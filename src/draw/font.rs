@@ -54,8 +54,8 @@ impl Font {
     }
 
     /// Create a new Font from an existing FcPattern
-    pub fn new_from_pattern(display: &mut xlib::Display, pattern: xft::FcPattern) -> Option<Font> {
-        let xfont = unsafe { xft::XftFontOpenPattern(display, &mut pattern) };
+    pub fn new_from_pattern(display: &mut xlib::Display, pattern: &mut xft::FcPattern) -> Option<Font> {
+        let xfont = unsafe { xft::XftFontOpenPattern(display, pattern) };
 
         return if !xfont.is_null() {
             eprintln!("ERROR - unable to load font pattern\n");
@@ -67,7 +67,7 @@ impl Font {
                     descent: (*xfont).descent,
                     h: ((*xfont).ascent + (*xfont).descent) as u32,
                     xfont: xfont,
-                    pattern: &mut pattern,
+                    pattern: pattern,
                 })
             }
         };

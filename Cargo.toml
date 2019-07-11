@@ -1,7 +1,7 @@
 [package]
 name = "penrose"
 version = "0.1.0"
-authors = ["sminez <innesdmorrison@gmail.com>"]
+authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license-file = "LICENSE"
 repository = "https://github.com/sminez/penrose"
 documentation = "https://docs.rs/penrose"
@@ -13,7 +13,7 @@ A tiling window manager library/WM for X in the style of dwm.
 [[bin]]
 doc = false
 name = "penrose"
-path = "src/bin/main.rs"
+path = "src/penrose.rs"
 
 [dependencies]
 x11 = "2.18.1"

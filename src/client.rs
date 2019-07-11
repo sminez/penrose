@@ -1,19 +1,21 @@
 extern crate x11;
 
+use output::Monitor;
+use util::Region;
 use x11::xlib;
 
-pub struct ClientList {
-    clients: Vec<Client>,
-    stack: Vec<Client>,
+pub struct ClientList<'a> {
+    clients: Vec<&'a Client<'a>>,
+    stack: Vec<&'a Client<'a>>,
 }
 
-pub struct Client {
+#[derive(Debug, PartialEq)]
+pub struct Client<'a> {
     name: String,
     tags: u8,
-    next: &Client,
-    snext: &Client,
-    monitor: &Monitor,
-    x_window: &xlib::Window,
+    next: &'a Client<'a>,
+    snext: &'a Client<'a>,
+    x_window: &'a xlib::Window,
 
     position: Region,
     old_position: Region,
@@ -43,14 +45,43 @@ pub struct Client {
     is_pinned: bool,
 }
 
-impl Client {}
+impl<'a> Client<'a> {
+    // static void applyrules(Client *c);
+    // fn apply_rules(&mut self, display: &mut xlib::Display) {
+    //     self.is_floating = false;
+    //     self.tags = 0;
 
-// static void applyrules(Client *c);
+    //     // Call out to xlib to get the class hints
+    //     let mut class_hint = xlib::XClassHint {
+    //         res_class: &mut 0,
+    //         res_name: &mut 0,
+    //     };
+
+    //     unsafe {
+    //         xlib::XGetClassHint(display, *self.x_window, &mut class_hint);
+    //     }
+
+    //     let class = class_hint.res_class;
+    //     let instance = class_hint.res_name;
+    // }
+
+    // static void attach(Client *c);
+    fn attatch(&'a mut self, monitor: &'a mut Monitor<'a>) {
+        self.next = monitor.client_list.clients[1];
+        monitor.client_list.clients.insert(0, self);
+    }
+
+    // static void detach(Client *c);
+    fn detatch(&'a self, monitor: &'a mut Monitor<'a>) {
+        if let Some(ix) = monitor.client_list.clients.iter().position(|i| *i == self) {
+            monitor.client_list.clients.remove(ix);
+        }
+    }
+}
+
 // static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
-// static void attach(Client *c);
 // static void attachstack(Client *c);
 // static void configure(Client *c);
-// static void detach(Client *c);
 // static void detachstack(Client *c);
 // static void focus(Client *c);
 // static Atom getatomprop(Client *c, Atom prop);
