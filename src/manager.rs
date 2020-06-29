@@ -1,26 +1,12 @@
 use crate::client::Client;
 use crate::config;
+use crate::layout::{FLOATING, MONOCLE};
 use crate::monitor::Monitor;
 use crate::util::Region;
 use crate::x;
 use std::ffi::CString;
 use std::ptr;
 use x11::xlib;
-
-// static char stext[256];
-// static int screen;
-// static int lrpad;            /* sum of left and right padding for text */
-// static int (*xerrorxlib)(Display *, XErrorEvent *);
-// static Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];
-// static Cur *cursor[CurLast];
-// static Clr **scheme;
-// static Drw *drw;
-// static Monitor *mons, *selmon;
-// static Window root, wmcheckwin;
-// static Clientlist *cl;
-
-// static Systray *systray =  NULL;
-// static unsigned int numlockmask = 0;
 
 pub struct WindowManager<'a> {
     // X11
@@ -30,7 +16,7 @@ pub struct WindowManager<'a> {
     wm_protocols: xlib::Atom,
     wm_delete_window: xlib::Atom,
     // wm state
-    monitors: Vec<Monitor<'a>>,
+    monitors: Vec<Monitor>,
     m_active: usize, // index into monitors
     clients: Vec<Client<'a>>,
     c_active: usize, // index into clients
@@ -108,11 +94,12 @@ impl<'a> WindowManager<'a> {
                         }
                     }
                 }
+                // TODO: add the other event handlers
                 _ => eprintln!("got unknown event: {:?}", event),
             }
         }
     }
-    pub fn active_monitor(&self) -> &'a Monitor {
+    pub fn active_monitor(&self) -> &Monitor {
         &self.monitors[self.m_active]
     }
 
@@ -121,7 +108,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn apply_size_hints(&self, r: Region, c: &mut Client, interact: bool) -> bool {
-        false
+        interact
     }
 
     pub fn resize(&mut self, r: Region, c: &mut Client, interact: bool) {
@@ -131,13 +118,14 @@ impl<'a> WindowManager<'a> {
     }
 
     fn resize_client(&mut self, r: Region, c: &mut Client) {
-        let n_tiled = self.monitors[self.m_active].n_tiled_clients();
-        let l_name = self.monitors[self.m_active].layout.name();
+        let m = &self.monitors[self.m_active];
+        let n_tiled = self.clients_for_monitor(m).len();
+        let l_name = m.layout().name();
 
-        let (offset, incr, border) = if c.is_floating || l_name == "floating" {
+        let (offset, incr, border) = if c.is_floating || l_name == FLOATING {
             (0, 0, c.border_width)
         } else {
-            if n_tiled == 1 || l_name == "monocle" {
+            if n_tiled == 1 || l_name == MONOCLE {
                 (0, -2 * config::BORDER_PX as isize, 0)
             } else {
                 (config::GAP_PX, 2 * config::GAP_PX as isize, c.border_width)
@@ -153,5 +141,22 @@ impl<'a> WindowManager<'a> {
         );
 
         self.configure_window(c, border);
+    }
+
+    fn clients_for_monitor(&self, m: &Monitor) -> Vec<&Client> {
+        self.clients
+            .iter()
+            .filter(|c| c.is_tiled_on_monitor(m))
+            .collect()
+    }
+
+    fn layout_monitor(&mut self, index: usize) {
+        let m = self.monitors[index];
+        let clients = self.clients_for_monitor(&m);
+        let regions = m.layout().arrange(&clients, &m.window_region);
+
+        for (c, r) in clients.iter_mut().zip(regions) {
+            self.resize(r, c, false)
+        }
     }
 }

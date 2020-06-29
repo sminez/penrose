@@ -38,12 +38,12 @@ pub struct Client<'a> {
 }
 
 impl<'a> Client<'a> {
-    pub fn width(&self) -> usize {
-        return self.region.w + 2 * self.border_width + config::GAP_PX;
+    pub fn width_on_resize(&self, r: Region) -> usize {
+        return r.w + 2 * self.border_width + config::GAP_PX;
     }
 
-    pub fn height(&self) -> usize {
-        return self.region.h + 2 * self.border_width + config::GAP_PX;
+    pub fn height_on_resize(&self, r: Region) -> usize {
+        return r.h + 2 * self.border_width + config::GAP_PX;
     }
 
     pub fn is_tiled_on_monitor(&self, m: &Monitor) -> bool {
