@@ -1,0 +1,157 @@
+use crate::client::Client;
+use crate::config;
+use crate::monitor::Monitor;
+use crate::util::Region;
+use crate::x;
+use std::ffi::CString;
+use std::ptr;
+use x11::xlib;
+
+// static char stext[256];
+// static int screen;
+// static int lrpad;            /* sum of left and right padding for text */
+// static int (*xerrorxlib)(Display *, XErrorEvent *);
+// static Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];
+// static Cur *cursor[CurLast];
+// static Clr **scheme;
+// static Drw *drw;
+// static Monitor *mons, *selmon;
+// static Window root, wmcheckwin;
+// static Clientlist *cl;
+
+// static Systray *systray =  NULL;
+// static unsigned int numlockmask = 0;
+
+pub struct WindowManager<'a> {
+    // X11
+    display: *mut xlib::Display,
+    default_screen: i32,
+    root: xlib::Window,
+    wm_protocols: xlib::Atom,
+    wm_delete_window: xlib::Atom,
+    // wm state
+    monitors: Vec<Monitor<'a>>,
+    m_active: usize, // index into monitors
+    clients: Vec<Client<'a>>,
+    c_active: usize, // index into clients
+    screen_width: usize,
+    screen_height: usize,
+    bar_width: usize,
+    bar_height: usize,
+    text_padding: usize,
+    running: bool,
+}
+
+impl<'a> WindowManager<'a> {
+    pub fn new() -> WindowManager<'a> {
+        unsafe {
+            let display = xlib::XOpenDisplay(ptr::null());
+            if display.is_null() {
+                panic!("unable to open display");
+            }
+
+            let screen = xlib::XDefaultScreen(display);
+            let root = xlib::XRootWindow(display, screen);
+
+            // Load atoms
+            let proto_str = CString::new("WM_PROTOCOLS").unwrap();
+            let del_win_str = CString::new("WM_DELETE_WINDOW").unwrap();
+            let wm_delete_window = xlib::XInternAtom(display, del_win_str.as_ptr(), xlib::False);
+            let wm_protocols = xlib::XInternAtom(display, proto_str.as_ptr(), xlib::False);
+
+            if wm_delete_window == 0 || wm_protocols == 0 {
+                panic!("unable to load atoms");
+            }
+
+            let mut protocols = [wm_delete_window];
+            let sub = xlib::XSetWMProtocols(display, root, &mut protocols[0] as *mut xlib::Atom, 1);
+            if sub == xlib::False {
+                panic!("can't set WM protocols");
+            }
+
+            WindowManager {
+                display: display,
+                default_screen: screen,
+                root: root,
+                wm_protocols: wm_protocols,
+                wm_delete_window: wm_delete_window,
+                monitors: vec![],
+                m_active: 0,
+                clients: vec![],
+                c_active: 0,
+                // TODO: determine and set these
+                screen_width: 0,
+                screen_height: 0,
+                bar_width: 0,
+                bar_height: 0,
+                text_padding: 0,
+                running: true,
+            }
+        }
+    }
+
+    pub fn run(&mut self) {
+        let mut reader = x::XEventReader::new();
+
+        while self.running {
+            let event = reader.next(self.display);
+
+            match event.get_type() {
+                xlib::ClientMessage => {
+                    let xclient: xlib::XClientMessageEvent = From::from(event);
+
+                    if xclient.message_type == self.wm_protocols && xclient.format == 32 {
+                        let protocol = xclient.data.get_long(0) as xlib::Atom;
+
+                        if protocol == self.wm_delete_window {
+                            self.running = false;
+                        }
+                    }
+                }
+                _ => eprintln!("got unknown event: {:?}", event),
+            }
+        }
+    }
+    pub fn active_monitor(&self) -> &'a Monitor {
+        &self.monitors[self.m_active]
+    }
+
+    pub fn configure_window(&mut self, c: &mut Client, w: usize) {
+        x::unsafe_configure_window(self.display, c, w);
+    }
+
+    fn apply_size_hints(&self, r: Region, c: &mut Client, interact: bool) -> bool {
+        false
+    }
+
+    pub fn resize(&mut self, r: Region, c: &mut Client, interact: bool) {
+        if self.apply_size_hints(r, c, interact) {
+            self.resize_client(r, c)
+        }
+    }
+
+    fn resize_client(&mut self, r: Region, c: &mut Client) {
+        let n_tiled = self.monitors[self.m_active].n_tiled_clients();
+        let l_name = self.monitors[self.m_active].layout.name();
+
+        let (offset, incr, border) = if c.is_floating || l_name == "floating" {
+            (0, 0, c.border_width)
+        } else {
+            if n_tiled == 1 || l_name == "monocle" {
+                (0, -2 * config::BORDER_PX as isize, 0)
+            } else {
+                (config::GAP_PX, 2 * config::GAP_PX as isize, c.border_width)
+            }
+        };
+
+        c.old_region = c.region;
+        c.region = Region::new(
+            r.x + offset,
+            r.y + offset,
+            (r.w as isize - incr) as usize,
+            (r.h as isize - incr) as usize,
+        );
+
+        self.configure_window(c, border);
+    }
+}

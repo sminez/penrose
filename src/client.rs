@@ -1,109 +1,54 @@
-extern crate x11;
-
-use output::Monitor;
-use util::Region;
+use crate::config;
+use crate::monitor::Monitor;
+use crate::util::Region;
 use x11::xlib;
 
-pub struct ClientList<'a> {
-    clients: Vec<&'a Client<'a>>,
-    stack: Vec<&'a Client<'a>>,
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Client<'a> {
     name: String,
-    tags: u8,
-    next: &'a Client<'a>,
-    snext: &'a Client<'a>,
-    x_window: &'a xlib::Window,
+    tags: usize,
 
-    position: Region,
-    old_position: Region,
+    pub x_window: &'a xlib::Window,
+    pub region: Region,
+    pub old_region: Region,
 
     min_alpha: f32,
     max_alpha: f32,
 
-    base_width: i32,
-    max_width: i32,
-    min_width: i32,
-    inc_width: i32,
+    pub base_width: usize,
+    pub max_width: usize,
+    pub min_width: usize,
+    pub inc_width: usize,
 
-    base_height: i32,
-    max_height: i32,
-    min_height: i32,
-    inc_height: i32,
+    pub base_height: usize,
+    pub max_height: usize,
+    pub min_height: usize,
+    pub inc_height: usize,
 
-    border_width: i32,
-    old_border_width: i32,
+    pub border_width: usize,
+    old_border_width: usize,
 
-    is_fixed: bool,
-    is_floating: bool,
-    is_urgent: bool,
-    never_focus: bool,
-    old_state: bool,
-    is_fullscreen: bool,
-    is_pinned: bool,
+    pub is_fixed: bool,
+    pub is_floating: bool,
+    pub is_urgent: bool,
+    pub never_focus: bool,
+    pub old_state: bool,
+    pub is_fullscreen: bool,
+    pub is_pinned: bool,
 }
 
 impl<'a> Client<'a> {
-    // static void applyrules(Client *c);
-    // fn apply_rules(&mut self, display: &mut xlib::Display) {
-    //     self.is_floating = false;
-    //     self.tags = 0;
-
-    //     // Call out to xlib to get the class hints
-    //     let mut class_hint = xlib::XClassHint {
-    //         res_class: &mut 0,
-    //         res_name: &mut 0,
-    //     };
-
-    //     unsafe {
-    //         xlib::XGetClassHint(display, *self.x_window, &mut class_hint);
-    //     }
-
-    //     let class = class_hint.res_class;
-    //     let instance = class_hint.res_name;
-    // }
-
-    // static void attach(Client *c);
-    fn attatch(&'a mut self, monitor: &'a mut Monitor<'a>) {
-        self.next = monitor.client_list.clients[1];
-        monitor.client_list.clients.insert(0, self);
+    pub fn width(&self) -> usize {
+        return self.region.w + 2 * self.border_width + config::GAP_PX;
     }
 
-    // static void detach(Client *c);
-    fn detatch(&'a self, monitor: &'a mut Monitor<'a>) {
-        if let Some(ix) = monitor.client_list.clients.iter().position(|i| *i == self) {
-            monitor.client_list.clients.remove(ix);
-        }
+    pub fn height(&self) -> usize {
+        return self.region.h + 2 * self.border_width + config::GAP_PX;
     }
+
+    pub fn is_tiled_on_monitor(&self, m: &Monitor) -> bool {
+        !self.is_floating && (self.is_pinned || m.is_showing_tag(self.tags))
+    }
+
+    pub fn configure(&mut self) {}
 }
-
-// static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
-// static void attachstack(Client *c);
-// static void configure(Client *c);
-// static void detachstack(Client *c);
-// static void focus(Client *c);
-// static Atom getatomprop(Client *c, Atom prop);
-// static void grabbuttons(Client *c, int focused);
-// static Client *nexttiled(Client *c, Monitor *m);
-// static void pop(Client *);
-// static void removesystrayicon(Client *i);
-// static void resize(Client *c, int x, int y, int w, int h, int interact);
-// static void sendmon(Client *c, Monitor *m);
-// static void setclientstate(Client *c, long state);
-// static void setfocus(Client *c);
-// static void setfullscreen(Client *c, int fullscreen);
-// static void seturgent(Client *c, int urg);
-// static void showhide(Client *c);
-// static void unfocus(Client *c, int setfocus);
-// static void unmanage(Client *c, int destroyed);
-// static void updatesizehints(Client *c);
-// static void updatesystrayicongeom(Client *i, int w, int h);
-// static void updatesystrayiconstate(Client *i, XPropertyEvent *ev);
-// static void updatetitle(Client *c);
-// static void updatewindowtype(Client *c);
-// static void updatewmhints(Client *c);
-// static void warp(const Client *c);
-// static Client *wintoclient(Window w);
-// static Client *wintosystrayicon(Window w);
