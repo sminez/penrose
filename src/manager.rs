@@ -15,17 +15,13 @@ pub struct WindowManager<'a> {
     root: xlib::Window,
     wm_protocols: xlib::Atom,
     wm_delete_window: xlib::Atom,
+
     // wm state
-    monitors: Vec<Monitor>,
-    m_active: usize, // index into monitors
-    clients: Vec<Client<'a>>,
-    c_active: usize, // index into clients
-    screen_width: usize,
-    screen_height: usize,
-    bar_width: usize,
-    bar_height: usize,
-    text_padding: usize,
     running: bool,
+    monitors: Vec<Monitor<'a>>,
+    m_active: usize, // index into monitors
+    clients: Vec<Client>,
+    c_active: usize, // index into clients
 }
 
 impl<'a> WindowManager<'a> {
@@ -61,17 +57,11 @@ impl<'a> WindowManager<'a> {
                 root: root,
                 wm_protocols: wm_protocols,
                 wm_delete_window: wm_delete_window,
+                running: true,
                 monitors: vec![],
                 m_active: 0,
                 clients: vec![],
                 c_active: 0,
-                // TODO: determine and set these
-                screen_width: 0,
-                screen_height: 0,
-                bar_width: 0,
-                bar_height: 0,
-                text_padding: 0,
-                running: true,
             }
         }
     }
@@ -99,7 +89,7 @@ impl<'a> WindowManager<'a> {
             }
         }
     }
-    pub fn active_monitor(&self) -> &Monitor {
+    pub fn active_monitor(&self) -> &'a Monitor {
         &self.monitors[self.m_active]
     }
 
@@ -118,9 +108,9 @@ impl<'a> WindowManager<'a> {
     }
 
     fn resize_client(&mut self, r: Region, c: &mut Client) {
-        let m = &self.monitors[self.m_active];
-        let n_tiled = self.clients_for_monitor(m).len();
-        let l_name = m.layout().name();
+        let m = self.monitors[self.m_active];
+        let n_tiled = self.clients_for_monitor(&m).len();
+        let l_name = m.layout().name;
 
         let (offset, incr, border) = if c.is_floating || l_name == FLOATING {
             (0, 0, c.border_width)
@@ -152,11 +142,14 @@ impl<'a> WindowManager<'a> {
 
     fn layout_monitor(&mut self, index: usize) {
         let m = self.monitors[index];
-        let clients = self.clients_for_monitor(&m);
-        let regions = m.layout().arrange(&clients, &m.window_region);
+        let layout = m.layout();
+        let actions = layout.arrange(self.clients_for_monitor(&m), &m.window_region);
 
-        for (c, r) in clients.iter_mut().zip(regions) {
-            self.resize(r, c, false)
+        // for mut action in m
+        //     .layout()
+        //     .arrange(&self.clients_for_monitor(m), &m.window_region)
+        for action in actions {
+            self.resize(action.r, &mut action.c, false)
         }
     }
 }

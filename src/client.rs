@@ -4,11 +4,11 @@ use crate::util::Region;
 use x11::xlib;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Client<'a> {
+pub struct Client {
     name: String,
     tags: usize,
 
-    pub x_window: &'a xlib::Window,
+    pub x_window: xlib::Window,
     pub region: Region,
     pub old_region: Region,
 
@@ -37,7 +37,7 @@ pub struct Client<'a> {
     pub is_pinned: bool,
 }
 
-impl<'a> Client<'a> {
+impl Client {
     pub fn width_on_resize(&self, r: Region) -> usize {
         return r.w + 2 * self.border_width + config::GAP_PX;
     }

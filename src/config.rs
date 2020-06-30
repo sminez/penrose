@@ -32,6 +32,6 @@ pub const TAGS: [&str; 9] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 pub const STARTUP_SCRIPT_PATH: Option<&str> = Some("~/bin/scripts/start-dwm.sh");
 
 // layout config
-pub const M_FACT: f32 = 0.60; // factor of master area size [0.05..0.95]
-pub const N_MASTER: usize = 1; // number of clients in master area
+pub const MAIN_RATIO: f32 = 0.60; // factor of main area size [0.05..0.95]
+pub const N_MAIN: usize = 1; // number of clients in main area
 pub const RESPECT_RESIZE_HINTS: bool = true; // true means respect size hints in tiled resizals

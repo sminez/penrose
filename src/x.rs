@@ -18,7 +18,7 @@ pub fn unsafe_configure_window(d: *mut xlib::Display, c: &mut Client, w: usize) 
     unsafe {
         xlib::XConfigureWindow(
             d,
-            *c.x_window,
+            c.x_window,
             XCONFIGURE_WINDOW_FLAGS,
             &mut region_as_window_changes(&c.region, w),
         );
