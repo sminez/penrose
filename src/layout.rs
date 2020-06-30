@@ -13,41 +13,44 @@ use crate::config;
 use crate::util::Region;
 use std::cmp;
 
-pub const BOTTOM_STACK: &'static str = "bottom_stack";
-pub const FLOATING: &'static str = "floating";
-pub const MONOCLE: &'static str = "monocle";
-
-pub fn layouts<'a>() -> Vec<Layout<'a>> {
-    vec![Layout::new(BOTTOM_STACK, bottom_stack)]
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum LayoutKind {
+    BottomStack,
+    Floating,
+    Monocle,
 }
 
-pub struct ResizeAction<'a> {
-    pub c: &'a Client,
-    pub r: Region,
+pub fn layouts() -> Vec<Layout> {
+    vec![Layout::new(LayoutKind::BottomStack, bottom_stack)]
+}
+
+pub struct ResizeAction {
+    pub c: Client,
+    pub r: Option<Region>,
 }
 
 #[derive(Clone)]
-pub struct Layout<'a> {
-    pub name: &'static str,
+pub struct Layout {
+    pub kind: LayoutKind,
     n_main: usize,
     ratio: f32,
-    f: fn(Vec<&'a Client>, &Region, usize, f32) -> Vec<ResizeAction<'a>>,
+    f: fn(Vec<Client>, &Region, usize, f32) -> Vec<ResizeAction>,
 }
 
-impl<'a> Layout<'a> {
+impl Layout {
     fn new(
-        name: &'static str,
-        f: fn(Vec<&'a Client>, &Region, usize, f32) -> Vec<ResizeAction<'a>>,
-    ) -> Layout<'a> {
+        kind: LayoutKind,
+        f: fn(Vec<Client>, &Region, usize, f32) -> Vec<ResizeAction>,
+    ) -> Layout {
         Layout {
-            name: name,
+            kind,
             n_main: config::N_MAIN,
             ratio: config::MAIN_RATIO,
-            f: f,
+            f,
         }
     }
 
-    pub fn arrange(&self, cs: Vec<&'a Client>, r: &Region) -> Vec<ResizeAction<'a>> {
+    pub fn arrange(&self, cs: Vec<Client>, r: &Region) -> Vec<ResizeAction> {
         (self.f)(cs, r, self.n_main, self.ratio)
     }
 
@@ -64,12 +67,7 @@ impl<'a> Layout<'a> {
  * Layout functions
  */
 
-fn bottom_stack<'a>(
-    clients: Vec<&'a Client>,
-    wr: &Region,
-    n_main: usize,
-    ratio: f32,
-) -> Vec<ResizeAction<'a>> {
+fn bottom_stack(clients: Vec<Client>, wr: &Region, n_main: usize, ratio: f32) -> Vec<ResizeAction> {
     let n = clients.len();
     let mut tx = wr.x;
     let mut mx = 0;
@@ -100,7 +98,7 @@ fn bottom_stack<'a>(
                 };
                 mx += c.width_on_resize(r);
 
-                ResizeAction { c, r }
+                ResizeAction { c: *c, r: Some(r) }
             } else {
                 let r = Region {
                     x: tx,
@@ -112,7 +110,7 @@ fn bottom_stack<'a>(
                     tx += c.width_on_resize(r);
                 };
 
-                ResizeAction { c, r }
+                ResizeAction { c: *c, r: Some(r) }
             }
         })
         .collect()

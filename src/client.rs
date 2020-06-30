@@ -3,9 +3,9 @@ use crate::monitor::Monitor;
 use crate::util::Region;
 use x11::xlib;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Client {
-    name: String,
+    // name: String,
     tags: usize,
 
     pub x_window: xlib::Window,
