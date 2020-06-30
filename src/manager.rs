@@ -112,7 +112,7 @@ impl WindowManager {
         let (offset, incr, border) = if c.is_floating || kind == LayoutKind::Floating {
             (0, 0, c.border_width)
         } else {
-            if n_tiled == 1 || kind == LayoutKind::Monocle {
+            if n_tiled == 1 || kind == LayoutKind::Gapless {
                 (0, -2 * config::BORDER_PX as isize, 0)
             } else {
                 (config::GAP_PX, 2 * config::GAP_PX as isize, c.border_width)

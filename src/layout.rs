@@ -15,13 +15,13 @@ use std::cmp;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum LayoutKind {
-    BottomStack,
     Floating,
-    Monocle,
+    Gapless,
+    Normal,
 }
 
 pub fn layouts() -> Vec<Layout> {
-    vec![Layout::new(LayoutKind::BottomStack, bottom_stack)]
+    vec![Layout::new(LayoutKind::Normal, bottom_stack)]
 }
 
 pub struct ResizeAction {
