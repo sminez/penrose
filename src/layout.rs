@@ -54,12 +54,27 @@ impl Layout {
         (self.f)(cs, r, self.n_main, self.ratio)
     }
 
-    pub fn set_n_main(&mut self, n: usize) {
-        self.n_main = n;
+    pub fn inc_n_main(&mut self) {
+        self.n_main += 1;
     }
 
-    pub fn set_main_ratio(&mut self, r: f32) {
-        self.ratio = r;
+    pub fn dec_n_main(&mut self) {
+        if self.n_main > 0 {
+            self.n_main -= 1;
+        }
+    }
+
+    pub fn inc_main_ratio(&mut self, r: f32) {
+        self.ratio += r;
+    }
+
+    pub fn dec_main_ratio(&mut self, r: f32) {
+        self.ratio -= r;
+        if self.ratio < 0.0 {
+            self.ratio = 0.0
+        } else if self.ratio > 1.0 {
+            self.ratio = 1.0;
+        }
     }
 }
 
