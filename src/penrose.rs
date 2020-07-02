@@ -34,15 +34,6 @@ macro_rules! warn(
 );
 
 macro_rules! run_external(
-    ($cmd:tt) => ({
-        Box::new(|| {
-            match process::Command::new($cmd).status() {
-                Ok(_) => (),
-                Err(e) => warn!("error running external program: {}", e),
-            };
-        }) as FireAndForget
-     });
-
     ($cmd:tt $($arg:tt)*) => ({
         Box::new(|| {
             match process::Command::new($cmd)
