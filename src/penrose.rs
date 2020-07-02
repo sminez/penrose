@@ -34,20 +34,26 @@ macro_rules! run_external(
     ($cmd:tt) => ({
         let parts: Vec<&str> = $cmd.split_whitespace().collect();
         if parts.len() > 1 {
-            Box::new(move || {
+            Box::new(move |_: &mut WindowManager| {
                 match process::Command::new(parts[0]).args(&parts[1..]).status() {
                     Ok(_) => (),
                     Err(e) => warn!("error running external program: {}", e),
                 };
             }) as FireAndForget
         } else {
-            Box::new(move || {
+            Box::new(move |_: &mut WindowManager| {
                 match process::Command::new(parts[0]).status() {
                     Ok(_) => (),
                     Err(e) => warn!("error running external program: {}", e),
                 };
             }) as FireAndForget
         }
+     });
+);
+
+macro_rules! run_internal(
+    ($func:tt) => ({
+        Box::new(|wm: &mut WindowManager| wm.$func())
      });
 );
 
@@ -91,6 +97,7 @@ const RESPECT_RESIZE_HINTS: bool = true;
 fn keybindings() -> HashMap<&'static str, FireAndForget> {
     map! {
         "M-;" => run_external!("rofi-apps"),
+        "M-A-r" => run_internal!(kill),
     }
 }
 
@@ -137,7 +144,7 @@ struct ColorScheme {
     hl: &'static str,
 }
 
-type FireAndForget = Box<dyn Fn() -> ()>;
+type FireAndForget = Box<dyn Fn(&mut WindowManager) -> ()>;
 
 struct WindowManager {
     conn: xcb::Connection,
@@ -198,8 +205,16 @@ impl WindowManager {
     }
 
     fn run(&mut self) {
-        let f = run_external!("rofi-apps");
-        f();
+        let f = run_external!("echo calling external with args works");
+        f(self);
+
+        let but_why = run_internal!(kill);
+        but_why(self);
+    }
+
+    fn kill(&mut self) {
+        println!("This may be disgusting, but it works...");
+        process::exit(0);
     }
 }
 
