@@ -16,15 +16,6 @@ impl Region {
     }
 }
 
-// Run the user startup script if there is one defined
-pub fn run_autostart() {
-    if let Some(path) = config::STARTUP_SCRIPT_PATH {
-        process::Command::new(path)
-            .spawn()
-            .expect("failed to spwan startup script");
-    }
-}
-
 /*
  * NOTE: The penrose tagging system
  * penrose follows the dwm model of applying tags to clients and allowing

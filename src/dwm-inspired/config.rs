@@ -23,13 +23,13 @@ pub const COLOR_GRAY_4: &str = "#f2e5bc";
 pub const COLOR_HIGHLIGHT: &str = "#458588";
 
 // fonts to use for rendering UI
-pub const FONTS: [&str; 2] = ["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
+pub const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
 
 // names for each of the tags
-pub const TAGS: [&str; 9] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+pub const TAGS: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 // path to an executable that will be run on initial WM start-up
-pub const STARTUP_SCRIPT_PATH: Option<&str> = Some("~/bin/scripts/start-dwm.sh");
+pub const STARTUP_SCRIPT_PATH: &str = "~/bin/scripts/start-dwm.sh";
 
 // layout config
 pub const MAIN_RATIO: f32 = 0.60; // factor of main area size [0.05..0.95]

@@ -17,6 +17,4 @@ name = "penrose"
 path = "src/penrose.rs"
 
 [dependencies]
-libc = "0.2.71"
-x11 = "2.18.2"
-xcb = "0.9.0"
+xcb = { version = "0.9.0", features = ["randr"] }
