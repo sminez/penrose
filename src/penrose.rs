@@ -11,25 +11,30 @@ use xcb;
  * NOTE: need to define these at the top of the file for them to be usable by
  *       functions later.
  */
+
+// log the reason why we we're dying and run cleanup (if any)
 macro_rules! die(
     ($msg:expr) => ({
         eprintln!("fatal :: {}", $msg);
         process::exit(42);
      });
 
-    ($fmt:expr, $($arg:tt)*) => ({
+    ($fmt:expr, $($arg:tt),*) => ({
         eprintln!("fatal :: {}", format!($fmt, $($arg)*));
         process::exit(42);
      });
 );
 
+// output something to stderr so that the user can redirect to a log file
+// and hopefully debug non-fatal errors.
 macro_rules! warn(
     ($msg:expr) => ({ eprintln!("warn :: {}", $msg); });
-    ($fmt:expr, $($arg:tt)*) => ({
+    ($fmt:expr, $($arg:tt),*) => ({
         eprintln!("warn :: {}", format!($fmt, $($arg)*));
      });
 );
 
+// kick off an external program as part of a key/mouse binding
 macro_rules! run_external(
     ($cmd:tt) => ({
         let parts: Vec<&str> = $cmd.split_whitespace().collect();
@@ -51,12 +56,14 @@ macro_rules! run_external(
      });
 );
 
+// kick off an internal method on the window manager as part of a key/mouse binding
 macro_rules! run_internal(
     ($func:tt) => ({
         Box::new(|wm: &mut WindowManager| wm.$func())
      });
 );
 
+// make creating a hash-map a little less verbose
 macro_rules! map(
     {} => { ::std::collections::HashMap::new(); };
 
