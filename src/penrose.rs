@@ -24,25 +24,30 @@ macro_rules! die(
 );
 
 macro_rules! warn(
-    ($msg:expr) => ({
-        eprintln!("warn :: {}", $msg);
-     });
-
+    ($msg:expr) => ({ eprintln!("warn :: {}", $msg); });
     ($fmt:expr, $($arg:tt)*) => ({
         eprintln!("warn :: {}", format!($fmt, $($arg)*));
      });
 );
 
 macro_rules! run_external(
-    ($cmd:tt $($arg:tt)*) => ({
-        Box::new(|| {
-            match process::Command::new($cmd)
-                $(.arg($arg))*
-                .status() {
+    ($cmd:tt) => ({
+        let parts: Vec<&str> = $cmd.split_whitespace().collect();
+        if parts.len() > 1 {
+            Box::new(move || {
+                match process::Command::new(parts[0]).args(&parts[1..]).status() {
                     Ok(_) => (),
                     Err(e) => warn!("error running external program: {}", e),
-            };
-        }) as FireAndForget
+                };
+            }) as FireAndForget
+        } else {
+            Box::new(move || {
+                match process::Command::new(parts[0]).status() {
+                    Ok(_) => (),
+                    Err(e) => warn!("error running external program: {}", e),
+                };
+            }) as FireAndForget
+        }
      });
 );
 
