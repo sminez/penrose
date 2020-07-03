@@ -120,6 +120,15 @@ impl WindowManager {
      * mapped to a handler
      */
     pub fn run(&mut self) {
+        let setup = self.conn.get_setup();
+        let screen = setup.roots().nth(self.screen_num as usize).unwrap();
+
+        println!("penrose screen details {}:", screen.root());
+        println!("  width..........: {}", screen.width_in_pixels());
+        println!("  height.........: {}", screen.height_in_pixels());
+        println!("  white pixel....: {:x}", screen.white_pixel());
+        println!("  black pixel....: {:x}", screen.black_pixel());
+
         loop {
             if let Some(event) = self.conn.wait_for_event() {
                 match event.response_type() {
@@ -152,4 +161,5 @@ impl WindowManager {
     pub fn set_tag(&mut self, tag: usize) {}
     pub fn add_tag(&mut self, tag: usize) {}
     pub fn tag_client(&mut self, tag: usize) {}
+    pub fn cycle_layout(&mut self, forward: bool) {}
 }
