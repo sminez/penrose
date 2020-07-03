@@ -76,7 +76,7 @@ pub fn str_prop(conn: &xcb::Connection, id: u32, name: &str) -> Result<String, S
     // https://www.mankier.com/3/xcb_intern_atom
     let interned_atom = xcb::intern_atom(
         conn,  // xcb connection to X11
-        false, // only return the atom ID if it already exists
+        false, // return the atom ID even if it doesn't already exists
         name,  // name of the atom to retrieve
     );
 
@@ -99,6 +99,41 @@ pub fn str_prop(conn: &xcb::Connection, id: u32, name: &str) -> Result<String, S
                     Err(e) => Err(format!("invalid utf8 resonse from xcb: {}", e)),
                     Ok(s) => Ok(s),
                 },
+            }
+        }
+    }
+}
+
+pub fn atom_prop(conn: &xcb::Connection, id: u32, name: &str) -> Result<u32, String> {
+    // https://www.mankier.com/3/xcb_intern_atom
+    let interned_atom = xcb::intern_atom(
+        conn, // xcb connection to X11
+        true, // only return the atom ID if it already exists
+        name, // name of the atom to retrieve
+    );
+
+    match interned_atom.get_reply() {
+        Err(e) => Err(format!("unable to fetch xcb atom '{}': {}", name, e)),
+        Ok(reply) => {
+            // xcb docs: https://www.mankier.com/3/xcb_get_property
+            let cookie = xcb::get_property(
+                conn,          // xcb connection to X11
+                false,         // should the property be deleted
+                id,            // target window to query
+                reply.atom(),  // the property we want
+                xcb::ATOM_ANY, // the type of the property
+                0,             // offset in the property to retrieve data from
+                1024,          // how many 32bit multiples of data to retrieve
+            );
+            match cookie.get_reply() {
+                Err(e) => Err(format!("unable to fetch window property: {}", e)),
+                Ok(reply) => {
+                    if reply.value_len() <= 0 {
+                        Err(format!("property '{}' was empty for id: {}", name, id))
+                    } else {
+                        Ok(reply.value()[0])
+                    }
+                }
             }
         }
     }
