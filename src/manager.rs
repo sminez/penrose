@@ -1,12 +1,7 @@
 use crate::config;
-use crate::data_types::{CodeMap, KeyCode, Region};
-use crate::helpers::keycodes_from_xmodmap;
-use std::collections::HashMap;
+use crate::data_types::{KeyBindings, Region};
 use std::process;
 use xcb;
-
-pub type FireAndForget = Box<dyn Fn(&mut WindowManager) -> ()>;
-pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
 
 pub struct WindowManager {
     conn: xcb::Connection,
@@ -14,7 +9,6 @@ pub struct WindowManager {
     screen_dims: Vec<Region>,
     screen_tags: Vec<usize>,
     key_bindings: KeyBindings,
-    xmodmap_codes: CodeMap,
 }
 
 impl WindowManager {
@@ -27,7 +21,6 @@ impl WindowManager {
             screen_dims: vec![],
             screen_tags: vec![],
             key_bindings: config::key_bindings(),
-            xmodmap_codes: keycodes_from_xmodmap(),
         };
 
         wm.update_screen_dimensions();
@@ -37,7 +30,49 @@ impl WindowManager {
         wm
     }
 
-    fn grab_keys(&mut self) {}
+    fn grab_keys(&self) {
+        // pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
+        let notify_mask = xcb::randr::NOTIFY_MASK_CRTC_CHANGE as u16;
+        let mode = xcb::GRAB_MODE_ASYNC as u8;
+        let event_mask = &[(
+            xcb::CW_EVENT_MASK,
+            xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
+        )];
+        let mouse_mask = (xcb::EVENT_MASK_BUTTON_PRESS
+            | xcb::EVENT_MASK_BUTTON_RELEASE
+            | xcb::EVENT_MASK_POINTER_MOTION) as u16;
+
+        let screen = self.conn.get_setup().roots().nth(0).unwrap();
+        let root = screen.root();
+
+        let input = xcb::randr::select_input(&self.conn, root, notify_mask);
+        match input.request_check() {
+            Err(e) => die!("randr error: {}", e),
+            Ok(_) => {
+                for k in self.key_bindings.keys() {
+                    xcb::grab_key(&self.conn, false, root, k.mask, k.code, mode, mode);
+                }
+            }
+        }
+
+        for mouse_button in &[1, 3] {
+            xcb::grab_button(
+                &self.conn,
+                false,
+                root,
+                mouse_mask,
+                mode,
+                mode,
+                xcb::NONE,
+                xcb::NONE,
+                *mouse_button,
+                xcb::MOD_MASK_4 as u16,
+            );
+        }
+
+        xcb::change_window_attributes(&self.conn, root, event_mask);
+        self.conn.flush();
+    }
 
     fn update_screen_dimensions(&mut self) {
         let screen = match self.conn.get_setup().roots().nth(0) {

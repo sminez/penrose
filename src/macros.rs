@@ -34,14 +34,14 @@ macro_rules! run_external(
                         Ok(_) => (),
                         Err(e) => warn!("error running external program: {}", e),
                     };
-                }) as $crate::manager::FireAndForget
+                }) as $crate::data_types::FireAndForget
             } else {
                 Box::new(move |_: &mut $crate::manager::WindowManager| {
                     match ::std::process::Command::new(parts[0]).status() {
                         Ok(_) => (),
                         Err(e) => warn!("error running external program: {}", e),
                     };
-                }) as $crate::manager::FireAndForget
+                }) as $crate::data_types::FireAndForget
             }
         }
     };

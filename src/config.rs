@@ -1,5 +1,4 @@
-use crate::data_types::ColorScheme;
-use crate::manager::KeyBindings;
+use crate::data_types::{ColorScheme, KeyBindings};
 
 pub const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
 pub const TAGS: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
