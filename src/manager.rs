@@ -105,10 +105,40 @@ impl WindowManager {
         };
     }
 
+    fn button_press(&mut self, event: &xcb::ButtonPressEvent) {}
+    fn button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
+    fn key_press(&mut self, event: &xcb::KeyPressEvent) {}
+    fn new_window(&mut self, event: &xcb::MapNotifyEvent) {}
+    fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {}
+    fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {}
+    fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
+    fn destroy_window(&mut self, event: &xcb::DestroyNotifyEvent) {}
+
+    /**
+     * main event loop for the window manager.
+     * Everything is driven by incoming events from the X server with each event type being
+     * mapped to a handler
+     */
     pub fn run(&mut self) {
-        println!("{} keys bound", self.key_bindings.len());
-        for key in self.key_bindings.keys() {
-            println!("{:?}", key);
+        loop {
+            if let Some(event) = self.conn.wait_for_event() {
+                match event.response_type() {
+                    // user input
+                    xcb::KEY_PRESS => self.key_press(unsafe { xcb::cast_event(&event) }),
+                    xcb::BUTTON_PRESS => self.button_press(unsafe { xcb::cast_event(&event) }),
+                    xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
+                    // window actions
+                    xcb::MAP_NOTIFY => self.new_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::MOTION_NOTIFY => self.resize_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::DESTROY_NOTIFY => self.destroy_window(unsafe { xcb::cast_event(&event) }),
+                    // unknown event type
+                    _ => (),
+                }
+            }
+
+            self.conn.flush();
         }
     }
 
