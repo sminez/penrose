@@ -147,9 +147,7 @@ impl WindowManager {
         log!("handling keypress: {} {}", event.state(), event.detail());
 
         if let Some(action) = bindings.get(&KeyCode::from_key_press(event)) {
-            log!("running action");
             action(self);
-            log!("action run");
         }
     }
 
@@ -188,7 +186,6 @@ impl WindowManager {
 
         loop {
             if let Some(event) = self.conn.wait_for_event() {
-                log!("got event");
                 match event.response_type() {
                     // user input
                     xcb::KEY_PRESS => self.key_press(unsafe { xcb::cast_event(&event) }, &bindings),

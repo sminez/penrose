@@ -1,27 +1,22 @@
 use crate::manager::WindowManager;
 use std::collections::HashMap;
-use std::convert;
 use xcb;
 
 pub type LayoutFunc = Box<dyn Fn(usize, &Region, usize, f32) -> Vec<Region>>;
 pub type FireAndForget = Box<dyn Fn(&mut WindowManager) -> ()>;
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
+pub type ResizeAction = (WinId, Option<Region>);
 pub type CodeMap = HashMap<String, u8>;
+pub type WinId = i32;
 
 type CRTCInfoReply = xcb::ffi::randr::xcb_randr_get_crtc_info_reply_t;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Region {
     x: u32,
     y: u32,
     w: u32,
     h: u32,
-}
-
-impl convert::Into<(u32, u32, u32, u32)> for Region {
-    fn into(self) -> (u32, u32, u32, u32) {
-        (self.x, self.y, self.w, self.h)
-    }
 }
 
 impl Region {
@@ -36,6 +31,14 @@ impl Region {
 
     pub fn width(&self) -> u32 {
         self.w
+    }
+
+    pub fn height(&self) -> u32 {
+        self.h
+    }
+
+    pub fn values(&self) -> (u32, u32, u32, u32) {
+        (self.x, self.y, self.w, self.h)
     }
 }
 
