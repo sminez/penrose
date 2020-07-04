@@ -7,9 +7,8 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
-use crate::client::Client;
 use crate::config;
-use crate::data_types::{Region, ResizeAction};
+use crate::data_types::{Region, ResizeAction, WinId};
 
 /**
  * Almost all layouts will be 'Normal' but penrose allows both for layouts that
@@ -49,9 +48,9 @@ pub enum LayoutKind {
 pub struct Layout {
     pub kind: LayoutKind,
     pub symbol: &'static str,
-    n_main: u32,
+    n_main: usize,
     ratio: f32,
-    f: fn(Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
+    f: fn(&Vec<WinId>, &Region, usize, f32) -> Vec<ResizeAction>,
 }
 
 impl Layout {
@@ -59,7 +58,7 @@ impl Layout {
     pub fn new(
         symbol: &'static str,
         kind: LayoutKind,
-        f: fn(Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
+        f: fn(&Vec<WinId>, &Region, usize, f32) -> Vec<ResizeAction>,
     ) -> Layout {
         Layout {
             symbol,
@@ -71,8 +70,8 @@ impl Layout {
     }
 
     /// Apply the embedded layout function using the current n_main and ratio
-    pub fn arrange(&self, clients: Vec<Client>, r: &Region) -> Vec<ResizeAction> {
-        (self.f)(clients, r, self.n_main, self.ratio)
+    pub fn arrange(&self, client_ids: &Vec<WinId>, r: &Region) -> Vec<ResizeAction> {
+        (self.f)(client_ids, r, self.n_main, self.ratio)
     }
 
     /// Increase/decrease the number of clients in the main area by 1
@@ -103,6 +102,22 @@ impl Layout {
 }
 
 /*
+ * Utility functions for simplifying writing layouts
+ *
+ * NOTE: public so that they can be used by layouts in other files if needed.
+ */
+
+/// number of clients for the main area vs secondary
+pub fn client_breakdown(clients: &Vec<WinId>, n_main: usize) -> (usize, usize) {
+    let n = clients.len();
+    if n <= n_main {
+        (n, 0)
+    } else {
+        (n_main, n - n_main)
+    }
+}
+
+/*
  * Layout functions
  *
  * Each of the following is a layout function that can be passed to Layout::new.
@@ -114,10 +129,38 @@ impl Layout {
 
 /// A no-op floating layout that simply satisfies the type required for Layout
 pub fn floating(
-    _clients: Vec<Client>,
+    _clients: &Vec<WinId>,
     _monitor_region: &Region,
-    _n_main: u32,
+    _max_main: usize,
     _ratio: f32,
 ) -> Vec<ResizeAction> {
     vec![]
+}
+
+/// A simple layout that places the main region on the left and tiles remaining
+/// windows in a single column to the right.
+pub fn side_stack(
+    client_ids: &Vec<WinId>,
+    monitor_region: &Region,
+    max_main: usize,
+    ratio: f32,
+) -> Vec<ResizeAction> {
+    let (_, _, mw, mh) = monitor_region.values();
+    let (n_main, n_stack) = client_breakdown(&client_ids, max_main);
+    let split = (mw as f32 * ratio) as usize;
+    let h_main = mh / n_main;
+    let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
+
+    client_ids
+        .iter()
+        .enumerate()
+        .map(|(n, id)| {
+            if n < max_main {
+                let w = if n_stack == 0 { mw } else { split };
+                (*id, Region::new(n * h_main, 0, w, h_main))
+            } else {
+                (*id, Region::new(n * h_stack, split, mw - split, h_stack))
+            }
+        })
+        .collect()
 }

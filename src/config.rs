@@ -1,5 +1,5 @@
 use crate::data_types::{ColorScheme, KeyBindings};
-use crate::layout::{floating, Layout, LayoutKind};
+use crate::layout::{floating, side_stack, Layout, LayoutKind};
 
 pub const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
 pub const TAGS: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -11,15 +11,20 @@ pub const COLOR_SCHEME: ColorScheme = ColorScheme {
     fg_3: "#f2e5bc",
     hl: "#458588",
 };
-pub const BORDER_PX: u32 = 2;
-pub const GAP_PX: u32 = 6;
+
 pub const SYSTRAY_SPACING: u32 = 2;
 pub const SHOW_SYSTRAY: bool = true;
 pub const SHOW_BAR: bool = true;
 pub const TOP_BAR: bool = true;
-pub const N_MAIN: u32 = 1;
+
+pub const BORDER_PX: u32 = 2;
+pub const GAP_PX: u32 = 6;
+
+pub const N_MAIN: usize = 1;
 pub const MAIN_RATIO: f32 = 0.60;
 pub const MAIN_RATIO_STEP: f32 = 0.05;
+
+pub const FLOATING_CLASSES: &[&'static str] = &["rofi", "dmenu", "dunst"];
 pub const RESPECT_RESIZE_HINTS: bool = true;
 
 /**
@@ -51,5 +56,8 @@ pub fn key_bindings() -> KeyBindings {
  * on each.
  */
 pub fn layouts() -> Vec<Layout> {
-    vec![Layout::new("[    ]", LayoutKind::Floating, floating)]
+    vec![
+        Layout::new("[side]", LayoutKind::Normal, side_stack),
+        Layout::new("[    ]", LayoutKind::Floating, floating),
+    ]
 }

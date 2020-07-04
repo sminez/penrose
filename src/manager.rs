@@ -1,6 +1,8 @@
+use crate::client::Client;
 use crate::config;
-use crate::data_types::{KeyBindings, KeyCode, Region};
-use crate::helpers::{atom_prop, str_prop};
+use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
+use crate::helpers::str_prop;
+use crate::layout::Layout;
 use std::process;
 use xcb;
 
@@ -18,6 +20,11 @@ const NEW_WINDOW_MASK: &[(u32, u32)] = &[(
     xcb::CW_EVENT_MASK,
     xcb::EVENT_MASK_ENTER_WINDOW | xcb::EVENT_MASK_LEAVE_WINDOW,
 )];
+const WIN_X: u16 = xcb::CONFIG_WINDOW_X as u16;
+const WIN_Y: u16 = xcb::CONFIG_WINDOW_Y as u16;
+const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
+const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
+const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -28,24 +35,35 @@ const NEW_WINDOW_MASK: &[(u32, u32)] = &[(
  */
 pub struct WindowManager {
     conn: xcb::Connection,
-    screen_num: i32,
     screen_dims: Vec<Region>,
-    screen_tags: Vec<usize>,
+    screen_tags: Vec<u32>,
+    screen_layouts: Vec<Vec<Layout>>,
+    active_layouts: Vec<usize>,
+    clients: Vec<Client>,
 }
 
 impl WindowManager {
     pub fn init() -> WindowManager {
-        let (conn, screen_num) = xcb::Connection::connect(None).unwrap();
+        let (conn, _) = xcb::Connection::connect(None).unwrap();
 
         let mut wm = WindowManager {
             conn,
-            screen_num,
             screen_dims: vec![],
             screen_tags: vec![],
+            screen_layouts: vec![],
+            active_layouts: vec![],
+            clients: vec![],
         };
 
-        wm.screen_tags = wm.screen_dims.iter().enumerate().map(|(i, _)| i).collect();
         wm.update_screen_dimensions();
+        wm.screen_layouts = wm.screen_dims.iter().map(|_| config::layouts()).collect();
+        wm.active_layouts = wm.screen_dims.iter().map(|_| 0).collect();
+        wm.screen_tags = wm
+            .screen_dims
+            .iter()
+            .enumerate()
+            .map(|(i, _)| (i + 1) as u32)
+            .collect();
 
         wm
     }
@@ -136,11 +154,50 @@ impl WindowManager {
         };
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
-    fn button_press(&mut self, event: &xcb::ButtonPressEvent) {}
+    fn apply_layout(&self, ix: usize) {
+        let layout = self.screen_layouts[ix][self.active_layouts[ix]];
+        let dims = self.screen_dims[ix];
+        let mask = self.screen_tags[ix];
+        let ids: Vec<WinId> = self
+            .clients
+            .iter()
+            .flat_map(|c| {
+                if c.is_tiled_for_tag(mask) {
+                    Some(c.id)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        log!("applying layout for {} clients", ids.len());
+
+        if ids.len() > 0 {
+            for (id, region) in layout.arrange(&ids, &dims) {
+                log!("configuring {} with {:?}", id, region);
+                let (x, y, w, h) = region.values();
+                let padding = 2 * (config::BORDER_PX + config::GAP_PX);
+
+                xcb::configure_window(
+                    &self.conn,
+                    id,
+                    &[
+                        (WIN_X, x as u32 + config::GAP_PX),
+                        (WIN_Y, y as u32 + config::GAP_PX),
+                        (WIN_WIDTH, w as u32 - padding),
+                        (WIN_HEIGHT, h as u32 - padding),
+                        (WIN_BORDER, config::BORDER_PX),
+                    ],
+                );
+            }
+        }
+    }
 
     // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
-    fn button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
+    // fn button_press(&mut self, event: &xcb::ButtonPressEvent) {}
+
+    // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
+    // fn button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
 
     // xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
     fn key_press(&mut self, event: &xcb::KeyPressEvent, bindings: &KeyBindings) {
@@ -154,26 +211,42 @@ impl WindowManager {
     // xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
     fn new_window(&mut self, event: &xcb::MapNotifyEvent) {
         let window = event.window();
-        let wm_class = str_prop(&self.conn, window, "WM_CLASS");
-        let window_type = atom_prop(&self.conn, window, "_NET_WM_WINDOW_TYPE");
+        let wm_class = match str_prop(&self.conn, window, "WM_CLASS") {
+            Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
+            Err(_) => String::new(),
+        };
+        // let window_type = atom_prop(&self.conn, window, "_NET_WM_WINDOW_TYPE");
+        log!("handling new window: {}", wm_class);
 
-        log!("handling new window: {:?} {:?}", wm_class, window_type);
+        let floating = config::FLOATING_CLASSES.contains(&wm_class.as_ref());
+        let client = Client::new(window, wm_class, 1, floating);
+        self.clients.push(client);
+
+        log!("currently have {} known clients", self.clients.len());
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
         xcb::change_window_attributes(&self.conn, window, NEW_WINDOW_MASK);
+
+        // TODO: determine active monitor. Can this be done from the event?
+        self.apply_layout(0);
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {}
+    // fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {}
 
     // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {}
+    // fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {}
 
     // xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
-    fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
+    // fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
 
     // xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
-    fn destroy_window(&mut self, event: &xcb::DestroyNotifyEvent) {}
+    fn destroy_window(&mut self, event: &xcb::DestroyNotifyEvent) {
+        let win_id = event.window();
+        log!("removing ref to win_id {}", win_id);
+        self.clients.retain(|c| c.id != win_id);
+        self.apply_layout(0);
+    }
 
     /**
      * main event loop for the window manager.
@@ -189,13 +262,13 @@ impl WindowManager {
                 match event.response_type() {
                     // user input
                     xcb::KEY_PRESS => self.key_press(unsafe { xcb::cast_event(&event) }, &bindings),
-                    xcb::BUTTON_PRESS => self.button_press(unsafe { xcb::cast_event(&event) }),
-                    xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
+                    // xcb::BUTTON_PRESS => self.button_press(unsafe { xcb::cast_event(&event) }),
+                    // xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
                     // window actions
                     xcb::MAP_NOTIFY => self.new_window(unsafe { xcb::cast_event(&event) }),
-                    xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
-                    xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
-                    xcb::MOTION_NOTIFY => self.resize_window(unsafe { xcb::cast_event(&event) }),
+                    // xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
+                    // xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
+                    // xcb::MOTION_NOTIFY => self.resize_window(unsafe { xcb::cast_event(&event) }),
                     xcb::DESTROY_NOTIFY => self.destroy_window(unsafe { xcb::cast_event(&event) }),
                     // unknown event type
                     _ => (),
