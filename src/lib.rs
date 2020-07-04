@@ -6,6 +6,7 @@ pub mod config;
 pub mod helpers;
 pub mod layout;
 pub mod manager;
+pub mod workspace;
 
 pub mod data_types {
     use crate::manager::WindowManager;

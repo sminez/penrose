@@ -2,6 +2,14 @@ use crate::data_types::{CodeMap, KeyCode};
 use std::process;
 use xcb;
 
+pub fn cycle_index(ix: usize, max: usize, forward: bool) -> usize {
+    if forward {
+        return if ix == max { 0 } else { ix + 1 };
+    } else {
+        return if ix == 0 { max } else { ix - 1 };
+    }
+}
+
 /**
  * Run the xmodmap command to dump the system keymap table in a form
  * that we can load in and convert back to key codes. This lets the user
