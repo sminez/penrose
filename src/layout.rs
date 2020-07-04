@@ -48,7 +48,7 @@ pub enum LayoutKind {
 pub struct Layout {
     pub kind: LayoutKind,
     pub symbol: &'static str,
-    n_main: usize,
+    max_main: usize,
     ratio: f32,
     f: fn(&Vec<WinId>, &Region, usize, f32) -> Vec<ResizeAction>,
 }
@@ -63,7 +63,7 @@ impl Layout {
         Layout {
             symbol,
             kind,
-            n_main: config::N_MAIN,
+            max_main: config::MAX_MAIN,
             ratio: config::MAIN_RATIO,
             f,
         }
@@ -71,16 +71,16 @@ impl Layout {
 
     /// Apply the embedded layout function using the current n_main and ratio
     pub fn arrange(&self, client_ids: &Vec<WinId>, r: &Region) -> Vec<ResizeAction> {
-        (self.f)(client_ids, r, self.n_main, self.ratio)
+        (self.f)(client_ids, r, self.max_main, self.ratio)
     }
 
     /// Increase/decrease the number of clients in the main area by 1
-    pub fn update_n_main(&mut self, increase: bool) {
+    pub fn update_max_main(&mut self, increase: bool) {
         if increase {
-            self.n_main += 1;
+            self.max_main += 1;
         } else {
-            if self.n_main > 0 {
-                self.n_main -= 1;
+            if self.max_main > 0 {
+                self.max_main -= 1;
             }
         }
     }
@@ -147,9 +147,13 @@ pub fn side_stack(
 ) -> Vec<ResizeAction> {
     let (_, _, mw, mh) = monitor_region.values();
     let (n_main, n_stack) = client_breakdown(&client_ids, max_main);
-    let split = (mw as f32 * ratio) as usize;
-    let h_main = mh / n_main;
     let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
+    let h_main = if n_main > 0 { mh / n_main } else { 0 };
+    let split = if max_main > 0 {
+        (mw as f32 * ratio) as usize
+    } else {
+        0
+    };
 
     client_ids
         .iter()
@@ -157,9 +161,10 @@ pub fn side_stack(
         .map(|(n, id)| {
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
-                (*id, Region::new(n * h_main, 0, w, h_main))
+                (*id, Region::new(0, n * h_main, w, h_main))
             } else {
-                (*id, Region::new(n * h_stack, split, mw - split, h_stack))
+                let sn = n - max_main; // nth stacked client
+                (*id, Region::new(split, sn * h_stack, mw - split, h_stack))
             }
         })
         .collect()

@@ -24,7 +24,7 @@ const WIN_X: u16 = xcb::CONFIG_WINDOW_X as u16;
 const WIN_Y: u16 = xcb::CONFIG_WINDOW_Y as u16;
 const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
 const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
-const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
+// const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -305,5 +305,25 @@ impl WindowManager {
     /// Move the next available layout, forward or backwards through the stack
     pub fn cycle_layout(&mut self, forward: bool) {
         log!("cycling layout: {}", forward);
+    }
+
+    pub fn inc_main(&mut self) {
+        self.screen_layouts[0][self.active_layouts[0]].update_max_main(true);
+        self.apply_layout(0);
+    }
+
+    pub fn dec_main(&mut self) {
+        self.screen_layouts[0][self.active_layouts[0]].update_max_main(false);
+        self.apply_layout(0);
+    }
+
+    pub fn inc_ratio(&mut self) {
+        self.screen_layouts[0][self.active_layouts[0]].update_main_ratio(true);
+        self.apply_layout(0);
+    }
+
+    pub fn dec_ratio(&mut self) {
+        self.screen_layouts[0][self.active_layouts[0]].update_main_ratio(false);
+        self.apply_layout(0);
     }
 }

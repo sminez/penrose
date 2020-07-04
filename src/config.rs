@@ -20,7 +20,7 @@ pub const TOP_BAR: bool = true;
 pub const BORDER_PX: u32 = 2;
 pub const GAP_PX: u32 = 6;
 
-pub const N_MAIN: usize = 1;
+pub const MAX_MAIN: usize = 1;
 pub const MAIN_RATIO: f32 = 0.60;
 pub const MAIN_RATIO_STEP: f32 = 0.05;
 
@@ -39,8 +39,15 @@ pub const RESPECT_RESIZE_HINTS: bool = true;
  */
 pub fn key_bindings() -> KeyBindings {
     gen_keybindings! {
+        // Program launch
         "M-semicolon" => run_external!("rofi-apps"),
         "M-Return" => run_external!("st"),
+
+        // Layout & window management
+        "M-A-Up" => run_internal!(inc_main),
+        "M-A-Down" => run_internal!(dec_main),
+        "M-A-Right" => run_internal!(inc_ratio),
+        "M-A-Left" => run_internal!(dec_ratio),
         "M-A-Escape" => run_internal!(kill);
 
         forall_tags: TAGS => {
