@@ -186,7 +186,6 @@ impl WindowManager {
                         (WIN_Y, y as u32 + config::GAP_PX),
                         (WIN_WIDTH, w as u32 - padding),
                         (WIN_HEIGHT, h as u32 - padding),
-                        (WIN_BORDER, config::BORDER_PX),
                     ],
                 );
             }
