@@ -53,3 +53,12 @@ pub struct KeyCode {
     pub mask: u16,
     pub code: u8,
 }
+
+impl KeyCode {
+    pub fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
+        KeyCode {
+            mask: k.state(),
+            code: k.detail(),
+        }
+    }
+}

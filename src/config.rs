@@ -33,7 +33,8 @@ pub const RESPECT_RESIZE_HINTS: bool = true;
 pub fn key_bindings() -> KeyBindings {
     gen_keybindings! {
         "M-semicolon" => run_external!("rofi-apps"),
-        "M-A-r" => run_internal!(kill);
+        "M-Return" => run_external!("st"),
+        "M-A-Escape" => run_internal!(kill);
 
         forall_tags: TAGS => {
             "M-{}" => set_tag,

@@ -1,6 +1,6 @@
 use crate::config;
-use crate::data_types::{KeyBindings, Region};
-use crate::helpers::str_prop;
+use crate::data_types::{KeyBindings, KeyCode, Region};
+use crate::helpers::{atom_prop, str_prop};
 use std::process;
 use xcb;
 
@@ -14,6 +14,10 @@ const EVENT_MASK: &[(u32, u32)] = &[(
 const MOUSE_MASK: u16 = (xcb::EVENT_MASK_BUTTON_PRESS
     | xcb::EVENT_MASK_BUTTON_RELEASE
     | xcb::EVENT_MASK_POINTER_MOTION) as u16;
+const NEW_WINDOW_MASK: &[(u32, u32)] = &[(
+    xcb::CW_EVENT_MASK,
+    xcb::EVENT_MASK_ENTER_WINDOW | xcb::EVENT_MASK_LEAVE_WINDOW,
+)];
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -27,7 +31,6 @@ pub struct WindowManager {
     screen_num: i32,
     screen_dims: Vec<Region>,
     screen_tags: Vec<usize>,
-    key_bindings: KeyBindings,
 }
 
 impl WindowManager {
@@ -39,17 +42,15 @@ impl WindowManager {
             screen_num,
             screen_dims: vec![],
             screen_tags: vec![],
-            key_bindings: config::key_bindings(),
         };
 
         wm.screen_tags = wm.screen_dims.iter().enumerate().map(|(i, _)| i).collect();
         wm.update_screen_dimensions();
-        wm.grab_keys();
 
         wm
     }
 
-    fn grab_keys(&self) {
+    fn grab_keys(&self, key_bindings: &KeyBindings) {
         let screen = self.conn.get_setup().roots().nth(0).unwrap();
         let root = screen.root();
 
@@ -58,7 +59,7 @@ impl WindowManager {
         match input.request_check() {
             Err(e) => die!("randr error: {}", e),
             Ok(_) => {
-                for k in self.key_bindings.keys() {
+                for k in key_bindings.keys() {
                     // xcb docs: https://www.mankier.com/3/xcb_grab_key
                     xcb::grab_key(
                         &self.conn,      // xcb connection to X11
@@ -142,11 +143,26 @@ impl WindowManager {
     fn button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
 
     // xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
-    fn key_press(&mut self, event: &xcb::KeyPressEvent) {}
+    fn key_press(&mut self, event: &xcb::KeyPressEvent, bindings: &KeyBindings) {
+        log!("handling keypress: {} {}", event.state(), event.detail());
+
+        if let Some(action) = bindings.get(&KeyCode::from_key_press(event)) {
+            log!("running action");
+            action(self);
+            log!("action run");
+        }
+    }
 
     // xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
     fn new_window(&mut self, event: &xcb::MapNotifyEvent) {
-        let wm_class = str_prop(&self.conn, event.window(), "WM_CLASS");
+        let window = event.window();
+        let wm_class = str_prop(&self.conn, window, "WM_CLASS");
+        let window_type = atom_prop(&self.conn, window, "_NET_WM_WINDOW_TYPE");
+
+        log!("handling new window: {:?} {:?}", wm_class, window_type);
+
+        // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
+        xcb::change_window_attributes(&self.conn, window, NEW_WINDOW_MASK);
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
@@ -167,20 +183,15 @@ impl WindowManager {
      * mapped to a handler
      */
     pub fn run(&mut self) {
-        let setup = self.conn.get_setup();
-        let screen = setup.roots().nth(self.screen_num as usize).unwrap();
-
-        println!("penrose screen details {}:", screen.root());
-        println!("  width..........: {}", screen.width_in_pixels());
-        println!("  height.........: {}", screen.height_in_pixels());
-        println!("  white pixel....: {:x}", screen.white_pixel());
-        println!("  black pixel....: {:x}", screen.black_pixel());
+        let bindings = config::key_bindings();
+        self.grab_keys(&bindings);
 
         loop {
             if let Some(event) = self.conn.wait_for_event() {
+                log!("got event");
                 match event.response_type() {
                     // user input
-                    xcb::KEY_PRESS => self.key_press(unsafe { xcb::cast_event(&event) }),
+                    xcb::KEY_PRESS => self.key_press(unsafe { xcb::cast_event(&event) }, &bindings),
                     xcb::BUTTON_PRESS => self.button_press(unsafe { xcb::cast_event(&event) }),
                     xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
                     // window actions
@@ -208,14 +219,22 @@ impl WindowManager {
     }
 
     /// Set the displayed tag for the current screen
-    pub fn set_tag(&mut self, tag: usize) {}
+    pub fn set_tag(&mut self, tag: usize) {
+        log!("setting tag: {}", tag);
+    }
 
     /// Add an additional tag to the current screen
-    pub fn add_tag(&mut self, tag: usize) {}
+    pub fn add_tag(&mut self, tag: usize) {
+        log!("adding tag {}", tag);
+    }
 
     /// Set the tag for the currently highlighted client
-    pub fn tag_client(&mut self, tag: usize) {}
+    pub fn tag_client(&mut self, tag: usize) {
+        log!("tagging client: {}", tag);
+    }
 
     /// Move the next available layout, forward or backwards through the stack
-    pub fn cycle_layout(&mut self, forward: bool) {}
+    pub fn cycle_layout(&mut self, forward: bool) {
+        log!("cycling layout: {}", forward);
+    }
 }

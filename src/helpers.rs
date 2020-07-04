@@ -59,6 +59,8 @@ where
                     &_ => die!("invalid key binding prefix: {}", s),
                 })
                 .fold(0, |acc, v| acc | v);
+
+            // log!("binding '{}' as [{}, {}]", s, mask, code);
             Some(KeyCode {
                 mask: mask as u16,
                 code: *code,

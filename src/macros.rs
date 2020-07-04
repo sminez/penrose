@@ -2,23 +2,29 @@
 #[macro_export]
 macro_rules! die(
     ($msg:expr) => ({
-        eprintln!("fatal :: {}", $msg);
+        eprintln!("FATAL :: {}", $msg);
         ::std::process::exit(42);
      });
 
-    ($fmt:expr, $($arg:tt),*) => ({
-        eprintln!("fatal :: {}", format!($fmt, $($arg)*));
+    ($fmt:expr, $($arg:expr),*) => ({
+        eprintln!("FATAL :: {}", format!($fmt, $($arg,)*));
         ::std::process::exit(42);
      });
 );
 
-/// output something to stderr so that the user can redirect to a log file
-/// and hopefully debug non-fatal errors.
 #[macro_export]
 macro_rules! warn(
-    ($msg:expr) => { eprintln!("warn :: {}", $msg); };
+    ($msg:expr) => { eprintln!("WARN :: {}", $msg); };
     ($fmt:expr, $($arg:tt),*) => {
-        eprintln!("warn :: {}", format!($fmt, $($arg)*));
+        eprintln!("WARN :: {}", format!($fmt, $($arg)*));
+    };
+);
+
+#[macro_export]
+macro_rules! log(
+    ($msg:expr) => { eprintln!("INFO :: {}", $msg); };
+    ($fmt:expr, $($arg:expr),*) => {
+        eprintln!("INFO :: {}", format!($fmt, $($arg,)*));
     };
 );
 
@@ -30,16 +36,16 @@ macro_rules! run_external(
             let parts: Vec<&str> = $cmd.split_whitespace().collect();
             if parts.len() > 1 {
                 Box::new(move |_: &mut $crate::manager::WindowManager| {
-                    match ::std::process::Command::new(parts[0]).args(&parts[1..]).status() {
+                    match ::std::process::Command::new(parts[0]).args(&parts[1..]).spawn() {
                         Ok(_) => (),
-                        Err(e) => warn!("error running external program: {}", e),
+                        Err(e) => warn!("error spawning external program: {}", e),
                     };
                 }) as $crate::data_types::FireAndForget
             } else {
                 Box::new(move |_: &mut $crate::manager::WindowManager| {
-                    match ::std::process::Command::new(parts[0]).status() {
+                    match ::std::process::Command::new(parts[0]).spawn() {
                         Ok(_) => (),
-                        Err(e) => warn!("error running external program: {}", e),
+                        Err(e) => warn!("error spawning external program: {}", e),
                     };
                 }) as $crate::data_types::FireAndForget
             }
@@ -50,11 +56,14 @@ macro_rules! run_external(
 /// kick off an internal method on the window manager as part of a key/mouse binding
 #[macro_export]
 macro_rules! run_internal(
-    ($func:tt) => {
-        Box::new(|wm: &mut $crate::manager::WindowManager| wm.$func())
+    ($func:ident) => {
+        Box::new(|wm: &mut $crate::manager::WindowManager| {
+            log!("calling method ({})", stringify!($func));
+            wm.$func()
+        })
     };
 
-    ($func:tt, $arg:tt) => {
+    ($func:ident, $arg:tt) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| wm.$func($arg))
     };
 );
