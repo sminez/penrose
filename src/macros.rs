@@ -28,7 +28,8 @@ macro_rules! log(
     };
 );
 
-/// kick off an external program as part of a key/mouse binding
+/// kick off an external program as part of a key/mouse binding.
+/// explicitly redirects stderr to /dev/null
 #[macro_export]
 macro_rules! run_external(
     ($cmd:tt) => {
@@ -36,14 +37,21 @@ macro_rules! run_external(
             let parts: Vec<&str> = $cmd.split_whitespace().collect();
             if parts.len() > 1 {
                 Box::new(move |_: &mut $crate::manager::WindowManager| {
-                    match ::std::process::Command::new(parts[0]).args(&parts[1..]).spawn() {
+                    match ::std::process::Command::new(parts[0])
+                        .args(&parts[1..])
+                        .stdout(::std::process::Stdio::null())
+                        .spawn()
+                    {
                         Ok(_) => (),
                         Err(e) => warn!("error spawning external program: {}", e),
                     };
                 }) as $crate::data_types::FireAndForget
             } else {
                 Box::new(move |_: &mut $crate::manager::WindowManager| {
-                    match ::std::process::Command::new(parts[0]).spawn() {
+                    match ::std::process::Command::new(parts[0])
+                        .stdout(::std::process::Stdio::null())
+                        .spawn()
+                    {
                         Ok(_) => (),
                         Err(e) => warn!("error spawning external program: {}", e),
                     };
@@ -63,8 +71,11 @@ macro_rules! run_internal(
         })
     };
 
-    ($func:ident, $arg:tt) => {
-        Box::new(move |wm: &mut $crate::manager::WindowManager| wm.$func($arg))
+    ($func:ident, $($arg:tt),+) => {
+        Box::new(move |wm: &mut $crate::manager::WindowManager| {
+            log!("calling method ({}) with argument ({})", stringify!($func), stringify!($($arg)+));
+            wm.$func($($arg),+)
+        })
     };
 );
 
