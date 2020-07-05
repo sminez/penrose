@@ -45,14 +45,17 @@ pub fn key_bindings() -> KeyBindings {
         "M-semicolon" => run_external!("rofi-apps"),
         "M-Return" => run_external!("st"),
 
+        // client management
+        "M-j" => run_internal!(next_client),
+        "M-k" => run_internal!(previous_client),
+        "M-S-q" => run_internal!(kill_client),
+
         // Layout & window management
         "M-A-Up" => run_internal!(inc_main),
         "M-A-Down" => run_internal!(dec_main),
         "M-A-Right" => run_internal!(inc_ratio),
         "M-A-Left" => run_internal!(dec_ratio),
-        "M-j" => run_internal!(next_client),
-        "M-k" => run_internal!(previous_client),
-        "M-A-Escape" => run_internal!(kill);
+        "M-A-Escape" => run_internal!(exit);
 
         forall_workspaces: WORKSPACES => {
             "M-{}" => switch_workspace,

@@ -43,30 +43,26 @@ impl Client {
             None => die!("unable to get handle for screen"),
             Some(screen) => screen.root(),
         };
+        let prop = intern_atom(conn, "_NET_ACTIVE_WINDOW");
 
-        match intern_atom(conn, "_NET_ACTIVE_WINDOW") {
-            Err(e) => die!("failed to focus client: {}", e),
-            Ok(prop) => {
-                // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
-                xcb::set_input_focus(
-                    conn,               // xcb connection to X11
-                    INPUT_FOCUS_PARENT, // focus the parent when focus is lost
-                    self.id,            // window to focus
-                    0, // current time to avoid network race conditions (0 == current time)
-                );
+        // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
+        xcb::set_input_focus(
+            conn,               // xcb connection to X11
+            INPUT_FOCUS_PARENT, // focus the parent when focus is lost
+            self.id,            // window to focus
+            0,                  // current time to avoid network race conditions (0 == current time)
+        );
 
-                // xcb docs: https://www.mankier.com/3/xcb_change_property
-                xcb::change_property(
-                    conn,              // xcb connection to X11
-                    PROP_MODE_REPLACE, // discard current prop and replace
-                    root,              // window to change prop on
-                    prop,              // prop to change
-                    ATOM_WINDOW,       // type of prop
-                    32,                // data format (8/16/32-bit)
-                    &[self.id],        // data
-                );
-            }
-        }
+        // xcb docs: https://www.mankier.com/3/xcb_change_property
+        xcb::change_property(
+            conn,              // xcb connection to X11
+            PROP_MODE_REPLACE, // discard current prop and replace
+            root,              // window to change prop on
+            prop,              // prop to change
+            ATOM_WINDOW,       // type of prop
+            32,                // data format (8/16/32-bit)
+            &[self.id],        // data
+        );
     }
 
     pub fn unfocus(&mut self, conn: &xcb::Connection) {

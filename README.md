@@ -33,12 +33,12 @@ done in the smartest way.
 
 
 ### Current TODO list
-- [ ] Focus
+- [x] Focus
   - Need to track the focused client (on focused monitor only) both for adding a
   visual indicator but also so that the client can be manipulated by other
   actions from the `WindowManager`.
 
-- [ ] Handling client removal
+- [x] Handling client removal
   - Should(?) just be a case of firing off the correct xcb messages to trigger
   this and then exposing that as an action. (Relies on being able to track the
   currently focused client though!)

@@ -12,8 +12,8 @@ pub struct Workspace {
     name: &'static str,
     clients: Vec<WinId>,
     layouts: Vec<Layout>,
-    current_layout: usize, // currently selected layout
-    focused_client: usize, // currently focused client
+    cix: usize, // currently selected layout
+    lix: usize, // currently focused client
 }
 
 impl Workspace {
@@ -22,29 +22,33 @@ impl Workspace {
             name,
             clients: vec![],
             layouts,
-            current_layout: 0,
-            focused_client: 0,
+            cix: 0,
+            lix: 0,
         }
+    }
+
+    pub fn focused_client(&self) -> WinId {
+        self.clients[self.cix]
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
     pub fn add_client(&mut self, id: WinId) {
         self.clients.insert(0, id);
-        self.focused_client = 0;
+        self.cix = 0;
     }
 
     /// Remove a target client, retaining focus at the same position in the stack
     pub fn remove_client(&mut self, id: WinId) {
         self.clients.retain(|c| *c != id);
 
-        if self.focused_client >= self.clients.len() && self.clients.len() > 0 {
-            self.focused_client -= 1;
+        if self.cix >= self.clients.len() && self.clients.len() > 0 {
+            self.cix -= 1;
         }
     }
 
     /// Remove the focused client, retaining focus at the same position in the stack
     pub fn remove_focused_client(&mut self) {
-        self.remove_client(self.clients[self.focused_client]);
+        self.remove_client(self.focused_client());
     }
 
     /// Run the current layout function, generating a list of resize actions to be
@@ -52,7 +56,7 @@ impl Workspace {
     pub fn arrange(&self, monitor_region: &Region) -> Vec<ResizeAction> {
         let n_clients = self.clients.len();
         if n_clients > 0 {
-            let layout = self.layouts[self.current_layout];
+            let layout = self.layouts[self.lix];
             debug!(
                 "applying {} layout for {} clients on workspace '{}'",
                 layout.symbol, n_clients, self.name
@@ -64,22 +68,26 @@ impl Workspace {
     }
 
     pub fn cycle_layout(&mut self, direction: Direction) {
-        self.current_layout = cycle_index(self.current_layout, self.layouts.len() - 1, direction);
+        self.lix = cycle_index(self.lix, self.layouts.len() - 1, direction);
     }
 
-    pub fn cycle_client(&mut self, direction: Direction) -> (WinId, WinId) {
-        let previous = self.clients[self.focused_client];
-        self.focused_client = cycle_index(self.focused_client, self.clients.len() - 1, direction);
-        let current = self.clients[self.focused_client];
+    pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
+        if self.clients.len() == 0 {
+            return None;
+        }
 
-        (previous, current)
+        let previous = self.clients[self.cix];
+        self.cix = cycle_index(self.cix, self.clients.len() - 1, direction);
+        let current = self.clients[self.cix];
+
+        Some((previous, current))
     }
 
     pub fn update_max_main(&mut self, change: Change) {
-        self.layouts[self.current_layout].update_max_main(change);
+        self.layouts[self.lix].update_max_main(change);
     }
 
     pub fn update_main_ratio(&mut self, change: Change) {
-        self.layouts[self.current_layout].update_main_ratio(change);
+        self.layouts[self.lix].update_main_ratio(change);
     }
 }

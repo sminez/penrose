@@ -95,15 +95,15 @@ macro_rules! run_external(
 macro_rules! run_internal(
     ($func:ident) => {
         Box::new(|wm: &mut $crate::manager::WindowManager| {
-            log!("calling method ({})", stringify!($func));
-            wm.$func()
+            debug!("calling method ({})", stringify!($func));
+            wm.$func();
         })
     };
 
     ($func:ident, $($arg:tt),+) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| {
-            log!("calling method ({}) with argument ({})", stringify!($func), $($arg)+);
-            wm.$func($($arg),+)
+            debug!("calling method ({}) with argument ({})", stringify!($func), $($arg)+);
+            wm.$func($($arg),+);
         })
     };
 );

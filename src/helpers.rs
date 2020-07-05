@@ -143,7 +143,7 @@ pub fn grab_keys(conn: &xcb::Connection, key_bindings: &KeyBindings) {
 /**
  * Intern an XCB atom by name, returning the atom ID if we are able
  */
-pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32, String> {
+pub fn intern_atom(conn: &xcb::Connection, name: &str) -> u32 {
     // https://www.mankier.com/3/xcb_intern_atom
     let interned_atom = xcb::intern_atom(
         conn,  // xcb connection to X11
@@ -152,8 +152,8 @@ pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32, String> {
     );
 
     match interned_atom.get_reply() {
-        Err(e) => Err(format!("unable to fetch xcb atom '{}': {}", name, e)),
-        Ok(reply) => Ok(reply.atom()),
+        Err(e) => die!("unable to fetch xcb atom '{}': {}", name, e),
+        Ok(reply) => reply.atom(),
     }
 }
 
@@ -162,55 +162,45 @@ pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32, String> {
  * Can fail if the property name is invalid or we get a malformed response from xcb.
  */
 pub fn str_prop(conn: &xcb::Connection, id: u32, name: &str) -> Result<String, String> {
-    match intern_atom(conn, name) {
-        Err(e) => Err(e),
-        Ok(atom) => {
-            // xcb docs: https://www.mankier.com/3/xcb_get_property
-            let cookie = xcb::get_property(
-                conn,          // xcb connection to X11
-                false,         // should the property be deleted
-                id,            // target window to query
-                atom,          // the property we want
-                xcb::ATOM_ANY, // the type of the property
-                0,             // offset in the property to retrieve data from
-                1024,          // how many 32bit multiples of data to retrieve
-            );
+    // xcb docs: https://www.mankier.com/3/xcb_get_property
+    let cookie = xcb::get_property(
+        conn,                    // xcb connection to X11
+        false,                   // should the property be deleted
+        id,                      // target window to query
+        intern_atom(conn, name), // the property we want
+        xcb::ATOM_ANY,           // the type of the property
+        0,                       // offset in the property to retrieve data from
+        1024,                    // how many 32bit multiples of data to retrieve
+    );
 
-            match cookie.get_reply() {
-                Err(e) => Err(format!("unable to fetch window property: {}", e)),
-                Ok(reply) => match String::from_utf8(reply.value().to_vec()) {
-                    Err(e) => Err(format!("invalid utf8 resonse from xcb: {}", e)),
-                    Ok(s) => Ok(s),
-                },
-            }
-        }
+    match cookie.get_reply() {
+        Err(e) => Err(format!("unable to fetch window property: {}", e)),
+        Ok(reply) => match String::from_utf8(reply.value().to_vec()) {
+            Err(e) => Err(format!("invalid utf8 resonse from xcb: {}", e)),
+            Ok(s) => Ok(s),
+        },
     }
 }
 
 pub fn atom_prop(conn: &xcb::Connection, id: u32, name: &str) -> Result<u32, String> {
-    match intern_atom(conn, name) {
-        Err(e) => Err(e),
-        Ok(atom) => {
-            // xcb docs: https://www.mankier.com/3/xcb_get_property
-            let cookie = xcb::get_property(
-                conn,          // xcb connection to X11
-                false,         // should the property be deleted
-                id,            // target window to query
-                atom,          // the property we want
-                xcb::ATOM_ANY, // the type of the property
-                0,             // offset in the property to retrieve data from
-                1024,          // how many 32bit multiples of data to retrieve
-            );
+    // xcb docs: https://www.mankier.com/3/xcb_get_property
+    let cookie = xcb::get_property(
+        conn,                    // xcb connection to X11
+        false,                   // should the property be deleted
+        id,                      // target window to query
+        intern_atom(conn, name), // the property we want
+        xcb::ATOM_ANY,           // the type of the property
+        0,                       // offset in the property to retrieve data from
+        1024,                    // how many 32bit multiples of data to retrieve
+    );
 
-            match cookie.get_reply() {
-                Err(e) => Err(format!("unable to fetch window property: {}", e)),
-                Ok(reply) => {
-                    if reply.value_len() <= 0 {
-                        Err(format!("property '{}' was empty for id: {}", name, id))
-                    } else {
-                        Ok(reply.value()[0])
-                    }
-                }
+    match cookie.get_reply() {
+        Err(e) => Err(format!("unable to fetch window property: {}", e)),
+        Ok(reply) => {
+            if reply.value_len() <= 0 {
+                Err(format!("property '{}' was empty for id: {}", name, id))
+            } else {
+                Ok(reply.value()[0])
             }
         }
     }

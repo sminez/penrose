@@ -1,7 +1,7 @@
 use crate::client::Client;
 use crate::config;
-use crate::data_types::{Change, Direction, KeyBindings, KeyCode};
-use crate::helpers::{grab_keys, str_prop};
+use crate::data_types::{Change, Direction, KeyBindings, KeyCode, WinId};
+use crate::helpers::{grab_keys, intern_atom, str_prop};
 use crate::screen::Screen;
 use crate::workspace::Workspace;
 use std::process;
@@ -77,6 +77,14 @@ impl WindowManager {
         }
     }
 
+    fn remove_client(&mut self, win_id: WinId) {
+        debug!("removing ref to client {}", win_id);
+
+        self.workspace_mut(self.focused_screen)
+            .remove_client(win_id);
+        self.clients.retain(|c| c.id != win_id);
+    }
+
     // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
     // fn button_press(&mut self, event: &xcb::ButtonPressEvent) {}
 
@@ -143,14 +151,8 @@ impl WindowManager {
 
     // xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
     fn destroy_window(&mut self, event: &xcb::DestroyNotifyEvent) {
-        let win_id = event.window();
-
-        debug!("removing ref to win_id {}", win_id);
-
-        self.workspace_mut(self.focused_screen)
-            .remove_client(win_id);
-        self.clients.retain(|c| c.id != win_id);
-        self.apply_layout(0);
+        self.remove_client(event.window());
+        self.apply_layout(self.focused_screen);
     }
 
     /**
@@ -192,16 +194,33 @@ impl WindowManager {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
 
+    fn focused_client(&self) -> &Client {
+        let id = self.workspace(self.focused_screen).focused_client();
+        &self.clients.iter().find(|c| c.id == id).unwrap()
+    }
+
+    // fn focused_client_mut(&mut self) -> &mut Client {
+    //     let id = self.workspace(self.focused_screen).focused_client();
+    //     for c in self.clients.iter_mut() {
+    //         if c.id == id {
+    //             return c;
+    //         }
+    //     }
+    //     die!("attempt to take &mut for unknown client: {}", id);
+    // }
+
     fn cycle_client(&mut self, direction: Direction) {
-        let (previous, current) = self
+        let cycled = self
             .workspace_mut(self.focused_screen)
             .cycle_client(direction);
 
-        for c in self.clients.iter_mut() {
-            if c.id == previous {
-                c.unfocus(&self.conn);
-            } else if c.id == current {
-                c.focus(&self.conn);
+        if let Some((previous, current)) = cycled {
+            for c in self.clients.iter_mut() {
+                if c.id == previous {
+                    c.unfocus(&self.conn);
+                } else if c.id == current {
+                    c.focus(&self.conn);
+                }
             }
         }
     }
@@ -213,8 +232,7 @@ impl WindowManager {
      * handlers which will then be run each time they are triggered
      */
 
-    pub fn kill(&mut self) {
-        // TODO: check what cleanup needs to be done
+    pub fn exit(&mut self) {
         self.conn.flush();
         process::exit(0);
     }
@@ -248,22 +266,39 @@ impl WindowManager {
         debug!("moving focused client to workspace: {}", index);
     }
 
-    pub fn next_layout(&mut self) {
-        self.workspace_mut(self.focused_screen)
-            .cycle_layout(Direction::Forward);
-    }
-
-    pub fn previous_layout(&mut self) {
-        self.workspace_mut(self.focused_screen)
-            .cycle_layout(Direction::Backward);
-    }
-
     pub fn next_client(&mut self) {
         self.cycle_client(Direction::Forward);
     }
 
     pub fn previous_client(&mut self) {
         self.cycle_client(Direction::Backward);
+    }
+
+    pub fn kill_client(&mut self) {
+        let id = self.focused_client().id;
+        let wm_delete_window = intern_atom(&self.conn, "WM_DELETE_WINDOW");
+        let wm_protocols = intern_atom(&self.conn, "WM_PROTOCOLS");
+        let data =
+            xcb::ClientMessageData::from_data32([wm_delete_window, xcb::CURRENT_TIME, 0, 0, 0]);
+        let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
+        xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
+        self.conn.flush();
+
+        self.remove_client(id);
+        self.next_client();
+        self.apply_layout(self.focused_screen);
+    }
+
+    pub fn next_layout(&mut self) {
+        self.workspace_mut(self.focused_screen)
+            .cycle_layout(Direction::Forward);
+        self.apply_layout(self.focused_screen);
+    }
+
+    pub fn previous_layout(&mut self) {
+        self.workspace_mut(self.focused_screen)
+            .cycle_layout(Direction::Backward);
+        self.apply_layout(self.focused_screen);
     }
 
     pub fn inc_main(&mut self) {
