@@ -28,6 +28,35 @@ macro_rules! log(
     };
 );
 
+#[macro_export]
+macro_rules! debug(
+    ($msg:expr) => {
+        if $crate::config::DEBUG {
+            eprintln!("DBUG :: {}", $msg);
+        }
+    };
+    ($fmt:expr, $($arg:expr),*) => {
+        if $crate::config::DEBUG {
+            eprintln!("DBUG :: {}", format!($fmt, $($arg,)*));
+        }
+    };
+);
+
+/// use notify-send to trigger a pop up window with a message (used for debugging)
+#[macro_export]
+macro_rules! notify(
+    ($msg:expr) => {
+        ::std::process::Command::new("notify-send").arg($msg).spawn().unwrap();
+    };
+
+    ($fmt:expr, $($arg:expr),*) => {
+        ::std::process::Command::new("notify-send")
+            .arg(format!($fmt, $($arg,)*))
+            .spawn()
+            .unwrap();
+    };
+);
+
 /// kick off an external program as part of a key/mouse binding.
 /// explicitly redirects stderr to /dev/null
 #[macro_export]
@@ -42,8 +71,8 @@ macro_rules! run_external(
                         .stdout(::std::process::Stdio::null())
                         .spawn()
                     {
-                        Ok(_) => (),
                         Err(e) => warn!("error spawning external program: {}", e),
+                        Ok(_) => (),
                     };
                 }) as $crate::data_types::FireAndForget
             } else {
@@ -52,8 +81,8 @@ macro_rules! run_external(
                         .stdout(::std::process::Stdio::null())
                         .spawn()
                     {
-                        Ok(_) => (),
                         Err(e) => warn!("error spawning external program: {}", e),
+                        Ok(_) => (),
                     };
                 }) as $crate::data_types::FireAndForget
             }
@@ -73,7 +102,7 @@ macro_rules! run_internal(
 
     ($func:ident, $($arg:tt),+) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| {
-            log!("calling method ({}) with argument ({})", stringify!($func), stringify!($($arg)+));
+            log!("calling method ({}) with argument ({})", stringify!($func), $($arg)+);
             wm.$func($($arg),+)
         })
     };
@@ -106,8 +135,8 @@ macro_rules! gen_keybindings(
 
             $(
                 match $crate::helpers::parse_key_binding($binding, &keycodes) {
-                    Some(key_code) => _map.insert(key_code, $action),
                     None => die!("invalid key binding: {}", $binding),
+                    Some(key_code) => _map.insert(key_code, $action),
                 };
             )+
 
@@ -115,8 +144,8 @@ macro_rules! gen_keybindings(
                 $(
                     let for_ws = format!($ws_binding, i);
                     match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
-                        Some(key_code) => _map.insert(key_code, run_internal!($ws_action, i)),
                         None => die!("invalid key binding: {}", for_ws),
+                        Some(key_code) => _map.insert(key_code, run_internal!($ws_action, i)),
                     };
                 )+
             }

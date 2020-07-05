@@ -25,6 +25,12 @@ done in the smartest way.
   ideal. So, things that are easy to acomplish using the XCB api (key bindings,
   simple rendering of a bar etc) are in, full on IPC via an exposed API is out.
 
+- Programatic hooks
+  - Rather than expose a set of hooks to be triggered, it is encouraged that you
+  simply modify the WindowManager method directly. Want to trigger something
+  every time you switch to a new workspace? Add a custom function call to the
+  `switch_workspace` method. Done.
+
 
 ### Current TODO list
 - [ ] Focus

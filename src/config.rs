@@ -1,6 +1,7 @@
 use crate::data_types::{ColorScheme, KeyBindings};
 use crate::layout::{floating, side_stack, Layout, LayoutKind};
 
+pub const DEBUG: bool = true;
 pub const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
 pub const WORKSPACES: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 pub const STARTUP_SCRIPT: &str = "~/bin/scripts/start-dwm.sh";
@@ -51,9 +52,8 @@ pub fn key_bindings() -> KeyBindings {
         "M-A-Escape" => run_internal!(kill);
 
         forall_workspaces: WORKSPACES => {
-            "M-{}" => set_tag,
-            "M-C-{}" => add_tag,
-            "M-S-{}" => tag_client,
+            "M-{}" => switch_workspace,
+            "M-S-{}" => client_to_workspace,
         }
     }
 }

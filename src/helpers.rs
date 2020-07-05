@@ -13,6 +13,7 @@ const MOUSE_MASK: u16 = (xcb::EVENT_MASK_BUTTON_PRESS
     | xcb::EVENT_MASK_BUTTON_RELEASE
     | xcb::EVENT_MASK_POINTER_MOTION) as u16;
 
+/// Cycle through a set of indices, wrapping at either end
 pub fn cycle_index(ix: usize, max: usize, forward: bool) -> usize {
     if forward {
         return if ix == max { 0 } else { ix + 1 };

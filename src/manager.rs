@@ -40,6 +40,7 @@ impl WindowManager {
             Ok(conn) => conn,
         };
         let screens = Screen::current_outputs(&mut conn);
+        log!("connected to X server: {} screens detected", screens.len());
 
         WindowManager {
             conn,
@@ -58,7 +59,7 @@ impl WindowManager {
         let ws = self.workspace(screen);
 
         for (id, region) in ws.arrange(&screen_region) {
-            log!("configuring {} with {:?}", id, region);
+            debug!("configuring {} with {:?}", id, region);
             let (x, y, w, h) = region.values();
             let padding = 2 * (config::BORDER_PX + config::GAP_PX);
 
@@ -83,7 +84,7 @@ impl WindowManager {
 
     // xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
     fn key_press(&mut self, event: &xcb::KeyPressEvent, bindings: &KeyBindings) {
-        log!("handling keypress: {} {}", event.state(), event.detail());
+        debug!("handling keypress: {} {}", event.state(), event.detail());
 
         if let Some(action) = bindings.get(&KeyCode::from_key_press(event)) {
             action(self);
@@ -98,7 +99,7 @@ impl WindowManager {
             Err(_) => String::new(),
         };
         // let window_type = atom_prop(&self.conn, window, "_NET_WM_WINDOW_TYPE");
-        log!("handling new window: {}", wm_class);
+        debug!("handling new window: {}", wm_class);
 
         let floating = config::FLOATING_CLASSES.contains(&wm_class.as_ref());
         let client = Client::new(win_id, wm_class, 1, floating);
@@ -108,7 +109,7 @@ impl WindowManager {
             self.workspace_mut(self.focused_screen).add_client(win_id);
         }
 
-        log!("currently have {} known clients", self.clients.len());
+        debug!("currently have {} known clients", self.clients.len());
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
         xcb::change_window_attributes(&self.conn, win_id, NEW_WINDOW_MASK);
@@ -129,7 +130,7 @@ impl WindowManager {
     fn destroy_window(&mut self, event: &xcb::DestroyNotifyEvent) {
         let win_id = event.window();
 
-        log!("removing ref to win_id {}", win_id);
+        debug!("removing ref to win_id {}", win_id);
 
         self.workspace_mut(self.focused_screen)
             .remove_client(win_id);
@@ -176,33 +177,29 @@ impl WindowManager {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
 
-    // Public methods that can be triggered by user bindings
+    /*
+     * Public methods that can be triggered by user bindings
+     *
+     * User defined hooks can be implemented by adding additional logic to these
+     * handlers which will then be run each time they are triggered
+     */
 
-    /// Exit the main event loop and perform cleanup
     pub fn kill(&mut self) {
-        // TODO: ungrab keys? need to check what cleanup needs to be done
+        // TODO: check what cleanup needs to be done
         self.conn.flush();
         process::exit(0);
     }
 
-    /// Set the displayed tag for the current screen
-    pub fn set_tag(&mut self, tag: usize) {
-        log!("setting tag: {}", tag);
+    pub fn switch_workspace(&mut self, index: usize) {
+        notify!("switching to ws: {}", index);
     }
 
-    /// Add an additional tag to the current screen
-    pub fn add_tag(&mut self, tag: usize) {
-        log!("adding tag {}", tag);
+    pub fn client_to_workspace(&mut self, index: usize) {
+        debug!("moving focused client to workspace: {}", index);
     }
 
-    /// Set the tag for the currently highlighted client
-    pub fn tag_client(&mut self, tag: usize) {
-        log!("tagging client: {}", tag);
-    }
-
-    /// Move the next available layout, forward or backwards through the stack
     pub fn cycle_layout(&mut self, forward: bool) {
-        log!("cycling layout: {}", forward);
+        debug!("cycling layout: {}", forward);
     }
 
     pub fn inc_main(&mut self) {

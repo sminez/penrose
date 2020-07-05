@@ -39,11 +39,9 @@ impl Workspace {
         let n_clients = self.clients.len();
         if n_clients > 0 {
             let layout = self.layouts[self.current_layout];
-            log!(
+            debug!(
                 "applying {} layout for {} clients on workspace '{}'",
-                layout.symbol,
-                n_clients,
-                self.name
+                layout.symbol, n_clients, self.name
             );
             layout.arrange(&self.clients, monitor_region)
         } else {
