@@ -1,4 +1,4 @@
-use crate::data_types::{Region, ResizeAction, WinId};
+use crate::data_types::{Change, Direction, Region, ResizeAction, WinId};
 use crate::helpers::cycle_index;
 use crate::layout::Layout;
 
@@ -27,14 +27,28 @@ impl Workspace {
         }
     }
 
+    /// Add a new client to this workspace at the top of the stack and focus it
     pub fn add_client(&mut self, id: WinId) {
-        self.clients.push(id)
+        self.clients.insert(0, id);
+        self.focused_client = 0;
     }
 
+    /// Remove a target client, retaining focus at the same position in the stack
     pub fn remove_client(&mut self, id: WinId) {
         self.clients.retain(|c| *c != id);
+
+        if self.focused_client >= self.clients.len() && self.clients.len() > 0 {
+            self.focused_client -= 1;
+        }
     }
 
+    /// Remove the focused client, retaining focus at the same position in the stack
+    pub fn remove_focused_client(&mut self) {
+        self.remove_client(self.clients[self.focused_client]);
+    }
+
+    /// Run the current layout function, generating a list of resize actions to be
+    /// applied byt the window manager.
     pub fn arrange(&self, monitor_region: &Region) -> Vec<ResizeAction> {
         let n_clients = self.clients.len();
         if n_clients > 0 {
@@ -49,27 +63,19 @@ impl Workspace {
         }
     }
 
-    pub fn cycle_layout(&mut self, forward: bool) {
-        self.current_layout = cycle_index(self.current_layout, self.layouts.len() - 1, forward);
+    pub fn cycle_layout(&mut self, direction: Direction) {
+        self.current_layout = cycle_index(self.current_layout, self.layouts.len() - 1, direction);
     }
 
-    pub fn cycle_client(&mut self, forward: bool) {
-        self.focused_client = cycle_index(self.focused_client, self.clients.len() - 1, forward);
+    pub fn cycle_client(&mut self, direction: Direction) {
+        self.focused_client = cycle_index(self.focused_client, self.clients.len() - 1, direction);
     }
 
-    pub fn inc_main(&mut self) {
-        self.layouts[self.current_layout].update_max_main(true);
+    pub fn update_max_main(&mut self, change: Change) {
+        self.layouts[self.current_layout].update_max_main(change);
     }
 
-    pub fn dec_main(&mut self) {
-        self.layouts[self.current_layout].update_max_main(false);
-    }
-
-    pub fn inc_ratio(&mut self) {
-        self.layouts[self.current_layout].update_main_ratio(true);
-    }
-
-    pub fn dec_ratio(&mut self) {
-        self.layouts[self.current_layout].update_main_ratio(false);
+    pub fn update_main_ratio(&mut self, change: Change) {
+        self.layouts[self.current_layout].update_main_ratio(change);
     }
 }

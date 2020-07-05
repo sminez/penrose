@@ -1,6 +1,6 @@
 use crate::client::Client;
 use crate::config;
-use crate::data_types::{KeyBindings, KeyCode};
+use crate::data_types::{Change, Direction, KeyBindings, KeyCode};
 use crate::helpers::{grab_keys, str_prop};
 use crate::screen::Screen;
 use crate::workspace::Workspace;
@@ -98,9 +98,8 @@ impl WindowManager {
             Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
-        // let window_type = atom_prop(&self.conn, window, "_NET_WM_WINDOW_TYPE");
-        debug!("handling new window: {}", wm_class);
 
+        debug!("handling new window: {}", wm_class);
         let floating = config::FLOATING_CLASSES.contains(&wm_class.as_ref());
         let client = Client::new(win_id, wm_class, 1, floating);
         self.clients.push(client);
@@ -113,7 +112,6 @@ impl WindowManager {
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
         xcb::change_window_attributes(&self.conn, win_id, NEW_WINDOW_MASK);
-
         self.apply_layout(self.focused_screen);
     }
 
@@ -192,33 +190,78 @@ impl WindowManager {
 
     pub fn switch_workspace(&mut self, index: usize) {
         notify!("switching to ws: {}", index);
+
+        for i in 0..self.screens.len() {
+            if self.screens[i].wix == index {
+                if i == self.focused_screen {
+                    return; // already focused on the current screen
+                }
+
+                // The workspace we want is currently displayed on another screen so
+                // pull the target workspace to the focused screen, and place the
+                // workspace we had on the screen where the target was
+                self.screens[i].wix = self.screens[self.focused_screen].wix;
+                self.screens[self.focused_screen].wix = index;
+                self.apply_layout(self.focused_screen);
+                self.apply_layout(i);
+                return;
+            }
+        }
+
+        // target not currently displayed
+        self.screens[self.focused_screen].wix = index;
+        self.apply_layout(self.focused_screen);
     }
 
     pub fn client_to_workspace(&mut self, index: usize) {
         debug!("moving focused client to workspace: {}", index);
     }
 
-    pub fn cycle_layout(&mut self, forward: bool) {
-        debug!("cycling layout: {}", forward);
+    pub fn next_layout(&mut self) {
+        debug!("next layout");
+        self.workspace_mut(self.focused_screen)
+            .cycle_layout(Direction::Forward);
+    }
+
+    pub fn previous_layout(&mut self) {
+        debug!("previous layout");
+        self.workspace_mut(self.focused_screen)
+            .cycle_layout(Direction::Backward);
+    }
+
+    pub fn next_client(&mut self) {
+        debug!("next client");
+        self.workspace_mut(self.focused_screen)
+            .cycle_layout(Direction::Forward);
+    }
+
+    pub fn previous_client(&mut self) {
+        debug!("next client");
+        self.workspace_mut(self.focused_screen)
+            .cycle_layout(Direction::Backward);
     }
 
     pub fn inc_main(&mut self) {
-        self.workspace_mut(self.focused_screen).inc_main();
+        self.workspace_mut(self.focused_screen)
+            .update_max_main(Change::More);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn dec_main(&mut self) {
-        self.workspace_mut(self.focused_screen).dec_main();
+        self.workspace_mut(self.focused_screen)
+            .update_max_main(Change::Less);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn inc_ratio(&mut self) {
-        self.workspace_mut(self.focused_screen).inc_ratio();
+        self.workspace_mut(self.focused_screen)
+            .update_main_ratio(Change::More);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn dec_ratio(&mut self) {
-        self.workspace_mut(self.focused_screen).dec_ratio();
+        self.workspace_mut(self.focused_screen)
+            .update_main_ratio(Change::Less);
         self.apply_layout(self.focused_screen);
     }
 }

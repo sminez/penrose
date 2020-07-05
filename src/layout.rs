@@ -8,7 +8,7 @@
  * for the layout to position windows.
  */
 use crate::config;
-use crate::data_types::{Region, ResizeAction, WinId};
+use crate::data_types::{Change, Region, ResizeAction, WinId};
 
 /**
  * Almost all layouts will be 'Normal' but penrose allows both for layouts that
@@ -75,24 +75,25 @@ impl Layout {
     }
 
     /// Increase/decrease the number of clients in the main area by 1
-    pub fn update_max_main(&mut self, increase: bool) {
-        if increase {
-            self.max_main += 1;
-        } else {
-            if self.max_main > 0 {
-                self.max_main -= 1;
+    pub fn update_max_main(&mut self, change: Change) {
+        match change {
+            Change::More => self.max_main += 1,
+            Change::Less => {
+                if self.max_main > 0 {
+                    self.max_main -= 1;
+                }
             }
         }
     }
 
     /// Increase/decrease the size of the main area relative to secondary.
     /// (clamps at 1.0 and 0.0 respectively)
-    pub fn update_main_ratio(&mut self, increase: bool) {
-        if increase {
-            self.ratio += config::MAIN_RATIO_STEP;
-        } else {
-            self.ratio -= config::MAIN_RATIO_STEP;
+    pub fn update_main_ratio(&mut self, change: Change) {
+        match change {
+            Change::More => self.ratio += config::MAIN_RATIO_STEP,
+            Change::Less => self.ratio -= config::MAIN_RATIO_STEP,
         }
+
         if self.ratio < 0.0 {
             self.ratio = 0.0
         } else if self.ratio > 1.0 {

@@ -20,6 +20,16 @@ pub mod data_types {
     pub type CodeMap = HashMap<String, u8>;
     pub type WinId = u32;
 
+    pub enum Direction {
+        Forward,
+        Backward,
+    }
+
+    pub enum Change {
+        More,
+        Less,
+    }
+
     #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct Region {
         x: usize,
