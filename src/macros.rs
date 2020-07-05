@@ -93,12 +93,12 @@ macro_rules! map(
     };
 );
 
-/// make creating a hash-map a little less verbose
+/// make creating all of the key bindings less verbose
 #[macro_export]
 macro_rules! gen_keybindings(
     {
         $($binding:expr => $action:expr),+;
-        forall_tags: $tag_array:expr => { $($tag_binding:expr => $tag_action:tt),+, }
+        forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, }
     } => {
         {
             let mut _map = ::std::collections::HashMap::new();
@@ -111,12 +111,12 @@ macro_rules! gen_keybindings(
                 };
             )+
 
-            for i in 1..$tag_array.len() {
+            for i in 1..$ws_array.len() {
                 $(
-                    let for_tag = format!($tag_binding, i);
-                    match $crate::helpers::parse_key_binding(for_tag.clone(), &keycodes) {
-                        Some(key_code) => _map.insert(key_code, run_internal!($tag_action, i)),
-                        None => die!("invalid key binding: {}", for_tag),
+                    let for_ws = format!($ws_binding, i);
+                    match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
+                        Some(key_code) => _map.insert(key_code, run_internal!($ws_action, i)),
+                        None => die!("invalid key binding: {}", for_ws),
                     };
                 )+
             }

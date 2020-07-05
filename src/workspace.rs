@@ -9,47 +9,69 @@ use crate::layout::Layout;
  * can be moved between monitors freely, bringing their clients with them.
  */
 pub struct Workspace {
+    name: &'static str,
     clients: Vec<WinId>,
     layouts: Vec<Layout>,
-    lix: usize, // currently selected layout
-    cix: usize, // currently focused client
+    current_layout: usize, // currently selected layout
+    focused_client: usize, // currently focused client
 }
 
 impl Workspace {
-    pub fn new(layouts: Vec<Layout>) -> Workspace {
+    pub fn new(name: &'static str, layouts: Vec<Layout>) -> Workspace {
         Workspace {
+            name,
             clients: vec![],
             layouts,
-            lix: 0,
-            cix: 0,
+            current_layout: 0,
+            focused_client: 0,
         }
     }
 
+    pub fn add_client(&mut self, id: WinId) {
+        self.clients.push(id)
+    }
+
+    pub fn remove_client(&mut self, id: WinId) {
+        self.clients.retain(|c| *c != id);
+    }
+
     pub fn arrange(&self, monitor_region: &Region) -> Vec<ResizeAction> {
-        self.layouts[self.lix].arrange(&self.clients, monitor_region)
+        let n_clients = self.clients.len();
+        if n_clients > 0 {
+            let layout = self.layouts[self.current_layout];
+            log!(
+                "applying {} layout for {} clients on workspace '{}'",
+                layout.symbol,
+                n_clients,
+                self.name
+            );
+            layout.arrange(&self.clients, monitor_region)
+        } else {
+            vec![]
+        }
     }
 
     pub fn cycle_layout(&mut self, forward: bool) {
-        self.lix = cycle_index(self.lix, self.layouts.len() - 1, forward);
+        self.current_layout = cycle_index(self.current_layout, self.layouts.len() - 1, forward);
     }
 
     pub fn cycle_client(&mut self, forward: bool) {
-        self.cix = cycle_index(self.cix, self.clients.len() - 1, forward);
+        self.focused_client = cycle_index(self.focused_client, self.clients.len() - 1, forward);
     }
 
     pub fn inc_main(&mut self) {
-        self.layouts[self.lix].update_max_main(true);
+        self.layouts[self.current_layout].update_max_main(true);
     }
 
     pub fn dec_main(&mut self) {
-        self.layouts[self.lix].update_max_main(false);
+        self.layouts[self.current_layout].update_max_main(false);
     }
 
     pub fn inc_ratio(&mut self) {
-        self.layouts[self.lix].update_main_ratio(true);
+        self.layouts[self.current_layout].update_main_ratio(true);
     }
 
     pub fn dec_ratio(&mut self) {
-        self.layouts[self.lix].update_main_ratio(false);
+        self.layouts[self.current_layout].update_main_ratio(false);
     }
 }

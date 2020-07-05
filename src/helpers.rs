@@ -1,6 +1,17 @@
-use crate::data_types::{CodeMap, KeyCode};
+use crate::data_types::{CodeMap, KeyBindings, KeyCode};
 use std::process;
 use xcb;
+
+// pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
+const NOTIFY_MASK: u16 = xcb::randr::NOTIFY_MASK_CRTC_CHANGE as u16;
+const GRAB_MODE_ASYNC: u8 = xcb::GRAB_MODE_ASYNC as u8;
+const EVENT_MASK: &[(u32, u32)] = &[(
+    xcb::CW_EVENT_MASK,
+    xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
+)];
+const MOUSE_MASK: u16 = (xcb::EVENT_MASK_BUTTON_PRESS
+    | xcb::EVENT_MASK_BUTTON_RELEASE
+    | xcb::EVENT_MASK_POINTER_MOTION) as u16;
 
 pub fn cycle_index(ix: usize, max: usize, forward: bool) -> usize {
     if forward {
@@ -76,6 +87,57 @@ where
         }
         None => None,
     }
+}
+
+/**
+ * Notify the X server that we are intercepting the user specified key bindings
+ * and prevent them being passed through to the underlying applications. This
+ * is what determines which key press events end up being sent through in the
+ * main event loop for the WindowManager.
+ */
+pub fn grab_keys(conn: &xcb::Connection, key_bindings: &KeyBindings) {
+    let screen = conn.get_setup().roots().nth(0).unwrap();
+    let root = screen.root();
+
+    // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
+    let input = xcb::randr::select_input(conn, root, NOTIFY_MASK);
+    match input.request_check() {
+        Err(e) => die!("randr error: {}", e),
+        Ok(_) => {
+            for k in key_bindings.keys() {
+                // xcb docs: https://www.mankier.com/3/xcb_grab_key
+                xcb::grab_key(
+                    conn,            // xcb connection to X11
+                    false,           // don't pass grabbed events through to the client
+                    root,            // the window to grab: in this case the root window
+                    k.mask,          // modifiers to grab
+                    k.code,          // keycode to grab
+                    GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
+                    GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
+                );
+            }
+        }
+    }
+
+    for mouse_button in &[1, 3] {
+        // xcb docs: https://www.mankier.com/3/xcb_grab_button
+        xcb::grab_button(
+            conn,                   // xcb connection to X11
+            false,                  // don't pass grabbed events through to the client
+            root,                   // the window to grab: in this case the root window
+            MOUSE_MASK,             // which events are reported to the client
+            GRAB_MODE_ASYNC,        // don't lock pointer input while grabbing
+            GRAB_MODE_ASYNC,        // don't lock keyboard input while grabbing
+            xcb::NONE,              // don't confine the cursor to a specific window
+            xcb::NONE,              // don't change the cursor type
+            *mouse_button,          // the button to grab
+            xcb::MOD_MASK_4 as u16, // modifiers to grab
+        );
+    }
+
+    // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
+    xcb::change_window_attributes(conn, root, EVENT_MASK);
+    conn.flush();
 }
 
 /**

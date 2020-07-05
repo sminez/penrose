@@ -6,6 +6,7 @@ pub mod config;
 pub mod helpers;
 pub mod layout;
 pub mod manager;
+pub mod screen;
 pub mod workspace;
 
 pub mod data_types {
@@ -19,8 +20,6 @@ pub mod data_types {
     pub type CodeMap = HashMap<String, u8>;
     pub type WinId = u32;
 
-    type CRTCInfoReply = xcb::ffi::randr::xcb_randr_get_crtc_info_reply_t;
-
     #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct Region {
         x: usize,
@@ -32,15 +31,6 @@ pub mod data_types {
     impl Region {
         pub fn new(x: usize, y: usize, w: usize, h: usize) -> Region {
             Region { x, y, w, h }
-        }
-
-        pub fn from_crtc_info_reply(r: xcb::base::Reply<CRTCInfoReply>) -> Region {
-            Region {
-                x: r.x() as usize,
-                y: r.y() as usize,
-                w: r.width() as usize,
-                h: r.height() as usize,
-            }
         }
 
         pub fn width(&self) -> usize {
