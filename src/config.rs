@@ -6,11 +6,12 @@ pub const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font
 pub const WORKSPACES: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 pub const STARTUP_SCRIPT: &str = "~/bin/scripts/start-dwm.sh";
 pub const COLOR_SCHEME: ColorScheme = ColorScheme {
-    bg: "#282828",
-    fg_1: "#3c3836",
-    fg_2: "#a89984",
-    fg_3: "#f2e5bc",
-    hl: "#458588",
+    bg: 0x282828,        // #282828
+    fg_1: 0x3c3836,      // #3c3836
+    fg_2: 0xa89984,      // #a89984
+    fg_3: 0xf2e5bc,      // #f2e5bc
+    highlight: 0xcc241d, // #cc241d
+    urgent: 0x458588,    // #458588
 };
 
 pub const SYSTRAY_SPACING: u32 = 2;
@@ -19,7 +20,7 @@ pub const SHOW_BAR: bool = true;
 pub const TOP_BAR: bool = true;
 
 pub const BORDER_PX: u32 = 2;
-pub const GAP_PX: u32 = 6;
+pub const GAP_PX: u32 = 5;
 
 pub const MAX_MAIN: usize = 1;
 pub const MAIN_RATIO: f32 = 0.60;

@@ -20,6 +20,10 @@ pub mod data_types {
     pub type CodeMap = HashMap<String, u8>;
     pub type WinId = u32;
 
+    /*
+     * Argument enums
+     */
+
     pub enum Direction {
         Forward,
         Backward,
@@ -28,6 +32,12 @@ pub mod data_types {
     pub enum Change {
         More,
         Less,
+    }
+
+    pub enum Border {
+        Urgent,
+        Focused,
+        Unfocused,
     }
 
     #[derive(Debug, PartialEq, Clone, Copy)]
@@ -56,13 +66,13 @@ pub mod data_types {
         }
     }
 
-    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub struct ColorScheme {
-        pub bg: &'static str,
-        pub fg_1: &'static str,
-        pub fg_2: &'static str,
-        pub fg_3: &'static str,
-        pub hl: &'static str,
+        pub bg: u32,
+        pub fg_1: u32,
+        pub fg_2: u32,
+        pub fg_3: u32,
+        pub highlight: u32,
+        pub urgent: u32,
     }
 
     #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]

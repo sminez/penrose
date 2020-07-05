@@ -16,7 +16,7 @@ const WIN_X: u16 = xcb::CONFIG_WINDOW_X as u16;
 const WIN_Y: u16 = xcb::CONFIG_WINDOW_Y as u16;
 const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
 const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
-// const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
+const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -71,6 +71,7 @@ impl WindowManager {
                     (WIN_Y, y as u32 + config::GAP_PX),
                     (WIN_WIDTH, w as u32 - padding),
                     (WIN_HEIGHT, h as u32 - padding),
+                    (WIN_BORDER, config::BORDER_PX),
                 ],
             );
         }
@@ -101,8 +102,7 @@ impl WindowManager {
 
         debug!("handling new window: {}", wm_class);
         let floating = config::FLOATING_CLASSES.contains(&wm_class.as_ref());
-        let client = Client::new(win_id, wm_class, 1, floating);
-        self.clients.push(client);
+        self.clients.push(Client::new(win_id, wm_class, floating));
 
         if !floating {
             self.workspace_mut(self.focused_screen).add_client(win_id);
@@ -116,10 +116,27 @@ impl WindowManager {
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    // fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {}
+    fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {
+        let win_id = event.event();
+        debug!("focusing client {}", win_id);
+        for c in self.clients.iter_mut() {
+            if c.id == win_id {
+                c.focus(&self.conn);
+            } else {
+                c.unfocus(&self.conn);
+            }
+        }
+    }
 
     // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    // fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {}
+    fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {
+        let win_id = event.event();
+        for c in self.clients.iter_mut() {
+            if c.id == win_id {
+                c.unfocus(&self.conn);
+            }
+        }
+    }
 
     // xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
     // fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -154,8 +171,8 @@ impl WindowManager {
                     // xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
                     // window actions
                     xcb::MAP_NOTIFY => self.new_window(unsafe { xcb::cast_event(&event) }),
-                    // xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
-                    // xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
                     // xcb::MOTION_NOTIFY => self.resize_window(unsafe { xcb::cast_event(&event) }),
                     xcb::DESTROY_NOTIFY => self.destroy_window(unsafe { xcb::cast_event(&event) }),
                     // unknown event type
