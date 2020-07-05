@@ -192,6 +192,20 @@ impl WindowManager {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
 
+    fn cycle_client(&mut self, direction: Direction) {
+        let (previous, current) = self
+            .workspace_mut(self.focused_screen)
+            .cycle_client(direction);
+
+        for c in self.clients.iter_mut() {
+            if c.id == previous {
+                c.unfocus(&self.conn);
+            } else if c.id == current {
+                c.focus(&self.conn);
+            }
+        }
+    }
+
     /*
      * Public methods that can be triggered by user bindings
      *
@@ -235,27 +249,21 @@ impl WindowManager {
     }
 
     pub fn next_layout(&mut self) {
-        debug!("next layout");
         self.workspace_mut(self.focused_screen)
             .cycle_layout(Direction::Forward);
     }
 
     pub fn previous_layout(&mut self) {
-        debug!("previous layout");
         self.workspace_mut(self.focused_screen)
             .cycle_layout(Direction::Backward);
     }
 
     pub fn next_client(&mut self) {
-        debug!("next client");
-        self.workspace_mut(self.focused_screen)
-            .cycle_layout(Direction::Forward);
+        self.cycle_client(Direction::Forward);
     }
 
     pub fn previous_client(&mut self) {
-        debug!("next client");
-        self.workspace_mut(self.focused_screen)
-            .cycle_layout(Direction::Backward);
+        self.cycle_client(Direction::Backward);
     }
 
     pub fn inc_main(&mut self) {

@@ -67,8 +67,12 @@ impl Workspace {
         self.current_layout = cycle_index(self.current_layout, self.layouts.len() - 1, direction);
     }
 
-    pub fn cycle_client(&mut self, direction: Direction) {
+    pub fn cycle_client(&mut self, direction: Direction) -> (WinId, WinId) {
+        let previous = self.clients[self.focused_client];
         self.focused_client = cycle_index(self.focused_client, self.clients.len() - 1, direction);
+        let current = self.clients[self.focused_client];
+
+        (previous, current)
     }
 
     pub fn update_max_main(&mut self, change: Change) {

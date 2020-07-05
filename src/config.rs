@@ -50,6 +50,8 @@ pub fn key_bindings() -> KeyBindings {
         "M-A-Down" => run_internal!(dec_main),
         "M-A-Right" => run_internal!(inc_ratio),
         "M-A-Left" => run_internal!(dec_ratio),
+        "M-j" => run_internal!(next_client),
+        "M-k" => run_internal!(previous_client),
         "M-A-Escape" => run_internal!(kill);
 
         forall_workspaces: WORKSPACES => {
