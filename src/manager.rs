@@ -56,7 +56,7 @@ impl WindowManager {
 
     fn apply_layout(&self, screen: usize) {
         let screen_region = self.screens[screen].region;
-        let ws = self.workspace(screen);
+        let ws = self.workspace_for_screen(screen);
 
         for (id, region) in ws.arrange(&screen_region) {
             debug!("configuring {} with {:?}", id, region);
@@ -80,7 +80,7 @@ impl WindowManager {
     fn remove_client(&mut self, win_id: WinId) {
         debug!("removing ref to client {}", win_id);
 
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .remove_client(win_id);
         self.clients.retain(|c| c.id != win_id);
     }
@@ -113,7 +113,8 @@ impl WindowManager {
         self.clients.push(Client::new(win_id, wm_class, floating));
 
         if !floating {
-            self.workspace_mut(self.focused_screen).add_client(win_id);
+            self.workspace_for_screen_mut(self.focused_screen)
+                .add_client(win_id);
         }
 
         debug!("currently have {} known clients", self.clients.len());
@@ -186,17 +187,22 @@ impl WindowManager {
         }
     }
 
-    fn workspace(&self, screen_index: usize) -> &Workspace {
+    fn workspace_for_screen(&self, screen_index: usize) -> &Workspace {
         &self.workspaces[self.screens[screen_index].wix]
     }
 
-    fn workspace_mut(&mut self, screen_index: usize) -> &mut Workspace {
+    fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
 
-    fn focused_client(&self) -> &Client {
-        let id = self.workspace(self.focused_screen).focused_client();
-        &self.clients.iter().find(|c| c.id == id).unwrap()
+    fn focused_client(&self) -> Option<&Client> {
+        match self
+            .workspace_for_screen(self.focused_screen)
+            .focused_client()
+        {
+            Some(id) => Some(self.clients.iter().find(|c| c.id == id).unwrap()),
+            None => None,
+        }
     }
 
     // fn focused_client_mut(&mut self) -> &mut Client {
@@ -211,7 +217,7 @@ impl WindowManager {
 
     fn cycle_client(&mut self, direction: Direction) {
         let cycled = self
-            .workspace_mut(self.focused_screen)
+            .workspace_for_screen_mut(self.focused_screen)
             .cycle_client(direction);
 
         if let Some((previous, current)) = cycled {
@@ -239,6 +245,14 @@ impl WindowManager {
 
     pub fn switch_workspace(&mut self, index: usize) {
         notify!("switching to ws: {}", index);
+        match index {
+            0 => run_external!("xsetroot -solid #282828")(self),
+            1 => run_external!("xsetroot -solid #cc241d")(self),
+            2 => run_external!("xsetroot -solid #458588")(self),
+            3 => run_external!("xsetroot -solid #fabd2f")(self),
+            4 => run_external!("xsetroot -solid #b8bb26")(self),
+            _ => run_external!("xsetroot -solid #ebdbb2")(self),
+        };
 
         for i in 0..self.screens.len() {
             if self.screens[i].wix == index {
@@ -258,7 +272,10 @@ impl WindowManager {
         }
 
         // target not currently displayed
+        let current = self.screens[self.focused_screen].wix;
         self.screens[self.focused_screen].wix = index;
+        self.workspaces[current].unmap_clients(&self.conn);
+        self.workspaces[index].map_clients(&self.conn);
         self.apply_layout(self.focused_screen);
     }
 
@@ -275,7 +292,10 @@ impl WindowManager {
     }
 
     pub fn kill_client(&mut self) {
-        let id = self.focused_client().id;
+        let id = match self.focused_client() {
+            Some(client) => client.id,
+            None => return,
+        };
         let wm_delete_window = intern_atom(&self.conn, "WM_DELETE_WINDOW");
         let wm_protocols = intern_atom(&self.conn, "WM_PROTOCOLS");
         let data =
@@ -290,37 +310,37 @@ impl WindowManager {
     }
 
     pub fn next_layout(&mut self) {
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .cycle_layout(Direction::Forward);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn previous_layout(&mut self) {
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .cycle_layout(Direction::Backward);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn inc_main(&mut self) {
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .update_max_main(Change::More);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn dec_main(&mut self) {
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .update_max_main(Change::Less);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn inc_ratio(&mut self) {
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .update_main_ratio(Change::More);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn dec_ratio(&mut self) {
-        self.workspace_mut(self.focused_screen)
+        self.workspace_for_screen_mut(self.focused_screen)
             .update_main_ratio(Change::Less);
         self.apply_layout(self.focused_screen);
     }

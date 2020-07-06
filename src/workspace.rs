@@ -27,8 +27,12 @@ impl Workspace {
         }
     }
 
-    pub fn focused_client(&self) -> WinId {
-        self.clients[self.cix]
+    pub fn focused_client(&self) -> Option<WinId> {
+        if self.clients.len() > 0 {
+            Some(self.clients[self.cix])
+        } else {
+            None
+        }
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
@@ -48,7 +52,9 @@ impl Workspace {
 
     /// Remove the focused client, retaining focus at the same position in the stack
     pub fn remove_focused_client(&mut self) {
-        self.remove_client(self.focused_client());
+        if let Some(id) = self.focused_client() {
+            self.remove_client(id);
+        }
     }
 
     /// Run the current layout function, generating a list of resize actions to be
@@ -89,5 +95,19 @@ impl Workspace {
 
     pub fn update_main_ratio(&mut self, change: Change) {
         self.layouts[self.lix].update_main_ratio(change);
+    }
+
+    /// Place this workspace's windows onto a screen
+    pub fn map_clients(&self, conn: &xcb::Connection) {
+        for c in self.clients.iter() {
+            xcb::map_window(conn, *c);
+        }
+    }
+
+    /// Remove this workspace's windows from a screen
+    pub fn unmap_clients(&self, conn: &xcb::Connection) {
+        for c in self.clients.iter() {
+            xcb::unmap_window(conn, *c);
+        }
     }
 }
