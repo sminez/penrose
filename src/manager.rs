@@ -3,6 +3,7 @@ use crate::data_types::{Change, ColorScheme, Config, Direction, KeyBindings, Key
 use crate::helpers::{grab_keys, intern_atom, str_prop};
 use crate::screen::Screen;
 use crate::workspace::Workspace;
+use std::collections::HashMap;
 use std::process;
 use xcb;
 
@@ -28,7 +29,7 @@ pub struct WindowManager {
     conn: xcb::Connection,
     screens: Vec<Screen>,
     workspaces: Vec<Workspace>,
-    clients: Vec<Client>,
+    clients: HashMap<WinId, Client>,
     focused_screen: usize,
     // config
     fonts: &'static [&'static str],
@@ -53,15 +54,17 @@ impl WindowManager {
         let screens = Screen::current_outputs(&mut conn);
         log!("connected to X server: {} screens detected", screens.len());
 
+        let workspaces: Vec<Workspace> = conf
+            .workspaces
+            .iter()
+            .map(|name| Workspace::new(name, conf.layouts.clone()))
+            .collect();
+
         WindowManager {
             conn,
             screens,
-            workspaces: conf
-                .workspaces
-                .iter()
-                .map(|name| Workspace::new(name, conf.layouts.clone()))
-                .collect(),
-            clients: vec![],
+            workspaces,
+            clients: HashMap::new(),
             focused_screen: 0,
             fonts: conf.fonts,
             floating_classes: conf.floating_classes,
@@ -105,7 +108,7 @@ impl WindowManager {
 
         self.workspace_for_screen_mut(self.focused_screen)
             .remove_client(win_id);
-        self.clients.retain(|c| c.id != win_id);
+        self.clients.remove(&win_id);
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
@@ -117,7 +120,6 @@ impl WindowManager {
     // xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
     fn key_press(&mut self, event: &xcb::KeyPressEvent, bindings: &KeyBindings) {
         debug!("handling keypress: {} {}", event.state(), event.detail());
-
         if let Some(action) = bindings.get(&KeyCode::from_key_press(event)) {
             action(self);
         }
@@ -134,14 +136,12 @@ impl WindowManager {
         debug!("handling new window: {}", wm_class);
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let client = Client::new(win_id, wm_class, floating, self.border_px);
-        self.clients.push(client);
+        self.clients.insert(win_id, client);
 
         if !floating {
             self.workspace_for_screen_mut(self.focused_screen)
                 .add_client(win_id);
         }
-
-        debug!("currently have {} known clients", self.clients.len());
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
         xcb::change_window_attributes(&self.conn, win_id, NEW_WINDOW_MASK);
@@ -152,8 +152,8 @@ impl WindowManager {
     fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {
         let win_id = event.event();
         debug!("focusing client {}", win_id);
-        for c in self.clients.iter_mut() {
-            if c.id == win_id {
+        for (id, c) in self.clients.iter_mut() {
+            if *id == win_id {
                 c.focus(&self.conn, &self.color_scheme);
             } else {
                 c.unfocus(&self.conn, &self.color_scheme);
@@ -164,8 +164,8 @@ impl WindowManager {
     // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
     fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {
         let win_id = event.event();
-        for c in self.clients.iter_mut() {
-            if c.id == win_id {
+        for (id, c) in self.clients.iter_mut() {
+            if *id == win_id {
                 c.unfocus(&self.conn, &self.color_scheme);
             }
         }
@@ -223,20 +223,10 @@ impl WindowManager {
             .workspace_for_screen(self.focused_screen)
             .focused_client()
         {
-            Some(id) => Some(self.clients.iter().find(|c| c.id == id).unwrap()),
+            Some(id) => self.clients.get(&id),
             None => None,
         }
     }
-
-    // fn focused_client_mut(&mut self) -> &mut Client {
-    //     let id = self.workspace(self.focused_screen).focused_client();
-    //     for c in self.clients.iter_mut() {
-    //         if c.id == id {
-    //             return c;
-    //         }
-    //     }
-    //     die!("attempt to take &mut for unknown client: {}", id);
-    // }
 
     fn cycle_client(&mut self, direction: Direction) {
         let cycled = self
@@ -244,8 +234,8 @@ impl WindowManager {
             .cycle_client(direction);
 
         if let Some((previous, current)) = cycled {
-            for c in self.clients.iter_mut() {
-                if c.id == previous {
+            for (id, c) in self.clients.iter_mut() {
+                if *id == previous {
                     c.unfocus(&self.conn, &self.color_scheme);
                 } else if c.id == current {
                     c.focus(&self.conn, &self.color_scheme);
