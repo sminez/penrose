@@ -17,7 +17,7 @@ pub struct Client {
     wm_class: String,
     border_width: u32,
     // state flags
-    is_focused: bool,
+    pub is_focused: bool,
     pub is_floating: bool,
     pub is_fullscreen: bool,
 }

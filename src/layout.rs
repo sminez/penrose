@@ -7,7 +7,8 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
-use crate::data_types::{Change, Region, ResizeAction, WinId};
+use crate::client::Client;
+use crate::data_types::{Change, Region, ResizeAction};
 
 /**
  * Almost all layouts will be 'Normal' but penrose allows both for layouts that
@@ -49,7 +50,7 @@ pub struct Layout {
     pub symbol: &'static str,
     max_main: usize,
     ratio: f32,
-    f: fn(&Vec<WinId>, &Region, usize, f32) -> Vec<ResizeAction>,
+    f: fn(&Vec<Client>, &Region, usize, f32) -> Vec<ResizeAction>,
 }
 
 impl Layout {
@@ -57,7 +58,7 @@ impl Layout {
     pub fn new(
         symbol: &'static str,
         kind: LayoutKind,
-        f: fn(&Vec<WinId>, &Region, usize, f32) -> Vec<ResizeAction>,
+        f: fn(&Vec<Client>, &Region, usize, f32) -> Vec<ResizeAction>,
         max_main: usize,
         ratio: f32,
     ) -> Layout {
@@ -71,8 +72,8 @@ impl Layout {
     }
 
     /// Apply the embedded layout function using the current n_main and ratio
-    pub fn arrange(&self, client_ids: &Vec<WinId>, r: &Region) -> Vec<ResizeAction> {
-        (self.f)(client_ids, r, self.max_main, self.ratio)
+    pub fn arrange(&self, clients: &Vec<Client>, r: &Region) -> Vec<ResizeAction> {
+        (self.f)(clients, r, self.max_main, self.ratio)
     }
 
     /// Increase/decrease the number of clients in the main area by 1
@@ -110,7 +111,7 @@ impl Layout {
  */
 
 /// number of clients for the main area vs secondary
-pub fn client_breakdown(clients: &Vec<WinId>, n_main: usize) -> (usize, usize) {
+pub fn client_breakdown(clients: &Vec<Client>, n_main: usize) -> (usize, usize) {
     let n = clients.len();
     if n <= n_main {
         (n, 0)
@@ -131,7 +132,7 @@ pub fn client_breakdown(clients: &Vec<WinId>, n_main: usize) -> (usize, usize) {
 
 /// A no-op floating layout that simply satisfies the type required for Layout
 pub fn floating(
-    _clients: &Vec<WinId>,
+    _clients: &Vec<Client>,
     _monitor_region: &Region,
     _max_main: usize,
     _ratio: f32,
@@ -142,7 +143,7 @@ pub fn floating(
 /// A simple layout that places the main region on the left and tiles remaining
 /// windows in a single column to the right.
 pub fn side_stack(
-    client_ids: &Vec<WinId>,
+    client_ids: &Vec<Client>,
     monitor_region: &Region,
     max_main: usize,
     ratio: f32,
@@ -160,13 +161,13 @@ pub fn side_stack(
     client_ids
         .iter()
         .enumerate()
-        .map(|(n, id)| {
+        .map(|(n, c)| {
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
-                (*id, Region::new(0, n * h_main, w, h_main))
+                (c.id, Region::new(0, n * h_main, w, h_main))
             } else {
                 let sn = n - max_main; // nth stacked client
-                (*id, Region::new(split, sn * h_stack, mw - split, h_stack))
+                (c.id, Region::new(split, sn * h_stack, mw - split, h_stack))
             }
         })
         .collect()

@@ -87,6 +87,7 @@ pub mod data_types {
         }
     }
 
+    #[derive(Debug, Clone, Copy)]
     pub struct ColorScheme {
         pub bg: u32,
         pub fg_1: u32,
