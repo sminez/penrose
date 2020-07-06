@@ -1,6 +1,5 @@
 use crate::client::Client;
-use crate::config;
-use crate::data_types::{Change, Direction, KeyBindings, KeyCode, WinId};
+use crate::data_types::{Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, WinId};
 use crate::helpers::{grab_keys, intern_atom, str_prop};
 use crate::screen::Screen;
 use crate::workspace::Workspace;
@@ -31,10 +30,22 @@ pub struct WindowManager {
     workspaces: Vec<Workspace>,
     clients: Vec<Client>,
     focused_screen: usize,
+    // config
+    fonts: &'static [&'static str],
+    floating_classes: &'static [&'static str],
+    color_scheme: ColorScheme,
+    border_px: u32,
+    gap_px: u32,
+    main_ratio_step: f32,
+    systray_spacing_px: u32,
+    show_systray: bool,
+    show_bar: bool,
+    top_bar: bool,
+    respect_resize_hints: bool,
 }
 
 impl WindowManager {
-    pub fn init() -> WindowManager {
+    pub fn init(conf: Config) -> WindowManager {
         let (mut conn, _) = match xcb::Connection::connect(None) {
             Err(e) => die!("unable to establish connection to X server: {}", e),
             Ok(conn) => conn,
@@ -45,12 +56,24 @@ impl WindowManager {
         WindowManager {
             conn,
             screens,
-            workspaces: config::WORKSPACES
+            workspaces: conf
+                .workspaces
                 .iter()
-                .map(|name| Workspace::new(name, config::layouts()))
+                .map(|name| Workspace::new(name, conf.layouts.clone()))
                 .collect(),
             clients: vec![],
             focused_screen: 0,
+            fonts: conf.fonts,
+            floating_classes: conf.floating_classes,
+            color_scheme: conf.color_scheme,
+            border_px: conf.border_px,
+            gap_px: conf.gap_px,
+            main_ratio_step: conf.main_ratio_step,
+            systray_spacing_px: conf.systray_spacing_px,
+            show_systray: conf.show_systray,
+            show_bar: conf.show_bar,
+            top_bar: conf.top_bar,
+            respect_resize_hints: conf.respect_resize_hints,
         }
     }
 
@@ -61,17 +84,17 @@ impl WindowManager {
         for (id, region) in ws.arrange(&screen_region) {
             debug!("configuring {} with {:?}", id, region);
             let (x, y, w, h) = region.values();
-            let padding = 2 * (config::BORDER_PX + config::GAP_PX);
+            let padding = 2 * (self.border_px + self.gap_px);
 
             xcb::configure_window(
                 &self.conn,
                 id,
                 &[
-                    (WIN_X, x as u32 + config::GAP_PX),
-                    (WIN_Y, y as u32 + config::GAP_PX),
+                    (WIN_X, x as u32 + self.gap_px),
+                    (WIN_Y, y as u32 + self.gap_px),
                     (WIN_WIDTH, w as u32 - padding),
                     (WIN_HEIGHT, h as u32 - padding),
-                    (WIN_BORDER, config::BORDER_PX),
+                    (WIN_BORDER, self.border_px),
                 ],
             );
         }
@@ -109,8 +132,9 @@ impl WindowManager {
         };
 
         debug!("handling new window: {}", wm_class);
-        let floating = config::FLOATING_CLASSES.contains(&wm_class.as_ref());
-        self.clients.push(Client::new(win_id, wm_class, floating));
+        let floating = self.floating_classes.contains(&wm_class.as_ref());
+        let client = Client::new(win_id, wm_class, floating, self.border_px);
+        self.clients.push(client);
 
         if !floating {
             self.workspace_for_screen_mut(self.focused_screen)
@@ -130,9 +154,9 @@ impl WindowManager {
         debug!("focusing client {}", win_id);
         for c in self.clients.iter_mut() {
             if c.id == win_id {
-                c.focus(&self.conn);
+                c.focus(&self.conn, &self.color_scheme);
             } else {
-                c.unfocus(&self.conn);
+                c.unfocus(&self.conn, &self.color_scheme);
             }
         }
     }
@@ -142,7 +166,7 @@ impl WindowManager {
         let win_id = event.event();
         for c in self.clients.iter_mut() {
             if c.id == win_id {
-                c.unfocus(&self.conn);
+                c.unfocus(&self.conn, &self.color_scheme);
             }
         }
     }
@@ -161,8 +185,7 @@ impl WindowManager {
      * Everything is driven by incoming events from the X server with each event type being
      * mapped to a handler
      */
-    pub fn run(&mut self) {
-        let bindings = config::key_bindings();
+    pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
         grab_keys(&self.conn, &bindings);
 
         loop {
@@ -223,9 +246,9 @@ impl WindowManager {
         if let Some((previous, current)) = cycled {
             for c in self.clients.iter_mut() {
                 if c.id == previous {
-                    c.unfocus(&self.conn);
+                    c.unfocus(&self.conn, &self.color_scheme);
                 } else if c.id == current {
-                    c.focus(&self.conn);
+                    c.focus(&self.conn, &self.color_scheme);
                 }
             }
         }
@@ -334,14 +357,16 @@ impl WindowManager {
     }
 
     pub fn inc_ratio(&mut self) {
+        let step = self.main_ratio_step;
         self.workspace_for_screen_mut(self.focused_screen)
-            .update_main_ratio(Change::More);
+            .update_main_ratio(Change::More, step);
         self.apply_layout(self.focused_screen);
     }
 
     pub fn dec_ratio(&mut self) {
+        let step = self.main_ratio_step;
         self.workspace_for_screen_mut(self.focused_screen)
-            .update_main_ratio(Change::Less);
+            .update_main_ratio(Change::Less, step);
         self.apply_layout(self.focused_screen);
     }
 }

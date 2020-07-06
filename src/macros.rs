@@ -31,12 +31,12 @@ macro_rules! log(
 #[macro_export]
 macro_rules! debug(
     ($msg:expr) => {
-        if $crate::config::DEBUG {
+        if cfg!(debug_assertions) {
             eprintln!("DBUG :: {}", $msg);
         }
     };
     ($fmt:expr, $($arg:expr),*) => {
-        if $crate::config::DEBUG {
+        if cfg!(debug_assertions) {
             eprintln!("DBUG :: {}", format!($fmt, $($arg,)*));
         }
     };

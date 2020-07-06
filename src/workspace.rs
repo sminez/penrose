@@ -93,8 +93,8 @@ impl Workspace {
         self.layouts[self.lix].update_max_main(change);
     }
 
-    pub fn update_main_ratio(&mut self, change: Change) {
-        self.layouts[self.lix].update_main_ratio(change);
+    pub fn update_main_ratio(&mut self, change: Change, step: f32) {
+        self.layouts[self.lix].update_main_ratio(change, step);
     }
 
     /// Place this workspace's windows onto a screen

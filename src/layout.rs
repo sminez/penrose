@@ -7,7 +7,6 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
-use crate::config;
 use crate::data_types::{Change, Region, ResizeAction, WinId};
 
 /**
@@ -59,12 +58,14 @@ impl Layout {
         symbol: &'static str,
         kind: LayoutKind,
         f: fn(&Vec<WinId>, &Region, usize, f32) -> Vec<ResizeAction>,
+        max_main: usize,
+        ratio: f32,
     ) -> Layout {
         Layout {
             symbol,
             kind,
-            max_main: config::MAX_MAIN,
-            ratio: config::MAIN_RATIO,
+            max_main,
+            ratio,
             f,
         }
     }
@@ -88,10 +89,10 @@ impl Layout {
 
     /// Increase/decrease the size of the main area relative to secondary.
     /// (clamps at 1.0 and 0.0 respectively)
-    pub fn update_main_ratio(&mut self, change: Change) {
+    pub fn update_main_ratio(&mut self, change: Change, step: f32) {
         match change {
-            Change::More => self.ratio += config::MAIN_RATIO_STEP,
-            Change::Less => self.ratio -= config::MAIN_RATIO_STEP,
+            Change::More => self.ratio += step,
+            Change::Less => self.ratio -= step,
         }
 
         if self.ratio < 0.0 {

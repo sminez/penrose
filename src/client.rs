@@ -1,5 +1,4 @@
-use crate::config;
-use crate::data_types::{Border, WinId};
+use crate::data_types::{Border, ColorScheme, WinId};
 use crate::helpers::intern_atom;
 use xcb;
 
@@ -24,19 +23,19 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(id: WinId, wm_class: String, floating: bool) -> Client {
+    pub fn new(id: WinId, wm_class: String, floating: bool, border_width: u32) -> Client {
         Client {
             id,
             wm_class,
-            border_width: config::BORDER_PX,
+            border_width,
             is_focused: true,
             is_floating: floating,
             is_fullscreen: false,
         }
     }
 
-    pub fn focus(&mut self, conn: &xcb::Connection) {
-        self.set_window_border(conn, Border::Focused);
+    pub fn focus(&mut self, conn: &xcb::Connection, scheme: &ColorScheme) {
+        self.set_window_border(conn, Border::Focused, scheme);
         self.is_focused = true;
 
         let root = match conn.get_setup().roots().nth(0) {
@@ -65,16 +64,16 @@ impl Client {
         );
     }
 
-    pub fn unfocus(&mut self, conn: &xcb::Connection) {
-        self.set_window_border(conn, Border::Unfocused);
+    pub fn unfocus(&mut self, conn: &xcb::Connection, scheme: &ColorScheme) {
+        self.set_window_border(conn, Border::Unfocused, scheme);
         self.is_focused = false;
     }
 
-    fn set_window_border(&mut self, conn: &xcb::Connection, border: Border) {
+    fn set_window_border(&mut self, conn: &xcb::Connection, border: Border, scheme: &ColorScheme) {
         let color = match border {
-            Border::Urgent => config::COLOR_SCHEME.urgent,
-            Border::Focused => config::COLOR_SCHEME.highlight,
-            Border::Unfocused => config::COLOR_SCHEME.fg_1,
+            Border::Urgent => scheme.urgent,
+            Border::Focused => scheme.highlight,
+            Border::Unfocused => scheme.fg_1,
         };
         xcb::change_window_attributes(conn, self.id, &[(xcb::CW_BORDER_PIXEL, color)]);
     }

@@ -2,14 +2,19 @@
 pub mod macros;
 
 pub mod client;
-pub mod config;
 pub mod helpers;
 pub mod layout;
 pub mod manager;
 pub mod screen;
 pub mod workspace;
 
+// top level re-exports
+pub use data_types::{ColorScheme, Config};
+pub use layout::{Layout, LayoutKind};
+pub use manager::WindowManager;
+
 pub mod data_types {
+    use crate::layout::Layout;
     use crate::manager::WindowManager;
     use std::collections::HashMap;
     use xcb;
@@ -19,6 +24,22 @@ pub mod data_types {
     pub type ResizeAction = (WinId, Region);
     pub type CodeMap = HashMap<String, u8>;
     pub type WinId = u32;
+
+    pub struct Config {
+        pub workspaces: &'static [&'static str],
+        pub fonts: &'static [&'static str],
+        pub floating_classes: &'static [&'static str],
+        pub layouts: Vec<Layout>,
+        pub color_scheme: ColorScheme,
+        pub border_px: u32,
+        pub gap_px: u32,
+        pub main_ratio_step: f32,
+        pub systray_spacing_px: u32,
+        pub show_systray: bool,
+        pub show_bar: bool,
+        pub top_bar: bool,
+        pub respect_resize_hints: bool,
+    }
 
     /*
      * Argument enums
