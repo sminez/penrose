@@ -48,9 +48,9 @@ pub enum LayoutKind {
 pub struct Layout {
     pub kind: LayoutKind,
     pub symbol: &'static str,
-    max_main: usize,
+    max_main: u32,
     ratio: f32,
-    f: fn(&Vec<Client>, &Region, usize, f32) -> Vec<ResizeAction>,
+    f: fn(&Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
 }
 
 impl Layout {
@@ -58,8 +58,8 @@ impl Layout {
     pub fn new(
         symbol: &'static str,
         kind: LayoutKind,
-        f: fn(&Vec<Client>, &Region, usize, f32) -> Vec<ResizeAction>,
-        max_main: usize,
+        f: fn(&Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
+        max_main: u32,
         ratio: f32,
     ) -> Layout {
         Layout {
@@ -111,8 +111,8 @@ impl Layout {
  */
 
 /// number of clients for the main area vs secondary
-pub fn client_breakdown(clients: &Vec<Client>, n_main: usize) -> (usize, usize) {
-    let n = clients.len();
+pub fn client_breakdown(clients: &Vec<Client>, n_main: u32) -> (u32, u32) {
+    let n = clients.len() as u32;
     if n <= n_main {
         (n, 0)
     } else {
@@ -134,7 +134,7 @@ pub fn client_breakdown(clients: &Vec<Client>, n_main: usize) -> (usize, usize) 
 pub fn floating(
     _clients: &Vec<Client>,
     _monitor_region: &Region,
-    _max_main: usize,
+    _max_main: u32,
     _ratio: f32,
 ) -> Vec<ResizeAction> {
     vec![]
@@ -145,7 +145,7 @@ pub fn floating(
 pub fn side_stack(
     client_ids: &Vec<Client>,
     monitor_region: &Region,
-    max_main: usize,
+    max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
     let (_, _, mw, mh) = monitor_region.values();
@@ -153,7 +153,7 @@ pub fn side_stack(
     let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
     let h_main = if n_main > 0 { mh / n_main } else { 0 };
     let split = if max_main > 0 {
-        (mw as f32 * ratio) as usize
+        (mw as f32 * ratio) as u32
     } else {
         0
     };
@@ -162,6 +162,7 @@ pub fn side_stack(
         .iter()
         .enumerate()
         .map(|(n, c)| {
+            let n = n as u32;
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
                 (c.id, Region::new(0, n * h_main, w, h_main))

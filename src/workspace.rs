@@ -2,6 +2,7 @@ use crate::client::Client;
 use crate::data_types::{Change, ColorScheme, Direction, Region, ResizeAction, WinId};
 use crate::helpers::cycle_index;
 use crate::layout::Layout;
+use crate::xconnection::XConn;
 
 /**
  * A Workspace represents a named set of clients that are tiled according
@@ -112,7 +113,7 @@ impl Workspace {
     pub fn cycle_client(
         &mut self,
         direction: Direction,
-        conn: &xcb::Connection,
+        conn: &dyn XConn,
         color_scheme: &ColorScheme,
     ) {
         if self.clients.len() > 0 {
@@ -131,22 +132,22 @@ impl Workspace {
     }
 
     /// Place this workspace's windows onto a screen
-    pub fn map_clients(&self, conn: &xcb::Connection) {
+    pub fn map_clients(&self, conn: &dyn XConn) {
         for c in self.clients.iter() {
             debug!("mapping {} on ws {}", c.id, self.name);
-            xcb::map_window(conn, c.id);
+            conn.map_window(c.id);
         }
     }
 
     /// Remove this workspace's windows from a screen
-    pub fn unmap_clients(&self, conn: &xcb::Connection) {
+    pub fn unmap_clients(&self, conn: &dyn XConn) {
         for c in self.clients.iter() {
-            xcb::unmap_window(conn, c.id);
             debug!("unmapping {} on ws {}", c.id, self.name);
+            conn.unmap_window(c.id);
         }
     }
 
-    pub fn focus_client(&mut self, id: WinId, conn: &xcb::Connection, color_scheme: &ColorScheme) {
+    pub fn focus_client(&mut self, id: WinId, conn: &dyn XConn, color_scheme: &ColorScheme) {
         for c in self.clients.iter_mut() {
             match (c.id == id, c.is_focused) {
                 (true, false) => c.focus(conn, color_scheme),

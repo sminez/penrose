@@ -7,6 +7,7 @@ pub mod layout;
 pub mod manager;
 pub mod screen;
 pub mod workspace;
+pub mod xconnection;
 
 // top level re-exports
 pub use data_types::{ColorScheme, Config};
@@ -63,26 +64,26 @@ pub mod data_types {
 
     #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct Region {
-        x: usize,
-        y: usize,
-        w: usize,
-        h: usize,
+        x: u32,
+        y: u32,
+        w: u32,
+        h: u32,
     }
 
     impl Region {
-        pub fn new(x: usize, y: usize, w: usize, h: usize) -> Region {
+        pub fn new(x: u32, y: u32, w: u32, h: u32) -> Region {
             Region { x, y, w, h }
         }
 
-        pub fn width(&self) -> usize {
+        pub fn width(&self) -> u32 {
             self.w
         }
 
-        pub fn height(&self) -> usize {
+        pub fn height(&self) -> u32 {
             self.h
         }
 
-        pub fn values(&self) -> (usize, usize, usize, usize) {
+        pub fn values(&self) -> (u32, u32, u32, u32) {
             (self.x, self.y, self.w, self.h)
         }
     }

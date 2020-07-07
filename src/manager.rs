@@ -1,22 +1,13 @@
 use crate::client::Client;
-use crate::data_types::{Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, WinId};
-use crate::helpers::{grab_keys, intern_atom, spawn, str_prop};
+use crate::data_types::{
+    Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, Region, WinId,
+};
+use crate::helpers::spawn;
 use crate::screen::Screen;
 use crate::workspace::Workspace;
+use crate::xconnection::XConn;
 use std::collections::HashMap;
 use std::process;
-use xcb;
-
-// pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
-const NEW_WINDOW_MASK: &[(u32, u32)] = &[(
-    xcb::CW_EVENT_MASK,
-    xcb::EVENT_MASK_ENTER_WINDOW | xcb::EVENT_MASK_LEAVE_WINDOW,
-)];
-const WIN_X: u16 = xcb::CONFIG_WINDOW_X as u16;
-const WIN_Y: u16 = xcb::CONFIG_WINDOW_Y as u16;
-const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
-const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
-const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -25,8 +16,8 @@ const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
  * and bound on init and then triggered via grabbed X events in the main loop
  * along with everything else.
  */
-pub struct WindowManager {
-    conn: xcb::Connection,
+pub struct WindowManager<'a> {
+    conn: &'a dyn XConn,
     screens: Vec<Screen>,
     workspaces: Vec<Workspace>,
     client_map: HashMap<WinId, usize>,
@@ -45,13 +36,9 @@ pub struct WindowManager {
     respect_resize_hints: bool,
 }
 
-impl WindowManager {
-    pub fn init(conf: Config) -> WindowManager {
-        let (mut conn, _) = match xcb::Connection::connect(None) {
-            Err(e) => die!("unable to establish connection to X server: {}", e),
-            Ok(conn) => conn,
-        };
-        let screens = Screen::current_outputs(&mut conn);
+impl<'a> WindowManager<'a> {
+    pub fn init(conf: Config, conn: &'a dyn XConn) -> WindowManager {
+        let screens = conn.current_outputs();
         log!("connected to X server: {} screens detected", screens.len());
 
         let workspaces: Vec<Workspace> = conf
@@ -61,7 +48,7 @@ impl WindowManager {
             .collect();
 
         WindowManager {
-            conn,
+            conn: conn,
             screens,
             workspaces,
             client_map: HashMap::new(),
@@ -88,18 +75,8 @@ impl WindowManager {
             debug!("configuring {} with {:?}", id, region);
             let (x, y, w, h) = region.values();
             let padding = 2 * (self.border_px + self.gap_px);
-
-            xcb::configure_window(
-                &self.conn,
-                id,
-                &[
-                    (WIN_X, x as u32 + self.gap_px),
-                    (WIN_Y, y as u32 + self.gap_px),
-                    (WIN_WIDTH, w as u32 - padding),
-                    (WIN_HEIGHT, h as u32 - padding),
-                    (WIN_BORDER, self.border_px),
-                ],
-            );
+            let r = Region::new(x + self.gap_px, y + self.gap_px, w - padding, h - padding);
+            self.conn.position_window(id, r, self.border_px);
         }
     }
 
@@ -135,7 +112,7 @@ impl WindowManager {
             return;
         }
 
-        let wm_class = match str_prop(&self.conn, win_id, "WM_CLASS") {
+        let wm_class = match self.conn.str_prop(win_id, "WM_CLASS") {
             Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
@@ -144,12 +121,14 @@ impl WindowManager {
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let client = Client::new(win_id, wm_class, floating, self.border_px);
         let wix = self.screens[self.focused_screen].wix;
+
         self.client_map.insert(win_id, wix);
         self.workspaces[wix].add_client(client);
-        self.workspaces[wix].focus_client(win_id, &self.conn, &self.color_scheme);
+        self.conn.focus_client(win_id);
+        self.conn.mark_new_window(win_id);
+        self.conn
+            .set_client_border_color(win_id, self.color_scheme.highlight);
 
-        // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
-        xcb::change_window_attributes(&self.conn, win_id, NEW_WINDOW_MASK);
         self.apply_layout(self.focused_screen);
     }
 
@@ -158,7 +137,7 @@ impl WindowManager {
         let win_id = event.event();
         debug!("focusing client {}", win_id);
         for ws in self.workspaces.iter_mut() {
-            ws.focus_client(win_id, &self.conn, &self.color_scheme);
+            ws.focus_client(win_id, self.conn, &self.color_scheme);
         }
     }
 
@@ -169,7 +148,7 @@ impl WindowManager {
             match ws.focused_client_mut() {
                 Some(client) => {
                     if client.id == win_id {
-                        client.unfocus(&self.conn, &self.color_scheme);
+                        client.unfocus(self.conn, &self.color_scheme);
                         return;
                     }
                 }
@@ -193,7 +172,7 @@ impl WindowManager {
      * mapped to a handler
      */
     pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
-        grab_keys(&self.conn, &bindings);
+        self.conn.grab_keys(&bindings);
         self.switch_workspace(0);
 
         loop {
@@ -234,7 +213,7 @@ impl WindowManager {
     fn cycle_client(&mut self, direction: Direction) {
         let scheme = self.color_scheme.clone();
         self.workspaces[self.screens[self.focused_screen].wix]
-            .cycle_client(direction, &self.conn, &scheme);
+            .cycle_client(direction, self.conn, &scheme);
     }
 
     /*
@@ -280,8 +259,8 @@ impl WindowManager {
         // target not currently displayed
         let current = self.screens[self.focused_screen].wix;
         self.screens[self.focused_screen].wix = index;
-        self.workspaces[current].unmap_clients(&self.conn);
-        self.workspaces[index].map_clients(&self.conn);
+        self.workspaces[current].unmap_clients(self.conn);
+        self.workspaces[index].map_clients(self.conn);
         self.apply_layout(self.focused_screen);
     }
 
@@ -294,7 +273,7 @@ impl WindowManager {
         };
 
         self.client_map.insert(client.id, index);
-        xcb::unmap_window(&self.conn, client.id);
+        self.conn.unmap_window(client.id);
         self.workspaces[index].add_client(client);
         self.apply_layout(self.focused_screen);
 
@@ -318,12 +297,8 @@ impl WindowManager {
             Some(client) => client.id,
             None => return,
         };
-        let wm_delete_window = intern_atom(&self.conn, "WM_DELETE_WINDOW");
-        let wm_protocols = intern_atom(&self.conn, "WM_PROTOCOLS");
-        let data =
-            xcb::ClientMessageData::from_data32([wm_delete_window, xcb::CURRENT_TIME, 0, 0, 0]);
-        let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
-        xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
+
+        self.conn.send_client_event(id, "WM_DELETE_WINDOW");
         self.conn.flush();
 
         self.remove_client(id);

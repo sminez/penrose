@@ -14,6 +14,7 @@
 extern crate penrose;
 
 use penrose::layout::{floating, side_stack};
+use penrose::xconnection::XcbConnection;
 use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager};
 
 fn main() {
@@ -61,21 +62,25 @@ fn main() {
 
     let floating_classes = &["rofi", "dmenu", "dunst"];
 
-    let mut wm = WindowManager::init(Config {
-        workspaces: workspaces,
-        fonts: fonts,
-        floating_classes: floating_classes,
-        layouts: layouts,
-        color_scheme: color_scheme,
-        border_px: 2,
-        gap_px: 5,
-        main_ratio_step: 0.05,
-        systray_spacing_px: 2,
-        show_systray: true,
-        show_bar: true,
-        top_bar: true,
-        respect_resize_hints: true,
-    });
+    let conn = XcbConnection::new();
+    let mut wm = WindowManager::init(
+        Config {
+            workspaces: workspaces,
+            fonts: fonts,
+            floating_classes: floating_classes,
+            layouts: layouts,
+            color_scheme: color_scheme,
+            border_px: 2,
+            gap_px: 5,
+            main_ratio_step: 0.05,
+            systray_spacing_px: 2,
+            show_systray: true,
+            show_bar: true,
+            top_bar: true,
+            respect_resize_hints: true,
+        },
+        &conn,
+    );
 
     wm.grab_keys_and_run(key_bindings);
 }
