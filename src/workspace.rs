@@ -10,8 +10,8 @@ use crate::layout::Layout;
  * can be moved between monitors freely, bringing their clients with them.
  */
 pub struct Workspace {
-    name: &'static str,
-    clients: Vec<Client>,
+    pub name: &'static str,
+    pub clients: Vec<Client>,
     layouts: Vec<Layout>,
     cix: usize, // currently selected layout
     lix: usize, // currently focused client
@@ -28,6 +28,7 @@ impl Workspace {
         }
     }
 
+    /// A reference to the currently focused client if there is one
     pub fn focused_client(&self) -> Option<&Client> {
         if self.clients.len() > 0 {
             Some(&self.clients[self.cix])
@@ -36,11 +37,19 @@ impl Workspace {
         }
     }
 
+    /// A mutable reference to the currently focused client if there is one
     pub fn focused_client_mut(&mut self) -> Option<&mut Client> {
         if self.clients.len() > 0 {
             Some(&mut self.clients[self.cix])
         } else {
             None
+        }
+    }
+
+    pub fn contains_id(&self, id: WinId) -> bool {
+        match self.clients.iter().find(|c| c.id == id) {
+            Some(_) => true,
+            None => false,
         }
     }
 
@@ -50,7 +59,8 @@ impl Workspace {
         self.cix = 0;
     }
 
-    /// Remove a target client, retaining focus at the same position in the stack
+    /// Remove a target client, retaining focus at the same position in the stack.
+    /// Returns the removed client if there was one to remove.
     pub fn remove_client(&mut self, id: WinId) -> Option<Client> {
         let mut ix = None;
 
@@ -73,7 +83,8 @@ impl Workspace {
         }
     }
 
-    /// Remove the focused client, retaining focus at the same position in the stack
+    /// Remove the currently focused client, keeping focus at the same position in the stack.
+    /// Returns the removed client if there was one to remove.
     pub fn remove_focused_client(&mut self) -> Option<Client> {
         self.remove_client_by_index(self.cix)
     }
@@ -122,6 +133,7 @@ impl Workspace {
     /// Place this workspace's windows onto a screen
     pub fn map_clients(&self, conn: &xcb::Connection) {
         for c in self.clients.iter() {
+            debug!("mapping {} on ws {}", c.id, self.name);
             xcb::map_window(conn, c.id);
         }
     }
@@ -130,6 +142,7 @@ impl Workspace {
     pub fn unmap_clients(&self, conn: &xcb::Connection) {
         for c in self.clients.iter() {
             xcb::unmap_window(conn, c.id);
+            debug!("unmapping {} on ws {}", c.id, self.name);
         }
     }
 

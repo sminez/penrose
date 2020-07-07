@@ -22,6 +22,31 @@ pub fn cycle_index(ix: usize, max: usize, direction: Direction) -> usize {
 }
 
 /**
+ * Run an external command, redirecting the process stdout and stderr to /dev/null
+ * Logs a warning if there were any errors in kicking off the process.
+ */
+pub fn spawn<S: Into<String>>(cmd: S) {
+    let s = cmd.into();
+    let parts: Vec<&str> = s.split_whitespace().collect();
+    let result = if parts.len() > 1 {
+        process::Command::new(parts[0])
+            .args(&parts[1..])
+            .stdout(process::Stdio::null())
+            .stderr(process::Stdio::null())
+            .spawn()
+    } else {
+        process::Command::new(parts[0])
+            .stdout(process::Stdio::null())
+            .stderr(process::Stdio::null())
+            .spawn()
+    };
+
+    if let Err(e) = result {
+        warn!("error spawning external program: {}", e);
+    };
+}
+
+/**
  * Run the xmodmap command to dump the system keymap table in a form
  * that we can load in and convert back to key codes. This lets the user
  * define key bindings in the way that they would expect while also

@@ -28,7 +28,7 @@ impl Client {
             id,
             wm_class,
             border_width,
-            is_focused: true,
+            is_focused: false,
             is_floating: floating,
             is_fullscreen: false,
         }

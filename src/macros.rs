@@ -63,29 +63,9 @@ macro_rules! notify(
 macro_rules! run_external(
     ($cmd:tt) => {
         {
-            let parts: Vec<&str> = $cmd.split_whitespace().collect();
-            if parts.len() > 1 {
-                Box::new(move |_: &mut $crate::manager::WindowManager| {
-                    match ::std::process::Command::new(parts[0])
-                        .args(&parts[1..])
-                        .stdout(::std::process::Stdio::null())
-                        .spawn()
-                    {
-                        Err(e) => warn!("error spawning external program: {}", e),
-                        Ok(_) => (),
-                    };
-                }) as $crate::data_types::FireAndForget
-            } else {
-                Box::new(move |_: &mut $crate::manager::WindowManager| {
-                    match ::std::process::Command::new(parts[0])
-                        .stdout(::std::process::Stdio::null())
-                        .spawn()
-                    {
-                        Err(e) => warn!("error spawning external program: {}", e),
-                        Ok(_) => (),
-                    };
-                }) as $crate::data_types::FireAndForget
-            }
+            Box::new(move |_: &mut $crate::manager::WindowManager| {
+                $crate::helpers::spawn($cmd);
+            }) as $crate::data_types::FireAndForget
         }
     };
 );
@@ -140,9 +120,9 @@ macro_rules! gen_keybindings(
                 };
             )+
 
-            for i in 1..$ws_array.len() {
+            for i in 0..$ws_array.len() {
                 $(
-                    let for_ws = format!($ws_binding, i);
+                    let for_ws = format!($ws_binding, i+1);
                     match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
                         None => die!("invalid key binding: {}", for_ws),
                         Some(key_code) => _map.insert(key_code, run_internal!($ws_action, i)),

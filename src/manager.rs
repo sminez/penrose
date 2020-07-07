@@ -1,8 +1,9 @@
 use crate::client::Client;
 use crate::data_types::{Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, WinId};
-use crate::helpers::{grab_keys, intern_atom, str_prop};
+use crate::helpers::{grab_keys, intern_atom, spawn, str_prop};
 use crate::screen::Screen;
 use crate::workspace::Workspace;
+use std::collections::HashMap;
 use std::process;
 use xcb;
 
@@ -28,6 +29,7 @@ pub struct WindowManager {
     conn: xcb::Connection,
     screens: Vec<Screen>,
     workspaces: Vec<Workspace>,
+    client_map: HashMap<WinId, usize>,
     focused_screen: usize,
     // config
     fonts: &'static [&'static str],
@@ -62,6 +64,7 @@ impl WindowManager {
             conn,
             screens,
             workspaces,
+            client_map: HashMap::new(),
             focused_screen: 0,
             fonts: conf.fonts,
             floating_classes: conf.floating_classes,
@@ -101,11 +104,14 @@ impl WindowManager {
     }
 
     fn remove_client(&mut self, win_id: WinId) {
-        debug!("removing ref to client {}", win_id);
-
-        // TODO: may not be on this screen...
-        self.workspace_for_screen_mut(self.focused_screen)
-            .remove_client(win_id);
+        match self.client_map.get(&win_id) {
+            Some(ix) => {
+                debug!("removing ref to client {}", win_id);
+                self.workspaces[*ix].remove_client(win_id);
+                self.client_map.remove(&win_id);
+            }
+            None => warn!("attempt to remove unknown window {}", win_id),
+        }
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
@@ -123,8 +129,12 @@ impl WindowManager {
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
-    fn new_window(&mut self, event: &xcb::MapNotifyEvent) {
+    fn map_x_window(&mut self, event: &xcb::MapNotifyEvent) {
         let win_id = event.window();
+        if self.client_map.contains_key(&win_id) {
+            return;
+        }
+
         let wm_class = match str_prop(&self.conn, win_id, "WM_CLASS") {
             Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
@@ -133,11 +143,10 @@ impl WindowManager {
         debug!("handling new window: {}", wm_class);
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let client = Client::new(win_id, wm_class, floating, self.border_px);
-
-        if !floating {
-            self.workspace_for_screen_mut(self.focused_screen)
-                .add_client(client);
-        }
+        let wix = self.screens[self.focused_screen].wix;
+        self.client_map.insert(win_id, wix);
+        self.workspaces[wix].add_client(client);
+        self.workspaces[wix].focus_client(win_id, &self.conn, &self.color_scheme);
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
         xcb::change_window_attributes(&self.conn, win_id, NEW_WINDOW_MASK);
@@ -185,6 +194,7 @@ impl WindowManager {
      */
     pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
         grab_keys(&self.conn, &bindings);
+        self.switch_workspace(0);
 
         loop {
             if let Some(event) = self.conn.wait_for_event() {
@@ -194,7 +204,7 @@ impl WindowManager {
                     // xcb::BUTTON_PRESS => self.button_press(unsafe { xcb::cast_event(&event) }),
                     // xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
                     // window actions
-                    xcb::MAP_NOTIFY => self.new_window(unsafe { xcb::cast_event(&event) }),
+                    xcb::MAP_NOTIFY => self.map_x_window(unsafe { xcb::cast_event(&event) }),
                     xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
                     xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
                     // xcb::MOTION_NOTIFY => self.resize_window(unsafe { xcb::cast_event(&event) }),
@@ -242,12 +252,12 @@ impl WindowManager {
     pub fn switch_workspace(&mut self, index: usize) {
         notify!("switching to ws: {}", index);
         match index {
-            0 => run_external!("xsetroot -solid #282828")(self),
-            1 => run_external!("xsetroot -solid #cc241d")(self),
-            2 => run_external!("xsetroot -solid #458588")(self),
-            3 => run_external!("xsetroot -solid #fabd2f")(self),
-            4 => run_external!("xsetroot -solid #b8bb26")(self),
-            _ => run_external!("xsetroot -solid #ebdbb2")(self),
+            0 => spawn("xsetroot -solid #282828"),
+            1 => spawn("xsetroot -solid #cc241d"),
+            2 => spawn("xsetroot -solid #458588"),
+            3 => spawn("xsetroot -solid #fabd2f"),
+            4 => spawn("xsetroot -solid #b8bb26"),
+            _ => spawn("xsetroot -solid #ebdbb2"),
         };
 
         for i in 0..self.screens.len() {
@@ -283,6 +293,8 @@ impl WindowManager {
             None => return,
         };
 
+        self.client_map.insert(client.id, index);
+        xcb::unmap_window(&self.conn, client.id);
         self.workspaces[index].add_client(client);
         self.apply_layout(self.focused_screen);
 
