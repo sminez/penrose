@@ -106,8 +106,6 @@ impl Layout {
 
 /*
  * Utility functions for simplifying writing layouts
- *
- * NOTE: public so that they can be used by layouts in other files if needed.
  */
 
 /// number of clients for the main area vs secondary
@@ -130,7 +128,9 @@ pub fn client_breakdown(clients: &Vec<Client>, n_main: u32) -> (u32, u32) {
  * that deliberately overlaps clients under the main window.
  */
 
-/// A no-op floating layout that simply satisfies the type required for Layout
+/**
+ * A no-op floating layout that simply satisfies the type required for Layout
+ */
 pub fn floating(
     _clients: &Vec<Client>,
     _monitor_region: &Region,
@@ -140,15 +140,17 @@ pub fn floating(
     vec![]
 }
 
-/// A simple layout that places the main region on the left and tiles remaining
-/// windows in a single column to the right.
+/**
+ * A simple layout that places the main region on the left and tiles remaining
+ * windows in a single column to the right.
+ */
 pub fn side_stack(
     client_ids: &Vec<Client>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
-    let (_, _, mw, mh) = monitor_region.values();
+    let (mx, my, mw, mh) = monitor_region.values();
     let (n_main, n_stack) = client_breakdown(&client_ids, max_main);
     let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
     let h_main = if n_main > 0 { mh / n_main } else { 0 };
@@ -165,10 +167,11 @@ pub fn side_stack(
             let n = n as u32;
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
-                (c.id, Region::new(0, n * h_main, w, h_main))
+                (c.id, Region::new(mx, my + n * h_main, w, h_main))
             } else {
                 let sn = n - max_main; // nth stacked client
-                (c.id, Region::new(split, sn * h_stack, mw - split, h_stack))
+                let region = Region::new(mx + split, my + sn * h_stack, mw - split, h_stack);
+                (c.id, region)
             }
         })
         .collect()
