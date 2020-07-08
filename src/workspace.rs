@@ -12,7 +12,7 @@ use crate::xconnection::XConn;
  */
 pub struct Workspace {
     pub name: &'static str,
-    pub clients: Vec<Client>,
+    clients: Vec<Client>,
     layouts: Vec<Layout>,
     cix: usize, // currently selected layout
     lix: usize, // currently focused client
@@ -163,5 +163,60 @@ impl Workspace {
         } else {
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::Client;
+    // use crate::layout::{floating, LayoutKind};
+
+    #[test]
+    fn ref_to_focused_client() {
+        let mut ws = Workspace::new("test", vec![]);
+        assert_eq!(ws.focused_client(), None);
+        ws.clients = vec![
+            Client::new(42, "focused first".into(), false),
+            Client::new(123, "focused second".into(), false),
+        ];
+
+        if let Some(c) = ws.focused_client() {
+            assert_eq!(c.id, 42);
+            assert_eq!(&c.wm_class, "focused first");
+        } else {
+            panic!();
+        }
+
+        ws.cix = 1;
+        if let Some(c) = ws.focused_client() {
+            assert_eq!(c.id, 123);
+            assert_eq!(&c.wm_class, "focused second");
+        } else {
+            panic!();
+        }
+    }
+
+    #[test]
+    fn removing_a_client_when_present() {
+        let mut ws = Workspace::new("test", vec![]);
+        let c = Client::new(42, "removed".into(), false);
+        ws.clients = vec![Client::new(13, "retained".into(), false), c];
+        let removed = ws.remove_client(42);
+
+        assert_ne!(removed, None);
+        if let Some(r) = removed {
+            assert_eq!(r.id, 42);
+            assert_eq!(&r.wm_class, "removed");
+        }
+    }
+
+    #[test]
+    fn removing_a_client_when_not_present() {
+        let mut ws = Workspace::new("test", vec![]);
+        ws.clients = vec![Client::new(13, "retained".into(), false)];
+        let removed = ws.remove_client(42);
+
+        assert_eq!(removed, None);
     }
 }

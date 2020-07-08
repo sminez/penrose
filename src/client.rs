@@ -9,8 +9,7 @@ use crate::xconnection::XConn;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Client {
     pub id: WinId,
-    wm_class: String,
-    border_width: u32,
+    pub wm_class: String,
     // state flags
     pub is_focused: bool,
     pub is_floating: bool,
@@ -18,11 +17,10 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(id: WinId, wm_class: String, floating: bool, border_width: u32) -> Client {
+    pub fn new(id: WinId, wm_class: String, floating: bool) -> Client {
         Client {
             id,
             wm_class,
-            border_width,
             is_focused: false,
             is_floating: floating,
             is_fullscreen: false,

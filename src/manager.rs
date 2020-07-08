@@ -23,17 +23,17 @@ pub struct WindowManager<'a> {
     client_map: HashMap<WinId, usize>,
     focused_screen: usize,
     // config
-    fonts: &'static [&'static str],
+    // fonts: &'static [&'static str],
     floating_classes: &'static [&'static str],
     color_scheme: ColorScheme,
     border_px: u32,
     gap_px: u32,
     main_ratio_step: f32,
-    systray_spacing_px: u32,
-    show_systray: bool,
-    show_bar: bool,
-    top_bar: bool,
-    respect_resize_hints: bool,
+    // systray_spacing_px: u32,
+    // show_systray: bool,
+    // show_bar: bool,
+    // top_bar: bool,
+    // respect_resize_hints: bool,
 }
 
 impl<'a> WindowManager<'a> {
@@ -53,17 +53,17 @@ impl<'a> WindowManager<'a> {
             workspaces,
             client_map: HashMap::new(),
             focused_screen: 0,
-            fonts: conf.fonts,
+            // fonts: conf.fonts,
             floating_classes: conf.floating_classes,
             color_scheme: conf.color_scheme,
             border_px: conf.border_px,
             gap_px: conf.gap_px,
             main_ratio_step: conf.main_ratio_step,
-            systray_spacing_px: conf.systray_spacing_px,
-            show_systray: conf.show_systray,
-            show_bar: conf.show_bar,
-            top_bar: conf.top_bar,
-            respect_resize_hints: conf.respect_resize_hints,
+            // systray_spacing_px: conf.systray_spacing_px,
+            // show_systray: conf.show_systray,
+            // show_bar: conf.show_bar,
+            // top_bar: conf.top_bar,
+            // respect_resize_hints: conf.respect_resize_hints,
         }
     }
 
@@ -119,7 +119,7 @@ impl<'a> WindowManager<'a> {
 
         debug!("handling new window: {}", wm_class);
         let floating = self.floating_classes.contains(&wm_class.as_ref());
-        let client = Client::new(win_id, wm_class, floating, self.border_px);
+        let client = Client::new(win_id, wm_class, floating);
         let wix = self.screens[self.focused_screen].wix;
 
         self.client_map.insert(win_id, wix);
