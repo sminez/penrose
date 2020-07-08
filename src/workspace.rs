@@ -47,8 +47,9 @@ impl Workspace {
         }
     }
 
+    /// Check this workspace to see if it contains a given X window ID
     pub fn contains_id(&self, id: WinId) -> bool {
-        match self.clients.iter().find(|c| c.id == id) {
+        match self.clients.iter().find(|c| c.id() == id) {
             Some(_) => true,
             None => false,
         }
@@ -66,7 +67,7 @@ impl Workspace {
         let mut ix = None;
 
         for (i, c) in self.clients.iter().enumerate() {
-            if c.id == id {
+            if c.id() == id {
                 ix = Some(i)
             }
         }
@@ -134,22 +135,22 @@ impl Workspace {
     /// Place this workspace's windows onto a screen
     pub fn map_clients(&self, conn: &dyn XConn) {
         for c in self.clients.iter() {
-            debug!("mapping {} on ws {}", c.id, self.name);
-            conn.map_window(c.id);
+            debug!("mapping {} on ws {}", c.id(), self.name);
+            conn.map_window(c.id());
         }
     }
 
     /// Remove this workspace's windows from a screen
     pub fn unmap_clients(&self, conn: &dyn XConn) {
         for c in self.clients.iter() {
-            debug!("unmapping {} on ws {}", c.id, self.name);
-            conn.unmap_window(c.id);
+            debug!("unmapping {} on ws {}", c.id(), self.name);
+            conn.unmap_window(c.id());
         }
     }
 
     pub fn focus_client(&mut self, id: WinId, conn: &dyn XConn, color_scheme: &ColorScheme) {
         for c in self.clients.iter_mut() {
-            match (c.id == id, c.is_focused) {
+            match (c.id() == id, c.is_focused()) {
                 (true, false) => c.focus(conn, color_scheme),
                 (false, true) => c.unfocus(conn, color_scheme),
                 (_, _) => (),
@@ -173,50 +174,64 @@ mod tests {
     // use crate::layout::{floating, LayoutKind};
 
     #[test]
-    fn ref_to_focused_client() {
-        let mut ws = Workspace::new("test", vec![]);
+    fn ref_to_focused_client_when_empty() {
+        let ws = Workspace::new("test", vec![]);
         assert_eq!(ws.focused_client(), None);
+    }
+
+    #[test]
+    fn ref_to_focused_client_when_populated() {
+        let mut ws = Workspace::new("test", vec![]);
         ws.clients = vec![
             Client::new(42, "focused first".into(), false),
             Client::new(123, "focused second".into(), false),
         ];
 
-        if let Some(c) = ws.focused_client() {
-            assert_eq!(c.id, 42);
-            assert_eq!(&c.wm_class, "focused first");
-        } else {
-            panic!();
-        }
+        let c = ws.focused_client().expect("should have had a client for 0");
+        assert_eq!(c.id(), 42);
+        assert_eq!(c.class(), "focused first");
 
         ws.cix = 1;
-        if let Some(c) = ws.focused_client() {
-            assert_eq!(c.id, 123);
-            assert_eq!(&c.wm_class, "focused second");
-        } else {
-            panic!();
-        }
+        let c = ws.focused_client().expect("should have had a client for 1");
+        assert_eq!(c.id(), 123);
+        assert_eq!(c.class(), "focused second");
     }
 
     #[test]
     fn removing_a_client_when_present() {
         let mut ws = Workspace::new("test", vec![]);
-        let c = Client::new(42, "removed".into(), false);
-        ws.clients = vec![Client::new(13, "retained".into(), false), c];
-        let removed = ws.remove_client(42);
+        ws.clients = vec![
+            Client::new(13, "retained".into(), false),
+            Client::new(42, "removed".into(), false),
+        ];
 
-        assert_ne!(removed, None);
-        if let Some(r) = removed {
-            assert_eq!(r.id, 42);
-            assert_eq!(&r.wm_class, "removed");
-        }
+        let removed = ws
+            .remove_client(42)
+            .expect("should have had a client for id=42");
+        assert_eq!(removed.id(), 42);
+        assert_eq!(removed.class(), "removed");
     }
 
     #[test]
     fn removing_a_client_when_not_present() {
         let mut ws = Workspace::new("test", vec![]);
         ws.clients = vec![Client::new(13, "retained".into(), false)];
-        let removed = ws.remove_client(42);
 
+        let removed = ws.remove_client(42);
         assert_eq!(removed, None);
+    }
+
+    #[test]
+    fn adding_a_client() {
+        let mut ws = Workspace::new("test", vec![]);
+        let c1 = Client::new(10, "first".into(), false);
+        let c2 = Client::new(20, "second".into(), false);
+        let c3 = Client::new(30, "third".into(), false);
+        ws.add_client(c1);
+        ws.add_client(c2);
+        ws.add_client(c3);
+
+        let ids: Vec<WinId> = ws.clients.iter().map(|c| c.id()).collect();
+        assert_eq!(ids, vec![30, 20, 10], "not pushing at the top of the stack")
     }
 }

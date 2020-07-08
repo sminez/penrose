@@ -167,11 +167,11 @@ pub fn side_stack(
             let n = n as u32;
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
-                (c.id, Region::new(mx, my + n * h_main, w, h_main))
+                (c.id(), Region::new(mx, my + n * h_main, w, h_main))
             } else {
                 let sn = n - max_main; // nth stacked client
                 let region = Region::new(mx + split, my + sn * h_stack, mw - split, h_stack);
-                (c.id, region)
+                (c.id(), region)
             }
         })
         .collect()

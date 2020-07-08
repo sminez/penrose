@@ -8,12 +8,12 @@ use crate::xconnection::XConn;
  */
 #[derive(Debug, PartialEq, Clone)]
 pub struct Client {
-    pub id: WinId,
-    pub wm_class: String,
+    id: WinId,
+    wm_class: String,
     // state flags
-    pub is_focused: bool,
-    pub is_floating: bool,
-    pub is_fullscreen: bool,
+    focused: bool,
+    floating: bool,
+    fullscreen: bool,
 }
 
 impl Client {
@@ -21,21 +21,33 @@ impl Client {
         Client {
             id,
             wm_class,
-            is_focused: false,
-            is_floating: floating,
-            is_fullscreen: false,
+            focused: false,
+            floating: floating,
+            fullscreen: false,
         }
+    }
+
+    pub fn id(&self) -> WinId {
+        self.id
+    }
+
+    pub fn class(&self) -> &str {
+        &self.wm_class
+    }
+
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 
     pub fn focus(&mut self, conn: &dyn XConn, scheme: &ColorScheme) {
         conn.focus_client(self.id);
         self.set_window_border(conn, Border::Focused, scheme);
-        self.is_focused = true;
+        self.focused = true;
     }
 
     pub fn unfocus(&mut self, conn: &dyn XConn, scheme: &ColorScheme) {
         self.set_window_border(conn, Border::Unfocused, scheme);
-        self.is_focused = false;
+        self.focused = false;
     }
 
     fn set_window_border(&mut self, conn: &dyn XConn, border: Border, scheme: &ColorScheme) {

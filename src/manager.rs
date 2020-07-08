@@ -147,7 +147,7 @@ impl<'a> WindowManager<'a> {
         for ws in self.workspaces.iter_mut() {
             match ws.focused_client_mut() {
                 Some(client) => {
-                    if client.id == win_id {
+                    if client.id() == win_id {
                         client.unfocus(self.conn, &self.color_scheme);
                         return;
                     }
@@ -272,8 +272,8 @@ impl<'a> WindowManager<'a> {
             None => return,
         };
 
-        self.client_map.insert(client.id, index);
-        self.conn.unmap_window(client.id);
+        self.client_map.insert(client.id(), index);
+        self.conn.unmap_window(client.id());
         self.workspaces[index].add_client(client);
         self.apply_layout(self.focused_screen);
 
@@ -294,7 +294,7 @@ impl<'a> WindowManager<'a> {
 
     pub fn kill_client(&mut self) {
         let id = match self.focused_client() {
-            Some(client) => client.id,
+            Some(client) => client.id(),
             None => return,
         };
 
