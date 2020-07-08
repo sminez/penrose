@@ -11,7 +11,7 @@ use crate::xconnection::XConn;
  * can be moved between monitors freely, bringing their clients with them.
  */
 pub struct Workspace {
-    pub name: &'static str,
+    name: &'static str,
     clients: Vec<Client>,
     layouts: Vec<Layout>,
     cix: usize, // currently selected layout

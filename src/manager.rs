@@ -5,7 +5,7 @@ use crate::data_types::{
 use crate::helpers::spawn;
 use crate::screen::Screen;
 use crate::workspace::Workspace;
-use crate::xconnection::XConn;
+use crate::xconnection::{XConn, XEvent};
 use std::collections::HashMap;
 use std::process;
 
@@ -91,23 +91,20 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
     // fn button_press(&mut self, event: &xcb::ButtonPressEvent) {}
 
-    // xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
     // fn button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
 
-    // xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
-    fn key_press(&mut self, event: &xcb::KeyPressEvent, bindings: &KeyBindings) {
-        debug!("handling keypress: {} {}", event.state(), event.detail());
-        if let Some(action) = bindings.get(&KeyCode::from_key_press(event)) {
+    fn key_press(&mut self, key_code: KeyCode, bindings: &KeyBindings) {
+        if let Some(action) = bindings.get(&key_code) {
+            debug!("handling key code: {:?}", key_code);
             action(self);
+        } else {
+            warn!("caught unknown key code: {:?}", key_code);
         }
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
-    fn map_x_window(&mut self, event: &xcb::MapNotifyEvent) {
-        let win_id = event.window();
+    fn map_x_window(&mut self, win_id: WinId) {
         if self.client_map.contains_key(&win_id) {
             return;
         }
@@ -132,18 +129,14 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    fn focus_window(&mut self, event: &xcb::EnterNotifyEvent) {
-        let win_id = event.event();
+    fn focus_window(&mut self, win_id: WinId) {
         debug!("focusing client {}", win_id);
         for ws in self.workspaces.iter_mut() {
             ws.focus_client(win_id, self.conn, &self.color_scheme);
         }
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    fn unfocus_window(&mut self, event: &xcb::LeaveNotifyEvent) {
-        let win_id = event.event();
+    fn unfocus_window(&mut self, win_id: WinId) {
         for ws in self.workspaces.iter_mut() {
             match ws.focused_client_mut() {
                 Some(client) => {
@@ -157,12 +150,10 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
     // fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
 
-    // xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
-    fn destroy_window(&mut self, event: &xcb::DestroyNotifyEvent) {
-        self.remove_client(event.window());
+    fn destroy_window(&mut self, win_id: WinId) {
+        self.remove_client(win_id);
         self.apply_layout(self.focused_screen);
     }
 
@@ -177,18 +168,15 @@ impl<'a> WindowManager<'a> {
 
         loop {
             if let Some(event) = self.conn.wait_for_event() {
-                match event.response_type() {
-                    // user input
-                    xcb::KEY_PRESS => self.key_press(unsafe { xcb::cast_event(&event) }, &bindings),
-                    // xcb::BUTTON_PRESS => self.button_press(unsafe { xcb::cast_event(&event) }),
-                    // xcb::BUTTON_RELEASE => self.button_release(unsafe { xcb::cast_event(&event) }),
-                    // window actions
-                    xcb::MAP_NOTIFY => self.map_x_window(unsafe { xcb::cast_event(&event) }),
-                    xcb::ENTER_NOTIFY => self.focus_window(unsafe { xcb::cast_event(&event) }),
-                    xcb::LEAVE_NOTIFY => self.unfocus_window(unsafe { xcb::cast_event(&event) }),
-                    // xcb::MOTION_NOTIFY => self.resize_window(unsafe { xcb::cast_event(&event) }),
-                    xcb::DESTROY_NOTIFY => self.destroy_window(unsafe { xcb::cast_event(&event) }),
-                    // unknown event type
+                match event {
+                    XEvent::KeyPress(key_code) => self.key_press(key_code, &bindings),
+                    XEvent::Map(win_id) => self.map_x_window(win_id),
+                    XEvent::Enter(win_id) => self.focus_window(win_id),
+                    XEvent::Leave(win_id) => self.unfocus_window(win_id),
+                    XEvent::Destroy(win_id) => self.destroy_window(win_id),
+                    // XEvent::Motion => self.resize_window(),
+                    // XEvent::ButtonPress => self.button_press(),
+                    // XEvent::ButtonRelease => self.button_release(),
                     _ => (),
                 }
             }

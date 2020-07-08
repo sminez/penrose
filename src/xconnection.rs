@@ -1,4 +1,4 @@
-use crate::data_types::{KeyBindings, Region, WinId};
+use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
 use xcb;
 
@@ -27,10 +27,35 @@ const EVENT_MASK: &[(u32, u32)] = &[(
     xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
 )];
 
+/**
+ * Wrapper around the low level XCB event types that require casting to work with.
+ * Not all event fields are extracted so check the XCB documentation and update
+ * accordingly if you need access to something that isn't currently passed through
+ * to the WindowManager event loop.
+ */
+pub enum XEvent {
+    /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
+    ButtonPress,
+    /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
+    ButtonRelease,
+    /// xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
+    KeyPress(KeyCode),
+    /// xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
+    Map(WinId),
+    /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
+    Enter(WinId),
+    /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
+    Leave(WinId),
+    /// xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
+    Motion,
+    /// xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
+    Destroy(WinId),
+}
+
 /// A handle on a running X11 connection that we can use for issuing X requests
 pub trait XConn {
     fn flush(&self) -> bool;
-    fn wait_for_event(&self) -> Option<xcb::base::GenericEvent>;
+    fn wait_for_event(&self) -> Option<XEvent>;
     fn current_outputs(&self) -> Vec<Screen>;
     fn position_window(&self, id: WinId, r: Region, border: u32);
     fn mark_new_window(&self, id: WinId);
@@ -83,8 +108,47 @@ impl XConn for XcbConnection {
         self.conn.flush()
     }
 
-    fn wait_for_event(&self) -> Option<xcb::base::GenericEvent> {
-        self.conn.wait_for_event()
+    fn wait_for_event(&self) -> Option<XEvent> {
+        self.conn.wait_for_event().and_then(|event| {
+            let etype = event.response_type();
+            match etype {
+                xcb::BUTTON_PRESS => None,
+
+                xcb::BUTTON_RELEASE => None,
+
+                xcb::KEY_PRESS => {
+                    let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::KeyPress(KeyCode::from_key_press(e)))
+                }
+
+                xcb::MAP_NOTIFY => {
+                    let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::Map(e.window()))
+                }
+
+                xcb::ENTER_NOTIFY => {
+                    let e: &xcb::EnterNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::Enter(e.event()))
+                }
+
+                xcb::LEAVE_NOTIFY => {
+                    let e: &xcb::LeaveNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::Leave(e.event()))
+                }
+
+                xcb::MOTION_NOTIFY => None,
+
+                xcb::DESTROY_NOTIFY => {
+                    let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::Destroy(e.event()))
+                }
+
+                _ => {
+                    warn!("caught unknown event: {:?}", etype);
+                    None
+                }
+            }
+        })
     }
 
     fn current_outputs(&self) -> Vec<Screen> {
