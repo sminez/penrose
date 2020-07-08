@@ -44,7 +44,7 @@ impl<'a> WindowManager<'a> {
         let workspaces: Vec<Workspace> = conf
             .workspaces
             .iter()
-            .map(|name| Workspace::new(name, conf.layouts.clone()))
+            .map(|name| Workspace::new(name, conf.layouts.clone().to_vec()))
             .collect();
 
         WindowManager {
@@ -330,5 +330,61 @@ impl<'a> WindowManager<'a> {
         self.workspace_for_screen_mut(self.focused_screen)
             .update_main_ratio(Change::Less, step);
         self.apply_layout(self.focused_screen);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /*
+     * NOTE: using mockiato for mocking
+     *       https://docs.rs/mockiato/0.9.5/mockiato/
+     */
+
+    use super::*;
+    use crate::data_types::*;
+    use crate::layout::*;
+    use crate::screen::*;
+    use crate::xconnection::*;
+
+    const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
+    const WORKSPACES: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    const FLOATING_CLASSES: &[&str] = &["rofi", "dmenu", "dunst"];
+    const COLOR_SCHEME: ColorScheme = ColorScheme {
+        bg: 0x282828,        // #282828
+        fg_1: 0x3c3836,      // #3c3836
+        fg_2: 0xa89984,      // #a89984
+        fg_3: 0xf2e5bc,      // #f2e5bc
+        highlight: 0xcc241d, // #cc241d
+        urgent: 0x458588,    // #458588
+    };
+
+    fn mock_conn() -> impl XConn {
+        let mut conn = XConnMock::new();
+        conn.expect_current_outputs().times(1).returns(vec![Screen {
+            region: Region::new(0, 0, 1366, 768),
+            wix: 0,
+        }]);
+
+        conn
+    }
+
+    fn wm_with_mock_conn<'a>(layouts: Vec<Layout>, conn: &'a dyn XConn) -> WindowManager<'a> {
+        let conf = Config {
+            workspaces: WORKSPACES,
+            fonts: FONTS,
+            floating_classes: FLOATING_CLASSES,
+            layouts: layouts,
+            color_scheme: COLOR_SCHEME,
+            border_px: 2,
+            gap_px: 5,
+            main_ratio_step: 0.05,
+            systray_spacing_px: 2,
+            show_systray: true,
+            show_bar: true,
+            top_bar: true,
+            respect_resize_hints: true,
+        };
+
+        WindowManager::init(conf, conn)
     }
 }

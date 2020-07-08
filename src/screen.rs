@@ -5,6 +5,7 @@ use xcb::ffi::randr::xcb_randr_get_crtc_info_reply_t;
 
 type CRTCInfoReply = Reply<xcb_randr_get_crtc_info_reply_t>;
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Screen {
     pub region: Region, // screen dimensions
     pub wix: usize,     // active workspace

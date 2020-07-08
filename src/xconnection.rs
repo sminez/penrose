@@ -2,6 +2,9 @@ use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
 use xcb;
 
+#[cfg(test)]
+use mockiato::mockable;
+
 /*
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
  */
@@ -53,6 +56,7 @@ pub enum XEvent {
 }
 
 /// A handle on a running X11 connection that we can use for issuing X requests
+#[cfg_attr(test, mockable)]
 pub trait XConn {
     fn flush(&self) -> bool;
     fn wait_for_event(&self) -> Option<XEvent>;
