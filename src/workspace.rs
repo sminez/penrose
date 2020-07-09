@@ -1,3 +1,4 @@
+//! A Workspace is a set of displayed clients and a Layout arranging them
 use crate::client::Client;
 use crate::data_types::{Change, ColorScheme, Direction, Region, ResizeAction, Ring, WinId};
 use crate::layout::Layout;
@@ -9,6 +10,7 @@ use crate::xconnection::XConn;
  * clients are referenced by ID. Workspaces are independant of monitors and
  * can be moved between monitors freely, bringing their clients with them.
  */
+#[derive(Debug)]
 pub struct Workspace {
     name: &'static str,
     clients: Ring<Client>,

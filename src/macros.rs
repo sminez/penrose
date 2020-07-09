@@ -1,4 +1,7 @@
-/// log the reason why we we're dying and run cleanup (if any)
+//! Utility macros for use in the rest of penrose.
+//! Not intended for general use
+
+/// log the reason why we we're dying and immediately exit
 #[macro_export]
 macro_rules! die(
     ($msg:expr) => ({
@@ -12,6 +15,7 @@ macro_rules! die(
      });
 );
 
+/// Log a WARN level message to stderr
 #[macro_export]
 macro_rules! warn(
     ($msg:expr) => { eprintln!("WARN :: {}", $msg); };
@@ -20,6 +24,7 @@ macro_rules! warn(
     };
 );
 
+/// Log an INFO level message to stderr
 #[macro_export]
 macro_rules! log(
     ($msg:expr) => { eprintln!("INFO :: {}", $msg); };
@@ -28,6 +33,7 @@ macro_rules! log(
     };
 );
 
+/// Log an DBUG level message to stderr if we were compiled in debug
 #[macro_export]
 macro_rules! debug(
     ($msg:expr) => {

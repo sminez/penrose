@@ -1,3 +1,4 @@
+//! Main logic for running Penrose
 use crate::client::Client;
 use crate::data_types::{
     Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, Region, WinId,
@@ -37,6 +38,8 @@ pub struct WindowManager<'a> {
 }
 
 impl<'a> WindowManager<'a> {
+    /// Initialise a new window manager instance using an existing connection to
+    /// the X server.
     pub fn init(conf: Config, conn: &'a dyn XConn) -> WindowManager {
         let screens = conn.current_outputs();
         log!("connected to X server: {} screens detected", screens.len());
@@ -99,8 +102,6 @@ impl<'a> WindowManager<'a> {
         if let Some(action) = bindings.get(&key_code) {
             debug!("handling key code: {:?}", key_code);
             action(self);
-        } else {
-            warn!("caught unknown key code: {:?}", key_code);
         }
     }
 
@@ -123,9 +124,8 @@ impl<'a> WindowManager<'a> {
         self.workspaces[wix].add_client(client);
         self.conn.focus_client(win_id);
         self.conn.mark_new_window(win_id);
-        self.conn
-            .set_client_border_color(win_id, self.color_scheme.highlight);
-
+        let color = self.color_scheme.highlight;
+        self.conn.set_client_border_color(win_id, color);
         self.apply_layout(self.focused_screen);
     }
 
@@ -138,14 +138,11 @@ impl<'a> WindowManager<'a> {
 
     fn unfocus_window(&mut self, win_id: WinId) {
         for ws in self.workspaces.iter_mut() {
-            match ws.focused_client_mut() {
-                Some(client) => {
-                    if client.id() == win_id {
-                        client.unfocus(self.conn, &self.color_scheme);
-                        return;
-                    }
+            if let Some(client) = ws.focused_client_mut() {
+                if client.id() == win_id {
+                    client.unfocus(self.conn, &self.color_scheme);
+                    return;
                 }
-                None => (),
             }
         }
     }
@@ -211,11 +208,19 @@ impl<'a> WindowManager<'a> {
      * handlers which will then be run each time they are triggered
      */
 
+    /// Shut down the WindowManager, running any required cleanup and exiting penrose
     pub fn exit(&mut self) {
         self.conn.flush();
         process::exit(0);
     }
 
+    /**
+     * Set the displayed workspace for the focused screen to be `index` in the list of
+     * workspaces passed at `init`. This will panic if the index passed is out of
+     * bounds which is only possible if you manually bind an action to this with an
+     * invalid index. You should almost always be using the `gen_keybindings!` macro
+     * to set up your keybindings so this is not normally an issue.
+     */
     pub fn switch_workspace(&mut self, index: usize) {
         notify!("switching to ws: {}", index);
         match index {
@@ -252,6 +257,10 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
+    /**
+     * Move the focused client to the workspace at `index` in the workspaces list.
+     * This will panic if you pass an index that is out of bounds.
+     */
     pub fn client_to_workspace(&mut self, index: usize) {
         debug!("moving focused client to workspace: {}", index);
         let ws = self.workspace_for_screen_mut(self.focused_screen);
@@ -272,14 +281,17 @@ impl<'a> WindowManager<'a> {
         }
     }
 
+    /// Move focus to the next client in the stack
     pub fn next_client(&mut self) {
         self.cycle_client(Direction::Forward);
     }
 
+    /// Move focus to the previous client in the stack
     pub fn previous_client(&mut self) {
         self.cycle_client(Direction::Backward);
     }
 
+    /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         let id = match self.focused_client() {
             Some(client) => client.id(),
@@ -294,30 +306,35 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
+    /// Rearrange the windows on the focused screen using the next available layout
     pub fn next_layout(&mut self) {
         self.workspace_for_screen_mut(self.focused_screen)
             .cycle_layout(Direction::Forward);
         self.apply_layout(self.focused_screen);
     }
 
+    /// Rearrange the windows on the focused screen using the previous layout
     pub fn previous_layout(&mut self) {
         self.workspace_for_screen_mut(self.focused_screen)
             .cycle_layout(Direction::Backward);
         self.apply_layout(self.focused_screen);
     }
 
+    /// Increaase the number of windows in the main layout area
     pub fn inc_main(&mut self) {
         self.workspace_for_screen_mut(self.focused_screen)
             .update_max_main(Change::More);
         self.apply_layout(self.focused_screen);
     }
 
+    /// Reduce the number of windows in the main layout area
     pub fn dec_main(&mut self) {
         self.workspace_for_screen_mut(self.focused_screen)
             .update_max_main(Change::Less);
         self.apply_layout(self.focused_screen);
     }
 
+    /// Make the main area larger relative to sub-areas
     pub fn inc_ratio(&mut self) {
         let step = self.main_ratio_step;
         self.workspace_for_screen_mut(self.focused_screen)
@@ -325,6 +342,7 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
+    /// Make the main area smaller relative to sub-areas
     pub fn dec_ratio(&mut self) {
         let step = self.main_ratio_step;
         self.workspace_for_screen_mut(self.focused_screen)

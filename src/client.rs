@@ -1,3 +1,4 @@
+//! Metadata around X clients and manipulating them
 use crate::data_types::{Border, ColorScheme, WinId};
 use crate::xconnection::XConn;
 

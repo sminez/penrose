@@ -1,5 +1,7 @@
+//! API wrapper for talking to the X server using XCB
 use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
+use std::fmt;
 use xcb;
 
 #[cfg(test)]
@@ -36,6 +38,7 @@ const EVENT_MASK: &[(u32, u32)] = &[(
  * accordingly if you need access to something that isn't currently passed through
  * to the WindowManager event loop.
  */
+#[derive(Debug)]
 pub enum XEvent {
     /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
     ButtonPress,
@@ -58,15 +61,34 @@ pub enum XEvent {
 /// A handle on a running X11 connection that we can use for issuing X requests
 #[cfg_attr(test, mockable)]
 pub trait XConn {
+    /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
+
+    /// Wait for the next event from the X server and return it as an XEvent
     fn wait_for_event(&self) -> Option<XEvent>;
+
+    /// Determine the currently connected CRTCs and return their details
     fn current_outputs(&self) -> Vec<Screen>;
+
+    /// Reposition the window identified by 'id' to the specifed region
     fn position_window(&self, id: WinId, r: Region, border: u32);
+
+    /// Mark the given window as newly created
     fn mark_new_window(&self, id: WinId);
+
+    /// Map a window to the display. Called each time a map_notify event is received
     fn map_window(&self, id: WinId);
+
+    /// Unmap a window from the display. Called each time an unmap_notify event is received
     fn unmap_window(&self, id: WinId);
+
+    /// Send an X event to the target window
     fn send_client_event(&self, id: WinId, atom_name: &str);
+
+    /// Mark the given client as having focus
     fn focus_client(&self, id: WinId);
+
+    /// Change the border color for the given client
     fn set_client_border_color(&self, id: WinId, color: u32);
 
     /**
@@ -88,6 +110,7 @@ pub trait XConn {
      */
     fn str_prop(&self, id: u32, name: &str) -> Result<String, String>;
 
+    /// Fetch an atom prop by name
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32, String>;
 }
 
@@ -96,7 +119,14 @@ pub struct XcbConnection {
     conn: xcb::Connection,
 }
 
+impl fmt::Debug for XcbConnection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("XcbConnection").finish()
+    }
+}
+
 impl XcbConnection {
+    /// Establish a new connection to the running X server. Fails if unable to connect
     pub fn new() -> XcbConnection {
         let (conn, _) = match xcb::Connection::connect(None) {
             Err(e) => die!("unable to establish connection to X server: {}", e),

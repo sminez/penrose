@@ -14,8 +14,7 @@
 extern crate penrose;
 
 use penrose::layout::{floating, side_stack};
-use penrose::xconnection::XcbConnection;
-use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager};
+use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager, XcbConnection};
 
 fn main() {
     let workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];

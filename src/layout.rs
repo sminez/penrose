@@ -1,4 +1,4 @@
-/**
+/*!
  * Layouts are maintained per monitor and allow for indepent management of the two
  * paramaters (n_main, main_ratio) that are used to modify layout logic. As penrose
  * makes use of a tagging system as opposed to workspaces, layouts will be passed a
@@ -9,6 +9,7 @@
  */
 use crate::client::Client;
 use crate::data_types::{Change, Region, ResizeAction};
+use std::fmt;
 
 /**
  * Almost all layouts will be 'Normal' but penrose allows both for layouts that
@@ -18,11 +19,14 @@ use crate::data_types::{Change, Region, ResizeAction};
  * point as kind == Floating disables calling through to the wrapped layout
  * function.
  */
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum LayoutKind {
-    Floating, // Floating layouts will not apply window resizing
-    Gapless,  // Prevent borders and gaps being added to windows
-    Normal,   // Gaps and borders will be added as per config.rs
+    /// Floating layouts will not apply window resizing
+    Floating,
+    /// Prevent borders and gaps being added to windows
+    Gapless,
+    /// Gaps and borders will be added as per config.rs
+    Normal,
 }
 
 /**
@@ -46,11 +50,25 @@ pub enum LayoutKind {
  */
 #[derive(Clone, Copy)]
 pub struct Layout {
+    /// How this layout should be applied by the WindowManager
     pub kind: LayoutKind,
+    /// User defined symbol for displaying in the status bar
     pub symbol: &'static str,
     max_main: u32,
     ratio: f32,
     f: fn(&Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
+}
+
+impl fmt::Debug for Layout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Layout")
+            .field("kind", &self.kind)
+            .field("symbol", &self.symbol)
+            .field("max_main", &self.max_main)
+            .field("ratio", &self.ratio)
+            .field("f", &stringify!(&self.f))
+            .finish()
+    }
 }
 
 impl Layout {

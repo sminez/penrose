@@ -1,15 +1,27 @@
+//! Simple data types and enums
 use crate::layout::Layout;
 use crate::manager::WindowManager;
 use std::collections::HashMap;
 use std::ops;
 use xcb;
 
+/// Some action to be run by a user key binding
 pub type FireAndForget = Box<dyn Fn(&mut WindowManager) -> ()>;
+
+/// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
+
+/// Output of a Layout function: the new position a window should take
 pub type ResizeAction = (WinId, Region);
+
+/// Map xmodmap key names to their X key code so that we can bind them by name
 pub type CodeMap = HashMap<String, u8>;
+
+/// An X window ID
 pub type WinId = u32;
 
+/// The main user facing configuration details
+#[derive(Debug)]
 pub struct Config {
     pub workspaces: &'static [&'static str],
     pub fonts: &'static [&'static str],
@@ -28,22 +40,36 @@ pub struct Config {
 
 /* Argument enums */
 
+/// A direction to permute a Ring
+#[derive(Debug)]
 pub enum Direction {
+    /// increase the index, wrapping if needed
     Forward,
+    /// decrease the index, wrapping if needed
     Backward,
 }
 
+/// Increment / decrement a value
+#[derive(Debug)]
 pub enum Change {
+    /// increase the value
     More,
+    /// decrease the value, possibly clamping
     Less,
 }
 
+/// X window border kind
+#[derive(Debug)]
 pub enum Border {
+    /// window is urgent
     Urgent,
+    /// window currently has focus
     Focused,
+    /// window does not have focus
     Unfocused,
 }
 
+/// An X window / screen position: top left corner + extent
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Region {
     x: u32,

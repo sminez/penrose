@@ -1,3 +1,8 @@
+//! A tiling window manager in the style of Xmonad
+// TODO: enable these once we are stable enough
+// #![warn(missing_debug_implementations)]
+// #![warn(missing_docs)]
+
 #[macro_use]
 pub mod macros;
 
@@ -14,3 +19,4 @@ pub mod xconnection;
 pub use data_types::{ColorScheme, Config};
 pub use layout::{Layout, LayoutKind};
 pub use manager::WindowManager;
+pub use xconnection::XcbConnection;

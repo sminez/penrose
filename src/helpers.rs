@@ -1,14 +1,7 @@
-use crate::data_types::{CodeMap, Direction, KeyCode};
+//! Utility functions for use in other parts of penrose
+use crate::data_types::{CodeMap, KeyCode};
 use std::process;
 use xcb;
-
-/// Cycle through a set of indices, wrapping at either end
-pub fn cycle_index(ix: usize, max: usize, direction: Direction) -> usize {
-    match direction {
-        Direction::Forward => return if ix == max { 0 } else { ix + 1 },
-        Direction::Backward => return if ix == 0 { max } else { ix - 1 },
-    }
-}
 
 /**
  * Run an external command, redirecting the process stdout and stderr to /dev/null
