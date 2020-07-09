@@ -1,11 +1,7 @@
 //! API wrapper for talking to the X server using XCB
 use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
-use std::fmt;
 use xcb;
-
-#[cfg(test)]
-use mockiato::mockable;
 
 /*
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
@@ -38,7 +34,7 @@ const EVENT_MASK: &[(u32, u32)] = &[(
  * accordingly if you need access to something that isn't currently passed through
  * to the WindowManager event loop.
  */
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum XEvent {
     /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
     ButtonPress,
@@ -59,7 +55,6 @@ pub enum XEvent {
 }
 
 /// A handle on a running X11 connection that we can use for issuing X requests
-#[cfg_attr(test, mockable)]
 pub trait XConn {
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
@@ -117,12 +112,6 @@ pub trait XConn {
 /// Handles communication with an X server via xcb
 pub struct XcbConnection {
     conn: xcb::Connection,
-}
-
-impl fmt::Debug for XcbConnection {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("XcbConnection").finish()
-    }
 }
 
 impl XcbConnection {
@@ -398,5 +387,44 @@ impl XConn for XcbConnection {
                 }
             }
         }
+    }
+}
+
+pub struct MockXConn {
+    screens: Vec<Screen>,
+}
+
+impl MockXConn {
+    pub fn new(screens: Vec<Screen>) -> Self {
+        MockXConn { screens }
+    }
+}
+
+impl XConn for MockXConn {
+    fn flush(&self) -> bool {
+        true
+    }
+    fn wait_for_event(&self) -> Option<XEvent> {
+        None
+    }
+    fn current_outputs(&self) -> Vec<Screen> {
+        self.screens.clone()
+    }
+    fn position_window(&self, _: WinId, _: Region, _: u32) {}
+    fn mark_new_window(&self, _: WinId) {}
+    fn map_window(&self, _: WinId) {}
+    fn unmap_window(&self, _: WinId) {}
+    fn send_client_event(&self, _: WinId, _: &str) {}
+    fn focus_client(&self, _: WinId) {}
+    fn set_client_border_color(&self, _: WinId, _: u32) {}
+    fn grab_keys(&self, _: &KeyBindings) {}
+    fn intern_atom(&self, _: &str) -> u32 {
+        0
+    }
+    fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
+        Ok(String::from(name))
+    }
+    fn atom_prop(&self, id: u32, _: &str) -> Result<u32, String> {
+        Ok(id)
     }
 }

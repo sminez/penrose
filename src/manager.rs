@@ -20,7 +20,7 @@ use std::process;
 pub struct WindowManager<'a> {
     conn: &'a dyn XConn,
     screens: Vec<Screen>,
-    workspaces: Vec<Workspace>,
+    pub workspaces: Vec<Workspace>,
     client_map: HashMap<WinId, usize>,
     focused_screen: usize,
     // config
@@ -105,7 +105,7 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    fn map_x_window(&mut self, win_id: WinId) {
+    pub fn map_x_window(&mut self, win_id: WinId) {
         if self.client_map.contains_key(&win_id) {
             return;
         }
@@ -353,11 +353,6 @@ impl<'a> WindowManager<'a> {
 
 #[cfg(test)]
 mod tests {
-    /*
-     * NOTE: using mockiato for mocking
-     *       https://docs.rs/mockiato/0.9.5/mockiato/
-     */
-
     use super::*;
     use crate::data_types::*;
     use crate::layout::*;
@@ -376,17 +371,7 @@ mod tests {
         urgent: 0x458588,    // #458588
     };
 
-    fn mock_conn() -> impl XConn {
-        let mut conn = XConnMock::new();
-        conn.expect_current_outputs().times(1).returns(vec![Screen {
-            region: Region::new(0, 0, 1366, 768),
-            wix: 0,
-        }]);
-
-        conn
-    }
-
-    fn wm_with_mock_conn<'a>(layouts: Vec<Layout>, conn: &'a dyn XConn) -> WindowManager<'a> {
+    fn wm_with_mock_conn<'a>(layouts: Vec<Layout>, conn: &'a MockXConn) -> WindowManager<'a> {
         let conf = Config {
             workspaces: WORKSPACES,
             fonts: FONTS,
@@ -404,5 +389,37 @@ mod tests {
         };
 
         WindowManager::init(conf, conn)
+    }
+
+    #[test]
+    fn worspace_switching_with_active_clients() {
+        let layouts = vec![Layout::new(
+            "[side]",
+            LayoutKind::Normal,
+            side_stack,
+            1,
+            0.6,
+        )];
+        let screens = vec![Screen {
+            region: Region::new(0, 0, 1366, 768),
+            wix: 0,
+        }];
+
+        let conn = MockXConn::new(screens);
+        let mut wm = wm_with_mock_conn(layouts, &conn);
+
+        // add clients to the first workspace
+        wm.map_x_window(0);
+        wm.map_x_window(1);
+        wm.map_x_window(2);
+        assert_eq!(wm.workspaces[0].len(), 3);
+
+        // switch and add to the second workspace
+        wm.switch_workspace(1);
+        wm.map_x_window(3);
+        wm.map_x_window(4);
+        assert_eq!(wm.workspaces[1].len(), 2);
+        wm.switch_workspace(0);
+        assert_eq!(wm.workspaces[0].len(), 3);
     }
 }

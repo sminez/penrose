@@ -26,6 +26,10 @@ impl Workspace {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.clients.len()
+    }
+
     /// A reference to the currently focused client if there is one
     pub fn focused_client(&self) -> Option<&Client> {
         self.clients.focused()

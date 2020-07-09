@@ -18,6 +18,3 @@ path = "src/example/main.rs"
 
 [dependencies]
 xcb = { version = "0.9.0", features = ["randr"] }
-
-[dev-dependencies]
-mockiato = "0.9.5"
