@@ -30,6 +30,10 @@ impl Workspace {
         self.clients.len()
     }
 
+    pub fn iter(&self) -> std::slice::Iter<Client> {
+        self.clients.iter()
+    }
+
     /// A reference to the currently focused client if there is one
     pub fn focused_client(&self) -> Option<&Client> {
         self.clients.focused()
@@ -138,6 +142,14 @@ mod tests {
     use super::*;
     use crate::client::Client;
     use crate::data_types::Direction;
+    use crate::layout::*;
+
+    fn add_n_clients(ws: &mut Workspace, n: usize) {
+        for i in 0..n {
+            let k = ((i + 1) * 10) as u32; // ensure win_id != index
+            ws.add_client(Client::new(k, format!("{}", k), false));
+        }
+    }
 
     #[test]
     fn ref_to_focused_client_when_empty() {
@@ -184,20 +196,25 @@ mod tests {
         ws.clients = Ring::new(vec![Client::new(13, "retained".into(), false)]);
 
         let removed = ws.remove_client(42);
-        assert_eq!(removed, None);
+        assert_eq!(removed, None, "got a client by the wrong ID");
     }
 
     #[test]
     fn adding_a_client() {
         let mut ws = Workspace::new("test", vec![]);
-        let c1 = Client::new(10, "first".into(), false);
-        let c2 = Client::new(20, "second".into(), false);
-        let c3 = Client::new(30, "third".into(), false);
-        ws.add_client(c1);
-        ws.add_client(c2);
-        ws.add_client(c3);
-
+        add_n_clients(&mut ws, 3);
         let ids: Vec<WinId> = ws.clients.iter().map(|c| c.id()).collect();
         assert_eq!(ids, vec![30, 20, 10], "not pushing at the top of the stack")
+    }
+
+    #[test]
+    fn applying_a_layout_gives_one_action_per_client() {
+        let mut ws = Workspace::new(
+            "test",
+            vec![Layout::new("test", LayoutKind::Normal, mock_layout, 0, 0.0)],
+        );
+        add_n_clients(&mut ws, 3);
+        let actions = ws.arrange(&Region::new(0, 0, 2000, 1000));
+        assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")
     }
 }

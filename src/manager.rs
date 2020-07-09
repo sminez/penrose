@@ -43,6 +43,9 @@ impl<'a> WindowManager<'a> {
     pub fn init(conf: Config, conn: &'a dyn XConn) -> WindowManager {
         let screens = conn.current_outputs();
         log!("connected to X server: {} screens detected", screens.len());
+        for (i, s) in screens.iter().enumerate() {
+            log!("screen ({}) :: {:?}", i, s);
+        }
 
         let workspaces: Vec<Workspace> = conf
             .workspaces
@@ -107,6 +110,7 @@ impl<'a> WindowManager<'a> {
 
     pub fn map_x_window(&mut self, win_id: WinId) {
         if self.client_map.contains_key(&win_id) {
+            warn!("got map request for known client: {}", win_id);
             return;
         }
 
@@ -222,7 +226,6 @@ impl<'a> WindowManager<'a> {
      * to set up your keybindings so this is not normally an issue.
      */
     pub fn switch_workspace(&mut self, index: usize) {
-        notify!("switching to ws: {}", index);
         match index {
             0 => spawn("xsetroot -solid #282828"),
             1 => spawn("xsetroot -solid #cc241d"),
@@ -359,9 +362,13 @@ mod tests {
     use crate::screen::*;
     use crate::xconnection::*;
 
-    const FONTS: &[&str] = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
+    /*
+     * NOTE: The following are simple test data used for setting up test cases
+     */
+
+    const FONTS: &[&str] = &["Comic Sans:size=88"];
     const WORKSPACES: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-    const FLOATING_CLASSES: &[&str] = &["rofi", "dmenu", "dunst"];
+    const FLOATING_CLASSES: &[&str] = &["clouds", "birds"];
     const COLOR_SCHEME: ColorScheme = ColorScheme {
         bg: 0x282828,        // #282828
         fg_1: 0x3c3836,      // #3c3836
@@ -391,35 +398,49 @@ mod tests {
         WindowManager::init(conf, conn)
     }
 
-    #[test]
-    fn worspace_switching_with_active_clients() {
-        let layouts = vec![Layout::new(
-            "[side]",
-            LayoutKind::Normal,
-            side_stack,
-            1,
-            0.6,
-        )];
-        let screens = vec![Screen {
+    fn test_layouts() -> Vec<Layout> {
+        vec![Layout::new("t", LayoutKind::Normal, mock_layout, 1, 0.6)]
+    }
+
+    fn test_screens() -> Vec<Screen> {
+        vec![Screen {
             region: Region::new(0, 0, 1366, 768),
             wix: 0,
-        }];
+        }]
+    }
 
-        let conn = MockXConn::new(screens);
-        let mut wm = wm_with_mock_conn(layouts, &conn);
+    fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
+        for i in 0..n {
+            wm.map_x_window((i + offset) as u32);
+        }
+    }
 
-        // add clients to the first workspace
-        wm.map_x_window(0);
-        wm.map_x_window(1);
-        wm.map_x_window(2);
+    #[test]
+    fn worspace_switching_with_active_clients() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+
+        // add clients to the first workspace: final client should have focus
+        add_n_clients(&mut wm, 3, 0);
         assert_eq!(wm.workspaces[0].len(), 3);
+        assert_eq!(wm.workspaces[0].focused_client().unwrap().id(), 2);
 
-        // switch and add to the second workspace
+        // switch and add to the second workspace: final client should have focus
         wm.switch_workspace(1);
-        wm.map_x_window(3);
-        wm.map_x_window(4);
+        add_n_clients(&mut wm, 2, 3);
         assert_eq!(wm.workspaces[1].len(), 2);
+        assert_eq!(wm.workspaces[1].focused_client().unwrap().id(), 4);
+
+        // switch back: clients should be the same, same client should have focus
         wm.switch_workspace(0);
         assert_eq!(wm.workspaces[0].len(), 3);
+        assert_eq!(wm.workspaces[0].focused_client().unwrap().id(), 2);
+
+        // Should have a single client with focus on wm.workspaces[0] only
+        let count_focus = |acc, c: &Client| if c.is_focused() { acc + 1 } else { acc };
+        let focused_0 = wm.workspaces[0].iter().fold(0, count_focus);
+        let focused_1 = wm.workspaces[1].iter().fold(0, count_focus);
+        assert_eq!(focused_0, 1, "ws[0]");
+        assert_eq!(focused_1, 0, "ws[1]");
     }
 }

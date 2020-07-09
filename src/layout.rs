@@ -136,6 +136,20 @@ pub fn client_breakdown(clients: &Vec<Client>, n_main: u32) -> (u32, u32) {
     }
 }
 
+// ignore paramas and return pairs of window ID and index in the client vec
+#[allow(dead_code)]
+pub(crate) fn mock_layout(clients: &Vec<Client>, r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+    clients
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let (x, y, w, h) = r.values();
+            let k = i as u32;
+            (c.id(), Region::new(x + k, y + k, w - k, h - k))
+        })
+        .collect()
+}
+
 /*
  * Layout functions
  *
@@ -163,13 +177,13 @@ pub fn floating(
  * windows in a single column to the right.
  */
 pub fn side_stack(
-    client_ids: &Vec<Client>,
+    client: &Vec<Client>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
     let (mx, my, mw, mh) = monitor_region.values();
-    let (n_main, n_stack) = client_breakdown(&client_ids, max_main);
+    let (n_main, n_stack) = client_breakdown(&client, max_main);
     let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
     let h_main = if n_main > 0 { mh / n_main } else { 0 };
     let split = if max_main > 0 {
@@ -178,7 +192,7 @@ pub fn side_stack(
         0
     };
 
-    client_ids
+    client
         .iter()
         .enumerate()
         .map(|(n, c)| {

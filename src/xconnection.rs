@@ -166,10 +166,7 @@ impl XConn for XcbConnection {
                     Some(XEvent::Destroy(e.event()))
                 }
 
-                _ => {
-                    warn!("caught unknown event: {:?}", etype);
-                    None
-                }
+                _ => None,
             }
         })
     }
