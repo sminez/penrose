@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install XCB deps
-      run: sudo apt-get install -y libxrandr-dev xcb
+      run: sudo apt-get install -y libxrandr-dev libx11-xcb-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
