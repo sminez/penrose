@@ -103,18 +103,76 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    // fn button_press(&mut self, event: &xcb::ButtonPressEvent) {}
+    fn workspace_for_screen(&self, screen_index: usize) -> &Workspace {
+        &self.workspaces[self.screens[screen_index].wix]
+    }
 
-    // fn button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
+    fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
+        &mut self.workspaces[self.screens[screen_index].wix]
+    }
 
-    fn key_press(&mut self, key_code: KeyCode, bindings: &KeyBindings) {
+    fn workspace_for_client_mut(&mut self, id: WinId) -> Option<&mut Workspace> {
+        if let Some(client) = self.client_map.get(&id) {
+            Some(&mut self.workspaces[client.workspace()])
+        } else {
+            None
+        }
+    }
+
+    fn cycle_client(&mut self, direction: Direction) {
+        let wix = self.screens[self.focused_screen].wix;
+        let cycled = self.workspaces[wix].cycle_client(direction);
+
+        if let Some((prev, new)) = cycled {
+            self.handle_leave_notify(prev); // treat like losing x focus
+            self.handle_enter_notify(new); // treat like gaining x focus
+        }
+    }
+
+    /**
+     * main event loop for the window manager.
+     * Everything is driven by incoming events from the X server with each event type being
+     * mapped to a handler
+     */
+    pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
+        self.conn.grab_keys(&bindings);
+        self.switch_workspace(0);
+
+        loop {
+            if let Some(event) = self.conn.wait_for_event() {
+                match event {
+                    XEvent::KeyPress(key_code) => self.handle_key_press(key_code, &bindings),
+                    XEvent::Map(win_id) => self.handle_map_notify(win_id),
+                    XEvent::Enter(win_id) => self.handle_enter_notify(win_id),
+                    XEvent::Leave(win_id) => self.handle_leave_notify(win_id),
+                    XEvent::Destroy(win_id) => self.handle_destroy_notify(win_id),
+                    // XEvent::Motion => self.handle_motion_notify(),
+                    // XEvent::ButtonPress => self.handle_button_press(),
+                    // XEvent::ButtonRelease => self.handle_button_release(),
+                    _ => (),
+                }
+            }
+
+            self.conn.flush();
+        }
+    }
+
+    /*
+     * X Event handler functions
+     * These are called in response to incoming XEvents so calling them directly should
+     * only be done if the intent is to act as if the corresponding XEvent had been
+     * received from the X event loop (i.e. to avoid emitting and picking up the event
+     * ourselves)
+     */
+
+    fn handle_key_press(&mut self, key_code: KeyCode, bindings: &KeyBindings) {
         if let Some(action) = bindings.get(&key_code) {
             debug!("handling key code: {:?}", key_code);
             action(self);
         }
     }
 
-    pub fn map_x_window(&mut self, win_id: WinId) {
+    pub fn handle_map_notify(&mut self, win_id: WinId) {
         if self.client_map.contains_key(&win_id) {
             warn!("got map request for known client: {}", win_id);
             return;
@@ -142,7 +200,7 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
-    fn set_focus_for_client(&mut self, id: WinId) {
+    fn handle_enter_notify(&mut self, id: WinId) {
         debug!("focusing client {}", id);
         let color = self.color_scheme.highlight;
         self.conn.focus_client(id);
@@ -151,72 +209,20 @@ impl<'a> WindowManager<'a> {
             .and_then(|ws| ws.focus_client(id));
     }
 
-    fn remove_focus_for_client(&self, id: WinId) {
+    fn handle_leave_notify(&self, id: WinId) {
         debug!("unfocusing client {}", id);
         let color = self.color_scheme.fg_1;
         self.conn.set_client_border_color(id, color);
         // TODO: do we need to explicitly cycle focus?
     }
 
-    // fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
+    // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
+    // fn handle_button_press(&mut self, event: &xcb::ButtonPressEvent) {}
+    // fn handle_button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
 
-    fn destroy_window(&mut self, win_id: WinId) {
+    fn handle_destroy_notify(&mut self, win_id: WinId) {
         self.remove_client(win_id);
         self.apply_layout(self.focused_screen);
-    }
-
-    fn workspace_for_screen(&self, screen_index: usize) -> &Workspace {
-        &self.workspaces[self.screens[screen_index].wix]
-    }
-
-    fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
-        &mut self.workspaces[self.screens[screen_index].wix]
-    }
-
-    fn workspace_for_client_mut(&mut self, id: WinId) -> Option<&mut Workspace> {
-        if let Some(client) = self.client_map.get(&id) {
-            Some(&mut self.workspaces[client.workspace()])
-        } else {
-            None
-        }
-    }
-
-    fn cycle_client(&mut self, direction: Direction) {
-        let wix = self.screens[self.focused_screen].wix;
-        let cycled = self.workspaces[wix].cycle_client(direction);
-
-        if let Some((prev, new)) = cycled {
-            self.remove_focus_for_client(prev);
-            self.set_focus_for_client(new);
-        }
-    }
-
-    /**
-     * main event loop for the window manager.
-     * Everything is driven by incoming events from the X server with each event type being
-     * mapped to a handler
-     */
-    pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
-        self.conn.grab_keys(&bindings);
-        self.switch_workspace(0);
-
-        loop {
-            if let Some(event) = self.conn.wait_for_event() {
-                match event {
-                    XEvent::KeyPress(key_code) => self.key_press(key_code, &bindings),
-                    XEvent::Map(win_id) => self.map_x_window(win_id),
-                    XEvent::Enter(win_id) => self.set_focus_for_client(win_id),
-                    XEvent::Leave(win_id) => self.remove_focus_for_client(win_id),
-                    XEvent::Destroy(win_id) => self.destroy_window(win_id),
-                    // XEvent::Motion => self.resize_window(),
-                    // XEvent::ButtonPress => self.button_press(),
-                    // XEvent::ButtonRelease => self.button_release(),
-                    _ => (),
-                }
-            }
-
-            self.conn.flush();
-        }
     }
 
     /*
@@ -435,7 +441,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.map_x_window(10 * (i + offset + 1) as u32);
+            wm.handle_map_notify(10 * (i + offset + 1) as u32);
         }
     }
 
@@ -479,7 +485,7 @@ mod tests {
         let conn = MockXConn::new(test_screens());
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
-        wm.set_focus_for_client(10); // should not be focusing 10
+        wm.handle_enter_notify(10);
         assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 10);
     }
 }
