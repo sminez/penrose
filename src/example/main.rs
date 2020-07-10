@@ -56,7 +56,7 @@ fn main() {
         }
     };
 
-    let floating_classes = &["rofi", "dmenu", "dunst"];
+    let floating_classes = &["rofi", "dmenu", "dunst", "polybar"];
 
     let conn = XcbConnection::new();
     let mut wm = WindowManager::init(
@@ -73,6 +73,7 @@ fn main() {
             show_systray: true,
             show_bar: true,
             top_bar: true,
+            bar_height: 18,
             respect_resize_hints: true,
         },
         &conn,

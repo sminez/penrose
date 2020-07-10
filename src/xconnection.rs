@@ -208,7 +208,7 @@ impl XConn for XcbConnection {
                 .flat_map(|c| xcb::randr::get_crtc_info(&self.conn, *c, 0).get_reply())
                 .enumerate()
                 .map(|(i, r)| Screen::from_crtc_info_reply(r, i))
-                .filter(|s| s.region.width() > 0)
+                .filter(|s| s.true_region.width() > 0)
                 .collect(),
         }
     }

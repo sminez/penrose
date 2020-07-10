@@ -32,8 +32,7 @@ pub struct WindowManager<'a> {
     main_ratio_step: f32,
     // systray_spacing_px: u32,
     // show_systray: bool,
-    // show_bar: bool,
-    // top_bar: bool,
+    show_bar: bool,
     // respect_resize_hints: bool,
 }
 
@@ -41,11 +40,15 @@ impl<'a> WindowManager<'a> {
     /// Initialise a new window manager instance using an existing connection to
     /// the X server.
     pub fn init(conf: Config, conn: &'a dyn XConn) -> WindowManager {
-        let screens = conn.current_outputs();
+        let mut screens = conn.current_outputs();
         log!("connected to X server: {} screens detected", screens.len());
         for (i, s) in screens.iter().enumerate() {
             log!("screen ({}) :: {:?}", i, s);
         }
+
+        screens
+            .iter_mut()
+            .for_each(|s| s.update_effective_region(conf.bar_height, conf.top_bar));
 
         let workspaces: Vec<Workspace> = conf
             .workspaces
@@ -67,14 +70,17 @@ impl<'a> WindowManager<'a> {
             main_ratio_step: conf.main_ratio_step,
             // systray_spacing_px: conf.systray_spacing_px,
             // show_systray: conf.show_systray,
-            // show_bar: conf.show_bar,
-            // top_bar: conf.top_bar,
+            show_bar: conf.show_bar,
             // respect_resize_hints: conf.respect_resize_hints,
         }
     }
 
     fn apply_layout(&self, screen: usize) {
-        let screen_region = self.screens[screen].region;
+        let screen_region = if self.show_bar {
+            self.screens[screen].effective_region
+        } else {
+            self.screens[screen].true_region
+        };
         let ws = self.workspace_for_screen(screen);
 
         for (id, region) in ws.arrange(&screen_region) {

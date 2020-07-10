@@ -10,7 +10,9 @@ type CRTCInfoReply = Reply<xcb_randr_get_crtc_info_reply_t>;
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Screen {
     /// The dimensions of the screen
-    pub region: Region,
+    pub true_region: Region,
+    /// The dimensions of the screen if bar is showing
+    pub effective_region: Region,
     /// The current workspace index being displayed
     pub wix: usize,
 }
@@ -25,6 +27,19 @@ impl Screen {
             r.height() as u32,
         );
 
-        Screen { region, wix }
+        Screen {
+            true_region: region,
+            effective_region: region,
+            wix,
+        }
+    }
+
+    pub fn update_effective_region(&mut self, bar_height: u32, top_bar: bool) {
+        let (x, y, w, h) = self.true_region.values();
+        self.effective_region = if top_bar {
+            Region::new(x, y + bar_height, w, h - bar_height)
+        } else {
+            Region::new(x, y, w, h - bar_height)
+        }
     }
 }

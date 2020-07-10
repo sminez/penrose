@@ -35,6 +35,7 @@ pub struct Config {
     pub show_systray: bool,
     pub show_bar: bool,
     pub top_bar: bool,
+    pub bar_height: u32,
     pub respect_resize_hints: bool,
 }
 
