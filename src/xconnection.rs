@@ -234,7 +234,7 @@ impl XConn for XcbConnection {
     }
 
     fn map_window(&self, id: WinId) {
-        xcb::unmap_window(&self.conn, id);
+        xcb::map_window(&self.conn, id);
     }
 
     fn unmap_window(&self, id: WinId) {

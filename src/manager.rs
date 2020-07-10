@@ -21,7 +21,7 @@ pub struct WindowManager<'a> {
     conn: &'a dyn XConn,
     screens: Vec<Screen>,
     pub workspaces: Vec<Workspace>,
-    client_map: HashMap<WinId, usize>,
+    client_map: HashMap<WinId, Client>,
     focused_screen: usize,
     // config
     // fonts: &'static [&'static str],
@@ -88,12 +88,12 @@ impl<'a> WindowManager<'a> {
 
     fn remove_client(&mut self, win_id: WinId) {
         match self.client_map.get(&win_id) {
-            Some(ix) => {
+            Some(client) => {
                 debug!("removing ref to client {}", win_id);
-                self.workspaces[*ix].remove_client(win_id);
+                self.workspaces[client.workspace()].remove_client(win_id);
                 self.client_map.remove(&win_id);
             }
-            None => warn!("attempt to remove unknown window {}", win_id),
+            None => warn!("attempt to remove unknown client {}", win_id),
         }
     }
 
@@ -121,11 +121,11 @@ impl<'a> WindowManager<'a> {
 
         debug!("handling new window: {}", wm_class);
         let floating = self.floating_classes.contains(&wm_class.as_ref());
-        let client = Client::new(win_id, wm_class, floating);
         let wix = self.screens[self.focused_screen].wix;
+        let client = Client::new(win_id, wm_class, wix, floating);
 
-        self.client_map.insert(win_id, wix);
-        self.workspaces[wix].add_client(client);
+        self.client_map.insert(win_id, client);
+        self.workspaces[wix].add_client(win_id);
         self.conn.focus_client(win_id);
         self.conn.mark_new_window(win_id);
         let color = self.color_scheme.highlight;
@@ -133,22 +133,17 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
-    fn focus_window(&mut self, win_id: WinId) {
-        debug!("focusing client {}", win_id);
-        for ws in self.workspaces.iter_mut() {
-            ws.focus_client(win_id, self.conn, &self.color_scheme);
-        }
+    fn set_focus_for_client(&self, id: WinId) {
+        debug!("focusing client {}", id);
+        let color = self.color_scheme.highlight;
+        self.conn.focus_client(id);
+        self.conn.set_client_border_color(id, color);
     }
 
-    fn unfocus_window(&mut self, win_id: WinId) {
-        for ws in self.workspaces.iter_mut() {
-            if let Some(client) = ws.focused_client_mut() {
-                if client.id() == win_id {
-                    client.unfocus(self.conn, &self.color_scheme);
-                    return;
-                }
-            }
-        }
+    fn remove_focus_for_client(&self, id: WinId) {
+        debug!("unfocusing client {}", id);
+        let color = self.color_scheme.fg_1;
+        self.conn.set_client_border_color(id, color);
     }
 
     // fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -156,6 +151,30 @@ impl<'a> WindowManager<'a> {
     fn destroy_window(&mut self, win_id: WinId) {
         self.remove_client(win_id);
         self.apply_layout(self.focused_screen);
+    }
+
+    fn workspace_for_screen(&self, screen_index: usize) -> &Workspace {
+        &self.workspaces[self.screens[screen_index].wix]
+    }
+
+    fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
+        &mut self.workspaces[self.screens[screen_index].wix]
+    }
+
+    fn current_focused_client(&self) -> Option<&Client> {
+        self.workspace_for_screen(self.focused_screen)
+            .focused_client()
+            .and_then(|id| self.client_map.get(id))
+    }
+
+    fn cycle_client(&mut self, direction: Direction) {
+        let wix = self.screens[self.focused_screen].wix;
+        let cycled = self.workspaces[wix].cycle_client(direction);
+
+        if let Some((prev, new)) = cycled {
+            self.remove_focus_for_client(prev);
+            self.set_focus_for_client(new);
+        }
     }
 
     /**
@@ -172,8 +191,8 @@ impl<'a> WindowManager<'a> {
                 match event {
                     XEvent::KeyPress(key_code) => self.key_press(key_code, &bindings),
                     XEvent::Map(win_id) => self.map_x_window(win_id),
-                    XEvent::Enter(win_id) => self.focus_window(win_id),
-                    XEvent::Leave(win_id) => self.unfocus_window(win_id),
+                    XEvent::Enter(win_id) => self.set_focus_for_client(win_id),
+                    XEvent::Leave(win_id) => self.remove_focus_for_client(win_id),
                     XEvent::Destroy(win_id) => self.destroy_window(win_id),
                     // XEvent::Motion => self.resize_window(),
                     // XEvent::ButtonPress => self.button_press(),
@@ -184,25 +203,6 @@ impl<'a> WindowManager<'a> {
 
             self.conn.flush();
         }
-    }
-
-    fn workspace_for_screen(&self, screen_index: usize) -> &Workspace {
-        &self.workspaces[self.screens[screen_index].wix]
-    }
-
-    fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
-        &mut self.workspaces[self.screens[screen_index].wix]
-    }
-
-    fn focused_client(&self) -> Option<&Client> {
-        self.workspace_for_screen(self.focused_screen)
-            .focused_client()
-    }
-
-    fn cycle_client(&mut self, direction: Direction) {
-        let scheme = self.color_scheme.clone();
-        self.workspaces[self.screens[self.focused_screen].wix]
-            .cycle_client(direction, self.conn, &scheme);
     }
 
     /*
@@ -226,38 +226,47 @@ impl<'a> WindowManager<'a> {
      * to set up your keybindings so this is not normally an issue.
      */
     pub fn switch_workspace(&mut self, index: usize) {
-        match index {
-            0 => spawn("xsetroot -solid #282828"),
-            1 => spawn("xsetroot -solid #cc241d"),
-            2 => spawn("xsetroot -solid #458588"),
-            3 => spawn("xsetroot -solid #fabd2f"),
-            4 => spawn("xsetroot -solid #b8bb26"),
-            _ => spawn("xsetroot -solid #ebdbb2"),
-        };
+        if self.screens[self.focused_screen].wix == index {
+            return; // already focused on the current screen
+        }
 
         for i in 0..self.screens.len() {
             if self.screens[i].wix == index {
-                if i == self.focused_screen {
-                    return; // already focused on the current screen
-                }
-
                 // The workspace we want is currently displayed on another screen so
                 // pull the target workspace to the focused screen, and place the
                 // workspace we had on the screen where the target was
                 self.screens[i].wix = self.screens[self.focused_screen].wix;
                 self.screens[self.focused_screen].wix = index;
+
+                // re-apply layouts as screen dimensions may differ
                 self.apply_layout(self.focused_screen);
                 self.apply_layout(i);
                 return;
             }
         }
 
-        // target not currently displayed
-        let current = self.screens[self.focused_screen].wix;
+        // target not currently displayed so unmap what we currently have
+        // displayed and replace it with the target workspace
+        self.workspace_for_screen(self.focused_screen)
+            .iter()
+            .for_each(|c| self.conn.unmap_window(*c));
+
+        self.workspaces[index]
+            .iter()
+            .for_each(|c| self.conn.map_window(*c));
+
         self.screens[self.focused_screen].wix = index;
-        self.workspaces[current].unmap_clients(self.conn);
-        self.workspaces[index].map_clients(self.conn);
         self.apply_layout(self.focused_screen);
+
+        // TODO: remove me (debugging only)
+        match index {
+            0 => spawn("xsetroot -solid #282828"),
+            1 => spawn("xsetroot -solid #689d6a"),
+            2 => spawn("xsetroot -solid #458588"),
+            3 => spawn("xsetroot -solid #fabd2f"),
+            4 => spawn("xsetroot -solid #b8bb26"),
+            _ => spawn("xsetroot -solid #ebdbb2"),
+        };
     }
 
     /**
@@ -267,14 +276,13 @@ impl<'a> WindowManager<'a> {
     pub fn client_to_workspace(&mut self, index: usize) {
         debug!("moving focused client to workspace: {}", index);
         let ws = self.workspace_for_screen_mut(self.focused_screen);
-        let client = match ws.remove_focused_client() {
-            Some(client) => client,
-            None => return,
+        let id = match ws.remove_focused_client() {
+            Some(id) => id,
+            None => return, // triggered without any clients on the workspace
         };
 
-        self.client_map.insert(client.id(), index);
-        self.conn.unmap_window(client.id());
-        self.workspaces[index].add_client(client);
+        self.conn.unmap_window(id);
+        self.workspaces[index].add_client(id);
         self.apply_layout(self.focused_screen);
 
         for (i, screen) in self.screens.iter().enumerate() {
@@ -296,7 +304,7 @@ impl<'a> WindowManager<'a> {
 
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
-        let id = match self.focused_client() {
+        let id = match self.current_focused_client() {
             Some(client) => client.id(),
             None => return,
         };
@@ -323,7 +331,7 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
-    /// Increaase the number of windows in the main layout area
+    /// Increase the number of windows in the main layout area
     pub fn inc_main(&mut self) {
         self.workspace_for_screen_mut(self.focused_screen)
             .update_max_main(Change::More);
@@ -423,24 +431,17 @@ mod tests {
         // add clients to the first workspace: final client should have focus
         add_n_clients(&mut wm, 3, 0);
         assert_eq!(wm.workspaces[0].len(), 3);
-        assert_eq!(wm.workspaces[0].focused_client().unwrap().id(), 2);
+        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 2);
 
         // switch and add to the second workspace: final client should have focus
         wm.switch_workspace(1);
         add_n_clients(&mut wm, 2, 3);
         assert_eq!(wm.workspaces[1].len(), 2);
-        assert_eq!(wm.workspaces[1].focused_client().unwrap().id(), 4);
+        assert_eq!(*wm.workspaces[1].focused_client().unwrap(), 4);
 
         // switch back: clients should be the same, same client should have focus
         wm.switch_workspace(0);
         assert_eq!(wm.workspaces[0].len(), 3);
-        assert_eq!(wm.workspaces[0].focused_client().unwrap().id(), 2);
-
-        // Should have a single client with focus on wm.workspaces[0] only
-        let count_focus = |acc, c: &Client| if c.is_focused() { acc + 1 } else { acc };
-        let focused_0 = wm.workspaces[0].iter().fold(0, count_focus);
-        let focused_1 = wm.workspaces[1].iter().fold(0, count_focus);
-        assert_eq!(focused_0, 1, "ws[0]");
-        assert_eq!(focused_1, 0, "ws[1]");
+        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 2);
     }
 }

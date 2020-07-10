@@ -1,19 +1,21 @@
-//! A Workspace is a set of displayed clients and a Layout arranging them
-use crate::client::Client;
-use crate::data_types::{Change, ColorScheme, Direction, Region, ResizeAction, Ring, WinId};
+//! A Workspace is a set of displayed clients and a set of Layouts for arranging them
+use crate::data_types::{Change, Direction, Region, ResizeAction, Ring, WinId};
 use crate::layout::Layout;
-use crate::xconnection::XConn;
 
 /**
  * A Workspace represents a named set of clients that are tiled according
  * to a specific layout. Layout properties are tracked per workspace and
  * clients are referenced by ID. Workspaces are independant of monitors and
  * can be moved between monitors freely, bringing their clients with them.
+ *
+ * The parent WindowManager struct tracks which client is focused from the
+ * point of view of the X server by checking focus at the Workspace level
+ * whenever a new Workspace becomes active.
  */
 #[derive(Debug)]
 pub struct Workspace {
     name: &'static str,
-    clients: Ring<Client>,
+    clients: Ring<WinId>,
     layouts: Ring<Layout>,
 }
 
@@ -26,38 +28,47 @@ impl Workspace {
         }
     }
 
+    /// The number of clients currently on this workspace
     pub fn len(&self) -> usize {
         self.clients.len()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<Client> {
+    /// Iterate over the clients on this workspace in position order
+    pub fn iter(&self) -> std::slice::Iter<WinId> {
         self.clients.iter()
     }
 
     /// A reference to the currently focused client if there is one
-    pub fn focused_client(&self) -> Option<&Client> {
+    pub fn focused_client(&self) -> Option<&WinId> {
         self.clients.focused()
     }
 
-    /// A mutable reference to the currently focused client if there is one
-    pub fn focused_client_mut(&mut self) -> Option<&mut Client> {
-        self.clients.focused_mut()
+    /// Add a new client to this workspace at the top of the stack and focus it
+    pub fn add_client(&mut self, id: WinId) {
+        self.clients.insert(0, id);
     }
 
-    /// Add a new client to this workspace at the top of the stack and focus it
-    pub fn add_client(&mut self, c: Client) {
-        self.clients.insert(0, c);
+    /// Focus the client with the given id, returns an option of the previously focused
+    /// client if there was one
+    pub fn focus_client(&mut self, id: WinId) -> Option<WinId> {
+        if self.clients.len() == 0 {
+            return None;
+        }
+
+        let prev = self.clients.focused().unwrap().clone();
+        self.clients.focus_by(|c| c == &id);
+        Some(prev)
     }
 
     /// Remove a target client, retaining focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
-    pub fn remove_client(&mut self, id: WinId) -> Option<Client> {
-        self.clients.remove_by(|c| c.id() == id)
+    pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
+        self.clients.remove_by(|c| c == &id)
     }
 
     /// Remove the currently focused client, keeping focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
-    pub fn remove_focused_client(&mut self) -> Option<Client> {
+    pub fn remove_focused_client(&mut self) -> Option<WinId> {
         self.clients.remove_focused()
     }
 
@@ -77,24 +88,25 @@ impl Workspace {
         }
     }
 
+    /// Cycle through the available layouts on this workspace
     pub fn cycle_layout(&mut self, direction: Direction) {
         self.layouts.cycle_focus(direction);
     }
 
-    pub fn cycle_client(
-        &mut self,
-        direction: Direction,
-        conn: &dyn XConn,
-        color_scheme: &ColorScheme,
-    ) {
-        if self.clients.len() > 1 {
-            if let Some(client) = self.clients.focused_mut() {
-                client.unfocus(conn, color_scheme);
-            }
-            self.clients.cycle_focus(direction);
-            if let Some(client) = self.clients.focused_mut() {
-                client.unfocus(conn, color_scheme);
-            }
+    /// Cycle focus through the clients on this workspace
+    pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
+        if self.clients.len() <= 1 {
+            return None;
+        }
+
+        let prev = self.clients.focused().unwrap().clone();
+        self.clients.cycle_focus(direction);
+        let new = self.clients.focused().unwrap();
+
+        if prev != *new {
+            Some((prev, *new))
+        } else {
+            None
         }
     }
 
@@ -109,45 +121,18 @@ impl Workspace {
             layout.update_main_ratio(change, step);
         }
     }
-
-    /// Place this workspace's windows onto a screen
-    pub fn map_clients(&self, conn: &dyn XConn) {
-        for c in self.clients.iter() {
-            debug!("mapping {} on ws {}", c.id(), self.name);
-            conn.map_window(c.id());
-        }
-    }
-
-    /// Remove this workspace's windows from a screen
-    pub fn unmap_clients(&self, conn: &dyn XConn) {
-        for c in self.clients.iter() {
-            debug!("unmapping {} on ws {}", c.id(), self.name);
-            conn.unmap_window(c.id());
-        }
-    }
-
-    pub fn focus_client(&mut self, id: WinId, conn: &dyn XConn, color_scheme: &ColorScheme) {
-        for c in self.clients.iter_mut() {
-            match (c.id() == id, c.is_focused()) {
-                (true, false) => c.focus(conn, color_scheme),
-                (false, true) => c.unfocus(conn, color_scheme),
-                (_, _) => (),
-            }
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::client::Client;
     use crate::data_types::Direction;
     use crate::layout::*;
 
     fn add_n_clients(ws: &mut Workspace, n: usize) {
         for i in 0..n {
             let k = ((i + 1) * 10) as u32; // ensure win_id != index
-            ws.add_client(Client::new(k, format!("{}", k), false));
+            ws.add_client(k);
         }
     }
 
@@ -160,40 +145,31 @@ mod tests {
     #[test]
     fn ref_to_focused_client_when_populated() {
         let mut ws = Workspace::new("test", vec![]);
-        ws.clients = Ring::new(vec![
-            Client::new(42, "focused first".into(), false),
-            Client::new(123, "focused second".into(), false),
-        ]);
+        ws.clients = Ring::new(vec![42, 123]);
 
         let c = ws.focused_client().expect("should have had a client for 0");
-        assert_eq!(c.id(), 42);
-        assert_eq!(c.class(), "focused first");
+        assert_eq!(*c, 42);
 
         ws.clients.cycle_focus(Direction::Forward);
         let c = ws.focused_client().expect("should have had a client for 1");
-        assert_eq!(c.id(), 123);
-        assert_eq!(c.class(), "focused second");
+        assert_eq!(*c, 123);
     }
 
     #[test]
     fn removing_a_client_when_present() {
         let mut ws = Workspace::new("test", vec![]);
-        ws.clients = Ring::new(vec![
-            Client::new(13, "retained".into(), false),
-            Client::new(42, "removed".into(), false),
-        ]);
+        ws.clients = Ring::new(vec![13, 42]);
 
         let removed = ws
             .remove_client(42)
             .expect("should have had a client for id=42");
-        assert_eq!(removed.id(), 42);
-        assert_eq!(removed.class(), "removed");
+        assert_eq!(removed, 42);
     }
 
     #[test]
     fn removing_a_client_when_not_present() {
         let mut ws = Workspace::new("test", vec![]);
-        ws.clients = Ring::new(vec![Client::new(13, "retained".into(), false)]);
+        ws.clients = Ring::new(vec![13]);
 
         let removed = ws.remove_client(42);
         assert_eq!(removed, None, "got a client by the wrong ID");
@@ -203,7 +179,7 @@ mod tests {
     fn adding_a_client() {
         let mut ws = Workspace::new("test", vec![]);
         add_n_clients(&mut ws, 3);
-        let ids: Vec<WinId> = ws.clients.iter().map(|c| c.id()).collect();
+        let ids: Vec<WinId> = ws.clients.iter().map(|c| *c).collect();
         assert_eq!(ids, vec![30, 20, 10], "not pushing at the top of the stack")
     }
 

@@ -7,8 +7,7 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
-use crate::client::Client;
-use crate::data_types::{Change, Region, ResizeAction};
+use crate::data_types::{Change, Region, ResizeAction, WinId};
 use std::fmt;
 
 /**
@@ -56,7 +55,7 @@ pub struct Layout {
     pub symbol: &'static str,
     max_main: u32,
     ratio: f32,
-    f: fn(&Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
+    f: fn(&Vec<WinId>, &Region, u32, f32) -> Vec<ResizeAction>,
 }
 
 impl fmt::Debug for Layout {
@@ -76,7 +75,7 @@ impl Layout {
     pub fn new(
         symbol: &'static str,
         kind: LayoutKind,
-        f: fn(&Vec<Client>, &Region, u32, f32) -> Vec<ResizeAction>,
+        f: fn(&Vec<WinId>, &Region, u32, f32) -> Vec<ResizeAction>,
         max_main: u32,
         ratio: f32,
     ) -> Layout {
@@ -90,7 +89,7 @@ impl Layout {
     }
 
     /// Apply the embedded layout function using the current n_main and ratio
-    pub fn arrange(&self, clients: &Vec<Client>, r: &Region) -> Vec<ResizeAction> {
+    pub fn arrange(&self, clients: &Vec<WinId>, r: &Region) -> Vec<ResizeAction> {
         (self.f)(clients, r, self.max_main, self.ratio)
     }
 
@@ -127,27 +126,13 @@ impl Layout {
  */
 
 /// number of clients for the main area vs secondary
-pub fn client_breakdown(clients: &Vec<Client>, n_main: u32) -> (u32, u32) {
+pub fn client_breakdown<T>(clients: &Vec<T>, n_main: u32) -> (u32, u32) {
     let n = clients.len() as u32;
     if n <= n_main {
         (n, 0)
     } else {
         (n_main, n - n_main)
     }
-}
-
-// ignore paramas and return pairs of window ID and index in the client vec
-#[allow(dead_code)]
-pub(crate) fn mock_layout(clients: &Vec<Client>, r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
-    clients
-        .iter()
-        .enumerate()
-        .map(|(i, c)| {
-            let (x, y, w, h) = r.values();
-            let k = i as u32;
-            (c.id(), Region::new(x + k, y + k, w - k, h - k))
-        })
-        .collect()
 }
 
 /*
@@ -160,11 +145,25 @@ pub(crate) fn mock_layout(clients: &Vec<Client>, r: &Region, _: u32, _: f32) -> 
  * that deliberately overlaps clients under the main window.
  */
 
+// ignore paramas and return pairs of window ID and index in the client vec
+#[allow(dead_code)]
+pub(crate) fn mock_layout(clients: &Vec<WinId>, r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+    clients
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let (x, y, w, h) = r.values();
+            let k = i as u32;
+            (*c, Region::new(x + k, y + k, w - k, h - k))
+        })
+        .collect()
+}
+
 /**
  * A no-op floating layout that simply satisfies the type required for Layout
  */
 pub fn floating(
-    _clients: &Vec<Client>,
+    _clients: &Vec<WinId>,
     _monitor_region: &Region,
     _max_main: u32,
     _ratio: f32,
@@ -177,13 +176,13 @@ pub fn floating(
  * windows in a single column to the right.
  */
 pub fn side_stack(
-    client: &Vec<Client>,
+    clients: &Vec<WinId>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
     let (mx, my, mw, mh) = monitor_region.values();
-    let (n_main, n_stack) = client_breakdown(&client, max_main);
+    let (n_main, n_stack) = client_breakdown(&clients, max_main);
     let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
     let h_main = if n_main > 0 { mh / n_main } else { 0 };
     let split = if max_main > 0 {
@@ -192,18 +191,18 @@ pub fn side_stack(
         0
     };
 
-    client
+    clients
         .iter()
         .enumerate()
         .map(|(n, c)| {
             let n = n as u32;
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
-                (c.id(), Region::new(mx, my + n * h_main, w, h_main))
+                (*c, Region::new(mx, my + n * h_main, w, h_main))
             } else {
                 let sn = n - max_main; // nth stacked client
                 let region = Region::new(mx + split, my + sn * h_stack, mw - split, h_stack);
-                (c.id(), region)
+                (*c, region)
             }
         })
         .collect()

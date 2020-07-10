@@ -195,6 +195,17 @@ impl<T> Ring<T> {
         self.focused = index;
     }
 
+    /// Focus the first element satisfying the given condition returning true if an
+    /// element was located, false otherwise.
+    pub fn focus_by(&mut self, cond: impl Fn(&T) -> bool) -> bool {
+        if let Some((i, _)) = self.elements.iter().enumerate().find(|(_, e)| cond(*e)) {
+            self.focused = i;
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.elements.len()
     }
@@ -207,7 +218,7 @@ impl<T> Ring<T> {
     /// current focus position if possible.
     pub fn remove_by(&mut self, cond: impl Fn(&T) -> bool) -> Option<T> {
         if let Some((i, _)) = self.elements.iter().enumerate().find(|(_, e)| cond(*e)) {
-            if self.focused == self.elements.len() - 1 {
+            if self.focused > 0 && self.focused == self.elements.len() - 1 {
                 self.focused -= 1;
             }
             Some(self.elements.remove(i))
@@ -215,17 +226,23 @@ impl<T> Ring<T> {
             None
         }
     }
+
+    /// If this Ring has at least one element, remove the focused element
+    /// and return it, otherwise None
     pub fn remove_focused(&mut self) -> Option<T> {
         if self.elements.len() > 0 {
-            if self.focused == self.elements.len() - 1 {
+            let c = self.elements.remove(self.focused);
+            // correct the focus point if we are now out of bounds
+            if self.focused == self.elements.len() {
                 self.focused -= 1;
             }
-            Some(self.elements.remove(self.focused))
+            Some(c)
         } else {
             None
         }
     }
 
+    /// If ix is within bounds, remove that element and return it, otherwise None
     pub fn remove_at(&mut self, ix: usize) -> Option<T> {
         let max = self.elements.len() - 1;
         if ix <= max {
@@ -238,14 +255,17 @@ impl<T> Ring<T> {
         }
     }
 
+    /// A reference to the underlying Vec<T> wrapped by this Ring
     pub fn as_vec(&self) -> &Vec<T> {
         &self.elements
     }
 
+    /// Iterate over the elements of this ring in their current order
     pub fn iter(&self) -> std::slice::Iter<T> {
         self.elements.iter()
     }
 
+    /// Mutably iterate over the elements of this ring in their current order
     pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
         self.elements.iter_mut()
     }
