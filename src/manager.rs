@@ -409,6 +409,7 @@ mod tests {
             show_systray: true,
             show_bar: true,
             top_bar: true,
+            bar_height: 18,
             respect_resize_hints: true,
         };
 
@@ -420,8 +421,10 @@ mod tests {
     }
 
     fn test_screens() -> Vec<Screen> {
+        let r = Region::new(0, 0, 1366, 768);
         vec![Screen {
-            region: Region::new(0, 0, 1366, 768),
+            true_region: r,
+            effective_region: r,
             wix: 0,
         }]
     }
