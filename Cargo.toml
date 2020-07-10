@@ -1,6 +1,6 @@
 [package]
 name = "penrose"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license-file = "LICENSE"
@@ -8,7 +8,7 @@ repository = "https://github.com/sminez/penrose"
 documentation = "https://docs.rs/penrose"
 readme = "README.md"
 description = """
-A tiling window manager library/WM for X11 in the style of dwm.
+A tiling window manager library/WM for X11 in the style of dwm and Xmonad.
 """
 
 [[bin]]

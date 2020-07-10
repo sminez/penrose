@@ -142,17 +142,20 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.focused_screen);
     }
 
-    fn set_focus_for_client(&self, id: WinId) {
+    fn set_focus_for_client(&mut self, id: WinId) {
         debug!("focusing client {}", id);
         let color = self.color_scheme.highlight;
         self.conn.focus_client(id);
         self.conn.set_client_border_color(id, color);
+        self.workspace_for_client_mut(id)
+            .and_then(|ws| ws.focus_client(id));
     }
 
     fn remove_focus_for_client(&self, id: WinId) {
         debug!("unfocusing client {}", id);
         let color = self.color_scheme.fg_1;
         self.conn.set_client_border_color(id, color);
+        // TODO: do we need to explicitly cycle focus?
     }
 
     // fn resize_window(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -170,10 +173,12 @@ impl<'a> WindowManager<'a> {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
 
-    fn current_focused_client(&self) -> Option<&Client> {
-        self.workspace_for_screen(self.focused_screen)
-            .focused_client()
-            .and_then(|id| self.client_map.get(id))
+    fn workspace_for_client_mut(&mut self, id: WinId) -> Option<&mut Workspace> {
+        if let Some(client) = self.client_map.get(&id) {
+            Some(&mut self.workspaces[client.workspace()])
+        } else {
+            None
+        }
     }
 
     fn cycle_client(&mut self, direction: Direction) {
@@ -313,17 +318,16 @@ impl<'a> WindowManager<'a> {
 
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
-        let id = match self.current_focused_client() {
-            Some(client) => client.id(),
-            None => return,
-        };
+        if let Some(&id) = self
+            .workspace_for_screen(self.focused_screen)
+            .focused_client()
+        {
+            self.conn.send_client_event(id, "WM_DELETE_WINDOW");
+            self.conn.flush();
 
-        self.conn.send_client_event(id, "WM_DELETE_WINDOW");
-        self.conn.flush();
-
-        self.remove_client(id);
-        self.next_client();
-        self.apply_layout(self.focused_screen);
+            self.remove_client(id);
+            self.apply_layout(self.focused_screen);
+        }
     }
 
     /// Rearrange the windows on the focused screen using the next available layout
@@ -431,7 +435,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.map_x_window((i + offset) as u32);
+            wm.map_x_window(10 * (i + offset + 1) as u32);
         }
     }
 
@@ -443,17 +447,30 @@ mod tests {
         // add clients to the first workspace: final client should have focus
         add_n_clients(&mut wm, 3, 0);
         assert_eq!(wm.workspaces[0].len(), 3);
-        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 2);
+        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
 
         // switch and add to the second workspace: final client should have focus
         wm.switch_workspace(1);
         add_n_clients(&mut wm, 2, 3);
         assert_eq!(wm.workspaces[1].len(), 2);
-        assert_eq!(*wm.workspaces[1].focused_client().unwrap(), 4);
+        assert_eq!(*wm.workspaces[1].focused_client().unwrap(), 50);
 
         // switch back: clients should be the same, same client should have focus
         wm.switch_workspace(0);
         assert_eq!(wm.workspaces[0].len(), 3);
-        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 2);
+        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
+    }
+
+    #[test]
+    fn kill_client_kills_focused_not_first() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 5, 0); // 50 40 30 20 10, 50 focused
+        wm.next_client(); // 40 focused
+        wm.kill_client(); // remove 40, focus 30
+
+        let ids: Vec<WinId> = wm.workspaces[0].iter().map(|c| *c).collect();
+        assert_eq!(ids, vec![50, 30, 20, 10]);
+        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
     }
 }
