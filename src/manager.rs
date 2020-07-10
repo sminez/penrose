@@ -125,7 +125,10 @@ impl<'a> WindowManager<'a> {
         let client = Client::new(win_id, wm_class, wix, floating);
 
         self.client_map.insert(win_id, client);
-        self.workspaces[wix].add_client(win_id);
+        if !floating {
+            self.workspaces[wix].add_client(win_id);
+        }
+
         self.conn.focus_client(win_id);
         self.conn.mark_new_window(win_id);
         let color = self.color_scheme.highlight;
