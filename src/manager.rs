@@ -473,4 +473,13 @@ mod tests {
         assert_eq!(ids, vec![50, 30, 20, 10]);
         assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
     }
+
+    #[test]
+    fn x_focus_events_set_workspace_focus() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 5, 0); // focus on last client: 50
+        wm.set_focus_for_client(10); // should not be focusing 10
+        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 10);
+    }
 }
