@@ -1,5 +1,6 @@
 Penrose - a tiling window manager in the style of dwm / xmonad
 ==============================================================
+![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=master) ![crates.io version](https://img.shields.io/crates/v/penrose)
 
 Not ready yet for general use but aiming for a configure in source and recompile
 model similar to dwm / Xmonad / Qtile. The code should be well documented and
