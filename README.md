@@ -8,6 +8,8 @@ relatively easy to understand (if not, please let me know!): I'm learning the
 XCB API as I go so there are likely multiple places where things are not being
 done in the smartest way.
 
+![screenshot](screenshot.png)
+
 ### Current project status
 If you don't mind a bare bones (_really_ bare bones) window manager then you can
 take penrose for a spin using the config in the `example` directory. You will
