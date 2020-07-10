@@ -51,7 +51,7 @@ fn main() {
         "M-A-Escape" => run_internal!(exit);
 
         forall_workspaces: workspaces => {
-            "M-{}" => switch_workspace,
+            "M-{}" => focus_workspace,
             "M-S-{}" => client_to_workspace,
         }
     };

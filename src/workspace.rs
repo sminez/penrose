@@ -21,6 +21,10 @@ pub struct Workspace {
 
 impl Workspace {
     pub fn new(name: &'static str, layouts: Vec<Layout>) -> Workspace {
+        if layouts.len() == 0 {
+            die!("{}: require at least one layout function", name);
+        }
+
         Workspace {
             name,
             clients: Ring::new(Vec::new()),
@@ -74,15 +78,15 @@ impl Workspace {
 
     /// Run the current layout function, generating a list of resize actions to be
     /// applied byt the window manager.
-    pub fn arrange(&self, monitor_region: &Region) -> Vec<ResizeAction> {
+    pub fn arrange(&self, screen_region: &Region) -> Vec<ResizeAction> {
         let n_clients = self.clients.len();
         if n_clients > 0 {
             let layout = self.layouts.focused().unwrap();
             debug!(
-                "applying {} layout for {} clients on workspace '{}'",
+                "applying '{}' layout for {} clients on workspace '{}'",
                 layout.symbol, n_clients, self.name
             );
-            layout.arrange(self.clients.as_vec(), monitor_region)
+            layout.arrange(self.clients.as_vec(), screen_region)
         } else {
             vec![]
         }
@@ -129,6 +133,10 @@ mod tests {
     use crate::data_types::Direction;
     use crate::layout::*;
 
+    fn test_layouts() -> Vec<Layout> {
+        vec![Layout::new("t", LayoutKind::Normal, mock_layout, 1, 0.6)]
+    }
+
     fn add_n_clients(ws: &mut Workspace, n: usize) {
         for i in 0..n {
             let k = ((i + 1) * 10) as u32; // ensure win_id != index
@@ -138,13 +146,13 @@ mod tests {
 
     #[test]
     fn ref_to_focused_client_when_empty() {
-        let ws = Workspace::new("test", vec![]);
+        let ws = Workspace::new("test", test_layouts());
         assert_eq!(ws.focused_client(), None);
     }
 
     #[test]
     fn ref_to_focused_client_when_populated() {
-        let mut ws = Workspace::new("test", vec![]);
+        let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![42, 123]);
 
         let c = ws.focused_client().expect("should have had a client for 0");
@@ -157,7 +165,7 @@ mod tests {
 
     #[test]
     fn removing_a_client_when_present() {
-        let mut ws = Workspace::new("test", vec![]);
+        let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![13, 42]);
 
         let removed = ws
@@ -168,7 +176,7 @@ mod tests {
 
     #[test]
     fn removing_a_client_when_not_present() {
-        let mut ws = Workspace::new("test", vec![]);
+        let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![13]);
 
         let removed = ws.remove_client(42);
@@ -177,7 +185,7 @@ mod tests {
 
     #[test]
     fn adding_a_client() {
-        let mut ws = Workspace::new("test", vec![]);
+        let mut ws = Workspace::new("test", test_layouts());
         add_n_clients(&mut ws, 3);
         let ids: Vec<WinId> = ws.clients.iter().map(|c| *c).collect();
         assert_eq!(ids, vec![30, 20, 10], "not pushing at the top of the stack")
@@ -185,10 +193,7 @@ mod tests {
 
     #[test]
     fn applying_a_layout_gives_one_action_per_client() {
-        let mut ws = Workspace::new(
-            "test",
-            vec![Layout::new("test", LayoutKind::Normal, mock_layout, 0, 0.0)],
-        );
+        let mut ws = Workspace::new("test", test_layouts());
         add_n_clients(&mut ws, 3);
         let actions = ws.arrange(&Region::new(0, 0, 2000, 1000));
         assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")

@@ -42,4 +42,12 @@ impl Screen {
             Region::new(x, y, w, h - bar_height)
         }
     }
+
+    pub fn region(&self, effective_only: bool) -> &Region {
+        if effective_only {
+            &self.effective_region
+        } else {
+            &self.true_region
+        }
+    }
 }

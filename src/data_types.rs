@@ -234,7 +234,7 @@ impl<T> Ring<T> {
         if self.elements.len() > 0 {
             let c = self.elements.remove(self.focused);
             // correct the focus point if we are now out of bounds
-            if self.focused == self.elements.len() {
+            if self.focused > 0 && self.focused == self.elements.len() - 1 {
                 self.focused -= 1;
             }
             Some(c)
