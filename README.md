@@ -1,5 +1,5 @@
-Penrose - a tiling window manager in the style of dwm
-=====================================================
+Penrose - a tiling window manager in the style of dwm / xmonad
+==============================================================
 
 Not ready yet for general use but aiming for a configure in source and recompile
 model similar to dwm / Xmonad / Qtile. The code should be well documented and
@@ -7,15 +7,28 @@ relatively easy to understand (if not, please let me know!): I'm learning the
 XCB API as I go so there are likely multiple places where things are not being
 done in the smartest way.
 
-### Non-goals
+### Current project status
+If you don't mind a bare bones (_really_ bare bones) window manager then you can
+take penrose for a spin using the config in the `example` directory. You will
+need to update the keybindings to launch your preferred terminal emulator and
+program launcher and may want to adjust the floating window classes to handle
+some additional programs.
+
+#### Current functionality
+- user defined layout functions (`side_stack` implemented)
+- configurable window borders for focused / unfocused
+- configurable gaps
+- configurable keybindings
+- workspaces (including moving clients between workspaces)
+- kill focused client
+- cycle focus
+
+### Project Non-goals
 - A config file
   - Parsing a config file and dynamically switching behaviour on the contents
   adds a huge amount of complexity to the code. I'd much rather keep the code
   simple and well documented so that modifying it is easy and then just
-  recompile. This is also more in the spirit of dwm (some top level config for
-  quick changes but really you should dig into the source) than Xmonad/Qtile (a
-  library that you use to write your on WM) but I suspect the latter aproach
-  should be possible.
+  recompile.
 
 - IPC / relying on external programs
   - I love acme from plan9 and how easy it is to drive it's state from external
@@ -25,35 +38,15 @@ done in the smartest way.
   ideal. So, things that are easy to acomplish using the XCB api (key bindings,
   simple rendering of a bar etc) are in, full on IPC via an exposed API is out.
 
-- Programatic hooks
-  - Rather than expose a set of hooks to be triggered, it is encouraged that you
-  simply modify the WindowManager method directly. Want to trigger something
-  every time you switch to a new workspace? Add a custom function call to the
-  `switch_workspace` method. Done.
-
 
 ### Current TODO list
-- [x] Focus
-  - Need to track the focused client (on focused monitor only) both for adding a
-  visual indicator but also so that the client can be manipulated by other
-  actions from the `WindowManager`.
-
-- [x] Handling client removal
-  - Should(?) just be a case of firing off the correct xcb messages to trigger
-  this and then exposing that as an action. (Relies on being able to track the
-  currently focused client though!)
-
-- [ ] Workspaces
-  - I've started writing penrose with the idea that I would use a tag based
-  system similar to dwm as that is what I am currently using. Now that I think
-  about it some more, I much prefer the set up I used to have with Qtile where I
-  added in the ability to "throw" workspaces from one monitor to another and
-  modify layout settings per workspace.
-  - With that in mind, there would be a single client list, with each workspace
-  tracking a list of known clients. Monitors would then have an active workspace
-  and user bindings would trigger modifications to those mappings rather than
-  modifying the client structs themselves.
-
+- [ ] drag clients through stack
+- [ ] track focused monitor with multi-monitor setup
+- [ ] move client to monitor
+- [ ] single client fullscreen for all layouts (configurable)
+- [ ] Run several / hooks for keybindings
+  - It'd be nice if it were possible to just give a block of actions to be run
+  but I'm not sure how that will work with the `gen_keybindings` macro
 - [ ] dwm style bar and systray
   - This one is probably a decent amount of work...I still prefer it to having
   to install and configure something like lemonbar/polybar though and exposing

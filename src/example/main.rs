@@ -1,9 +1,6 @@
 /**
  * penrose :: A tiling window manager in the style of dwm
  *
- * Simple configuration can be done by modifying the contents of config.rs,
- * for anything not covered there you should be able to edit the source
- * code with minimal difficulty.
  * To follow the start-up logic and main loop, start with manager.rs
  *
  * The C-level xcb API documentation can be found in the following places:
