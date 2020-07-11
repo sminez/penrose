@@ -102,10 +102,6 @@ impl<'a> WindowManager<'a> {
      * Helpers for indexing into WindowManager state
      */
 
-    fn workspace_for_screen(&self, screen_index: usize) -> &Workspace {
-        &self.workspaces[self.screens[screen_index].wix]
-    }
-
     fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
@@ -305,6 +301,7 @@ impl<'a> WindowManager<'a> {
         ws.remove_focused_client().map(|id| {
             self.conn.unmap_window(id);
             self.workspaces[index].add_client(id);
+            self.client_map.get_mut(&id).map(|c| c.set_workspace(index));
             self.apply_layout(self.active_ws_index());
         });
     }
@@ -321,10 +318,8 @@ impl<'a> WindowManager<'a> {
 
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
-        if let Some(&id) = self
-            .workspace_for_screen(self.focused_screen)
-            .focused_client()
-        {
+        if let Some(client) = self.focused_client() {
+            let id = client.id();
             self.conn.send_client_event(id, "WM_DELETE_WINDOW");
             self.conn.flush();
 
@@ -461,6 +456,16 @@ mod tests {
     }
 
     #[test]
+    fn killing_a_client_removes_it_from_the_workspace() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 1, 0);
+        wm.kill_client();
+
+        assert_eq!(wm.workspaces[0].len(), 0);
+    }
+
+    #[test]
     fn kill_client_kills_focused_not_first() {
         let conn = MockXConn::new(test_screens());
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
@@ -474,11 +479,53 @@ mod tests {
     }
 
     #[test]
+    fn moving_then_deleting_clients() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 2, 0);
+        wm.client_to_workspace(1);
+        wm.client_to_workspace(1);
+        wm.focus_workspace(1);
+        wm.kill_client();
+
+        // should have removed first client on ws::1 (last sent from ws::0)
+        assert_eq!(wm.workspaces[1].iter().collect::<Vec<&WinId>>(), vec![&20]);
+    }
+
+    #[test]
+    fn sending_a_client_inserts_at_head() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 2, 0); // [20, 10]
+        wm.client_to_workspace(1); // 20 -> ws::1
+        wm.client_to_workspace(1); // 10 -> ws::1, [10, 20]
+        wm.focus_workspace(1);
+
+        assert_eq!(
+            wm.workspaces[1].iter().collect::<Vec<&WinId>>(),
+            vec![&10, &20]
+        );
+    }
+
+    #[test]
+    fn sending_a_client_sets_focus() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 2, 0); // [20, 10]
+        wm.client_to_workspace(1); // 20 -> ws::1
+        wm.client_to_workspace(1); // 10 -> ws::1, [10, 20]
+        wm.focus_workspace(1);
+
+        assert_eq!(*wm.workspaces[1].focused_client().unwrap(), 10);
+    }
+
+    #[test]
     fn x_focus_events_set_workspace_focus() {
         let conn = MockXConn::new(test_screens());
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
         wm.handle_enter_notify(10);
+
         assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 10);
     }
 }

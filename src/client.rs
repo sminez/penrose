@@ -36,6 +36,10 @@ impl Client {
         self.workspace
     }
 
+    pub fn set_workspace(&mut self, workspace: usize) {
+        self.workspace = workspace
+    }
+
     pub fn class(&self) -> &str {
         &self.wm_class
     }
