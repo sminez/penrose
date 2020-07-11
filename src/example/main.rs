@@ -43,6 +43,9 @@ fn main() {
         "M-k" => run_internal!(previous_client),
         "M-S-q" => run_internal!(kill_client),
 
+        // workspace management
+        "M-Tab" => run_internal!(toggle_workspace),
+
         // Layout & window management
         "M-A-Up" => run_internal!(inc_main),
         "M-A-Down" => run_internal!(dec_main),

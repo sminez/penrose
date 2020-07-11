@@ -22,6 +22,7 @@ pub struct WindowManager<'a> {
     workspaces: Vec<Workspace>,
     client_map: HashMap<WinId, Client>,
     focused_screen: usize,
+    previous_workspace: usize,
     // config
     // fonts: &'static [&'static str],
     floating_classes: &'static [&'static str],
@@ -61,6 +62,7 @@ impl<'a> WindowManager<'a> {
             workspaces,
             client_map: HashMap::new(),
             focused_screen: 0,
+            previous_workspace: 0,
             // fonts: conf.fonts,
             floating_classes: conf.floating_classes,
             color_scheme: conf.color_scheme,
@@ -287,6 +289,12 @@ impl<'a> WindowManager<'a> {
 
         self.screens[self.focused_screen].wix = index;
         self.apply_layout(self.active_ws_index());
+    }
+
+    pub fn toggle_workspace(&mut self) {
+        let current = self.active_ws_index();
+        self.focus_workspace(self.previous_workspace);
+        self.previous_workspace = current;
     }
 
     /**
