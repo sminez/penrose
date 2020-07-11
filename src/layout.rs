@@ -1,4 +1,6 @@
 /*!
+ * Layouts are user definable window arangements for a Workspace.
+ *
  * Layouts are maintained per monitor and allow for indepent management of the two
  * paramaters (n_main, main_ratio) that are used to modify layout logic. As penrose
  * makes use of a tagging system as opposed to workspaces, layouts will be passed a
@@ -11,6 +13,8 @@ use crate::data_types::{Change, Region, ResizeAction, WinId};
 use std::fmt;
 
 /**
+ * How a given layout should treat borders, gaps and floating windows.
+ *
  * Almost all layouts will be 'Normal' but penrose allows both for layouts that
  * explicitly remove gaps and window borders and for floating layouts that do
  * not apply resize actions to their windows.
@@ -29,6 +33,8 @@ pub enum LayoutKind {
 }
 
 /**
+ * Responsible for arranging windows within a Workspace.
+ *
  * A Layout is primarily a function that will be passed an array of client IDs
  * to apply resize actions to. Only clients that should be tiled for the current
  * monitor will be passed so no checks are required to see if each client should

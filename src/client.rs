@@ -3,6 +3,7 @@ use crate::data_types::WinId;
 
 /**
  * Meta-data around a client window that we are handling.
+ *
  * Primarily state flags and information used when determining which clients
  * to show for a given monitor and how they are tiled.
  */
@@ -17,6 +18,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// Track a new client window on a specific workspace
     pub fn new(id: WinId, wm_class: String, workspace: usize, floating: bool) -> Client {
         Client {
             id,
@@ -27,6 +29,7 @@ impl Client {
         }
     }
 
+    /// The X window ID of this client
     pub fn id(&self) -> WinId {
         self.id
     }
@@ -36,10 +39,12 @@ impl Client {
         self.workspace
     }
 
+    /// Mark this window as being on a new workspace
     pub fn set_workspace(&mut self, workspace: usize) {
         self.workspace = workspace
     }
 
+    /// The WM_CLASS of the window that this Client is tracking
     pub fn class(&self) -> &str {
         &self.wm_class
     }

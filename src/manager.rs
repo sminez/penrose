@@ -90,9 +90,10 @@ impl<'a> WindowManager<'a> {
     fn remove_client(&mut self, win_id: WinId) {
         match self.client_map.get(&win_id) {
             Some(client) => {
-                debug!("removing ref to client {}", win_id);
                 self.workspaces[client.workspace()].remove_client(win_id);
-                self.client_map.remove(&win_id);
+                self.client_map.remove(&win_id).map(|c| {
+                    debug!("removing ref to client {} ({})", c.id(), c.class());
+                });
             }
             None => warn!("attempt to remove unknown client {}", win_id),
         }
@@ -146,12 +147,11 @@ impl<'a> WindowManager<'a> {
         loop {
             if let Some(event) = self.conn.wait_for_event() {
                 match event {
-                    XEvent::KeyPress(key_code) => self.handle_key_press(key_code, &bindings),
-                    XEvent::Map(win_id) => self.handle_map_notify(win_id),
-                    XEvent::Enter(win_id) => self.handle_enter_notify(win_id),
-                    XEvent::Leave(win_id) => self.handle_leave_notify(win_id),
-                    XEvent::Destroy(win_id) => self.handle_destroy_notify(win_id),
-                    // XEvent::Motion => self.handle_motion_notify(),
+                    XEvent::KeyPress { code } => self.handle_key_press(code, &bindings),
+                    XEvent::Map { window, ignore } => self.handle_map_notify(window, ignore),
+                    XEvent::Enter { window } => self.handle_enter_notify(window),
+                    XEvent::Leave { window } => self.handle_leave_notify(window),
+                    XEvent::Destroy { window } => self.handle_destroy_notify(window),
                     // XEvent::ButtonPress => self.handle_button_press(),
                     // XEvent::ButtonRelease => self.handle_button_release(),
                     _ => (),
@@ -177,8 +177,10 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    pub fn handle_map_notify(&mut self, win_id: WinId) {
-        if self.client_map.contains_key(&win_id) {
+    pub fn handle_map_notify(&mut self, win_id: WinId, override_redirect: bool) {
+        if override_redirect {
+            return;
+        } else if self.client_map.contains_key(&win_id) {
             warn!("got map request for known client: {}", win_id);
             return;
         }
@@ -429,7 +431,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.handle_map_notify(10 * (i + offset + 1) as u32);
+            wm.handle_map_notify(10 * (i + offset + 1) as u32, false);
         }
     }
 

@@ -1,0 +1,50 @@
+- Intern atoms on init and keep them in a map so that they can just be looked up rather than
+  created every time.
+  - Need to figure out which atoms need interning and where to keep that. Feels internal to
+    the XcbConnection?
+
+- Handle mouse events (drag and resize for floating windows)
+  - Eventually click to WS switch and other actions from the status bar but that's a long way off
+
+- drag clients through the stack
+  - probably a method on Ring? (This is NOT rotate and cycle_focus together: the client is being
+    moved _through_ the stack with all other elements staying fixed, and focus is following)
+
+- track focused monitor with multi-monitor setup
+  - Should be doable with the X-root position info that comes with most events? Need to unack that
+    as part of the XEvent enum varients though
+
+- move client to monitor
+  - Similar idea to move client to workspace and probably can just be "determine WS on that monitor
+    then throw"
+
+- single client fullscreen for all layouts (configurable)
+  - i.e. the default dwm gaps behaviour I have on my patched version: for all layouts, if there is
+    only a single client then it takes up all of the screen and all gaps/borders are removed.
+  - Probably better to have this driven by the LayoutKind enum varients rather than a field on the
+    WindowManager as that will let allow for different layouts to have different behaviour.
+
+- Run several / hooks for keybindings
+  - This means updating the gen_keybindings macro to be able to handle both:
+        "key-combo" => single_action
+    and,
+        "key-combo" => [action1, action2, ...]
+  - This may get a bit hairy but it's not as simple as just dropping in a block or the user defining
+    an action that triggers multiple things: the ref to the WindowManager needs to be threaded through
+    in order to allow for triggering internal methods and that is not going to work easily...
+    - Unless, there is just a 'run_many!' macro that acts wraps each action in FireAndForget and then
+      triggers them in sequence? It'd work but it's gross and horribly inefficient...probably can do
+      a lot better!
+
+- dwm style bar and systray
+  - This one is probably a decent amount of work...I still prefer it to having to install and configure
+    something like lemonbar/polybar though and exposing the API via xsetroot is a nice touch that I'd
+    like to keep.
+  - While the Qtile bar I used to have was my favourite by far, I doubt I'm going to be able to
+    reproduce that any time soon starting from scratch!
+
+- scratchpads
+  - My dwm set up currently has a single scratchpad (a terminal) but I've previously has a set up where
+    different bindings triggered scratchpads for different programs. Not decided yet on whether I prefer
+    that (hard coded scratch pads) or the ability to tag windows as being on a scratch pad and then
+    cycling through them a-la i3.

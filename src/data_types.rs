@@ -123,9 +123,11 @@ impl KeyCode {
 }
 
 /**
- * A Collection<T> that has both the notion of an order of elements and a
- * focused element at some index. Supports rotating the position of the
- * elements and rotating which element is focused independently of one another.
+ * A Collection<T> that has both an order for its elements and a focused element
+ * at some index.
+ *
+ * Supports rotating the position of the elements and rotating which element
+ * is focused independently of one another.
  */
 #[derive(Debug)]
 pub struct Ring<T> {

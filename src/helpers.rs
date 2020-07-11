@@ -4,7 +4,9 @@ use std::process;
 use xcb;
 
 /**
- * Run an external command, redirecting the process stdout and stderr to /dev/null
+ * Run an external command
+ *
+ * This redirects the process stdout and stderr to /dev/null.
  * Logs a warning if there were any errors in kicking off the process.
  */
 pub fn spawn<S: Into<String>>(cmd: S) {
@@ -29,11 +31,12 @@ pub fn spawn<S: Into<String>>(cmd: S) {
 }
 
 /**
- * Run the xmodmap command to dump the system keymap table in a form
- * that we can load in and convert back to key codes. This lets the user
- * define key bindings in the way that they would expect while also
- * ensuring that it is east to debug any odd issues with bindings by
- * referring the user to the xmodmap output.
+ * Run the xmodmap command to dump the system keymap table.
+ *
+ * This is done in a form that we can load in and convert back to key
+ * codes. This lets the user define key bindings in the way that they
+ * would expect while also ensuring that it is east to debug any odd
+ * issues with bindings by referring the user to the xmodmap output.
  */
 pub fn keycodes_from_xmodmap() -> CodeMap {
     match process::Command::new("xmodmap").arg("-pke").output() {
@@ -53,7 +56,9 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
 }
 
 /**
- * Allow the user to define their keybindings using the gen_keybindings macro
+ * Convert user friendly key bindings into X keycodes.
+ *
+ * Allows the user to define their keybindings using the gen_keybindings macro
  * which calls through to this. Bindings are of the form '<MOD>-<key name>'
  * with multipple modifiers being allowed, and keynames being taken from the
  * output of 'xmodmap -pke'.

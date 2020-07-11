@@ -1,6 +1,6 @@
 Penrose - a tiling window manager in the style of dwm / xmonad
 ==============================================================
-![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=master) ![crates.io version](https://img.shields.io/crates/v/penrose)
+[![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=master)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose)
 
 Not ready yet for general use but aiming for a configure in source and recompile
 model similar to dwm / Xmonad / Qtile. The code should be well documented and
@@ -42,32 +42,7 @@ some additional programs.
   simple rendering of a bar etc) are in, full on IPC via an exposed API is out.
 
 
-### Current TODO list
-- [ ] drag clients through stack
-- [ ] track focused monitor with multi-monitor setup
-- [ ] move client to monitor
-- [ ] single client fullscreen for all layouts (configurable)
-- [ ] Run several / hooks for keybindings
-  - It'd be nice if it were possible to just give a block of actions to be run
-  but I'm not sure how that will work with the `gen_keybindings` macro
-- [ ] dwm style bar and systray
-  - This one is probably a decent amount of work...I still prefer it to having
-  to install and configure something like lemonbar/polybar though and exposing
-  the API via xsetroot is a nice touch that I'd like to keep.
-  - While the Qtile bar I used to have was my favourite by far, I doubt I'm
-  going to be able to reproduce that any time soon starting from scratch!
-
-- [ ] Scratchpads
-  - My dwm set up currently has a single scratchpad (a terminal) but I've
-  previously has a set up where different bindings triggered scratchpads for
-  different programs. Not decided yet on whether I prefer that (hard coded
-  scratch pads) or the ability to tag windows as being on a scratch pad and then
-  cycling through them a-la i3.
-
-- [ ] Mouse bindings
-  - I'm currently grabbing `MOD-{1, 3}` on start up with the intension of using
-  that for mouse based move and resize respectively. The xcb events provide
-  cursor position info so it should be a case of generating a target region from
-  that and applying the resize.
-  - Probably should factor out the resize logic so this can be reused then...
-  - getting draw-term back (possibly as a build in feature) would be pretty cool
+### Current Work
+See the [TODO](TODO) file in the root of the repo for next steps and ongoing work. I'm
+trying to keep it mostly up to date but the docs/TODOs and the codebase may
+diverge at points when I forget to update things. If in doubt, read the source.
