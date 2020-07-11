@@ -48,3 +48,7 @@
     different bindings triggered scratchpads for different programs. Not decided yet on whether I prefer
     that (hard coded scratch pads) or the ability to tag windows as being on a scratch pad and then
     cycling through them a-la i3.
+
+- support things like _NET_ACTIVE_WINDOW and friends (EWMH etc)
+
+- set the window manager name on startup
