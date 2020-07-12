@@ -97,6 +97,7 @@ impl Region {
     }
 }
 
+/// A set of named color codes
 #[derive(Debug, Clone, Copy)]
 pub struct ColorScheme {
     pub bg: u32,
@@ -107,6 +108,7 @@ pub struct ColorScheme {
     pub urgent: u32,
 }
 
+/// An X key-code along with a modifier mask
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct KeyCode {
     pub mask: u16,
@@ -363,7 +365,8 @@ impl<T> Ring<T> {
         Some(c)
     }
 
-    /** If ix is within bounds, remove that element and return it, otherwise None
+    /**
+     * If ix is within bounds, remove that element and return it, otherwise None
      * ```
      * use penrose::data_types::Ring;
      *
