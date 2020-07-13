@@ -9,7 +9,10 @@
  */
 use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
+use std::collections::HashMap;
 use xcb;
+
+const WM_NAME: &'static str = "penrose";
 
 /*
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
@@ -35,6 +38,33 @@ const EVENT_MASK: &[(u32, u32)] = &[(
     xcb::CW_EVENT_MASK,
     xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
 )];
+
+// TODO: this list has been copied from atoms used in other WMs, not using everything
+//       yet so work out which ones we need to keep and which we can drop.
+const ATOMS: &[&'static str] = &[
+    "MANAGER",
+    "UTF8_STRING",
+    "WM_CLASS",
+    "WM_DELETE_WINDOW",
+    "WM_PROTOCOLS",
+    "WM_STATE",
+    "WM_TAKE_FOCUS",
+    "_NET_ACTIVE_WINDOW",
+    "_NET_CLIENT_LIST",
+    "_NET_SUPPORTED",
+    "_NET_SUPPORTING_WM_CHECK",
+    "_NET_SYSTEM_TRAY_OPCODE",
+    "_NET_SYSTEM_TRAY_ORIENTATION",
+    "_NET_SYSTEM_TRAY_ORIENTATION_HORZ",
+    "_NET_SYSTEM_TRAY_S0",
+    "_NET_WM_NAME",
+    "_NET_WM_STATE",
+    "_NET_WM_STATE_FULLSCREEN",
+    "_NET_WM_WINDOW_TYPE",
+    "_NET_WM_WINDOW_TYPE_DIALOG",
+    "_XEMBED",
+    "_XEMBED_INFO",
+];
 
 /**
  * Wrapper around the low level XCB event types that require casting to work with.
@@ -189,10 +219,8 @@ pub trait XConn {
      */
     fn grab_keys(&self, key_bindings: &KeyBindings);
 
-    /**
-     * Intern an XCB atom by name, returning the atom ID if we are able
-     */
-    fn intern_atom(&self, name: &str) -> u32;
+    /// Set required Net* X properties to ensure compatability
+    fn set_wm_properties(&self);
 
     /**
      * Use the xcb api to query a string property for a window by window ID and poperty name.
@@ -200,13 +228,14 @@ pub trait XConn {
      */
     fn str_prop(&self, id: u32, name: &str) -> Result<String, String>;
 
-    /// Fetch an atom prop by name
+    /// Fetch an atom prop by name for a particular window ID
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32, String>;
 }
 
 /// Handles communication with an X server via xcb
 pub struct XcbConnection {
     conn: xcb::Connection,
+    atoms: HashMap<&'static str, u32>,
 }
 
 impl XcbConnection {
@@ -217,7 +246,57 @@ impl XcbConnection {
             Ok(conn) => conn,
         };
 
-        XcbConnection { conn }
+        let mut atoms = HashMap::with_capacity(ATOMS.len());
+        for atom in ATOMS.iter() {
+            // https://www.mankier.com/3/xcb_intern_atom
+            let val = xcb::intern_atom(
+                &conn, // xcb connection to X11
+                false, // return the atom ID even if it doesn't already exists
+                atom,  // name of the atom to retrieve
+            )
+            .get_reply()
+            .expect(&format!("unable to intern xcb atom '{}'", atom))
+            .atom();
+
+            atoms.insert(*atom, val);
+        }
+
+        XcbConnection { conn, atoms }
+    }
+
+    fn atom(&self, name: &str) -> u32 {
+        *self
+            .atoms
+            .get(name)
+            .expect(&format!("{} is not a known atom", name))
+    }
+
+    fn new_stub_window(&self) -> WinId {
+        let screen = match self.conn.get_setup().roots().nth(0) {
+            None => die!("unable to get handle for screen"),
+            Some(s) => s,
+        };
+
+        let win_id = self.conn.generate_id();
+        let root = screen.root();
+
+        // xcb docs: https://www.mankier.com/3/xcb_create_window
+        xcb::create_window(
+            &self.conn, // xcb connection to X11
+            0,          // new window's depth
+            win_id,     // ID to be used for referring to the window
+            root,       // parent window
+            0,          // x-coordinate
+            0,          // y-coordinate
+            1,          // width
+            1,          // height
+            0,          // border width
+            0,          // class (i _think_ 0 == COPY_FROM_PARENT?)
+            0,          // visual (i _think_ 0 == COPY_FROM_PARENT?)
+            &[],        // value list? (value mask? not documented either way...)
+        );
+
+        win_id
     }
 }
 
@@ -271,29 +350,7 @@ impl XConn for XcbConnection {
     }
 
     fn current_outputs(&self) -> Vec<Screen> {
-        let screen = match self.conn.get_setup().roots().nth(0) {
-            None => die!("unable to get handle for screen"),
-            Some(s) => s,
-        };
-
-        let win_id = self.conn.generate_id();
-        let root = screen.root();
-
-        // xcb docs: https://www.mankier.com/3/xcb_create_window
-        xcb::create_window(
-            &self.conn, // xcb connection to X11
-            0,          // new window's depth
-            win_id,     // ID to be used for referring to the window
-            root,       // parent window
-            0,          // x-coordinate
-            0,          // y-coordinate
-            1,          // width
-            1,          // height
-            0,          // border width
-            0,          // class (i _think_ 0 == COPY_FROM_PARENT?)
-            0,          // visual (i _think_ 0 == COPY_FROM_PARENT?)
-            &[],        // value list? (value mask? not documented either way...)
-        );
+        let win_id = self.new_stub_window();
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_screen_resources
         let resources = xcb::randr::get_screen_resources(&self.conn, win_id);
@@ -341,8 +398,8 @@ impl XConn for XcbConnection {
     }
 
     fn send_client_event(&self, id: WinId, atom_name: &str) {
-        let atom = self.intern_atom(atom_name);
-        let wm_protocols = self.intern_atom("WM_PROTOCOLS");
+        let atom = self.atom(atom_name);
+        let wm_protocols = self.atom("WM_PROTOCOLS");
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
         xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
@@ -354,7 +411,7 @@ impl XConn for XcbConnection {
             Some(screen) => screen.root(),
         };
 
-        let prop = self.intern_atom("_NET_ACTIVE_WINDOW");
+        let prop = self.atom("_NET_ACTIVE_WINDOW");
 
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
         xcb::set_input_focus(
@@ -426,30 +483,69 @@ impl XConn for XcbConnection {
         &self.conn.flush();
     }
 
-    fn intern_atom(&self, name: &str) -> u32 {
-        // https://www.mankier.com/3/xcb_intern_atom
-        let interned_atom = xcb::intern_atom(
-            &self.conn, // xcb connection to X11
-            false,      // return the atom ID even if it doesn't already exists
-            name,       // name of the atom to retrieve
+    fn set_wm_properties(&self) {
+        let screen = match self.conn.get_setup().roots().nth(0) {
+            None => die!("unable to get handle for screen"),
+            Some(s) => s,
+        };
+        let root = screen.root();
+
+        // NOTE: The following uses xcb_change_property under the hood
+        //       xcb docs: https://www.mankier.com/3/xcb_change_property
+        let check_win = self.new_stub_window();
+
+        xcb::change_property(
+            &self.conn,                            // xcb connection to X11
+            PROP_MODE_REPLACE,                     // discard current prop and replace
+            check_win,                             // window to change prop on
+            self.atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
+            ATOM_WINDOW,                           // type of prop
+            32,                                    // data format (8/16/32-bit)
+            &[check_win],                          // data
+        );
+        xcb::change_property(
+            &self.conn,                // xcb connection to X11
+            PROP_MODE_REPLACE,         // discard current prop and replace
+            check_win,                 // window to change prop on
+            self.atom("_NET_WM_NAME"), // prop to change
+            xcb::xproto::ATOM_STRING,  // type of prop
+            8,                         // data format (8/16/32-bit)
+            &[WM_NAME],                // data
+        );
+        xcb::change_property(
+            &self.conn,                            // xcb connection to X11
+            PROP_MODE_REPLACE,                     // discard current prop and replace
+            root,                                  // window to change prop on
+            self.atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
+            ATOM_WINDOW,                           // type of prop
+            32,                                    // data format (8/16/32-bit)
+            &[check_win],                          // data
         );
 
-        match interned_atom.get_reply() {
-            Err(e) => die!("unable to fetch xcb atom '{}': {}", name, e),
-            Ok(reply) => reply.atom(),
-        }
+        // EWMH support
+        let supported: Vec<u32> = ATOMS.iter().map(|a| self.atom(a)).collect();
+        xcb::change_property(
+            &self.conn,                  // xcb connection to X11
+            PROP_MODE_REPLACE,           // discard current prop and replace
+            root,                        // window to change prop on
+            self.atom("_NET_SUPPORTED"), // prop to change
+            xcb::xproto::ATOM_ATOM,      // type of prop
+            32,                          // data format (8/16/32-bit)
+            &supported,                  // data
+        );
+        xcb::delete_property(&self.conn, root, self.atom("_NET_CLIENT_LIST"));
     }
 
     fn str_prop(&self, id: u32, name: &str) -> Result<String, String> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
-            &self.conn,             // xcb connection to X11
-            false,                  // should the property be deleted
-            id,                     // target window to query
-            self.intern_atom(name), // the property we want
-            xcb::ATOM_ANY,          // the type of the property
-            0,                      // offset in the property to retrieve data from
-            1024,                   // how many 32bit multiples of data to retrieve
+            &self.conn,      // xcb connection to X11
+            false,           // should the property be deleted
+            id,              // target window to query
+            self.atom(name), // the property we want
+            xcb::ATOM_ANY,   // the type of the property
+            0,               // offset in the property to retrieve data from
+            1024,            // how many 32bit multiples of data to retrieve
         );
 
         match cookie.get_reply() {
@@ -464,13 +560,13 @@ impl XConn for XcbConnection {
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32, String> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
-            &self.conn,             // xcb connection to X11
-            false,                  // should the property be deleted
-            id,                     // target window to query
-            self.intern_atom(name), // the property we want
-            xcb::ATOM_ANY,          // the type of the property
-            0,                      // offset in the property to retrieve data from
-            1024,                   // how many 32bit multiples of data to retrieve
+            &self.conn,      // xcb connection to X11
+            false,           // should the property be deleted
+            id,              // target window to query
+            self.atom(name), // the property we want
+            xcb::ATOM_ANY,   // the type of the property
+            0,               // offset in the property to retrieve data from
+            1024,            // how many 32bit multiples of data to retrieve
         );
 
         match cookie.get_reply() {
@@ -514,9 +610,7 @@ impl XConn for MockXConn {
     fn focus_client(&self, _: WinId) {}
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
-    fn intern_atom(&self, _: &str) -> u32 {
-        0
-    }
+    fn set_wm_properties(&self) {}
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
         Ok(String::from(name))
     }
