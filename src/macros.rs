@@ -1,53 +1,6 @@
 //! Utility macros for use in the rest of penrose.
 //! Not intended for general use
 
-/// log the reason why we we're dying and immediately exit
-#[macro_export]
-macro_rules! die(
-    ($msg:expr) => ({
-        eprintln!("FATAL :: {}", $msg);
-        ::std::process::exit(42);
-     });
-
-    ($fmt:expr, $($arg:expr),*) => ({
-        eprintln!("FATAL :: {}", format!($fmt, $($arg,)*));
-        ::std::process::exit(42);
-     });
-);
-
-/// Log a WARN level message to stderr
-#[macro_export]
-macro_rules! warn(
-    ($msg:expr) => { eprintln!("WARN :: {}", $msg); };
-    ($fmt:expr, $($arg:tt),*) => {
-        eprintln!("WARN :: {}", format!($fmt, $($arg)*));
-    };
-);
-
-/// Log an INFO level message to stderr
-#[macro_export]
-macro_rules! log(
-    ($msg:expr) => { eprintln!("INFO :: {}", $msg); };
-    ($fmt:expr, $($arg:expr),*) => {
-        eprintln!("INFO :: {}", format!($fmt, $($arg,)*));
-    };
-);
-
-/// Log an DBUG level message to stderr if we were compiled in debug
-#[macro_export]
-macro_rules! debug(
-    ($msg:expr) => {
-        if cfg!(debug_assertions) {
-            eprintln!("DBUG :: {}", $msg);
-        }
-    };
-    ($fmt:expr, $($arg:expr),*) => {
-        if cfg!(debug_assertions) {
-            eprintln!("DBUG :: {}", format!($fmt, $($arg,)*));
-        }
-    };
-);
-
 /// use notify-send to trigger a pop up window with a message (used for debugging)
 #[macro_export]
 macro_rules! notify(
@@ -81,14 +34,12 @@ macro_rules! run_external(
 macro_rules! run_internal(
     ($func:ident) => {
         Box::new(|wm: &mut $crate::manager::WindowManager| {
-            debug!("calling method ({})", stringify!($func));
             wm.$func();
         })
     };
 
     ($func:ident, $($arg:tt),+) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| {
-            debug!("calling method ({}) with argument ({})", stringify!($func), $($arg)+);
             wm.$func($($arg),+);
         })
     };
@@ -121,7 +72,7 @@ macro_rules! gen_keybindings(
 
             $(
                 match $crate::helpers::parse_key_binding($binding, &keycodes) {
-                    None => die!("invalid key binding: {}", $binding),
+                    None => panic!("invalid key binding: {}", $binding),
                     Some(key_code) => _map.insert(key_code, $action),
                 };
             )+
@@ -130,7 +81,7 @@ macro_rules! gen_keybindings(
                 $(
                     let for_ws = format!($ws_binding, i+1);
                     match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
-                        None => die!("invalid key binding: {}", for_ws),
+                        None => panic!("invalid key binding: {}", for_ws),
                         Some(key_code) => _map.insert(key_code, run_internal!($ws_action, i)),
                     };
                 )+

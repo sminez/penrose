@@ -41,9 +41,9 @@ impl<'a> WindowManager<'a> {
     /// the X server.
     pub fn init(conf: Config, conn: &'a dyn XConn) -> WindowManager {
         let mut screens = conn.current_outputs();
-        log!("connected to X server: {} screens detected", screens.len());
+        info!("connected to X server: {} screens detected", screens.len());
         for (i, s) in screens.iter().enumerate() {
-            log!("screen ({}) :: {:?}", i, s);
+            info!("screen ({}) :: {:?}", i, s);
         }
 
         screens

@@ -40,9 +40,9 @@ pub fn spawn<S: Into<String>>(cmd: S) {
  */
 pub fn keycodes_from_xmodmap() -> CodeMap {
     match process::Command::new("xmodmap").arg("-pke").output() {
-        Err(e) => die!("unable to fetch keycodes via xmodmap: {}", e),
+        Err(e) => panic!("unable to fetch keycodes via xmodmap: {}", e),
         Ok(o) => match String::from_utf8(o.stdout) {
-            Err(e) => die!("invalid utf8 from xmodmap: {}", e),
+            Err(e) => panic!("invalid utf8 from xmodmap: {}", e),
             Ok(s) => s
                 .lines()
                 .flat_map(|l| {
@@ -87,7 +87,7 @@ where
                     &"M" => xcb::MOD_MASK_4,
                     &"S" => xcb::MOD_MASK_SHIFT,
                     &"C" => xcb::MOD_MASK_CONTROL,
-                    &_ => die!("invalid key binding prefix: {}", s),
+                    &_ => panic!("invalid key binding prefix: {}", s),
                 })
                 .fold(0, |acc, v| acc | v);
 

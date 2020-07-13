@@ -242,7 +242,7 @@ impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
     pub fn new() -> XcbConnection {
         let (conn, _) = match xcb::Connection::connect(None) {
-            Err(e) => die!("unable to establish connection to X server: {}", e),
+            Err(e) => panic!("unable to establish connection to X server: {}", e),
             Ok(conn) => conn,
         };
 
@@ -273,7 +273,7 @@ impl XcbConnection {
 
     fn new_stub_window(&self) -> WinId {
         let screen = match self.conn.get_setup().roots().nth(0) {
-            None => die!("unable to get handle for screen"),
+            None => panic!("unable to get handle for screen"),
             Some(s) => s,
         };
 
@@ -357,7 +357,7 @@ impl XConn for XcbConnection {
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_crtc_info
         match resources.get_reply() {
-            Err(e) => die!("error reading X screen resources: {}", e),
+            Err(e) => panic!("error reading X screen resources: {}", e),
             Ok(reply) => reply
                 .crtcs()
                 .iter()
@@ -407,7 +407,7 @@ impl XConn for XcbConnection {
 
     fn focus_client(&self, id: WinId) {
         let root = match self.conn.get_setup().roots().nth(0) {
-            None => die!("unable to get handle for screen"),
+            None => panic!("unable to get handle for screen"),
             Some(screen) => screen.root(),
         };
 
@@ -444,7 +444,7 @@ impl XConn for XcbConnection {
         // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
         let input = xcb::randr::select_input(&self.conn, root, NOTIFY_MASK);
         match input.request_check() {
-            Err(e) => die!("randr error: {}", e),
+            Err(e) => panic!("randr error: {}", e),
             Ok(_) => {
                 for k in key_bindings.keys() {
                     // xcb docs: https://www.mankier.com/3/xcb_grab_key
@@ -485,7 +485,7 @@ impl XConn for XcbConnection {
 
     fn set_wm_properties(&self) {
         let screen = match self.conn.get_setup().roots().nth(0) {
-            None => die!("unable to get handle for screen"),
+            None => panic!("unable to get handle for screen"),
             Some(s) => s,
         };
         let root = screen.root();

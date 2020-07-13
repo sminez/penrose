@@ -12,8 +12,20 @@ extern crate penrose;
 
 use penrose::layout::{floating, side_stack};
 use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager, XcbConnection};
+use simplelog;
 
 fn main() {
+    // Turn on debug logging for non-release builds
+    simplelog::SimpleLogger::init(
+        if cfg!(debug_assertions) {
+            simplelog::LevelFilter::Debug
+        } else {
+            simplelog::LevelFilter::Info
+        },
+        simplelog::Config::default(),
+    )
+    .unwrap();
+
     let workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
     let fonts = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
     let color_scheme = ColorScheme {

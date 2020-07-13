@@ -22,7 +22,7 @@ pub struct Workspace {
 impl Workspace {
     pub fn new(name: &'static str, layouts: Vec<Layout>) -> Workspace {
         if layouts.len() == 0 {
-            die!("{}: require at least one layout function", name);
+            panic!("{}: require at least one layout function", name);
         }
 
         Workspace {
