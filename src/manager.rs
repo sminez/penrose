@@ -260,6 +260,8 @@ impl<'a> WindowManager<'a> {
     pub fn focus_workspace(&mut self, index: usize) {
         if self.active_ws_index() == index {
             return; // already focused on the current screen
+        } else {
+            self.previous_workspace = self.active_ws_index();
         }
 
         for i in 0..self.screens.len() {
@@ -292,9 +294,7 @@ impl<'a> WindowManager<'a> {
     }
 
     pub fn toggle_workspace(&mut self) {
-        let current = self.active_ws_index();
         self.focus_workspace(self.previous_workspace);
-        self.previous_workspace = current;
     }
 
     /**
