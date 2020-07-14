@@ -42,7 +42,7 @@ pub struct Config {
 /* Argument enums */
 
 /// A direction to permute a Ring
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Direction {
     /// increase the index, wrapping if needed
     Forward,
@@ -51,7 +51,7 @@ pub enum Direction {
 }
 
 /// Increment / decrement a value
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Change {
     /// increase the value
     More,
@@ -192,8 +192,8 @@ impl<T> Ring<T> {
      *
      * let mut r = Ring::new(vec![1, 2, 3]);
      * r.rotate(Direction::Forward);
-     * assert_eq!(r.as_vec(), &vec![2, 3, 1]);
-     * assert_eq!(r.focused(), Some(&2));
+     * assert_eq!(r.as_vec(), &vec![3, 1, 2]);
+     * assert_eq!(r.focused(), Some(&3));
      * r.rotate(Direction::Backward);
      * assert_eq!(r.as_vec(), &vec![1, 2, 3]);
      * assert_eq!(r.focused(), Some(&1));
@@ -203,12 +203,12 @@ impl<T> Ring<T> {
         if self.elements.len() > 1 {
             match direction {
                 Direction::Forward => {
-                    let first = self.elements.remove(0);
-                    self.elements.push(first);
-                }
-                Direction::Backward => {
                     let last = self.elements.pop().unwrap();
                     self.elements.insert(0, last);
+                }
+                Direction::Backward => {
+                    let first = self.elements.remove(0);
+                    self.elements.push(first);
                 }
             }
         }
@@ -221,15 +221,13 @@ impl<T> Ring<T> {
      * use penrose::data_types::{Direction, Ring};
      *
      * let mut r = Ring::new(vec![1, 2, 3]);
-     * r.cycle_focus(Direction::Forward);
+     * assert_eq!(r.cycle_focus(Direction::Forward), Some(&2));
      * assert_eq!(r.as_vec(), &vec![1, 2, 3]);
-     * assert_eq!(r.focused(), Some(&2));
-     * r.cycle_focus(Direction::Backward);
+     * assert_eq!(r.cycle_focus(Direction::Backward), Some(&1));
      * assert_eq!(r.as_vec(), &vec![1, 2, 3]);
-     * assert_eq!(r.focused(), Some(&1));
      * ```
      */
-    pub fn cycle_focus(&mut self, direction: Direction) {
+    pub fn cycle_focus(&mut self, direction: Direction) -> Option<&T> {
         let max = self.elements.len() - 1;
         self.focused = match direction {
             Direction::Forward => {
@@ -247,6 +245,26 @@ impl<T> Ring<T> {
                 }
             }
         };
+        self.focused()
+    }
+
+    /**
+     * Move the focused element forward/backward through the ring while
+     * retaining focus.
+     * ```
+     * use penrose::data_types::{Direction, Ring};
+     *
+     * let mut r = Ring::new(vec![1, 2, 3]);
+     * assert_eq!(r.focused(), Some(&1));
+     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+     * assert_eq!(r.as_vec(), &vec![3, 1, 2]);
+     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+     * assert_eq!(r.as_vec(), &vec![2, 3, 1]);
+     * ```
+     */
+    pub fn drag_focused(&mut self, direction: Direction) -> Option<&T> {
+        self.rotate(direction);
+        self.cycle_focus(direction)
     }
 
     /**
@@ -451,8 +469,8 @@ mod tests {
     fn rotate_holds_focus_but_permutes_order() {
         let mut r = Ring::new(vec![1, 2, 3]);
         r.rotate(Direction::Forward);
-        assert_eq!(*r.focused().unwrap(), 2);
+        assert_eq!(r.focused(), Some(&3));
         r.rotate(Direction::Backward);
-        assert_eq!(*r.focused().unwrap(), 1);
+        assert_eq!(r.focused(), Some(&1));
     }
 }

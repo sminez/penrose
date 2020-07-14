@@ -152,7 +152,7 @@ pub fn client_breakdown<T>(clients: &Vec<T>, n_main: u32) -> (u32, u32) {
  */
 
 // ignore paramas and return pairs of window ID and index in the client vec
-#[allow(dead_code)]
+#[cfg(test)]
 pub(crate) fn mock_layout(clients: &Vec<WinId>, r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     clients
         .iter()
@@ -165,15 +165,8 @@ pub(crate) fn mock_layout(clients: &Vec<WinId>, r: &Region, _: u32, _: f32) -> V
         .collect()
 }
 
-/**
- * A no-op floating layout that simply satisfies the type required for Layout
- */
-pub fn floating(
-    _clients: &Vec<WinId>,
-    _monitor_region: &Region,
-    _max_main: u32,
-    _ratio: f32,
-) -> Vec<ResizeAction> {
+/// A no-op floating layout that simply satisfies the type required for Layout
+pub fn floating(_: &Vec<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     vec![]
 }
 

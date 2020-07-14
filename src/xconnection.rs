@@ -17,6 +17,7 @@ const WM_NAME: &'static str = "penrose";
 /*
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
  */
+const WINDOW_CLASS_INPUT_ONLY: u16 = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
 const NOTIFY_MASK: u16 = xcb::randr::NOTIFY_MASK_CRTC_CHANGE as u16;
 const GRAB_MODE_ASYNC: u8 = xcb::GRAB_MODE_ASYNC as u8;
 const INPUT_FOCUS_PARENT: u8 = xcb::INPUT_FOCUS_PARENT as u8;
@@ -246,20 +247,19 @@ impl XcbConnection {
             Ok(conn) => conn,
         };
 
-        let mut atoms = HashMap::with_capacity(ATOMS.len());
-        for atom in ATOMS.iter() {
-            // https://www.mankier.com/3/xcb_intern_atom
-            let val = xcb::intern_atom(
-                &conn, // xcb connection to X11
-                false, // return the atom ID even if it doesn't already exists
-                atom,  // name of the atom to retrieve
-            )
-            .get_reply()
-            .expect(&format!("unable to intern xcb atom '{}'", atom))
-            .atom();
+        // https://www.mankier.com/3/xcb_intern_atom
+        let atoms: HashMap<&'static str, u32> = ATOMS
+            .iter()
+            .map(|atom| {
+                // false == always return the atom, even if exists already
+                let val = xcb::intern_atom(&conn, false, atom)
+                    .get_reply()
+                    .expect(&format!("unable to intern xcb atom '{}'", atom))
+                    .atom();
 
-            atoms.insert(*atom, val);
-        }
+                (*atom, val)
+            })
+            .collect();
 
         XcbConnection { conn, atoms }
     }
@@ -272,28 +272,24 @@ impl XcbConnection {
     }
 
     fn new_stub_window(&self) -> WinId {
-        let screen = match self.conn.get_setup().roots().nth(0) {
-            None => panic!("unable to get handle for screen"),
-            Some(s) => s,
-        };
-
+        let screen = self.conn.get_setup().roots().nth(0).expect("no screen");
         let win_id = self.conn.generate_id();
         let root = screen.root();
 
         // xcb docs: https://www.mankier.com/3/xcb_create_window
         xcb::create_window(
-            &self.conn, // xcb connection to X11
-            0,          // new window's depth
-            win_id,     // ID to be used for referring to the window
-            root,       // parent window
-            0,          // x-coordinate
-            0,          // y-coordinate
-            1,          // width
-            1,          // height
-            0,          // border width
-            0,          // class (i _think_ 0 == COPY_FROM_PARENT?)
-            0,          // visual (i _think_ 0 == COPY_FROM_PARENT?)
-            &[],        // value list? (value mask? not documented either way...)
+            &self.conn,              // xcb connection to X11
+            0,                       // new window's depth
+            win_id,                  // ID to be used for referring to the window
+            root,                    // parent window
+            0,                       // x-coordinate
+            0,                       // y-coordinate
+            1,                       // width
+            1,                       // height
+            0,                       // border width
+            WINDOW_CLASS_INPUT_ONLY, // class (i _think_ 0 == COPY_FROM_PARENT?)
+            0,                       // visual (i _think_ 0 == COPY_FROM_PARENT?)
+            &[],                     // value list? (value mask? not documented either way...)
         );
 
         win_id
@@ -406,12 +402,9 @@ impl XConn for XcbConnection {
     }
 
     fn focus_client(&self, id: WinId) {
-        let root = match self.conn.get_setup().roots().nth(0) {
-            None => panic!("unable to get handle for screen"),
-            Some(screen) => screen.root(),
-        };
-
+        let screen = self.conn.get_setup().roots().nth(0).expect("no screen");
         let prop = self.atom("_NET_ACTIVE_WINDOW");
+        let root = screen.root();
 
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
         xcb::set_input_focus(
@@ -508,9 +501,9 @@ impl XConn for XcbConnection {
             PROP_MODE_REPLACE,         // discard current prop and replace
             check_win,                 // window to change prop on
             self.atom("_NET_WM_NAME"), // prop to change
-            xcb::xproto::ATOM_STRING,  // type of prop
+            self.atom("UTF8_STRING"),  // type of prop
             8,                         // data format (8/16/32-bit)
-            &[WM_NAME],                // data
+            WM_NAME.as_bytes(),        // data
         );
         xcb::change_property(
             &self.conn,                            // xcb connection to X11
@@ -520,6 +513,15 @@ impl XConn for XcbConnection {
             ATOM_WINDOW,                           // type of prop
             32,                                    // data format (8/16/32-bit)
             &[check_win],                          // data
+        );
+        xcb::change_property(
+            &self.conn,                // xcb connection to X11
+            PROP_MODE_REPLACE,         // discard current prop and replace
+            root,                      // window to change prop on
+            self.atom("_NET_WM_NAME"), // prop to change
+            self.atom("UTF8_STRING"),  // type of prop
+            8,                         // data format (8/16/32-bit)
+            WM_NAME.as_bytes(),        // data
         );
 
         // EWMH support
