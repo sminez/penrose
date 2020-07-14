@@ -50,6 +50,15 @@ pub enum Direction {
     Backward,
 }
 
+impl Direction {
+    pub fn reverse(&self) -> Direction {
+        match self {
+            Direction::Forward => Direction::Backward,
+            Direction::Backward => Direction::Forward,
+        }
+    }
+}
+
 /// Increment / decrement a value
 #[derive(Debug, Copy, Clone)]
 pub enum Change {
@@ -213,6 +222,25 @@ impl<T> Ring<T> {
             }
         }
     }
+    fn next_index(&self, direction: Direction) -> usize {
+        let max = self.elements.len() - 1;
+        match direction {
+            Direction::Forward => {
+                if self.focused == max {
+                    0
+                } else {
+                    self.focused + 1
+                }
+            }
+            Direction::Backward => {
+                if self.focused == 0 {
+                    max
+                } else {
+                    self.focused - 1
+                }
+            }
+        }
+    }
 
     /**
      * Move the focus point of the ring forward / backward through the elements
@@ -228,23 +256,7 @@ impl<T> Ring<T> {
      * ```
      */
     pub fn cycle_focus(&mut self, direction: Direction) -> Option<&T> {
-        let max = self.elements.len() - 1;
-        self.focused = match direction {
-            Direction::Forward => {
-                if self.focused == max {
-                    0
-                } else {
-                    self.focused + 1
-                }
-            }
-            Direction::Backward => {
-                if self.focused == 0 {
-                    max
-                } else {
-                    self.focused - 1
-                }
-            }
-        };
+        self.focused = self.next_index(direction);
         self.focused()
     }
 
@@ -254,16 +266,24 @@ impl<T> Ring<T> {
      * ```
      * use penrose::data_types::{Direction, Ring};
      *
-     * let mut r = Ring::new(vec![1, 2, 3]);
+     * let mut r = Ring::new(vec![1, 2, 3, 4]);
      * assert_eq!(r.focused(), Some(&1));
      * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![3, 1, 2]);
+     * assert_eq!(r.as_vec(), &vec![2, 1, 3, 4]);
      * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![2, 3, 1]);
+     * assert_eq!(r.as_vec(), &vec![2, 3, 1, 4]);
+     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+     * assert_eq!(r.as_vec(), &vec![2, 3, 4, 1]);
+     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+     * assert_eq!(r.as_vec(), &vec![1, 2, 3, 4]);
      * ```
      */
     pub fn drag_focused(&mut self, direction: Direction) -> Option<&T> {
-        self.rotate(direction);
+        match (self.focused, self.next_index(direction), direction) {
+            (0, _, Direction::Backward) => self.rotate(direction),
+            (_, 0, Direction::Forward) => self.rotate(direction),
+            (focused, other, _) => self.elements.swap(focused, other),
+        }
         self.cycle_focus(direction)
     }
 
@@ -471,6 +491,46 @@ mod tests {
         r.rotate(Direction::Forward);
         assert_eq!(r.focused(), Some(&3));
         r.rotate(Direction::Backward);
+        assert_eq!(r.focused(), Some(&1));
+    }
+
+    #[test]
+    fn dragging_an_element_forward() {
+        let mut r = Ring::new(vec![1, 2, 3, 4]);
+        assert_eq!(r.focused(), Some(&1));
+
+        assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+        assert_eq!(r.elements, vec![2, 1, 3, 4]);
+
+        assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+        assert_eq!(r.elements, vec![2, 3, 1, 4]);
+
+        assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+        assert_eq!(r.elements, vec![2, 3, 4, 1]);
+
+        assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
+        assert_eq!(r.elements, vec![1, 2, 3, 4]);
+
+        assert_eq!(r.focused(), Some(&1));
+    }
+
+    #[test]
+    fn dragging_an_element_backward() {
+        let mut r = Ring::new(vec![1, 2, 3, 4]);
+        assert_eq!(r.focused(), Some(&1));
+
+        assert_eq!(r.drag_focused(Direction::Backward), Some(&1));
+        assert_eq!(r.elements, vec![2, 3, 4, 1]);
+
+        assert_eq!(r.drag_focused(Direction::Backward), Some(&1));
+        assert_eq!(r.elements, vec![2, 3, 1, 4]);
+
+        assert_eq!(r.drag_focused(Direction::Backward), Some(&1));
+        assert_eq!(r.elements, vec![2, 1, 3, 4]);
+
+        assert_eq!(r.drag_focused(Direction::Backward), Some(&1));
+        assert_eq!(r.elements, vec![1, 2, 3, 4]);
+
         assert_eq!(r.focused(), Some(&1));
     }
 }

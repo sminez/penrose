@@ -99,19 +99,25 @@ impl Workspace {
 
     /// Cycle focus through the clients on this workspace
     pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
-        if self.clients.len() <= 1 {
-            return None;
+        if self.clients.len() < 2 {
+            return None; // need at least two clients to cycle
         }
 
-        let prev = self.clients.focused().unwrap().clone();
-        self.clients.cycle_focus(direction);
-        let new = self.clients.focused().unwrap();
+        let prev = *self.clients.focused()?;
+        let new = *self.clients.cycle_focus(direction)?;
 
-        if prev != *new {
-            Some((prev, *new))
+        if prev != new {
+            Some((prev, new))
         } else {
             None
         }
+    }
+
+    /**
+     * Drag the focused client through the stack, retaining focus
+     */
+    pub fn drag_client(&mut self, direction: Direction) -> Option<&WinId> {
+        self.clients.drag_focused(direction)
     }
 
     pub fn update_max_main(&mut self, change: Change) {
@@ -194,8 +200,51 @@ mod tests {
     #[test]
     fn applying_a_layout_gives_one_action_per_client() {
         let mut ws = Workspace::new("test", test_layouts());
-        add_n_clients(&mut ws, 3);
+        ws.clients = Ring::new(vec![1, 2, 3]);
         let actions = ws.arrange(&Region::new(0, 0, 2000, 1000));
         assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")
+    }
+
+    #[test]
+    fn dragging_a_client_forward() {
+        let mut ws = Workspace::new("test", test_layouts());
+        ws.clients = Ring::new(vec![1, 2, 3, 4]);
+        assert_eq!(ws.focused_client(), Some(&1));
+
+        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.clients.as_vec(), &vec![2, 1, 3, 4]);
+
+        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.clients.as_vec(), &vec![2, 3, 1, 4]);
+
+        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.clients.as_vec(), &vec![2, 3, 4, 1]);
+
+        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.clients.as_vec(), &vec![1, 2, 3, 4]);
+
+        assert_eq!(ws.focused_client(), Some(&1));
+    }
+
+    #[test]
+    fn dragging_non_index_0_client_backward() {
+        let mut ws = Workspace::new("test", test_layouts());
+        ws.clients = Ring::new(vec![1, 2, 3, 4]);
+        ws.focus_client(3);
+        assert_eq!(ws.focused_client(), Some(&3));
+
+        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.clients.as_vec(), &vec![1, 3, 2, 4]);
+
+        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.clients.as_vec(), &vec![3, 1, 2, 4]);
+
+        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.clients.as_vec(), &vec![1, 2, 4, 3]);
+
+        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.clients.as_vec(), &vec![1, 2, 3, 4]);
+
+        assert_eq!(ws.focused_client(), Some(&3));
     }
 }

@@ -53,6 +53,8 @@ fn main() {
         // client management
         "M-j" => run_internal!(next_client),
         "M-k" => run_internal!(previous_client),
+        "M-S-j" => run_internal!(drag_client_forward),
+        "M-S-k" => run_internal!(drag_client_backward),
         "M-S-q" => run_internal!(kill_client),
 
         // workspace management

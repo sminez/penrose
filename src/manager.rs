@@ -137,6 +137,12 @@ impl<'a> WindowManager<'a> {
         }
     }
 
+    fn drag_client(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
+        self.workspaces[wix].drag_client(direction);
+        self.apply_layout(wix);
+    }
+
     /**
      * main event loop for the window manager.
      * Everything is driven by incoming events from the X server with each event type being
@@ -324,6 +330,14 @@ impl<'a> WindowManager<'a> {
     /// Move focus to the previous client in the stack
     pub fn previous_client(&mut self) {
         self.cycle_client(Direction::Backward);
+    }
+
+    pub fn drag_client_forward(&mut self) {
+        self.drag_client(Direction::Forward);
+    }
+
+    pub fn drag_client_backward(&mut self) {
+        self.drag_client(Direction::Backward);
     }
 
     /// Kill the focused client window.
