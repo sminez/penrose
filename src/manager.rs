@@ -134,6 +134,7 @@ impl<'a> WindowManager<'a> {
         if let Some((prev, new)) = cycled {
             self.handle_leave_notify(prev); // treat like losing x focus
             self.handle_enter_notify(new); // treat like gaining x focus
+            self.conn.warp_cursor(Some(new));
         }
     }
 
@@ -143,6 +144,7 @@ impl<'a> WindowManager<'a> {
             self.workspaces[wix].drag_client(direction);
             self.apply_layout(wix);
             self.handle_enter_notify(id); // treat like gaining x focus
+            self.conn.warp_cursor(Some(id));
         }
     }
 

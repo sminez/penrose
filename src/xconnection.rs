@@ -7,7 +7,6 @@
  *  as reference for how the API works. Sections have been converted and added
  *  to the documentation of the method calls and enums present in this module.
  */
-use crate::client::Client;
 use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
 use std::collections::HashMap;
@@ -228,7 +227,7 @@ pub trait XConn {
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
      */
-    fn warp_cursor(&self, win_id: Option<Client>);
+    fn warp_cursor(&self, win_id: Option<WinId>);
 
     /**
      * Use the xcb api to query a string property for a window by window ID and poperty name.
@@ -559,10 +558,9 @@ impl XConn for XcbConnection {
         xcb::delete_property(&self.conn, root, self.atom("_NET_CLIENT_LIST"));
     }
 
-    fn warp_cursor(&self, win_id: Option<Client>) {
+    fn warp_cursor(&self, win_id: Option<WinId>) {
         let (x, y, id) = match win_id {
-            Some(client) => {
-                let id = client.id();
+            Some(id) => {
                 let (_, _, w, h) = self.window_geometry(id).unwrap().values();
                 ((w / 2) as i16, (h / 2) as i16, id)
             }
@@ -657,7 +655,7 @@ impl XConn for MockXConn {
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
     fn set_wm_properties(&self) {}
-    fn warp_cursor(&self, _: Option<Client>) {}
+    fn warp_cursor(&self, _: Option<WinId>) {}
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
         Ok(String::from(name))
     }
