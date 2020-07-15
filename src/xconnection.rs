@@ -6,6 +6,8 @@
  *  [here](https://github.com/rtbo/rust-xcb/tree/master/xml) and are useful
  *  as reference for how the API works. Sections have been converted and added
  *  to the documentation of the method calls and enums present in this module.
+ *
+ *  [EWMH](https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html)
  */
 use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
@@ -52,12 +54,16 @@ const ATOMS: &[&'static str] = &[
     "WM_TAKE_FOCUS",
     "_NET_ACTIVE_WINDOW",
     "_NET_CLIENT_LIST",
+    "_NET_CURRENT_DESKTOP",
+    "_NET_DESKTOP_NAMES",
+    "_NET_NUMBER_OF_DESKTOPS",
     "_NET_SUPPORTED",
     "_NET_SUPPORTING_WM_CHECK",
     "_NET_SYSTEM_TRAY_OPCODE",
     "_NET_SYSTEM_TRAY_ORIENTATION",
     "_NET_SYSTEM_TRAY_ORIENTATION_HORZ",
     "_NET_SYSTEM_TRAY_S0",
+    "_NET_WM_DESKTOP",
     "_NET_WM_NAME",
     "_NET_WM_STATE",
     "_NET_WM_STATE_FULLSCREEN",
@@ -220,8 +226,14 @@ pub trait XConn {
      */
     fn grab_keys(&self, key_bindings: &KeyBindings);
 
-    /// Set required Net* X properties to ensure compatability
-    fn set_wm_properties(&self);
+    /// Set required EWMH properties to ensure compatability with external programs
+    fn set_wm_properties(&self, workspaces: &[&'static str]);
+
+    /// Update which desktop is currently focused
+    fn set_current_workspace(&self, wix: usize);
+
+    /// Update which desktop a client is currently on
+    fn set_client_workspace(&self, id: WinId, wix: usize);
 
     /**
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
@@ -242,6 +254,7 @@ pub trait XConn {
 /// Handles communication with an X server via xcb
 pub struct XcbConnection {
     conn: xcb::Connection,
+    root: u32,
     atoms: HashMap<&'static str, u32>,
 }
 
@@ -251,6 +264,11 @@ impl XcbConnection {
         let (conn, _) = match xcb::Connection::connect(None) {
             Err(e) => panic!("unable to establish connection to X server: {}", e),
             Ok(conn) => conn,
+        };
+
+        let root = match conn.get_setup().roots().nth(0) {
+            None => panic!("unable to get handle for screen"),
+            Some(s) => s.root(),
         };
 
         // https://www.mankier.com/3/xcb_intern_atom
@@ -267,7 +285,7 @@ impl XcbConnection {
             })
             .collect();
 
-        XcbConnection { conn, atoms }
+        XcbConnection { conn, root, atoms }
     }
 
     fn atom(&self, name: &str) -> u32 {
@@ -278,16 +296,14 @@ impl XcbConnection {
     }
 
     fn new_stub_window(&self) -> WinId {
-        let screen = self.conn.get_setup().roots().nth(0).expect("no screen");
         let win_id = self.conn.generate_id();
-        let root = screen.root();
 
         // xcb docs: https://www.mankier.com/3/xcb_create_window
         xcb::create_window(
             &self.conn,              // xcb connection to X11
             0,                       // new window's depth
             win_id,                  // ID to be used for referring to the window
-            root,                    // parent window
+            self.root,               // parent window
             0,                       // x-coordinate
             0,                       // y-coordinate
             1,                       // width
@@ -424,9 +440,7 @@ impl XConn for XcbConnection {
     }
 
     fn focus_client(&self, id: WinId) {
-        let screen = self.conn.get_setup().roots().nth(0).expect("no screen");
         let prop = self.atom("_NET_ACTIVE_WINDOW");
-        let root = screen.root();
 
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
         xcb::set_input_focus(
@@ -440,7 +454,7 @@ impl XConn for XcbConnection {
         xcb::change_property(
             &self.conn,        // xcb connection to X11
             PROP_MODE_REPLACE, // discard current prop and replace
-            root,              // window to change prop on
+            self.root,         // window to change prop on
             prop,              // prop to change
             ATOM_WINDOW,       // type of prop
             32,                // data format (8/16/32-bit)
@@ -453,11 +467,8 @@ impl XConn for XcbConnection {
     }
 
     fn grab_keys(&self, key_bindings: &KeyBindings) {
-        let screen = self.conn.get_setup().roots().nth(0).unwrap();
-        let root = screen.root();
-
         // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
-        let input = xcb::randr::select_input(&self.conn, root, NOTIFY_MASK);
+        let input = xcb::randr::select_input(&self.conn, self.root, NOTIFY_MASK);
         match input.request_check() {
             Err(e) => panic!("randr error: {}", e),
             Ok(_) => {
@@ -466,7 +477,7 @@ impl XConn for XcbConnection {
                     xcb::grab_key(
                         &self.conn,      // xcb connection to X11
                         false,           // don't pass grabbed events through to the client
-                        root,            // the window to grab: in this case the root window
+                        self.root,       // the window to grab: in this case the root window
                         k.mask,          // modifiers to grab
                         k.code,          // keycode to grab
                         GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
@@ -482,7 +493,7 @@ impl XConn for XcbConnection {
             xcb::grab_button(
                 &self.conn,             // xcb connection to X11
                 false,                  // don't pass grabbed events through to the client
-                root,                   // the window to grab: in this case the root window
+                self.root,              // the window to grab: in this case the root window
                 MOUSE_MASK,             // which events are reported to the client
                 GRAB_MODE_ASYNC,        // don't lock pointer input while grabbing
                 GRAB_MODE_ASYNC,        // don't lock keyboard input while grabbing
@@ -494,21 +505,14 @@ impl XConn for XcbConnection {
         }
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
-        xcb::change_window_attributes(&self.conn, root, EVENT_MASK);
+        xcb::change_window_attributes(&self.conn, self.root, EVENT_MASK);
         &self.conn.flush();
     }
 
-    fn set_wm_properties(&self) {
-        let screen = match self.conn.get_setup().roots().nth(0) {
-            None => panic!("unable to get handle for screen"),
-            Some(s) => s,
-        };
-        let root = screen.root();
-
-        // NOTE: The following uses xcb_change_property under the hood
-        //       xcb docs: https://www.mankier.com/3/xcb_change_property
+    fn set_wm_properties(&self, workspaces: &[&'static str]) {
         let check_win = self.new_stub_window();
 
+        // xcb docs: https://www.mankier.com/3/xcb_change_property
         xcb::change_property(
             &self.conn,                            // xcb connection to X11
             PROP_MODE_REPLACE,                     // discard current prop and replace
@@ -530,7 +534,7 @@ impl XConn for XcbConnection {
         xcb::change_property(
             &self.conn,                            // xcb connection to X11
             PROP_MODE_REPLACE,                     // discard current prop and replace
-            root,                                  // window to change prop on
+            self.root,                             // window to change prop on
             self.atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
             ATOM_WINDOW,                           // type of prop
             32,                                    // data format (8/16/32-bit)
@@ -539,7 +543,7 @@ impl XConn for XcbConnection {
         xcb::change_property(
             &self.conn,                // xcb connection to X11
             PROP_MODE_REPLACE,         // discard current prop and replace
-            root,                      // window to change prop on
+            self.root,                 // window to change prop on
             self.atom("_NET_WM_NAME"), // prop to change
             self.atom("UTF8_STRING"),  // type of prop
             8,                         // data format (8/16/32-bit)
@@ -551,13 +555,56 @@ impl XConn for XcbConnection {
         xcb::change_property(
             &self.conn,                  // xcb connection to X11
             PROP_MODE_REPLACE,           // discard current prop and replace
-            root,                        // window to change prop on
+            self.root,                   // window to change prop on
             self.atom("_NET_SUPPORTED"), // prop to change
             xcb::xproto::ATOM_ATOM,      // type of prop
             32,                          // data format (8/16/32-bit)
             &supported,                  // data
         );
-        xcb::delete_property(&self.conn, root, self.atom("_NET_CLIENT_LIST"));
+        xcb::change_property(
+            &self.conn,                           // xcb connection to X11
+            PROP_MODE_REPLACE,                    // discard current prop and replace
+            self.root,                            // window to change prop on
+            self.atom("_NET_NUMBER_OF_DESKTOPS"), // prop to change
+            xcb::xproto::ATOM_CARDINAL,           // type of prop
+            32,                                   // data format (8/16/32-bit)
+            &[workspaces.len() as u32],           // data
+        );
+        xcb::change_property(
+            &self.conn,                       // xcb connection to X11
+            PROP_MODE_REPLACE,                // discard current prop and replace
+            self.root,                        // window to change prop on
+            self.atom("_NET_DESKTOP_NAMES"),  // prop to change
+            self.atom("UTF8_STRING"),         // type of prop
+            8,                                // data format (8/16/32-bit)
+            workspaces.join("\0").as_bytes(), // data
+        );
+
+        xcb::delete_property(&self.conn, self.root, self.atom("_NET_CLIENT_LIST"));
+    }
+
+    fn set_current_workspace(&self, wix: usize) {
+        xcb::change_property(
+            &self.conn,                        // xcb connection to X11
+            PROP_MODE_REPLACE,                 // discard current prop and replace
+            self.root,                         // window to change prop on
+            self.atom("_NET_CURRENT_DESKTOP"), // prop to change
+            xcb::xproto::ATOM_CARDINAL,        // type of prop
+            32,                                // data format (8/16/32-bit)
+            &[wix as u32],                     // data
+        );
+    }
+
+    fn set_client_workspace(&self, id: WinId, wix: usize) {
+        xcb::change_property(
+            &self.conn,                   // xcb connection to X11
+            PROP_MODE_REPLACE,            // discard current prop and replace
+            id,                           // window to change prop on
+            self.atom("_NET_WM_DESKTOP"), // prop to change
+            xcb::xproto::ATOM_CARDINAL,   // type of prop
+            32,                           // data format (8/16/32-bit)
+            &[wix as u32],                // data
+        );
     }
 
     fn warp_cursor(&self, win_id: Option<WinId>) {
@@ -656,7 +703,9 @@ impl XConn for MockXConn {
     fn focus_client(&self, _: WinId) {}
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
-    fn set_wm_properties(&self) {}
+    fn set_wm_properties(&self, _: &[&'static str]) {}
+    fn set_current_workspace(&self, _: usize) {}
+    fn set_client_workspace(&self, _: WinId, _: usize) {}
     fn warp_cursor(&self, _: Option<WinId>) {}
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
         Ok(String::from(name))

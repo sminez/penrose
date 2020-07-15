@@ -56,6 +56,8 @@ impl<'a> WindowManager<'a> {
             .map(|name| Workspace::new(name, conf.layouts.clone().to_vec()))
             .collect();
 
+        conn.set_wm_properties(conf.workspaces);
+
         WindowManager {
             conn: conn,
             screens,
@@ -217,6 +219,7 @@ impl<'a> WindowManager<'a> {
         self.conn.mark_new_window(win_id);
         let color = self.color_scheme.highlight;
         self.conn.set_client_border_color(win_id, color);
+        self.conn.set_client_workspace(win_id, wix);
         self.apply_layout(self.active_ws_index());
     }
 
@@ -300,7 +303,8 @@ impl<'a> WindowManager<'a> {
             .for_each(|c| self.conn.map_window(*c));
 
         self.screens[self.focused_screen].wix = index;
-        self.apply_layout(self.active_ws_index());
+        self.apply_layout(index);
+        self.conn.set_current_workspace(index);
     }
 
     pub fn toggle_workspace(&mut self) {
@@ -322,6 +326,7 @@ impl<'a> WindowManager<'a> {
             self.conn.unmap_window(id);
             self.workspaces[index].add_client(id);
             self.client_map.get_mut(&id).map(|c| c.set_workspace(index));
+            self.conn.set_client_workspace(id, index);
             self.apply_layout(self.active_ws_index());
         });
     }
