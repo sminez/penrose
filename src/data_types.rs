@@ -1,7 +1,7 @@
 //! Simple data types and enums
 use crate::layout::Layout;
 use crate::manager::WindowManager;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::ops;
 use xcb;
 
@@ -141,87 +141,37 @@ impl KeyCode {
  * is focused independently of one another.
  */
 #[derive(Debug)]
-pub struct Ring<T> {
-    elements: Vec<T>,
+pub(crate) struct Ring<T> {
+    elements: VecDeque<T>,
     focused: usize,
 }
 
 impl<T> Ring<T> {
     pub fn new(elements: Vec<T>) -> Ring<T> {
         Ring {
-            elements,
+            elements: elements.into(),
             focused: 0,
         }
     }
 
-    /**
-     * Take a reference to the currently focused element if there is one
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r1 = Ring::new(vec![1, 2, 3]);
-     * assert_eq!(r1.focused(), Some(&1));
-     *
-     * let mut r2: Ring<()> = Ring::new(vec![]);
-     * assert_eq!(r2.focused(), None);
-     * ```
-     */
     pub fn focused(&self) -> Option<&T> {
-        if self.elements.len() > 0 {
-            Some(&self.elements[self.focused])
-        } else {
-            None
-        }
+        self.elements.get(self.focused)
     }
 
-    /**
-     * Take a mutable reference to the currently focused element if there is one
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r1 = Ring::new(vec![1, 2, 3]);
-     * assert_eq!(r1.focused_mut(), Some(&mut 1));
-     *
-     * let mut r2: Ring<()> = Ring::new(vec![]);
-     * assert_eq!(r2.focused_mut(), None);
-     * ```
-     */
     pub fn focused_mut(&mut self) -> Option<&mut T> {
-        if self.elements.len() > 0 {
-            Some(&mut self.elements[self.focused])
-        } else {
-            None
+        self.elements.get_mut(self.focused)
+    }
+
+    pub fn rotate(&mut self, direction: Direction) {
+        if self.elements.is_empty() {
+            return;
+        }
+        match direction {
+            Direction::Forward => self.elements.rotate_right(1),
+            Direction::Backward => self.elements.rotate_left(1),
         }
     }
 
-    /**
-     * Rotate the elements of the Ring but maintain focus at the current index
-     * ```
-     * use penrose::data_types::{Direction, Ring};
-     *
-     * let mut r = Ring::new(vec![1, 2, 3]);
-     * r.rotate(Direction::Forward);
-     * assert_eq!(r.as_vec(), &vec![3, 1, 2]);
-     * assert_eq!(r.focused(), Some(&3));
-     * r.rotate(Direction::Backward);
-     * assert_eq!(r.as_vec(), &vec![1, 2, 3]);
-     * assert_eq!(r.focused(), Some(&1));
-     * ```
-     */
-    pub fn rotate(&mut self, direction: Direction) {
-        if self.elements.len() > 1 {
-            match direction {
-                Direction::Forward => {
-                    let last = self.elements.pop().unwrap();
-                    self.elements.insert(0, last);
-                }
-                Direction::Backward => {
-                    let first = self.elements.remove(0);
-                    self.elements.push(first);
-                }
-            }
-        }
-    }
     fn next_index(&self, direction: Direction) -> usize {
         let max = self.elements.len() - 1;
         match direction {
@@ -242,76 +192,21 @@ impl<T> Ring<T> {
         }
     }
 
-    /**
-     * Move the focus point of the ring forward / backward through the elements
-     * but leave their order unchanged.
-     * ```
-     * use penrose::data_types::{Direction, Ring};
-     *
-     * let mut r = Ring::new(vec![1, 2, 3]);
-     * assert_eq!(r.cycle_focus(Direction::Forward), Some(&2));
-     * assert_eq!(r.as_vec(), &vec![1, 2, 3]);
-     * assert_eq!(r.cycle_focus(Direction::Backward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![1, 2, 3]);
-     * ```
-     */
     pub fn cycle_focus(&mut self, direction: Direction) -> Option<&T> {
         self.focused = self.next_index(direction);
         self.focused()
     }
 
-    /**
-     * Move the focused element forward/backward through the ring while
-     * retaining focus.
-     * ```
-     * use penrose::data_types::{Direction, Ring};
-     *
-     * let mut r = Ring::new(vec![1, 2, 3, 4]);
-     * assert_eq!(r.focused(), Some(&1));
-     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![2, 1, 3, 4]);
-     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![2, 3, 1, 4]);
-     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![2, 3, 4, 1]);
-     * assert_eq!(r.drag_focused(Direction::Forward), Some(&1));
-     * assert_eq!(r.as_vec(), &vec![1, 2, 3, 4]);
-     * ```
-     */
     pub fn drag_focused(&mut self, direction: Direction) -> Option<&T> {
         match (self.focused, self.next_index(direction), direction) {
             (0, _, Direction::Backward) => self.rotate(direction),
             (_, 0, Direction::Forward) => self.rotate(direction),
             (focused, other, _) => self.elements.swap(focused, other),
         }
+
         self.cycle_focus(direction)
     }
 
-    /**
-     * Set the currently focused index and return a reference to the focused element
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec!["this", "that", "other"]);
-     * assert_eq!(r.set_focus(2), &"other");
-     * ```
-     */
-    pub fn set_focus(&mut self, index: usize) -> &T {
-        self.focused = index;
-        &self.elements[self.focused]
-    }
-
-    /**
-     * Focus the first element satisfying the given condition returning Some(&T) if an
-     * element was located, otherwise None.
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-     * assert_eq!(r.focus_by(|e| e % 2 == 0), Some(&2));
-     * assert_eq!(r.focus_by(|e| e % 7 == 0), None);
-     * ```
-     */
     pub fn focus_by(&mut self, cond: impl Fn(&T) -> bool) -> Option<&T> {
         if let Some((i, _)) = self.elements.iter().enumerate().find(|(_, e)| cond(*e)) {
             self.focused = i;
@@ -321,149 +216,46 @@ impl<T> Ring<T> {
         }
     }
 
-    /**
-     * Return the length of the underlying Vec<T>
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-     * assert_eq!(r.len(), 6);
-     * ```
-     */
     pub fn len(&self) -> usize {
         self.elements.len()
     }
 
-    /**
-     * Add a new element at 'index', leaving the focused index unchanged.
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-     * assert_eq!(r.set_focus(3), &4);
-     * r.insert(2, 42);
-     * assert_eq!(r.focused(), Some(&3));
-     * ```
-     */
     pub fn insert(&mut self, index: usize, element: T) {
         self.elements.insert(index, element);
     }
 
-    /**
-     * Remove the first element satisfying the given condition, maintaining the
-     * current focus position if possible.
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-     * assert_eq!(r.set_focus(3), &4);
-     * assert_eq!(r.remove_by(|e| e % 2 == 0), Some(2));
-     * assert_eq!(r.focused(), Some(&5));
-     * ```
-     */
     pub fn remove_by(&mut self, cond: impl Fn(&T) -> bool) -> Option<T> {
         if let Some((i, _)) = self.elements.iter().enumerate().find(|(_, e)| cond(*e)) {
             if self.focused > 0 && self.focused == self.elements.len() - 1 {
                 self.focused -= 1;
             }
-            Some(self.elements.remove(i))
+            self.elements.remove(i)
         } else {
             None
         }
     }
 
-    /**
-     * If this Ring has at least one element, remove the focused element
-     * and return it, otherwise None
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec![1, 2, 3]);
-     * assert_eq!(r.set_focus(2), &3);
-     * assert_eq!(r.remove_focused(), Some(3));
-     * assert_eq!(r.focused(), Some(&2));
-     * assert_eq!(r.remove_focused(), Some(2));
-     * assert_eq!(r.focused(), Some(&1));
-     * assert_eq!(r.remove_focused(), Some(1));
-     * assert_eq!(r.focused(), None);
-     * assert_eq!(r.remove_focused(), None);
-     * ```
-     */
     pub fn remove_focused(&mut self) -> Option<T> {
         if self.elements.len() == 0 {
             return None;
         }
 
         let c = self.elements.remove(self.focused);
-        // correct the focus point if we are now out of bounds
         if self.focused > 0 && self.focused >= self.elements.len() - 1 {
             self.focused -= 1;
         }
 
-        Some(c)
+        return c;
     }
 
-    /**
-     * If ix is within bounds, remove that element and return it, otherwise None
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec!['a', 'b', 'c']);
-     * assert_eq!(r.remove_at(1), Some('b'));
-     * assert_eq!(r.remove_at(3), None);
-     * ```
-     */
-    pub fn remove_at(&mut self, ix: usize) -> Option<T> {
-        let max = self.elements.len() - 1;
-        if ix <= max {
-            if self.focused == max {
-                self.focused -= 1;
-            }
-            Some(self.elements.remove(ix))
-        } else {
-            None
-        }
-    }
-
-    /**
-     * A reference to the underlying Vec<T> wrapped by this Ring
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec!['a', 'b', 'c']);
-     * assert_eq!(r.as_vec(), &vec!['a', 'b', 'c']);
-     * ```
-     */
-    pub fn as_vec(&self) -> &Vec<T> {
-        &self.elements
-    }
-
-    /**
-     * Iterate over the elements of this ring in their current order
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let r = Ring::new(vec![1, 2, 3, 4]);
-     * assert_eq!(r.iter().map(|c| c + 1).collect::<Vec<i32>>(), vec![2, 3, 4, 5]);
-     * ```
-     */
-    pub fn iter(&self) -> std::slice::Iter<T> {
+    pub fn iter(&self) -> std::collections::vec_deque::Iter<T> {
         self.elements.iter()
     }
+}
 
-    /**
-     * Mutably iterate over the elements of this ring in their current order
-     * ```
-     * use penrose::data_types::Ring;
-     *
-     * let mut r = Ring::new(vec![1, 2, 3]);
-     * r.iter_mut().for_each(|e| *e *= 2);
-     * r.set_focus(2);
-     * assert_eq!(r.focused(), Some(&6));
-     * ```
-     */
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<T> {
-        self.elements.iter_mut()
+impl<T: Clone> Ring<T> {
+    pub fn as_vec(&self) -> Vec<T> {
+        Vec::from(self.elements.clone())
     }
 }
 
@@ -488,9 +280,13 @@ mod tests {
     #[test]
     fn rotate_holds_focus_but_permutes_order() {
         let mut r = Ring::new(vec![1, 2, 3]);
+
         r.rotate(Direction::Forward);
+        assert_eq!(r.as_vec(), vec![3, 1, 2]);
         assert_eq!(r.focused(), Some(&3));
+
         r.rotate(Direction::Backward);
+        assert_eq!(r.as_vec(), vec![1, 2, 3]);
         assert_eq!(r.focused(), Some(&1));
     }
 
@@ -532,5 +328,44 @@ mod tests {
         assert_eq!(r.elements, vec![1, 2, 3, 4]);
 
         assert_eq!(r.focused(), Some(&1));
+    }
+
+    #[test]
+    fn remove_focused() {
+        let mut r = Ring::new(vec![1, 2, 3]);
+        r.focused = 2;
+        assert_eq!(r.focused(), Some(&3));
+        assert_eq!(r.remove_focused(), Some(3));
+        assert_eq!(r.focused(), Some(&2));
+        assert_eq!(r.remove_focused(), Some(2));
+        assert_eq!(r.focused(), Some(&1));
+        assert_eq!(r.remove_focused(), Some(1));
+        assert_eq!(r.focused(), None);
+        assert_eq!(r.remove_focused(), None);
+    }
+
+    #[test]
+    fn remove_by() {
+        let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
+        r.focused = 3;
+        assert_eq!(r.focused(), Some(&4));
+        assert_eq!(r.remove_by(|e| e % 2 == 0), Some(2));
+        assert_eq!(r.focused(), Some(&5));
+    }
+
+    #[test]
+    fn focus_by() {
+        let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
+        assert_eq!(r.focus_by(|e| e % 2 == 0), Some(&2));
+        assert_eq!(r.focus_by(|e| e % 7 == 0), None);
+    }
+
+    #[test]
+    fn cycle_focus() {
+        let mut r = Ring::new(vec![1, 2, 3]);
+        assert_eq!(r.cycle_focus(Direction::Forward), Some(&2));
+        assert_eq!(r.as_vec(), vec![1, 2, 3]);
+        assert_eq!(r.cycle_focus(Direction::Backward), Some(&1));
+        assert_eq!(r.as_vec(), vec![1, 2, 3]);
     }
 }

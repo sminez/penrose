@@ -38,7 +38,7 @@ impl Workspace {
     }
 
     /// Iterate over the clients on this workspace in position order
-    pub fn iter(&self) -> std::slice::Iter<WinId> {
+    pub fn iter(&self) -> std::collections::vec_deque::Iter<WinId> {
         self.clients.iter()
     }
 
@@ -86,7 +86,7 @@ impl Workspace {
                 "applying '{}' layout for {} clients on workspace '{}'",
                 layout.symbol, n_clients, self.name
             );
-            layout.arrange(self.clients.as_vec(), screen_region)
+            layout.arrange(&self.clients.as_vec(), screen_region)
         } else {
             vec![]
         }
@@ -212,16 +212,16 @@ mod tests {
         assert_eq!(ws.focused_client(), Some(&1));
 
         assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
-        assert_eq!(ws.clients.as_vec(), &vec![2, 1, 3, 4]);
+        assert_eq!(ws.clients.as_vec(), vec![2, 1, 3, 4]);
 
         assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
-        assert_eq!(ws.clients.as_vec(), &vec![2, 3, 1, 4]);
+        assert_eq!(ws.clients.as_vec(), vec![2, 3, 1, 4]);
 
         assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
-        assert_eq!(ws.clients.as_vec(), &vec![2, 3, 4, 1]);
+        assert_eq!(ws.clients.as_vec(), vec![2, 3, 4, 1]);
 
         assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
-        assert_eq!(ws.clients.as_vec(), &vec![1, 2, 3, 4]);
+        assert_eq!(ws.clients.as_vec(), vec![1, 2, 3, 4]);
 
         assert_eq!(ws.focused_client(), Some(&1));
     }
@@ -234,16 +234,16 @@ mod tests {
         assert_eq!(ws.focused_client(), Some(&3));
 
         assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
-        assert_eq!(ws.clients.as_vec(), &vec![1, 3, 2, 4]);
+        assert_eq!(ws.clients.as_vec(), vec![1, 3, 2, 4]);
 
         assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
-        assert_eq!(ws.clients.as_vec(), &vec![3, 1, 2, 4]);
+        assert_eq!(ws.clients.as_vec(), vec![3, 1, 2, 4]);
 
         assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
-        assert_eq!(ws.clients.as_vec(), &vec![1, 2, 4, 3]);
+        assert_eq!(ws.clients.as_vec(), vec![1, 2, 4, 3]);
 
         assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
-        assert_eq!(ws.clients.as_vec(), &vec![1, 2, 3, 4]);
+        assert_eq!(ws.clients.as_vec(), vec![1, 2, 3, 4]);
 
         assert_eq!(ws.focused_client(), Some(&3));
     }
