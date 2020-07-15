@@ -387,6 +387,8 @@ impl XConn for XcbConnection {
 
     fn position_window(&self, id: WinId, r: Region, border: u32) {
         let (x, y, w, h) = r.values();
+
+        // xcb docs: https://www.mankier.com/3/xcb_configure_window
         xcb::configure_window(
             &self.conn,
             id,
