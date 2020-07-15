@@ -7,6 +7,7 @@
  *  as reference for how the API works. Sections have been converted and added
  *  to the documentation of the method calls and enums present in this module.
  */
+use crate::client::Client;
 use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
 use crate::screen::Screen;
 use std::collections::HashMap;
@@ -224,6 +225,12 @@ pub trait XConn {
     fn set_wm_properties(&self);
 
     /**
+     * Warp the cursor to be within the specified window. If win_id == None then behaviour is
+     * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
+     */
+    fn warp_cursor(&self, win_id: Option<Client>);
+
+    /**
      * Use the xcb api to query a string property for a window by window ID and poperty name.
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
@@ -293,6 +300,20 @@ impl XcbConnection {
         );
 
         win_id
+    }
+
+    fn window_geometry(&self, id: WinId) -> Result<Region, String> {
+        let cookie = xcb::get_geometry(&self.conn, id);
+
+        match cookie.get_reply() {
+            Err(e) => Err(format!("unable to fetch window property: {}", e)),
+            Ok(r) => Ok(Region::new(
+                r.x() as u32,
+                r.y() as u32,
+                r.width() as u32,
+                r.height() as u32,
+            )),
+        }
     }
 }
 
@@ -538,6 +559,29 @@ impl XConn for XcbConnection {
         xcb::delete_property(&self.conn, root, self.atom("_NET_CLIENT_LIST"));
     }
 
+    fn warp_cursor(&self, win_id: Option<Client>) {
+        let (x, y, id) = match win_id {
+            Some(client) => {
+                let id = client.id();
+                let (_, _, w, h) = self.window_geometry(id).unwrap().values();
+                ((w / 2) as i16, (h / 2) as i16, id)
+            }
+            None => todo!("warp to screen center"),
+        };
+
+        xcb::warp_pointer(
+            &self.conn, // xcb connection to X11
+            0,          // source window
+            id,         // destination window
+            0,          // source x
+            0,          // source y
+            0,          // source width
+            0,          // source height
+            x,          // destination x
+            y,          // destination y
+        );
+    }
+
     fn str_prop(&self, id: u32, name: &str) -> Result<String, String> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
@@ -613,6 +657,7 @@ impl XConn for MockXConn {
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
     fn set_wm_properties(&self) {}
+    fn warp_cursor(&self, _: Option<Client>) {}
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
         Ok(String::from(name))
     }
