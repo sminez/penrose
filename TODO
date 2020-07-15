@@ -1,9 +1,9 @@
+- support things like _NET_ACTIVE_WINDOW and friends (EWMH etc)
+
+- set the window manager name on startup
+
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
-
-- drag clients through the stack
-  - probably a method on Ring? (This is NOT rotate and cycle_focus together: the client is being
-    moved _through_ the stack with all other elements staying fixed, and focus is following)
 
 - track focused monitor with multi-monitor setup
   - Should be doable with the X-root position info that comes with most events? Need to unack that
@@ -43,7 +43,3 @@
     different bindings triggered scratchpads for different programs. Not decided yet on whether I prefer
     that (hard coded scratch pads) or the ability to tag windows as being on a scratch pad and then
     cycling through them a-la i3.
-
-- support things like _NET_ACTIVE_WINDOW and friends (EWMH etc)
-
-- set the window manager name on startup

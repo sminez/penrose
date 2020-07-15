@@ -138,9 +138,12 @@ impl<'a> WindowManager<'a> {
     }
 
     fn drag_client(&mut self, direction: Direction) {
-        let wix = self.active_ws_index();
-        self.workspaces[wix].drag_client(direction);
-        self.apply_layout(wix);
+        if let Some(id) = self.focused_client().and_then(|c| Some(c.id())) {
+            let wix = self.active_ws_index();
+            self.workspaces[wix].drag_client(direction);
+            self.apply_layout(wix);
+            self.handle_enter_notify(id); // treat like gaining x focus
+        }
     }
 
     /**
@@ -231,7 +234,6 @@ impl<'a> WindowManager<'a> {
         debug!("unfocusing client {}", id);
         let color = self.color_scheme.fg_1;
         self.conn.set_client_border_color(id, color);
-        // TODO: do we need to explicitly cycle focus?
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -551,5 +553,32 @@ mod tests {
         wm.handle_enter_notify(10);
 
         assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 10);
+    }
+
+    #[test]
+    fn dragging_clients_forward_from_index_0() {
+        let conn = MockXConn::new(test_screens());
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 5, 0); // focus on last client (50) ix == 0
+
+        let clients = |w: &mut WindowManager| {
+            w.workspace_for_screen_mut(0)
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+
+        wm.drag_client_forward();
+        assert_eq!(wm.focused_client().unwrap().id(), 50);
+        assert_eq!(clients(&mut wm), vec![40, 50, 30, 20, 10]);
+
+        wm.drag_client_forward();
+        assert_eq!(wm.focused_client().unwrap().id(), 50);
+        assert_eq!(clients(&mut wm), vec![40, 30, 50, 20, 10]);
+
+        wm.handle_enter_notify(20);
+        wm.drag_client_forward();
+        assert_eq!(wm.focused_client().unwrap().id(), 20);
+        assert_eq!(clients(&mut wm), vec![40, 30, 50, 10, 20]);
     }
 }
