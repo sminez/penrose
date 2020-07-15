@@ -1,7 +1,3 @@
-- support things like _NET_ACTIVE_WINDOW and friends (EWMH etc)
-
-- set the window manager name on startup
-
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
 
