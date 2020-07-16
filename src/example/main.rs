@@ -10,7 +10,7 @@
 #[macro_use]
 extern crate penrose;
 
-use penrose::layout::{floating, side_stack};
+use penrose::layout::{bottom_stack, side_stack};
 use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager, XcbConnection};
 use simplelog;
 
@@ -41,7 +41,8 @@ fn main() {
     let ratio = 0.6;
     let layouts = vec![
         Layout::new("[side]", LayoutKind::Normal, side_stack, n_main, ratio),
-        Layout::new("[    ]", LayoutKind::Floating, floating, n_main, ratio),
+        Layout::new("[botm]", LayoutKind::Normal, bottom_stack, n_main, ratio),
+        // Layout::new("[    ]", LayoutKind::Floating, floating, n_main, ratio),
     ];
 
     let terminal = "st";
@@ -61,6 +62,8 @@ fn main() {
         "M-Tab" => run_internal!(toggle_workspace),
 
         // Layout & window management
+        "M-grave" => run_internal!(next_layout),
+        "M-S-grave" => run_internal!(previous_layout),
         "M-A-Up" => run_internal!(inc_main),
         "M-A-Down" => run_internal!(dec_main),
         "M-A-Right" => run_internal!(inc_ratio),

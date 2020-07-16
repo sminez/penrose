@@ -203,3 +203,39 @@ pub fn side_stack(
         })
         .collect()
 }
+
+/**
+ * A simple layout that places the main region at the top of the screen and tiles
+ * remaining windows in a single row underneath.
+ */
+pub fn bottom_stack(
+    clients: &[WinId],
+    monitor_region: &Region,
+    max_main: u32,
+    ratio: f32,
+) -> Vec<ResizeAction> {
+    let (mx, my, mw, mh) = monitor_region.values();
+    let (n_main, n_stack) = client_breakdown(&clients, max_main);
+    let split = if max_main > 0 {
+        (mh as f32 * ratio) as u32
+    } else {
+        0
+    };
+    let h_main = if n_stack > 0 { split } else { mh } / n_main;
+    let w_stack = if n_stack > 0 { mw / n_stack } else { 0 };
+
+    clients
+        .iter()
+        .enumerate()
+        .map(|(n, c)| {
+            let n = n as u32;
+            if n < max_main {
+                (*c, Region::new(mx, my + n * h_main, mw, h_main))
+            } else {
+                let sn = n - max_main; // nth stacked client
+                let region = Region::new(mx + sn * w_stack, my + split, w_stack, mh - split);
+                (*c, region)
+            }
+        })
+        .collect()
+}
