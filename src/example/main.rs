@@ -10,9 +10,11 @@
 #[macro_use]
 extern crate penrose;
 
+use penrose::helpers::spawn;
 use penrose::layout::{bottom_stack, side_stack};
 use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager, XcbConnection};
 use simplelog;
+use std::env;
 
 fn main() {
     // Turn on debug logging for non-release builds
@@ -99,5 +101,9 @@ fn main() {
         &conn,
     );
 
+    spawn(format!(
+        "{}/bin/scripts/penrose-startup.sh",
+        env::var("HOME").unwrap()
+    ));
     wm.grab_keys_and_run(key_bindings);
 }
