@@ -221,7 +221,8 @@ pub fn bottom_stack(
     } else {
         0
     };
-    let h_main = if n_stack > 0 { split } else { mh } / n_main;
+    let h_main_full = if n_stack > 0 { split } else { mh };
+    let h_main = if n_main > 0 { h_main_full / n_main } else { 0 };
     let w_stack = if n_stack > 0 { mw / n_stack } else { 0 };
 
     clients
@@ -230,7 +231,7 @@ pub fn bottom_stack(
         .map(|(n, c)| {
             let n = n as u32;
             if n < max_main {
-                (*c, Region::new(mx, my + n * h_main, mw, h_main))
+                (*c, Region::new(mx, my + n * h_main / n_main, mw, h_main))
             } else {
                 let sn = n - max_main; // nth stacked client
                 let region = Region::new(mx + sn * w_stack, my + split, w_stack, mh - split);
