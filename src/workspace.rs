@@ -86,7 +86,7 @@ impl Workspace {
                 "applying '{}' layout for {} clients on workspace '{}'",
                 layout.symbol, n_clients, self.name
             );
-            layout.arrange(&self.clients.as_vec(), screen_region)
+            layout.arrange(self.clients.as_slice(), screen_region)
         } else {
             vec![]
         }

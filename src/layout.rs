@@ -49,9 +49,6 @@ pub enum LayoutKind {
  * compared to other cliens.
  * Layouts maintain their own state for number of clients in the main area and
  * ratio which will be passed through to the layout function when it is called.
- *
- * NOTE: currently _not_ doing this as a trait in order to avoid painful generic
- *       nonsense...maybe something to tackle later when I'm feeling up to it!
  */
 #[derive(Clone, Copy)]
 pub struct Layout {
@@ -61,7 +58,7 @@ pub struct Layout {
     pub symbol: &'static str,
     max_main: u32,
     ratio: f32,
-    f: fn(&Vec<WinId>, &Region, u32, f32) -> Vec<ResizeAction>,
+    f: fn(&[WinId], &Region, u32, f32) -> Vec<ResizeAction>,
 }
 
 impl fmt::Debug for Layout {
@@ -81,7 +78,7 @@ impl Layout {
     pub fn new(
         symbol: &'static str,
         kind: LayoutKind,
-        f: fn(&Vec<WinId>, &Region, u32, f32) -> Vec<ResizeAction>,
+        f: fn(&[WinId], &Region, u32, f32) -> Vec<ResizeAction>,
         max_main: u32,
         ratio: f32,
     ) -> Layout {
@@ -95,7 +92,7 @@ impl Layout {
     }
 
     /// Apply the embedded layout function using the current n_main and ratio
-    pub fn arrange(&self, clients: &Vec<WinId>, r: &Region) -> Vec<ResizeAction> {
+    pub fn arrange(&self, clients: &[WinId], r: &Region) -> Vec<ResizeAction> {
         (self.f)(clients, r, self.max_main, self.ratio)
     }
 
@@ -132,7 +129,7 @@ impl Layout {
  */
 
 /// number of clients for the main area vs secondary
-pub fn client_breakdown<T>(clients: &Vec<T>, n_main: u32) -> (u32, u32) {
+pub fn client_breakdown<T>(clients: &[T], n_main: u32) -> (u32, u32) {
     let n = clients.len() as u32;
     if n <= n_main {
         (n, 0)
@@ -153,7 +150,7 @@ pub fn client_breakdown<T>(clients: &Vec<T>, n_main: u32) -> (u32, u32) {
 
 // ignore paramas and return pairs of window ID and index in the client vec
 #[cfg(test)]
-pub(crate) fn mock_layout(clients: &Vec<WinId>, r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+pub(crate) fn mock_layout(clients: &[WinId], r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     clients
         .iter()
         .enumerate()
@@ -166,7 +163,7 @@ pub(crate) fn mock_layout(clients: &Vec<WinId>, r: &Region, _: u32, _: f32) -> V
 }
 
 /// A no-op floating layout that simply satisfies the type required for Layout
-pub fn floating(_: &Vec<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+pub fn floating(_: &[WinId], _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     vec![]
 }
 
@@ -175,7 +172,7 @@ pub fn floating(_: &Vec<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction>
  * windows in a single column to the right.
  */
 pub fn side_stack(
-    clients: &Vec<WinId>,
+    clients: &[WinId],
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
