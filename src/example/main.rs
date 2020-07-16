@@ -47,11 +47,20 @@ fn main() {
         // Layout::new("[    ]", LayoutKind::Floating, floating, n_main, ratio),
     ];
 
+    let browser = "qutebrowser";
     let terminal = "st";
+
     let key_bindings = gen_keybindings! {
         // Program launch
         "M-semicolon" => run_external!("rofi-apps"),
+        "M-b" => run_external!(browser),
         "M-Return" => run_external!(terminal),
+
+        // actions
+        "M-A-s" => run_external!("screenshot"),
+        "M-A-k" => run_external!("toggle-kb-for-tada"),
+        "M-A-l" => run_external!("lock-screen"),
+        "M-A-m" => run_external!("xrandr --output HDMI-1 --auto --right-of eDP-1 "),
 
         // client management
         "M-j" => run_internal!(next_client),
