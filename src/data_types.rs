@@ -254,9 +254,8 @@ impl<T> Ring<T> {
 }
 
 impl<T: Clone> Ring<T> {
-    pub fn as_slice(&self) -> &[T] {
-        let (front, back) = self.elements.as_slices();
-        &[front, back].concat()
+    pub fn as_vec(&self) -> Vec<T> {
+        Vec::from(self.elements.clone())
     }
 }
 
