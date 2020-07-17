@@ -51,6 +51,7 @@ const ATOMS: &[&'static str] = &[
     "WM_DELETE_WINDOW",
     "WM_PROTOCOLS",
     "WM_STATE",
+    "WM_NAME",
     "WM_TAKE_FOCUS",
     "_NET_ACTIVE_WINDOW",
     "_NET_CLIENT_LIST",
@@ -231,6 +232,9 @@ pub trait XConn {
 
     /// Update which desktop is currently focused
     fn set_current_workspace(&self, wix: usize);
+
+    /// Set the WM_NAME prop of the root window
+    fn set_root_window_name(&self, name: &str);
 
     /// Update which desktop a client is currently on
     fn set_client_workspace(&self, id: WinId, wix: usize);
@@ -595,6 +599,18 @@ impl XConn for XcbConnection {
         );
     }
 
+    fn set_root_window_name(&self, name: &str) {
+        xcb::change_property(
+            &self.conn,               // xcb connection to X11
+            PROP_MODE_REPLACE,        // discard current prop and replace
+            self.root,                // window to change prop on
+            self.atom("WM_NAME"),     // prop to change
+            self.atom("UTF8_STRING"), // type of prop
+            8,                        // data format (8/16/32-bit)
+            name.as_bytes(),          // data
+        );
+    }
+
     fn set_client_workspace(&self, id: WinId, wix: usize) {
         xcb::change_property(
             &self.conn,                   // xcb connection to X11
@@ -705,6 +721,7 @@ impl XConn for MockXConn {
     fn grab_keys(&self, _: &KeyBindings) {}
     fn set_wm_properties(&self, _: &[&'static str]) {}
     fn set_current_workspace(&self, _: usize) {}
+    fn set_root_window_name(&self, _: &str) {}
     fn set_client_workspace(&self, _: WinId, _: usize) {}
     fn warp_cursor(&self, _: Option<WinId>) {}
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {

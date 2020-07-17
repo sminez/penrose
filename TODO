@@ -1,13 +1,20 @@
+- multi monitor support
+  - some things work fine but there are lots of issues. Need to get an idea of what needs to be done
+    and then work out a plan of attack
+
+- additional user facing actions:
+  - move client to screen
+  - focus screen
+  - cycle workspaces
+
+- auto-float all dialogues / pop ups
+
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
 
 - track focused monitor with multi-monitor setup
   - Should be doable with the X-root position info that comes with most events? Need to unack that
     as part of the XEvent enum varients though
-
-- move client to monitor
-  - Similar idea to move client to workspace and probably can just be "determine WS on that monitor
-    then throw"
 
 - Run several / hooks for keybindings
   - This means updating the gen_keybindings macro to be able to handle both:

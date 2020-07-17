@@ -97,6 +97,11 @@ impl Workspace {
         self.layouts.cycle_focus(direction);
     }
 
+    /// The symbol of the currently used layout (passed on creation)
+    pub fn layout_symbol(&self) -> &str {
+        self.layouts.focused().unwrap().symbol
+    }
+
     /// Cycle focus through the clients on this workspace
     pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
         if self.clients.len() < 2 {

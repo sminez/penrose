@@ -123,6 +123,26 @@ impl<'a> WindowManager<'a> {
         self.screens[self.focused_screen].wix
     }
 
+    fn cycle_layout(&mut self, direction: Direction) {
+        self.workspace_for_screen_mut(self.focused_screen)
+            .cycle_layout(direction);
+        let wix = self.active_ws_index();
+        self.apply_layout(wix);
+    }
+
+    fn update_max_main(&mut self, change: Change) {
+        self.workspace_for_screen_mut(self.focused_screen)
+            .update_max_main(change);
+        self.apply_layout(self.active_ws_index());
+    }
+
+    fn update_main_ratio(&mut self, change: Change) {
+        let step = self.main_ratio_step;
+        self.workspace_for_screen_mut(self.focused_screen)
+            .update_main_ratio(change, step);
+        self.apply_layout(self.active_ws_index());
+    }
+
     fn focused_client(&self) -> Option<&Client> {
         self.workspaces[self.active_ws_index()]
             .focused_client()
@@ -192,7 +212,7 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    pub fn handle_map_notify(&mut self, win_id: WinId, override_redirect: bool) {
+    fn handle_map_notify(&mut self, win_id: WinId, override_redirect: bool) {
         if override_redirect {
             return;
         } else if self.client_map.contains_key(&win_id) {
@@ -261,6 +281,16 @@ impl<'a> WindowManager<'a> {
     pub fn exit(&mut self) {
         self.conn.flush();
         process::exit(0);
+    }
+
+    /// The layout symbol for the Layout currently being used on the active workspace
+    pub fn current_layout_symbol(&self) -> &str {
+        self.workspaces[self.active_ws_index()].layout_symbol()
+    }
+
+    /// Set the root X window name. Useful for exposing information to external programs
+    pub fn set_root_window_name(&self, s: &str) {
+        self.conn.set_root_window_name(s);
     }
 
     /**
@@ -363,46 +393,32 @@ impl<'a> WindowManager<'a> {
 
     /// Rearrange the windows on the focused screen using the next available layout
     pub fn next_layout(&mut self) {
-        self.workspace_for_screen_mut(self.focused_screen)
-            .cycle_layout(Direction::Forward);
-        self.apply_layout(self.active_ws_index());
+        self.cycle_layout(Direction::Forward);
     }
 
     /// Rearrange the windows on the focused screen using the previous layout
     pub fn previous_layout(&mut self) {
-        self.workspace_for_screen_mut(self.focused_screen)
-            .cycle_layout(Direction::Backward);
-        self.apply_layout(self.active_ws_index());
+        self.cycle_layout(Direction::Backward);
     }
 
     /// Increase the number of windows in the main layout area
     pub fn inc_main(&mut self) {
-        self.workspace_for_screen_mut(self.focused_screen)
-            .update_max_main(Change::More);
-        self.apply_layout(self.active_ws_index());
+        self.update_max_main(Change::More);
     }
 
     /// Reduce the number of windows in the main layout area
     pub fn dec_main(&mut self) {
-        self.workspace_for_screen_mut(self.focused_screen)
-            .update_max_main(Change::Less);
-        self.apply_layout(self.active_ws_index());
+        self.update_max_main(Change::Less);
     }
 
     /// Make the main area larger relative to sub-areas
     pub fn inc_ratio(&mut self) {
-        let step = self.main_ratio_step;
-        self.workspace_for_screen_mut(self.focused_screen)
-            .update_main_ratio(Change::More, step);
-        self.apply_layout(self.active_ws_index());
+        self.update_main_ratio(Change::More);
     }
 
     /// Make the main area smaller relative to sub-areas
     pub fn dec_ratio(&mut self) {
-        let step = self.main_ratio_step;
-        self.workspace_for_screen_mut(self.focused_screen)
-            .update_main_ratio(Change::Less, step);
-        self.apply_layout(self.active_ws_index());
+        self.update_main_ratio(Change::Less);
     }
 }
 

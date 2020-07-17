@@ -15,6 +15,7 @@ use penrose::layout::{bottom_stack, side_stack};
 use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager, XcbConnection};
 use simplelog;
 use std::env;
+use std::process::Command;
 
 fn main() {
     // Turn on debug logging for non-release builds
@@ -28,6 +29,7 @@ fn main() {
     )
     .unwrap();
 
+    let floating_classes = &["rofi", "dmenu", "dunst", "polybar"];
     let workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
     let fonts = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
     let color_scheme = ColorScheme {
@@ -46,6 +48,26 @@ fn main() {
         Layout::new("[botm]", LayoutKind::Normal, bottom_stack, n_main, ratio),
         // Layout::new("[    ]", LayoutKind::Floating, floating, n_main, ratio),
     ];
+
+    // NOTE: So long as it is of type 'FireAndForget', you can pass any closure you want as the
+    // action for a keybinding, allowing you to sequence multiple actions of run native rust
+    // functions if so desired.
+    let shutdown_if_confirmed = Box::new(move |wm: &mut WindowManager| {
+        let choice = Command::new("sh")
+            .arg("-c")
+            .arg("echo 'yes\nno' | dmenu -p 'really exit?'")
+            .output()
+            .unwrap();
+        match String::from_utf8(choice.stdout).unwrap().as_str() {
+            "yes\n" => wm.exit(),
+            _ => (), // 'no', user exited out or something went wrong
+        }
+    });
+
+    // Set the root X window name to be the active layout symbol so it can be picked up by polybar
+    let active_layout_as_root_name = |wm: &mut WindowManager| {
+        wm.set_root_window_name(wm.current_layout_symbol());
+    };
 
     let browser = "qutebrowser";
     let terminal = "st";
@@ -73,13 +95,22 @@ fn main() {
         "M-Tab" => run_internal!(toggle_workspace),
 
         // Layout & window management
-        "M-grave" => run_internal!(next_layout),
-        "M-S-grave" => run_internal!(previous_layout),
+        // "M-grave" => run_internal!(next_layout),
+        // "M-S-grave" => run_internal!(previous_layout),
+        "M-grave" => Box::new(move |wm| {
+            wm.next_layout();
+            active_layout_as_root_name(wm);
+        }),
+        "M-S-grave" => Box::new(move |wm| {
+            wm.previous_layout();
+            active_layout_as_root_name(wm);
+        }),
         "M-A-Up" => run_internal!(inc_main),
         "M-A-Down" => run_internal!(dec_main),
         "M-A-Right" => run_internal!(inc_ratio),
         "M-A-Left" => run_internal!(dec_ratio),
-        "M-A-Escape" => run_internal!(exit);
+        "M-A-C-Escape" => run_internal!(exit),
+        "M-A-Escape" => shutdown_if_confirmed;
 
         forall_workspaces: workspaces => {
             "M-{}" => focus_workspace,
@@ -87,9 +118,8 @@ fn main() {
         }
     };
 
-    let floating_classes = &["rofi", "dmenu", "dunst", "polybar"];
-
     let conn = XcbConnection::new();
+
     let mut wm = WindowManager::init(
         Config {
             workspaces: workspaces,
@@ -114,5 +144,7 @@ fn main() {
         "{}/bin/scripts/penrose-startup.sh",
         env::var("HOME").unwrap()
     ));
+
+    active_layout_as_root_name(&mut wm);
     wm.grab_keys_and_run(key_bindings);
 }
