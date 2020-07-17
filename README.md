@@ -1,6 +1,6 @@
-<image width="80px" src="icon.svg" align="left"></image>
-Penrose - a tiling window manager in the style of dwm / xmonad
-==============================================================
+<image width="100px" src="icon.svg" align="left"></image>
+penrose - a tiling window manager library
+=========================================
 
 [![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=master)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose)
 
