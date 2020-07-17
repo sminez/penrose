@@ -213,10 +213,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn handle_map_notify(&mut self, win_id: WinId, override_redirect: bool) {
-        if override_redirect {
-            return;
-        } else if self.client_map.contains_key(&win_id) {
-            warn!("got map request for known client: {}", win_id);
+        if override_redirect || self.client_map.contains_key(&win_id) {
             return;
         }
 
@@ -225,7 +222,6 @@ impl<'a> WindowManager<'a> {
             Err(_) => String::new(),
         };
 
-        debug!("handling new window: {}", wm_class);
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
         let client = Client::new(win_id, wm_class, wix, floating);
@@ -244,7 +240,6 @@ impl<'a> WindowManager<'a> {
     }
 
     fn handle_enter_notify(&mut self, id: WinId) {
-        debug!("focusing client {}", id);
         let color_focus = self.color_scheme.highlight;
         let color_normal = self.color_scheme.fg_1;
         self.focused_client()
@@ -256,7 +251,6 @@ impl<'a> WindowManager<'a> {
     }
 
     fn handle_leave_notify(&self, id: WinId) {
-        debug!("unfocusing client {}", id);
         let color = self.color_scheme.fg_1;
         self.conn.set_client_border_color(id, color);
     }
@@ -350,7 +344,6 @@ impl<'a> WindowManager<'a> {
             return;
         }
 
-        debug!("moving focused client to workspace: {}", index);
         let ws = self.workspace_for_screen_mut(self.focused_screen);
         ws.remove_focused_client().map(|id| {
             self.conn.unmap_window(id);

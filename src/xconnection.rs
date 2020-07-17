@@ -72,6 +72,33 @@ const ATOMS: &[&'static str] = &[
     "_NET_WM_WINDOW_TYPE_DIALOG",
     "_XEMBED",
     "_XEMBED_INFO",
+    // window types
+    "_NET_WM_WINDOW_TYPE_DESKTOP",
+    "_NET_WM_WINDOW_TYPE_DOCK",
+    "_NET_WM_WINDOW_TYPE_TOOLBAR",
+    "_NET_WM_WINDOW_TYPE_MENU",
+    "_NET_WM_WINDOW_TYPE_UTILITY",
+    "_NET_WM_WINDOW_TYPE_SPLASH",
+    "_NET_WM_WINDOW_TYPE_DIALOG",
+    "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
+    "_NET_WM_WINDOW_TYPE_POPUP_MENU",
+    "_NET_WM_WINDOW_TYPE_NOTIFICATION",
+    "_NET_WM_WINDOW_TYPE_COMBO",
+    "_NET_WM_WINDOW_TYPE_DND",
+    "_NET_WM_WINDOW_TYPE_NORMAL",
+];
+
+const AUTO_FLOAT_WINDOW_TYPES: &[&'static str] = &[
+    "_NET_WM_WINDOW_TYPE_DESKTOP",
+    "_NET_WM_WINDOW_TYPE_DOCK",
+    "_NET_WM_WINDOW_TYPE_TOOLBAR",
+    "_NET_WM_WINDOW_TYPE_MENU",
+    "_NET_WM_WINDOW_TYPE_UTILITY",
+    "_NET_WM_WINDOW_TYPE_SPLASH",
+    "_NET_WM_WINDOW_TYPE_DIALOG",
+    "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
+    "_NET_WM_WINDOW_TYPE_POPUP_MENU",
+    "_NET_WM_WINDOW_TYPE_NOTIFICATION",
 ];
 
 /**
@@ -239,6 +266,9 @@ pub trait XConn {
     /// Update which desktop a client is currently on
     fn set_client_workspace(&self, id: WinId, wix: usize);
 
+    /// Determine whether the target window should be tiled or allowed to float
+    fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool;
+
     /**
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
@@ -260,6 +290,7 @@ pub struct XcbConnection {
     conn: xcb::Connection,
     root: u32,
     atoms: HashMap<&'static str, u32>,
+    auto_float_types: Vec<u32>,
 }
 
 impl XcbConnection {
@@ -289,7 +320,17 @@ impl XcbConnection {
             })
             .collect();
 
-        XcbConnection { conn, root, atoms }
+        let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
+            .iter()
+            .map(|t| *atoms.get(t).unwrap())
+            .collect();
+
+        XcbConnection {
+            conn,
+            root,
+            atoms,
+            auto_float_types,
+        }
     }
 
     fn atom(&self, name: &str) -> u32 {
@@ -623,6 +664,36 @@ impl XConn for XcbConnection {
         );
     }
 
+    fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
+        match self.str_prop(id, "WM_CLASS") {
+            Ok(s) => {
+                if s.split("\0").any(|c| floating_classes.contains(&c)) {
+                    return true;
+                }
+            }
+            Err(_) => (), // no WM_CLASS set
+        };
+
+        // xcb docs: https://www.mankier.com/3/xcb_get_property
+        let cookie = xcb::get_property(
+            &self.conn,                       // xcb connection to X11
+            false,                            // should the property be deleted
+            id,                               // target window to query
+            self.atom("_NET_WM_WINDOW_TYPE"), // the property we want
+            xcb::ATOM_ANY,                    // the type of the property
+            0,                                // offset in the property to retrieve data from
+            2048,                             // how many 32bit multiples of data to retrieve
+        );
+
+        match cookie.get_reply() {
+            Err(_) => false,
+            Ok(types) => types
+                .value()
+                .iter()
+                .any(|t| self.auto_float_types.contains(t)),
+        }
+    }
+
     fn warp_cursor(&self, win_id: Option<WinId>) {
         let (x, y, id) = match win_id {
             Some(id) => {
@@ -723,6 +794,9 @@ impl XConn for MockXConn {
     fn set_current_workspace(&self, _: usize) {}
     fn set_root_window_name(&self, _: &str) {}
     fn set_client_workspace(&self, _: WinId, _: usize) {}
+    fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
+        true
+    }
     fn warp_cursor(&self, _: Option<WinId>) {}
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
         Ok(String::from(name))

@@ -29,9 +29,9 @@ fn main() {
     )
     .unwrap();
 
-    let floating_classes = &["rofi", "dmenu", "dunst", "polybar"];
     let workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
     let fonts = &["ProFont For Powerline:size=10", "Iosevka Nerd Font:size=10"];
+    let floating_classes = &["rofi", "dmenu", "dunst", "polybar", "pinentry-gtk-2"];
     let color_scheme = ColorScheme {
         bg: 0x282828,        // #282828
         fg_1: 0x3c3836,      // #3c3836
@@ -95,8 +95,6 @@ fn main() {
         "M-Tab" => run_internal!(toggle_workspace),
 
         // Layout & window management
-        // "M-grave" => run_internal!(next_layout),
-        // "M-S-grave" => run_internal!(previous_layout),
         "M-grave" => Box::new(move |wm| {
             wm.next_layout();
             active_layout_as_root_name(wm);
