@@ -1,8 +1,10 @@
+<image width="80px" src="icon.svg" align="left"></image>
 Penrose - a tiling window manager in the style of dwm / xmonad
 ==============================================================
+
 [![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=master)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose)
 
-![icon](icon.svg) `penrose` is a library for configuring your own X11 window
+`penrose` is a library for configuring your own X11 window
 manager in Rust. It uses a workspace model (as opposed to tags) and is built on
 top of the XCB API.  The project is very much a work in progress as I try to set
 up my ideal, minimal window manager for daily use. `penrose` is now feature
