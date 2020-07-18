@@ -93,8 +93,9 @@ impl Workspace {
     }
 
     /// Cycle through the available layouts on this workspace
-    pub fn cycle_layout(&mut self, direction: Direction) {
+    pub fn cycle_layout(&mut self, direction: Direction) -> &str {
         self.layouts.cycle_focus(direction);
+        self.layout_symbol()
     }
 
     /// The symbol of the currently used layout (passed on creation)

@@ -49,17 +49,17 @@ fn main() {
         // Layout::new("[    ]", LayoutKind::Floating, floating, n_main, ratio),
     ];
 
-    // NOTE: So long as it is of type 'FireAndForget', you can pass any closure you want as the
-    // action for a keybinding, allowing you to sequence multiple actions of run native rust
-    // functions if so desired.
-    let shutdown_if_confirmed = Box::new(move |wm: &mut WindowManager| {
-        let choice = Command::new("sh")
-            .arg("-c")
-            .arg("echo 'yes\nno' | dmenu -p 'really exit?'")
-            .output()
-            .unwrap();
+    // I run penrose wrapped in a shell script that redirects the log output to a file and allows
+    // me to restart without killing the session. "real" exit is done via 'pkill x'
+    let power_menu = Box::new(move |wm: &mut WindowManager| {
+        let choice = Command::new(format!(
+            "{}/bin/scripts/power-menu.sh",
+            env::var("HOME").unwrap()
+        ))
+        .output()
+        .unwrap();
         match String::from_utf8(choice.stdout).unwrap().as_str() {
-            "yes\n" => wm.exit(),
+            "restart-wm\n" => wm.exit(),
             _ => (), // 'no', user exited out or something went wrong
         }
     });
@@ -108,7 +108,7 @@ fn main() {
         "M-A-Right" => run_internal!(inc_ratio),
         "M-A-Left" => run_internal!(dec_ratio),
         "M-A-C-Escape" => run_internal!(exit),
-        "M-A-Escape" => shutdown_if_confirmed;
+        "M-A-Escape" => power_menu;
 
         forall_workspaces: workspaces => {
             "M-{}" => focus_workspace,

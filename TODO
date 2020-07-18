@@ -7,26 +7,12 @@
   - focus screen
   - cycle workspaces
 
-- auto-float all dialogues / pop ups
-
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
 
 - track focused monitor with multi-monitor setup
   - Should be doable with the X-root position info that comes with most events? Need to unack that
     as part of the XEvent enum varients though
-
-- Run several / hooks for keybindings
-  - This means updating the gen_keybindings macro to be able to handle both:
-        "key-combo" => single_action
-    and,
-        "key-combo" => [action1, action2, ...]
-  - This may get a bit hairy but it's not as simple as just dropping in a block or the user defining
-    an action that triggers multiple things: the ref to the WindowManager needs to be threaded through
-    in order to allow for triggering internal methods and that is not going to work easily...
-    - Unless, there is just a 'run_many!' macro that acts wraps each action in FireAndForget and then
-      triggers them in sequence? It'd work but it's gross and horribly inefficient...probably can do
-      a lot better!
 
 - dwm style bar and systray
   - This one is probably a decent amount of work...I still prefer it to having to install and configure

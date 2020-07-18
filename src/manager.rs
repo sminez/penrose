@@ -124,10 +124,11 @@ impl<'a> WindowManager<'a> {
     }
 
     fn cycle_layout(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
         self.workspace_for_screen_mut(self.focused_screen)
             .cycle_layout(direction);
-        let wix = self.active_ws_index();
         self.apply_layout(wix);
+        info!("ACTIVE_LAYOUT {}", self.workspaces[wix].layout_symbol());
     }
 
     fn update_max_main(&mut self, change: Change) {
@@ -176,6 +177,12 @@ impl<'a> WindowManager<'a> {
      * mapped to a handler
      */
     pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
+        // TODO: need to be smarter about this. This will also map all of the systray apps
+        //       as tiled windows currently.
+        // for id in self.conn.query_for_active_windows() {
+        //     self.handle_map_notify(id, false);
+        // }
+
         self.conn.grab_keys(&bindings);
         self.focus_workspace(0);
 
@@ -225,6 +232,7 @@ impl<'a> WindowManager<'a> {
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
         let client = Client::new(win_id, wm_class, wix, floating);
+        debug!("mapping client: {:?}", client);
 
         self.client_map.insert(win_id, client);
         if !floating {
@@ -273,6 +281,7 @@ impl<'a> WindowManager<'a> {
 
     /// Shut down the WindowManager, running any required cleanup and exiting penrose
     pub fn exit(&mut self) {
+        self.conn.cleanup();
         self.conn.flush();
         process::exit(0);
     }
@@ -329,6 +338,7 @@ impl<'a> WindowManager<'a> {
         self.screens[self.focused_screen].wix = index;
         self.apply_layout(index);
         self.conn.set_current_workspace(index);
+        info!("ACTIVE_LAYOUT {}", self.workspaces[index].layout_symbol());
     }
 
     pub fn toggle_workspace(&mut self) {

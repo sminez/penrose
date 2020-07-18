@@ -275,6 +275,9 @@ pub trait XConn {
      */
     fn warp_cursor(&self, win_id: Option<WinId>);
 
+    /// Run on startup/restart to determine already running windows that we need to track
+    fn query_for_active_windows(&self) -> Vec<WinId>;
+
     /**
      * Use the xcb api to query a string property for a window by window ID and poperty name.
      * Can fail if the property name is invalid or we get a malformed response from xcb.
@@ -283,12 +286,16 @@ pub trait XConn {
 
     /// Fetch an atom prop by name for a particular window ID
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32, String>;
+
+    /// Perform any state cleanup required prior to shutting down the window manager
+    fn cleanup(&self);
 }
 
 /// Handles communication with an X server via xcb
 pub struct XcbConnection {
     conn: xcb::Connection,
-    root: u32,
+    root: WinId,
+    check_win: WinId,
     atoms: HashMap<&'static str, u32>,
     auto_float_types: Vec<u32>,
 }
@@ -325,30 +332,14 @@ impl XcbConnection {
             .map(|t| *atoms.get(t).unwrap())
             .collect();
 
-        XcbConnection {
-            conn,
-            root,
-            atoms,
-            auto_float_types,
-        }
-    }
-
-    fn atom(&self, name: &str) -> u32 {
-        *self
-            .atoms
-            .get(name)
-            .expect(&format!("{} is not a known atom", name))
-    }
-
-    fn new_stub_window(&self) -> WinId {
-        let win_id = self.conn.generate_id();
+        let check_win = conn.generate_id();
 
         // xcb docs: https://www.mankier.com/3/xcb_create_window
         xcb::create_window(
-            &self.conn,              // xcb connection to X11
+            &conn,                   // xcb connection to X11
             0,                       // new window's depth
-            win_id,                  // ID to be used for referring to the window
-            self.root,               // parent window
+            check_win,               // ID to be used for referring to the window
+            root,                    // parent window
             0,                       // x-coordinate
             0,                       // y-coordinate
             1,                       // width
@@ -359,7 +350,20 @@ impl XcbConnection {
             &[],                     // value list? (value mask? not documented either way...)
         );
 
-        win_id
+        XcbConnection {
+            conn,
+            root,
+            check_win,
+            atoms,
+            auto_float_types,
+        }
+    }
+
+    fn atom(&self, name: &str) -> u32 {
+        *self
+            .atoms
+            .get(name)
+            .expect(&format!("{} is not a known atom", name))
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region, String> {
@@ -373,6 +377,24 @@ impl XcbConnection {
                 r.width() as u32,
                 r.height() as u32,
             )),
+        }
+    }
+
+    fn window_has_type_in(&self, id: WinId, win_types: &Vec<u32>) -> bool {
+        // xcb docs: https://www.mankier.com/3/xcb_get_property
+        let cookie = xcb::get_property(
+            &self.conn,                       // xcb connection to X11
+            false,                            // should the property be deleted
+            id,                               // target window to query
+            self.atom("_NET_WM_WINDOW_TYPE"), // the property we want
+            xcb::ATOM_ANY,                    // the type of the property
+            0,                                // offset in the property to retrieve data from
+            2048,                             // how many 32bit multiples of data to retrieve
+        );
+
+        match cookie.get_reply() {
+            Err(_) => false,
+            Ok(types) => types.value().iter().any(|t| win_types.contains(t)),
         }
     }
 }
@@ -427,10 +449,8 @@ impl XConn for XcbConnection {
     }
 
     fn current_outputs(&self) -> Vec<Screen> {
-        let win_id = self.new_stub_window();
-
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_screen_resources
-        let resources = xcb::randr::get_screen_resources(&self.conn, win_id);
+        let resources = xcb::randr::get_screen_resources(&self.conn, self.check_win);
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_crtc_info
         match resources.get_reply() {
@@ -555,22 +575,20 @@ impl XConn for XcbConnection {
     }
 
     fn set_wm_properties(&self, workspaces: &[&'static str]) {
-        let check_win = self.new_stub_window();
-
         // xcb docs: https://www.mankier.com/3/xcb_change_property
         xcb::change_property(
             &self.conn,                            // xcb connection to X11
             PROP_MODE_REPLACE,                     // discard current prop and replace
-            check_win,                             // window to change prop on
+            self.check_win,                        // window to change prop on
             self.atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
             ATOM_WINDOW,                           // type of prop
             32,                                    // data format (8/16/32-bit)
-            &[check_win],                          // data
+            &[self.check_win],                     // data
         );
         xcb::change_property(
             &self.conn,                // xcb connection to X11
             PROP_MODE_REPLACE,         // discard current prop and replace
-            check_win,                 // window to change prop on
+            self.check_win,            // window to change prop on
             self.atom("_NET_WM_NAME"), // prop to change
             self.atom("UTF8_STRING"),  // type of prop
             8,                         // data format (8/16/32-bit)
@@ -583,7 +601,7 @@ impl XConn for XcbConnection {
             self.atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
             ATOM_WINDOW,                           // type of prop
             32,                                    // data format (8/16/32-bit)
-            &[check_win],                          // data
+            &[self.check_win],                     // data
         );
         xcb::change_property(
             &self.conn,                // xcb connection to X11
@@ -674,6 +692,7 @@ impl XConn for XcbConnection {
             Err(_) => (), // no WM_CLASS set
         };
 
+        // self.window_has_type_in(id, &self.auto_float_types)
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
             &self.conn,                       // xcb connection to X11
@@ -700,7 +719,7 @@ impl XConn for XcbConnection {
                 let (_, _, w, h) = self.window_geometry(id).unwrap().values();
                 ((w / 2) as i16, (h / 2) as i16, id)
             }
-            None => todo!("warp to screen center"),
+            None => todo!("warp cursor to center of screen"),
         };
 
         xcb::warp_pointer(
@@ -714,6 +733,24 @@ impl XConn for XcbConnection {
             x,          // destination x
             y,          // destination y
         );
+    }
+
+    fn query_for_active_windows(&self) -> Vec<WinId> {
+        let all_ids = match xcb::query_tree(&self.conn, self.root).get_reply() {
+            Err(_) => Vec::new(),
+            Ok(reply) => reply.children().into(),
+        };
+
+        let dont_manage: Vec<u32> = ["_NET_WM_WINDOW_TYPE_DOCK", "_NET_WM_WINDOW_TYPE_TOOLBAR"]
+            .iter()
+            .map(|t| self.atom(t))
+            .collect();
+
+        all_ids
+            .iter()
+            .filter(|id| !self.window_has_type_in(**id, &dont_manage))
+            .cloned()
+            .collect()
     }
 
     fn str_prop(&self, id: u32, name: &str) -> Result<String, String> {
@@ -760,6 +797,23 @@ impl XConn for XcbConnection {
             }
         }
     }
+
+    // - Release all of the keybindings we are holding on to
+    // - destroy the check window
+    // - mark ourselves as no longer being the active root window
+    // - TODO: tidy embedded bar / systray once this is a thing
+    // - TODO: tidy up any graphics context we have
+    fn cleanup(&self) {
+        // xcb docs: https://www.mankier.com/3/xcb_ungrab_key
+        xcb::ungrab_key(
+            &self.conn, // xcb connection to X11
+            xcb::GRAB_ANY as u8,
+            self.root, // the window to ungrab keys for
+            xcb::MOD_MASK_ANY as u16,
+        );
+        xcb::destroy_window(&self.conn, self.check_win);
+        xcb::delete_property(&self.conn, self.root, self.atom("_NET_ACTIVE_WINDOW"));
+    }
 }
 
 pub struct MockXConn {
@@ -798,10 +852,14 @@ impl XConn for MockXConn {
         true
     }
     fn warp_cursor(&self, _: Option<WinId>) {}
+    fn query_for_active_windows(&self) -> Vec<WinId> {
+        Vec::new()
+    }
     fn str_prop(&self, _: u32, name: &str) -> Result<String, String> {
         Ok(String::from(name))
     }
     fn atom_prop(&self, id: u32, _: &str) -> Result<u32, String> {
         Ok(id)
     }
+    fn cleanup(&self) {}
 }
