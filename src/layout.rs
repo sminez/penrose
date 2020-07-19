@@ -14,23 +14,28 @@ use crate::data_types::{Change, Region, ResizeAction, WinId};
 use std::fmt;
 
 /**
- * How a given layout should treat borders, gaps and floating windows.
- *
- * Almost all layouts will be 'Normal' but penrose allows both for layouts that
- * explicitly remove gaps and window borders and for floating layouts that do
- * not apply resize actions to their windows.
- * While it is possible to have multiple floating layouts, there isn't much
- * point as kind == Floating disables calling through to the wrapped layout
- * function.
+ * When and how a Layout should be applied.
  */
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum LayoutKind {
-    /// Floating layouts will not apply window resizing
-    Floating,
-    /// Prevent borders and gaps being added to windows
-    Gapless,
-    /// Gaps and borders will be added as per config.rs
-    Normal,
+pub struct LayoutConf {
+    /// If true, this layout function will not be called to produce resize actions
+    pub floating: bool,
+    /// Should gaps be dropped regardless of config
+    pub gapless: bool,
+    /// Should this layout be triggered by window focus as well as add/remove client
+    pub follow_focus: bool,
+}
+
+impl LayoutConf {
+    /// A layout config that only triggers when clients are added / removed and follows user
+    /// defined config options.
+    pub fn default() -> LayoutConf {
+        LayoutConf {
+            floating: false,
+            gapless: false,
+            follow_focus: false,
+        }
+    }
 }
 
 /**
@@ -41,27 +46,25 @@ pub enum LayoutKind {
 pub type LayoutFunc = fn(&[&Client], Option<WinId>, &Region, u32, f32) -> Vec<ResizeAction>;
 
 /**
- * Responsible for arranging windows within a Workspace.
+ * Responsible for arranging Clients within a Workspace.
  *
- * A Layout is primarily a function that will be passed an array of client IDs
- * to apply resize actions to. Only clients that should be tiled for the current
- * monitor will be passed so no checks are required to see if each client should
- * be handled. The region passed to the layout function represents the current
- * screen dimensions that can be utilised and gaps/borders will be added to
- * each client by the WindowManager itself so there is no need to handle that
- * in the layouts themselves.
- * Layouts are expected to have a 'main area' that holds the clients with primary
- * focus and any number of secondary areas for the remaining clients to be tiled.
- * The user can increase/decrease the size of the main area by setting 'ratio'
- * via key bindings which should determine the relative size of the main area
- * compared to other cliens.
- * Layouts maintain their own state for number of clients in the main area and
- * ratio which will be passed through to the layout function when it is called.
+ * A Layout is primarily a function that will be passed an array of Clients to apply resize actions
+ * to. Only clients that should be tiled for the current monitor will be passed so no checks are
+ * required to see if each client should be handled. The region passed to the layout function
+ * represents the current screen dimensions that can be utilised and gaps/borders will be added to
+ * each client by the WindowManager itself so there is no need to handle that in the layouts
+ * themselves.
+ * Layouts are expected to have a 'main area' that holds the clients with primary focus and any
+ * number of secondary areas for the remaining clients to be tiled.
+ * The user can increase/decrease the size of the main area by setting 'ratio' via key bindings
+ * which should determine the relative size of the main area compared to other cliens.  Layouts
+ * maintain their own state for number of clients in the main area and ratio which will be passed
+ * through to the layout function when it is called.
  */
 #[derive(Clone, Copy)]
 pub struct Layout {
     /// How this layout should be applied by the WindowManager
-    pub kind: LayoutKind,
+    pub conf: LayoutConf,
     /// User defined symbol for displaying in the status bar
     pub symbol: &'static str,
     max_main: u32,
@@ -72,7 +75,7 @@ pub struct Layout {
 impl fmt::Debug for Layout {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Layout")
-            .field("kind", &self.kind)
+            .field("kind", &self.conf)
             .field("symbol", &self.symbol)
             .field("max_main", &self.max_main)
             .field("ratio", &self.ratio)
@@ -81,21 +84,41 @@ impl fmt::Debug for Layout {
     }
 }
 
+// A no-op floating layout that simply satisfies the type required for Layout
+fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+    vec![]
+}
+
 impl Layout {
     /// Create a new Layout for a specific monitor
     pub fn new(
         symbol: &'static str,
-        kind: LayoutKind,
+        conf: LayoutConf,
         f: LayoutFunc,
         max_main: u32,
         ratio: f32,
     ) -> Layout {
         Layout {
             symbol,
-            kind,
+            conf,
             max_main,
             ratio,
             f,
+        }
+    }
+
+    /// A default floating layout that will not attempt to manage windows
+    pub fn floating(symbol: &'static str) -> Layout {
+        Layout {
+            symbol,
+            conf: LayoutConf {
+                floating: true,
+                gapless: false,
+                follow_focus: false,
+            },
+            f: floating,
+            max_main: 1,
+            ratio: 1.0,
         }
     }
 
@@ -181,11 +204,6 @@ pub(crate) fn mock_layout(
         .collect()
 }
 
-/// A no-op floating layout that simply satisfies the type required for Layout
-pub fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
-    vec![]
-}
-
 /**
  * A simple layout that places the main region on the left and tiles remaining
  * windows in a single column to the right.
@@ -258,6 +276,53 @@ pub fn bottom_stack(
                 let sn = n - max_main; // nth stacked client
                 let region = Region::new(mx + sn * w_stack, my + split, w_stack, mh - split);
                 (c.id(), region)
+            }
+        })
+        .collect()
+}
+
+/**
+ * A layout that aims to mimic the feel of having multiple pieces of paper fanned out on a desk,
+ * inspired by http://10gui.com/
+ *
+ * Without access to the custom hardware required for 10gui, we instead have to rely on the WM
+ * actions we have available: n_main is ignored and instead, the focused client takes up ratio% of
+ * the screen, with the remaining windows being stacked on top of one another to either side. Think
+ * fanning out a hand of cards and then pulling one out and placing it on top of the fan.
+ */
+pub fn paper(
+    clients: &[&Client],
+    focused: Option<WinId>,
+    monitor_region: &Region,
+    _: u32,
+    ratio: f32,
+) -> Vec<ResizeAction> {
+    let n = clients.len();
+    if n == 1 {
+        return vec![(clients[0].id(), *monitor_region)];
+    }
+
+    let (mx, my, mw, mh) = monitor_region.values();
+    let min_w = 0.5; // clamp client width at 50% screen size (we're effectively fancy monocle)
+    let cw = (mw as f32 * if ratio > min_w { ratio } else { min_w }) as u32;
+    let step = (mw - cw) / (n - 1) as u32;
+
+    let fid = focused.unwrap(); // we know we have at least one client now
+    let mut after_focused = false;
+    clients
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let cid = c.id();
+            if cid == fid {
+                after_focused = true;
+                (cid, Region::new(mx + i as u32 * step, my, cw, mh))
+            } else {
+                let mut x = mx + i as u32 * step;
+                if after_focused {
+                    x += cw - step
+                };
+                (cid, Region::new(x, my, step, mh))
             }
         })
         .collect()

@@ -42,7 +42,7 @@ pub struct Config {
 /* Argument enums */
 
 /// A direction to permute a Ring
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Direction {
     /// increase the index, wrapping if needed
     Forward,
@@ -152,6 +152,13 @@ impl<T> Ring<T> {
             elements: elements.into(),
             focused: 0,
         }
+    }
+
+    pub fn would_wrap(&self, dir: Direction) -> bool {
+        let wrap_back = self.focused == 0 && dir == Direction::Backward;
+        let wrap_forward = self.focused == self.elements.len() - 1 && dir == Direction::Forward;
+
+        wrap_back || wrap_forward
     }
 
     pub fn focused(&self) -> Option<&T> {

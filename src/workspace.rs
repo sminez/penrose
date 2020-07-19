@@ -1,7 +1,7 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
 use crate::client::Client;
 use crate::data_types::{Change, Direction, Region, ResizeAction, Ring, WinId};
-use crate::layout::Layout;
+use crate::layout::{Layout, LayoutConf};
 use std::collections::HashMap;
 
 /**
@@ -115,10 +115,21 @@ impl Workspace {
         self.layouts.focused().unwrap().symbol
     }
 
+    /**
+     * The LayoutConf of the currently active Layout. Used by the WindowManager to
+     * determine when and how the layout function should be applied.
+     */
+    pub fn layout_conf(&self) -> LayoutConf {
+        self.layouts.focused().unwrap().conf
+    }
+
     /// Cycle focus through the clients on this workspace
     pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
         if self.clients.len() < 2 {
             return None; // need at least two clients to cycle
+        }
+        if self.layout_conf().follow_focus && self.clients.would_wrap(direction) {
+            return None; // When following focus, don't allow wrapping focus
         }
 
         let prev = *self.clients.focused()?;
@@ -135,6 +146,9 @@ impl Workspace {
      * Drag the focused client through the stack, retaining focus
      */
     pub fn drag_client(&mut self, direction: Direction) -> Option<WinId> {
+        if self.layout_conf().follow_focus && self.clients.would_wrap(direction) {
+            return None; // When following focus, don't allow wrapping focus
+        }
         self.clients.drag_focused(direction).map(|c| *c)
     }
 
@@ -158,7 +172,7 @@ mod tests {
     use crate::layout::*;
 
     fn test_layouts() -> Vec<Layout> {
-        vec![Layout::new("t", LayoutKind::Normal, mock_layout, 1, 0.6)]
+        vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)]
     }
 
     fn add_n_clients(ws: &mut Workspace, n: usize) {

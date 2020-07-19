@@ -80,13 +80,19 @@ impl<'a> WindowManager<'a> {
 
     fn apply_layout(&self, workspace: usize) {
         let ws = &self.workspaces[workspace];
+        let lc = ws.layout_conf();
+        if lc.floating {
+            return;
+        }
+
         let s = self.screens.iter().find(|s| s.wix == workspace).unwrap();
+        let gpx = if lc.gapless { 0 } else { self.gap_px };
+        let padding = 2 * (self.border_px + gpx);
 
         for (id, region) in ws.arrange(s.region(self.show_bar), &self.client_map) {
             debug!("configuring {} with {:?}", id, region);
             let (x, y, w, h) = region.values();
-            let padding = 2 * (self.border_px + self.gap_px);
-            let r = Region::new(x + self.gap_px, y + self.gap_px, w - padding, h - padding);
+            let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
             self.conn.position_window(id, r, self.border_px);
         }
     }
@@ -111,12 +117,8 @@ impl<'a> WindowManager<'a> {
         &mut self.workspaces[self.screens[screen_index].wix]
     }
 
-    fn workspace_for_client_mut(&mut self, id: WinId) -> Option<&mut Workspace> {
-        if let Some(client) = self.client_map.get(&id) {
-            Some(&mut self.workspaces[client.workspace()])
-        } else {
-            None
-        }
+    fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
+        self.client_map.get(&id).map(|c| c.workspace())
     }
 
     fn active_ws_index(&self) -> usize {
@@ -254,8 +256,14 @@ impl<'a> WindowManager<'a> {
             .map(|c| self.conn.set_client_border_color(c.id(), color_normal));
         self.conn.focus_client(id);
         self.conn.set_client_border_color(id, color_focus);
-        self.workspace_for_client_mut(id)
-            .and_then(|ws| ws.focus_client(id));
+
+        if let Some(wix) = self.workspace_index_for_client(id) {
+            let ws = &mut self.workspaces[wix];
+            ws.focus_client(id);
+            if ws.layout_conf().follow_focus {
+                self.apply_layout(wix);
+            }
+        }
     }
 
     fn handle_leave_notify(&self, id: WinId) {
@@ -304,6 +312,7 @@ impl<'a> WindowManager<'a> {
      * to set up your keybindings so this is not normally an issue.
      */
     pub fn focus_workspace(&mut self, index: usize) {
+        info!("ACTIVE_LAYOUT {}", self.workspaces[index].layout_symbol());
         if self.active_ws_index() == index {
             return; // already focused on the current screen
         } else {
@@ -338,7 +347,6 @@ impl<'a> WindowManager<'a> {
         self.screens[self.focused_screen].wix = index;
         self.apply_layout(index);
         self.conn.set_current_workspace(index);
-        info!("ACTIVE_LAYOUT {}", self.workspaces[index].layout_symbol());
     }
 
     pub fn toggle_workspace(&mut self) {
@@ -467,7 +475,7 @@ mod tests {
     }
 
     fn test_layouts() -> Vec<Layout> {
-        vec![Layout::new("t", LayoutKind::Normal, mock_layout, 1, 0.6)]
+        vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)]
     }
 
     fn test_screens() -> Vec<Screen> {

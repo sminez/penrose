@@ -20,6 +20,6 @@ pub mod xconnection;
 
 // top level re-exports
 pub use data_types::{ColorScheme, Config};
-pub use layout::{Layout, LayoutKind};
+pub use layout::{Layout, LayoutConf};
 pub use manager::WindowManager;
 pub use xconnection::XcbConnection;
