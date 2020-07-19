@@ -1,6 +1,8 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
+use crate::client::Client;
 use crate::data_types::{Change, Direction, Region, ResizeAction, Ring, WinId};
 use crate::layout::Layout;
+use std::collections::HashMap;
 
 /**
  * A Workspace represents a named set of clients that are tiled according
@@ -43,8 +45,8 @@ impl Workspace {
     }
 
     /// A reference to the currently focused client if there is one
-    pub fn focused_client(&self) -> Option<&WinId> {
-        self.clients.focused()
+    pub fn focused_client(&self) -> Option<WinId> {
+        self.clients.focused().map(|c| *c)
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
@@ -78,15 +80,25 @@ impl Workspace {
 
     /// Run the current layout function, generating a list of resize actions to be
     /// applied byt the window manager.
-    pub fn arrange(&self, screen_region: &Region) -> Vec<ResizeAction> {
-        let n_clients = self.clients.len();
-        if n_clients > 0 {
+    pub fn arrange(
+        &self,
+        screen_region: &Region,
+        client_map: &HashMap<WinId, Client>,
+    ) -> Vec<ResizeAction> {
+        if self.clients.len() > 0 {
             let layout = self.layouts.focused().unwrap();
+            let clients: Vec<&Client> = self
+                .clients
+                .iter()
+                .map(|id| client_map.get(id).unwrap())
+                .collect();
             debug!(
                 "applying '{}' layout for {} clients on workspace '{}'",
-                layout.symbol, n_clients, self.name
+                layout.symbol,
+                self.clients.len(),
+                self.name
             );
-            layout.arrange(&self.clients.as_vec(), screen_region)
+            layout.arrange(&clients, self.focused_client(), screen_region)
         } else {
             vec![]
         }
@@ -122,8 +134,8 @@ impl Workspace {
     /**
      * Drag the focused client through the stack, retaining focus
      */
-    pub fn drag_client(&mut self, direction: Direction) -> Option<&WinId> {
-        self.clients.drag_focused(direction)
+    pub fn drag_client(&mut self, direction: Direction) -> Option<WinId> {
+        self.clients.drag_focused(direction).map(|c| *c)
     }
 
     pub fn update_max_main(&mut self, change: Change) {
@@ -168,11 +180,11 @@ mod tests {
         ws.clients = Ring::new(vec![42, 123]);
 
         let c = ws.focused_client().expect("should have had a client for 0");
-        assert_eq!(*c, 42);
+        assert_eq!(c, 42);
 
         ws.clients.cycle_focus(Direction::Forward);
         let c = ws.focused_client().expect("should have had a client for 1");
-        assert_eq!(*c, 123);
+        assert_eq!(c, 123);
     }
 
     #[test]
@@ -207,7 +219,12 @@ mod tests {
     fn applying_a_layout_gives_one_action_per_client() {
         let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![1, 2, 3]);
-        let actions = ws.arrange(&Region::new(0, 0, 2000, 1000));
+        let client_map = map! {
+            1 => Client::new(1, "".into(), 1, false),
+            2 => Client::new(2, "".into(), 1, false),
+            3 => Client::new(3, "".into(), 1, false),
+        };
+        let actions = ws.arrange(&Region::new(0, 0, 2000, 1000), &client_map);
         assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")
     }
 
@@ -215,21 +232,21 @@ mod tests {
     fn dragging_a_client_forward() {
         let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![1, 2, 3, 4]);
-        assert_eq!(ws.focused_client(), Some(&1));
+        assert_eq!(ws.focused_client(), Some(1));
 
-        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.drag_client(Direction::Forward), Some(1));
         assert_eq!(ws.clients.as_vec(), vec![2, 1, 3, 4]);
 
-        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.drag_client(Direction::Forward), Some(1));
         assert_eq!(ws.clients.as_vec(), vec![2, 3, 1, 4]);
 
-        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.drag_client(Direction::Forward), Some(1));
         assert_eq!(ws.clients.as_vec(), vec![2, 3, 4, 1]);
 
-        assert_eq!(ws.drag_client(Direction::Forward), Some(&1));
+        assert_eq!(ws.drag_client(Direction::Forward), Some(1));
         assert_eq!(ws.clients.as_vec(), vec![1, 2, 3, 4]);
 
-        assert_eq!(ws.focused_client(), Some(&1));
+        assert_eq!(ws.focused_client(), Some(1));
     }
 
     #[test]
@@ -237,20 +254,20 @@ mod tests {
         let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![1, 2, 3, 4]);
         ws.focus_client(3);
-        assert_eq!(ws.focused_client(), Some(&3));
+        assert_eq!(ws.focused_client(), Some(3));
 
-        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.drag_client(Direction::Backward), Some(3));
         assert_eq!(ws.clients.as_vec(), vec![1, 3, 2, 4]);
 
-        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.drag_client(Direction::Backward), Some(3));
         assert_eq!(ws.clients.as_vec(), vec![3, 1, 2, 4]);
 
-        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.drag_client(Direction::Backward), Some(3));
         assert_eq!(ws.clients.as_vec(), vec![1, 2, 4, 3]);
 
-        assert_eq!(ws.drag_client(Direction::Backward), Some(&3));
+        assert_eq!(ws.drag_client(Direction::Backward), Some(3));
         assert_eq!(ws.clients.as_vec(), vec![1, 2, 3, 4]);
 
-        assert_eq!(ws.focused_client(), Some(&3));
+        assert_eq!(ws.focused_client(), Some(3));
     }
 }

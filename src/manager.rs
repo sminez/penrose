@@ -82,7 +82,7 @@ impl<'a> WindowManager<'a> {
         let ws = &self.workspaces[workspace];
         let s = self.screens.iter().find(|s| s.wix == workspace).unwrap();
 
-        for (id, region) in ws.arrange(s.region(self.show_bar)) {
+        for (id, region) in ws.arrange(s.region(self.show_bar), &self.client_map) {
             debug!("configuring {} with {:?}", id, region);
             let (x, y, w, h) = region.values();
             let padding = 2 * (self.border_px + self.gap_px);
@@ -147,7 +147,7 @@ impl<'a> WindowManager<'a> {
     fn focused_client(&self) -> Option<&Client> {
         self.workspaces[self.active_ws_index()]
             .focused_client()
-            .and_then(|id| self.client_map.get(id))
+            .and_then(|id| self.client_map.get(&id))
     }
 
     fn cycle_client(&mut self, direction: Direction) {
@@ -493,18 +493,18 @@ mod tests {
         // add clients to the first workspace: final client should have focus
         add_n_clients(&mut wm, 3, 0);
         assert_eq!(wm.workspaces[0].len(), 3);
-        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
+        assert_eq!(wm.workspaces[0].focused_client(), Some(30));
 
         // switch and add to the second workspace: final client should have focus
         wm.focus_workspace(1);
         add_n_clients(&mut wm, 2, 3);
         assert_eq!(wm.workspaces[1].len(), 2);
-        assert_eq!(*wm.workspaces[1].focused_client().unwrap(), 50);
+        assert_eq!(wm.workspaces[1].focused_client(), Some(50));
 
         // switch back: clients should be the same, same client should have focus
         wm.focus_workspace(0);
         assert_eq!(wm.workspaces[0].len(), 3);
-        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
+        assert_eq!(wm.workspaces[0].focused_client(), Some(30));
     }
 
     #[test]
@@ -527,7 +527,7 @@ mod tests {
 
         let ids: Vec<WinId> = wm.workspaces[0].iter().map(|c| *c).collect();
         assert_eq!(ids, vec![50, 30, 20, 10]);
-        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 30);
+        assert_eq!(wm.workspaces[0].focused_client(), Some(30));
     }
 
     #[test]
@@ -568,7 +568,7 @@ mod tests {
         wm.client_to_workspace(1); // 10 -> ws::1, [10, 20]
         wm.focus_workspace(1);
 
-        assert_eq!(*wm.workspaces[1].focused_client().unwrap(), 10);
+        assert_eq!(wm.workspaces[1].focused_client(), Some(10));
     }
 
     #[test]
@@ -578,7 +578,7 @@ mod tests {
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
         wm.handle_enter_notify(10);
 
-        assert_eq!(*wm.workspaces[0].focused_client().unwrap(), 10);
+        assert_eq!(wm.workspaces[0].focused_client(), Some(10));
     }
 
     #[test]

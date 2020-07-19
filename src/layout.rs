@@ -1,4 +1,4 @@
-/*!
+/**!
  * Layouts are user definable window arangements for a Workspace.
  *
  * Layouts are maintained per monitor and allow for indepent management of the two
@@ -9,6 +9,7 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
+use crate::client::Client;
 use crate::data_types::{Change, Region, ResizeAction, WinId};
 use std::fmt;
 
@@ -31,6 +32,13 @@ pub enum LayoutKind {
     /// Gaps and borders will be added as per config.rs
     Normal,
 }
+
+/**
+ * A function that can be used to position Clients on a Workspace. Will be called with the current
+ * client list, the active client ID (if there is one), the size of the screen that the workspace
+ * is shown on and the current values of n_main and ratio for this layout.
+ */
+pub type LayoutFunc = fn(&[&Client], Option<WinId>, &Region, u32, f32) -> Vec<ResizeAction>;
 
 /**
  * Responsible for arranging windows within a Workspace.
@@ -58,7 +66,7 @@ pub struct Layout {
     pub symbol: &'static str,
     max_main: u32,
     ratio: f32,
-    f: fn(&[WinId], &Region, u32, f32) -> Vec<ResizeAction>,
+    f: LayoutFunc,
 }
 
 impl fmt::Debug for Layout {
@@ -78,7 +86,7 @@ impl Layout {
     pub fn new(
         symbol: &'static str,
         kind: LayoutKind,
-        f: fn(&[WinId], &Region, u32, f32) -> Vec<ResizeAction>,
+        f: LayoutFunc,
         max_main: u32,
         ratio: f32,
     ) -> Layout {
@@ -92,8 +100,13 @@ impl Layout {
     }
 
     /// Apply the embedded layout function using the current n_main and ratio
-    pub fn arrange(&self, clients: &[WinId], r: &Region) -> Vec<ResizeAction> {
-        (self.f)(clients, r, self.max_main, self.ratio)
+    pub fn arrange(
+        &self,
+        clients: &[&Client],
+        focused: Option<WinId>,
+        r: &Region,
+    ) -> Vec<ResizeAction> {
+        (self.f)(clients, focused, r, self.max_main, self.ratio)
     }
 
     /// Increase/decrease the number of clients in the main area by 1
@@ -150,20 +163,26 @@ pub fn client_breakdown<T>(clients: &[T], n_main: u32) -> (u32, u32) {
 
 // ignore paramas and return pairs of window ID and index in the client vec
 #[cfg(test)]
-pub(crate) fn mock_layout(clients: &[WinId], r: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+pub(crate) fn mock_layout(
+    clients: &[&Client],
+    _: Option<WinId>,
+    r: &Region,
+    _: u32,
+    _: f32,
+) -> Vec<ResizeAction> {
     clients
         .iter()
         .enumerate()
         .map(|(i, c)| {
             let (x, y, w, h) = r.values();
             let k = i as u32;
-            (*c, Region::new(x + k, y + k, w - k, h - k))
+            (c.id(), Region::new(x + k, y + k, w - k, h - k))
         })
         .collect()
 }
 
 /// A no-op floating layout that simply satisfies the type required for Layout
-pub fn floating(_: &[WinId], _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+pub fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     vec![]
 }
 
@@ -172,7 +191,8 @@ pub fn floating(_: &[WinId], _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
  * windows in a single column to the right.
  */
 pub fn side_stack(
-    clients: &[WinId],
+    clients: &[&Client],
+    _: Option<WinId>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
@@ -194,11 +214,11 @@ pub fn side_stack(
             let n = n as u32;
             if n < max_main {
                 let w = if n_stack == 0 { mw } else { split };
-                (*c, Region::new(mx, my + n * h_main, w, h_main))
+                (c.id(), Region::new(mx, my + n * h_main, w, h_main))
             } else {
                 let sn = n - max_main; // nth stacked client
                 let region = Region::new(mx + split, my + sn * h_stack, mw - split, h_stack);
-                (*c, region)
+                (c.id(), region)
             }
         })
         .collect()
@@ -209,7 +229,8 @@ pub fn side_stack(
  * remaining windows in a single row underneath.
  */
 pub fn bottom_stack(
-    clients: &[WinId],
+    clients: &[&Client],
+    _: Option<WinId>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
@@ -231,11 +252,12 @@ pub fn bottom_stack(
         .map(|(n, c)| {
             let n = n as u32;
             if n < max_main {
-                (*c, Region::new(mx, my + n * h_main / n_main, mw, h_main))
+                let region = Region::new(mx, my + n * h_main / n_main, mw, h_main);
+                (c.id(), region)
             } else {
                 let sn = n - max_main; // nth stacked client
                 let region = Region::new(mx + sn * w_stack, my + split, w_stack, mh - split);
-                (*c, region)
+                (c.id(), region)
             }
         })
         .collect()
