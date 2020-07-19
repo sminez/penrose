@@ -11,8 +11,8 @@
 extern crate penrose;
 
 use penrose::helpers::spawn;
-use penrose::layout::{bottom_stack, side_stack};
-use penrose::{ColorScheme, Config, Layout, LayoutKind, WindowManager, XcbConnection};
+use penrose::layout::{bottom_stack, paper, side_stack};
+use penrose::{ColorScheme, Config, Layout, LayoutConf, WindowManager, XcbConnection};
 use simplelog;
 use std::env;
 use std::process::Command;
@@ -41,12 +41,18 @@ fn main() {
         urgent: 0x458588,    // #458588
     };
 
+    let follow_focus_conf = LayoutConf {
+        floating: false,
+        gapless: true,
+        follow_focus: true,
+    };
     let n_main = 1;
     let ratio = 0.6;
     let layouts = vec![
-        Layout::new("[side]", LayoutKind::Normal, side_stack, n_main, ratio),
-        Layout::new("[botm]", LayoutKind::Normal, bottom_stack, n_main, ratio),
-        // Layout::new("[    ]", LayoutKind::Floating, floating, n_main, ratio),
+        Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
+        Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
+        Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
+        Layout::floating("[    ]"),
     ];
 
     // I run penrose wrapped in a shell script that redirects the log output to a file and allows
