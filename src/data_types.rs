@@ -254,8 +254,9 @@ impl<T> Ring<T> {
 }
 
 impl<T: Clone> Ring<T> {
+    #[allow(dead_code)]
     pub fn as_vec(&self) -> Vec<T> {
-        Vec::from(self.elements.clone())
+        self.iter().cloned().collect()
     }
 }
 
