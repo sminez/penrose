@@ -1,6 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::data_types::{CodeMap, KeyCode};
-use std::process;
+use std::process::{Child, Command, Stdio};
 use xcb;
 
 /**
@@ -9,25 +9,29 @@ use xcb;
  * This redirects the process stdout and stderr to /dev/null.
  * Logs a warning if there were any errors in kicking off the process.
  */
-pub fn spawn<S: Into<String>>(cmd: S) {
+pub fn spawn<S: Into<String>>(cmd: S) -> Option<Child> {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
     let result = if parts.len() > 1 {
-        process::Command::new(parts[0])
+        Command::new(parts[0])
             .args(&parts[1..])
-            .stdout(process::Stdio::null())
-            .stderr(process::Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .spawn()
     } else {
-        process::Command::new(parts[0])
-            .stdout(process::Stdio::null())
-            .stderr(process::Stdio::null())
+        Command::new(parts[0])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .spawn()
     };
 
-    if let Err(e) = result {
-        warn!("error spawning external program: {}", e);
-    };
+    match result {
+        Err(e) => {
+            warn!("error spawning external program: {}", e);
+            None
+        }
+        Ok(child) => Some(child),
+    }
 }
 
 /**
@@ -39,7 +43,7 @@ pub fn spawn<S: Into<String>>(cmd: S) {
  * issues with bindings by referring the user to the xmodmap output.
  */
 pub fn keycodes_from_xmodmap() -> CodeMap {
-    match process::Command::new("xmodmap").arg("-pke").output() {
+    match Command::new("xmodmap").arg("-pke").output() {
         Err(e) => panic!("unable to fetch keycodes via xmodmap: {}", e),
         Ok(o) => match String::from_utf8(o.stdout) {
             Err(e) => panic!("invalid utf8 from xmodmap: {}", e),

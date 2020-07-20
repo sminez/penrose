@@ -68,6 +68,7 @@ fn main() {
             "restart-wm\n" => wm.exit(),
             _ => (), // 'no', user exited out or something went wrong
         }
+        None
     });
 
     // Set the root X window name to be the active layout symbol so it can be picked up by polybar
@@ -104,10 +105,12 @@ fn main() {
         "M-grave" => Box::new(move |wm| {
             wm.next_layout();
             active_layout_as_root_name(wm);
+            None
         }),
         "M-S-grave" => Box::new(move |wm| {
             wm.previous_layout();
             active_layout_as_root_name(wm);
+            None
         }),
         "M-A-Up" => run_internal!(inc_main),
         "M-A-Down" => run_internal!(dec_main),

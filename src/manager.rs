@@ -7,7 +7,7 @@ use crate::screen::Screen;
 use crate::workspace::Workspace;
 use crate::xconnection::{XConn, XEvent};
 use std::collections::HashMap;
-use std::process;
+use std::process::{exit, Child};
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -188,10 +188,14 @@ impl<'a> WindowManager<'a> {
         self.conn.grab_keys(&bindings);
         self.focus_workspace(0);
 
+        let mut spawned = Vec::new();
+
         loop {
             if let Some(event) = self.conn.wait_for_event() {
                 match event {
-                    XEvent::KeyPress { code } => self.handle_key_press(code, &bindings),
+                    XEvent::KeyPress { code } => {
+                        self.handle_key_press(code, &bindings, &mut spawned)
+                    }
                     XEvent::Map { window, ignore } => self.handle_map_notify(window, ignore),
                     XEvent::Enter { window } => self.handle_enter_notify(window),
                     XEvent::Leave { window } => self.handle_leave_notify(window),
@@ -203,6 +207,21 @@ impl<'a> WindowManager<'a> {
             }
 
             self.conn.flush();
+
+            // reap any spawned child processes that have now completed
+            spawned = spawned
+                .into_iter()
+                .filter_map(|mut c| {
+                    match c.try_wait() {
+                        Ok(None) => Some(c), // still running
+                        Ok(Some(_)) => None, // clean exit
+                        Err(e) => {
+                            warn!("subprocess [{}] errored: {}", c.id(), e);
+                            None
+                        }
+                    }
+                })
+                .collect();
         }
     }
 
@@ -214,10 +233,17 @@ impl<'a> WindowManager<'a> {
      * ourselves)
      */
 
-    fn handle_key_press(&mut self, key_code: KeyCode, bindings: &KeyBindings) {
+    fn handle_key_press(
+        &mut self,
+        key_code: KeyCode,
+        bindings: &KeyBindings,
+        spawned: &mut Vec<Child>,
+    ) {
         if let Some(action) = bindings.get(&key_code) {
             debug!("handling key code: {:?}", key_code);
-            action(self);
+            if let Some(child) = action(self) {
+                spawned.push(child);
+            }
         }
     }
 
@@ -291,7 +317,7 @@ impl<'a> WindowManager<'a> {
     pub fn exit(&mut self) {
         self.conn.cleanup();
         self.conn.flush();
-        process::exit(0);
+        exit(0);
     }
 
     /// The layout symbol for the Layout currently being used on the active workspace
