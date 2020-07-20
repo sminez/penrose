@@ -1,21 +1,6 @@
 //! Utility macros for use in the rest of penrose.
 //! Not intended for general use
 
-/// use notify-send to trigger a pop up window with a message (used for debugging)
-#[macro_export]
-macro_rules! notify(
-    ($msg:expr) => {
-        ::std::process::Command::new("notify-send").arg($msg).spawn().unwrap();
-    };
-
-    ($fmt:expr, $($arg:expr),*) => {
-        ::std::process::Command::new("notify-send")
-            .arg(format!($fmt, $($arg,)*))
-            .spawn()
-            .unwrap();
-    };
-);
-
 /// kick off an external program as part of a key/mouse binding.
 /// explicitly redirects stderr to /dev/null
 #[macro_export]
@@ -23,7 +8,7 @@ macro_rules! run_external(
     ($cmd:tt) => {
         {
             Box::new(move |_: &mut $crate::manager::WindowManager| {
-                $crate::helpers::spawn($cmd);
+                $crate::helpers::spawn($cmd)
             }) as $crate::data_types::FireAndForget
         }
     };
@@ -35,12 +20,14 @@ macro_rules! run_internal(
     ($func:ident) => {
         Box::new(|wm: &mut $crate::manager::WindowManager| {
             wm.$func();
+            None
         })
     };
 
     ($func:ident, $($arg:tt),+) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| {
             wm.$func($($arg),+);
+            None
         })
     };
 );

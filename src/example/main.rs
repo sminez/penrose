@@ -52,7 +52,7 @@ fn main() {
         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
-        Layout::floating("[    ]"),
+        Layout::floating("[----]"),
     ];
 
     // I run penrose wrapped in a shell script that redirects the log output to a file and allows
@@ -68,6 +68,7 @@ fn main() {
             "restart-wm\n" => wm.exit(),
             _ => (), // 'no', user exited out or something went wrong
         }
+        None
     });
 
     // Set the root X window name to be the active layout symbol so it can be picked up by polybar
@@ -104,10 +105,12 @@ fn main() {
         "M-grave" => Box::new(move |wm| {
             wm.next_layout();
             active_layout_as_root_name(wm);
+            None
         }),
         "M-S-grave" => Box::new(move |wm| {
             wm.previous_layout();
             active_layout_as_root_name(wm);
+            None
         }),
         "M-A-Up" => run_internal!(inc_main),
         "M-A-Down" => run_internal!(dec_main),
