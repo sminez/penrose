@@ -52,7 +52,7 @@ fn main() {
         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
-        Layout::floating("[    ]"),
+        Layout::floating("[----]"),
     ];
 
     // I run penrose wrapped in a shell script that redirects the log output to a file and allows
