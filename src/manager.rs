@@ -125,26 +125,6 @@ impl<'a> WindowManager<'a> {
         self.screens.focused().unwrap().wix
     }
 
-    fn cycle_layout(&mut self, direction: Direction) {
-        let wix = self.active_ws_index();
-        self.workspaces[wix].cycle_layout(direction);
-        self.apply_layout(wix);
-        info!("ACTIVE_LAYOUT {}", self.workspaces[wix].layout_symbol());
-    }
-
-    fn update_max_main(&mut self, change: Change) {
-        let wix = self.active_ws_index();
-        self.workspaces[wix].update_max_main(change);
-        self.apply_layout(wix);
-    }
-
-    fn update_main_ratio(&mut self, change: Change) {
-        let step = self.main_ratio_step;
-        let wix = self.active_ws_index();
-        self.workspaces[wix].update_main_ratio(change, step);
-        self.apply_layout(wix);
-    }
-
     fn focused_client(&self) -> Option<&Client> {
         self.workspaces[self.active_ws_index()]
             .focused_client()
@@ -171,27 +151,6 @@ impl<'a> WindowManager<'a> {
     fn client_lost_focus(&mut self, id: WinId) {
         let color = self.color_scheme.fg_1;
         self.conn.set_client_border_color(id, color);
-    }
-
-    fn cycle_client(&mut self, direction: Direction) {
-        let wix = self.active_ws_index();
-        let cycled = self.workspaces[wix].cycle_client(direction);
-
-        if let Some((prev, new)) = cycled {
-            self.client_lost_focus(prev);
-            self.client_gained_focus(new);
-            self.conn.warp_cursor(Some(new));
-        }
-    }
-
-    fn drag_client(&mut self, direction: Direction) {
-        if let Some(id) = self.focused_client().and_then(|c| Some(c.id())) {
-            let wix = self.active_ws_index();
-            self.workspaces[wix].drag_client(direction);
-            self.apply_layout(wix);
-            self.client_gained_focus(id);
-            self.conn.warp_cursor(Some(id));
-        }
     }
 
     /**
@@ -327,6 +286,52 @@ impl<'a> WindowManager<'a> {
      * handlers which will then be run each time they are triggered
      */
 
+    /// Cycle between Clients for the active Workspace
+    pub fn cycle_client(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
+        let cycled = self.workspaces[wix].cycle_client(direction);
+
+        if let Some((prev, new)) = cycled {
+            self.client_lost_focus(prev);
+            self.client_gained_focus(new);
+            self.conn.warp_cursor(Some(new));
+        }
+    }
+
+    /// Move the focused Client through the stack of Clients on the active Workspace
+    pub fn drag_client(&mut self, direction: Direction) {
+        if let Some(id) = self.focused_client().and_then(|c| Some(c.id())) {
+            let wix = self.active_ws_index();
+            self.workspaces[wix].drag_client(direction);
+            self.apply_layout(wix);
+            self.client_gained_focus(id);
+            self.conn.warp_cursor(Some(id));
+        }
+    }
+
+    /// Cycle between Layouts for the active Workspace
+    pub fn cycle_layout(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
+        self.workspaces[wix].cycle_layout(direction);
+        self.apply_layout(wix);
+        info!("ACTIVE_LAYOUT {}", self.workspaces[wix].layout_symbol());
+    }
+
+    /// Increase or decrease the number of clients in the main area by 1
+    pub fn update_max_main(&mut self, change: Change) {
+        let wix = self.active_ws_index();
+        self.workspaces[wix].update_max_main(change);
+        self.apply_layout(wix);
+    }
+
+    /// Increase or decrease the current Layout main_ratio by main_ratio_step
+    pub fn update_main_ratio(&mut self, change: Change) {
+        let step = self.main_ratio_step;
+        let wix = self.active_ws_index();
+        self.workspaces[wix].update_main_ratio(change, step);
+        self.apply_layout(wix);
+    }
+
     /// Shut down the WindowManager, running any required cleanup and exiting penrose
     pub fn exit(&mut self) {
         self.conn.cleanup();
@@ -389,6 +394,7 @@ impl<'a> WindowManager<'a> {
         self.conn.set_current_workspace(index);
     }
 
+    /// Switch focus back to the last workspace that had focus.
     pub fn toggle_workspace(&mut self) {
         self.focus_workspace(self.previous_workspace);
     }
@@ -413,24 +419,6 @@ impl<'a> WindowManager<'a> {
         });
     }
 
-    /// Move focus to the next client in the stack
-    pub fn next_client(&mut self) {
-        self.cycle_client(Direction::Forward);
-    }
-
-    /// Move focus to the previous client in the stack
-    pub fn previous_client(&mut self) {
-        self.cycle_client(Direction::Backward);
-    }
-
-    pub fn drag_client_forward(&mut self) {
-        self.drag_client(Direction::Forward);
-    }
-
-    pub fn drag_client_backward(&mut self) {
-        self.drag_client(Direction::Backward);
-    }
-
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         if let Some(client) = self.focused_client() {
@@ -441,36 +429,6 @@ impl<'a> WindowManager<'a> {
             self.remove_client(id);
             self.apply_layout(self.active_ws_index());
         }
-    }
-
-    /// Rearrange the windows on the focused screen using the next available layout
-    pub fn next_layout(&mut self) {
-        self.cycle_layout(Direction::Forward);
-    }
-
-    /// Rearrange the windows on the focused screen using the previous layout
-    pub fn previous_layout(&mut self) {
-        self.cycle_layout(Direction::Backward);
-    }
-
-    /// Increase the number of windows in the main layout area
-    pub fn inc_main(&mut self) {
-        self.update_max_main(Change::More);
-    }
-
-    /// Reduce the number of windows in the main layout area
-    pub fn dec_main(&mut self) {
-        self.update_max_main(Change::Less);
-    }
-
-    /// Make the main area larger relative to sub-areas
-    pub fn inc_ratio(&mut self) {
-        self.update_main_ratio(Change::More);
-    }
-
-    /// Make the main area smaller relative to sub-areas
-    pub fn dec_ratio(&mut self) {
-        self.update_main_ratio(Change::Less);
     }
 }
 

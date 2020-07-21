@@ -24,7 +24,7 @@ macro_rules! run_internal(
         })
     };
 
-    ($func:ident, $($arg:tt),+) => {
+    ($func:ident, $($arg:expr),+) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| {
             wm.$func($($arg),+);
             None
