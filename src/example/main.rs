@@ -105,6 +105,8 @@ fn main() {
         "M-Tab" => run_internal!(toggle_workspace),
         "M-bracketright" => run_internal!(cycle_screen, Forward),
         "M-bracketleft" => run_internal!(cycle_screen, Backward),
+        "M-S-bracketright" => run_internal!(drag_workspace, Forward),
+        "M-S-bracketleft" => run_internal!(drag_workspace, Backward),
 
         // Layout & window management
         "M-grave" => Box::new(move |wm: &mut WindowManager| {

@@ -306,7 +306,11 @@ impl<'a> WindowManager<'a> {
         self.focus_workspace(i);
     }
 
-    // TODO: workspace -> other screen
+    pub fn drag_workspace(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
+        self.cycle_screen(direction);
+        self.focus_workspace(wix); // focus_workspace will pull it to the new screen
+    }
 
     /// Cycle between Clients for the active Workspace
     pub fn cycle_client(&mut self, direction: Direction) {
