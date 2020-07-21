@@ -308,6 +308,7 @@ impl<'a> WindowManager<'a> {
         self.focus_workspace(i);
     }
 
+    /// Move the currently focused workspace to the next Screen in 'direction'
     pub fn drag_workspace(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
         self.cycle_screen(direction);
