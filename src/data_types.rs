@@ -21,6 +21,19 @@ pub type CodeMap = HashMap<String, u8>;
 /// An X window ID
 pub type WinId = u32;
 
+/// An x,y coordinate pair
+#[derive(Debug, Copy, Clone)]
+pub struct Point {
+    pub x: u32,
+    pub y: u32,
+}
+
+impl Point {
+    pub fn new(x: u32, y: u32) -> Point {
+        Point { x, y }
+    }
+}
+
 /// The main user facing configuration details
 #[derive(Debug)]
 pub struct Config {

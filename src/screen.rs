@@ -1,5 +1,5 @@
 //! Information on connected displays
-use crate::data_types::Region;
+use crate::data_types::{Point, Region};
 use xcb;
 use xcb::base::Reply;
 use xcb::ffi::randr::xcb_randr_get_crtc_info_reply_t;
@@ -49,5 +49,12 @@ impl Screen {
         } else {
             &self.true_region
         }
+    }
+
+    pub fn contains(&self, p: Point) -> bool {
+        let (x1, y1, w, h) = self.true_region.values();
+        let (x2, y2) = (x1 + w, x1 + h);
+
+        return p.x >= x1 && p.x < x2 && p.y >= y1 && p.y < y2;
     }
 }

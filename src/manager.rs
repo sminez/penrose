@@ -1,7 +1,7 @@
 //! Main logic for running Penrose
 use crate::client::Client;
 use crate::data_types::{
-    Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, Region, WinId,
+    Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, Point, Region, Ring, WinId,
 };
 use crate::screen::Screen;
 use crate::workspace::Workspace;
@@ -18,10 +18,9 @@ use std::process::{exit, Child};
  */
 pub struct WindowManager<'a> {
     conn: &'a dyn XConn,
-    screens: Vec<Screen>,
-    workspaces: Vec<Workspace>,
+    screens: Ring<Screen>,
+    workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
-    focused_screen: usize,
     previous_workspace: usize,
     // config
     // fonts: &'static [&'static str],
@@ -60,10 +59,9 @@ impl<'a> WindowManager<'a> {
 
         WindowManager {
             conn: conn,
-            screens,
-            workspaces,
+            screens: Ring::new(screens),
+            workspaces: Ring::new(workspaces),
             client_map: HashMap::new(),
-            focused_screen: 0,
             previous_workspace: 0,
             // fonts: conf.fonts,
             floating_classes: conf.floating_classes,
@@ -113,8 +111,10 @@ impl<'a> WindowManager<'a> {
      * Helpers for indexing into WindowManager state
      */
 
-    fn workspace_for_screen_mut(&mut self, screen_index: usize) -> &mut Workspace {
-        &mut self.workspaces[self.screens[screen_index].wix]
+    fn set_screen_from_cursor(&mut self, cursor: Point) -> Option<&Screen> {
+        let s = self.screens.focus_by(|s| s.contains(cursor));
+        debug!("FOCUSED_SCREEN :: {:?}", s);
+        s
     }
 
     fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
@@ -122,28 +122,27 @@ impl<'a> WindowManager<'a> {
     }
 
     fn active_ws_index(&self) -> usize {
-        self.screens[self.focused_screen].wix
+        self.screens.focused().unwrap().wix
     }
 
     fn cycle_layout(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
-        self.workspace_for_screen_mut(self.focused_screen)
-            .cycle_layout(direction);
+        self.workspaces[wix].cycle_layout(direction);
         self.apply_layout(wix);
         info!("ACTIVE_LAYOUT {}", self.workspaces[wix].layout_symbol());
     }
 
     fn update_max_main(&mut self, change: Change) {
-        self.workspace_for_screen_mut(self.focused_screen)
-            .update_max_main(change);
-        self.apply_layout(self.active_ws_index());
+        let wix = self.active_ws_index();
+        self.workspaces[wix].update_max_main(change);
+        self.apply_layout(wix);
     }
 
     fn update_main_ratio(&mut self, change: Change) {
         let step = self.main_ratio_step;
-        self.workspace_for_screen_mut(self.focused_screen)
-            .update_main_ratio(change, step);
-        self.apply_layout(self.active_ws_index());
+        let wix = self.active_ws_index();
+        self.workspaces[wix].update_main_ratio(change, step);
+        self.apply_layout(wix);
     }
 
     fn focused_client(&self) -> Option<&Client> {
@@ -152,13 +151,35 @@ impl<'a> WindowManager<'a> {
             .and_then(|id| self.client_map.get(&id))
     }
 
+    fn client_gained_focus(&mut self, id: WinId) {
+        let color_focus = self.color_scheme.highlight;
+        let color_normal = self.color_scheme.fg_1;
+        self.focused_client()
+            .map(|c| self.conn.set_client_border_color(c.id(), color_normal));
+        self.conn.focus_client(id);
+        self.conn.set_client_border_color(id, color_focus);
+
+        if let Some(wix) = self.workspace_index_for_client(id) {
+            let ws = &mut self.workspaces[wix];
+            ws.focus_client(id);
+            if ws.layout_conf().follow_focus {
+                self.apply_layout(wix);
+            }
+        }
+    }
+
+    fn client_lost_focus(&mut self, id: WinId) {
+        let color = self.color_scheme.fg_1;
+        self.conn.set_client_border_color(id, color);
+    }
+
     fn cycle_client(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
         let cycled = self.workspaces[wix].cycle_client(direction);
 
         if let Some((prev, new)) = cycled {
-            self.handle_leave_notify(prev); // treat like losing x focus
-            self.handle_enter_notify(new); // treat like gaining x focus
+            self.client_lost_focus(prev);
+            self.client_gained_focus(new);
             self.conn.warp_cursor(Some(new));
         }
     }
@@ -168,7 +189,7 @@ impl<'a> WindowManager<'a> {
             let wix = self.active_ws_index();
             self.workspaces[wix].drag_client(direction);
             self.apply_layout(wix);
-            self.handle_enter_notify(id); // treat like gaining x focus
+            self.client_gained_focus(id);
             self.conn.warp_cursor(Some(id));
         }
     }
@@ -196,10 +217,11 @@ impl<'a> WindowManager<'a> {
                     XEvent::KeyPress { code } => {
                         self.handle_key_press(code, &bindings, &mut spawned)
                     }
-                    XEvent::Map { window, ignore } => self.handle_map_notify(window, ignore),
-                    XEvent::Enter { window } => self.handle_enter_notify(window),
-                    XEvent::Leave { window } => self.handle_leave_notify(window),
-                    XEvent::Destroy { window } => self.handle_destroy_notify(window),
+                    XEvent::Map { id, ignore } => self.handle_map_notify(id, ignore),
+                    XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
+                    XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
+                    XEvent::Destroy { id } => self.handle_destroy_notify(id),
+                    XEvent::ScreenChange => self.handle_screen_change(),
                     // XEvent::ButtonPress => self.handle_button_press(),
                     // XEvent::ButtonRelease => self.handle_button_release(),
                     _ => (),
@@ -275,26 +297,18 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.active_ws_index());
     }
 
-    fn handle_enter_notify(&mut self, id: WinId) {
-        let color_focus = self.color_scheme.highlight;
-        let color_normal = self.color_scheme.fg_1;
-        self.focused_client()
-            .map(|c| self.conn.set_client_border_color(c.id(), color_normal));
-        self.conn.focus_client(id);
-        self.conn.set_client_border_color(id, color_focus);
-
-        if let Some(wix) = self.workspace_index_for_client(id) {
-            let ws = &mut self.workspaces[wix];
-            ws.focus_client(id);
-            if ws.layout_conf().follow_focus {
-                self.apply_layout(wix);
-            }
-        }
+    fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
+        self.client_gained_focus(id);
+        self.set_screen_from_cursor(rpt);
     }
 
-    fn handle_leave_notify(&self, id: WinId) {
-        let color = self.color_scheme.fg_1;
-        self.conn.set_client_border_color(id, color);
+    fn handle_leave_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
+        self.client_lost_focus(id);
+        self.set_screen_from_cursor(rpt);
+    }
+
+    fn handle_screen_change(&mut self) {
+        self.set_screen_from_cursor(self.conn.cursor_position());
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -350,8 +364,8 @@ impl<'a> WindowManager<'a> {
                 // The workspace we want is currently displayed on another screen so
                 // pull the target workspace to the focused screen, and place the
                 // workspace we had on the screen where the target was
-                self.screens[i].wix = self.screens[self.focused_screen].wix;
-                self.screens[self.focused_screen].wix = index;
+                self.screens[i].wix = self.screens.focused().unwrap().wix;
+                self.screens.focused_mut().unwrap().wix = index;
 
                 // re-apply layouts as screen dimensions may differ
                 self.apply_layout(self.active_ws_index());
@@ -370,7 +384,7 @@ impl<'a> WindowManager<'a> {
             .iter()
             .for_each(|c| self.conn.map_window(*c));
 
-        self.screens[self.focused_screen].wix = index;
+        self.screens.focused_mut().unwrap().wix = index;
         self.apply_layout(index);
         self.conn.set_current_workspace(index);
     }
@@ -384,11 +398,12 @@ impl<'a> WindowManager<'a> {
      * This will panic if you pass an index that is out of bounds.
      */
     pub fn client_to_workspace(&mut self, index: usize) {
-        if index == self.screens[self.focused_screen].wix {
+        if index == self.screens.focused().unwrap().wix {
             return;
         }
 
-        let ws = self.workspace_for_screen_mut(self.focused_screen);
+        let wix = self.active_ws_index();
+        let ws = &mut self.workspaces[wix];
         ws.remove_focused_client().map(|id| {
             self.conn.unmap_window(id);
             self.workspaces[index].add_client(id);
@@ -556,7 +571,9 @@ mod tests {
         let conn = MockXConn::new(test_screens());
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // 50 40 30 20 10, 50 focused
+        assert_eq!(wm.active_ws_index(), 0);
         wm.next_client(); // 40 focused
+        assert_eq!(wm.workspaces[0].focused_client(), Some(40));
         wm.kill_client(); // remove 40, focus 30
 
         let ids: Vec<WinId> = wm.workspaces[0].iter().map(|c| *c).collect();
@@ -610,7 +627,7 @@ mod tests {
         let conn = MockXConn::new(test_screens());
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
-        wm.handle_enter_notify(10);
+        wm.client_gained_focus(10);
 
         assert_eq!(wm.workspaces[0].focused_client(), Some(10));
     }
@@ -622,7 +639,7 @@ mod tests {
         add_n_clients(&mut wm, 5, 0); // focus on last client (50) ix == 0
 
         let clients = |w: &mut WindowManager| {
-            w.workspace_for_screen_mut(0)
+            w.workspaces[w.screens[0].wix]
                 .iter()
                 .cloned()
                 .collect::<Vec<_>>()
@@ -636,7 +653,7 @@ mod tests {
         assert_eq!(wm.focused_client().unwrap().id(), 50);
         assert_eq!(clients(&mut wm), vec![40, 30, 50, 20, 10]);
 
-        wm.handle_enter_notify(20);
+        wm.client_gained_focus(20);
         wm.drag_client_forward();
         assert_eq!(wm.focused_client().unwrap().id(), 20);
         assert_eq!(clients(&mut wm), vec![40, 30, 50, 10, 20]);
