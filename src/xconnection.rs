@@ -228,6 +228,7 @@ pub trait XConn {
     /// Determine the currently connected CRTCs and return their details
     fn current_outputs(&self) -> Vec<Screen>;
 
+    /// Determine the current (x,y) position of the cursor relative to the root window.
     fn cursor_position(&self) -> Point;
 
     /// Reposition the window identified by 'id' to the specifed region
