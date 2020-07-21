@@ -278,7 +278,7 @@ pub trait XConn {
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
      */
-    fn warp_cursor(&self, win_id: Option<WinId>);
+    fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen);
 
     /// Run on startup/restart to determine already running windows that we need to track
     fn query_for_active_windows(&self) -> Vec<WinId>;
@@ -736,13 +736,16 @@ impl XConn for XcbConnection {
         }
     }
 
-    fn warp_cursor(&self, win_id: Option<WinId>) {
+    fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen) {
         let (x, y, id) = match win_id {
             Some(id) => {
                 let (_, _, w, h) = self.window_geometry(id).unwrap().values();
                 ((w / 2) as i16, (h / 2) as i16, id)
             }
-            None => todo!("warp cursor to center of screen"),
+            None => {
+                let (x, y, w, h) = screen.effective_region.values();
+                ((x + w / 2) as i16, (y + h / 2) as i16, self.root)
+            }
         };
 
         xcb::warp_pointer(
@@ -877,7 +880,7 @@ impl XConn for MockXConn {
     fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
         true
     }
-    fn warp_cursor(&self, _: Option<WinId>) {}
+    fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
     fn query_for_active_windows(&self) -> Vec<WinId> {
         Vec::new()
     }

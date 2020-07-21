@@ -175,6 +175,10 @@ impl<T> Ring<T> {
         wrap_back || wrap_forward
     }
 
+    pub fn focused_index(&mut self) -> usize {
+        self.focused
+    }
+
     pub fn focused(&self) -> Option<&T> {
         self.elements.get(self.focused)
     }
@@ -211,6 +215,11 @@ impl<T> Ring<T> {
                 }
             }
         }
+    }
+
+    pub fn focus_nth(&mut self, n: usize) -> Option<&T> {
+        self.focused = n;
+        self.focused()
     }
 
     pub fn cycle_focus(&mut self, direction: Direction) -> Option<&T> {

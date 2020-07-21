@@ -13,7 +13,8 @@ extern crate penrose;
 use penrose::helpers::spawn;
 use penrose::layout::{bottom_stack, paper, side_stack};
 use penrose::{
-    Change, ColorScheme, Config, Direction, Layout, LayoutConf, WindowManager, XcbConnection,
+    Backward, ColorScheme, Config, Forward, Layout, LayoutConf, Less, More, WindowManager,
+    XcbConnection,
 };
 use simplelog;
 use std::env;
@@ -94,30 +95,32 @@ fn main() {
         "M-A-m" => run_external!("xrandr --output HDMI-1 --auto --right-of eDP-1 "),
 
         // client management
-        "M-j" => run_internal!(cycle_client, Direction::Forward),
-        "M-k" => run_internal!(cycle_client, Direction::Backward),
-        "M-S-j" => run_internal!(drag_client, Direction::Forward),
-        "M-S-k" => run_internal!(drag_client, Direction::Backward),
+        "M-j" => run_internal!(cycle_client, Forward),
+        "M-k" => run_internal!(cycle_client, Backward),
+        "M-S-j" => run_internal!(drag_client, Forward),
+        "M-S-k" => run_internal!(drag_client, Backward),
         "M-S-q" => run_internal!(kill_client),
 
         // workspace management
         "M-Tab" => run_internal!(toggle_workspace),
+        "M-bracketright" => run_internal!(cycle_screen, Forward),
+        "M-bracketleft" => run_internal!(cycle_screen, Backward),
 
         // Layout & window management
         "M-grave" => Box::new(move |wm: &mut WindowManager| {
-            wm.cycle_layout(Direction::Forward);
+            wm.cycle_layout(Forward);
             active_layout_as_root_name(wm);
             None
         }),
         "M-S-grave" => Box::new(move |wm: &mut WindowManager| {
-            wm.cycle_layout(Direction::Backward);
+            wm.cycle_layout(Backward);
             active_layout_as_root_name(wm);
             None
         }),
-        "M-A-Up" => run_internal!(update_max_main, Change::More),
-        "M-A-Down" => run_internal!(update_max_main, Change::Less),
-        "M-A-Right" => run_internal!(update_main_ratio, Change::More),
-        "M-A-Left" => run_internal!(update_main_ratio, Change::Less),
+        "M-A-Up" => run_internal!(update_max_main, More),
+        "M-A-Down" => run_internal!(update_max_main, Less),
+        "M-A-Right" => run_internal!(update_main_ratio, More),
+        "M-A-Left" => run_internal!(update_main_ratio, Less),
         "M-A-C-Escape" => run_internal!(exit),
         "M-A-Escape" => power_menu;
 

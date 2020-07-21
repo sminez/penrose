@@ -286,6 +286,28 @@ impl<'a> WindowManager<'a> {
      * handlers which will then be run each time they are triggered
      */
 
+    /// Cycle between known screens. Does not wrap from first to last
+    pub fn cycle_screen(&mut self, direction: Direction) {
+        if !self.screens.would_wrap(direction) {
+            self.screens.cycle_focus(direction);
+            self.workspaces
+                .focus_nth(self.screens.focused().unwrap().wix);
+            self.conn.warp_cursor(None, self.screens.focused().unwrap());
+        }
+    }
+
+    /**
+     * Cycle between workspaces on the current Screen. This will pull workspaces
+     * to the screen if they are currently displayed on another screen.
+     */
+    pub fn cycle_workspace(&mut self, direction: Direction) {
+        self.workspaces.cycle_focus(direction);
+        let i = self.workspaces.focused_index();
+        self.focus_workspace(i);
+    }
+
+    // TODO: workspace -> other screen
+
     /// Cycle between Clients for the active Workspace
     pub fn cycle_client(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
@@ -294,7 +316,8 @@ impl<'a> WindowManager<'a> {
         if let Some((prev, new)) = cycled {
             self.client_lost_focus(prev);
             self.client_gained_focus(new);
-            self.conn.warp_cursor(Some(new));
+            self.conn
+                .warp_cursor(Some(new), self.screens.focused().unwrap());
         }
     }
 
@@ -305,7 +328,8 @@ impl<'a> WindowManager<'a> {
             self.workspaces[wix].drag_client(direction);
             self.apply_layout(wix);
             self.client_gained_focus(id);
-            self.conn.warp_cursor(Some(id));
+            self.conn
+                .warp_cursor(Some(id), self.screens.focused().unwrap());
         }
     }
 
@@ -358,10 +382,12 @@ impl<'a> WindowManager<'a> {
      */
     pub fn focus_workspace(&mut self, index: usize) {
         info!("ACTIVE_LAYOUT {}", self.workspaces[index].layout_symbol());
-        if self.active_ws_index() == index {
+        let active = self.active_ws_index();
+
+        if active == index {
             return; // already focused on the current screen
         } else {
-            self.previous_workspace = self.active_ws_index();
+            self.previous_workspace = active
         }
 
         for i in 0..self.screens.len() {
@@ -373,7 +399,7 @@ impl<'a> WindowManager<'a> {
                 self.screens.focused_mut().unwrap().wix = index;
 
                 // re-apply layouts as screen dimensions may differ
-                self.apply_layout(self.active_ws_index());
+                self.apply_layout(active);
                 self.apply_layout(index);
                 return;
             }
@@ -381,7 +407,7 @@ impl<'a> WindowManager<'a> {
 
         // target not currently displayed so unmap what we currently have
         // displayed and replace it with the target workspace
-        self.workspaces[self.active_ws_index()]
+        self.workspaces[active]
             .iter()
             .for_each(|c| self.conn.unmap_window(*c));
 
@@ -435,7 +461,7 @@ impl<'a> WindowManager<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_types::*;
+    use crate::data_types::{Direction::*, *};
     use crate::layout::*;
     use crate::screen::*;
     use crate::xconnection::*;
@@ -530,7 +556,7 @@ mod tests {
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // 50 40 30 20 10, 50 focused
         assert_eq!(wm.active_ws_index(), 0);
-        wm.next_client(); // 40 focused
+        wm.cycle_client(Forward); // 40 focused
         assert_eq!(wm.workspaces[0].focused_client(), Some(40));
         wm.kill_client(); // remove 40, focus 30
 
@@ -603,16 +629,16 @@ mod tests {
                 .collect::<Vec<_>>()
         };
 
-        wm.drag_client_forward();
+        wm.drag_client(Forward);
         assert_eq!(wm.focused_client().unwrap().id(), 50);
         assert_eq!(clients(&mut wm), vec![40, 50, 30, 20, 10]);
 
-        wm.drag_client_forward();
+        wm.drag_client(Forward);
         assert_eq!(wm.focused_client().unwrap().id(), 50);
         assert_eq!(clients(&mut wm), vec![40, 30, 50, 20, 10]);
 
         wm.client_gained_focus(20);
-        wm.drag_client_forward();
+        wm.drag_client(Forward);
         assert_eq!(wm.focused_client().unwrap().id(), 20);
         assert_eq!(clients(&mut wm), vec![40, 30, 50, 10, 20]);
     }
