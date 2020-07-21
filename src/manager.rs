@@ -268,6 +268,8 @@ impl<'a> WindowManager<'a> {
 
     fn handle_screen_change(&mut self) {
         self.set_screen_from_cursor(self.conn.cursor_position());
+        self.workspaces
+            .focus_nth(self.screens.focused().unwrap().wix);
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
