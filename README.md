@@ -17,11 +17,17 @@ git repo for latest changes.
 ![screenshot](screenshot.png)
 
 ### Current project status
+While the project is still in its early stages, please expect there to be
+multiple breaking changes as the public API stabilises. The example config file
+will always be kept up to date so please refer to that for updating to newer
+versions published to cargo.
+
 If you don't mind a bare bones (_really_ bare bones) window manager then you can
 take penrose for a spin using the config in the `example` directory. You will
 need to update the keybindings to launch your preferred terminal emulator and
 program launcher and may want to adjust the floating window classes to handle
 some additional programs.
+
 
 #### Current functionality
 - partial EWMH support (active window/desktop, number of desktops, desktop

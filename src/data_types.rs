@@ -21,6 +21,19 @@ pub type CodeMap = HashMap<String, u8>;
 /// An X window ID
 pub type WinId = u32;
 
+/// An x,y coordinate pair
+#[derive(Debug, Copy, Clone)]
+pub struct Point {
+    pub x: u32,
+    pub y: u32,
+}
+
+impl Point {
+    pub fn new(x: u32, y: u32) -> Point {
+        Point { x, y }
+    }
+}
+
 /// The main user facing configuration details
 #[derive(Debug)]
 pub struct Config {
@@ -162,6 +175,10 @@ impl<T> Ring<T> {
         wrap_back || wrap_forward
     }
 
+    pub fn focused_index(&mut self) -> usize {
+        self.focused
+    }
+
     pub fn focused(&self) -> Option<&T> {
         self.elements.get(self.focused)
     }
@@ -198,6 +215,11 @@ impl<T> Ring<T> {
                 }
             }
         }
+    }
+
+    pub fn focus_nth(&mut self, n: usize) -> Option<&T> {
+        self.focused = n;
+        self.focused()
     }
 
     pub fn cycle_focus(&mut self, direction: Direction) -> Option<&T> {

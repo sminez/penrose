@@ -9,7 +9,7 @@
  *
  *  [EWMH](https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html)
  */
-use crate::data_types::{KeyBindings, KeyCode, Region, WinId};
+use crate::data_types::{KeyBindings, KeyCode, Point, Region, WinId};
 use crate::screen::Screen;
 use std::collections::HashMap;
 use xcb;
@@ -201,17 +201,20 @@ pub enum XEvent {
 
     /// MapNotifyEvent
     /// xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
-    Map { window: WinId, ignore: bool },
+    Map { id: WinId, ignore: bool },
 
     /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    Enter { window: WinId },
+    Enter { id: WinId, rpt: Point, wpt: Point },
 
     /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    Leave { window: WinId },
+    Leave { id: WinId, rpt: Point, wpt: Point },
 
     /// MapNotifyEvent
     /// xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
-    Destroy { window: WinId },
+    Destroy { id: WinId },
+
+    /// xcb docs: https://www.mankier.com/3/xcb_randr_screen_change_notify_event_t
+    ScreenChange,
 }
 
 /// A handle on a running X11 connection that we can use for issuing X requests
@@ -224,6 +227,9 @@ pub trait XConn {
 
     /// Determine the currently connected CRTCs and return their details
     fn current_outputs(&self) -> Vec<Screen>;
+
+    /// Determine the current (x,y) position of the cursor relative to the root window.
+    fn cursor_position(&self) -> Point;
 
     /// Reposition the window identified by 'id' to the specifed region
     fn position_window(&self, id: WinId, r: Region, border: u32);
@@ -273,7 +279,7 @@ pub trait XConn {
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
      */
-    fn warp_cursor(&self, win_id: Option<WinId>);
+    fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen);
 
     /// Run on startup/restart to determine already running windows that we need to track
     fn query_for_active_windows(&self) -> Vec<WinId>;
@@ -422,25 +428,35 @@ impl XConn for XcbConnection {
                 xcb::MAP_NOTIFY => {
                     let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
                     Some(XEvent::Map {
-                        window: e.window(),
+                        id: e.window(),
                         ignore: e.override_redirect(),
                     })
                 }
 
                 xcb::ENTER_NOTIFY => {
                     let e: &xcb::EnterNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Enter { window: e.event() })
+                    Some(XEvent::Enter {
+                        id: e.event(),
+                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                    })
                 }
 
                 xcb::LEAVE_NOTIFY => {
                     let e: &xcb::LeaveNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Leave { window: e.event() })
+                    Some(XEvent::Leave {
+                        id: e.event(),
+                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                    })
                 }
 
                 xcb::DESTROY_NOTIFY => {
                     let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Destroy { window: e.window() })
+                    Some(XEvent::Destroy { id: e.window() })
                 }
+
+                xcb::randr::SCREEN_CHANGE_NOTIFY => Some(XEvent::ScreenChange),
 
                 // NOTE: ignoring other event types
                 _ => None,
@@ -463,6 +479,14 @@ impl XConn for XcbConnection {
                 .map(|(i, r)| Screen::from_crtc_info_reply(r, i))
                 .filter(|s| s.true_region.width() > 0)
                 .collect(),
+        }
+    }
+
+    fn cursor_position(&self) -> Point {
+        let cookie = xcb::query_pointer(&self.conn, self.root);
+        match cookie.get_reply() {
+            Err(_) => Point::new(0, 0),
+            Ok(reply) => Point::new(reply.root_x() as u32, reply.root_y() as u32),
         }
     }
 
@@ -713,13 +737,16 @@ impl XConn for XcbConnection {
         }
     }
 
-    fn warp_cursor(&self, win_id: Option<WinId>) {
+    fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen) {
         let (x, y, id) = match win_id {
             Some(id) => {
                 let (_, _, w, h) = self.window_geometry(id).unwrap().values();
                 ((w / 2) as i16, (h / 2) as i16, id)
             }
-            None => todo!("warp cursor to center of screen"),
+            None => {
+                let (x, y, w, h) = screen.effective_region.values();
+                ((x + w / 2) as i16, (y + h / 2) as i16, self.root)
+            }
         };
 
         xcb::warp_pointer(
@@ -836,6 +863,9 @@ impl XConn for MockXConn {
     fn current_outputs(&self) -> Vec<Screen> {
         self.screens.clone()
     }
+    fn cursor_position(&self) -> Point {
+        Point::new(0, 0)
+    }
     fn position_window(&self, _: WinId, _: Region, _: u32) {}
     fn mark_new_window(&self, _: WinId) {}
     fn map_window(&self, _: WinId) {}
@@ -851,7 +881,7 @@ impl XConn for MockXConn {
     fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
         true
     }
-    fn warp_cursor(&self, _: Option<WinId>) {}
+    fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
     fn query_for_active_windows(&self) -> Vec<WinId> {
         Vec::new()
     }
