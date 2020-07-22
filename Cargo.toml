@@ -1,6 +1,6 @@
 [package]
 name = "penrose"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2018"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license = "MIT"
@@ -14,7 +14,7 @@ A tiling window manager library/WM for X11 in the style of dwm and Xmonad.
 [[bin]]
 doc = false
 name = "penrose"
-path = "src/example/main.rs"
+path = "examples/main.rs"
 
 [dependencies]
 xcb = { version = "0.9.0", features = ["randr"] }

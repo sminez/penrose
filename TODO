@@ -1,18 +1,8 @@
-- multi monitor support
-  - some things work fine but there are lots of issues. Need to get an idea of what needs to be done
-    and then work out a plan of attack
-
 - additional user facing actions:
   - move client to screen
-  - focus screen
-  - cycle workspaces
 
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
-
-- track focused monitor with multi-monitor setup
-  - Should be doable with the X-root position info that comes with most events? Need to unack that
-    as part of the XEvent enum varients though
 
 - dwm style bar and systray
   - This one is probably a decent amount of work...I still prefer it to having to install and configure
