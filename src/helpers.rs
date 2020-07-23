@@ -1,6 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::data_types::{CodeMap, KeyCode};
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use xcb;
 
 /**
@@ -9,7 +9,7 @@ use xcb;
  * This redirects the process stdout and stderr to /dev/null.
  * Logs a warning if there were any errors in kicking off the process.
  */
-pub fn spawn<S: Into<String>>(cmd: S) -> Option<Child> {
+pub fn spawn<S: Into<String>>(cmd: S) {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
     let result = if parts.len() > 1 {
@@ -25,12 +25,8 @@ pub fn spawn<S: Into<String>>(cmd: S) -> Option<Child> {
             .spawn()
     };
 
-    match result {
-        Err(e) => {
-            warn!("error spawning external program: {}", e);
-            None
-        }
-        Ok(child) => Some(child),
+    if let Err(e) = result {
+        warn!("error spawning external program: {}", e);
     }
 }
 

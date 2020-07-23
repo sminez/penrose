@@ -3,11 +3,10 @@ use crate::layout::Layout;
 use crate::manager::WindowManager;
 use std::collections::{HashMap, VecDeque};
 use std::ops;
-use std::process::Child;
 use xcb;
 
 /// Some action to be run by a user key binding
-pub type FireAndForget = Box<dyn Fn(&mut WindowManager) -> Option<Child>>;
+pub type FireAndForget = Box<dyn Fn(&mut WindowManager) -> ()>;
 
 /// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;

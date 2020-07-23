@@ -14,13 +14,13 @@ use penrose::{
     Backward, ColorScheme, Config, Forward, Layout, LayoutConf, Less, More, WindowManager,
     XcbConnection,
 };
-use simplelog::SimpleLogger;
 
 fn main() {
     // penrose will log useful information about the current state of the WindowManager during
     // normal operation that can be used to drive scripts and related programs. Additional debug
     // output can be helpful if you are hitting issues.
-    SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default()).unwrap();
+    // NOTE: you can include a logging handler such as simplelog shown below to see the logging output
+    // simplelog::SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default()).unwrap();
 
     // Created at startup. See keybindings below for how to access them
     let workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -109,12 +109,10 @@ fn main() {
         "M-grave" => Box::new(move |wm: &mut WindowManager| {
             wm.cycle_layout(Forward);
             active_layout_as_root_name(wm);
-            None
         }),
         "M-S-grave" => Box::new(move |wm: &mut WindowManager| {
             wm.cycle_layout(Backward);
             active_layout_as_root_name(wm);
-            None
         }),
         "M-A-Up" => run_internal!(update_max_main, More),
         "M-A-Down" => run_internal!(update_max_main, Less),

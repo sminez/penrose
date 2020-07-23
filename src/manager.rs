@@ -6,8 +6,9 @@ use crate::data_types::{
 use crate::screen::Screen;
 use crate::workspace::Workspace;
 use crate::xconnection::{XConn, XEvent};
+use nix::sys::signal::{signal, SigHandler, Signal};
 use std::collections::HashMap;
-use std::process::{exit, Child};
+use std::process::exit;
 
 /**
  * WindowManager is the primary struct / owner of the event loop ofr penrose.
@@ -165,17 +166,16 @@ impl<'a> WindowManager<'a> {
         //     self.handle_map_notify(id, false);
         // }
 
+        // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
+        unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) }.unwrap();
+
         self.conn.grab_keys(&bindings);
         self.focus_workspace(0);
-
-        let mut spawned = Vec::new();
 
         loop {
             if let Some(event) = self.conn.wait_for_event() {
                 match event {
-                    XEvent::KeyPress { code } => {
-                        self.handle_key_press(code, &bindings, &mut spawned)
-                    }
+                    XEvent::KeyPress { code } => self.handle_key_press(code, &bindings),
                     XEvent::Map { id, ignore } => self.handle_map_notify(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
                     XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
@@ -188,21 +188,6 @@ impl<'a> WindowManager<'a> {
             }
 
             self.conn.flush();
-
-            // reap any spawned child processes that have now completed
-            spawned = spawned
-                .into_iter()
-                .filter_map(|mut c| {
-                    match c.try_wait() {
-                        Ok(None) => Some(c), // still running
-                        Ok(Some(_)) => None, // clean exit
-                        Err(e) => {
-                            warn!("subprocess [{}] errored: {}", c.id(), e);
-                            None
-                        }
-                    }
-                })
-                .collect();
         }
     }
 
@@ -214,17 +199,10 @@ impl<'a> WindowManager<'a> {
      * ourselves)
      */
 
-    fn handle_key_press(
-        &mut self,
-        key_code: KeyCode,
-        bindings: &KeyBindings,
-        spawned: &mut Vec<Child>,
-    ) {
+    fn handle_key_press(&mut self, key_code: KeyCode, bindings: &KeyBindings) {
         if let Some(action) = bindings.get(&key_code) {
             debug!("handling key code: {:?}", key_code);
-            if let Some(child) = action(self) {
-                spawned.push(child);
-            }
+            action(self); // ignoring Child handlers and SIGCHILD
         }
     }
 

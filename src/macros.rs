@@ -8,7 +8,7 @@ macro_rules! run_external(
     ($cmd:tt) => {
         {
             Box::new(move |_: &mut $crate::manager::WindowManager| {
-                $crate::helpers::spawn($cmd)
+                $crate::helpers::spawn($cmd);
             }) as $crate::data_types::FireAndForget
         }
     };
@@ -20,14 +20,12 @@ macro_rules! run_internal(
     ($func:ident) => {
         Box::new(|wm: &mut $crate::manager::WindowManager| {
             wm.$func();
-            None
         })
     };
 
     ($func:ident, $($arg:expr),+) => {
         Box::new(move |wm: &mut $crate::manager::WindowManager| {
             wm.$func($($arg),+);
-            None
         })
     };
 );
