@@ -7,7 +7,7 @@
 #[macro_use]
 extern crate penrose;
 
-use penrose::{Backward, ColorScheme, Config, Forward, Less, More, WindowManager, XcbConnection};
+use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
 
 fn main() {
     let config = Config::default();
