@@ -1,5 +1,6 @@
 //! Simple data types and enums
-use crate::layout::Layout;
+use crate::hooks;
+use crate::layout::{side_stack, Layout, LayoutConf};
 use crate::manager::WindowManager;
 use std::collections::{HashMap, VecDeque};
 use std::ops;
@@ -34,7 +35,6 @@ impl Point {
 }
 
 /// The main user facing configuration details
-#[derive(Debug)]
 pub struct Config {
     pub workspaces: &'static [&'static str],
     pub fonts: &'static [&'static str],
@@ -50,6 +50,47 @@ pub struct Config {
     pub top_bar: bool,
     pub bar_height: u32,
     pub respect_resize_hints: bool,
+    pub new_client_hooks: Vec<hooks::NewClientHook>,
+    pub layout_hooks: Vec<hooks::LayoutHook>,
+    pub workspace_change_hooks: Vec<hooks::WorkspaceChangeHook>,
+    pub screen_change_hooks: Vec<hooks::ScreenChangeHook>,
+    pub focus_hooks: Vec<hooks::FocusHook>,
+}
+
+impl Config {
+    pub fn default() -> Config {
+        Config {
+            workspaces: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            floating_classes: &["dmenu", "dunst"],
+            fonts: &["mono"],
+            layouts: vec![
+                Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
+                Layout::floating("[----]"),
+            ],
+            color_scheme: ColorScheme {
+                bg: 0x282828,        // #282828
+                fg_1: 0x3c3836,      // #3c3836
+                fg_2: 0xa89984,      // #a89984
+                fg_3: 0xf2e5bc,      // #f2e5bc
+                highlight: 0xcc241d, // #cc241d
+                urgent: 0x458588,    // #458588
+            },
+            border_px: 2,
+            gap_px: 5,
+            main_ratio_step: 0.05,
+            systray_spacing_px: 2,
+            show_systray: true,
+            show_bar: true,
+            top_bar: true,
+            bar_height: 18,
+            respect_resize_hints: true,
+            new_client_hooks: vec![],
+            layout_hooks: vec![],
+            workspace_change_hooks: vec![],
+            screen_change_hooks: vec![],
+            focus_hooks: vec![],
+        }
+    }
 }
 
 /* Argument enums */

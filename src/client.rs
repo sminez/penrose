@@ -34,6 +34,10 @@ impl Client {
         self.id
     }
 
+    pub fn wm_class(&self) -> &str {
+        &self.wm_class
+    }
+
     /// The current workspace index that this client is showing on
     pub fn workspace(&self) -> usize {
         self.workspace

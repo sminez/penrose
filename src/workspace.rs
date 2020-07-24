@@ -82,7 +82,7 @@ impl Workspace {
     /// applied byt the window manager.
     pub fn arrange(
         &self,
-        screen_region: &Region,
+        screen_region: Region,
         client_map: &HashMap<WinId, Client>,
     ) -> Vec<ResizeAction> {
         if self.clients.len() > 0 {
@@ -98,7 +98,7 @@ impl Workspace {
                 self.clients.len(),
                 self.name
             );
-            layout.arrange(&clients, self.focused_client(), screen_region)
+            layout.arrange(&clients, self.focused_client(), &screen_region)
         } else {
             vec![]
         }
@@ -238,7 +238,7 @@ mod tests {
             2 => Client::new(2, "".into(), 1, false),
             3 => Client::new(3, "".into(), 1, false),
         };
-        let actions = ws.arrange(&Region::new(0, 0, 2000, 1000), &client_map);
+        let actions = ws.arrange(Region::new(0, 0, 2000, 1000), &client_map);
         assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")
     }
 

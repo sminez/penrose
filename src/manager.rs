@@ -3,6 +3,7 @@ use crate::client::Client;
 use crate::data_types::{
     Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, Point, Region, Ring, WinId,
 };
+use crate::hooks;
 use crate::screen::Screen;
 use crate::workspace::Workspace;
 use crate::xconnection::{XConn, XEvent};
@@ -23,7 +24,6 @@ pub struct WindowManager<'a> {
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
     previous_workspace: usize,
-    // config
     // fonts: &'static [&'static str],
     floating_classes: &'static [&'static str],
     color_scheme: ColorScheme,
@@ -34,12 +34,16 @@ pub struct WindowManager<'a> {
     // show_systray: bool,
     show_bar: bool,
     // respect_resize_hints: bool,
+    new_client_hooks: Vec<hooks::NewClientHook>,
+    layout_hooks: Vec<hooks::LayoutHook>,
+    workspace_change_hooks: Vec<hooks::WorkspaceChangeHook>,
+    screen_change_hooks: Vec<hooks::ScreenChangeHook>,
+    focus_hooks: Vec<hooks::FocusHook>,
 }
 
 impl<'a> WindowManager<'a> {
-    /// Initialise a new window manager instance using an existing connection to
-    /// the X server.
-    pub fn init(conf: Config, conn: &'a dyn XConn) -> WindowManager {
+    /// Initialise a new window manager instance using an existing connection to the X server.
+    pub fn init(config: Config, conn: &'a dyn XConn) -> WindowManager<'a> {
         let mut screens = conn.current_outputs();
         info!("connected to X server: {} screens detected", screens.len());
         for (i, s) in screens.iter().enumerate() {
@@ -48,15 +52,15 @@ impl<'a> WindowManager<'a> {
 
         screens
             .iter_mut()
-            .for_each(|s| s.update_effective_region(conf.bar_height, conf.top_bar));
+            .for_each(|s| s.update_effective_region(config.bar_height, config.top_bar));
 
-        let workspaces: Vec<Workspace> = conf
+        let workspaces: Vec<Workspace> = config
             .workspaces
             .iter()
-            .map(|name| Workspace::new(name, conf.layouts.clone().to_vec()))
+            .map(|name| Workspace::new(name, config.layouts.clone().to_vec()))
             .collect();
 
-        conn.set_wm_properties(conf.workspaces);
+        conn.set_wm_properties(config.workspaces);
 
         WindowManager {
             conn: conn,
@@ -65,30 +69,51 @@ impl<'a> WindowManager<'a> {
             client_map: HashMap::new(),
             previous_workspace: 0,
             // fonts: conf.fonts,
-            floating_classes: conf.floating_classes,
-            color_scheme: conf.color_scheme,
-            border_px: conf.border_px,
-            gap_px: conf.gap_px,
-            main_ratio_step: conf.main_ratio_step,
+            floating_classes: config.floating_classes,
+            color_scheme: config.color_scheme,
+            border_px: config.border_px,
+            gap_px: config.gap_px,
+            main_ratio_step: config.main_ratio_step,
             // systray_spacing_px: conf.systray_spacing_px,
             // show_systray: conf.show_systray,
-            show_bar: conf.show_bar,
+            show_bar: config.show_bar,
             // respect_resize_hints: conf.respect_resize_hints,
+            new_client_hooks: config.new_client_hooks,
+            layout_hooks: config.layout_hooks,
+            workspace_change_hooks: config.workspace_change_hooks,
+            screen_change_hooks: config.screen_change_hooks,
+            focus_hooks: config.focus_hooks,
         }
     }
 
-    fn apply_layout(&self, workspace: usize) {
-        let ws = &self.workspaces[workspace];
-        let lc = ws.layout_conf();
+    fn apply_layout(&mut self, wix: usize) {
+        let lc = self.workspaces[wix].layout_conf();
         if lc.floating {
             return;
         }
 
-        let s = self.screens.iter().find(|s| s.wix == workspace).unwrap();
+        let (i, s) = {
+            self.screens
+                .iter()
+                .enumerate()
+                .find(|(_, s)| s.wix == wix)
+                .unwrap()
+        };
+
+        let r = s.region(self.show_bar);
+
+        // call any hooks that have been set up first now that we have enough information to
+        // trigger them
+        self.layout_hooks
+            .clone()
+            .iter()
+            .for_each(|h| (h)(self, wix, i));
+
+        let ws = &self.workspaces[wix];
         let gpx = if lc.gapless { 0 } else { self.gap_px };
         let padding = 2 * (self.border_px + gpx);
 
-        for (id, region) in ws.arrange(s.region(self.show_bar), &self.client_map) {
+        for (id, region) in ws.arrange(r, &self.client_map) {
             debug!("configuring {} with {:?}", id, region);
             let (x, y, w, h) = region.values();
             let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
@@ -133,6 +158,9 @@ impl<'a> WindowManager<'a> {
     }
 
     fn client_gained_focus(&mut self, id: WinId) {
+        // call any hooks that have been set up first
+        self.focus_hooks.clone().iter().for_each(|h| (h)(self, id));
+
         let color_focus = self.color_scheme.highlight;
         let color_normal = self.color_scheme.fg_1;
         self.focused_client()
@@ -218,8 +246,13 @@ impl<'a> WindowManager<'a> {
 
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
-        let client = Client::new(win_id, wm_class, wix, floating);
+        let mut client = Client::new(win_id, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
+        // call any hooks that have been set up first
+        self.new_client_hooks
+            .clone()
+            .iter()
+            .for_each(|h| (h)(self, &mut client));
 
         self.client_map.insert(win_id, client);
         if !floating {
@@ -237,6 +270,7 @@ impl<'a> WindowManager<'a> {
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
         self.client_gained_focus(id);
         self.set_screen_from_cursor(rpt);
+        self.focus_hooks.clone().iter().for_each(|h| (h)(self, id));
     }
 
     fn handle_leave_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -255,6 +289,7 @@ impl<'a> WindowManager<'a> {
     // fn handle_button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
 
     fn handle_destroy_notify(&mut self, win_id: WinId) {
+        debug!("DESTROY_NOTIFY for {}", win_id);
         self.remove_client(win_id);
         self.apply_layout(self.active_ws_index());
     }
@@ -266,6 +301,11 @@ impl<'a> WindowManager<'a> {
      * handlers which will then be run each time they are triggered
      */
 
+    /// Log information out at INFO level for picking up by external programs
+    pub fn log(&self, msg: &str) {
+        info!("{}", msg);
+    }
+
     /// Cycle between known screens. Does not wrap from first to last
     pub fn cycle_screen(&mut self, direction: Direction) {
         if !self.screens.would_wrap(direction) {
@@ -273,6 +313,14 @@ impl<'a> WindowManager<'a> {
             self.workspaces
                 .focus_nth(self.screens.focused().unwrap().wix);
             self.conn.warp_cursor(None, self.screens.focused().unwrap());
+            let wix = self.workspaces.focused_index();
+            self.conn.set_current_workspace(wix);
+
+            let i = self.screens.focused_index();
+            self.screen_change_hooks
+                .clone()
+                .iter()
+                .for_each(|h| (h)(self, i));
         }
     }
 
@@ -371,9 +419,13 @@ impl<'a> WindowManager<'a> {
 
         if active == index {
             return; // already focused on the current screen
-        } else {
-            self.previous_workspace = active
         }
+
+        self.previous_workspace = active;
+        self.workspace_change_hooks
+            .clone()
+            .iter()
+            .for_each(|h| (h)(self, active, index));
 
         for i in 0..self.screens.len() {
             if self.screens[i].wix == index {
@@ -434,6 +486,7 @@ impl<'a> WindowManager<'a> {
     pub fn kill_client(&mut self) {
         if let Some(client) = self.focused_client() {
             let id = client.id();
+            debug!("KILL_CLIENT for {}", id);
             self.conn.send_client_event(id, "WM_DELETE_WINDOW");
             self.conn.flush();
 
@@ -451,36 +504,9 @@ mod tests {
     use crate::screen::*;
     use crate::xconnection::*;
 
-    const FONTS: &[&str] = &["Comic Sans:size=88"];
-    const WORKSPACES: &[&str] = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-    const FLOATING_CLASSES: &[&str] = &["clouds", "birds"];
-    const COLOR_SCHEME: ColorScheme = ColorScheme {
-        bg: 0x282828,        // #282828
-        fg_1: 0x3c3836,      // #3c3836
-        fg_2: 0xa89984,      // #a89984
-        fg_3: 0xf2e5bc,      // #f2e5bc
-        highlight: 0xcc241d, // #cc241d
-        urgent: 0x458588,    // #458588
-    };
-
     fn wm_with_mock_conn<'a>(layouts: Vec<Layout>, conn: &'a MockXConn) -> WindowManager<'a> {
-        let conf = Config {
-            workspaces: WORKSPACES,
-            fonts: FONTS,
-            floating_classes: FLOATING_CLASSES,
-            layouts: layouts,
-            color_scheme: COLOR_SCHEME,
-            border_px: 2,
-            gap_px: 5,
-            main_ratio_step: 0.05,
-            systray_spacing_px: 2,
-            show_systray: true,
-            show_bar: true,
-            top_bar: true,
-            bar_height: 18,
-            respect_resize_hints: true,
-        };
-
+        let mut conf = Config::default();
+        conf.layouts = layouts;
         WindowManager::init(conf, conn)
     }
 

@@ -43,11 +43,11 @@ impl Screen {
         }
     }
 
-    pub fn region(&self, effective_only: bool) -> &Region {
+    pub fn region(&self, effective_only: bool) -> Region {
         if effective_only {
-            &self.effective_region
+            self.effective_region
         } else {
-            &self.true_region
+            self.true_region
         }
     }
 
