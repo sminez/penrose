@@ -9,6 +9,8 @@
 #[macro_use]
 extern crate penrose;
 
+use penrose::client::Client;
+use penrose::hooks::{LayoutHook, NewClientHook};
 use penrose::layout::{bottom_stack, paper, side_stack};
 use penrose::{
     Backward, ColorScheme, Config, Forward, Layout, LayoutConf, Less, More, WindowManager,
@@ -22,15 +24,19 @@ fn main() {
     // NOTE: you can include a logging handler such as simplelog shown below to see the logging output
     // simplelog::SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default()).unwrap();
 
+    // Config structs can be intiialised directly as all fields are public.
+    // A default config is provided which sets sensible (but minimal) values for each field.
+    let mut config = Config::default();
+
     // Created at startup. See keybindings below for how to access them
-    let workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    config.workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
     // Windows with a matching WM_CLASS will always float
-    let floating_classes = &["rofi", "dmenu", "dunst", "polybar", "pinentry-gtk-2"];
+    config.floating_classes = &["dmenu", "dunst", "polybar"];
 
     // Only the highlight color is currently used (window borders). Work is planned for an embedded
     // task bar and systray which will make use of the other colors
-    let color_scheme = ColorScheme {
+    config.color_scheme = ColorScheme {
         bg: 0x282828,        // #282828
         fg_1: 0x3c3836,      // #3c3836
         fg_2: 0xa89984,      // #a89984
@@ -57,18 +63,12 @@ fn main() {
 
     // Layouts to be used on each workspace. Currently all workspaces have the same set of Layouts
     // available to them, though they track modifications to n_main and ratio independently.
-    let layouts = vec![
+    config.layouts = vec![
         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
         Layout::floating("[----]"),
     ];
-
-    // Set the root X window name to be the active layout symbol so it can be picked up by external
-    // programs such as a status bar or script.
-    let active_layout_as_root_name = |wm: &mut WindowManager| {
-        wm.set_root_window_name(wm.current_layout_symbol());
-    };
 
     // The gen_keybindings macro parses user friendly key binding definitions into X keycodes and
     // modifier masks. It uses the 'xmodmap' program to determine your current keymap and create
@@ -77,19 +77,11 @@ fn main() {
     // keybindings (see helpers.rs and data_types.rs for details).
     // FireAndForget functions do not need to make use of the mutable WindowManager reference they
     // are passed if it is not required: the run_external macro ignores the WindowManager itself
-    // and instead spawns a new child process, returning an Option<Child> so that penrose can clean
-    // up the process when it exits. If no child processes are spawned (in the case of running
-    // methods on the WindowManager for example) then None must be returned instead.
+    // and instead spawns a new child process.
     let key_bindings = gen_keybindings! {
         // Program launch
-        "M-semicolon" => run_external!("dmenu"),
-        "M-Return" => run_external!("xterm"),
-
-        // actions
-        "M-A-s" => run_external!("screenshot"),
-        "M-A-k" => run_external!("toggle-kb-for-tada"),
-        "M-A-l" => run_external!("lock-screen"),
-        "M-A-m" => run_external!("xrandr --output HDMI-1 --auto --right-of eDP-1 "),
+        "M-semicolon" => run_external!("dmenu_run"),
+        "M-Return" => run_external!("st"),
 
         // client management
         "M-j" => run_internal!(cycle_client, Forward),
@@ -105,28 +97,49 @@ fn main() {
         "M-S-bracketright" => run_internal!(drag_workspace, Forward),
         "M-S-bracketleft" => run_internal!(drag_workspace, Backward),
 
-        // Layout & window management
-        "M-grave" => Box::new(move |wm: &mut WindowManager| {
-            wm.cycle_layout(Forward);
-            active_layout_as_root_name(wm);
-        }),
-        "M-S-grave" => Box::new(move |wm: &mut WindowManager| {
-            wm.cycle_layout(Backward);
-            active_layout_as_root_name(wm);
-        }),
+        // Layout management
+        "M-grave" => run_internal!(cycle_layout, Forward),
+        "M-S-grave" => run_internal!(cycle_layout, Backward),
         "M-A-Up" => run_internal!(update_max_main, More),
         "M-A-Down" => run_internal!(update_max_main, Less),
         "M-A-Right" => run_internal!(update_main_ratio, More),
         "M-A-Left" => run_internal!(update_main_ratio, Less),
+
         "M-A-Escape" => run_internal!(exit);
 
         // Each keybinding here will be templated in with the workspace index of each workspace,
         // allowing for common workspace actions to be bound at once.
-        forall_workspaces: workspaces => {
+        forall_workspaces: config.workspaces => {
             "M-{}" => focus_workspace,
             "M-S-{}" => client_to_workspace,
         }
     };
+
+    /*
+     * hooks
+     *
+     * penrose provides several hook points where you can run your own code as part of
+     * WindowManager methods. This allows you to trigger custom code without having to use a key
+     * binding to do so. See the hooks module in the docs for details of what hooks are avaliable
+     * and when/how they will be called. Note that each class of hook will be called in the order
+     * that they are defined and that it is not possible for hooks to dynamically modify themselves
+     * or other hooks, though this _can_ be done via keybindings.
+     */
+
+    // Set the root X window name to be the active layout symbol so it can be picked up by external
+    // programs such as a status bar or script.
+    let active_layout_as_root_name: LayoutHook = |wm: &mut WindowManager, _, _| {
+        wm.set_root_window_name(wm.current_layout_symbol());
+    };
+
+    // NOTE: you will need to configure a logging handler in order to see the output of wm.log
+    let log_client_class: NewClientHook = |wm: &mut WindowManager, c: &mut Client| {
+        wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
+    };
+
+    // register the hooks
+    config.layout_hooks.push(active_layout_as_root_name);
+    config.new_client_hooks.push(log_client_class);
 
     // The underlying connection to the X server is handled as a trait: XConn. XcbConnection is the
     // reference implementation of this trait that uses the XCB library to communicate with the X
@@ -134,34 +147,15 @@ fn main() {
     // details of the required methods and expected behaviour.
     let conn = XcbConnection::new();
 
-    let mut wm = WindowManager::init(
-        Config {
-            workspaces: workspaces,
-            fonts: &[],
-            floating_classes: floating_classes,
-            layouts: layouts,
-            color_scheme: color_scheme,
-            border_px: 2,
-            gap_px: 5,
-            main_ratio_step: 0.05,
-            systray_spacing_px: 2,
-            show_systray: true,
-            show_bar: true,
-            top_bar: true,
-            bar_height: 18,
-            respect_resize_hints: true,
-        },
-        &conn,
-    );
+    // Create the WindowManager instance with the config we have built and a connection to the X
+    // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
+    // such as configuring initial WindowManager state, running custom code / hooks or spawning
+    // external processes such as a start-up script.
+    let mut wm = WindowManager::init(config, &conn);
 
-    // A startup script can be run as follows
-    // spawn(format!(
-    //     "{}/bin/scripts/penrose-startup.sh",
-    //     env::var("HOME").unwrap()
-    // ));
-
-    // Call out custom hook with the new WindowManager instance to set the X root window name.
-    active_layout_as_root_name(&mut wm);
+    // Call our custom hook with the new WindowManager instance to set the X root window name
+    // on start up so that there is an initial value.
+    active_layout_as_root_name(&mut wm, 0, 0);
 
     // grab_keys_and_run will start listening to events from the X server and drop into the main
     // event loop. From this point on, program control passes to the WindowManager so make sure
