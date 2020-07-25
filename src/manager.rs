@@ -72,7 +72,6 @@ impl<'a> WindowManager<'a> {
             focus_hooks: config.focus_hooks,
         };
 
-        wm.detect_screens();
         wm.workspaces = Ring::new(
             config
                 .workspaces
@@ -80,6 +79,7 @@ impl<'a> WindowManager<'a> {
                 .map(|name| Workspace::new(name, layouts.to_vec()))
                 .collect(),
         );
+        wm.detect_screens();
         conn.set_wm_properties(config.workspaces);
         return wm;
     }
@@ -289,7 +289,6 @@ impl<'a> WindowManager<'a> {
         self.set_screen_from_cursor(self.conn.cursor_position());
         self.workspaces
             .focus_nth(self.screens.focused().unwrap().wix);
-        self.detect_screens()
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -311,9 +310,20 @@ impl<'a> WindowManager<'a> {
 
     /// Reset the current known screens based on currently detected outputs
     pub fn detect_screens(&mut self) {
-        let mut screens = self.conn.current_outputs();
+        let screens: Vec<Screen> = self
+            .conn
+            .current_outputs()
+            .into_iter()
+            .enumerate()
+            .map(|(i, mut s)| {
+                s.update_effective_region(self.bar_height, self.top_bar);
+                s.wix = i;
+                s
+            })
+            .collect();
+
         info!("updating known screens: {} screens detected", screens.len());
-        for (i, s) in self.screens.iter().enumerate() {
+        for (i, s) in screens.iter().enumerate() {
             info!("screen ({}) :: {:?}", i, s);
         }
 
@@ -321,14 +331,11 @@ impl<'a> WindowManager<'a> {
             return;
         }
 
-        let workspaces: Vec<_> = self.screens.iter().map(|s| s.wix).collect();
-        screens.iter_mut().zip(workspaces).for_each(|(s, wix)| {
-            s.update_effective_region(self.bar_height, self.top_bar);
-            s.wix = wix;
-            self.apply_layout(wix);
-        });
-
-        self.screens = Ring::new(screens)
+        self.screens = Ring::new(screens);
+        let visible_workspaces: Vec<_> = self.screens.iter().map(|s| s.wix).collect();
+        visible_workspaces
+            .iter()
+            .for_each(|wix| self.apply_layout(*wix));
     }
 
     /// Log information out at INFO level for picking up by external programs
