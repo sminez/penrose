@@ -22,7 +22,7 @@ fn main() {
     // normal operation that can be used to drive scripts and related programs. Additional debug
     // output can be helpful if you are hitting issues.
     // NOTE: you can include a logging handler such as simplelog shown below to see the logging output
-    // simplelog::SimpleLogger::init(simplelog::LevelFilter::Info, simplelog::Config::default()).unwrap();
+    // simplelog::SimpleLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default()).unwrap();
 
     // Config structs can be intiialised directly as all fields are public.
     // A default config is provided which sets sensible (but minimal) values for each field.
@@ -104,6 +104,8 @@ fn main() {
         "M-A-Down" => run_internal!(update_max_main, Less),
         "M-A-Right" => run_internal!(update_main_ratio, More),
         "M-A-Left" => run_internal!(update_main_ratio, Less),
+
+        "M-A-s" => run_internal!(detect_screens),
 
         "M-A-Escape" => run_internal!(exit);
 

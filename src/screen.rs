@@ -7,7 +7,7 @@ use xcb::ffi::randr::xcb_randr_get_crtc_info_reply_t;
 type CRTCInfoReply = Reply<xcb_randr_get_crtc_info_reply_t>;
 
 /// Display information for a connected screen
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Screen {
     /// The dimensions of the screen
     pub true_region: Region,

@@ -8,6 +8,7 @@
  *  to the documentation of the method calls and enums present in this module.
  *
  *  [EWMH](https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html)
+ *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
 use crate::data_types::{KeyBindings, KeyCode, Point, Region, WinId};
 use crate::screen::Screen;
@@ -107,6 +108,7 @@ const AUTO_FLOAT_WINDOW_TYPES: &[&'static str] = &[
  * accordingly if you need access to something that isn't currently passed through
  * to the WindowManager event loop.
  *
+ * https://tronche.com/gui/x/xlib/events/types.html
  * https://github.com/rtbo/rust-xcb/xml/xproto.xml
  *
  * ### XCB Level events
@@ -209,12 +211,21 @@ pub enum XEvent {
     /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
     Leave { id: WinId, rpt: Point, wpt: Point },
 
+    /// xcb docs: https://www.mankier.com/3/xcb_focus_in_event_t
+    FocusIn { id: WinId },
+
+    /// xcb docs: https://www.mankier.com/3/xcb_focus_out_event_t
+    FocusOut { id: WinId },
+
     /// MapNotifyEvent
     /// xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
     Destroy { id: WinId },
 
     /// xcb docs: https://www.mankier.com/3/xcb_randr_screen_change_notify_event_t
     ScreenChange,
+
+    /// xcb docs: https://www.mankier.com/3/xcb_randr_notify_event_t
+    RandrNotify,
 }
 
 /// A handle on a running X11 connection that we can use for issuing X requests
@@ -304,6 +315,7 @@ pub struct XcbConnection {
     check_win: WinId,
     atoms: HashMap<&'static str, u32>,
     auto_float_types: Vec<u32>,
+    randr_base: u8,
 }
 
 impl XcbConnection {
@@ -356,12 +368,23 @@ impl XcbConnection {
             &[],                     // value list? (value mask? not documented either way...)
         );
 
+        let randr_base = conn
+            .get_extension_data(&mut xcb::randr::id())
+            .unwrap()
+            .first_event();
+
+        // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
+        if let Err(e) = xcb::randr::select_input(&conn, root, NOTIFY_MASK).request_check() {
+            panic!("xrandr error: {}", e);
+        }
+
         XcbConnection {
             conn,
             root,
             check_win,
             atoms,
             auto_float_types,
+            randr_base,
         }
     }
 
@@ -413,6 +436,11 @@ impl XConn for XcbConnection {
     fn wait_for_event(&self) -> Option<XEvent> {
         self.conn.wait_for_event().and_then(|event| {
             let etype = event.response_type();
+            // Need to apply the randr_base mask as well which doesn't seem to work in 'match'
+            if etype == self.randr_base + xcb::randr::NOTIFY {
+                return Some(XEvent::RandrNotify);
+            }
+
             match etype {
                 xcb::BUTTON_PRESS => None,
 
@@ -449,6 +477,16 @@ impl XConn for XcbConnection {
                         rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
                         wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
                     })
+                }
+
+                xcb::FOCUS_IN => {
+                    let e: &xcb::FocusInEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::FocusIn { id: e.event() })
+                }
+
+                xcb::FOCUS_OUT => {
+                    let e: &xcb::FocusOutEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::FocusOut { id: e.event() })
                 }
 
                 xcb::DESTROY_NOTIFY => {
@@ -556,24 +594,17 @@ impl XConn for XcbConnection {
     }
 
     fn grab_keys(&self, key_bindings: &KeyBindings) {
-        // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
-        let input = xcb::randr::select_input(&self.conn, self.root, NOTIFY_MASK);
-        match input.request_check() {
-            Err(e) => panic!("randr error: {}", e),
-            Ok(_) => {
-                for k in key_bindings.keys() {
-                    // xcb docs: https://www.mankier.com/3/xcb_grab_key
-                    xcb::grab_key(
-                        &self.conn,      // xcb connection to X11
-                        false,           // don't pass grabbed events through to the client
-                        self.root,       // the window to grab: in this case the root window
-                        k.mask,          // modifiers to grab
-                        k.code,          // keycode to grab
-                        GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
-                        GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
-                    );
-                }
-            }
+        for k in key_bindings.keys() {
+            // xcb docs: https://www.mankier.com/3/xcb_grab_key
+            xcb::grab_key(
+                &self.conn,      // xcb connection to X11
+                false,           // don't pass grabbed events through to the client
+                self.root,       // the window to grab: in this case the root window
+                k.mask,          // modifiers to grab
+                k.code,          // keycode to grab
+                GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
+                GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
+            );
         }
 
         // TODO: this needs to be more configurable by the user

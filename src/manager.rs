@@ -33,6 +33,8 @@ pub struct WindowManager<'a> {
     // systray_spacing_px: u32,
     // show_systray: bool,
     show_bar: bool,
+    bar_height: u32,
+    top_bar: bool,
     // respect_resize_hints: bool,
     new_client_hooks: Vec<hooks::NewClientHook>,
     layout_hooks: Vec<hooks::LayoutHook>,
@@ -44,28 +46,11 @@ pub struct WindowManager<'a> {
 impl<'a> WindowManager<'a> {
     /// Initialise a new window manager instance using an existing connection to the X server.
     pub fn init(config: Config, conn: &'a dyn XConn) -> WindowManager<'a> {
-        let mut screens = conn.current_outputs();
-        info!("connected to X server: {} screens detected", screens.len());
-        for (i, s) in screens.iter().enumerate() {
-            info!("screen ({}) :: {:?}", i, s);
-        }
-
-        screens
-            .iter_mut()
-            .for_each(|s| s.update_effective_region(config.bar_height, config.top_bar));
-
-        let workspaces: Vec<Workspace> = config
-            .workspaces
-            .iter()
-            .map(|name| Workspace::new(name, config.layouts.clone().to_vec()))
-            .collect();
-
-        conn.set_wm_properties(config.workspaces);
-
-        WindowManager {
+        let layouts = config.layouts.clone();
+        let mut wm = WindowManager {
             conn: conn,
-            screens: Ring::new(screens),
-            workspaces: Ring::new(workspaces),
+            screens: Ring::new(vec![]),
+            workspaces: Ring::new(vec![]),
             client_map: HashMap::new(),
             previous_workspace: 0,
             // fonts: conf.fonts,
@@ -77,13 +62,26 @@ impl<'a> WindowManager<'a> {
             // systray_spacing_px: conf.systray_spacing_px,
             // show_systray: conf.show_systray,
             show_bar: config.show_bar,
+            bar_height: config.bar_height,
+            top_bar: config.top_bar,
             // respect_resize_hints: conf.respect_resize_hints,
             new_client_hooks: config.new_client_hooks,
             layout_hooks: config.layout_hooks,
             workspace_change_hooks: config.workspace_change_hooks,
             screen_change_hooks: config.screen_change_hooks,
             focus_hooks: config.focus_hooks,
-        }
+        };
+
+        wm.detect_screens();
+        wm.workspaces = Ring::new(
+            config
+                .workspaces
+                .iter()
+                .map(|name| Workspace::new(name, layouts.to_vec()))
+                .collect(),
+        );
+        conn.set_wm_properties(config.workspaces);
+        return wm;
     }
 
     fn apply_layout(&mut self, wix: usize) {
@@ -202,6 +200,7 @@ impl<'a> WindowManager<'a> {
 
         loop {
             if let Some(event) = self.conn.wait_for_event() {
+                debug!("got XEvent: {:?}", event);
                 match event {
                     XEvent::KeyPress { code } => self.handle_key_press(code, &bindings),
                     XEvent::Map { id, ignore } => self.handle_map_notify(id, ignore),
@@ -209,6 +208,7 @@ impl<'a> WindowManager<'a> {
                     XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
                     XEvent::Destroy { id } => self.handle_destroy_notify(id),
                     XEvent::ScreenChange => self.handle_screen_change(),
+                    XEvent::RandrNotify => self.detect_screens(),
                     // XEvent::ButtonPress => self.handle_button_press(),
                     // XEvent::ButtonRelease => self.handle_button_release(),
                     _ => (),
@@ -282,6 +282,7 @@ impl<'a> WindowManager<'a> {
         self.set_screen_from_cursor(self.conn.cursor_position());
         self.workspaces
             .focus_nth(self.screens.focused().unwrap().wix);
+        self.detect_screens()
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -300,6 +301,28 @@ impl<'a> WindowManager<'a> {
      * User defined hooks can be implemented by adding additional logic to these
      * handlers which will then be run each time they are triggered
      */
+
+    /// Reset the current known screens based on currently detected outputs
+    pub fn detect_screens(&mut self) {
+        let mut screens = self.conn.current_outputs();
+        info!("updating known screens: {} screens detected", screens.len());
+        for (i, s) in self.screens.iter().enumerate() {
+            info!("screen ({}) :: {:?}", i, s);
+        }
+
+        if screens == self.screens.as_vec() {
+            return;
+        }
+
+        let workspaces: Vec<_> = self.screens.iter().map(|s| s.wix).collect();
+        screens.iter_mut().zip(workspaces).for_each(|(s, wix)| {
+            s.update_effective_region(self.bar_height, self.top_bar);
+            s.wix = wix;
+            self.apply_layout(wix);
+        });
+
+        self.screens = Ring::new(screens)
+    }
 
     /// Log information out at INFO level for picking up by external programs
     pub fn log(&self, msg: &str) {

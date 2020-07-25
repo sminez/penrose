@@ -134,7 +134,7 @@ pub enum Border {
 }
 
 /// An X window / screen position: top left corner + extent
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Region {
     x: u32,
     y: u32,
