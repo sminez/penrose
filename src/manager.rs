@@ -159,12 +159,11 @@ impl<'a> WindowManager<'a> {
         // call any hooks that have been set up first
         self.focus_hooks.clone().iter().for_each(|h| (h)(self, id));
 
-        let color_focus = self.color_scheme.highlight;
-        let color_normal = self.color_scheme.fg_1;
         self.focused_client()
-            .map(|c| self.conn.set_client_border_color(c.id(), color_normal));
-        self.conn.focus_client(id);
-        self.conn.set_client_border_color(id, color_focus);
+            .map(|c| self.client_lost_focus(c.id()));
+
+        let color = self.color_scheme.highlight;
+        self.conn.set_client_border_color(id, color);
 
         if let Some(wix) = self.workspace_index_for_client(id) {
             let ws = &mut self.workspaces[wix];
@@ -175,7 +174,7 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    fn client_lost_focus(&mut self, id: WinId) {
+    fn client_lost_focus(&self, id: WinId) {
         let color = self.color_scheme.fg_1;
         self.conn.set_client_border_color(id, color);
     }
@@ -234,19 +233,19 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    fn handle_map_notify(&mut self, win_id: WinId, override_redirect: bool) {
-        if override_redirect || self.client_map.contains_key(&win_id) {
+    fn handle_map_notify(&mut self, id: WinId, override_redirect: bool) {
+        if override_redirect || self.client_map.contains_key(&id) {
             return;
         }
 
-        let wm_class = match self.conn.str_prop(win_id, "WM_CLASS") {
+        let wm_class = match self.conn.str_prop(id, "WM_CLASS") {
             Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
 
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
-        let mut client = Client::new(win_id, wm_class, wix, floating);
+        let mut client = Client::new(id, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
         // call any hooks that have been set up first
         self.new_client_hooks
@@ -254,23 +253,31 @@ impl<'a> WindowManager<'a> {
             .iter()
             .for_each(|h| (h)(self, &mut client));
 
-        self.client_map.insert(win_id, client);
+        self.client_map.insert(id, client);
         if !floating {
-            self.workspaces[wix].add_client(win_id);
+            self.workspaces[wix].add_client(id);
         }
 
-        self.conn.focus_client(win_id);
-        self.conn.mark_new_window(win_id);
-        let color = self.color_scheme.highlight;
-        self.conn.set_client_border_color(win_id, color);
-        self.conn.set_client_workspace(win_id, wix);
+        self.conn.mark_new_window(id);
+        self.conn.focus_client(id);
+        self.client_gained_focus(id);
+
+        let s = self.screens.focused().unwrap();
+        self.conn.warp_cursor(Some(id), s);
+
+        self.conn.set_client_workspace(id, wix);
         self.apply_layout(self.active_ws_index());
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
+        if let Some(current) = self.focused_client() {
+            if current.id() != id {
+                self.client_lost_focus(current.id());
+            }
+        }
+
         self.client_gained_focus(id);
         self.set_screen_from_cursor(rpt);
-        self.focus_hooks.clone().iter().for_each(|h| (h)(self, id));
     }
 
     fn handle_leave_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
