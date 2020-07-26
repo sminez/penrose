@@ -1,4 +1,4 @@
-/**!
+/*!
  * Layouts are user definable window arangements for a Workspace.
  *
  * Layouts are maintained per monitor and allow for indepent management of the two

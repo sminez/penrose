@@ -7,20 +7,21 @@
 extern crate log;
 
 #[macro_use]
-pub mod macros;
+pub mod core;
 
-pub mod client;
-pub mod data_types;
-pub mod helpers;
-pub mod hooks;
-pub mod layout;
-pub mod manager;
-pub mod screen;
-pub mod workspace;
-pub mod xconnection;
+pub mod contrib;
 
 // top level re-exports
-pub use data_types::{Change::*, ColorScheme, Config, Direction::*};
-pub use layout::{Layout, LayoutConf};
+pub use crate::core::client;
+pub use crate::core::data_types;
+pub use crate::core::helpers;
+pub use crate::core::hooks;
+pub use crate::core::layout;
+pub use crate::core::manager;
+pub use crate::core::screen;
+pub use crate::core::workspace;
+pub use crate::core::xconnection;
+
+pub use data_types::{Change::*, Config, Direction::*};
 pub use manager::WindowManager;
 pub use xconnection::XcbConnection;

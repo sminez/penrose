@@ -49,10 +49,10 @@ pub struct WindowManager<'a> {
     top_bar: bool,
     // respect_resize_hints: bool,
     new_client_hooks: MutableHooks<dyn hooks::NewClientHook>,
-    layout_hooks: MutableHooks<dyn hooks::LayoutChangeHook>,
+    layout_change_hooks: MutableHooks<dyn hooks::LayoutChangeHook>,
     workspace_change_hooks: MutableHooks<dyn hooks::WorkspaceChangeHook>,
     screen_change_hooks: MutableHooks<dyn hooks::ScreenChangeHook>,
-    focus_hooks: MutableHooks<dyn hooks::FocusChangeHook>,
+    focus_change_hooks: MutableHooks<dyn hooks::FocusChangeHook>,
     running: bool,
 }
 
@@ -79,10 +79,10 @@ impl<'a> WindowManager<'a> {
             top_bar: config.top_bar,
             // respect_resize_hints: conf.respect_resize_hints,
             new_client_hooks: Cell::new(config.new_client_hooks),
-            layout_hooks: Cell::new(config.layout_hooks),
+            layout_change_hooks: Cell::new(config.layout_change_hooks),
             workspace_change_hooks: Cell::new(config.workspace_change_hooks),
             screen_change_hooks: Cell::new(config.screen_change_hooks),
-            focus_hooks: Cell::new(config.focus_hooks),
+            focus_change_hooks: Cell::new(config.focus_change_hooks),
             running: false,
         };
 
@@ -115,7 +115,7 @@ impl<'a> WindowManager<'a> {
 
         let r = s.region(self.show_bar);
 
-        run_hooks!(layout_hooks, self, wix, i);
+        run_hooks!(layout_change_hooks, self, wix, i);
 
         let ws = &self.workspaces[wix];
         let gpx = if lc.gapless { 0 } else { self.gap_px };
@@ -171,7 +171,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn client_gained_focus(&mut self, id: WinId) {
-        run_hooks!(focus_hooks, self, id);
+        run_hooks!(focus_change_hooks, self, id);
 
         self.focused_client()
             .map(|c| self.client_lost_focus(c.id()));
@@ -259,9 +259,14 @@ impl<'a> WindowManager<'a> {
             Err(_) => String::new(),
         };
 
+        let wm_name = match self.conn.str_prop(id, "WM_NAME") {
+            Ok(s) => s,
+            Err(_) => String::from("n/a"),
+        };
+
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
-        let mut client = Client::new(id, wm_class, wix, floating);
+        let mut client = Client::new(id, wm_name, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
         run_hooks!(new_client_hooks, self, &mut client);
 

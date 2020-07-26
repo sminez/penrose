@@ -51,10 +51,10 @@ pub struct Config {
     pub bar_height: u32,
     pub respect_resize_hints: bool,
     pub new_client_hooks: Vec<Box<dyn hooks::NewClientHook>>,
-    pub layout_hooks: Vec<Box<dyn hooks::LayoutChangeHook>>,
+    pub layout_change_hooks: Vec<Box<dyn hooks::LayoutChangeHook>>,
     pub workspace_change_hooks: Vec<Box<dyn hooks::WorkspaceChangeHook>>,
     pub screen_change_hooks: Vec<Box<dyn hooks::ScreenChangeHook>>,
-    pub focus_hooks: Vec<Box<dyn hooks::FocusChangeHook>>,
+    pub focus_change_hooks: Vec<Box<dyn hooks::FocusChangeHook>>,
 }
 
 impl Config {
@@ -85,10 +85,10 @@ impl Config {
             bar_height: 18,
             respect_resize_hints: true,
             new_client_hooks: vec![],
-            layout_hooks: vec![],
+            layout_change_hooks: vec![],
             workspace_change_hooks: vec![],
             screen_change_hooks: vec![],
-            focus_hooks: vec![],
+            focus_change_hooks: vec![],
         }
     }
 }

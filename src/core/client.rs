@@ -10,6 +10,7 @@ use crate::data_types::WinId;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Client {
     id: WinId,
+    wm_name: String,
     wm_class: String,
     workspace: usize,
     // state flags
@@ -19,9 +20,16 @@ pub struct Client {
 
 impl Client {
     /// Track a new client window on a specific workspace
-    pub fn new(id: WinId, wm_class: String, workspace: usize, floating: bool) -> Client {
+    pub fn new(
+        id: WinId,
+        wm_name: String,
+        wm_class: String,
+        workspace: usize,
+        floating: bool,
+    ) -> Client {
         Client {
             id,
+            wm_name,
             wm_class,
             workspace,
             floating: floating,
@@ -34,8 +42,14 @@ impl Client {
         self.id
     }
 
+    /// The WM_CLASS property of this client
     pub fn wm_class(&self) -> &str {
         &self.wm_class
+    }
+
+    /// The WM_NAME property of this client
+    pub fn wm_name(&self) -> &str {
+        &self.wm_name
     }
 
     /// The current workspace index that this client is showing on

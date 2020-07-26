@@ -10,27 +10,20 @@
 extern crate penrose;
 
 use penrose::client::Client;
-use penrose::hooks::{LayoutChangeHook, NewClientHook};
-use penrose::layout::{bottom_stack, paper, side_stack};
-use penrose::{
-    Backward, ColorScheme, Config, Forward, Layout, LayoutConf, Less, More, WindowManager,
-    XcbConnection,
-};
+use penrose::data_types::ColorScheme;
+use penrose::hooks::NewClientHook;
+use penrose::layout::{bottom_stack, paper, side_stack, Layout, LayoutConf};
+use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
 
+use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
+
+// An example of a simple custom hook. In this case we are creating a NewClientHook which will
+// be run each time a new client program is spawned.
 // NOTE: you will need to configure a logging handler in order to see the output of wm.log
 struct MyClientHook {}
 impl NewClientHook for MyClientHook {
     fn call(&mut self, wm: &mut WindowManager, c: &mut Client) {
         wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
-    }
-}
-
-// Set the root X window name to be the active layout symbol so it can be picked up by external
-// programs such as a status bar or script.
-struct MyLayoutHook {}
-impl LayoutChangeHook for MyLayoutHook {
-    fn call(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
-        wm.set_root_window_name(wm.current_layout_symbol());
     }
 }
 
@@ -95,10 +88,17 @@ fn main() {
     // FireAndForget functions do not need to make use of the mutable WindowManager reference they
     // are passed if it is not required: the run_external macro ignores the WindowManager itself
     // and instead spawns a new child process.
+
+    // NOTE: change these to programs that you have installed!
+    let my_program_launcher = "dmenu_run";
+    let my_file_manager = "thunar";
+    let my_terminal = "st";
+
     let key_bindings = gen_keybindings! {
         // Program launch
-        "M-semicolon" => run_external!("dmenu_run"),
-        "M-Return" => run_external!("st"),
+        "M-semicolon" => run_external!(my_program_launcher),
+        "M-Return" => run_external!(my_terminal),
+        "M-f" => run_external!(my_file_manager),
 
         // client management
         "M-j" => run_internal!(cycle_client, Forward),
@@ -144,8 +144,23 @@ fn main() {
      * that they are defined. Hooks may maintain their own internal state which they can use to
      * modify their behaviour if desired.
      */
-    config.layout_hooks.push(Box::new(MyLayoutHook {}));
     config.new_client_hooks.push(Box::new(MyClientHook {}));
+
+    // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
+    // method that returns a boxed instance of the hook with any configuration performed so that it
+    // is ready to push onto the corresponding *_hooks vec.
+    config
+        .layout_change_hooks
+        .push(LayoutSymbolAsRootName::new());
+
+    // Here we are using a contrib hook that requires configuration to set up a default workspace
+    // on workspace "9". This will set the layout and spawn the supplied programs if we make
+    // workspace "9" active while it has no clients.
+    config.workspace_change_hooks.push(DefaultWorkspace::new(
+        "9",
+        "[botm]",
+        vec![my_terminal, my_terminal, my_file_manager],
+    ));
 
     // The underlying connection to the X server is handled as a trait: XConn. XcbConnection is the
     // reference implementation of this trait that uses the XCB library to communicate with the X

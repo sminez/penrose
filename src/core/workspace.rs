@@ -34,6 +34,11 @@ impl Workspace {
         }
     }
 
+    /// The name of this workspace
+    pub fn name(&self) -> &str {
+        self.name
+    }
+
     /// The number of clients currently on this workspace
     pub fn len(&self) -> usize {
         self.clients.len()
@@ -102,6 +107,11 @@ impl Workspace {
         } else {
             vec![]
         }
+    }
+
+    pub fn try_set_layout(&mut self, symbol: &str) -> Option<&Layout> {
+        self.layouts
+            .focus(Selector::Condition(&|l| l.symbol == symbol))
     }
 
     /// Cycle through the available layouts on this workspace
