@@ -50,11 +50,11 @@ pub struct Config {
     pub top_bar: bool,
     pub bar_height: u32,
     pub respect_resize_hints: bool,
-    pub new_client_hooks: Vec<hooks::NewClientHook>,
-    pub layout_hooks: Vec<hooks::LayoutHook>,
-    pub workspace_change_hooks: Vec<hooks::WorkspaceChangeHook>,
-    pub screen_change_hooks: Vec<hooks::ScreenChangeHook>,
-    pub focus_hooks: Vec<hooks::FocusHook>,
+    pub new_client_hooks: Vec<Box<dyn hooks::NewClientHook>>,
+    pub layout_hooks: Vec<Box<dyn hooks::LayoutChangeHook>>,
+    pub workspace_change_hooks: Vec<Box<dyn hooks::WorkspaceChangeHook>>,
+    pub screen_change_hooks: Vec<Box<dyn hooks::ScreenChangeHook>>,
+    pub focus_hooks: Vec<Box<dyn hooks::FocusChangeHook>>,
 }
 
 impl Config {
@@ -187,6 +187,15 @@ impl KeyCode {
     }
 }
 
+/// Used with WindowManager helper functions to select an element from the
+/// known workspaces or clients.
+pub enum Selector<'a, T> {
+    Focused,
+    Index(usize),
+    WinId(WinId),
+    Condition(&'a dyn Fn(&T) -> bool),
+}
+
 /**
  * A Collection<T> that has both an order for its elements and a focused element
  * at some index.
@@ -257,11 +266,6 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn focus_nth(&mut self, n: usize) -> Option<&T> {
-        self.focused = n;
-        self.focused()
-    }
-
     pub fn cycle_focus(&mut self, direction: Direction) -> Option<&T> {
         self.focused = self.next_index(direction);
         self.focused()
@@ -277,15 +281,6 @@ impl<T> Ring<T> {
         self.cycle_focus(direction)
     }
 
-    pub fn focus_by(&mut self, cond: impl Fn(&T) -> bool) -> Option<&T> {
-        if let Some((i, _)) = self.elements.iter().enumerate().find(|(_, e)| cond(*e)) {
-            self.focused = i;
-            Some(&self.elements[self.focused])
-        } else {
-            None
-        }
-    }
-
     pub fn len(&self) -> usize {
         self.elements.len()
     }
@@ -294,32 +289,84 @@ impl<T> Ring<T> {
         self.elements.insert(index, element);
     }
 
-    pub fn remove_by(&mut self, cond: impl Fn(&T) -> bool) -> Option<T> {
-        if let Some((i, _)) = self.elements.iter().enumerate().find(|(_, e)| cond(*e)) {
-            if self.focused > 0 && self.focused == self.elements.len() - 1 {
-                self.focused -= 1;
-            }
-            self.elements.remove(i)
-        } else {
-            None
-        }
+    pub fn iter(&self) -> std::collections::vec_deque::Iter<T> {
+        self.elements.iter()
     }
 
-    pub fn remove_focused(&mut self) -> Option<T> {
-        if self.elements.len() == 0 {
-            return None;
-        }
-
-        let c = self.elements.remove(self.focused);
+    fn clamp_focus(&mut self) {
         if self.focused > 0 && self.focused >= self.elements.len() - 1 {
             self.focused -= 1;
         }
-
-        return c;
     }
 
-    pub fn iter(&self) -> std::collections::vec_deque::Iter<T> {
-        self.elements.iter()
+    fn element_by(&self, cond: impl Fn(&T) -> bool) -> Option<(usize, &T)> {
+        self.elements.iter().enumerate().find(|(_, e)| cond(*e))
+    }
+
+    fn element_by_mut(&mut self, cond: impl Fn(&T) -> bool) -> Option<(usize, &mut T)> {
+        self.elements.iter_mut().enumerate().find(|(_, e)| cond(*e))
+    }
+
+    pub fn element(&self, s: Selector<T>) -> Option<&T> {
+        match s {
+            Selector::WinId(_) => None, // ignored
+            Selector::Focused => self.focused(),
+            Selector::Index(i) => self.elements.get(i),
+            Selector::Condition(f) => self.element_by(f).map(|(_, e)| e),
+        }
+    }
+
+    pub fn element_mut(&mut self, s: Selector<T>) -> Option<&mut T> {
+        match s {
+            Selector::Focused => self.focused_mut(),
+            Selector::Index(i) => self.elements.get_mut(i),
+            Selector::WinId(_) => None, // ignored
+            Selector::Condition(f) => self.element_by_mut(f).map(|(_, e)| e),
+        }
+    }
+
+    pub fn focus(&mut self, s: Selector<T>) -> Option<&T> {
+        match s {
+            Selector::WinId(_) => None, // ignored
+            Selector::Focused => self.focused(),
+            Selector::Index(i) => {
+                self.focused = i;
+                self.focused()
+            }
+            Selector::Condition(f) => {
+                if let Some((i, _)) = self.element_by(f) {
+                    self.focused = i;
+                    Some(&self.elements[self.focused])
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    pub fn remove(&mut self, s: Selector<T>) -> Option<T> {
+        match s {
+            Selector::WinId(_) => None, // ignored
+            Selector::Focused => {
+                let c = self.elements.remove(self.focused);
+                self.clamp_focus();
+                return c;
+            }
+            Selector::Index(i) => {
+                let c = self.elements.remove(i);
+                self.clamp_focus();
+                return c;
+            }
+            Selector::Condition(f) => {
+                if let Some((i, _)) = self.element_by(f) {
+                    let c = self.elements.remove(i);
+                    self.clamp_focus();
+                    c
+                } else {
+                    None
+                }
+            }
+        }
     }
 }
 
@@ -406,13 +453,14 @@ mod tests {
         let mut r = Ring::new(vec![1, 2, 3]);
         r.focused = 2;
         assert_eq!(r.focused(), Some(&3));
-        assert_eq!(r.remove_focused(), Some(3));
+        assert_eq!(r.remove(Selector::Focused), Some(3));
+        assert_eq!(r.focused_index(), 1);
         assert_eq!(r.focused(), Some(&2));
-        assert_eq!(r.remove_focused(), Some(2));
+        assert_eq!(r.remove(Selector::Focused), Some(2));
         assert_eq!(r.focused(), Some(&1));
-        assert_eq!(r.remove_focused(), Some(1));
+        assert_eq!(r.remove(Selector::Focused), Some(1));
         assert_eq!(r.focused(), None);
-        assert_eq!(r.remove_focused(), None);
+        assert_eq!(r.remove(Selector::Focused), None);
     }
 
     #[test]
@@ -420,15 +468,15 @@ mod tests {
         let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
         r.focused = 3;
         assert_eq!(r.focused(), Some(&4));
-        assert_eq!(r.remove_by(|e| e % 2 == 0), Some(2));
+        assert_eq!(r.remove(Selector::Condition(&|e| e % 2 == 0)), Some(2));
         assert_eq!(r.focused(), Some(&5));
     }
 
     #[test]
     fn focus_by() {
         let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-        assert_eq!(r.focus_by(|e| e % 2 == 0), Some(&2));
-        assert_eq!(r.focus_by(|e| e % 7 == 0), None);
+        assert_eq!(r.focus(Selector::Condition(&|e| e % 2 == 0)), Some(&2));
+        assert_eq!(r.focus(Selector::Condition(&|e| e % 7 == 0)), None);
     }
 
     #[test]

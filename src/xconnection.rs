@@ -12,6 +12,7 @@
  */
 use crate::data_types::{KeyBindings, KeyCode, Point, Region, WinId};
 use crate::screen::Screen;
+use std::cell::Cell;
 use std::collections::HashMap;
 use xcb;
 
@@ -876,11 +877,15 @@ impl XConn for XcbConnection {
 
 pub struct MockXConn {
     screens: Vec<Screen>,
+    events: Cell<Vec<XEvent>>,
 }
 
 impl MockXConn {
-    pub fn new(screens: Vec<Screen>) -> Self {
-        MockXConn { screens }
+    pub fn new(screens: Vec<Screen>, events: Vec<XEvent>) -> Self {
+        MockXConn {
+            screens,
+            events: Cell::new(events),
+        }
     }
 }
 
@@ -889,7 +894,13 @@ impl XConn for MockXConn {
         true
     }
     fn wait_for_event(&self) -> Option<XEvent> {
-        None
+        let mut remaining = self.events.replace(vec![]);
+        if remaining.len() == 0 {
+            return None;
+        }
+        let next = remaining.remove(0);
+        self.events.set(remaining);
+        Some(next)
     }
     fn current_outputs(&self) -> Vec<Screen> {
         self.screens.clone()

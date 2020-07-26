@@ -1,6 +1,6 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
 use crate::client::Client;
-use crate::data_types::{Change, Direction, Region, ResizeAction, Ring, WinId};
+use crate::data_types::{Change, Direction, Region, ResizeAction, Ring, Selector, WinId};
 use crate::layout::{Layout, LayoutConf};
 use std::collections::HashMap;
 
@@ -62,20 +62,20 @@ impl Workspace {
         }
 
         let prev = self.clients.focused().unwrap().clone();
-        self.clients.focus_by(|c| c == &id);
+        self.clients.focus(Selector::Condition(&|c| c == &id));
         Some(prev)
     }
 
     /// Remove a target client, retaining focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
-        self.clients.remove_by(|c| c == &id)
+        self.clients.remove(Selector::Condition(&|c| c == &id))
     }
 
     /// Remove the currently focused client, keeping focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_focused_client(&mut self) -> Option<WinId> {
-        self.clients.remove_focused()
+        self.clients.remove(Selector::Focused)
     }
 
     /// Run the current layout function, generating a list of resize actions to be
