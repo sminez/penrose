@@ -10,12 +10,29 @@
 extern crate penrose;
 
 use penrose::client::Client;
-use penrose::hooks::{LayoutHook, NewClientHook};
+use penrose::hooks::{LayoutChangeHook, NewClientHook};
 use penrose::layout::{bottom_stack, paper, side_stack};
 use penrose::{
     Backward, ColorScheme, Config, Forward, Layout, LayoutConf, Less, More, WindowManager,
     XcbConnection,
 };
+
+// NOTE: you will need to configure a logging handler in order to see the output of wm.log
+struct MyClientHook {}
+impl NewClientHook for MyClientHook {
+    fn call(&mut self, wm: &mut WindowManager, c: &mut Client) {
+        wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
+    }
+}
+
+// Set the root X window name to be the active layout symbol so it can be picked up by external
+// programs such as a status bar or script.
+struct MyLayoutHook {}
+impl LayoutChangeHook for MyLayoutHook {
+    fn call(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
+        wm.set_root_window_name(wm.current_layout_symbol());
+    }
+}
 
 fn main() {
     // penrose will log useful information about the current state of the WindowManager during
@@ -124,24 +141,11 @@ fn main() {
      * WindowManager methods. This allows you to trigger custom code without having to use a key
      * binding to do so. See the hooks module in the docs for details of what hooks are avaliable
      * and when/how they will be called. Note that each class of hook will be called in the order
-     * that they are defined and that it is not possible for hooks to dynamically modify themselves
-     * or other hooks, though this _can_ be done via keybindings.
+     * that they are defined. Hooks may maintain their own internal state which they can use to
+     * modify their behaviour if desired.
      */
-
-    // Set the root X window name to be the active layout symbol so it can be picked up by external
-    // programs such as a status bar or script.
-    let active_layout_as_root_name: LayoutHook = |wm: &mut WindowManager, _, _| {
-        wm.set_root_window_name(wm.current_layout_symbol());
-    };
-
-    // NOTE: you will need to configure a logging handler in order to see the output of wm.log
-    let log_client_class: NewClientHook = |wm: &mut WindowManager, c: &mut Client| {
-        wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
-    };
-
-    // register the hooks
-    config.layout_hooks.push(active_layout_as_root_name);
-    config.new_client_hooks.push(log_client_class);
+    config.layout_hooks.push(Box::new(MyLayoutHook {}));
+    config.new_client_hooks.push(Box::new(MyClientHook {}));
 
     // The underlying connection to the X server is handled as a trait: XConn. XcbConnection is the
     // reference implementation of this trait that uses the XCB library to communicate with the X
@@ -154,10 +158,6 @@ fn main() {
     // such as configuring initial WindowManager state, running custom code / hooks or spawning
     // external processes such as a start-up script.
     let mut wm = WindowManager::init(config, &conn);
-
-    // Call our custom hook with the new WindowManager instance to set the X root window name
-    // on start up so that there is an initial value.
-    active_layout_as_root_name(&mut wm, 0, 0);
 
     // grab_keys_and_run will start listening to events from the X server and drop into the main
     // event loop. From this point on, program control passes to the WindowManager so make sure
