@@ -85,7 +85,7 @@ hook_test!(
     expected_calls => 2, // Initial layout application and then due to the change
     LayoutChangeHook,
     TestLayoutHook,
-    layout_hooks,
+    layout_change_hooks,
     test_layout_hooks,
     vec![XEvent::KeyPress {
         code: common::LAYOUT_CHANGE_CODE
@@ -123,7 +123,7 @@ hook_test!(
     expected_calls => 3, // For each client and then the explicit change
     FocusChangeHook,
     TestFocusChangeHook,
-    focus_hooks,
+    focus_change_hooks,
     test_focus_hooks,
     vec![
         XEvent::Map {

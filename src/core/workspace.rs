@@ -244,9 +244,9 @@ mod tests {
         let mut ws = Workspace::new("test", test_layouts());
         ws.clients = Ring::new(vec![1, 2, 3]);
         let client_map = map! {
-            1 => Client::new(1, "".into(), 1, false),
-            2 => Client::new(2, "".into(), 1, false),
-            3 => Client::new(3, "".into(), 1, false),
+            1 => Client::new(1, "".into(), "".into(), 1, false),
+            2 => Client::new(2, "".into(), "".into(), 1, false),
+            3 => Client::new(3, "".into(), "".into(), 1, false),
         };
         let actions = ws.arrange(Region::new(0, 0, 2000, 1000), &client_map);
         assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")
