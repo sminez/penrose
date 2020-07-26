@@ -62,14 +62,14 @@ impl Workspace {
         }
 
         let prev = self.clients.focused().unwrap().clone();
-        self.clients.focus(Selector::Condition(&|c| c == &id));
+        self.clients.focus(Selector::Condition(&|c| *c == id));
         Some(prev)
     }
 
     /// Remove a target client, retaining focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
-        self.clients.remove(Selector::Condition(&|c| c == &id))
+        self.clients.remove(Selector::Condition(&|c| *c == id))
     }
 
     /// Remove the currently focused client, keeping focus at the same position in the stack.

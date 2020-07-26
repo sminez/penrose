@@ -178,6 +178,7 @@ impl<'a> WindowManager<'a> {
 
         let color = self.color_scheme.highlight;
         self.conn.set_client_border_color(id, color);
+        self.conn.focus_client(id);
 
         if let Some(wix) = self.workspace_index_for_client(id) {
             let ws = &mut self.workspaces[wix];
