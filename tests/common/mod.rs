@@ -10,6 +10,7 @@ pub const LAYOUT_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 1 };
 pub const WORKSPACE_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 2 };
 pub const SCREEN_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 3 };
 pub const FOCUS_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 4 };
+pub const KILL_CLIENT_CODE: KeyCode = KeyCode { mask: 0, code: 5 };
 
 pub fn simple_screen(n: u32) -> Screen {
     let r = Region::new(
@@ -26,7 +27,7 @@ pub fn simple_screen(n: u32) -> Screen {
     }
 }
 
-pub fn exit_bindings() -> KeyBindings {
+pub fn test_bindings() -> KeyBindings {
     let mut bindings = HashMap::new();
     bindings.insert(
         EXIT_CODE,
@@ -47,6 +48,10 @@ pub fn exit_bindings() -> KeyBindings {
     bindings.insert(
         FOCUS_CHANGE_CODE,
         Box::new(|wm: &mut WindowManager| wm.cycle_client(Forward)) as FireAndForget,
+    );
+    bindings.insert(
+        KILL_CLIENT_CODE,
+        Box::new(|wm: &mut WindowManager| wm.kill_client()) as FireAndForget,
     );
 
     bindings

@@ -2,7 +2,7 @@
 use crate::core::client::Client;
 use crate::core::data_types::Selector;
 use crate::core::helpers::spawn;
-use crate::core::hooks::{LayoutChangeHook, NewClientHook, WorkspaceChangeHook};
+use crate::core::hooks::Hook;
 use crate::core::manager::WindowManager;
 
 /**
@@ -19,9 +19,10 @@ impl ActiveClientAsRootName {
         Box::new(Self {})
     }
 }
-impl NewClientHook for ActiveClientAsRootName {
-    fn call(&mut self, wm: &mut WindowManager, c: &mut Client) {
+impl Hook for ActiveClientAsRootName {
+    fn new_client(&mut self, wm: &mut WindowManager, c: Client) -> Option<Client> {
         wm.set_root_window_name(c.wm_name());
+        Some(c)
     }
 }
 
@@ -37,8 +38,8 @@ impl LayoutSymbolAsRootName {
         Box::new(Self {})
     }
 }
-impl LayoutChangeHook for LayoutSymbolAsRootName {
-    fn call(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
+impl Hook for LayoutSymbolAsRootName {
+    fn layout_change(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
         wm.set_root_window_name(wm.current_layout_symbol());
     }
 }
@@ -66,8 +67,8 @@ impl<'a> DefaultWorkspace<'a> {
         })
     }
 }
-impl<'a> WorkspaceChangeHook for DefaultWorkspace<'a> {
-    fn call(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
+impl<'a> Hook for DefaultWorkspace<'a> {
+    fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
         let ws = wm.workspace_mut(Selector::Index(new)).unwrap();
         if ws.name() == self.name && ws.len() == 0 {
             // can fail if the layout symbol is wrong

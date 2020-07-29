@@ -7,7 +7,7 @@ use std::ops;
 use xcb;
 
 /// Some action to be run by a user key binding
-pub type FireAndForget = Box<dyn Fn(&mut WindowManager) -> ()>;
+pub type FireAndForget = Box<dyn FnMut(&mut WindowManager) -> ()>;
 
 /// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
@@ -50,11 +50,7 @@ pub struct Config {
     pub top_bar: bool,
     pub bar_height: u32,
     pub respect_resize_hints: bool,
-    pub new_client_hooks: Vec<Box<dyn hooks::NewClientHook>>,
-    pub layout_change_hooks: Vec<Box<dyn hooks::LayoutChangeHook>>,
-    pub workspace_change_hooks: Vec<Box<dyn hooks::WorkspaceChangeHook>>,
-    pub screen_change_hooks: Vec<Box<dyn hooks::ScreenChangeHook>>,
-    pub focus_change_hooks: Vec<Box<dyn hooks::FocusChangeHook>>,
+    pub hooks: Vec<Box<dyn hooks::Hook>>,
 }
 
 impl Config {
@@ -84,11 +80,7 @@ impl Config {
             top_bar: true,
             bar_height: 18,
             respect_resize_hints: true,
-            new_client_hooks: vec![],
-            layout_change_hooks: vec![],
-            workspace_change_hooks: vec![],
-            screen_change_hooks: vec![],
-            focus_change_hooks: vec![],
+            hooks: vec![],
         }
     }
 }
@@ -224,7 +216,7 @@ impl<T> Ring<T> {
         wrap_back || wrap_forward
     }
 
-    pub fn focused_index(&mut self) -> usize {
+    pub fn focused_index(&self) -> usize {
         self.focused
     }
 

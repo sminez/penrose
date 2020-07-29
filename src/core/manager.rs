@@ -12,19 +12,28 @@ use nix::sys::signal::{signal, SigHandler, Signal};
 use std::cell::Cell;
 use std::collections::HashMap;
 
-type MutableHooks<T> = Cell<Vec<Box<T>>>;
-
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks(
-    ($hookvec:ident, $_self:expr, $($arg:expr),+) => {
-        let mut hooks = $_self.$hookvec.replace(vec![]);
-        hooks.iter_mut().for_each(|h| h.call($_self, $($arg),+));
-        $_self.$hookvec.replace(hooks);
+    ($method:ident, $_self:expr, $($arg:expr),+) => {
+        let mut hooks = $_self.hooks.replace(vec![]);
+        hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),+));
+        $_self.hooks.replace(hooks);
+    };
+
+    ($method:ident, $_self:expr; $seed:expr) => {
+        {
+            let mut hooks = $_self.hooks.replace(vec![]);
+            let result = hooks
+                .iter_mut()
+                .fold(Some($seed), |acc, h| acc.and_then(|c| h.$method($_self, c)));
+            $_self.hooks.replace(hooks);
+            result
+        }
     };
 );
 
 /**
- * WindowManager is the primary struct / owner of the event loop ofr penrose.
+ * WindowManager is the primary struct / owner of the event loop for penrose.
  * It handles most (if not all) of the communication with XCB and responds to
  * X events served over the embedded connection. User input bindings are parsed
  * and bound on init and then triggered via grabbed X events in the main loop
@@ -48,11 +57,7 @@ pub struct WindowManager<'a> {
     bar_height: u32,
     top_bar: bool,
     // respect_resize_hints: bool,
-    new_client_hooks: MutableHooks<dyn hooks::NewClientHook>,
-    layout_change_hooks: MutableHooks<dyn hooks::LayoutChangeHook>,
-    workspace_change_hooks: MutableHooks<dyn hooks::WorkspaceChangeHook>,
-    screen_change_hooks: MutableHooks<dyn hooks::ScreenChangeHook>,
-    focus_change_hooks: MutableHooks<dyn hooks::FocusChangeHook>,
+    hooks: Cell<Vec<Box<dyn hooks::Hook>>>,
     running: bool,
 }
 
@@ -78,11 +83,7 @@ impl<'a> WindowManager<'a> {
             bar_height: config.bar_height,
             top_bar: config.top_bar,
             // respect_resize_hints: conf.respect_resize_hints,
-            new_client_hooks: Cell::new(config.new_client_hooks),
-            layout_change_hooks: Cell::new(config.layout_change_hooks),
-            workspace_change_hooks: Cell::new(config.workspace_change_hooks),
-            screen_change_hooks: Cell::new(config.screen_change_hooks),
-            focus_change_hooks: Cell::new(config.focus_change_hooks),
+            hooks: Cell::new(config.hooks),
             running: false,
         };
 
@@ -114,9 +115,6 @@ impl<'a> WindowManager<'a> {
         };
 
         let r = s.region(self.show_bar);
-
-        run_hooks!(layout_change_hooks, self, wix, i);
-
         let ws = &self.workspaces[wix];
         let gpx = if lc.gapless { 0 } else { self.gap_px };
         let padding = 2 * (self.border_px + gpx);
@@ -127,9 +125,11 @@ impl<'a> WindowManager<'a> {
             let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
             self.conn.position_window(id, r, self.border_px);
         }
+        run_hooks!(layout_change, self, wix, i);
     }
 
     fn remove_client(&mut self, win_id: WinId) {
+        run_hooks!(remove_client, self, win_id);
         match self.client_map.get(&win_id) {
             Some(client) => {
                 self.workspaces[client.workspace()].remove_client(win_id);
@@ -171,14 +171,14 @@ impl<'a> WindowManager<'a> {
     }
 
     fn client_gained_focus(&mut self, id: WinId) {
-        run_hooks!(focus_change_hooks, self, id);
-
         self.focused_client()
             .map(|c| self.client_lost_focus(c.id()));
 
         let color = self.color_scheme.highlight;
         self.conn.set_client_border_color(id, color);
         self.conn.focus_client(id);
+
+        run_hooks!(focus_change, self, id);
 
         if let Some(wix) = self.workspace_index_for_client(id) {
             let ws = &mut self.workspaces[wix];
@@ -199,7 +199,7 @@ impl<'a> WindowManager<'a> {
      * Everything is driven by incoming events from the X server with each event type being
      * mapped to a handler
      */
-    pub fn grab_keys_and_run(&mut self, bindings: KeyBindings) {
+    pub fn grab_keys_and_run(&mut self, mut bindings: KeyBindings) {
         // TODO: need to be smarter about this. This will also map all of the systray apps
         //       as tiled windows currently.
         // for id in self.conn.query_for_active_windows() {
@@ -217,7 +217,7 @@ impl<'a> WindowManager<'a> {
             if let Some(event) = self.conn.wait_for_event() {
                 debug!("got XEvent: {:?}", event);
                 match event {
-                    XEvent::KeyPress { code } => self.handle_key_press(code, &bindings),
+                    XEvent::KeyPress { code } => self.handle_key_press(code, &mut bindings),
                     XEvent::Map { id, ignore } => self.handle_map_notify(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
                     XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
@@ -241,9 +241,8 @@ impl<'a> WindowManager<'a> {
      * received from the X event loop (i.e. to avoid emitting and picking up the event
      * ourselves)
      */
-
-    fn handle_key_press(&mut self, key_code: KeyCode, bindings: &KeyBindings) {
-        if let Some(action) = bindings.get(&key_code) {
+    fn handle_key_press(&mut self, key_code: KeyCode, bindings: &mut KeyBindings) {
+        if let Some(action) = bindings.get_mut(&key_code) {
             debug!("handling key code: {:?}", key_code);
             action(self); // ignoring Child handlers and SIGCHILD
         }
@@ -266,24 +265,27 @@ impl<'a> WindowManager<'a> {
 
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
-        let mut client = Client::new(id, wm_name, wm_class, wix, floating);
+        let client = Client::new(id, wm_name, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
-        run_hooks!(new_client_hooks, self, &mut client);
 
-        self.client_map.insert(id, client);
-        if !floating {
-            self.workspaces[wix].add_client(id);
+        let client = run_hooks!(new_client, self; client);
+
+        if let Some(c) = client {
+            self.client_map.insert(id, c);
+            if !floating {
+                self.workspaces[wix].add_client(id);
+            }
+
+            self.conn.mark_new_window(id);
+            self.conn.focus_client(id);
+            self.client_gained_focus(id);
+
+            let s = self.screens.focused().unwrap();
+            self.conn.warp_cursor(Some(id), s);
+
+            self.conn.set_client_workspace(id, wix);
+            self.apply_layout(self.active_ws_index());
         }
-
-        self.conn.mark_new_window(id);
-        self.conn.focus_client(id);
-        self.client_gained_focus(id);
-
-        let s = self.screens.focused().unwrap();
-        self.conn.warp_cursor(Some(id), s);
-
-        self.conn.set_client_workspace(id, wix);
-        self.apply_layout(self.active_ws_index());
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -371,7 +373,7 @@ impl<'a> WindowManager<'a> {
             self.conn.set_current_workspace(wix);
 
             let i = self.screens.focused_index();
-            run_hooks!(screen_change_hooks, self, i);
+            run_hooks!(screen_change, self, i);
         }
     }
 
@@ -473,7 +475,7 @@ impl<'a> WindowManager<'a> {
         }
 
         self.previous_workspace = active;
-        run_hooks!(workspace_change_hooks, self, active, index);
+        run_hooks!(workspace_change, self, active, index);
 
         for i in 0..self.screens.len() {
             if self.screens[i].wix == index {
@@ -601,6 +603,26 @@ impl<'a> WindowManager<'a> {
                 None => None,
             },
         }
+    }
+
+    pub fn screen_size(&self, screen_index: usize) -> Region {
+        self.screens[screen_index].region(self.show_bar)
+    }
+
+    pub fn position_client(&self, id: WinId, region: Region) {
+        self.conn.position_window(id, region, self.border_px);
+    }
+
+    pub fn hide_client(&self, id: WinId) {
+        self.conn.unmap_window(id);
+    }
+
+    pub fn layout_screen(&mut self, screen_index: usize) {
+        self.apply_layout(self.screens[screen_index].wix);
+    }
+
+    pub fn active_screen_index(&self) -> usize {
+        self.screens.focused_index()
     }
 }
 

@@ -11,19 +11,21 @@ extern crate penrose;
 
 use penrose::client::Client;
 use penrose::data_types::ColorScheme;
-use penrose::hooks::NewClientHook;
+use penrose::hooks::Hook;
 use penrose::layout::{bottom_stack, paper, side_stack, Layout, LayoutConf};
 use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
 
+use penrose::contrib::extensions::scratchpad::Scratchpad;
 use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
 
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
 // be run each time a new client program is spawned.
 // NOTE: you will need to configure a logging handler in order to see the output of wm.log
 struct MyClientHook {}
-impl NewClientHook for MyClientHook {
-    fn call(&mut self, wm: &mut WindowManager, c: &mut Client) {
+impl Hook for MyClientHook {
+    fn new_client(&mut self, wm: &mut WindowManager, c: Client) -> Option<Client> {
         wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
+        Some(c)
     }
 }
 
@@ -32,7 +34,8 @@ fn main() {
     // normal operation that can be used to drive scripts and related programs. Additional debug
     // output can be helpful if you are hitting issues.
     // NOTE: you can include a logging handler such as simplelog shown below to see the logging output
-    // simplelog::SimpleLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default()).unwrap();
+    simplelog::SimpleLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default())
+        .unwrap();
 
     // Config structs can be intiialised directly as all fields are public.
     // A default config is provided which sets sensible (but minimal) values for each field.
@@ -94,6 +97,9 @@ fn main() {
     let my_file_manager = "thunar";
     let my_terminal = "st";
 
+    // let mut sp = Scratchpad::new("st", 0.6, 0.6);
+    // sp.register(&mut config);
+
     let key_bindings = gen_keybindings! {
         // Program launch
         "M-semicolon" => run_external!(my_program_launcher),
@@ -106,6 +112,7 @@ fn main() {
         "M-S-j" => run_internal!(drag_client, Forward),
         "M-S-k" => run_internal!(drag_client, Backward),
         "M-S-q" => run_internal!(kill_client),
+        // "M-slash" => Box::new(move |wm| sp.toggle(wm)),
 
         // workspace management
         "M-Tab" => run_internal!(toggle_workspace),
@@ -144,19 +151,17 @@ fn main() {
      * that they are defined. Hooks may maintain their own internal state which they can use to
      * modify their behaviour if desired.
      */
-    config.new_client_hooks.push(Box::new(MyClientHook {}));
+    config.hooks.push(Box::new(MyClientHook {}));
 
     // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
     // method that returns a boxed instance of the hook with any configuration performed so that it
     // is ready to push onto the corresponding *_hooks vec.
-    config
-        .layout_change_hooks
-        .push(LayoutSymbolAsRootName::new());
+    config.hooks.push(LayoutSymbolAsRootName::new());
 
     // Here we are using a contrib hook that requires configuration to set up a default workspace
     // on workspace "9". This will set the layout and spawn the supplied programs if we make
     // workspace "9" active while it has no clients.
-    config.workspace_change_hooks.push(DefaultWorkspace::new(
+    config.hooks.push(DefaultWorkspace::new(
         "9",
         "[botm]",
         vec![my_terminal, my_terminal, my_file_manager],
