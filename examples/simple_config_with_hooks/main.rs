@@ -15,7 +15,7 @@ use penrose::hooks::Hook;
 use penrose::layout::{bottom_stack, paper, side_stack, Layout, LayoutConf};
 use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
 
-use penrose::contrib::extensions::scratchpad::Scratchpad;
+// use penrose::contrib::extensions::scratchpad::Scratchpad;
 use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
 
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
