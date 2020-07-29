@@ -268,24 +268,31 @@ impl<'a> WindowManager<'a> {
         let client = Client::new(id, wm_name, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
 
+        let original = client.clone();
         let client = run_hooks!(new_client, self; client);
 
-        if let Some(c) = client {
-            self.client_map.insert(id, c);
-            if !floating {
-                self.workspaces[wix].add_client(id);
+        match client {
+            Some(c) => {
+                self.client_map.insert(id, c);
+                if !floating {
+                    self.workspaces[wix].add_client(id);
+                }
             }
-
-            self.conn.mark_new_window(id);
-            self.conn.focus_client(id);
-            self.client_gained_focus(id);
-
-            let s = self.screens.focused().unwrap();
-            self.conn.warp_cursor(Some(id), s);
-
-            self.conn.set_client_workspace(id, wix);
-            self.apply_layout(self.active_ws_index());
+            None => {
+                // tracker for eventual removal
+                self.client_map.insert(id, original);
+            }
         }
+
+        self.conn.mark_new_window(id);
+        self.conn.focus_client(id);
+        self.client_gained_focus(id);
+
+        let s = self.screens.focused().unwrap();
+        self.conn.warp_cursor(Some(id), s);
+
+        self.conn.set_client_workspace(id, wix);
+        self.apply_layout(self.active_ws_index());
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -488,6 +495,10 @@ impl<'a> WindowManager<'a> {
                 // re-apply layouts as screen dimensions may differ
                 self.apply_layout(active);
                 self.apply_layout(index);
+
+                if let Some(id) = self.workspaces[index].focused_client() {
+                    self.client_gained_focus(id);
+                }
                 return;
             }
         }
@@ -505,6 +516,10 @@ impl<'a> WindowManager<'a> {
         self.screens.focused_mut().unwrap().wix = index;
         self.apply_layout(index);
         self.conn.set_current_workspace(index);
+
+        if let Some(id) = self.workspaces[index].focused_client() {
+            self.client_gained_focus(id);
+        }
     }
 
     /// Switch focus back to the last workspace that had focus.
@@ -534,15 +549,13 @@ impl<'a> WindowManager<'a> {
 
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
-        if let Some(client) = self.focused_client() {
-            let id = client.id();
-            debug!("KILL_CLIENT for {}", id);
-            self.conn.send_client_event(id, "WM_DELETE_WINDOW");
-            self.conn.flush();
+        let id = self.conn.focused_client();
+        debug!("KILL_CLIENT for {}", id);
+        self.conn.send_client_event(id, "WM_DELETE_WINDOW");
+        self.conn.flush();
 
-            self.remove_client(id);
-            self.apply_layout(self.active_ws_index());
-        }
+        self.remove_client(id);
+        self.apply_layout(self.active_ws_index());
     }
 
     /// Add a new workspace at `index`, shifting all workspaces with indices greater to the right.
@@ -611,6 +624,10 @@ impl<'a> WindowManager<'a> {
 
     pub fn position_client(&self, id: WinId, region: Region) {
         self.conn.position_window(id, region, self.border_px);
+    }
+
+    pub fn show_client(&self, id: WinId) {
+        self.conn.map_window(id);
     }
 
     pub fn hide_client(&self, id: WinId) {

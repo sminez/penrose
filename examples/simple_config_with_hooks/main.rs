@@ -15,7 +15,7 @@ use penrose::hooks::Hook;
 use penrose::layout::{bottom_stack, paper, side_stack, Layout, LayoutConf};
 use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
 
-// use penrose::contrib::extensions::scratchpad::Scratchpad;
+use penrose::contrib::extensions::scratchpad::Scratchpad;
 use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
 
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
@@ -97,8 +97,8 @@ fn main() {
     let my_file_manager = "thunar";
     let my_terminal = "st";
 
-    // let mut sp = Scratchpad::new("st", 0.6, 0.6);
-    // sp.register(&mut config);
+    let mut sp = Scratchpad::new("st", 0.8, 0.8);
+    sp.register(&mut config);
 
     let key_bindings = gen_keybindings! {
         // Program launch
@@ -112,7 +112,7 @@ fn main() {
         "M-S-j" => run_internal!(drag_client, Forward),
         "M-S-k" => run_internal!(drag_client, Backward),
         "M-S-q" => run_internal!(kill_client),
-        // "M-slash" => Box::new(move |wm| sp.toggle(wm)),
+        "M-slash" => Box::new(move |wm| sp.toggle(wm)),
 
         // workspace management
         "M-Tab" => run_internal!(toggle_workspace),

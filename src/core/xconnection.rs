@@ -27,6 +27,8 @@ const GRAB_MODE_ASYNC: u8 = xcb::GRAB_MODE_ASYNC as u8;
 const INPUT_FOCUS_PARENT: u8 = xcb::INPUT_FOCUS_PARENT as u8;
 const PROP_MODE_REPLACE: u8 = xcb::PROP_MODE_REPLACE as u8;
 const ATOM_WINDOW: u32 = xcb::xproto::ATOM_WINDOW;
+const STACK_ABOVE: u32 = xcb::STACK_MODE_ABOVE as u32;
+const STACK_MODE: u16 = xcb::CONFIG_WINDOW_STACK_MODE as u16;
 const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
 const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
@@ -257,6 +259,9 @@ pub trait XConn {
 
     /// Send an X event to the target window
     fn send_client_event(&self, id: WinId, atom_name: &str);
+
+    /// Return the client ID of the Client that currently holds X focus
+    fn focused_client(&self) -> WinId;
 
     /// Mark the given client as having focus
     fn focus_client(&self, id: WinId);
@@ -542,6 +547,7 @@ impl XConn for XcbConnection {
                 (WIN_WIDTH, w),
                 (WIN_HEIGHT, h),
                 (WIN_BORDER, border),
+                (STACK_MODE, STACK_ABOVE),
             ],
         );
     }
@@ -565,6 +571,14 @@ impl XConn for XcbConnection {
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
         xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
+    }
+
+    fn focused_client(&self) -> WinId {
+        // xcb docs: https://www.mankier.com/3/xcb_get_input_focus
+        match xcb::get_input_focus(&self.conn).get_reply() {
+            Err(_) => 0,
+            Ok(resp) => resp.focus(),
+        }
     }
 
     fn focus_client(&self, id: WinId) {
@@ -878,6 +892,7 @@ impl XConn for XcbConnection {
 pub struct MockXConn {
     screens: Vec<Screen>,
     events: Cell<Vec<XEvent>>,
+    focused: Cell<WinId>,
 }
 
 impl MockXConn {
@@ -885,6 +900,7 @@ impl MockXConn {
         MockXConn {
             screens,
             events: Cell::new(events),
+            focused: Cell::new(0),
         }
     }
 }
@@ -913,7 +929,12 @@ impl XConn for MockXConn {
     fn map_window(&self, _: WinId) {}
     fn unmap_window(&self, _: WinId) {}
     fn send_client_event(&self, _: WinId, _: &str) {}
-    fn focus_client(&self, _: WinId) {}
+    fn focused_client(&self) -> WinId {
+        self.focused.get()
+    }
+    fn focus_client(&self, id: WinId) {
+        self.focused.replace(id);
+    }
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
     fn set_wm_properties(&self, _: &[&'static str]) {}
