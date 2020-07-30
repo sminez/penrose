@@ -311,6 +311,9 @@ pub trait XConn {
     /// Set required EWMH properties to ensure compatability with external programs
     fn set_wm_properties(&self, workspaces: &[&str]);
 
+    /// Update the root window properties with the current desktop details
+    fn update_desktops(&self, workspaces: &[&str]);
+
     /// Update which desktop is currently focused
     fn set_current_workspace(&self, wix: usize);
 
@@ -728,6 +731,12 @@ impl XConn for XcbConnection {
             32,                          // data format (8/16/32-bit)
             &supported,                  // data
         );
+        self.update_desktops(workspaces);
+
+        xcb::delete_property(&self.conn, self.root, self.atom("_NET_CLIENT_LIST"));
+    }
+
+    fn update_desktops(&self, workspaces: &[&str]) {
         xcb::change_property(
             &self.conn,                           // xcb connection to X11
             PROP_MODE_REPLACE,                    // discard current prop and replace
@@ -746,8 +755,6 @@ impl XConn for XcbConnection {
             8,                                // data format (8/16/32-bit)
             workspaces.join("\0").as_bytes(), // data
         );
-
-        xcb::delete_property(&self.conn, self.root, self.atom("_NET_CLIENT_LIST"));
     }
 
     fn set_current_workspace(&self, wix: usize) {
@@ -974,6 +981,7 @@ impl XConn for MockXConn {
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
     fn set_wm_properties(&self, _: &[&str]) {}
+    fn update_desktops(&self, _: &[&str]) {}
     fn set_current_workspace(&self, _: usize) {}
     fn set_root_window_name(&self, _: &str) {}
     fn set_client_workspace(&self, _: WinId, _: usize) {}

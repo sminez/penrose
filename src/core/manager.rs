@@ -128,6 +128,16 @@ impl<'a> WindowManager<'a> {
         }
     }
 
+    fn update_x_workspace_details(&self) {
+        self.conn.update_desktops(
+            &self
+                .workspaces
+                .iter()
+                .map(|ws| ws.name())
+                .collect::<Vec<_>>(),
+        );
+    }
+
     /*
      * Helpers for indexing into WindowManager state
      */
@@ -538,7 +548,8 @@ impl<'a> WindowManager<'a> {
 
     /// Add a new workspace at `index`, shifting all workspaces with indices greater to the right.
     pub fn add_workspace(&mut self, index: usize, ws: Workspace) {
-        self.workspaces.insert(index, ws)
+        self.workspaces.insert(index, ws);
+        self.update_x_workspace_details();
     }
 
     /// Remove a Workspace from the WindowManager. All clients that were present on the removed
@@ -548,10 +559,13 @@ impl<'a> WindowManager<'a> {
             return None; // not allowed to remove the last workspace
         }
 
-        self.workspaces.remove(selector).map(|ws| {
+        let ws = self.workspaces.remove(selector).map(|ws| {
             ws.iter().for_each(|c| self.remove_client(*c));
             ws
-        })
+        });
+
+        self.update_x_workspace_details();
+        return ws;
     }
 
     /// Get a reference to the first Workspace satisfying 'selector'. WinId selectors will return
@@ -564,6 +578,14 @@ impl<'a> WindowManager<'a> {
     /// return the workspace containing that Client if the client is known.
     pub fn workspace_mut(&mut self, selector: Selector<Workspace>) -> Option<&mut Workspace> {
         self.workspaces.element_mut(selector)
+    }
+
+    /// Set the name of the selected Workspace
+    pub fn set_workspace_name(&mut self, name: impl Into<String>, selector: Selector<Workspace>) {
+        self.workspaces
+            .element_mut(selector)
+            .map(|ws| ws.set_name(name));
+        self.update_x_workspace_details();
     }
 
     /// Take a reference to the first Client found matching 'selector'

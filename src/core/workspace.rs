@@ -40,8 +40,7 @@ impl Workspace {
         &self.name
     }
 
-    /// Set the name of this workspace
-    pub fn set_name(&mut self, name: impl Into<String>) {
+    pub(crate) fn set_name(&mut self, name: impl Into<String>) {
         self.name = name.into();
     }
 
