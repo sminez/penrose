@@ -24,11 +24,14 @@ pub type WinId = u32;
 /// An x,y coordinate pair
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
+    /// An absolute x coordinate relative to the root window
     pub x: u32,
+    /// An absolute y coordinate relative to the root window
     pub y: u32,
 }
 
 impl Point {
+    /// Create a new Point.
     pub fn new(x: u32, y: u32) -> Point {
         Point { x, y }
     }
@@ -36,24 +39,38 @@ impl Point {
 
 /// The main user facing configuration details
 pub struct Config {
+    /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
     pub workspaces: &'static [&'static str],
+    /// Font names to use for rendering embedded elements such as status bars.
     pub fonts: &'static [&'static str],
+    /// WM_CLASS values that should always be treated as floating.
     pub floating_classes: &'static [&'static str],
+    /// Default Layouts to be given to every workspace.
     pub layouts: Vec<Layout>,
+    /// Color values to be used when rendering UI elements.
     pub color_scheme: ColorScheme,
+    /// The width of window borders in pixels
     pub border_px: u32,
+    /// The size of gaps between windows in pixels.
     pub gap_px: u32,
+    /// The percentage change in main_ratio to be applied when increasing / decreasing.
     pub main_ratio_step: f32,
+    /// Spacing in pixels between systray icons
     pub systray_spacing_px: u32,
+    /// Whether or not a systray should be spawned
     pub show_systray: bool,
+    /// Whether or not space should be reserved for a status bar
     pub show_bar: bool,
+    /// True if the status bar should be at the top of the screen, false if it should be at the bottom
     pub top_bar: bool,
+    /// Height of space reserved for status bars in pixels
     pub bar_height: u32,
-    pub respect_resize_hints: bool,
+    /// User supplied Hooks for modifying WindowManager behaviour
     pub hooks: Vec<Box<dyn hooks::Hook>>,
 }
 
 impl Config {
+    /// Initialise a default Config, giving sensible (but minimal) values for all fields.
     pub fn default() -> Config {
         Config {
             workspaces: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
@@ -79,7 +96,6 @@ impl Config {
             show_bar: true,
             top_bar: true,
             bar_height: 18,
-            respect_resize_hints: true,
             hooks: vec![],
         }
     }
@@ -97,6 +113,7 @@ pub enum Direction {
 }
 
 impl Direction {
+    /// Invert this Direction
     pub fn reverse(&self) -> Direction {
         match self {
             Direction::Forward => Direction::Backward,
@@ -135,18 +152,12 @@ pub struct Region {
 }
 
 impl Region {
+    /// Create a new Region.
     pub fn new(x: u32, y: u32, w: u32, h: u32) -> Region {
         Region { x, y, w, h }
     }
 
-    pub fn width(&self) -> u32 {
-        self.w
-    }
-
-    pub fn height(&self) -> u32 {
-        self.h
-    }
-
+    /// Destructure this Region into its component values (x, y, w, h).
     pub fn values(&self) -> (u32, u32, u32, u32) {
         (self.x, self.y, self.w, self.h)
     }
@@ -155,22 +166,31 @@ impl Region {
 /// A set of named color codes
 #[derive(Debug, Clone, Copy)]
 pub struct ColorScheme {
+    /// Background
     pub bg: u32,
+    /// Foreground color 1
     pub fg_1: u32,
+    /// Foreground color 2
     pub fg_2: u32,
+    /// Foreground color 3
     pub fg_3: u32,
+    /// Focused border color.
     pub highlight: u32,
+    /// Urgent border color.
     pub urgent: u32,
 }
 
 /// An X key-code along with a modifier mask
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct KeyCode {
+    /// Modifier key bit mask
     pub mask: u16,
+    /// X key code
     pub code: u8,
 }
 
 impl KeyCode {
+    /// Build a new KeyCode from an XCB KeyPressEvent
     pub fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
         KeyCode {
             mask: k.state(),
@@ -182,9 +202,13 @@ impl KeyCode {
 /// Used with WindowManager helper functions to select an element from the
 /// known workspaces or clients.
 pub enum Selector<'a, T> {
+    /// The focused element of the target collection.
     Focused,
+    /// The element at this index.
     Index(usize),
+    /// The element with/containing this client ID.
     WinId(WinId),
+    /// The first element satisfying this condition.
     Condition(&'a dyn Fn(&T) -> bool),
 }
 

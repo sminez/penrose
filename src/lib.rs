@@ -1,7 +1,5 @@
 //! A tiling window manager in the style of Xmonad
-// TODO: enable these once we are stable enough
-// #![warn(missing_debug_implementations)]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 #[macro_use]
 extern crate log;

@@ -10,9 +10,3 @@
     like to keep.
   - While the Qtile bar I used to have was my favourite by far, I doubt I'm going to be able to
     reproduce that any time soon starting from scratch!
-
-- scratchpads
-  - My dwm set up currently has a single scratchpad (a terminal) but I've previously has a set up where
-    different bindings triggered scratchpads for different programs. Not decided yet on whether I prefer
-    that (hard coded scratch pads) or the ability to tag windows as being on a scratch pad and then
-    cycling through them a-la i3.

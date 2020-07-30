@@ -15,6 +15,7 @@ use crate::core::manager::WindowManager;
  */
 pub struct ActiveClientAsRootName {}
 impl ActiveClientAsRootName {
+    /// Construct a pre-boxed instance of the ActiveClientAsRootName hook
     pub fn new() -> Box<Self> {
         Box::new(Self {})
     }
@@ -33,6 +34,7 @@ impl Hook for ActiveClientAsRootName {
  */
 pub struct LayoutSymbolAsRootName {}
 impl LayoutSymbolAsRootName {
+    /// Construct a pre-boxed instance of the LayoutSymbolAsRootName hook
     pub fn new() -> Box<Self> {
         Box::new(Self {})
     }

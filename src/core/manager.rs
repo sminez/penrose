@@ -71,7 +71,6 @@ impl<'a> WindowManager<'a> {
             show_bar: config.show_bar,
             bar_height: config.bar_height,
             top_bar: config.top_bar,
-            // respect_resize_hints: conf.respect_resize_hints,
             hooks: Cell::new(config.hooks),
             running: false,
         };
@@ -598,26 +597,34 @@ impl<'a> WindowManager<'a> {
         }
     }
 
+    /// The current effective screen size of the target screen. Effective screen size is the
+    /// physical screen size minus any space reserved for a status bar.
     pub fn screen_size(&self, screen_index: usize) -> Region {
         self.screens[screen_index].region(self.show_bar)
     }
 
+    /// Position an individual client on the display. (x,y) coordinates are absolute (i.e. relative
+    /// to the root window not any individual screen).
     pub fn position_client(&self, id: WinId, region: Region) {
         self.conn.position_window(id, region, self.border_px);
     }
 
+    /// Make the Client with ID 'id' visible at its last known position.
     pub fn show_client(&self, id: WinId) {
         self.conn.map_window(id);
     }
 
+    /// Hide the Client with ID 'id'.
     pub fn hide_client(&self, id: WinId) {
         self.conn.unmap_window(id);
     }
 
+    /// Layout the workspace currently shown on the given screen index.
     pub fn layout_screen(&mut self, screen_index: usize) {
         self.apply_layout(self.screens[screen_index].wix);
     }
 
+    /// An index into the WindowManager known screens for the screen that is currently focused
     pub fn active_screen_index(&self) -> usize {
         self.screens.focused_index()
     }

@@ -202,27 +202,58 @@ pub enum XEvent {
     ButtonRelease,
 
     /// xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
-    KeyPress { code: KeyCode },
+    KeyPress {
+        /// The X11 key code that was received along with any modifiers that were held
+        code: KeyCode,
+    },
 
     /// MapNotifyEvent
     /// xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
-    Map { id: WinId, ignore: bool },
+    Map {
+        /// The ID of the window being mapped
+        id: WinId,
+        /// Whether or not the WindowManager should handle this window.
+        ignore: bool,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    Enter { id: WinId, rpt: Point, wpt: Point },
+    Enter {
+        /// The ID of the window that was entered
+        id: WinId,
+        /// Absolute coordinate of the event
+        rpt: Point,
+        /// Coordinate of the event relative to top-left of the window itself
+        wpt: Point,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
-    Leave { id: WinId, rpt: Point, wpt: Point },
+    Leave {
+        /// The ID of the window that was left
+        id: WinId,
+        /// Absolute coordinate of the event
+        rpt: Point,
+        /// Coordinate of the event relative to top-left of the window itself
+        wpt: Point,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_focus_in_event_t
-    FocusIn { id: WinId },
+    FocusIn {
+        /// The ID of the window that gained focus
+        id: WinId,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_focus_out_event_t
-    FocusOut { id: WinId },
+    FocusOut {
+        /// The ID of the window that lost focus
+        id: WinId,
+    },
 
     /// MapNotifyEvent
     /// xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
-    Destroy { id: WinId },
+    Destroy {
+        /// The ID of the window being destroyed
+        id: WinId,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_randr_screen_change_notify_event_t
     ScreenChange,
@@ -521,7 +552,10 @@ impl XConn for XcbConnection {
                 .flat_map(|c| xcb::randr::get_crtc_info(&self.conn, *c, 0).get_reply())
                 .enumerate()
                 .map(|(i, r)| Screen::from_crtc_info_reply(r, i))
-                .filter(|s| s.true_region.width() > 0)
+                .filter(|s| {
+                    let (_, _, w, _) = s.true_region.values();
+                    w > 0
+                })
                 .collect(),
         }
     }
@@ -889,6 +923,7 @@ impl XConn for XcbConnection {
     }
 }
 
+/// A dummy XConn implementation for testing
 pub struct MockXConn {
     screens: Vec<Screen>,
     events: Cell<Vec<XEvent>>,
@@ -896,6 +931,7 @@ pub struct MockXConn {
 }
 
 impl MockXConn {
+    /// Set up a new MockXConn with pre-defined Screens and an event stream to pull from
     pub fn new(screens: Vec<Screen>, events: Vec<XEvent>) -> Self {
         MockXConn {
             screens,

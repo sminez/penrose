@@ -22,6 +22,7 @@ pub struct Workspace {
 }
 
 impl Workspace {
+    /// Construct a new Workspace with the given name and choice of Layouts
     pub fn new(name: &'static str, layouts: Vec<Layout>) -> Workspace {
         if layouts.len() == 0 {
             panic!("{}: require at least one layout function", name);
@@ -109,6 +110,8 @@ impl Workspace {
         }
     }
 
+    /// Set the active layout by symbol name if it is available. Returns a reference to active
+    /// layout if it was able to be set.
     pub fn try_set_layout(&mut self, symbol: &str) -> Option<&Layout> {
         self.layouts
             .focus(Selector::Condition(&|l| l.symbol == symbol))
@@ -162,12 +165,14 @@ impl Workspace {
         self.clients.drag_focused(direction).map(|c| *c)
     }
 
+    /// Increase or decrease the number of possible clients in the main area of the current Layout
     pub fn update_max_main(&mut self, change: Change) {
         if let Some(layout) = self.layouts.focused_mut() {
             layout.update_max_main(change);
         }
     }
 
+    /// Increase or decrease the size of the main area for the current Layout
     pub fn update_main_ratio(&mut self, change: Change, step: f32) {
         if let Some(layout) = self.layouts.focused_mut() {
             layout.update_main_ratio(change, step);
