@@ -12,9 +12,7 @@ pub trait Hook {
      * not passed back to penrose. If the hook takes ownership of the client, it is responsible
      * ensuring that it is unmapped.
      */
-    fn new_client(&mut self, _wm: &mut WindowManager, c: Client) -> Option<Client> {
-        Some(c)
-    }
+    fn new_client(&mut self, _wm: &mut WindowManager, _c: &mut Client) {}
 
     /**
      * Called when a Client is removed from the WindowManager, either through a user initiated

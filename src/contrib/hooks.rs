@@ -20,9 +20,8 @@ impl ActiveClientAsRootName {
     }
 }
 impl Hook for ActiveClientAsRootName {
-    fn new_client(&mut self, wm: &mut WindowManager, c: Client) -> Option<Client> {
+    fn new_client(&mut self, wm: &mut WindowManager, c: &mut Client) {
         wm.set_root_window_name(c.wm_name());
-        Some(c)
     }
 }
 

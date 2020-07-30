@@ -19,17 +19,6 @@ macro_rules! run_hooks(
         hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),+));
         $_self.hooks.replace(hooks);
     };
-
-    ($method:ident, $_self:expr; $seed:expr) => {
-        {
-            let mut hooks = $_self.hooks.replace(vec![]);
-            let result = hooks
-                .iter_mut()
-                .fold(Some($seed), |acc, h| acc.and_then(|c| h.$method($_self, c)));
-            $_self.hooks.replace(hooks);
-            result
-        }
-    };
 );
 
 /**
@@ -265,23 +254,14 @@ impl<'a> WindowManager<'a> {
 
         let floating = self.floating_classes.contains(&wm_class.as_ref());
         let wix = self.active_ws_index();
-        let client = Client::new(id, wm_name, wm_class, wix, floating);
+        let mut client = Client::new(id, wm_name, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
 
-        let original = client.clone();
-        let client = run_hooks!(new_client, self; client);
+        run_hooks!(new_client, self, &mut client);
+        self.client_map.insert(id, client);
 
-        match client {
-            Some(c) => {
-                self.client_map.insert(id, c);
-                if !floating {
-                    self.workspaces[wix].add_client(id);
-                }
-            }
-            None => {
-                // tracker for eventual removal
-                self.client_map.insert(id, original);
-            }
+        if !floating {
+            self.workspaces[wix].add_client(id);
         }
 
         self.conn.mark_new_window(id);

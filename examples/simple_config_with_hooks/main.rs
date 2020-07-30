@@ -12,20 +12,21 @@ extern crate penrose;
 use penrose::client::Client;
 use penrose::data_types::ColorScheme;
 use penrose::hooks::Hook;
-use penrose::layout::{bottom_stack, paper, side_stack, Layout, LayoutConf};
+use penrose::layout::{bottom_stack, side_stack, Layout, LayoutConf};
 use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
 
-use penrose::contrib::extensions::scratchpad::Scratchpad;
+use penrose::contrib::extensions::Scratchpad;
 use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
+use penrose::contrib::layouts::paper;
+
+use simplelog::{LevelFilter, SimpleLogger};
 
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
 // be run each time a new client program is spawned.
-// NOTE: you will need to configure a logging handler in order to see the output of wm.log
 struct MyClientHook {}
 impl Hook for MyClientHook {
-    fn new_client(&mut self, wm: &mut WindowManager, c: Client) -> Option<Client> {
+    fn new_client(&mut self, wm: &mut WindowManager, c: &mut Client) {
         wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
-        Some(c)
     }
 }
 
@@ -33,9 +34,7 @@ fn main() {
     // penrose will log useful information about the current state of the WindowManager during
     // normal operation that can be used to drive scripts and related programs. Additional debug
     // output can be helpful if you are hitting issues.
-    // NOTE: you can include a logging handler such as simplelog shown below to see the logging output
-    simplelog::SimpleLogger::init(simplelog::LevelFilter::Debug, simplelog::Config::default())
-        .unwrap();
+    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default()).unwrap();
 
     // Config structs can be intiialised directly as all fields are public.
     // A default config is provided which sets sensible (but minimal) values for each field.
@@ -83,23 +82,51 @@ fn main() {
         Layout::floating("[----]"),
     ];
 
-    // The gen_keybindings macro parses user friendly key binding definitions into X keycodes and
-    // modifier masks. It uses the 'xmodmap' program to determine your current keymap and create
-    // the bindings dynamically on startup. If this feels a little too magical then you can
-    // alternatively construct a  HashMap<KeyCode, FireAndForget> manually with your chosen
-    // keybindings (see helpers.rs and data_types.rs for details).
-    // FireAndForget functions do not need to make use of the mutable WindowManager reference they
-    // are passed if it is not required: the run_external macro ignores the WindowManager itself
-    // and instead spawns a new child process.
-
     // NOTE: change these to programs that you have installed!
     let my_program_launcher = "dmenu_run";
     let my_file_manager = "thunar";
     let my_terminal = "st";
 
-    let mut sp = Scratchpad::new("st", 0.8, 0.8);
+    /* hooks
+     *
+     * penrose provides several hook points where you can run your own code as part of
+     * WindowManager methods. This allows you to trigger custom code without having to use a key
+     * binding to do so. See the hooks module in the docs for details of what hooks are avaliable
+     * and when/how they will be called. Note that each class of hook will be called in the order
+     * that they are defined. Hooks may maintain their own internal state which they can use to
+     * modify their behaviour if desired.
+     */
+    config.hooks.push(Box::new(MyClientHook {}));
+
+    // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
+    // method that returns a boxed instance of the hook with any configuration performed so that it
+    // is ready to push onto the corresponding *_hooks vec.
+    config.hooks.push(LayoutSymbolAsRootName::new());
+
+    // Here we are using a contrib hook that requires configuration to set up a default workspace
+    // on workspace "9". This will set the layout and spawn the supplied programs if we make
+    // workspace "9" active while it has no clients.
+    config.hooks.push(DefaultWorkspace::new(
+        "9",
+        "[botm]",
+        vec![my_terminal, my_terminal, my_file_manager],
+    ));
+
+    // Scratchpad is an extension: it makes use of the same Hook points as the examples above but
+    // additionally provides a 'toggle' method that can be bound to a key combination in order to
+    // trigger the bound scratchpad client.
+    let sp = Scratchpad::new("st", 0.8, 0.8);
     sp.register(&mut config);
 
+    /* The gen_keybindings macro parses user friendly key binding definitions into X keycodes and
+     * modifier masks. It uses the 'xmodmap' program to determine your current keymap and create
+     * the bindings dynamically on startup. If this feels a little too magical then you can
+     * alternatively construct a  HashMap<KeyCode, FireAndForget> manually with your chosen
+     * keybindings (see helpers.rs and data_types.rs for details).
+     * FireAndForget functions do not need to make use of the mutable WindowManager reference they
+     * are passed if it is not required: the run_external macro ignores the WindowManager itself
+     * and instead spawns a new child process.
+     */
     let key_bindings = gen_keybindings! {
         // Program launch
         "M-semicolon" => run_external!(my_program_launcher),
@@ -112,7 +139,7 @@ fn main() {
         "M-S-j" => run_internal!(drag_client, Forward),
         "M-S-k" => run_internal!(drag_client, Backward),
         "M-S-q" => run_internal!(kill_client),
-        "M-slash" => Box::new(move |wm| sp.toggle(wm)),
+        "M-slash" => sp.toggle(),
 
         // workspace management
         "M-Tab" => run_internal!(toggle_workspace),
@@ -140,32 +167,6 @@ fn main() {
             "M-S-{}" => client_to_workspace,
         }
     };
-
-    /*
-     * hooks
-     *
-     * penrose provides several hook points where you can run your own code as part of
-     * WindowManager methods. This allows you to trigger custom code without having to use a key
-     * binding to do so. See the hooks module in the docs for details of what hooks are avaliable
-     * and when/how they will be called. Note that each class of hook will be called in the order
-     * that they are defined. Hooks may maintain their own internal state which they can use to
-     * modify their behaviour if desired.
-     */
-    config.hooks.push(Box::new(MyClientHook {}));
-
-    // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
-    // method that returns a boxed instance of the hook with any configuration performed so that it
-    // is ready to push onto the corresponding *_hooks vec.
-    config.hooks.push(LayoutSymbolAsRootName::new());
-
-    // Here we are using a contrib hook that requires configuration to set up a default workspace
-    // on workspace "9". This will set the layout and spawn the supplied programs if we make
-    // workspace "9" active while it has no clients.
-    config.hooks.push(DefaultWorkspace::new(
-        "9",
-        "[botm]",
-        vec![my_terminal, my_terminal, my_file_manager],
-    ));
 
     // The underlying connection to the X server is handled as a trait: XConn. XcbConnection is the
     // reference implementation of this trait that uses the XCB library to communicate with the X
