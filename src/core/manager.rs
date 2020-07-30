@@ -264,14 +264,13 @@ impl<'a> WindowManager<'a> {
         let wix = self.active_ws_index();
         let mut client = Client::new(id, wm_name, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);
-
         run_hooks!(new_client, self, &mut client);
-        self.client_map.insert(id, client);
 
-        if !floating {
+        if client.wm_managed && !floating {
             self.workspaces[wix].add_client(id);
         }
 
+        self.client_map.insert(id, client);
         self.conn.mark_new_window(id);
         self.conn.focus_client(id);
         self.client_gained_focus(id);

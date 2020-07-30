@@ -94,6 +94,7 @@ impl Hook for Scratchpad {
         if *self.pending.borrow() && self.client.borrow().is_none() {
             self.pending.replace(false);
             self.client.replace(Some(c.id()));
+            c.externally_managed();
             self.toggle_client(wm);
         }
     }
