@@ -25,9 +25,8 @@ impl TestHook {
 }
 
 impl Hook for TestHook {
-    fn new_client(&mut self, _: &mut WindowManager, c: Client) -> Option<Client> {
+    fn new_client(&mut self, _: &mut WindowManager, _: &mut Client) {
         self.mark_called("new_client");
-        Some(c)
     }
 
     fn remove_client(&mut self, _: &mut WindowManager, _: WinId) {
