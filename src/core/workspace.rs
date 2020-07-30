@@ -16,20 +16,20 @@ use std::collections::HashMap;
  */
 #[derive(Debug)]
 pub struct Workspace {
-    name: &'static str,
+    name: String,
     clients: Ring<WinId>,
     layouts: Ring<Layout>,
 }
 
 impl Workspace {
     /// Construct a new Workspace with the given name and choice of Layouts
-    pub fn new(name: &'static str, layouts: Vec<Layout>) -> Workspace {
+    pub fn new(name: impl Into<String>, layouts: Vec<Layout>) -> Workspace {
         if layouts.len() == 0 {
-            panic!("{}: require at least one layout function", name);
+            panic!("{}: require at least one layout function", name.into());
         }
 
         Workspace {
-            name,
+            name: name.into(),
             clients: Ring::new(Vec::new()),
             layouts: Ring::new(layouts),
         }
@@ -37,7 +37,12 @@ impl Workspace {
 
     /// The name of this workspace
     pub fn name(&self) -> &str {
-        self.name
+        &self.name
+    }
+
+    /// Set the name of this workspace
+    pub fn set_name(&mut self, name: impl Into<String>) {
+        self.name = name.into();
     }
 
     /// The number of clients currently on this workspace

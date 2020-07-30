@@ -45,7 +45,6 @@ pub struct WindowManager<'a> {
     show_bar: bool,
     bar_height: u32,
     top_bar: bool,
-    // respect_resize_hints: bool,
     hooks: Cell<Vec<Box<dyn hooks::Hook>>>,
     running: bool,
 }
@@ -79,11 +78,11 @@ impl<'a> WindowManager<'a> {
             config
                 .workspaces
                 .iter()
-                .map(|name| Workspace::new(name, layouts.to_vec()))
+                .map(|name| Workspace::new(*name, layouts.to_vec()))
                 .collect(),
         );
         wm.detect_screens();
-        conn.set_wm_properties(config.workspaces);
+        conn.set_wm_properties(&config.workspaces);
 
         return wm;
     }

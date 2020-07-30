@@ -41,7 +41,7 @@ fn main() {
     let mut config = Config::default();
 
     // Created at startup. See keybindings below for how to access them
-    config.workspaces = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    config.workspaces = vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
     // Windows with a matching WM_CLASS will always float
     config.floating_classes = &["dmenu", "dunst", "polybar"];

@@ -309,7 +309,7 @@ pub trait XConn {
     fn grab_keys(&self, key_bindings: &KeyBindings);
 
     /// Set required EWMH properties to ensure compatability with external programs
-    fn set_wm_properties(&self, workspaces: &[&'static str]);
+    fn set_wm_properties(&self, workspaces: &[&str]);
 
     /// Update which desktop is currently focused
     fn set_current_workspace(&self, wix: usize);
@@ -678,7 +678,7 @@ impl XConn for XcbConnection {
         &self.conn.flush();
     }
 
-    fn set_wm_properties(&self, workspaces: &[&'static str]) {
+    fn set_wm_properties(&self, workspaces: &[&str]) {
         // xcb docs: https://www.mankier.com/3/xcb_change_property
         xcb::change_property(
             &self.conn,                            // xcb connection to X11
@@ -973,7 +973,7 @@ impl XConn for MockXConn {
     }
     fn set_client_border_color(&self, _: WinId, _: u32) {}
     fn grab_keys(&self, _: &KeyBindings) {}
-    fn set_wm_properties(&self, _: &[&'static str]) {}
+    fn set_wm_properties(&self, _: &[&str]) {}
     fn set_current_workspace(&self, _: usize) {}
     fn set_root_window_name(&self, _: &str) {}
     fn set_client_workspace(&self, _: WinId, _: usize) {}

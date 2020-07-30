@@ -38,9 +38,9 @@ impl Point {
 }
 
 /// The main user facing configuration details
-pub struct Config {
+pub struct Config<'a> {
     /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
-    pub workspaces: &'static [&'static str],
+    pub workspaces: Vec<&'a str>,
     /// Font names to use for rendering embedded elements such as status bars.
     pub fonts: &'static [&'static str],
     /// WM_CLASS values that should always be treated as floating.
@@ -69,11 +69,11 @@ pub struct Config {
     pub hooks: Vec<Box<dyn hooks::Hook>>,
 }
 
-impl Config {
+impl<'a> Config<'a> {
     /// Initialise a default Config, giving sensible (but minimal) values for all fields.
-    pub fn default() -> Config {
+    pub fn default() -> Config<'a> {
         Config {
-            workspaces: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            workspaces: vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"],
             floating_classes: &["dmenu", "dunst"],
             fonts: &["mono"],
             layouts: vec![
