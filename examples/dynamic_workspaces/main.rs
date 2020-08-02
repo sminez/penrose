@@ -1,34 +1,18 @@
 #[macro_use]
 extern crate penrose;
 
-#[macro_use]
-extern crate log;
-
 use penrose::core::helpers::spawn_for_output;
-use penrose::core::{Hook, Layout, Selector, WindowManager, Workspace, XcbConnection};
+use penrose::core::{Layout, WindowManager, XcbConnection};
 use penrose::layout::{bottom_stack, side_stack, LayoutConf};
 use penrose::{Backward, Config, Forward, Less, More};
 
+use penrose::contrib::actions::create_or_switch_to_workspace;
 use penrose::contrib::extensions::Scratchpad;
-use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
+use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces};
 use penrose::contrib::layouts::paper;
 
 use simplelog::{LevelFilter, SimpleLogger};
 use std::env;
-
-const WORKSPACES: &[&str] = &["1term", "2term", "3term", "web", "files"];
-struct RemoveEmptyWorkspaces {}
-impl Hook for RemoveEmptyWorkspaces {
-    fn workspace_change(&mut self, wm: &mut WindowManager, old: usize, _: usize) {
-        let sel = Selector::Index(old);
-        if let Some(ws) = wm.workspace(&sel) {
-            info!("ws name: {}", ws.name());
-            if WORKSPACES.contains(&ws.name()) && ws.len() == 0 {
-                wm.remove_workspace(&sel);
-            }
-        };
-    }
-}
 
 fn my_layouts() -> Vec<Layout> {
     let n_main = 1;
@@ -46,20 +30,6 @@ fn my_layouts() -> Vec<Layout> {
     ]
 }
 
-fn create_or_switch_to_workspace(wm: &mut WindowManager) {
-    let script = format!("{}/bin/ws_spawn.sh", env::var("HOME").unwrap());
-    let output = spawn_for_output(script);
-    let ws_name = output.trim_end();
-
-    let cond = |ws: &Workspace| ws.name() == ws_name;
-    let sel = Selector::Condition(&cond);
-
-    if wm.workspace(&sel).is_none() {
-        wm.push_workspace(Workspace::new(ws_name, my_layouts()))
-    }
-    wm.focus_workspace(&sel);
-}
-
 fn main() {
     SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default()).unwrap();
     let mut config = Config::default();
@@ -67,7 +37,7 @@ fn main() {
     config.layouts = my_layouts();
     config.hooks = vec![
         LayoutSymbolAsRootName::new(),
-        Box::new(RemoveEmptyWorkspaces {}),
+        RemoveEmptyWorkspaces::new(config.workspaces.clone()),
         DefaultWorkspace::new("1term", "[side]", vec!["st"]),
         DefaultWorkspace::new("2term", "[botm]", vec!["st", "st"]),
         DefaultWorkspace::new("3term", "[side]", vec!["st", "st", "st"]),
@@ -80,7 +50,7 @@ fn main() {
 
     let key_bindings = gen_keybindings! {
         // Program launch
-        "M-semicolon" => run_external!("rofi-apps"),
+        "M-semicolon" => run_external!("dmenu_run"),
         "M-Return" => run_external!("st"),
 
         // client management
@@ -92,7 +62,15 @@ fn main() {
         "M-slash" => sp.toggle(),
 
         // workspace management
-        "M-w" => Box::new(create_or_switch_to_workspace),
+        "M-w" => create_or_switch_to_workspace(
+            || {
+                let output = spawn_for_output(
+                    format!("{}/bin/ws_spawn.sh", env::var("HOME").unwrap())
+                );
+                output.trim_end().to_string()
+            },
+            my_layouts()
+        ),
         "M-Tab" => run_internal!(toggle_workspace),
         "M-bracketright" => run_internal!(cycle_screen, Forward),
         "M-bracketleft" => run_internal!(cycle_screen, Backward),
@@ -111,8 +89,8 @@ fn main() {
 
         "M-A-Escape" => run_internal!(exit);
 
-        // setting up bindings for 9 workspaces
-        forall_workspaces: &[1,2,3,4,5,6,7,8,9] => {
+        // setting up bindings for 6 possible workspaces
+        forall_workspaces: &[1, 2, 3, 4, 5, 6] => {
             "M-{}" => focus_workspace,
             "M-S-{}" => client_to_workspace,
         }

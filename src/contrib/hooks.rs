@@ -59,7 +59,7 @@ pub struct DefaultWorkspace<'a> {
     name: &'static str,
 }
 impl<'a> DefaultWorkspace<'a> {
-    /// Create a new DefaultWorkspace that is pre-boxed for adding to your workspace_hooks
+    /// Create a new DefaultWorkspace that is pre-boxed for adding to your workspace hooks
     pub fn new(name: &'static str, layout: &'static str, defaults: Vec<&'a str>) -> Box<Self> {
         Box::new(Self {
             name,
@@ -77,5 +77,31 @@ impl<'a> Hook for DefaultWorkspace<'a> {
                 self.defaults.iter().for_each(|prog| spawn(*prog));
             }
         }
+    }
+}
+
+/**
+ * Automatically remove empty workspaces when they lose focus. Workspaces with names in 'protected'
+ * will not be auto-removed when empty so that you can maintain a set of default workspaces that
+ * are always available. This hook is most useful when combined with `DefaultWorkspace` to provide
+ * a set of ephemeral workspace configurations that can be created on demand.
+ */
+pub struct RemoveEmptyWorkspaces<'a> {
+    protected: Vec<&'a str>,
+}
+impl<'a> RemoveEmptyWorkspaces<'a> {
+    /// Create a new RemoveEmptyWorkspaces that is pre-boxed for adding to your workspace hooks.
+    pub fn new(protected: Vec<&'a str>) -> Box<Self> {
+        Box::new(Self { protected })
+    }
+}
+impl<'a> Hook for RemoveEmptyWorkspaces<'a> {
+    fn workspace_change(&mut self, wm: &mut WindowManager, old: usize, _: usize) {
+        let sel = Selector::Index(old);
+        if let Some(ws) = wm.workspace(&sel) {
+            if !self.protected.contains(&ws.name()) && ws.len() == 0 {
+                wm.remove_workspace(&sel);
+            }
+        };
     }
 }
