@@ -340,7 +340,13 @@ impl<T> Ring<T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => Some(self.focused_index()),
-            Selector::Index(i) => Some(*i),
+            Selector::Index(i) => {
+                if *i < self.len() {
+                    Some(*i)
+                } else {
+                    None
+                }
+            }
             Selector::Condition(f) => self.element_by(f).map(|(i, _)| i),
         }
     }
@@ -508,6 +514,13 @@ mod tests {
         assert_eq!(r.remove(&Selector::Focused), Some(1));
         assert_eq!(r.focused(), None);
         assert_eq!(r.remove(&Selector::Focused), None);
+    }
+
+    #[test]
+    fn indices_are_in_bounds() {
+        let r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
+        assert_eq!(r.index(&Selector::Index(2)), Some(2));
+        assert_eq!(r.index(&Selector::Index(42)), None);
     }
 
     #[test]
