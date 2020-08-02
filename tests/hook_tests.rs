@@ -117,12 +117,13 @@ hook_test!(
 );
 
 hook_test!(
-    expected_calls => 2, // Initial layout application and then due to the change
+    expected_calls => 3, // Initial layout application for each screen and then due to the change
     "layout_change",
     test_layout_hooks,
     vec![XEvent::KeyPress {
         code: common::LAYOUT_CHANGE_CODE
-    }]
+    },
+    ]
 );
 
 hook_test!(

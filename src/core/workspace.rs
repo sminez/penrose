@@ -14,7 +14,7 @@ use std::collections::HashMap;
  * point of view of the X server by checking focus at the Workspace level
  * whenever a new Workspace becomes active.
  */
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Workspace {
     name: String,
     clients: Ring<WinId>,
@@ -72,20 +72,20 @@ impl Workspace {
         }
 
         let prev = self.clients.focused().unwrap().clone();
-        self.clients.focus(Selector::Condition(&|c| *c == id));
+        self.clients.focus(&Selector::Condition(&|c| *c == id));
         Some(prev)
     }
 
     /// Remove a target client, retaining focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
-        self.clients.remove(Selector::Condition(&|c| *c == id))
+        self.clients.remove(&Selector::Condition(&|c| *c == id))
     }
 
     /// Remove the currently focused client, keeping focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_focused_client(&mut self) -> Option<WinId> {
-        self.clients.remove(Selector::Focused)
+        self.clients.remove(&Selector::Focused)
     }
 
     /// Run the current layout function, generating a list of resize actions to be
@@ -118,7 +118,7 @@ impl Workspace {
     /// layout if it was able to be set.
     pub fn try_set_layout(&mut self, symbol: &str) -> Option<&Layout> {
         self.layouts
-            .focus(Selector::Condition(&|l| l.symbol == symbol))
+            .focus(&Selector::Condition(&|l| l.symbol == symbol))
     }
 
     /// Cycle through the available layouts on this workspace

@@ -1,5 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::data_types::{CodeMap, KeyCode};
+use std::io::Read;
 use std::process::{Command, Stdio};
 use xcb;
 
@@ -27,6 +28,39 @@ pub fn spawn<S: Into<String>>(cmd: S) {
 
     if let Err(e) = result {
         warn!("error spawning external program: {}", e);
+    }
+}
+
+/**
+ * Run an external command and return its output.
+ *
+ * NOTE: std::process::Command::output will not work within penrose due to the
+ * way that signal handling is set up. Use this function if you need to access the
+ * output of a process that you spawn.
+ */
+pub fn spawn_for_output<S: Into<String>>(cmd: S) -> String {
+    let s = cmd.into();
+    let parts: Vec<&str> = s.split_whitespace().collect();
+    let result = if parts.len() > 1 {
+        Command::new(parts[0])
+            .stdout(std::process::Stdio::piped())
+            .args(&parts[1..])
+            .spawn()
+    } else {
+        Command::new(parts[0])
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+    };
+
+    match result {
+        Err(e) => format!("error spawning external program: {}", e),
+        Ok(child) => {
+            let mut buff = String::new();
+            match child.stdout.unwrap().read_to_string(&mut buff) {
+                Ok(_) => buff,
+                Err(e) => format!("error spawning external program: {}", e),
+            }
+        }
     }
 }
 

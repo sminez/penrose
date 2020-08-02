@@ -1,4 +1,4 @@
-use penrose::data_types::{FireAndForget, KeyBindings, KeyCode, Region};
+use penrose::data_types::{FireAndForget, KeyBindings, KeyCode, Region, Selector};
 use penrose::screen::Screen;
 use penrose::{Forward, WindowManager};
 use std::collections::HashMap;
@@ -39,7 +39,7 @@ pub fn test_bindings() -> KeyBindings {
     );
     bindings.insert(
         WORKSPACE_CHANGE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.focus_workspace(1)) as FireAndForget,
+        Box::new(|wm: &mut WindowManager| wm.focus_workspace(&Selector::Index(1))) as FireAndForget,
     );
     bindings.insert(
         SCREEN_CHANGE_CODE,

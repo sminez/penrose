@@ -11,6 +11,7 @@
  */
 use crate::client::Client;
 use crate::data_types::{Change, Region, ResizeAction, WinId};
+use std::cmp;
 use std::fmt;
 
 /**
@@ -70,6 +71,16 @@ pub struct Layout {
     max_main: u32,
     ratio: f32,
     f: LayoutFunc,
+}
+
+impl cmp::PartialEq<Layout> for Layout {
+    // Ignoring 'f'
+    fn eq(&self, other: &Layout) -> bool {
+        self.conf == other.conf
+            && self.symbol == other.symbol
+            && self.max_main == other.max_main
+            && self.ratio == other.ratio
+    }
 }
 
 impl fmt::Debug for Layout {

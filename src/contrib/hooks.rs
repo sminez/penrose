@@ -70,7 +70,7 @@ impl<'a> DefaultWorkspace<'a> {
 }
 impl<'a> Hook for DefaultWorkspace<'a> {
     fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
-        let ws = wm.workspace_mut(Selector::Index(new)).unwrap();
+        let ws = wm.workspace_mut(&Selector::Index(new)).unwrap();
         if ws.name() == self.name && ws.len() == 0 {
             // can fail if the layout symbol is wrong
             ws.try_set_layout(self.layout);

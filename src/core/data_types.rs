@@ -201,6 +201,7 @@ impl KeyCode {
 
 /// Used with WindowManager helper functions to select an element from the
 /// known workspaces or clients.
+#[derive(Clone, Copy)]
 pub enum Selector<'a, T> {
     /// The focused element of the target collection.
     Focused,
@@ -219,7 +220,7 @@ pub enum Selector<'a, T> {
  * Supports rotating the position of the elements and rotating which element
  * is focused independently of one another.
  */
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ring<T> {
     elements: VecDeque<T>,
     focused: usize,
@@ -305,8 +306,20 @@ impl<T> Ring<T> {
         self.elements.insert(index, element);
     }
 
+    pub fn push(&mut self, element: T) {
+        self.elements.push_back(element);
+    }
+
     pub fn iter(&self) -> std::collections::vec_deque::Iter<T> {
         self.elements.iter()
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.elements.get(index)
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.elements.get_mut(index)
     }
 
     fn clamp_focus(&mut self) {
@@ -323,30 +336,39 @@ impl<T> Ring<T> {
         self.elements.iter_mut().enumerate().find(|(_, e)| cond(*e))
     }
 
-    pub fn element(&self, s: Selector<T>) -> Option<&T> {
+    pub fn index(&self, s: &Selector<T>) -> Option<usize> {
+        match s {
+            Selector::WinId(_) => None, // ignored
+            Selector::Focused => Some(self.focused_index()),
+            Selector::Index(i) => Some(*i),
+            Selector::Condition(f) => self.element_by(f).map(|(i, _)| i),
+        }
+    }
+
+    pub fn element(&self, s: &Selector<T>) -> Option<&T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => self.focused(),
-            Selector::Index(i) => self.elements.get(i),
+            Selector::Index(i) => self.elements.get(*i),
             Selector::Condition(f) => self.element_by(f).map(|(_, e)| e),
         }
     }
 
-    pub fn element_mut(&mut self, s: Selector<T>) -> Option<&mut T> {
+    pub fn element_mut(&mut self, s: &Selector<T>) -> Option<&mut T> {
         match s {
             Selector::Focused => self.focused_mut(),
-            Selector::Index(i) => self.elements.get_mut(i),
+            Selector::Index(i) => self.elements.get_mut(*i),
             Selector::WinId(_) => None, // ignored
             Selector::Condition(f) => self.element_by_mut(f).map(|(_, e)| e),
         }
     }
 
-    pub fn focus(&mut self, s: Selector<T>) -> Option<&T> {
+    pub fn focus(&mut self, s: &Selector<T>) -> Option<&T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => self.focused(),
             Selector::Index(i) => {
-                self.focused = i;
+                self.focused = *i;
                 self.focused()
             }
             Selector::Condition(f) => {
@@ -360,7 +382,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn remove(&mut self, s: Selector<T>) -> Option<T> {
+    pub fn remove(&mut self, s: &Selector<T>) -> Option<T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => {
@@ -369,7 +391,7 @@ impl<T> Ring<T> {
                 return c;
             }
             Selector::Index(i) => {
-                let c = self.elements.remove(i);
+                let c = self.elements.remove(*i);
                 self.clamp_focus();
                 return c;
             }
@@ -382,6 +404,15 @@ impl<T> Ring<T> {
                     None
                 }
             }
+        }
+    }
+}
+
+impl<T: PartialEq> Ring<T> {
+    pub fn equivalent_selectors(&self, s: &Selector<T>, t: &Selector<T>) -> bool {
+        match (self.element(&s), self.element(&t)) {
+            (Some(e), Some(f)) => e == f,
+            _ => false,
         }
     }
 }
@@ -469,14 +500,14 @@ mod tests {
         let mut r = Ring::new(vec![1, 2, 3]);
         r.focused = 2;
         assert_eq!(r.focused(), Some(&3));
-        assert_eq!(r.remove(Selector::Focused), Some(3));
+        assert_eq!(r.remove(&Selector::Focused), Some(3));
         assert_eq!(r.focused_index(), 1);
         assert_eq!(r.focused(), Some(&2));
-        assert_eq!(r.remove(Selector::Focused), Some(2));
+        assert_eq!(r.remove(&Selector::Focused), Some(2));
         assert_eq!(r.focused(), Some(&1));
-        assert_eq!(r.remove(Selector::Focused), Some(1));
+        assert_eq!(r.remove(&Selector::Focused), Some(1));
         assert_eq!(r.focused(), None);
-        assert_eq!(r.remove(Selector::Focused), None);
+        assert_eq!(r.remove(&Selector::Focused), None);
     }
 
     #[test]
@@ -484,15 +515,15 @@ mod tests {
         let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
         r.focused = 3;
         assert_eq!(r.focused(), Some(&4));
-        assert_eq!(r.remove(Selector::Condition(&|e| e % 2 == 0)), Some(2));
+        assert_eq!(r.remove(&Selector::Condition(&|e| e % 2 == 0)), Some(2));
         assert_eq!(r.focused(), Some(&5));
     }
 
     #[test]
     fn focus_by() {
         let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-        assert_eq!(r.focus(Selector::Condition(&|e| e % 2 == 0)), Some(&2));
-        assert_eq!(r.focus(Selector::Condition(&|e| e % 7 == 0)), None);
+        assert_eq!(r.focus(&Selector::Condition(&|e| e % 2 == 0)), Some(&2));
+        assert_eq!(r.focus(&Selector::Condition(&|e| e % 7 == 0)), None);
     }
 
     #[test]

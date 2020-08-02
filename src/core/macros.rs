@@ -67,7 +67,13 @@ macro_rules! gen_keybindings(
                     let for_ws = format!($ws_binding, i+1);
                     match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
                         None => panic!("invalid key binding: {}", for_ws),
-                        Some(key_code) => _map.insert(key_code, run_internal!($ws_action, i)),
+                        Some(key_code) => _map.insert(
+                            key_code,
+                            run_internal!(
+                                $ws_action,
+                                &$crate::data_types::Selector::Index(i)
+                            )
+                        ),
                     };
                 )+
             }
