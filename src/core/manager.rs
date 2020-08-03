@@ -272,7 +272,8 @@ impl<'a> WindowManager<'a> {
             Err(_) => String::from("n/a"),
         };
 
-        let floating = self.floating_classes.contains(&wm_class.as_ref());
+        // let floating = self.floating_classes.contains(&wm_class.as_ref());
+        let floating = self.conn.window_should_float(id, self.floating_classes);
         let wix = self.active_ws_index();
         let mut client = Client::new(id, wm_name, wm_class, wix, floating);
         debug!("mapping client: {:?}", client);

@@ -73,7 +73,6 @@ const ATOMS: &[&'static str] = &[
     "_NET_WM_STATE",
     "_NET_WM_STATE_FULLSCREEN",
     "_NET_WM_WINDOW_TYPE",
-    "_NET_WM_WINDOW_TYPE_DIALOG",
     "_XEMBED",
     "_XEMBED_INFO",
     // window types
@@ -354,7 +353,7 @@ pub struct XcbConnection {
     root: WinId,
     check_win: WinId,
     atoms: HashMap<&'static str, u32>,
-    auto_float_types: Vec<u32>,
+    auto_float_types: Vec<&'static str>,
     randr_base: u8,
 }
 
@@ -385,11 +384,7 @@ impl XcbConnection {
             })
             .collect();
 
-        let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
-            .iter()
-            .map(|t| *atoms.get(t).unwrap())
-            .collect();
-
+        let auto_float_types: Vec<&str> = AUTO_FLOAT_WINDOW_TYPES.to_vec();
         let check_win = conn.generate_id();
 
         // xcb docs: https://www.mankier.com/3/xcb_create_window
@@ -803,24 +798,12 @@ impl XConn for XcbConnection {
             Err(_) => (), // no WM_CLASS set
         };
 
-        // self.window_has_type_in(id, &self.auto_float_types)
-        // xcb docs: https://www.mankier.com/3/xcb_get_property
-        let cookie = xcb::get_property(
-            &self.conn,                       // xcb connection to X11
-            false,                            // should the property be deleted
-            id,                               // target window to query
-            self.atom("_NET_WM_WINDOW_TYPE"), // the property we want
-            xcb::ATOM_ANY,                    // the type of the property
-            0,                                // offset in the property to retrieve data from
-            2048,                             // how many 32bit multiples of data to retrieve
-        );
-
-        match cookie.get_reply() {
+        match self.str_prop(id, "_NET_WM_WINDOW_TYPE") {
+            Ok(s) => {
+                info!("window_type: {}", s);
+                s.split("\0").any(|t| self.auto_float_types.contains(&t))
+            }
             Err(_) => false,
-            Ok(types) => types
-                .value()
-                .iter()
-                .any(|t| self.auto_float_types.contains(t)),
         }
     }
 
