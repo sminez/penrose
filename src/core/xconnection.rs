@@ -969,7 +969,7 @@ impl XConn for MockXConn {
     fn set_root_window_name(&self, _: &str) {}
     fn set_client_workspace(&self, _: WinId, _: usize) {}
     fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
-        true
+        false
     }
     fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
     fn query_for_active_windows(&self) -> Vec<WinId> {
