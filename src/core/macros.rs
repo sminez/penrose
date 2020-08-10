@@ -64,7 +64,7 @@ macro_rules! gen_keybindings(
 
             for i in 0..$ws_array.len() {
                 $(
-                    let for_ws = format!($ws_binding, i+1);
+                    let for_ws = format!($ws_binding, $ws_array[i]);
                     match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
                         None => panic!("invalid key binding: {}", for_ws),
                         Some(key_code) => _map.insert(
