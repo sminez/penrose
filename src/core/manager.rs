@@ -272,7 +272,6 @@ impl<'a> WindowManager<'a> {
             Err(_) => String::from("n/a"),
         };
 
-        // let floating = self.floating_classes.contains(&wm_class.as_ref());
         let floating = self.conn.window_should_float(id, self.floating_classes);
         let wix = self.active_ws_index();
         let mut client = Client::new(id, wm_name, wm_class, wix, floating);
@@ -577,7 +576,7 @@ impl<'a> WindowManager<'a> {
     pub fn kill_client(&mut self) {
         let id = self.conn.focused_client();
         debug!("KILL_CLIENT for {}", id);
-        self.conn.send_client_event(id, "WM_DELETE_WINDOW");
+        self.conn.send_client_event(id, "WM_DELETE_WINDOW").unwrap();
         self.conn.flush();
 
         self.remove_client(id);

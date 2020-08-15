@@ -172,7 +172,7 @@ fn main() {
     // reference implementation of this trait that uses the XCB library to communicate with the X
     // server. You are free to provide your own implementation if you wish, see xconnection.rs for
     // details of the required methods and expected behaviour.
-    let conn = XcbConnection::new();
+    let conn = XcbConnection::new().unwrap();
 
     // Create the WindowManager instance with the config we have built and a connection to the X
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions

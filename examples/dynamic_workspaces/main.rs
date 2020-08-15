@@ -66,7 +66,7 @@ fn main() {
             || {
                 let output = spawn_for_output(
                     format!("{}/bin/ws_spawn.sh", env::var("HOME").unwrap())
-                );
+                ).unwrap();
                 output.trim_end().to_string()
             },
             my_layouts()
@@ -96,7 +96,7 @@ fn main() {
         }
     };
 
-    let conn = XcbConnection::new();
+    let conn = XcbConnection::new().unwrap();
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings);
 }

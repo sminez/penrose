@@ -67,11 +67,10 @@ impl Workspace {
     /// Focus the client with the given id, returns an option of the previously focused
     /// client if there was one
     pub fn focus_client(&mut self, id: WinId) -> Option<WinId> {
-        if self.clients.len() == 0 {
-            return None;
-        }
-
-        let prev = self.clients.focused().unwrap().clone();
+        let prev = match self.clients.focused() {
+            Some(c) => *c,
+            None => return None,
+        };
         self.clients.focus(&Selector::Condition(&|c| *c == id));
         Some(prev)
     }

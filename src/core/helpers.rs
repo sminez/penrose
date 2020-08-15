@@ -2,6 +2,8 @@
 use crate::data_types::{CodeMap, KeyCode};
 use std::io::Read;
 use std::process::{Command, Stdio};
+
+use anyhow::anyhow;
 use xcb;
 
 /**
@@ -38,7 +40,7 @@ pub fn spawn<S: Into<String>>(cmd: S) {
  * way that signal handling is set up. Use this function if you need to access the
  * output of a process that you spawn.
  */
-pub fn spawn_for_output<S: Into<String>>(cmd: S) -> String {
+pub fn spawn_for_output<S: Into<String>>(cmd: S) -> anyhow::Result<String> {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
     let result = if parts.len() > 1 {
@@ -52,16 +54,13 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> String {
             .spawn()
     };
 
-    match result {
-        Err(e) => format!("error spawning external program: {}", e),
-        Ok(child) => {
-            let mut buff = String::new();
-            match child.stdout.unwrap().read_to_string(&mut buff) {
-                Ok(_) => buff,
-                Err(e) => format!("error spawning external program: {}", e),
-            }
-        }
-    }
+    let child = result?;
+    let mut buff = String::new();
+    Ok(child
+        .stdout
+        .ok_or_else(|| anyhow!("unable to get stdout for child process: {}", s))?
+        .read_to_string(&mut buff)
+        .map(|_| buff)?)
 }
 
 /**
