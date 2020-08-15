@@ -12,8 +12,6 @@ use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnectio
 fn main() {
     let config = Config::default();
     let key_bindings = gen_keybindings! {
-        "M-semicolon" => run_external!("dmenu_run"),
-        "M-Return" => run_external!("st"),
         "M-j" => run_internal!(cycle_client, Forward),
         "M-k" => run_internal!(cycle_client, Backward),
         "M-S-j" => run_internal!(drag_client, Forward),
@@ -30,7 +28,9 @@ fn main() {
         "M-A-Down" => run_internal!(update_max_main, Less),
         "M-A-Right" => run_internal!(update_main_ratio, More),
         "M-A-Left" => run_internal!(update_main_ratio, Less),
-        "M-A-Escape" => run_internal!(exit);
+        "M-A-Escape" => run_internal!(exit),
+        "M-semicolon" => run_external!("dmenu_run"),
+        "M-Return" => run_external!("st");
 
         forall_workspaces: config.workspaces => {
             "M-{}" => focus_workspace,
