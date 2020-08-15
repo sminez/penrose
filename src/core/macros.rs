@@ -49,7 +49,7 @@ macro_rules! map(
 macro_rules! gen_keybindings(
     {
         $($binding:expr => $action:expr),+;
-        forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, }
+        $(forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, })+
     } => {
         {
             let mut _map = ::std::collections::HashMap::new();
@@ -62,7 +62,7 @@ macro_rules! gen_keybindings(
                 };
             )+
 
-            for i in 0..$ws_array.len() {
+            $(for i in 0..$ws_array.len() {
                 $(
                     let for_ws = format!($ws_binding, i+1);
                     match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
@@ -76,7 +76,7 @@ macro_rules! gen_keybindings(
                         ),
                     };
                 )+
-            }
+            })+
 
             _map
         }
