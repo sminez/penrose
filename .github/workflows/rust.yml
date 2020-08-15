@@ -18,8 +18,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install XCB deps
-      run: sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev
+    - name: Install C deps
+      run: sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
