@@ -551,7 +551,7 @@ impl XConn for XcbConnection {
                 .enumerate()
                 .map(|(i, r)| Screen::from_crtc_info_reply(r, i))
                 .filter(|s| {
-                    let (_, _, w, _) = s.true_region.values();
+                    let (_, _, w, _) = s.region(false).values();
                     w > 0
                 })
                 .collect(),
@@ -814,7 +814,7 @@ impl XConn for XcbConnection {
                 ((w / 2) as i16, (h / 2) as i16, id)
             }
             None => {
-                let (x, y, w, h) = screen.effective_region.values();
+                let (x, y, w, h) = screen.region(true).values();
                 ((x + w / 2) as i16, (y + h / 2) as i16, self.root)
             }
         };

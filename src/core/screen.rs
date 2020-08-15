@@ -9,15 +9,22 @@ type CRTCInfoReply = Reply<xcb_randr_get_crtc_info_reply_t>;
 /// Display information for a connected screen
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Screen {
-    /// The dimensions of the screen
-    pub true_region: Region,
-    /// The dimensions of the screen if bar is showing
-    pub effective_region: Region,
     /// The current workspace index being displayed
     pub wix: usize,
+    true_region: Region,
+    effective_region: Region,
 }
 
 impl Screen {
+    /// Create a new screen instance directly
+    pub fn new(region: Region, wix: usize) -> Screen {
+        Screen {
+            true_region: region.clone(),
+            effective_region: region,
+            wix,
+        }
+    }
+
     /// Create a new Screen from information obtained from the X server
     pub fn from_crtc_info_reply(r: CRTCInfoReply, wix: usize) -> Screen {
         let region = Region::new(

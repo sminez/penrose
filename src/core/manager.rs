@@ -736,12 +736,7 @@ mod tests {
     }
 
     fn test_screens() -> Vec<Screen> {
-        let r = Region::new(0, 0, 1366, 768);
-        vec![Screen {
-            true_region: r,
-            effective_region: r,
-            wix: 0,
-        }]
+        vec![Screen::new(Region::new(0, 0, 1366, 768), 0)]
     }
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {

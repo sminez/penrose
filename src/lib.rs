@@ -9,6 +9,9 @@ pub mod core;
 
 pub mod contrib;
 
+#[cfg(feature = "draw")]
+pub mod draw;
+
 // top level re-exports
 pub use crate::core::client;
 pub use crate::core::data_types;

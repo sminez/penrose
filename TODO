@@ -1,6 +1,3 @@
-- additional user facing actions:
-  - move client to screen
-
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
 
@@ -10,3 +7,13 @@
     like to keep.
   - While the Qtile bar I used to have was my favourite by far, I doubt I'm going to be able to
     reproduce that any time soon starting from scratch!
+
+- more hooks
+- more tests!
+- Selector based methods that return all matching items rather than just the first
+- re-order the methods on WindowManager
+- Fix auto-float behaviour
+- 'tags' extension
+- focus next (condition) action
+- focus_or_spawn action
+- move client to screen built-in action

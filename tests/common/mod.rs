@@ -12,19 +12,16 @@ pub const SCREEN_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 3 };
 pub const FOCUS_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 4 };
 pub const KILL_CLIENT_CODE: KeyCode = KeyCode { mask: 0, code: 5 };
 
-pub fn simple_screen(n: u32) -> Screen {
-    let r = Region::new(
-        n * SCREEN_WIDTH,
-        n * SCREEN_HEIGHT,
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-    );
-
-    Screen {
-        true_region: r,
-        effective_region: r,
-        wix: n as usize,
-    }
+pub fn simple_screen(n: usize) -> Screen {
+    Screen::new(
+        Region::new(
+            n as u32 * SCREEN_WIDTH,
+            n as u32 * SCREEN_HEIGHT,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT,
+        ),
+        n,
+    )
 }
 
 pub fn test_bindings() -> KeyBindings {
