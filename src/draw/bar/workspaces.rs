@@ -8,7 +8,7 @@ use crate::{
 struct WSMeta {
     name: String,
     occupied: bool,
-    extent: f64,
+    extent: (f64, f64),
 }
 
 fn meta_from_names(names: &[&str]) -> Vec<WSMeta> {
@@ -17,7 +17,7 @@ fn meta_from_names(names: &[&str]) -> Vec<WSMeta> {
         .map(|&s| WSMeta {
             name: format!(" {} ", s),
             occupied: false,
-            extent: 0.0,
+            extent: (0.0, 0.0),
         })
         .collect()
 }
@@ -31,7 +31,7 @@ pub struct WorkspaceWidget {
     is_focused: bool,
     focused_ws: usize,
     require_draw: bool,
-    extent: Option<f64>,
+    extent: Option<(f64, f64)>,
     fg_1: Color,
     fg_2: Color,
     bg_1: Color,
@@ -98,41 +98,43 @@ impl Hook for WorkspaceWidget {
 }
 
 impl Widget for WorkspaceWidget {
-    fn draw(&mut self, ctx: &mut Box<&mut dyn DrawContext>, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()> {
         ctx.color(&self.bg_2);
         ctx.rectangle(0.0, 0.0, w, h);
         ctx.font(&self.font, self.point_size)?;
 
-        let mut offset = 0.0;
         for (i, ws) in self.workspaces.iter().enumerate() {
             if i == self.focused_ws {
                 ctx.color(&self.bg_1);
-                ctx.rectangle(offset, 0.0, ws.extent, h);
+                ctx.rectangle(0.0, 0.0, ws.extent.0, h);
             }
 
             let fg = if ws.occupied { self.fg_1 } else { self.fg_2 };
             ctx.color(&fg);
-            ctx.text(&ws.name, (1.0, 1.0, 1.0, 1.0))?;
-            ctx.translate(ws.extent, 0.0);
-            offset += ws.extent;
+            let (_, eh) = self.extent.unwrap();
+            ctx.text(&ws.name, h - eh, (1.0, 1.0))?;
+            ctx.translate(ws.extent.0, 0.0);
         }
 
         self.require_draw = false;
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &Box<&mut dyn DrawContext>, _h: f64) -> Result<f64> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, _h: f64) -> Result<(f64, f64)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
                 let mut total = 0.0;
+                let mut h_max = 0.0;
                 for ws in self.workspaces.iter_mut() {
-                    let extent = ctx.text_extent(&ws.name, &self.font)?;
-                    total += extent;
-                    ws.extent = extent;
+                    let (w, h) = ctx.text_extent(&ws.name, &self.font)?;
+                    total += w;
+                    h_max = if h > h_max { h } else { h_max };
+                    ws.extent = (w, h);
                 }
 
-                Ok(total)
+                self.extent = Some((total, h_max));
+                Ok((total, h_max))
             }
         }
     }

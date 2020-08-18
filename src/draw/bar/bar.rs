@@ -59,38 +59,35 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     /// Re-render all widgets in this status bar
     pub fn redraw(&mut self) -> Result<()> {
         let mut ctx = self.drw.context_for(self.id)?;
-        let mut boxed: Box<&mut dyn DrawContext> = Box::new(&mut ctx);
 
-        boxed.color(&self.bg); // set background
-        boxed.rectangle(0.0, 0.0, self.w as f64, self.h as f64);
+        ctx.color(&self.bg);
+        ctx.rectangle(0.0, 0.0, self.w as f64, self.h as f64);
 
-        let extents = self.layout(&boxed)?;
-        let mut x = 0.0;
-
-        for (w, ext) in self.widgets.iter_mut().zip(extents) {
-            boxed.translate(x, 0.0);
-            w.draw(&mut boxed, ext, self.h)?;
-            x += ext + self.spacing;
+        let extents = self.layout(&mut ctx)?;
+        for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
+            wd.draw(&mut ctx, w, self.h)?;
+            ctx.translate(w + self.spacing, 0.0);
         }
 
         self.drw.flush();
         Ok(())
     }
 
-    fn layout(&mut self, ctx: &Box<&mut dyn DrawContext>) -> Result<Vec<f64>> {
+    fn layout(&mut self, ctx: &mut dyn DrawContext) -> Result<Vec<(f64, f64)>> {
         let mut extents = Vec::with_capacity(self.widgets.len());
         for w in self.widgets.iter_mut() {
             extents.push(w.current_extent(ctx, self.h)?);
         }
 
-        let total = extents.iter().sum::<f64>();
+        let total = extents.iter().map(|(w, _)| w).sum::<f64>();
         let n_greedy = self.greedy_indices.len();
 
         if total < self.w && n_greedy > 0 {
             // Pad out any greedy widgets that we have
             let per_greedy = (self.w - total) / n_greedy as f64;
             for i in self.greedy_indices.iter() {
-                extents[*i] += per_greedy;
+                let (w, h) = extents[*i];
+                extents[*i] = (w + per_greedy, h);
             }
         }
 

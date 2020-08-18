@@ -11,9 +11,9 @@ pub struct StaticText {
     point_size: i32,
     fg: Color,
     bg: Option<Color>,
-    padding: (f64, f64, f64, f64),
+    padding: (f64, f64),
     is_greedy: bool,
-    extent: Option<f64>,
+    extent: Option<(f64, f64)>,
 }
 impl StaticText {
     /// Construct a new StaticText
@@ -23,7 +23,7 @@ impl StaticText {
         point_size: i32,
         fg: C,
         bg: Option<C>,
-        padding: (f64, f64, f64, f64),
+        padding: (f64, f64),
         is_greedy: bool,
     ) -> Self {
         Self {
@@ -40,23 +40,28 @@ impl StaticText {
 }
 impl Hook for StaticText {}
 impl Widget for StaticText {
-    fn draw(&mut self, ctx: &mut Box<&mut dyn DrawContext>, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()> {
         if let Some(color) = self.bg {
             ctx.color(&color);
-            ctx.rectangle(0.0, 0.0, w, h);
+            let (x, y) = self.padding;
+            ctx.rectangle(0.0, 0.0, w + x + y, h);
         }
+
+        let (_, eh) = self.extent.unwrap();
         ctx.font(&self.font, self.point_size)?;
         ctx.color(&self.fg);
-        ctx.text(&self.txt, self.padding)?;
+        ctx.text(&self.txt, h - eh, self.padding)?;
 
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &Box<&mut dyn DrawContext>, _h: f64) -> Result<f64> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, _h: f64) -> Result<(f64, f64)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
-                let extent = ctx.text_extent(&self.txt, &self.font)?;
+                let (l, r) = self.padding;
+                let (w, h) = ctx.text_extent(&self.txt, &self.font)?;
+                let extent = (w + l + r, h);
                 self.extent = Some(extent);
                 Ok(extent)
             }

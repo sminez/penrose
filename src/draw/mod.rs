@@ -123,7 +123,7 @@ mod inner {
         /// Optional background color in 0xRRGGBB format (default to current background if None)
         pub bg: Option<u32>,
         /// Pixel padding around this string
-        pub padding: (f64, f64, f64, f64),
+        pub padding: (f64, f64),
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -216,15 +216,19 @@ mod inner {
         fn font(&mut self, font_name: &str, point_size: i32) -> Result<()>;
         /// Set the color used for subsequent drawing operations
         fn color(&mut self, color: &Color);
-        /// Translate this context to (x, y) within the window
-        fn translate(&self, x: f64, y: f64);
+        /// Translate this context by (dx, dy) from its current position
+        fn translate(&self, dx: f64, dy: f64);
+        /// Set the x offset for this context absolutely
+        fn set_x_offset(&self, x: f64);
+        /// Set the y offset for this context absolutely
+        fn set_y_offset(&self, y: f64);
         /// Draw a filled rectangle using the current color
         fn rectangle(&self, x: f64, y: f64, w: f64, h: f64);
         /// Render 's' using the current font with the supplied padding. returns the extent taken
         /// up by the rendered text
-        fn text(&self, s: &str, padding: (f64, f64, f64, f64)) -> Result<(f64, f64)>;
+        fn text(&self, s: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)>;
         /// Determine the pixel width of a given piece of text
-        fn text_extent(&self, s: &str, font: &str) -> Result<f64>;
+        fn text_extent(&self, s: &str, font: &str) -> Result<(f64, f64)>;
     }
 
     /// An XCB based Draw
@@ -335,8 +339,20 @@ mod inner {
             self.ctx.set_source_rgb(r, g, b);
         }
 
-        fn translate(&self, x: f64, y: f64) {
-            self.ctx.translate(x, y)
+        fn translate(&self, dx: f64, dy: f64) {
+            self.ctx.translate(dx, dy)
+        }
+
+        fn set_x_offset(&self, x: f64) {
+            let (_, y_offset) = self.ctx.get_matrix().transform_point(0.0, 0.0);
+            self.ctx.set_matrix(cairo::Matrix::identity());
+            self.ctx.translate(x, y_offset);
+        }
+
+        fn set_y_offset(&self, y: f64) {
+            let (x_offset, _) = self.ctx.get_matrix().transform_point(0.0, 0.0);
+            self.ctx.set_matrix(cairo::Matrix::identity());
+            self.ctx.translate(x_offset, y);
         }
 
         fn rectangle(&self, x: f64, y: f64, w: f64, h: f64) {
@@ -344,7 +360,7 @@ mod inner {
             self.ctx.fill();
         }
 
-        fn text(&self, s: &str, padding: (f64, f64, f64, f64)) -> Result<(f64, f64)> {
+        fn text(&self, s: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)> {
             let layout = pango_layout(&self.ctx)?;
             if let Some(ref font) = self.font {
                 layout.set_font_description(Some(font));
@@ -354,28 +370,25 @@ mod inner {
             layout.set_ellipsize(EllipsizeMode::End);
 
             let (w, h) = layout.get_pixel_size();
-            layout.set_width(w as i32 * pango::SCALE);
-            layout.set_height(h as i32 * pango::SCALE);
-
-            let (l, r, t, b) = padding;
-            self.ctx.translate(l, t);
+            let (l, r) = padding;
+            self.ctx.translate(l, h_offset);
             show_layout(&self.ctx, &layout);
-            self.ctx.translate(-l, -t);
+            self.ctx.translate(-l, -h_offset);
 
             let width = w as f64 + l + r;
-            let height = h as f64 + t + b;
+            let height = h as f64;
 
             Ok((width, height))
         }
 
-        fn text_extent(&self, s: &str, font_name: &str) -> Result<f64> {
+        fn text_extent(&self, s: &str, font_name: &str) -> Result<(f64, f64)> {
             let layout = pango_layout(&self.ctx)?;
             let font = self.fonts.get(font_name);
             layout.set_text(&s);
             layout.set_font_description(font);
-            let (w, _) = layout.get_pixel_size();
+            let (w, h) = layout.get_pixel_size();
 
-            Ok(w as f64)
+            Ok((w as f64, h as f64))
         }
     }
 }
