@@ -134,14 +134,16 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    fn update_x_workspace_details(&self) {
-        self.conn.update_desktops(
-            &self
-                .workspaces
-                .iter()
-                .map(|ws| ws.name())
-                .collect::<Vec<_>>(),
-        );
+    fn update_x_workspace_details(&mut self) {
+        let string_names: Vec<String> = self
+            .workspaces
+            .iter()
+            .map(|ws| ws.name().to_string())
+            .collect();
+        let names: Vec<&str> = string_names.iter().map(|s| s.as_ref()).collect();
+
+        self.conn.update_desktops(&names);
+        run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
     }
 
     /*

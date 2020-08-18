@@ -1,20 +1,20 @@
 //! Utilities for rendering custom windows
 pub mod bar;
-pub mod text;
 
-pub use inner::{Draw, DrawContext, WindowType, XCBDraw, XCBDrawContext};
+pub use bar::*;
+pub use inner::{Color, Draw, DrawContext, WindowType, XCBDraw, XCBDrawContext};
 
 mod inner {
     use std::collections::HashMap;
 
-    use crate::core::data_types::WinId;
+    use crate::{core::data_types::WinId, Result};
 
     use anyhow::anyhow;
     use cairo::{Context, XCBConnection, XCBDrawable, XCBSurface, XCBVisualType};
     use pango::{EllipsizeMode, FontDescription, Layout};
     use pangocairo::functions::{create_layout, show_layout};
 
-    fn pango_layout(ctx: &Context) -> anyhow::Result<Layout> {
+    fn pango_layout(ctx: &Context) -> Result<Layout> {
         create_layout(ctx).ok_or_else(|| anyhow!("unable to create pango layout"))
     }
 
@@ -22,10 +22,12 @@ mod inner {
         conn: &xcb::Connection,
         screen: &xcb::Screen,
         window_type: &WindowType,
-        width: i32,
-        height: i32,
-    ) -> anyhow::Result<(u32, XCBSurface)> {
-        let id = create_window(conn, screen, window_type, width as u16, height as u16)?;
+        x: i16,
+        y: i16,
+        w: i32,
+        h: i32,
+    ) -> Result<(u32, XCBSurface)> {
+        let id = create_window(conn, screen, window_type, x, y, w as u16, h as u16)?;
         let mut visualtype = get_visual_type(&conn, screen)?;
 
         let surface = unsafe {
@@ -38,20 +40,17 @@ mod inner {
                     &mut visualtype.base as *mut xcb::ffi::xcb_visualtype_t
                         as *mut cairo_sys::xcb_visualtype_t,
                 ),
-                width,
-                height,
+                w,
+                h,
             )
             .map_err(|err| anyhow!("Error creating surface: {}", err))?
         };
 
-        surface.set_size(width, height).unwrap();
+        surface.set_size(w, h).unwrap();
         Ok((id, surface))
     }
 
-    fn get_visual_type(
-        conn: &xcb::Connection,
-        screen: &xcb::Screen,
-    ) -> anyhow::Result<xcb::Visualtype> {
+    fn get_visual_type(conn: &xcb::Connection, screen: &xcb::Screen) -> Result<xcb::Visualtype> {
         conn.get_setup()
             .roots()
             .flat_map(|r| r.allowed_depths())
@@ -64,9 +63,11 @@ mod inner {
         conn: &xcb::Connection,
         screen: &xcb::Screen,
         window_type: &WindowType,
-        width: u16,
-        height: u16,
-    ) -> anyhow::Result<u32> {
+        x: i16,
+        y: i16,
+        w: u16,
+        h: u16,
+    ) -> Result<u32> {
         let id = conn.generate_id();
 
         xcb::create_window(
@@ -74,10 +75,10 @@ mod inner {
             xcb::COPY_FROM_PARENT as u8,
             id,
             screen.root(),
-            0,
-            0,
-            width,
-            height,
+            x,
+            y,
+            w,
+            h,
             0,
             xcb::WINDOW_CLASS_INPUT_OUTPUT as u16,
             0,
@@ -103,7 +104,7 @@ mod inner {
         Ok(id)
     }
 
-    fn intern_atom(conn: &xcb::Connection, name: &str) -> anyhow::Result<u32> {
+    fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32> {
         xcb::intern_atom(conn, false, name)
             .get_reply()
             .map(|r| r.atom())
@@ -111,12 +112,29 @@ mod inner {
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]
+    /// A set of styling options for a text string
+    pub struct TextStyle {
+        /// Pango font name to use for rendering
+        pub font: &'static str,
+        /// Point size to render the font at
+        pub point_size: i32,
+        /// Foreground color in 0xRRGGBB format
+        pub fg: u32,
+        /// Optional background color in 0xRRGGBB format (default to current background if None)
+        pub bg: Option<u32>,
+        /// Pixel padding around this string
+        pub padding: (f64, f64, f64, f64),
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    /// A simple RGB based color
     pub struct Color {
         r: f64,
         g: f64,
         b: f64,
     }
     impl Color {
+        /// Create a new Color from a hex encoded u32: 0xRRGGBB
         pub fn new_from_hex(hex: u32) -> Self {
             Self {
                 r: ((hex & 0xFF0000) >> 16) as f64 / 255.0,
@@ -125,8 +143,23 @@ mod inner {
             }
         }
 
+        /// The RGB information of this color as 0.0-1.0 range floats representing
+        /// proportions of 255 for each of R, G, B
         pub fn rgb(&self) -> (f64, f64, f64) {
             (self.r, self.g, self.b)
+        }
+    }
+
+    impl From<u32> for Color {
+        fn from(hex: u32) -> Self {
+            Self::new_from_hex(hex)
+        }
+    }
+
+    impl From<(f64, f64, f64)> for Color {
+        fn from(rgb: (f64, f64, f64)) -> Self {
+            let (r, g, b) = rgb;
+            Self { r, g, b }
         }
     }
 
@@ -155,13 +188,20 @@ mod inner {
         type Ctx: DrawContext;
 
         /// Create a new client window with a canvas for drawing
-        fn new_window(&mut self, t: &WindowType, w: usize, h: usize) -> anyhow::Result<WinId>;
+        fn new_window(
+            &mut self,
+            t: &WindowType,
+            x: usize,
+            y: usize,
+            w: usize,
+            h: usize,
+        ) -> Result<WinId>;
         /// Get the size of the target screen in pixels
-        fn screen_size(&self, ix: usize) -> anyhow::Result<(usize, usize)>;
+        fn screen_size(&self, ix: usize) -> Result<(usize, usize)>;
         /// Register a font by name for later use
         fn register_font(&mut self, font_name: &str);
         /// Get a new DrawContext for the target window
-        fn context_for(&self, id: WinId) -> anyhow::Result<Self::Ctx>;
+        fn context_for(&self, id: WinId) -> Result<Self::Ctx>;
         /// Flush pending actions
         fn flush(&self);
         /// Map the target window to the screen
@@ -173,16 +213,18 @@ mod inner {
     /// Used for simple drawing to the screen
     pub trait DrawContext {
         /// Set the active font, must have been registered on the partent Draw
-        fn font(&mut self, font_name: &str, point_size: i32) -> anyhow::Result<&mut Self>;
+        fn font(&mut self, font_name: &str, point_size: i32) -> Result<()>;
         /// Set the color used for subsequent drawing operations
-        fn color(&mut self, color: u32) -> &mut Self;
+        fn color(&mut self, color: &Color);
         /// Translate this context to (x, y) within the window
         fn translate(&self, x: f64, y: f64);
         /// Draw a filled rectangle using the current color
         fn rectangle(&self, x: f64, y: f64, w: f64, h: f64);
         /// Render 's' using the current font with the supplied padding. returns the extent taken
         /// up by the rendered text
-        fn text(&self, s: &str, padding: (f64, f64, f64, f64)) -> anyhow::Result<(usize, usize)>;
+        fn text(&self, s: &str, padding: (f64, f64, f64, f64)) -> Result<(f64, f64)>;
+        /// Determine the pixel width of a given piece of text
+        fn text_extent(&self, s: &str, font: &str) -> Result<f64>;
     }
 
     /// An XCB based Draw
@@ -193,7 +235,7 @@ mod inner {
     }
     impl XCBDraw {
         /// Create a new empty XCBDraw. Fails if unable to connect to the X server
-        pub fn new() -> anyhow::Result<Self> {
+        pub fn new() -> Result<Self> {
             let (conn, _) = xcb::Connection::connect(None)?;
 
             Ok(Self {
@@ -203,7 +245,7 @@ mod inner {
             })
         }
 
-        fn screen(&self, ix: usize) -> anyhow::Result<xcb::Screen> {
+        fn screen(&self, ix: usize) -> Result<xcb::Screen> {
             Ok(self
                 .conn
                 .get_setup()
@@ -215,15 +257,24 @@ mod inner {
     impl Draw for XCBDraw {
         type Ctx = XCBDrawContext;
 
-        fn new_window(&mut self, t: &WindowType, w: usize, h: usize) -> anyhow::Result<WinId> {
+        fn new_window(
+            &mut self,
+            t: &WindowType,
+            x: usize,
+            y: usize,
+            w: usize,
+            h: usize,
+        ) -> Result<WinId> {
             let screen = self.screen(0)?;
-            let (id, surface) = new_cairo_surface(&self.conn, &screen, t, w as i32, h as i32)?;
+            let (id, surface) = new_cairo_surface(
+                &self.conn, &screen, t, x as i16, y as i16, w as i32, h as i32,
+            )?;
             self.surfaces.insert(id, surface);
 
             Ok(id)
         }
 
-        fn screen_size(&self, ix: usize) -> anyhow::Result<(usize, usize)> {
+        fn screen_size(&self, ix: usize) -> Result<(usize, usize)> {
             let s = self.screen(ix)?;
             Ok((s.width_in_pixels() as usize, s.height_in_pixels() as usize))
         }
@@ -233,7 +284,7 @@ mod inner {
                 .insert(font_name.into(), FontDescription::from_string(font_name));
         }
 
-        fn context_for(&self, id: WinId) -> anyhow::Result<Self::Ctx> {
+        fn context_for(&self, id: WinId) -> Result<Self::Ctx> {
             let ctx = Context::new(
                 self.surfaces
                     .get(&id)
@@ -263,27 +314,25 @@ mod inner {
     /// An XCB based drawing context using pango and cairo
     pub struct XCBDrawContext {
         ctx: Context,
-        font: Option<String>,
+        font: Option<FontDescription>,
         fonts: HashMap<String, FontDescription>,
     }
     impl DrawContext for XCBDrawContext {
-        fn font(&mut self, font_name: &str, point_size: i32) -> anyhow::Result<&mut Self> {
+        fn font(&mut self, font_name: &str, point_size: i32) -> Result<()> {
             let mut font = self
                 .fonts
                 .get_mut(font_name)
                 .ok_or_else(|| anyhow!("unknown font: {}", font_name))?
                 .clone();
             font.set_size(point_size * pango::SCALE);
-            self.font = Some(font_name.to_string());
+            self.font = Some(font);
 
-            Ok(self)
+            Ok(())
         }
 
-        fn color(&mut self, color: u32) -> &mut Self {
-            let (r, g, b) = Color::new_from_hex(color).rgb();
+        fn color(&mut self, color: &Color) {
+            let (r, g, b) = color.rgb();
             self.ctx.set_source_rgb(r, g, b);
-
-            self
         }
 
         fn translate(&self, x: f64, y: f64) {
@@ -295,10 +344,10 @@ mod inner {
             self.ctx.fill();
         }
 
-        fn text(&self, s: &str, padding: (f64, f64, f64, f64)) -> anyhow::Result<(usize, usize)> {
+        fn text(&self, s: &str, padding: (f64, f64, f64, f64)) -> Result<(f64, f64)> {
             let layout = pango_layout(&self.ctx)?;
             if let Some(ref font) = self.font {
-                layout.set_font_description(Some(self.fonts.get(font).unwrap()));
+                layout.set_font_description(Some(font));
             }
 
             layout.set_text(s);
@@ -313,9 +362,20 @@ mod inner {
             show_layout(&self.ctx, &layout);
             self.ctx.translate(-l, -t);
 
-            let width = (w as f64 + l + r) as usize;
-            let height = (h as f64 + t + b) as usize;
+            let width = w as f64 + l + r;
+            let height = h as f64 + t + b;
+
             Ok((width, height))
+        }
+
+        fn text_extent(&self, s: &str, font_name: &str) -> Result<f64> {
+            let layout = pango_layout(&self.ctx)?;
+            let font = self.fonts.get(font_name);
+            layout.set_text(&s);
+            layout.set_font_description(font);
+            let (w, _) = layout.get_pixel_size();
+
+            Ok(w as f64)
         }
     }
 }

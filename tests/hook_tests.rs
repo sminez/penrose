@@ -41,6 +41,10 @@ impl Hook for TestHook {
         self.mark_called("workspace_change");
     }
 
+    fn workspaces_updated(&mut self, _: &mut WindowManager, _: &Vec<&str>, _: usize) {
+        self.mark_called("workspaces_updated");
+    }
+
     fn screen_change(&mut self, _: &mut WindowManager, _: usize) {
         self.mark_called("screen_change");
     }
@@ -129,9 +133,18 @@ hook_test!(
 hook_test!(
     expected_calls => 1,
     "workspace_change",
-    test_workspace_hooks,
+    test_workspace_change_hooks,
     vec![XEvent::KeyPress {
         code: common::WORKSPACE_CHANGE_CODE
+    }]
+);
+
+hook_test!(
+    expected_calls => 1,
+    "workspaces_updated",
+    test_workspace_update_hooks,
+    vec![XEvent::KeyPress {
+        code: common::ADD_WORKSPACE_CODE
     }]
 );
 

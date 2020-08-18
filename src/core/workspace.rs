@@ -89,7 +89,7 @@ impl Workspace {
 
     /// Run the current layout function, generating a list of resize actions to be
     /// applied byt the window manager.
-    pub fn arrange(
+    pub(crate) fn arrange(
         &self,
         screen_region: Region,
         client_map: &HashMap<WinId, Client>,

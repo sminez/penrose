@@ -26,3 +26,8 @@ pub use crate::core::xconnection;
 pub use data_types::{Change::*, Config, Direction::*};
 pub use manager::WindowManager;
 pub use xconnection::XcbConnection;
+
+use anyhow;
+
+/// A default 'anyhow' based result type
+pub type Result<T> = anyhow::Result<T>;

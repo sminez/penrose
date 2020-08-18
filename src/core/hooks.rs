@@ -58,6 +58,11 @@ pub trait Hook {
     }
 
     /**
+     * Called when there has been a change to the WindowManager workspace list.
+     */
+    fn workspaces_updated(&mut self, _wm: &mut WindowManager, _names: &Vec<&str>, _active: usize) {}
+
+    /**
      * Called after focus moves to a new Screen.
      * Argument is a index into the WindowManager screen array (internal data structure that supports
      * indexing) for the new Screen.
