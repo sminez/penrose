@@ -5,6 +5,8 @@ use crate::{
     Result, WindowManager,
 };
 
+const PADDING: f64 = 3.0;
+
 struct WSMeta {
     name: String,
     occupied: bool,
@@ -15,7 +17,7 @@ fn meta_from_names(names: &[&str]) -> Vec<WSMeta> {
     names
         .iter()
         .map(|&s| WSMeta {
-            name: format!(" {} ", s),
+            name: s.to_string(),
             occupied: false,
             extent: (0.0, 0.0),
         })
@@ -102,6 +104,7 @@ impl Widget for WorkspaceWidget {
         ctx.color(&self.bg_2);
         ctx.rectangle(0.0, 0.0, w, h);
         ctx.font(&self.font, self.point_size)?;
+        ctx.translate(PADDING, 0.0);
 
         for (i, ws) in self.workspaces.iter().enumerate() {
             if i == self.focused_ws {
@@ -112,7 +115,7 @@ impl Widget for WorkspaceWidget {
             let fg = if ws.occupied { self.fg_1 } else { self.fg_2 };
             ctx.color(&fg);
             let (_, eh) = self.extent.unwrap();
-            ctx.text(&ws.name, h - eh, (1.0, 1.0))?;
+            ctx.text(&ws.name, h - eh, (PADDING, PADDING))?;
             ctx.translate(ws.extent.0, 0.0);
         }
 
@@ -128,9 +131,9 @@ impl Widget for WorkspaceWidget {
                 let mut h_max = 0.0;
                 for ws in self.workspaces.iter_mut() {
                     let (w, h) = ctx.text_extent(&ws.name, &self.font)?;
-                    total += w;
+                    total += w + PADDING + PADDING;
                     h_max = if h > h_max { h } else { h_max };
-                    ws.extent = (w, h);
+                    ws.extent = (w + PADDING + PADDING, h);
                 }
 
                 self.extent = Some((total, h_max));

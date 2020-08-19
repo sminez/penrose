@@ -1,6 +1,6 @@
 use std::{thread, time};
 
-use penrose::{draw::*, Result};
+use penrose::{core::hooks::Hook, draw::*, Config, Result, WindowManager, XcbConnection};
 
 const HEIGHT: usize = 18;
 
@@ -32,18 +32,9 @@ fn bar_draw() -> Result<()> {
         "",
         IOSEVKA,
         12,
-        WHITE,
-        Some(BLUE),
-        (6.0, 2.0),
-        false,
-    )));
-    bar.add_widget(Box::new(StaticText::new(
-        "penrose",
-        PROFONT,
-        11,
-        RED,
+        BLUE,
         None,
-        (0.0, 0.0),
+        (2.0, 2.0),
         false,
     )));
     bar.add_widget(Box::new(WorkspaceWidget::new(
@@ -51,7 +42,16 @@ fn bar_draw() -> Result<()> {
     )));
 
     bar.redraw()?;
-    thread::sleep(time::Duration::from_millis(5000));
+
+    let config = Config::default();
+    let conn = XcbConnection::new().unwrap();
+    let mut wm = WindowManager::init(config, &conn);
+
+    thread::sleep(time::Duration::from_millis(1000));
+    for focused in 1..6 {
+        bar.workspace_change(&mut wm, focused - 1, focused);
+        thread::sleep(time::Duration::from_millis(1000));
+    }
     Ok(())
 }
 
