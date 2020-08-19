@@ -64,6 +64,10 @@ impl Client {
         self.workspace = workspace
     }
 
+    pub(crate) fn set_name(&mut self, name: impl Into<String>) {
+        self.wm_name = name.into()
+    }
+
     /// The WM_CLASS of the window that this Client is tracking
     pub fn class(&self) -> &str {
         &self.wm_class

@@ -31,6 +31,19 @@ pub trait Hook {
     fn remove_client(&mut self, _wm: &mut WindowManager, _id: WinId) {}
 
     /**
+     * Called whenever something updates the WM_NAME or _NET_WM_NAME property on a window.
+     * is_root == true indicates that this is the root window that is being modified
+     */
+    fn client_name_updated(
+        &mut self,
+        _wm: &mut WindowManager,
+        _id: WinId,
+        _name: &str,
+        _is_root: bool,
+    ) {
+    }
+
+    /**
      * Called after a Layout is applied to the active Workspace.
      * Arguments are indices into the WindowManager workspace and screen arrays (internal data
      * structures that support indexing) which can be used to fetch references to the active Workspace

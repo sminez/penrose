@@ -235,6 +235,9 @@ impl<'a> WindowManager<'a> {
                     XEvent::Destroy { id } => self.handle_destroy_notify(id),
                     XEvent::ScreenChange => self.handle_screen_change(),
                     XEvent::RandrNotify => self.detect_screens(),
+                    XEvent::PropertyNotify { id, atom, is_root } => {
+                        self.handle_property_notify(id, &atom, is_root)
+                    }
                     // XEvent::ButtonPress => self.handle_button_press(),
                     // XEvent::ButtonRelease => self.handle_button_release(),
                     _ => (),
@@ -326,6 +329,15 @@ impl<'a> WindowManager<'a> {
         debug!("DESTROY_NOTIFY for {}", win_id);
         self.remove_client(win_id);
         self.apply_layout(self.active_ws_index());
+    }
+
+    fn handle_property_notify(&mut self, id: WinId, atom: &str, is_root: bool) {
+        if atom == "WM_NAME" || atom == "_NET_WM_NAME" {
+            if let Ok(name) = self.conn.str_prop(id, atom) {
+                self.client_map.get_mut(&id).map(|c| c.set_name(&name));
+                run_hooks!(client_name_updated, self, id, &name, is_root);
+            }
+        }
     }
 
     /*
