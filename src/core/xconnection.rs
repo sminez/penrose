@@ -270,6 +270,8 @@ pub enum XEvent {
         id: WinId,
         /// The property that changed
         atom: String,
+        /// Is this window the root window?
+        is_root: bool,
     },
 }
 
@@ -553,6 +555,7 @@ impl XConn for XcbConnection {
                             Some(XEvent::PropertyNotify {
                                 id: e.window(),
                                 atom: atom.name().to_string(),
+                                is_root: e.window() == self.root,
                             })
                         })
                 }
