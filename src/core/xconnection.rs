@@ -10,10 +10,12 @@
  *  [EWMH](https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html)
  *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
-use crate::data_types::{KeyBindings, KeyCode, Point, Region, WinId};
-use crate::screen::Screen;
-use std::cell::Cell;
-use std::collections::HashMap;
+use crate::{
+    data_types::{KeyBindings, KeyCode, Point, Region, WinId},
+    screen::Screen,
+    Result,
+};
+use std::{cell::Cell, collections::HashMap};
 
 use anyhow::anyhow;
 use xcb;
@@ -194,7 +196,7 @@ const AUTO_FLOAT_WINDOW_TYPES: &[&'static str] = &[
  * *ButtonRelease* - a mouse button was released
  *   - same fields as *ButtonPress*
  */
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum XEvent {
     /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
     ButtonPress,
@@ -261,6 +263,14 @@ pub enum XEvent {
 
     /// xcb docs: https://www.mankier.com/3/xcb_randr_notify_event_t
     RandrNotify,
+
+    /// xcb docs: https://www.mankier.com/3/xcb_property_notify_event_t
+    PropertyNotify {
+        /// The ID of the window that had a property changed
+        id: WinId,
+        /// The property that changed
+        atom: String,
+    },
 }
 
 /// A handle on a running X11 connection that we can use for issuing X requests
@@ -290,7 +300,7 @@ pub trait XConn {
     fn unmap_window(&self, id: WinId);
 
     /// Send an X event to the target window
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> anyhow::Result<()>;
+    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()>;
 
     /// Return the client ID of the Client that currently holds X focus
     fn focused_client(&self) -> WinId;
@@ -340,13 +350,13 @@ pub trait XConn {
      * Use the xcb api to query a string property for a window by window ID and poperty name.
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
-    fn str_prop(&self, id: u32, name: &str) -> anyhow::Result<String>;
+    fn str_prop(&self, id: u32, name: &str) -> Result<String>;
 
     /**
      * Fetch an atom prop by name for a particular window ID
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
-    fn atom_prop(&self, id: u32, name: &str) -> anyhow::Result<u32>;
+    fn atom_prop(&self, id: u32, name: &str) -> Result<u32>;
 
     /// Perform any state cleanup required prior to shutting down the window manager
     fn cleanup(&self);
@@ -364,7 +374,7 @@ pub struct XcbConnection {
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new() -> anyhow::Result<XcbConnection> {
+    pub fn new() -> Result<XcbConnection> {
         let (conn, _) = match xcb::Connection::connect(None) {
             Err(e) => return Err(anyhow!("unable to establish connection to X server: {}", e)),
             Ok(conn) => conn,
@@ -426,7 +436,7 @@ impl XcbConnection {
         })
     }
 
-    fn atom(&self, name: &str) -> anyhow::Result<u32> {
+    fn atom(&self, name: &str) -> Result<u32> {
         self.atoms
             .get(name)
             .map(|a| *a)
@@ -437,7 +447,7 @@ impl XcbConnection {
         self.atom(name).unwrap()
     }
 
-    fn window_geometry(&self, id: WinId) -> anyhow::Result<Region> {
+    fn window_geometry(&self, id: WinId) -> Result<Region> {
         let res = xcb::get_geometry(&self.conn, id).get_reply()?;
         Ok(Region::new(
             res.x() as u32,
@@ -534,6 +544,19 @@ impl XConn for XcbConnection {
 
                 xcb::randr::SCREEN_CHANGE_NOTIFY => Some(XEvent::ScreenChange),
 
+                xcb::PROPERTY_NOTIFY => {
+                    let e: &xcb::PropertyNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    xcb::xproto::get_atom_name(&self.conn, e.atom())
+                        .get_reply()
+                        .ok()
+                        .and_then(|atom| {
+                            Some(XEvent::PropertyNotify {
+                                id: e.window(),
+                                atom: atom.name().to_string(),
+                            })
+                        })
+                }
+
                 // NOTE: ignoring other event types
                 _ => None,
             }
@@ -600,7 +623,7 @@ impl XConn for XcbConnection {
         xcb::unmap_window(&self.conn, id);
     }
 
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> anyhow::Result<()> {
+    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
         let atom = self.atom(atom_name)?;
         let wm_protocols = self.known_atom("WM_PROTOCOLS");
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
@@ -853,7 +876,7 @@ impl XConn for XcbConnection {
             .collect()
     }
 
-    fn str_prop(&self, id: u32, name: &str) -> anyhow::Result<String> {
+    fn str_prop(&self, id: u32, name: &str) -> Result<String> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
             &self.conn,       // xcb connection to X11
@@ -868,7 +891,7 @@ impl XConn for XcbConnection {
         Ok(String::from_utf8(cookie.get_reply()?.value().to_vec())?)
     }
 
-    fn atom_prop(&self, id: u32, name: &str) -> anyhow::Result<u32> {
+    fn atom_prop(&self, id: u32, name: &str) -> Result<u32> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
             &self.conn,       // xcb connection to X11
@@ -947,7 +970,7 @@ impl XConn for MockXConn {
     fn mark_new_window(&self, _: WinId) {}
     fn map_window(&self, _: WinId) {}
     fn unmap_window(&self, _: WinId) {}
-    fn send_client_event(&self, _: WinId, _: &str) -> anyhow::Result<()> {
+    fn send_client_event(&self, _: WinId, _: &str) -> Result<()> {
         Ok(())
     }
     fn focused_client(&self) -> WinId {
@@ -970,10 +993,10 @@ impl XConn for MockXConn {
     fn query_for_active_windows(&self) -> Vec<WinId> {
         Vec::new()
     }
-    fn str_prop(&self, _: u32, name: &str) -> anyhow::Result<String> {
+    fn str_prop(&self, _: u32, name: &str) -> Result<String> {
         Ok(String::from(name))
     }
-    fn atom_prop(&self, id: u32, _: &str) -> anyhow::Result<u32> {
+    fn atom_prop(&self, id: u32, _: &str) -> Result<u32> {
         Ok(id)
     }
     fn cleanup(&self) {}
