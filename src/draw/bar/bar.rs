@@ -7,6 +7,14 @@ use crate::{
     Result, WindowManager,
 };
 
+/// The position of a status bar
+pub enum Position {
+    /// Top of the screen
+    Top,
+    /// Bottom of the screen
+    Bottom,
+}
+
 /// A simple status bar that works via hooks
 pub struct StatusBar<Ctx> {
     drw: Box<dyn Draw<Ctx = Ctx>>,
@@ -22,38 +30,35 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     /// Try to initialise a new empty status bar. Can fail if we are unable to create our window
     pub fn try_new(
         mut drw: Box<dyn Draw<Ctx = Ctx>>,
+        position: Position,
         spacing: f64,
-        top_bar: bool,
         screen_index: usize,
         h: usize,
         bg: impl Into<Color>,
+        fonts: &[&str],
+        widgets: Vec<Box<dyn Widget>>,
     ) -> Result<Self> {
         let (sw, sh) = drw.screen_size(screen_index)?;
-        let y = if top_bar { 0 } else { sh - h };
+        let y = match position {
+            Position::Top => 0,
+            Position::Bottom => sh - h,
+        };
         let id = drw.new_window(&WindowType::Dock, 0, y, sw, h)?;
-
-        Ok(Self {
+        let mut bar = Self {
             drw,
             spacing,
-            widgets: vec![],
+            widgets,
             greedy_indices: vec![],
             id,
             w: sw as f64,
             h: h as f64,
             bg: bg.into(),
-        })
-    }
+        };
 
-    /// Register the fonts required by the widgets contained in this bar
-    pub fn register_fonts(&mut self, fonts: &[&str]) {
-        for font in fonts {
-            self.drw.register_font(font);
-        }
-    }
+        fonts.iter().for_each(|f| bar.drw.register_font(f));
+        bar.redraw()?;
 
-    /// Add a new widget to the status bar
-    pub fn add_widget(&mut self, widget: Box<dyn Widget>) {
-        self.widgets.push(widget);
+        Ok(bar)
     }
 
     /// Re-render all widgets in this status bar
@@ -116,6 +121,19 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
     fn remove_client(&mut self, wm: &mut WindowManager, id: WinId) {
         for w in self.widgets.iter_mut() {
             w.remove_client(wm, id);
+        }
+        self.redraw_if_needed();
+    }
+
+    fn client_name_updated(
+        &mut self,
+        wm: &mut WindowManager,
+        id: WinId,
+        name: &str,
+        is_root: bool,
+    ) {
+        for w in self.widgets.iter_mut() {
+            w.client_name_updated(wm, id, name, is_root);
         }
         self.redraw_if_needed();
     }

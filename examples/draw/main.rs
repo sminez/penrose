@@ -26,22 +26,29 @@ fn bar_draw() -> Result<()> {
     let workspaces = &["1", "2", "3", "4", "5", "6"];
 
     let drw = XCBDraw::new()?;
-    let mut bar = StatusBar::try_new(Box::new(drw), 5.0, true, 0, HEIGHT, BLACK)?;
-    bar.register_fonts(&[PROFONT, IOSEVKA]);
-    bar.add_widget(Box::new(StaticText::new(
-        "",
-        IOSEVKA,
-        12,
-        BLUE,
-        None,
-        (2.0, 2.0),
-        false,
-    )));
-    bar.add_widget(Box::new(WorkspaceWidget::new(
-        workspaces, PROFONT, 11, 0, WHITE, GREY, BLUE, BLACK,
-    )));
-
-    bar.redraw()?;
+    let mut bar = StatusBar::try_new(
+        Box::new(drw),
+        Position::Top,
+        5.0, // widget spacing
+        0,   // screen index
+        HEIGHT,
+        BLACK,
+        &[PROFONT, IOSEVKA],
+        vec![
+            Box::new(StaticText::new(
+                "",
+                IOSEVKA,
+                12,
+                BLUE,
+                None,
+                (2.0, 2.0),
+                false,
+            )),
+            Box::new(Workspaces::new(
+                workspaces, PROFONT, 11, 0, WHITE, GREY, BLUE, BLACK,
+            )),
+        ],
+    )?;
 
     let config = Config::default();
     let conn = XcbConnection::new().unwrap();

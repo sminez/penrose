@@ -1,11 +1,9 @@
 //! Status bars
 pub mod bar;
-mod text;
-mod workspaces;
+pub mod widgets;
 
-pub use bar::StatusBar;
-pub use text::StaticText;
-pub use workspaces::WorkspaceWidget;
+pub use bar::{Position, StatusBar};
+pub use widgets::{StaticText, Workspaces};
 
 use crate::{draw::DrawContext, hooks::Hook, Result};
 
