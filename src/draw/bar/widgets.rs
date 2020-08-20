@@ -1,6 +1,6 @@
 //! Built in status bar widgets
 use crate::{
-    data_types::Selector,
+    data_types::{Selector, WinId},
     draw::{Color, DrawContext, Widget},
     hooks::Hook,
     Result, WindowManager,
@@ -8,8 +8,11 @@ use crate::{
 
 const PADDING: f64 = 3.0;
 
-/// A simple piece of static text that never updates
-pub struct StaticText {
+/// A simple piece of static text with an optional background color.
+///
+/// Can be used as a simple static element in a status bar or as an inner element for rendering
+/// more complex text based widgets.
+pub struct Text {
     txt: String,
     font: String,
     point_size: i32,
@@ -17,48 +20,69 @@ pub struct StaticText {
     bg: Option<Color>,
     padding: (f64, f64),
     is_greedy: bool,
+    right_justified: bool,
     extent: Option<(f64, f64)>,
+    require_draw: bool,
 }
 
-impl StaticText {
-    /// Construct a new StaticText
-    pub fn new<S: Into<String>, C: Into<Color>>(
-        txt: S,
-        font: S,
+impl Text {
+    /// Construct a new Text
+    pub fn new(
+        txt: impl Into<String>,
+        font: impl Into<String>,
         point_size: i32,
-        fg: C,
-        bg: Option<C>,
+        fg: Color,
+        bg: Option<Color>,
         padding: (f64, f64),
         is_greedy: bool,
+        right_justified: bool,
     ) -> Self {
         Self {
             txt: txt.into(),
             font: font.into(),
             point_size,
-            fg: fg.into(),
-            bg: bg.map(|b| b.into()),
+            fg: fg,
+            bg: bg,
             padding,
             is_greedy,
+            right_justified,
             extent: None,
+            require_draw: false,
         }
+    }
+
+    /// Set the rendered text and trigger a redraw
+    pub fn set_text(&mut self, txt: impl Into<String>) {
+        self.txt = txt.into();
+        self.extent = None;
+        self.require_draw = true;
     }
 }
 
-impl Hook for StaticText {}
+impl Hook for Text {}
 
-impl Widget for StaticText {
+impl Widget for Text {
     fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()> {
         if let Some(color) = self.bg {
             ctx.color(&color);
-            let (x, y) = self.padding;
-            ctx.rectangle(0.0, 0.0, w + x + y, h);
+            ctx.rectangle(0.0, 0.0, w, h);
         }
 
-        let (_, eh) = self.extent.unwrap();
+        let (ew, eh) = self.extent.unwrap();
         ctx.font(&self.font, self.point_size)?;
         ctx.color(&self.fg);
-        ctx.text(&self.txt, h - eh, self.padding)?;
 
+        let offset = w - ew;
+        let right_justify = self.right_justified && self.is_greedy && offset > 0.0;
+        if right_justify {
+            ctx.translate(offset, 0.0);
+            ctx.text(&self.txt, h - eh, self.padding)?;
+            ctx.translate(-offset, 0.0);
+        } else {
+            ctx.text(&self.txt, h - eh, self.padding)?;
+        }
+
+        self.require_draw = false;
         Ok(())
     }
 
@@ -76,7 +100,7 @@ impl Widget for StaticText {
     }
 
     fn require_draw(&self) -> bool {
-        false
+        self.require_draw
     }
 
     fn is_greedy(&self) -> bool {
@@ -167,6 +191,8 @@ impl Hook for Workspaces {
                     .len()
                     > 0
             });
+            self.extent = None;
+            self.require_draw = true;
         }
     }
 
@@ -226,5 +252,125 @@ impl Widget for Workspaces {
 
     fn is_greedy(&self) -> bool {
         false
+    }
+}
+
+/// A text widget that is set via updating the root window name a la dwm
+pub struct RootWindowName {
+    txt: Text,
+}
+
+impl RootWindowName {
+    /// Create a new RootWindowName widget
+    pub fn new(
+        font: impl Into<String>,
+        point_size: i32,
+        fg: Color,
+        bg: Option<Color>,
+        padding: (f64, f64),
+        is_greedy: bool,
+        right_justified: bool,
+    ) -> Self {
+        Self {
+            txt: Text::new(
+                "penrose",
+                font,
+                point_size,
+                fg,
+                bg,
+                padding,
+                is_greedy,
+                right_justified,
+            ),
+        }
+    }
+}
+
+impl Hook for RootWindowName {
+    fn client_name_updated(&mut self, _: &mut WindowManager, _: WinId, name: &str, is_root: bool) {
+        if is_root {
+            self.txt.set_text(name);
+        }
+    }
+}
+
+impl Widget for RootWindowName {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()> {
+        self.txt.draw(ctx, w, h)
+    }
+
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
+        self.txt.current_extent(ctx, h)
+    }
+
+    fn require_draw(&self) -> bool {
+        self.txt.require_draw()
+    }
+
+    fn is_greedy(&self) -> bool {
+        self.txt.is_greedy()
+    }
+}
+
+/// A text widget that is set via updating the root window name a la dwm
+pub struct ActiveWindowName {
+    txt: Text,
+}
+
+impl ActiveWindowName {
+    /// Create a new RootWindowName widget
+    pub fn new(
+        font: impl Into<String>,
+        point_size: i32,
+        fg: Color,
+        bg: Option<Color>,
+        padding: (f64, f64),
+        is_greedy: bool,
+        right_justified: bool,
+    ) -> Self {
+        Self {
+            txt: Text::new(
+                "",
+                font,
+                point_size,
+                fg,
+                bg,
+                padding,
+                is_greedy,
+                right_justified,
+            ),
+        }
+    }
+}
+
+impl Hook for ActiveWindowName {
+    fn focus_change(&mut self, wm: &mut WindowManager, id: WinId) {
+        if let Some(client) = wm.client(&Selector::WinId(id)) {
+            self.txt.set_text(client.wm_name());
+        }
+    }
+
+    fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, name: &str, _: bool) {
+        if Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
+            self.txt.set_text(name);
+        }
+    }
+}
+
+impl Widget for ActiveWindowName {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()> {
+        self.txt.draw(ctx, w, h)
+    }
+
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
+        self.txt.current_extent(ctx, h)
+    }
+
+    fn require_draw(&self) -> bool {
+        self.txt.require_draw()
+    }
+
+    fn is_greedy(&self) -> bool {
+        self.txt.is_greedy()
     }
 }

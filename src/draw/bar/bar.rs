@@ -19,8 +19,6 @@ pub enum Position {
 pub struct StatusBar<Ctx> {
     drw: Box<dyn Draw<Ctx = Ctx>>,
     widgets: Vec<Box<dyn Widget>>,
-    spacing: f64,
-    greedy_indices: Vec<usize>,
     id: WinId,
     w: f64,
     h: f64,
@@ -31,7 +29,6 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     pub fn try_new(
         mut drw: Box<dyn Draw<Ctx = Ctx>>,
         position: Position,
-        spacing: f64,
         screen_index: usize,
         h: usize,
         bg: impl Into<Color>,
@@ -46,9 +43,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
         let id = drw.new_window(&WindowType::Dock, 0, y, sw, h)?;
         let mut bar = Self {
             drw,
-            spacing,
             widgets,
-            greedy_indices: vec![],
             id,
             w: sw as f64,
             h: h as f64,
@@ -69,9 +64,11 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
         ctx.rectangle(0.0, 0.0, self.w as f64, self.h as f64);
 
         let extents = self.layout(&mut ctx)?;
+        let mut x = 0.0;
         for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
             wd.draw(&mut ctx, w, self.h)?;
-            ctx.translate(w + self.spacing, 0.0);
+            x += w;
+            ctx.set_x_offset(x);
         }
 
         self.drw.flush();
@@ -80,17 +77,21 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
 
     fn layout(&mut self, ctx: &mut dyn DrawContext) -> Result<Vec<(f64, f64)>> {
         let mut extents = Vec::with_capacity(self.widgets.len());
-        for w in self.widgets.iter_mut() {
+        let mut greedy_indices = vec![];
+
+        for (i, w) in self.widgets.iter_mut().enumerate() {
             extents.push(w.current_extent(ctx, self.h)?);
+            if w.is_greedy() {
+                greedy_indices.push(i)
+            }
         }
 
         let total = extents.iter().map(|(w, _)| w).sum::<f64>();
-        let n_greedy = self.greedy_indices.len();
+        let n_greedy = greedy_indices.len();
 
         if total < self.w && n_greedy > 0 {
-            // Pad out any greedy widgets that we have
             let per_greedy = (self.w - total) / n_greedy as f64;
-            for i in self.greedy_indices.iter() {
+            for i in greedy_indices.iter() {
                 let (w, h) = extents[*i];
                 extents[*i] = (w + per_greedy, h);
             }

@@ -24,30 +24,17 @@ fn main() -> Result<()> {
 
 fn bar_draw() -> Result<()> {
     let workspaces = &["1", "2", "3", "4", "5", "6"];
-
-    let drw = XCBDraw::new()?;
-    let mut bar = StatusBar::try_new(
-        Box::new(drw),
-        Position::Top,
-        5.0, // widget spacing
-        0,   // screen index
+    let mut bar = dwm_bar(
+        Box::new(XCBDraw::new()?),
+        0,
         HEIGHT,
+        PROFONT,
+        12,
+        WHITE,
         BLACK,
-        &[PROFONT, IOSEVKA],
-        vec![
-            Box::new(StaticText::new(
-                "",
-                IOSEVKA,
-                12,
-                BLUE,
-                None,
-                (2.0, 2.0),
-                false,
-            )),
-            Box::new(Workspaces::new(
-                workspaces, PROFONT, 11, 0, WHITE, GREY, BLUE, BLACK,
-            )),
-        ],
+        BLUE,
+        GREY,
+        workspaces,
     )?;
 
     let config = Config::default();
@@ -59,6 +46,8 @@ fn bar_draw() -> Result<()> {
         bar.workspace_change(&mut wm, focused - 1, focused);
         thread::sleep(time::Duration::from_millis(1000));
     }
+
+    thread::sleep(time::Duration::from_millis(10000));
     Ok(())
 }
 
@@ -94,3 +83,35 @@ fn simple_draw() -> Result<()> {
     thread::sleep(time::Duration::from_millis(5000));
     Ok(())
 }
+
+// let mut bar = StatusBar::try_new(
+//     Box::new(drw),
+//     Position::Top,
+//     5.0, // widget spacing
+//     0,   // screen index
+//     HEIGHT,
+//     BLACK,
+//     &[PROFONT, IOSEVKA],
+//     vec![
+//         Box::new(StaticText::new(
+//             "",
+//             IOSEVKA,
+//             12,
+//             BLUE,
+//             None,
+//             (2.0, 2.0),
+//             false,
+//         )),
+//         Box::new(Workspaces::new(
+//             workspaces, PROFONT, 11, 0, WHITE, GREY, BLUE, BLACK,
+//         )),
+//         Box::new(RootWindowName::new(
+//             PROFONT,
+//             12,
+//             WHITE,
+//             None,
+//             (2.0, 2.0),
+//             true,
+//         )),
+//     ],
+// )?;
