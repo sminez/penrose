@@ -33,6 +33,10 @@ impl Hook for TestHook {
         self.mark_called("remove_client");
     }
 
+    fn client_name_updated(&mut self, _: &mut WindowManager, _: WinId, _: &str, _: bool) {
+        self.mark_called("client_name_updated");
+    }
+
     fn layout_change(&mut self, _: &mut WindowManager, _: usize, _: usize) {
         self.mark_called("layout_change");
     }
@@ -117,6 +121,24 @@ hook_test!(
         XEvent::KeyPress {
             code: common::KILL_CLIENT_CODE
         }
+    ]
+);
+
+hook_test!(
+    expected_calls => 2,
+    "client_name_updated",
+    test_client_name_update_hooks,
+    vec![
+        XEvent::PropertyNotify {
+            id: 1,
+            atom: "WM_NAME".to_string(),
+            is_root: false
+        },
+        XEvent::PropertyNotify {
+            id: 1,
+            atom: "_NET_WM_NAME".to_string(),
+            is_root: false
+        },
     ]
 );
 
