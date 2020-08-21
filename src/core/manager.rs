@@ -120,7 +120,6 @@ impl<'a> WindowManager<'a> {
     }
 
     fn remove_client(&mut self, win_id: WinId) {
-        run_hooks!(remove_client, self, win_id);
         match self.client_map.get(&win_id) {
             Some(client) => {
                 self.workspaces
@@ -129,6 +128,7 @@ impl<'a> WindowManager<'a> {
                 self.client_map.remove(&win_id).map(|c| {
                     debug!("removing ref to client {} ({})", c.id(), c.class());
                 });
+                run_hooks!(remove_client, self, win_id);
             }
             None => warn!("attempt to remove unknown client {}", win_id),
         }
@@ -280,7 +280,6 @@ impl<'a> WindowManager<'a> {
         let floating = self.conn.window_should_float(id, self.floating_classes);
         let wix = self.active_ws_index();
         let mut client = Client::new(id, wm_name, wm_class, wix, floating);
-        debug!("mapping client: {:?}", client);
         run_hooks!(new_client, self, &mut client);
 
         if client.wm_managed && !floating {
@@ -447,7 +446,6 @@ impl<'a> WindowManager<'a> {
         let wix = self.active_ws_index();
         self.workspaces.get_mut(wix).map(|ws| {
             ws.cycle_layout(direction);
-            info!("ACTIVE_LAYOUT {}", ws.layout_symbol());
         });
         self.apply_layout(wix);
     }
@@ -509,7 +507,6 @@ impl<'a> WindowManager<'a> {
         }
 
         if let Some(index) = self.workspaces.index(selector) {
-            info!("ACTIVE_LAYOUT {}", self.layout_symbol(index));
             let active = self.active_ws_index();
             self.previous_workspace = active;
             run_hooks!(workspace_change, self, active, index);
@@ -589,7 +586,6 @@ impl<'a> WindowManager<'a> {
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         let id = self.conn.focused_client();
-        debug!("KILL_CLIENT for {}", id);
         self.conn.send_client_event(id, "WM_DELETE_WINDOW").unwrap();
         self.conn.flush();
 

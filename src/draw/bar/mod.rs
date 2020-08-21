@@ -3,7 +3,7 @@ pub mod bar;
 pub mod widgets;
 
 pub use bar::{Position, StatusBar};
-pub use widgets::{ActiveWindowName, RootWindowName, Text, Workspaces};
+pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspaces};
 
 use crate::{
     draw::{Color, Draw, DrawContext},
@@ -54,6 +54,7 @@ pub fn dwm_bar<Ctx: DrawContext>(
 ) -> Result<StatusBar<Ctx>> {
     let fg = fg.into();
     let bg = bg.into();
+    let highlight = highlight.into();
 
     Ok(StatusBar::try_new(
         drw,
@@ -66,13 +67,14 @@ pub fn dwm_bar<Ctx: DrawContext>(
             Box::new(Workspaces::new(
                 workspaces, font, point_size, 0, fg, empty_ws, highlight, bg,
             )),
+            Box::new(CurrentLayout::new(font, point_size, fg, None, (2.0, 2.0))),
             Box::new(ActiveWindowName::new(
                 font,
                 point_size,
                 fg,
-                None,
-                (2.0, 2.0),
-                false,
+                Some(highlight),
+                (6.0, 4.0),
+                true,
                 false,
             )),
             Box::new(RootWindowName::new(
@@ -80,8 +82,8 @@ pub fn dwm_bar<Ctx: DrawContext>(
                 point_size,
                 fg,
                 None,
-                (2.0, 2.0),
-                true,
+                (4.0, 2.0),
+                false,
                 true,
             )),
         ],

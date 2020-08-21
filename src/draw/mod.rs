@@ -384,8 +384,8 @@ mod inner {
         fn text_extent(&self, s: &str, font_name: &str) -> Result<(f64, f64)> {
             let layout = pango_layout(&self.ctx)?;
             let font = self.fonts.get(font_name);
-            layout.set_text(&s);
             layout.set_font_description(font);
+            layout.set_text(&s);
             let (w, h) = layout.get_pixel_size();
 
             Ok((w as f64, h as f64))

@@ -5,7 +5,6 @@ use penrose::{core::hooks::Hook, draw::*, Config, Result, WindowManager, XcbConn
 const HEIGHT: usize = 18;
 
 const PROFONT: &'static str = "ProFont For Powerline";
-const IOSEVKA: &'static str = "Iosevka Nerd Font";
 const FIRA: &'static str = "Fira Code";
 const SERIF: &'static str = "Serif";
 
@@ -83,35 +82,3 @@ fn simple_draw() -> Result<()> {
     thread::sleep(time::Duration::from_millis(5000));
     Ok(())
 }
-
-// let mut bar = StatusBar::try_new(
-//     Box::new(drw),
-//     Position::Top,
-//     5.0, // widget spacing
-//     0,   // screen index
-//     HEIGHT,
-//     BLACK,
-//     &[PROFONT, IOSEVKA],
-//     vec![
-//         Box::new(StaticText::new(
-//             "",
-//             IOSEVKA,
-//             12,
-//             BLUE,
-//             None,
-//             (2.0, 2.0),
-//             false,
-//         )),
-//         Box::new(Workspaces::new(
-//             workspaces, PROFONT, 11, 0, WHITE, GREY, BLUE, BLACK,
-//         )),
-//         Box::new(RootWindowName::new(
-//             PROFONT,
-//             12,
-//             WHITE,
-//             None,
-//             (2.0, 2.0),
-//             true,
-//         )),
-//     ],
-// )?;

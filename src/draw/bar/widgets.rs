@@ -1,5 +1,6 @@
 //! Built in status bar widgets
 use crate::{
+    client::Client,
     data_types::{Selector, WinId},
     draw::{Color, DrawContext, Widget},
     hooks::Hook,
@@ -172,9 +173,29 @@ impl Workspaces {
     fn names(&self) -> Vec<&str> {
         self.workspaces.iter().map(|w| w.name.as_ref()).collect()
     }
+
+    fn update_workspace_occupied(&mut self, wm: &mut WindowManager) {
+        self.workspaces.iter_mut().for_each(|ws| {
+            ws.occupied = wm
+                .workspace(&Selector::Condition(&|w| w.name() == ws.name))
+                .unwrap()
+                .len()
+                > 0
+        });
+    }
 }
 
 impl Hook for Workspaces {
+    fn new_client(&mut self, _: &mut WindowManager, c: &mut Client) {
+        self.workspaces[c.workspace()].occupied = true;
+        self.require_draw = true;
+    }
+
+    fn remove_client(&mut self, wm: &mut WindowManager, _: WinId) {
+        self.update_workspace_occupied(wm);
+        self.require_draw = true;
+    }
+
     fn workspace_change(&mut self, _: &mut WindowManager, _prev: usize, new: usize) {
         self.focused_ws = new;
         self.require_draw = true;
@@ -184,13 +205,7 @@ impl Hook for Workspaces {
         if names != &self.names() {
             self.focused_ws = active;
             self.workspaces = meta_from_names(names);
-            self.workspaces.iter_mut().for_each(|ws| {
-                ws.occupied = wm
-                    .workspace(&Selector::Condition(&|w| w.name() == ws.name))
-                    .unwrap()
-                    .len()
-                    > 0
-            });
+            self.update_workspace_occupied(wm);
             self.extent = None;
             self.require_draw = true;
         }
@@ -240,8 +255,9 @@ impl Widget for Workspaces {
                     ws.extent = (w + PADDING + PADDING, h);
                 }
 
-                self.extent = Some((total, h_max));
-                Ok((total, h_max))
+                let ext = (total + PADDING, h_max);
+                self.extent = Some(ext);
+                Ok(ext)
             }
         }
     }
@@ -318,7 +334,7 @@ pub struct ActiveWindowName {
 }
 
 impl ActiveWindowName {
-    /// Create a new RootWindowName widget
+    /// Create a new ActiveWindowName widget
     pub fn new(
         font: impl Into<String>,
         point_size: i32,
@@ -372,5 +388,57 @@ impl Widget for ActiveWindowName {
 
     fn is_greedy(&self) -> bool {
         self.txt.is_greedy()
+    }
+}
+
+/// A simple widget that displays the active layout symbol
+pub struct CurrentLayout {
+    txt: Text,
+}
+
+impl CurrentLayout {
+    /// Create a new CurrentLayout widget
+    pub fn new(
+        font: impl Into<String>,
+        point_size: i32,
+        fg: Color,
+        bg: Option<Color>,
+        padding: (f64, f64),
+    ) -> Self {
+        Self {
+            txt: Text::new("", font, point_size, fg, bg, padding, false, false),
+        }
+    }
+}
+
+impl Hook for CurrentLayout {
+    fn layout_change(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
+        self.txt.set_text(wm.current_layout_symbol());
+    }
+
+    fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
+        self.txt.set_text(wm.current_layout_symbol());
+    }
+
+    fn screen_change(&mut self, wm: &mut WindowManager, _: usize) {
+        self.txt.set_text(wm.current_layout_symbol());
+    }
+}
+
+impl Widget for CurrentLayout {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()> {
+        self.txt.draw(ctx, w, h)
+    }
+
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
+        self.txt.current_extent(ctx, h)
+    }
+
+    fn require_draw(&self) -> bool {
+        self.txt.require_draw()
+    }
+
+    fn is_greedy(&self) -> bool {
+        false
     }
 }

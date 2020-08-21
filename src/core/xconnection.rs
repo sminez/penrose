@@ -40,14 +40,14 @@ const WIN_X: u16 = xcb::CONFIG_WINDOW_X as u16;
 const WIN_Y: u16 = xcb::CONFIG_WINDOW_Y as u16;
 const NEW_WINDOW_MASK: &[(u32, u32)] = &[(
     xcb::CW_EVENT_MASK,
-    xcb::EVENT_MASK_ENTER_WINDOW | xcb::EVENT_MASK_LEAVE_WINDOW,
+    xcb::EVENT_MASK_ENTER_WINDOW | xcb::EVENT_MASK_LEAVE_WINDOW | xcb::EVENT_MASK_PROPERTY_CHANGE,
 )];
 const MOUSE_MASK: u16 = (xcb::EVENT_MASK_BUTTON_PRESS
     | xcb::EVENT_MASK_BUTTON_RELEASE
     | xcb::EVENT_MASK_POINTER_MOTION) as u16;
 const EVENT_MASK: &[(u32, u32)] = &[(
     xcb::CW_EVENT_MASK,
-    xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
+    xcb::EVENT_MASK_PROPERTY_CHANGE | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
 )];
 
 // TODO: this list has been copied from atoms used in other WMs, not using everything

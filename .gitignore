@@ -1,4 +1,4 @@
-
+/examples/local_test/
 /target/
 **/*.rs.bk
 Cargo.lock

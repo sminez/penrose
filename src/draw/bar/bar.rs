@@ -153,6 +153,13 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
         self.redraw_if_needed();
     }
 
+    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &Vec<&str>, active: usize) {
+        for w in self.widgets.iter_mut() {
+            w.workspaces_updated(wm, names, active);
+        }
+        self.redraw_if_needed();
+    }
+
     fn screen_change(&mut self, wm: &mut WindowManager, ix: usize) {
         for w in self.widgets.iter_mut() {
             w.screen_change(wm, ix);
