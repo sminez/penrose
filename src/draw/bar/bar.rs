@@ -71,7 +71,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
             ctx.set_x_offset(x);
         }
 
-        self.drw.flush();
+        self.drw.flush(self.id);
         Ok(())
     }
 
@@ -116,14 +116,12 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
         for w in self.widgets.iter_mut() {
             w.new_client(wm, c);
         }
-        self.redraw_if_needed();
     }
 
     fn remove_client(&mut self, wm: &mut WindowManager, id: WinId) {
         for w in self.widgets.iter_mut() {
             w.remove_client(wm, id);
         }
-        self.redraw_if_needed();
     }
 
     fn client_name_updated(
@@ -136,40 +134,47 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
         for w in self.widgets.iter_mut() {
             w.client_name_updated(wm, id, name, is_root);
         }
-        self.redraw_if_needed();
+    }
+
+    fn layout_applied(&mut self, wm: &mut WindowManager, ws_ix: usize, s_ix: usize) {
+        for w in self.widgets.iter_mut() {
+            w.layout_applied(wm, ws_ix, s_ix);
+        }
     }
 
     fn layout_change(&mut self, wm: &mut WindowManager, ws_ix: usize, s_ix: usize) {
         for w in self.widgets.iter_mut() {
             w.layout_change(wm, ws_ix, s_ix);
         }
-        self.redraw_if_needed();
     }
 
     fn workspace_change(&mut self, wm: &mut WindowManager, prev: usize, new: usize) {
         for w in self.widgets.iter_mut() {
             w.workspace_change(wm, prev, new);
         }
-        self.redraw_if_needed();
     }
 
     fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &Vec<&str>, active: usize) {
         for w in self.widgets.iter_mut() {
             w.workspaces_updated(wm, names, active);
         }
-        self.redraw_if_needed();
     }
 
     fn screen_change(&mut self, wm: &mut WindowManager, ix: usize) {
         for w in self.widgets.iter_mut() {
             w.screen_change(wm, ix);
         }
-        self.redraw_if_needed();
     }
 
     fn focus_change(&mut self, wm: &mut WindowManager, id: WinId) {
         for w in self.widgets.iter_mut() {
             w.focus_change(wm, id);
+        }
+    }
+
+    fn event_handled(&mut self, wm: &mut WindowManager) {
+        for w in self.widgets.iter_mut() {
+            w.event_handled(wm);
         }
         self.redraw_if_needed();
     }

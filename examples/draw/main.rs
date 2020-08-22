@@ -23,16 +23,22 @@ fn main() -> Result<()> {
 
 fn bar_draw() -> Result<()> {
     let workspaces = &["1", "2", "3", "4", "5", "6"];
+    let style = TextStyle {
+        font: PROFONT.to_string(),
+        point_size: 11,
+        fg: WHITE.into(),
+        bg: Some(BLACK.into()),
+        padding: (2.0, 2.0),
+    };
+    let highlight = BLUE;
+    let empty_ws = GREY;
     let mut bar = dwm_bar(
         Box::new(XCBDraw::new()?),
         0,
         HEIGHT,
-        PROFONT,
-        12,
-        WHITE,
-        BLACK,
-        BLUE,
-        GREY,
+        &style,
+        highlight,
+        empty_ws,
         workspaces,
     )?;
 
@@ -43,6 +49,7 @@ fn bar_draw() -> Result<()> {
     thread::sleep(time::Duration::from_millis(1000));
     for focused in 1..6 {
         bar.workspace_change(&mut wm, focused - 1, focused);
+        bar.event_handled(&mut wm);
         thread::sleep(time::Duration::from_millis(1000));
     }
 
@@ -78,7 +85,7 @@ fn simple_draw() -> Result<()> {
     ctx.translate((offset + 5.0) as f64, 0.0);
     ctx.text("Look at all the colors!", 0.0, (0.0, 0.0))?;
 
-    drw.flush();
+    drw.flush(id);
     thread::sleep(time::Duration::from_millis(5000));
     Ok(())
 }

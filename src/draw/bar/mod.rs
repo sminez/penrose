@@ -6,7 +6,7 @@ pub use bar::{Position, StatusBar};
 pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspaces};
 
 use crate::{
-    draw::{Color, Draw, DrawContext},
+    draw::{Color, Draw, DrawContext, TextStyle},
     hooks::Hook,
     Result,
 };
@@ -44,16 +44,11 @@ pub fn dwm_bar<Ctx: DrawContext>(
     drw: Box<dyn Draw<Ctx = Ctx>>,
     screen_index: usize,
     height: usize,
-    font: &str,
-    point_size: i32,
-    fg: impl Into<Color>,
-    bg: impl Into<Color>,
+    style: &TextStyle,
     highlight: impl Into<Color>,
     empty_ws: impl Into<Color>,
     workspaces: &[&str],
 ) -> Result<StatusBar<Ctx>> {
-    let fg = fg.into();
-    let bg = bg.into();
     let highlight = highlight.into();
 
     Ok(StatusBar::try_new(
@@ -61,28 +56,25 @@ pub fn dwm_bar<Ctx: DrawContext>(
         Position::Top,
         screen_index,
         height,
-        bg,
-        &[font],
+        style.bg.unwrap_or(0x000000.into()),
+        &[&style.font],
         vec![
-            Box::new(Workspaces::new(
-                workspaces, font, point_size, 0, fg, empty_ws, highlight, bg,
-            )),
-            Box::new(CurrentLayout::new(font, point_size, fg, None, (2.0, 2.0))),
+            Box::new(Workspaces::new(workspaces, 0, style, highlight, empty_ws)),
+            Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
-                font,
-                point_size,
-                fg,
-                Some(highlight),
-                (6.0, 4.0),
+                &TextStyle {
+                    bg: Some(highlight),
+                    padding: (6.0, 4.0),
+                    ..style.clone()
+                },
                 true,
                 false,
             )),
             Box::new(RootWindowName::new(
-                font,
-                point_size,
-                fg,
-                None,
-                (4.0, 2.0),
+                &TextStyle {
+                    padding: (4.0, 2.0),
+                    ..style.clone()
+                },
                 false,
                 true,
             )),

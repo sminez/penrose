@@ -2,7 +2,7 @@
 use crate::{
     client::Client,
     data_types::{Selector, WinId},
-    draw::{Color, DrawContext, Widget},
+    draw::{Color, DrawContext, TextStyle, Widget},
     hooks::Hook,
     Result, WindowManager,
 };
@@ -30,21 +30,17 @@ impl Text {
     /// Construct a new Text
     pub fn new(
         txt: impl Into<String>,
-        font: impl Into<String>,
-        point_size: i32,
-        fg: Color,
-        bg: Option<Color>,
-        padding: (f64, f64),
+        style: &TextStyle,
         is_greedy: bool,
         right_justified: bool,
     ) -> Self {
         Self {
             txt: txt.into(),
-            font: font.into(),
-            point_size,
-            fg: fg,
-            bg: bg,
-            padding,
+            font: style.font.clone(),
+            point_size: style.point_size,
+            fg: style.fg,
+            bg: style.bg,
+            padding: style.padding,
             is_greedy,
             right_justified,
             extent: None,
@@ -54,9 +50,12 @@ impl Text {
 
     /// Set the rendered text and trigger a redraw
     pub fn set_text(&mut self, txt: impl Into<String>) {
-        self.txt = txt.into();
-        self.extent = None;
-        self.require_draw = true;
+        let new_text = txt.into();
+        if self.txt != new_text {
+            self.txt = new_text;
+            self.extent = None;
+            self.require_draw = true;
+        }
     }
 }
 
@@ -92,7 +91,8 @@ impl Widget for Text {
             Some(extent) => Ok(extent),
             None => {
                 let (l, r) = self.padding;
-                let (w, h) = ctx.text_extent(&self.txt, &self.font)?;
+                ctx.font(&self.font, self.point_size)?;
+                let (w, h) = ctx.text_extent(&self.txt)?;
                 let extent = (w + l + r, h);
                 self.extent = Some(extent);
                 Ok(extent)
@@ -109,6 +109,7 @@ impl Widget for Text {
     }
 }
 
+#[derive(Debug)]
 struct WSMeta {
     name: String,
     occupied: bool,
@@ -146,27 +147,24 @@ impl Workspaces {
     /// Construct a new WorkspaceWidget
     pub fn new(
         workspace_names: &[&str],
-        font: impl Into<String>,
-        point_size: i32,
         screen: usize,
-        occupied_fg: impl Into<Color>,
+        style: &TextStyle,
+        highlight: impl Into<Color>,
         empty_fg: impl Into<Color>,
-        focused_bg: impl Into<Color>,
-        default_bg: impl Into<Color>,
     ) -> Self {
         Self {
             workspaces: meta_from_names(workspace_names),
-            font: font.into(),
-            point_size,
+            font: style.font.clone(),
+            point_size: style.point_size,
             screen,
             is_focused: screen == 0,
             focused_ws: 0,
             require_draw: false,
             extent: None,
-            fg_1: occupied_fg.into(),
+            fg_1: style.fg,
             fg_2: empty_fg.into(),
-            bg_1: focused_bg.into(),
-            bg_2: default_bg.into(),
+            bg_1: highlight.into(),
+            bg_2: style.bg.unwrap_or(0x000000.into()),
         }
     }
 
@@ -175,30 +173,38 @@ impl Workspaces {
     }
 
     fn update_workspace_occupied(&mut self, wm: &mut WindowManager) {
-        self.workspaces.iter_mut().for_each(|ws| {
-            ws.occupied = wm
+        for ws in self.workspaces.iter_mut() {
+            let now_occupied = wm
                 .workspace(&Selector::Condition(&|w| w.name() == ws.name))
                 .unwrap()
                 .len()
-                > 0
-        });
+                > 0;
+
+            if ws.occupied != now_occupied {
+                self.require_draw = true;
+                ws.occupied = now_occupied;
+            }
+        }
     }
 }
 
 impl Hook for Workspaces {
     fn new_client(&mut self, _: &mut WindowManager, c: &mut Client) {
-        self.workspaces[c.workspace()].occupied = true;
-        self.require_draw = true;
+        if let Some(ws) = self.workspaces.get_mut(c.workspace()) {
+            self.require_draw = ws.occupied == false;
+            ws.occupied = true;
+        }
     }
 
     fn remove_client(&mut self, wm: &mut WindowManager, _: WinId) {
         self.update_workspace_occupied(wm);
-        self.require_draw = true;
     }
 
-    fn workspace_change(&mut self, _: &mut WindowManager, _prev: usize, new: usize) {
-        self.focused_ws = new;
-        self.require_draw = true;
+    fn workspace_change(&mut self, _: &mut WindowManager, _: usize, new: usize) {
+        if self.focused_ws != new {
+            self.focused_ws = new;
+            self.require_draw = true;
+        }
     }
 
     fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &Vec<&str>, active: usize) {
@@ -224,6 +230,7 @@ impl Widget for Workspaces {
         ctx.rectangle(0.0, 0.0, w, h);
         ctx.font(&self.font, self.point_size)?;
         ctx.translate(PADDING, 0.0);
+        let (_, eh) = self.extent.unwrap();
 
         for (i, ws) in self.workspaces.iter().enumerate() {
             if i == self.focused_ws {
@@ -233,7 +240,6 @@ impl Widget for Workspaces {
 
             let fg = if ws.occupied { self.fg_1 } else { self.fg_2 };
             ctx.color(&fg);
-            let (_, eh) = self.extent.unwrap();
             ctx.text(&ws.name, h - eh, (PADDING, PADDING))?;
             ctx.translate(ws.extent.0, 0.0);
         }
@@ -249,7 +255,8 @@ impl Widget for Workspaces {
                 let mut total = 0.0;
                 let mut h_max = 0.0;
                 for ws in self.workspaces.iter_mut() {
-                    let (w, h) = ctx.text_extent(&ws.name, &self.font)?;
+                    ctx.font(&self.font, self.point_size)?;
+                    let (w, h) = ctx.text_extent(&ws.name)?;
                     total += w + PADDING + PADDING;
                     h_max = if h > h_max { h } else { h_max };
                     ws.extent = (w + PADDING + PADDING, h);
@@ -278,26 +285,9 @@ pub struct RootWindowName {
 
 impl RootWindowName {
     /// Create a new RootWindowName widget
-    pub fn new(
-        font: impl Into<String>,
-        point_size: i32,
-        fg: Color,
-        bg: Option<Color>,
-        padding: (f64, f64),
-        is_greedy: bool,
-        right_justified: bool,
-    ) -> Self {
+    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
-            txt: Text::new(
-                "penrose",
-                font,
-                point_size,
-                fg,
-                bg,
-                padding,
-                is_greedy,
-                right_justified,
-            ),
+            txt: Text::new("penrose", style, is_greedy, right_justified),
         }
     }
 }
@@ -335,26 +325,9 @@ pub struct ActiveWindowName {
 
 impl ActiveWindowName {
     /// Create a new ActiveWindowName widget
-    pub fn new(
-        font: impl Into<String>,
-        point_size: i32,
-        fg: Color,
-        bg: Option<Color>,
-        padding: (f64, f64),
-        is_greedy: bool,
-        right_justified: bool,
-    ) -> Self {
+    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
-            txt: Text::new(
-                "",
-                font,
-                point_size,
-                fg,
-                bg,
-                padding,
-                is_greedy,
-                right_justified,
-            ),
+            txt: Text::new("", style, is_greedy, right_justified),
         }
     }
 }
@@ -366,9 +339,11 @@ impl Hook for ActiveWindowName {
         }
     }
 
-    fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, name: &str, _: bool) {
-        if Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
-            self.txt.set_text(name);
+    fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, name: &str, root: bool) {
+        if !root {
+            if Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
+                self.txt.set_text(name);
+            }
         }
     }
 }
@@ -398,15 +373,9 @@ pub struct CurrentLayout {
 
 impl CurrentLayout {
     /// Create a new CurrentLayout widget
-    pub fn new(
-        font: impl Into<String>,
-        point_size: i32,
-        fg: Color,
-        bg: Option<Color>,
-        padding: (f64, f64),
-    ) -> Self {
+    pub fn new(style: &TextStyle) -> Self {
         Self {
-            txt: Text::new("", font, point_size, fg, bg, padding, false, false),
+            txt: Text::new("", style, false, false),
         }
     }
 }

@@ -2,7 +2,7 @@
 pub mod bar;
 
 pub use bar::*;
-pub use inner::{Color, Draw, DrawContext, WindowType, XCBDraw, XCBDrawContext};
+pub use inner::{Color, Draw, DrawContext, TextStyle, WindowType, XCBDraw, XCBDrawContext};
 
 mod inner {
     use std::collections::HashMap;
@@ -111,17 +111,17 @@ mod inner {
             .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq)]
+    #[derive(Clone, Debug, PartialEq)]
     /// A set of styling options for a text string
     pub struct TextStyle {
         /// Pango font name to use for rendering
-        pub font: &'static str,
+        pub font: String,
         /// Point size to render the font at
         pub point_size: i32,
         /// Foreground color in 0xRRGGBB format
-        pub fg: u32,
+        pub fg: Color,
         /// Optional background color in 0xRRGGBB format (default to current background if None)
-        pub bg: Option<u32>,
+        pub bg: Option<Color>,
         /// Pixel padding around this string
         pub padding: (f64, f64),
     }
@@ -203,7 +203,7 @@ mod inner {
         /// Get a new DrawContext for the target window
         fn context_for(&self, id: WinId) -> Result<Self::Ctx>;
         /// Flush pending actions
-        fn flush(&self);
+        fn flush(&self, id: WinId);
         /// Map the target window to the screen
         fn map_window(&self, id: WinId);
         /// Unmap the target window from the screen
@@ -227,8 +227,8 @@ mod inner {
         /// Render 's' using the current font with the supplied padding. returns the extent taken
         /// up by the rendered text
         fn text(&self, s: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)>;
-        /// Determine the pixel width of a given piece of text
-        fn text_extent(&self, s: &str, font: &str) -> Result<(f64, f64)>;
+        /// Determine the pixel width of a given piece of text using the current font
+        fn text_extent(&self, s: &str) -> Result<(f64, f64)>;
     }
 
     /// An XCB based Draw
@@ -302,7 +302,8 @@ mod inner {
             })
         }
 
-        fn flush(&self) {
+        fn flush(&self, id: WinId) {
+            self.map_window(id);
             self.conn.flush();
         }
 
@@ -381,10 +382,11 @@ mod inner {
             Ok((width, height))
         }
 
-        fn text_extent(&self, s: &str, font_name: &str) -> Result<(f64, f64)> {
+        fn text_extent(&self, s: &str) -> Result<(f64, f64)> {
             let layout = pango_layout(&self.ctx)?;
-            let font = self.fonts.get(font_name);
-            layout.set_font_description(font);
+            if let Some(ref font) = self.font {
+                layout.set_font_description(Some(font));
+            }
             layout.set_text(&s);
             let (w, h) = layout.get_pixel_size();
 
