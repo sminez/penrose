@@ -111,7 +111,7 @@ impl Hook for Scratchpad {
         }
     }
 
-    fn layout_change(&mut self, wm: &mut WindowManager, _: usize, screen_index: usize) {
+    fn layout_applied(&mut self, wm: &mut WindowManager, _: usize, screen_index: usize) {
         match *self.client.borrow() {
             None => return, // no active scratchpad client
             Some(id) => {

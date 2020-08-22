@@ -37,6 +37,10 @@ impl Hook for TestHook {
         self.mark_called("client_name_updated");
     }
 
+    fn layout_applied(&mut self, _: &mut WindowManager, _: usize, _: usize) {
+        self.mark_called("layout_applied");
+    }
+
     fn layout_change(&mut self, _: &mut WindowManager, _: usize, _: usize) {
         self.mark_called("layout_change");
     }
@@ -144,8 +148,18 @@ hook_test!(
 
 hook_test!(
     expected_calls => 3, // Initial layout application for each screen and then due to the change
+    "layout_applied",
+    test_layout_applied_hooks,
+    vec![XEvent::KeyPress {
+        code: common::LAYOUT_CHANGE_CODE
+    },
+    ]
+);
+
+hook_test!(
+    expected_calls => 1,
     "layout_change",
-    test_layout_hooks,
+    test_layout_change_hooks,
     vec![XEvent::KeyPress {
         code: common::LAYOUT_CHANGE_CODE
     },

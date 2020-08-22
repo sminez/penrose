@@ -551,12 +551,18 @@ impl XConn for XcbConnection {
                     xcb::xproto::get_atom_name(&self.conn, e.atom())
                         .get_reply()
                         .ok()
-                        .and_then(|atom| {
-                            Some(XEvent::PropertyNotify {
-                                id: e.window(),
-                                atom: atom.name().to_string(),
-                                is_root: e.window() == self.root,
-                            })
+                        .and_then(|a| {
+                            let atom = a.name().to_string();
+                            let is_root = e.window() == self.root;
+                            if is_root && !(atom == "WM_NAME" || atom == "_NET_WM_NAME") {
+                                None
+                            } else {
+                                Some(XEvent::PropertyNotify {
+                                    id: e.window(),
+                                    atom,
+                                    is_root,
+                                })
+                            }
                         })
                 }
 
@@ -703,7 +709,7 @@ impl XConn for XcbConnection {
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
         xcb::change_window_attributes(&self.conn, self.root, EVENT_MASK);
-        &self.conn.flush();
+        self.conn.flush();
     }
 
     fn set_wm_properties(&self, workspaces: &[&str]) {

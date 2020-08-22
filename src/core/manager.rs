@@ -14,9 +14,9 @@ use std::collections::HashMap;
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks(
-    ($method:ident, $_self:expr, $($arg:expr),+) => {
+    ($method:ident, $_self:expr, $($arg:expr),*) => {
         let mut hooks = $_self.hooks.replace(vec![]);
-        hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),+));
+        hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),*));
         $_self.hooks.replace(hooks);
     };
 );
@@ -115,7 +115,7 @@ impl<'a> WindowManager<'a> {
                     self.conn.position_window(id, r, self.border_px);
                 }
             }
-            run_hooks!(layout_change, self, wix, i);
+            run_hooks!(layout_applied, self, wix, i);
         }
     }
 
@@ -242,6 +242,7 @@ impl<'a> WindowManager<'a> {
                     // XEvent::ButtonRelease => self.handle_button_release(),
                     _ => (),
                 }
+                run_hooks!(event_handled, self,);
             }
 
             self.conn.flush();
@@ -447,6 +448,7 @@ impl<'a> WindowManager<'a> {
         self.workspaces.get_mut(wix).map(|ws| {
             ws.cycle_layout(direction);
         });
+        run_hooks!(layout_change, self, wix, self.active_screen_index());
         self.apply_layout(wix);
     }
 

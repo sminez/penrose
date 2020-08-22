@@ -1,7 +1,5 @@
 //! Hook for adding additional functionality around standard WindowManager actions
-use crate::client::Client;
-use crate::data_types::WinId;
-use crate::manager::WindowManager;
+use crate::{client::Client, data_types::WinId, manager::WindowManager};
 
 /**
  * impls of Hook can be registered to receive events during WindowManager operation. Each hook
@@ -49,6 +47,20 @@ pub trait Hook {
      * structures that support indexing) which can be used to fetch references to the active Workspace
      * and Screen.
      */
+    fn layout_applied(
+        &mut self,
+        _wm: &mut WindowManager,
+        _workspace_index: usize,
+        _screen_index: usize,
+    ) {
+    }
+
+    /**
+     * Called after a workspace's layout changes
+     * Arguments are indices into the WindowManager workspace and screen arrays (internal data
+     * structures that support indexing) which can be used to fetch references to the active Workspace
+     * and Screen.
+     */
     fn layout_change(
         &mut self,
         _wm: &mut WindowManager,
@@ -88,4 +100,12 @@ pub trait Hook {
      * needed.
      */
     fn focus_change(&mut self, _wm: &mut WindowManager, _id: WinId) {}
+
+    /**
+     * Called at the end of the main WindowManager event loop once each XEvent has been handled.
+     *
+     * Usefull if you want to ensure that all other event processing has taken place before you
+     * take action in response to another hook.
+     */
+    fn event_handled(&mut self, _wm: &mut WindowManager) {}
 }
