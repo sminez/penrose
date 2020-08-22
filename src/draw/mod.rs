@@ -229,6 +229,8 @@ mod inner {
         fn text(&self, s: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)>;
         /// Determine the pixel width of a given piece of text using the current font
         fn text_extent(&self, s: &str) -> Result<(f64, f64)>;
+        /// Flush pending actions
+        fn flush(&self);
     }
 
     /// An XCB based Draw
@@ -303,6 +305,7 @@ mod inner {
         }
 
         fn flush(&self, id: WinId) {
+            self.surfaces.get(&id).map(|s| s.flush());
             self.map_window(id);
             self.conn.flush();
         }
@@ -391,6 +394,10 @@ mod inner {
             let (w, h) = layout.get_pixel_size();
 
             Ok((w as f64, h as f64))
+        }
+
+        fn flush(&self) {
+            self.ctx.get_target().flush();
         }
     }
 }

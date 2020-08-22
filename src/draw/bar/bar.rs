@@ -24,6 +24,7 @@ pub struct StatusBar<Ctx> {
     h: f64,
     bg: Color,
 }
+
 impl<Ctx: DrawContext> StatusBar<Ctx> {
     /// Try to initialise a new empty status bar. Can fail if we are unable to create our window
     pub fn try_new(
@@ -68,6 +69,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
         for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
             wd.draw(&mut ctx, w, self.h)?;
             x += w;
+            ctx.flush();
             ctx.set_x_offset(x);
         }
 

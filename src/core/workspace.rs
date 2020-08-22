@@ -1,7 +1,10 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
-use crate::client::Client;
-use crate::data_types::{Change, Direction, Region, ResizeAction, Ring, Selector, WinId};
-use crate::layout::{Layout, LayoutConf};
+use crate::{
+    client::Client,
+    data_types::{Change, Direction, Region, ResizeAction, Ring, Selector, WinId},
+    layout::{Layout, LayoutConf},
+};
+
 use std::collections::HashMap;
 
 /**

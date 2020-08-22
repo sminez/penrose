@@ -1,8 +1,7 @@
 //! Information on connected displays
 use crate::data_types::{Point, Region};
-use xcb;
-use xcb::base::Reply;
-use xcb::ffi::randr::xcb_randr_get_crtc_info_reply_t;
+
+use xcb::{base::Reply, ffi::randr::xcb_randr_get_crtc_info_reply_t};
 
 type CRTCInfoReply = Reply<xcb_randr_get_crtc_info_reply_t>;
 

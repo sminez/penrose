@@ -1,7 +1,13 @@
 //! Utility functions for use in other parts of penrose
-use crate::data_types::{CodeMap, KeyCode};
-use std::io::Read;
-use std::process::{Command, Stdio};
+use crate::{
+    data_types::{CodeMap, KeyCode},
+    Result,
+};
+
+use std::{
+    io::Read,
+    process::{Command, Stdio},
+};
 
 use anyhow::anyhow;
 use xcb;
@@ -40,7 +46,7 @@ pub fn spawn<S: Into<String>>(cmd: S) {
  * way that signal handling is set up. Use this function if you need to access the
  * output of a process that you spawn.
  */
-pub fn spawn_for_output<S: Into<String>>(cmd: S) -> anyhow::Result<String> {
+pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
     let result = if parts.len() > 1 {
@@ -105,10 +111,7 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
  * The user friendly patterns are parsed into a modifier mask and X key code
  * pair that is then grabbed by penrose to trigger the bound action.
  */
-pub fn parse_key_binding<S>(pattern: S, known_codes: &CodeMap) -> Option<KeyCode>
-where
-    S: Into<String>,
-{
+pub fn parse_key_binding(pattern: impl Into<String>, known_codes: &CodeMap) -> Option<KeyCode> {
     let s = pattern.into();
     let mut parts: Vec<&str> = s.split("-").collect();
     match known_codes.get(parts.remove(parts.len() - 1)) {

@@ -1,13 +1,6 @@
 - Handle mouse events (drag and resize for floating windows)
   - Eventually click to WS switch and other actions from the status bar but that's a long way off
 
-- dwm style bar and systray
-  - This one is probably a decent amount of work...I still prefer it to having to install and configure
-    something like lemonbar/polybar though and exposing the API via xsetroot is a nice touch that I'd
-    like to keep.
-  - While the Qtile bar I used to have was my favourite by far, I doubt I'm going to be able to
-    reproduce that any time soon starting from scratch!
-
 - more hooks
 - more tests!
 - Selector based methods that return all matching items rather than just the first

@@ -1,9 +1,15 @@
 //! Simple data types and enums
-use crate::hooks;
-use crate::layout::{side_stack, Layout, LayoutConf};
-use crate::manager::WindowManager;
-use std::collections::{HashMap, VecDeque};
-use std::ops;
+use crate::{
+    hooks,
+    layout::{side_stack, Layout, LayoutConf},
+    manager::WindowManager,
+};
+
+use std::{
+    collections::{HashMap, VecDeque},
+    ops,
+};
+
 use xcb;
 
 /// Some action to be run by a user key binding
@@ -41,24 +47,20 @@ impl Point {
 pub struct Config<'a> {
     /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
     pub workspaces: Vec<&'a str>,
-    /// Font names to use for rendering embedded elements such as status bars.
-    pub fonts: &'static [&'static str],
     /// WM_CLASS values that should always be treated as floating.
     pub floating_classes: &'static [&'static str],
     /// Default Layouts to be given to every workspace.
     pub layouts: Vec<Layout>,
-    /// Color values to be used when rendering UI elements.
-    pub color_scheme: ColorScheme,
+    /// Focused boder color
+    pub focused_border: u32,
+    /// Unfocused boder color
+    pub unfocused_border: u32,
     /// The width of window borders in pixels
     pub border_px: u32,
     /// The size of gaps between windows in pixels.
     pub gap_px: u32,
     /// The percentage change in main_ratio to be applied when increasing / decreasing.
     pub main_ratio_step: f32,
-    /// Spacing in pixels between systray icons
-    pub systray_spacing_px: u32,
-    /// Whether or not a systray should be spawned
-    pub show_systray: bool,
     /// Whether or not space should be reserved for a status bar
     pub show_bar: bool,
     /// True if the status bar should be at the top of the screen, false if it should be at the bottom
@@ -75,24 +77,15 @@ impl<'a> Config<'a> {
         Config {
             workspaces: vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"],
             floating_classes: &["dmenu", "dunst"],
-            fonts: &["mono"],
             layouts: vec![
                 Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
                 Layout::floating("[----]"),
             ],
-            color_scheme: ColorScheme {
-                bg: 0x282828,        // #282828
-                fg_1: 0x3c3836,      // #3c3836
-                fg_2: 0xa89984,      // #a89984
-                fg_3: 0xf2e5bc,      // #f2e5bc
-                highlight: 0xcc241d, // #cc241d
-                urgent: 0x458588,    // #458588
-            },
+            focused_border: 0xcc241d,   // #cc241d
+            unfocused_border: 0x3c3836, // #3c3836
             border_px: 2,
             gap_px: 5,
             main_ratio_step: 0.05,
-            systray_spacing_px: 2,
-            show_systray: true,
             show_bar: true,
             top_bar: true,
             bar_height: 18,
@@ -161,23 +154,6 @@ impl Region {
     pub fn values(&self) -> (u32, u32, u32, u32) {
         (self.x, self.y, self.w, self.h)
     }
-}
-
-/// A set of named color codes
-#[derive(Debug, Clone, Copy)]
-pub struct ColorScheme {
-    /// Background
-    pub bg: u32,
-    /// Foreground color 1
-    pub fg_1: u32,
-    /// Foreground color 2
-    pub fg_2: u32,
-    /// Foreground color 3
-    pub fg_3: u32,
-    /// Focused border color.
-    pub highlight: u32,
-    /// Urgent border color.
-    pub urgent: u32,
 }
 
 /// An X key-code along with a modifier mask

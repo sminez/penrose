@@ -1,10 +1,12 @@
-use penrose::client::Client;
-use penrose::data_types::WinId;
-use penrose::hooks::Hook;
-use penrose::xconnection::{MockXConn, XEvent};
-use penrose::{Config, WindowManager};
-use std::cell::RefCell;
-use std::rc::Rc;
+use penrose::{
+    client::Client,
+    data_types::WinId,
+    hooks::Hook,
+    xconnection::{MockXConn, XEvent},
+    {Config, WindowManager},
+};
+
+use std::{cell::RefCell, rc::Rc};
 
 mod common;
 

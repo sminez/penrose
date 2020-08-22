@@ -9,10 +9,12 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
-use crate::client::Client;
-use crate::data_types::{Change, Region, ResizeAction, WinId};
-use std::cmp;
-use std::fmt;
+use crate::{
+    client::Client,
+    data_types::{Change, Region, ResizeAction, WinId},
+};
+
+use std::{cmp, fmt};
 
 /**
  * When and how a Layout should be applied.

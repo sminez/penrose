@@ -1,7 +1,11 @@
-use penrose::data_types::{FireAndForget, KeyBindings, KeyCode, Region, Selector};
-use penrose::layout::*;
-use penrose::screen::Screen;
-use penrose::{workspace::Workspace, Forward, WindowManager};
+use penrose::{
+    data_types::{FireAndForget, KeyBindings, KeyCode, Region, Selector},
+    layout::*,
+    screen::Screen,
+    workspace::Workspace,
+    Forward, WindowManager,
+};
+
 use std::collections::HashMap;
 
 const SCREEN_WIDTH: u32 = 1000;

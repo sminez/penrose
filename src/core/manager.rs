@@ -1,16 +1,18 @@
 //! Main logic for running Penrose
-use crate::client::Client;
-use crate::data_types::{
-    Change, ColorScheme, Config, Direction, KeyBindings, KeyCode, Point, Region, Ring, Selector,
-    WinId,
+use crate::{
+    client::Client,
+    data_types::{
+        Change, Config, Direction, KeyBindings, KeyCode, Point, Region, Ring, Selector, WinId,
+    },
+    hooks,
+    screen::Screen,
+    workspace::Workspace,
+    xconnection::{XConn, XEvent},
 };
-use crate::hooks;
-use crate::screen::Screen;
-use crate::workspace::Workspace;
-use crate::xconnection::{XConn, XEvent};
+
 use nix::sys::signal::{signal, SigHandler, Signal};
-use std::cell::Cell;
-use std::collections::HashMap;
+
+use std::{cell::Cell, collections::HashMap};
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks(
@@ -34,14 +36,12 @@ pub struct WindowManager<'a> {
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
     previous_workspace: usize,
-    // fonts: &'static [&'static str],
     floating_classes: &'static [&'static str],
-    color_scheme: ColorScheme,
+    focused_border: u32,
+    unfocused_border: u32,
     border_px: u32,
     gap_px: u32,
     main_ratio_step: f32,
-    // systray_spacing_px: u32,
-    // show_systray: bool,
     show_bar: bool,
     bar_height: u32,
     top_bar: bool,
@@ -59,14 +59,12 @@ impl<'a> WindowManager<'a> {
             workspaces: Ring::new(vec![]),
             client_map: HashMap::new(),
             previous_workspace: 0,
-            // fonts: conf.fonts,
             floating_classes: config.floating_classes,
-            color_scheme: config.color_scheme,
+            focused_border: config.focused_border,
+            unfocused_border: config.unfocused_border,
             border_px: config.border_px,
             gap_px: config.gap_px,
             main_ratio_step: config.main_ratio_step,
-            // systray_spacing_px: conf.systray_spacing_px,
-            // show_systray: conf.show_systray,
             show_bar: config.show_bar,
             bar_height: config.bar_height,
             top_bar: config.top_bar,
@@ -184,8 +182,7 @@ impl<'a> WindowManager<'a> {
         self.focused_client()
             .map(|c| self.client_lost_focus(c.id()));
 
-        let color = self.color_scheme.highlight;
-        self.conn.set_client_border_color(id, color);
+        self.conn.set_client_border_color(id, self.focused_border);
         self.conn.focus_client(id);
 
         run_hooks!(focus_change, self, id);
@@ -201,7 +198,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn client_lost_focus(&self, id: WinId) {
-        let color = self.color_scheme.fg_1;
+        let color = self.unfocused_border;
         self.conn.set_client_border_color(id, color);
     }
 

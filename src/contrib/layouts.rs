@@ -1,6 +1,8 @@
 //! Additional layout functions
-use crate::client::Client;
-use crate::data_types::{Region, ResizeAction, WinId};
+use crate::{
+    client::Client,
+    data_types::{Region, ResizeAction, WinId},
+};
 
 /**
  * A layout that aims to mimic the feel of having multiple pieces of paper fanned out on a desk,

@@ -1,9 +1,7 @@
 //! Additional common hooks that can be used out of the box with minimal config.
-use crate::core::client::Client;
-use crate::core::data_types::Selector;
-use crate::core::helpers::spawn;
-use crate::core::hooks::Hook;
-use crate::core::manager::WindowManager;
+use crate::core::{
+    client::Client, data_types::Selector, helpers::spawn, hooks::Hook, manager::WindowManager,
+};
 
 /**
  * Automatically set the X root window WM_NAME property to be the WM_NAME of the

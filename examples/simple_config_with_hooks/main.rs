@@ -9,15 +9,17 @@
 #[macro_use]
 extern crate penrose;
 
-use penrose::client::Client;
-use penrose::data_types::ColorScheme;
-use penrose::hooks::Hook;
-use penrose::layout::{bottom_stack, side_stack, Layout, LayoutConf};
-use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
-
-use penrose::contrib::extensions::Scratchpad;
-use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName};
-use penrose::contrib::layouts::paper;
+use penrose::{
+    client::Client,
+    contrib::{
+        extensions::Scratchpad,
+        hooks::{DefaultWorkspace, LayoutSymbolAsRootName},
+        layouts::paper,
+    },
+    hooks::Hook,
+    layout::{bottom_stack, side_stack, Layout, LayoutConf},
+    Backward, Config, Forward, Less, More, WindowManager, XcbConnection,
+};
 
 use simplelog::{LevelFilter, SimpleLogger};
 
@@ -46,16 +48,9 @@ fn main() {
     // Windows with a matching WM_CLASS will always float
     config.floating_classes = &["dmenu", "dunst", "polybar"];
 
-    // Only the highlight color is currently used (window borders). Work is planned for an embedded
-    // task bar and systray which will make use of the other colors
-    config.color_scheme = ColorScheme {
-        bg: 0x282828,        // #282828
-        fg_1: 0x3c3836,      // #3c3836
-        fg_2: 0xa89984,      // #a89984
-        fg_3: 0xf2e5bc,      // #f2e5bc
-        highlight: 0xcc241d, // #cc241d
-        urgent: 0x458588,    // #458588
-    };
+    // Client border colors are set based on X focus
+    config.focused_border = 0xcc241d; // #cc241d
+    config.unfocused_border = 0x3c3836; // #3c3836
 
     // When specifying a layout, most of the time you will want LayoutConf::default() as shown
     // below, which will honour gap settings and will not be run on focus changes (only when

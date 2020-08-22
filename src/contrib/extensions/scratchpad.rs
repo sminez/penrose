@@ -1,11 +1,13 @@
 //! A scratchpad that holds a single client
-use crate::core::client::Client;
-use crate::core::data_types::{Config, FireAndForget, Region, WinId};
-use crate::core::helpers::spawn;
-use crate::core::hooks::Hook;
-use crate::core::manager::WindowManager;
-use std::cell::RefCell;
-use std::rc::Rc;
+use crate::core::{
+    client::Client,
+    data_types::{Config, FireAndForget, Region, WinId},
+    helpers::spawn,
+    hooks::Hook,
+    manager::WindowManager,
+};
+
+use std::{cell::RefCell, rc::Rc};
 
 /**
  * A Scratchpad spawns and manages a single Client which can then be shown above the current layout

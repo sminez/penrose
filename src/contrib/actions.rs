@@ -1,6 +1,8 @@
 //! Additional helper functions and actions for use with penrose.
-use crate::core::{Layout, WindowManager, Workspace};
-use crate::data_types::{FireAndForget, Selector};
+use crate::{
+    core::{Layout, WindowManager, Workspace},
+    data_types::{FireAndForget, Selector},
+};
 
 /**
  * Call 'get_name' to obtain a Workspace name and check to see if there is currently a Workspace
