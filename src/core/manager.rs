@@ -89,11 +89,8 @@ impl<'a> WindowManager<'a> {
         let ws = match self.workspaces.get(wix) {
             Some(ws) => ws,
             None => {
-                warn!(
-                    "attempt to apply layout to index={} but there only {} known workspaces",
-                    wix,
-                    self.workspaces.len()
-                );
+                let len = self.workspaces.len();
+                warn!("layout: wix out of bounds {} {}", wix, len);
                 return;
             }
         };
@@ -226,7 +223,7 @@ impl<'a> WindowManager<'a> {
                 debug!("got XEvent: {:?}", event);
                 match event {
                     XEvent::KeyPress { code } => self.handle_key_press(code, &mut bindings),
-                    XEvent::Map { id, ignore } => self.handle_map_notify(id, ignore),
+                    XEvent::MapRequest { id, ignore } => self.handle_map_request(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
                     XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
                     XEvent::Destroy { id } => self.handle_destroy_notify(id),
@@ -260,7 +257,7 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    fn handle_map_notify(&mut self, id: WinId, override_redirect: bool) {
+    fn handle_map_request(&mut self, id: WinId, override_redirect: bool) {
         if override_redirect || self.client_map.contains_key(&id) {
             return;
         }
@@ -293,7 +290,8 @@ impl<'a> WindowManager<'a> {
         self.conn.warp_cursor(Some(id), s);
 
         self.conn.set_client_workspace(id, wix);
-        self.apply_layout(self.active_ws_index());
+        self.apply_layout(wix);
+        self.conn.map_window(id);
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -749,7 +747,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.handle_map_notify(10 * (i + offset + 1) as u32, false);
+            wm.handle_map_request(10 * (i + offset + 1) as u32, false);
         }
     }
 

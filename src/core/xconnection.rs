@@ -47,7 +47,9 @@ const MOUSE_MASK: u16 = (xcb::EVENT_MASK_BUTTON_PRESS
     | xcb::EVENT_MASK_POINTER_MOTION) as u16;
 const EVENT_MASK: &[(u32, u32)] = &[(
     xcb::CW_EVENT_MASK,
-    xcb::EVENT_MASK_PROPERTY_CHANGE | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY as u32,
+    xcb::EVENT_MASK_PROPERTY_CHANGE
+        | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
+        | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 )];
 
 // TODO: this list has been copied from atoms used in other WMs, not using everything
@@ -210,10 +212,16 @@ pub enum XEvent {
         code: KeyCode,
     },
 
-    /// MapNotifyEvent
-    /// xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
-    Map {
-        /// The ID of the window being mapped
+    // /// xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
+    // MapNotify {
+    //     /// The ID of the window being mapped
+    //     id: WinId,
+    //     /// Whether or not the WindowManager should handle this window.
+    //     ignore: bool,
+    // },
+    /// xcb docs: https://www.mankier.com/3/xcb_map_request_event_t
+    MapRequest {
+        /// The ID of the window that wants to be mapped
         id: WinId,
         /// Whether or not the WindowManager should handle this window.
         ignore: bool,
@@ -503,12 +511,18 @@ impl XConn for XcbConnection {
                     })
                 }
 
-                xcb::MAP_NOTIFY => {
-                    let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Map {
-                        id: e.window(),
-                        ignore: e.override_redirect(),
-                    })
+                xcb::MAP_REQUEST => {
+                    let e: &xcb::MapRequestEvent = unsafe { xcb::cast_event(&event) };
+                    let id = e.window();
+                    xcb::xproto::get_window_attributes(&self.conn, id)
+                        .get_reply()
+                        .ok()
+                        .and_then(|r| {
+                            dbg!(Some(XEvent::MapRequest {
+                                id,
+                                ignore: r.override_redirect(),
+                            }))
+                        })
                 }
 
                 xcb::ENTER_NOTIFY => {

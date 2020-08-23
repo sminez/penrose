@@ -109,7 +109,7 @@ hook_test!(
     expected_calls => 1,
     "new_client",
     test_new_client_hooks,
-    vec![XEvent::Map {
+    vec![XEvent::MapRequest {
         id: 1,
         ignore: false
     }]
@@ -120,7 +120,7 @@ hook_test!(
     "remove_client",
     test_remove_client_hooks,
     vec![
-        XEvent::Map {
+        XEvent::MapRequest {
             id: 1,
             ignore: false
         },
@@ -200,11 +200,11 @@ hook_test!(
     "focus_change",
     test_focus_hooks,
     vec![
-        XEvent::Map {
+        XEvent::MapRequest {
             id: 1,
             ignore: false
         },
-        XEvent::Map {
+        XEvent::MapRequest {
             id: 2,
             ignore: false
         },
