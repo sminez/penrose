@@ -11,6 +11,8 @@ use crate::{
     Result,
 };
 
+const MAX_ACTIVE_WINDOW_CHARS: usize = 80;
+
 /**
  * A status bar widget
  *
@@ -67,6 +69,7 @@ pub fn dwm_bar<Ctx: DrawContext>(
                     padding: (6.0, 4.0),
                     ..style.clone()
                 },
+                MAX_ACTIVE_WINDOW_CHARS,
                 true,
                 false,
             )),

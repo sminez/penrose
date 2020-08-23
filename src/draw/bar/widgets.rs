@@ -321,13 +321,29 @@ impl Widget for RootWindowName {
 /// A text widget that is set via updating the root window name a la dwm
 pub struct ActiveWindowName {
     txt: Text,
+    max_chars: usize,
 }
 
 impl ActiveWindowName {
     /// Create a new ActiveWindowName widget
-    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
+    pub fn new(
+        style: &TextStyle,
+        max_chars: usize,
+        is_greedy: bool,
+        right_justified: bool,
+    ) -> Self {
         Self {
             txt: Text::new("", style, is_greedy, right_justified),
+            max_chars,
+        }
+    }
+
+    fn set_text(&mut self, txt: &str) {
+        if txt.chars().count() <= self.max_chars {
+            self.txt.set_text(txt);
+        } else {
+            let s: String = txt.chars().take(self.max_chars - 3).collect();
+            self.txt.set_text(format!("{}...", s));
         }
     }
 }
@@ -335,14 +351,14 @@ impl ActiveWindowName {
 impl Hook for ActiveWindowName {
     fn focus_change(&mut self, wm: &mut WindowManager, id: WinId) {
         if let Some(client) = wm.client(&Selector::WinId(id)) {
-            self.txt.set_text(client.wm_name());
+            self.set_text(client.wm_name());
         }
     }
 
     fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, name: &str, root: bool) {
         if !root {
             if Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
-                self.txt.set_text(name);
+                self.set_text(name);
             }
         }
     }
