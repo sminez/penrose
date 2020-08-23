@@ -46,6 +46,7 @@ pub struct WindowManager<'a> {
     bar_height: u32,
     top_bar: bool,
     hooks: Cell<Vec<Box<dyn hooks::Hook>>>,
+    focused_client: Option<WinId>,
     running: bool,
 }
 
@@ -69,6 +70,7 @@ impl<'a> WindowManager<'a> {
             bar_height: config.bar_height,
             top_bar: config.top_bar,
             hooks: Cell::new(config.hooks),
+            focused_client: None,
             running: false,
         };
 
@@ -114,18 +116,22 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    fn remove_client(&mut self, win_id: WinId) {
-        match self.client_map.get(&win_id) {
+    fn remove_client(&mut self, id: WinId) {
+        match self.client_map.get(&id) {
             Some(client) => {
                 self.workspaces
                     .get_mut(client.workspace())
-                    .and_then(|ws| ws.remove_client(win_id));
-                self.client_map.remove(&win_id).map(|c| {
+                    .and_then(|ws| ws.remove_client(id));
+                self.client_map.remove(&id).map(|c| {
                     debug!("removing ref to client {} ({})", c.id(), c.class());
                 });
-                run_hooks!(remove_client, self, win_id);
+
+                if self.focused_client == Some(id) {
+                    self.focused_client = None;
+                }
+                run_hooks!(remove_client, self, id);
             }
-            None => warn!("attempt to remove unknown client {}", win_id),
+            None => warn!("attempt to remove unknown client {}", id),
         }
     }
 
@@ -163,15 +169,22 @@ impl<'a> WindowManager<'a> {
     }
 
     fn focused_client(&self) -> Option<&Client> {
-        self.workspaces
-            .get(self.active_ws_index())
-            .and_then(|ws| ws.focused_client().and_then(|id| self.client_map.get(&id)))
+        self.focused_client
+            .or_else(|| {
+                self.workspaces
+                    .get(self.active_ws_index())
+                    .and_then(|ws| ws.focused_client())
+            })
+            .and_then(|id| self.client_map.get(&id))
     }
 
     fn focused_client_mut(&mut self) -> Option<&mut Client> {
-        self.workspaces
-            .get(self.active_ws_index())
-            .and_then(|ws| ws.focused_client())
+        self.focused_client
+            .or_else(|| {
+                self.workspaces
+                    .get(self.active_ws_index())
+                    .and_then(|ws| ws.focused_client())
+            })
             .and_then(move |id| self.client_map.get_mut(&id))
     }
 
@@ -182,8 +195,6 @@ impl<'a> WindowManager<'a> {
         self.conn.set_client_border_color(id, self.focused_border);
         self.conn.focus_client(id);
 
-        run_hooks!(focus_change, self, id);
-
         if let Some(wix) = self.workspace_index_for_client(id) {
             if let Some(ws) = self.workspaces.get_mut(wix) {
                 ws.focus_client(id);
@@ -192,6 +203,9 @@ impl<'a> WindowManager<'a> {
                 }
             }
         }
+
+        self.focused_client = Some(id);
+        run_hooks!(focus_change, self, id);
     }
 
     fn client_lost_focus(&self, id: WinId) {
