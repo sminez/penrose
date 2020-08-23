@@ -107,12 +107,35 @@ impl<'a> WindowManager<'a> {
 
                 for (id, region) in ws.arrange(r, &self.client_map) {
                     debug!("configuring {} with {:?}", id, region);
-                    let (x, y, w, h) = region.values();
-                    let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
-                    self.conn.position_window(id, r, self.border_px);
+                    if let Some(region) = region {
+                        let (x, y, w, h) = region.values();
+                        let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
+                        self.conn.position_window(id, r, self.border_px);
+                        self.map_window_if_needed(id);
+                    } else {
+                        self.unmap_window_if_needed(id);
+                    }
                 }
             }
             run_hooks!(layout_applied, self, wix, i);
+        }
+    }
+
+    fn map_window_if_needed(&mut self, id: WinId) {
+        if let Some(c) = self.client_map.get_mut(&id) {
+            if !c.mapped {
+                c.mapped = true;
+                self.conn.map_window(id);
+            }
+        }
+    }
+
+    fn unmap_window_if_needed(&mut self, id: WinId) {
+        if let Some(c) = self.client_map.get_mut(&id) {
+            if c.mapped {
+                c.mapped = false;
+                self.conn.unmap_window(id);
+            }
         }
     }
 
@@ -546,11 +569,17 @@ impl<'a> WindowManager<'a> {
             // displayed and replace it with the target workspace
             self.workspaces
                 .get(active)
-                .map(|ws| ws.iter().for_each(|c| self.conn.unmap_window(*c)));
+                .unwrap()
+                .clients()
+                .iter()
+                .for_each(|id| self.unmap_window_if_needed(*id));
 
             self.workspaces
                 .get(index)
-                .map(|ws| ws.iter().for_each(|c| self.conn.map_window(*c)));
+                .unwrap()
+                .clients()
+                .iter()
+                .for_each(|id| self.map_window_if_needed(*id));
 
             self.screens.focused_mut().unwrap().wix = index;
             self.apply_layout(index);

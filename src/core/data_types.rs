@@ -19,7 +19,7 @@ pub type FireAndForget = Box<dyn FnMut(&mut WindowManager) -> ()>;
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
 
 /// Output of a Layout function: the new position a window should take
-pub type ResizeAction = (WinId, Region);
+pub type ResizeAction = (WinId, Option<Region>);
 
 /// Map xmodmap key names to their X key code so that we can bind them by name
 pub type CodeMap = HashMap<String, u8>;
@@ -288,6 +288,10 @@ impl<T> Ring<T> {
 
     pub fn iter(&self) -> std::collections::vec_deque::Iter<T> {
         self.elements.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<T> {
+        self.elements.iter_mut()
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
