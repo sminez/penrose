@@ -381,6 +381,10 @@ impl CurrentLayout {
 }
 
 impl Hook for CurrentLayout {
+    fn startup(&mut self, wm: &mut WindowManager) {
+        self.txt.set_text(wm.current_layout_symbol());
+    }
+
     fn layout_change(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
         self.txt.set_text(wm.current_layout_symbol());
     }

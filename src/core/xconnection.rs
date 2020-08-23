@@ -212,13 +212,6 @@ pub enum XEvent {
         code: KeyCode,
     },
 
-    // /// xcb docs: https://www.mankier.com/3/xcb_xkb_map_notify_event_t
-    // MapNotify {
-    //     /// The ID of the window being mapped
-    //     id: WinId,
-    //     /// Whether or not the WindowManager should handle this window.
-    //     ignore: bool,
-    // },
     /// xcb docs: https://www.mankier.com/3/xcb_map_request_event_t
     MapRequest {
         /// The ID of the window that wants to be mapped

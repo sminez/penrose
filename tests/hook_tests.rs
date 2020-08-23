@@ -19,7 +19,7 @@ impl TestHook {
     fn mark_called(&mut self, method: &str) {
         self.calls.replace_with(|cs| {
             if method == self.method {
-                cs.push(self.name.into());
+                cs.push(format!("{}:{}", self.name, method));
             }
             cs.to_vec()
         });
@@ -62,6 +62,14 @@ impl Hook for TestHook {
     fn focus_change(&mut self, _: &mut WindowManager, _: WinId) {
         self.mark_called("focus_change");
     }
+
+    fn startup(&mut self, _: &mut WindowManager) {
+        self.mark_called("startup");
+    }
+
+    fn event_handled(&mut self, _: &mut WindowManager) {
+        self.mark_called("event_handled");
+    }
 }
 
 macro_rules! hook_test(
@@ -99,7 +107,10 @@ macro_rules! hook_test(
 
             assert_eq!(
                 Rc::try_unwrap(calls).unwrap().into_inner(),
-                ["hook_1", "hook_2"].repeat($n)
+                [
+                    format!("{}:{}", "hook_1", $method).as_str(),
+                    format!("{}:{}", "hook_2", $method).as_str()
+                ].repeat($n)
             );
         }
     };
@@ -212,4 +223,18 @@ hook_test!(
             code: common::FOCUS_CHANGE_CODE
         }
     ]
+);
+
+hook_test!(
+    expected_calls => 1,
+    "startup",
+    test_startup_hooks,
+    vec![]
+);
+
+hook_test!(
+    expected_calls => 2, // one from startup events, and the second from screen change
+    "event_handled",
+    test_event_handled_hooks,
+    vec![XEvent::ScreenChange]
 );

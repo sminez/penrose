@@ -108,4 +108,9 @@ pub trait Hook {
      * take action in response to another hook.
      */
     fn event_handled(&mut self, _wm: &mut WindowManager) {}
+
+    /**
+     * Called once at window manager startup
+     */
+    fn startup(&mut self, _wm: &mut WindowManager) {}
 }

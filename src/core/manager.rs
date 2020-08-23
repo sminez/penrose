@@ -253,6 +253,7 @@ impl<'a> WindowManager<'a> {
 
         self.conn.grab_keys(&bindings);
         self.focus_workspace(&Selector::Index(0));
+        run_hooks!(startup, self,);
         self.running = true;
 
         while self.running {
