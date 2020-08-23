@@ -180,4 +180,11 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
         }
         self.redraw_if_needed();
     }
+
+    fn startup(&mut self, wm: &mut WindowManager) {
+        for w in self.widgets.iter_mut() {
+            w.startup(wm);
+        }
+        self.redraw_if_needed();
+    }
 }
