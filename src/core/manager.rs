@@ -747,7 +747,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.handle_map_notify(10 * (i + offset + 1) as u32, false);
+            wm.handle_map_request(10 * (i + offset + 1) as u32, false);
         }
     }
 
