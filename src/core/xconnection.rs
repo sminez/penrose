@@ -511,10 +511,10 @@ impl XConn for XcbConnection {
                         .get_reply()
                         .ok()
                         .and_then(|r| {
-                            dbg!(Some(XEvent::MapRequest {
+                            Some(XEvent::MapRequest {
                                 id,
                                 ignore: r.override_redirect(),
-                            }))
+                            })
                         })
                 }
 
