@@ -57,6 +57,15 @@ impl Workspace {
         self.clients.iter()
     }
 
+    /// Iterate over the clients on this workspace in position order
+    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<WinId> {
+        self.clients.iter_mut()
+    }
+
+    pub(crate) fn clients(&self) -> Vec<WinId> {
+        self.clients.as_vec()
+    }
+
     /// A reference to the currently focused client if there is one
     pub fn focused_client(&self) -> Option<WinId> {
         self.clients.focused().map(|c| *c)
@@ -147,8 +156,8 @@ impl Workspace {
         if self.clients.len() < 2 {
             return None; // need at least two clients to cycle
         }
-        if self.layout_conf().follow_focus && self.clients.would_wrap(direction) {
-            return None; // When following focus, don't allow wrapping focus
+        if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
+            return None;
         }
 
         let prev = *self.clients.focused()?;
@@ -165,8 +174,8 @@ impl Workspace {
      * Drag the focused client through the stack, retaining focus
      */
     pub fn drag_client(&mut self, direction: Direction) -> Option<WinId> {
-        if self.layout_conf().follow_focus && self.clients.would_wrap(direction) {
-            return None; // When following focus, don't allow wrapping focus
+        if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
+            return None;
         }
         self.clients.drag_focused(direction).map(|c| *c)
     }

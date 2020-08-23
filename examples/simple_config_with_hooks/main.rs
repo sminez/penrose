@@ -60,6 +60,7 @@ fn main() {
         floating: false,
         gapless: true,
         follow_focus: true,
+        allow_wrapping: false,
     };
 
     // Defauly number of clients in the main layout area

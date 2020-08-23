@@ -22,7 +22,7 @@ pub fn paper(
 ) -> Vec<ResizeAction> {
     let n = clients.len();
     if n == 1 {
-        return vec![(clients[0].id(), *monitor_region)];
+        return vec![(clients[0].id(), Some(*monitor_region))];
     }
 
     let (mx, my, mw, mh) = monitor_region.values();
@@ -39,13 +39,13 @@ pub fn paper(
             let cid = c.id();
             if cid == fid {
                 after_focused = true;
-                (cid, Region::new(mx + i as u32 * step, my, cw, mh))
+                (cid, Some(Region::new(mx + i as u32 * step, my, cw, mh)))
             } else {
                 let mut x = mx + i as u32 * step;
                 if after_focused {
                     x += cw - step
                 };
-                (cid, Region::new(x, my, step, mh))
+                (cid, Some(Region::new(x, my, step, mh)))
             }
         })
         .collect()
