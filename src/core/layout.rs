@@ -69,10 +69,8 @@ pub type LayoutFunc = fn(&[&Client], Option<WinId>, &Region, u32, f32) -> Vec<Re
  */
 #[derive(Clone, Copy)]
 pub struct Layout {
-    /// How this layout should be applied by the WindowManager
-    pub conf: LayoutConf,
-    /// User defined symbol for displaying in the status bar
-    pub symbol: &'static str,
+    pub(crate) conf: LayoutConf,
+    pub(crate) symbol: &'static str,
     max_main: u32,
     ratio: f32,
     f: LayoutFunc,
