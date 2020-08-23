@@ -131,6 +131,7 @@ impl Layout {
                 floating: true,
                 gapless: false,
                 follow_focus: false,
+                allow_wrapping: true,
             },
             f: floating,
             max_main: 1,
