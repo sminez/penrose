@@ -682,11 +682,11 @@ impl<'a> WindowManager<'a> {
     /// return the workspace containing that Client if the client is known.
     pub fn workspace_mut(&mut self, selector: &Selector<Workspace>) -> Option<&mut Workspace> {
         if let Selector::WinId(id) = selector {
-            let wix = match self.client_map.get(&id).map(|c| c.workspace()) {
-                Some(i) => i,
-                None => return None,
-            };
-            self.workspaces.get_mut(wix)
+            if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
+                self.workspaces.get_mut(wix)
+            } else {
+               return None;
+            }
         } else {
             self.workspaces.element_mut(&selector)
         }
