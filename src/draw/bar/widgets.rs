@@ -174,11 +174,12 @@ impl Workspaces {
 
     fn update_workspace_occupied(&mut self, wm: &mut WindowManager) {
         for ws in self.workspaces.iter_mut() {
-            let now_occupied = wm
-                .workspace(&Selector::Condition(&|w| w.name() == ws.name))
-                .unwrap()
-                .len()
-                > 0;
+            let now_occupied =
+                if let Some(ws) = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name)) {
+                    ws.len() > 0
+                } else {
+                    false
+                };
 
             if ws.occupied != now_occupied {
                 self.require_draw = true;
@@ -200,9 +201,18 @@ impl Hook for Workspaces {
         self.update_workspace_occupied(wm);
     }
 
-    fn workspace_change(&mut self, _: &mut WindowManager, _: usize, new: usize) {
+    fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
         if self.focused_ws != new {
             self.focused_ws = new;
+            if let Some(ws) = self.workspaces.get_mut(new) {
+                let res = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name));
+                ws.occupied = if let Some(w) = res {
+                    w.len() > 0
+                } else {
+                    false
+                };
+            }
+
             self.require_draw = true;
         }
     }
@@ -349,6 +359,12 @@ impl ActiveWindowName {
 }
 
 impl Hook for ActiveWindowName {
+    fn remove_client(&mut self, wm: &mut WindowManager, _: WinId) {
+        if wm.client(&Selector::Focused) == None {
+            self.txt.set_text("");
+        }
+    }
+
     fn focus_change(&mut self, wm: &mut WindowManager, id: WinId) {
         if let Some(client) = wm.client(&Selector::WinId(id)) {
             self.set_text(client.wm_name());

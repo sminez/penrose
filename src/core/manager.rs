@@ -544,7 +544,6 @@ impl<'a> WindowManager<'a> {
         if let Some(index) = self.workspaces.index(selector) {
             let active = self.active_ws_index();
             self.previous_workspace = active;
-            run_hooks!(workspace_change, self, active, index);
 
             for i in 0..self.screens.len() {
                 if self.screens[i].wix == index {
@@ -562,25 +561,25 @@ impl<'a> WindowManager<'a> {
                         .get(index)
                         .and_then(|ws| ws.focused_client())
                         .map(|id| self.client_gained_focus(id));
+
+                    run_hooks!(workspace_change, self, active, index);
                     return;
                 }
             }
 
             // target not currently displayed so unmap what we currently have
             // displayed and replace it with the target workspace
-            self.workspaces
-                .get(active)
-                .unwrap()
-                .clients()
-                .iter()
-                .for_each(|id| self.unmap_window_if_needed(*id));
+            if let Some(ws) = self.workspaces.get(active) {
+                ws.clients()
+                    .iter()
+                    .for_each(|id| self.unmap_window_if_needed(*id));
+            }
 
-            self.workspaces
-                .get(index)
-                .unwrap()
-                .clients()
-                .iter()
-                .for_each(|id| self.map_window_if_needed(*id));
+            if let Some(ws) = self.workspaces.get(index) {
+                ws.clients()
+                    .iter()
+                    .for_each(|id| self.map_window_if_needed(*id));
+            }
 
             self.screens.focused_mut().unwrap().wix = index;
             self.apply_layout(index);
@@ -590,6 +589,8 @@ impl<'a> WindowManager<'a> {
                 .get(index)
                 .and_then(|ws| ws.focused_client())
                 .map(|id| self.client_gained_focus(id));
+
+            run_hooks!(workspace_change, self, active, index);
         }
     }
 
@@ -653,13 +654,16 @@ impl<'a> WindowManager<'a> {
             return None; // not allowed to remove the last workspace
         }
 
-        let ws = self.workspaces.remove(&selector).map(|ws| {
-            ws.iter().for_each(|c| self.remove_client(*c));
-            ws
-        });
+        let ws = self.workspaces.remove(&selector)?;
+        ws.iter().for_each(|c| self.remove_client(*c));
+
+        // Focus the workspace before the one we just removed. There is always at least one
+        // workspace before this one due to the guard above.
+        let ix = self.screens.focused()?.wix - 1;
+        self.focus_workspace(&Selector::Index(ix));
 
         self.update_x_workspace_details();
-        return ws;
+        return Some(ws);
     }
 
     /// Get a reference to the first Workspace satisfying 'selector'. WinId selectors will return
