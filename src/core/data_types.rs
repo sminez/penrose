@@ -349,6 +349,24 @@ impl<T> Ring<T> {
         }
     }
 
+    pub fn all_elements(&self, s: &Selector<T>) -> Vec<&T> {
+        match s {
+            Selector::WinId(_) => vec![], // ignored
+            Selector::Focused => self.focused().into_iter().collect(),
+            Selector::Index(i) => self.elements.get(*i).into_iter().collect(),
+            Selector::Condition(f) => self.elements.iter().filter(|e| f(*e)).collect(),
+        }
+    }
+    
+    pub fn all_elements_mut(&mut self, s: &Selector<T>) -> Vec<&mut T> {
+        match s {
+            Selector::WinId(_) => vec![], // ignored
+            Selector::Focused => self.focused_mut().into_iter().collect(),
+            Selector::Index(i) => self.elements.get_mut(*i).into_iter().collect(),
+            Selector::Condition(f) => self.elements.iter_mut().filter(|e| f(*e)).collect(),
+        }
+    }
+
     pub fn focus(&mut self, s: &Selector<T>) -> Option<&T> {
         match s {
             Selector::WinId(_) => None, // ignored
@@ -526,5 +544,47 @@ mod tests {
         assert_eq!(r.as_vec(), vec![1, 2, 3]);
         assert_eq!(r.cycle_focus(Direction::Backward), Some(&1));
         assert_eq!(r.as_vec(), vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn element() {
+        let mut r = Ring::new(vec![1, 2, 3, 4]);
+        assert_eq!(r.element(&Selector::Condition(&|e| e % 2 == 0)), Some(&2));
+        assert_eq!(r.element_mut(&Selector::Condition(&|e| e % 2 == 0)), Some(&mut 2));
+
+        assert_eq!(r.element(&Selector::Index(2)), Some(&3));
+        assert_eq!(r.element_mut(&Selector::Index(2)), Some(&mut 3));
+        assert_eq!(r.element(&Selector::Index(50)), None);
+        assert_eq!(r.element_mut(&Selector::Index(50)), None);
+
+        r.focus(&Selector::Index(1));
+        assert_eq!(r.element(&Selector::Focused), Some(&2));
+        assert_eq!(r.element_mut(&Selector::Focused), Some(&mut 2));
+
+        assert_eq!(r.element(&Selector::WinId(42)), None);
+        assert_eq!(r.element_mut(&Selector::WinId(69)), None);
+
+        assert_eq!(r.as_vec(), vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn all_elements() {
+        let mut r = Ring::new(vec![1, 2, 3, 4]);
+        assert_eq!(r.all_elements(&Selector::Condition(&|e| e % 2 == 0)), vec![&2, &4]);
+        assert_eq!(r.all_elements_mut(&Selector::Condition(&|e| e % 2 == 0)), vec![&mut 2, &mut 4]);
+
+        assert_eq!(r.all_elements(&Selector::Index(2)), vec![&3]);
+        assert_eq!(r.all_elements_mut(&Selector::Index(2)), vec![&mut 3]);
+        assert_eq!(r.all_elements(&Selector::Index(50)), vec![&0; 0]);
+        assert_eq!(r.all_elements_mut(&Selector::Index(50)), vec![&0; 0]);
+
+        r.focus(&Selector::Index(1));
+        assert_eq!(r.all_elements(&Selector::Focused), vec![&2]);
+        assert_eq!(r.all_elements_mut(&Selector::Focused), vec![&mut 2]);
+
+        assert_eq!(r.all_elements(&Selector::WinId(42)), vec![&0; 0]);
+        assert_eq!(r.all_elements_mut(&Selector::WinId(69)), vec![&0; 0]);
+
+        assert_eq!(r.as_vec(), vec![1, 2, 3, 4]);
     }
 }
