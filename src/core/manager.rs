@@ -709,7 +709,8 @@ impl<'a> WindowManager<'a> {
             Selector::Index(i) => self
                 .workspaces
                 .get(self.active_ws_index())
-                .and_then(|ws| ws.iter().nth(*i).and_then(|id| self.client_map.get(id))),
+                .and_then(|ws| ws.iter().nth(*i))
+                .and_then(|id| self.client_map.get(id)),
         }
     }
 
