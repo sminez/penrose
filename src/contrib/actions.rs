@@ -37,8 +37,7 @@ pub fn focus_or_spawn(class: String, command: String) -> FireAndForget {
     Box::new(move |wm: &mut WindowManager| {
         let cond = |c: &Client| c.class() == &class;
         let sel = Selector::Condition(&cond);
-        let client = wm.client(&sel);
-        if let Some(client) = client {
+        if let Some(client) = wm.client(&sel) {
             let workspace = client.workspace();
             wm.focus_workspace(&Selector::Index(workspace));
         } else {
