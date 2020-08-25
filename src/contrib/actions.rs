@@ -1,7 +1,8 @@
 //! Additional helper functions and actions for use with penrose.
 use crate::{
-    core::{Layout, WindowManager, Workspace},
+    core::{Layout, WindowManager, Workspace, Client},
     data_types::{FireAndForget, Selector},
+    helpers::spawn,
 };
 
 /**
@@ -23,5 +24,24 @@ pub fn create_or_switch_to_workspace(
             wm.push_workspace(Workspace::new(name, layouts.clone()))
         }
         wm.focus_workspace(&sel);
+    })
+}
+
+/**
+ * Focus a Client with the given class as WM_CLASS or spawn the program with
+ * the given command if no such Client exists. This is useful for key bindings 
+ * that are based on the program you want to work with rather than having to 
+ * remember where things are running.
+ */
+pub fn focus_or_spawn(class: String, command: String) -> FireAndForget {
+    Box::new(move |wm: &mut WindowManager| {
+        let cond = |c: &Client| c.class() == &class;
+        let sel = Selector::Condition(&cond);
+        if let Some(client) = wm.client(&sel) {
+            let workspace = client.workspace();
+            wm.focus_workspace(&Selector::Index(workspace));
+        } else {
+            spawn(&command);
+        }
     })
 }
