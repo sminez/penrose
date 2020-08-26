@@ -5,7 +5,7 @@ pub use bar::*;
 pub use inner::{Color, Draw, DrawContext, TextStyle, WindowType, XCBDraw, XCBDrawContext};
 
 mod inner {
-    use std::collections::HashMap;
+    use std::{collections::HashMap, convert::TryFrom};
 
     use crate::{core::data_types::WinId, Result};
 
@@ -136,11 +136,15 @@ mod inner {
     impl Color {
         /// Create a new Color from a hex encoded u32: 0xRRGGBB
         pub fn new_from_hex(hex: u32) -> Self {
-            Self {
-                r: ((hex & 0xFF0000) >> 16) as f64 / 255.0,
-                g: ((hex & 0x00FF00) >> 8) as f64 / 255.0,
-                b: (hex & 0x0000FF) as f64 / 255.0,
-            }
+            let floats: Vec<f64> = hex
+                .to_be_bytes()
+                .iter()
+                .skip(1)
+                .map(|n| *n as f64 / 255.0)
+                .collect();
+
+            let (r, g, b) = (floats[0], floats[1], floats[2]);
+            Self { r, g, b }
         }
 
         /// The RGB information of this color as 0.0-1.0 range floats representing
@@ -160,6 +164,17 @@ mod inner {
         fn from(rgb: (f64, f64, f64)) -> Self {
             let (r, g, b) = rgb;
             Self { r, g, b }
+        }
+    }
+
+    impl TryFrom<String> for Color {
+        type Error = std::num::ParseIntError;
+
+        fn try_from(s: String) -> std::result::Result<Color, Self::Error> {
+            Ok(Self::new_from_hex(u32::from_str_radix(
+                s.strip_prefix('#').unwrap_or_else(|| &s),
+                16,
+            )?))
         }
     }
 
