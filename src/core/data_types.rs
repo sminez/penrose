@@ -357,7 +357,7 @@ impl<T> Ring<T> {
             Selector::Condition(f) => self.elements.iter().filter(|e| f(*e)).collect(),
         }
     }
-    
+
     pub fn all_elements_mut(&mut self, s: &Selector<T>) -> Vec<&mut T> {
         match s {
             Selector::WinId(_) => vec![], // ignored
@@ -550,7 +550,10 @@ mod tests {
     fn element() {
         let mut r = Ring::new(vec![1, 2, 3, 4]);
         assert_eq!(r.element(&Selector::Condition(&|e| e % 2 == 0)), Some(&2));
-        assert_eq!(r.element_mut(&Selector::Condition(&|e| e % 2 == 0)), Some(&mut 2));
+        assert_eq!(
+            r.element_mut(&Selector::Condition(&|e| e % 2 == 0)),
+            Some(&mut 2)
+        );
 
         assert_eq!(r.element(&Selector::Index(2)), Some(&3));
         assert_eq!(r.element_mut(&Selector::Index(2)), Some(&mut 3));
@@ -570,8 +573,14 @@ mod tests {
     #[test]
     fn all_elements() {
         let mut r = Ring::new(vec![1, 2, 3, 4]);
-        assert_eq!(r.all_elements(&Selector::Condition(&|e| e % 2 == 0)), vec![&2, &4]);
-        assert_eq!(r.all_elements_mut(&Selector::Condition(&|e| e % 2 == 0)), vec![&mut 2, &mut 4]);
+        assert_eq!(
+            r.all_elements(&Selector::Condition(&|e| e % 2 == 0)),
+            vec![&2, &4]
+        );
+        assert_eq!(
+            r.all_elements_mut(&Selector::Condition(&|e| e % 2 == 0)),
+            vec![&mut 2, &mut 4]
+        );
 
         assert_eq!(r.all_elements(&Selector::Index(2)), vec![&3]);
         assert_eq!(r.all_elements_mut(&Selector::Index(2)), vec![&mut 3]);
