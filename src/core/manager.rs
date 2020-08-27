@@ -324,12 +324,12 @@ impl<'a> WindowManager<'a> {
         self.conn.focus_client(id);
         self.client_gained_focus(id);
 
-        let s = self.screens.focused().unwrap();
-        self.conn.warp_cursor(Some(id), s);
-
         self.conn.set_client_workspace(id, wix);
         self.apply_layout(wix);
         self.conn.map_window(id);
+
+        let s = self.screens.focused().unwrap();
+        self.conn.warp_cursor(Some(id), s);
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -685,7 +685,7 @@ impl<'a> WindowManager<'a> {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
                 self.workspaces.get_mut(wix)
             } else {
-               return None;
+                return None;
             }
         } else {
             self.workspaces.element_mut(&selector)
@@ -707,15 +707,15 @@ impl<'a> WindowManager<'a> {
         }
     }
 
-    /// Get a vector of mutable references to Workspaces satisfying 'selector'. WinId selectors will 
-    /// return a vector with the workspace containing that Client if the client is known. Otherwise 
+    /// Get a vector of mutable references to Workspaces satisfying 'selector'. WinId selectors will
+    /// return a vector with the workspace containing that Client if the client is known. Otherwise
     /// an empty vector will be returned.
     pub fn all_workspaces_mut(&mut self, selector: &Selector<Workspace>) -> Vec<&mut Workspace> {
         if let Selector::WinId(id) = selector {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
                 self.workspaces.all_elements_mut(&Selector::Index(wix))
             } else {
-               return vec![];
+                return vec![];
             }
         } else {
             self.workspaces.all_elements_mut(&selector)
@@ -779,7 +779,7 @@ impl<'a> WindowManager<'a> {
                     .collect::<Vec<_>>();
                 clients.sort_by(|a, b| a.id().cmp(&b.id()));
                 clients
-            },
+            }
             Selector::Index(i) => self
                 .workspaces
                 .get(self.active_ws_index())
@@ -804,17 +804,15 @@ impl<'a> WindowManager<'a> {
                     .collect::<Vec<_>>();
                 clients.sort_by(|a, b| a.id().cmp(&b.id()));
                 clients
-            },
+            }
             Selector::Index(i) => match self
                 .workspaces
                 .get(self.active_ws_index())
                 .and_then(|ws| ws.iter().nth(*i))
             {
-                Some(id) => self.client_map.get_mut(id)
-                    .into_iter()
-                    .collect(),
+                Some(id) => self.client_map.get_mut(id).into_iter().collect(),
                 None => vec![],
-            }
+            },
         }
     }
 
@@ -1013,25 +1011,42 @@ mod tests {
         let conn = MockXConn::new(test_screens(), vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
 
-        add_n_clients(&mut wm, 3, 0); 
+        add_n_clients(&mut wm, 3, 0);
         wm.focus_workspace(&Selector::Index(1));
-        add_n_clients(&mut wm, 2, 3); 
+        add_n_clients(&mut wm, 2, 3);
 
-        assert_eq!(wm.all_clients(&Selector::Condition(&|c: &Client| c.workspace() == 0)).len(), 3);
-        assert_eq!(wm.all_clients_mut(&Selector::Condition(&|c: &Client| c.workspace() == 1)).len(), 2);
+        assert_eq!(
+            wm.all_clients(&Selector::Condition(&|c: &Client| c.workspace() == 0))
+                .len(),
+            3
+        );
+        assert_eq!(
+            wm.all_clients_mut(&Selector::Condition(&|c: &Client| c.workspace() == 1))
+                .len(),
+            2
+        );
 
-        assert_eq!(wm.all_clients(&Selector::Condition(&|c: &Client| c.workspace() == 0))[0].id(), 10);
-        assert_eq!(wm.all_clients_mut(&Selector::Condition(&|_| true)).iter().map(|c| c.id()).collect::<Vec<_>>(), vec![10, 20, 30, 40, 50]);
+        assert_eq!(
+            wm.all_clients(&Selector::Condition(&|c: &Client| c.workspace() == 0))[0].id(),
+            10
+        );
+        assert_eq!(
+            wm.all_clients_mut(&Selector::Condition(&|_| true))
+                .iter()
+                .map(|c| c.id())
+                .collect::<Vec<_>>(),
+            vec![10, 20, 30, 40, 50]
+        );
     }
 
     #[test]
     fn getting_all_workspaces_of_window() {
         let conn = MockXConn::new(test_screens(), vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
-        
-        add_n_clients(&mut wm, 3, 0); 
+
+        add_n_clients(&mut wm, 3, 0);
         wm.focus_workspace(&Selector::Index(1));
-        add_n_clients(&mut wm, 2, 3); 
+        add_n_clients(&mut wm, 2, 3);
 
         assert_eq!(wm.all_workspaces(&Selector::WinId(40))[0].name(), "2");
         assert_eq!(wm.all_workspaces_mut(&Selector::WinId(10))[0].name(), "1");
