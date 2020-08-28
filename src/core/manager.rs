@@ -610,10 +610,7 @@ impl<'a> WindowManager<'a> {
         self.focus_workspace(&Selector::Index(self.previous_workspace));
     }
 
-    /**
-     * Move the focused client to the workspace at `index` in the workspaces list.
-     * This will panic if you pass an index that is out of bounds.
-     */
+    /// Move the focused client to the workspace matching 'selector'.
     pub fn client_to_workspace(&mut self, selector: &Selector<Workspace>) {
         let active_ws = Selector::Index(self.screens.focused().unwrap().wix);
         if self.workspaces.equivalent_selectors(&selector, &active_ws) {
@@ -627,13 +624,32 @@ impl<'a> WindowManager<'a> {
                 .and_then(|ws| ws.remove_focused_client());
 
             if let Some(id) = res {
-                self.conn.unmap_window(id);
                 self.workspaces.get_mut(index).map(|ws| ws.add_client(id));
                 self.client_map.get_mut(&id).map(|c| c.set_workspace(index));
                 self.conn.set_client_workspace(id, index);
                 self.apply_layout(self.active_ws_index());
+
+                // layout & focus the screen we just landed on if the workspace is displayed
+                // otherwise unmap the window because we're no longer visible
+                if self.screens.iter().any(|s| s.wix == index) {
+                    self.apply_layout(index);
+                    let s = self.screens.focused().unwrap();
+                    self.conn.warp_cursor(Some(id), s);
+                    self.focus_screen(&Selector::Index(self.active_screen_index()));
+                } else {
+                    self.conn.unmap_window(id);
+                }
             };
         }
+    }
+
+    /// Move the focused client to the active workspace on the screen matching 'selector'.
+    pub fn client_to_screen(&mut self, selector: &Selector<Screen>) {
+        let i = match self.screen(selector) {
+            Some(s) => s.wix,
+            None => return,
+        };
+        self.client_to_workspace(&Selector::Index(i));
     }
 
     /// Kill the focused client window.
@@ -981,7 +997,7 @@ mod tests {
     }
 
     #[test]
-    fn sending_a_client_inserts_at_head() {
+    fn client_to_workspace_inserts_at_head() {
         let conn = MockXConn::new(test_screens(), vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 2, 0); // [20, 10]
@@ -996,7 +1012,7 @@ mod tests {
     }
 
     #[test]
-    fn sending_a_client_sets_focus() {
+    fn client_to_workspace_sets_focus() {
         let conn = MockXConn::new(test_screens(), vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 2, 0); // [20, 10]
@@ -1005,6 +1021,38 @@ mod tests {
         wm.focus_workspace(&Selector::Index(1));
 
         assert_eq!(wm.workspaces[1].focused_client(), Some(10));
+    }
+
+    #[test]
+    fn client_to_invalid_workspace_is_noop() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 1, 0); // [20, 10]
+
+        assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(0));
+        wm.client_to_workspace(&Selector::Index(42));
+        assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(0));
+    }
+
+    #[test]
+    fn client_to_screen_sets_correct_workspace() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 1, 0); // [20, 10]
+
+        wm.client_to_screen(&Selector::Index(1));
+        assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(1));
+    }
+
+    #[test]
+    fn client_to_invalid_screen_is_noop() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 1, 0); // [20, 10]
+
+        assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(0));
+        wm.client_to_screen(&Selector::Index(5));
+        assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(0));
     }
 
     #[test]

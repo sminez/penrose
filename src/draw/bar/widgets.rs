@@ -256,6 +256,10 @@ impl Hook for Workspaces {
         }
     }
 
+    fn screen_change(&mut self, _: &mut WindowManager, _: usize) {
+        self.require_draw = true;
+    }
+
     fn startup(&mut self, wm: &mut WindowManager) {
         // NOTE: Following initial workspace placement from WindowManager
         self.focused_ws = (0..wm.n_screens()).collect()
