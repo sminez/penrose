@@ -83,6 +83,7 @@ impl<'a> WindowManager<'a> {
         );
         wm.detect_screens();
         conn.set_wm_properties(&config.workspaces);
+        wm.conn.warp_cursor(None, &wm.screens[0]);
 
         return wm;
     }
