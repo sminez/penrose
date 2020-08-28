@@ -352,6 +352,9 @@ impl<'a> WindowManager<'a> {
         self.set_screen_from_cursor(self.conn.cursor_position());
         let wix = self.screens.focused().unwrap().wix;
         self.workspaces.focus(&Selector::Index(wix));
+
+        let i = self.screens.focused_index();
+        run_hooks!(screen_change, self, i);
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
@@ -635,6 +638,25 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.active_ws_index());
     }
 
+    /// Get a reference to the first Screen satisfying 'selector'. WinId selectors will return
+    /// the screen containing that Client if the client is known.
+    /// NOTE: It is not possible to get a mutable reference to a Screen.
+    pub fn screen(&self, selector: &Selector<Screen>) -> Option<&Screen> {
+        if let Selector::WinId(id) = selector {
+            self.client_map.get(&id).and_then(|c| {
+                self.screens
+                    .element(&Selector::Condition(&|s| s.wix == c.workspace()))
+            })
+        } else {
+            self.screens.element(&selector)
+        }
+    }
+
+    /// The currently focused workspace indices being shown on each screen
+    pub fn focused_workspaces(&self) -> Vec<usize> {
+        self.screens.iter().map(|s| s.wix).collect()
+    }
+
     /// Add a new workspace at `index`, shifting all workspaces with indices greater to the right.
     pub fn add_workspace(&mut self, index: usize, ws: Workspace) {
         self.workspaces.insert(index, ws);
@@ -816,6 +838,11 @@ impl<'a> WindowManager<'a> {
         }
     }
 
+    /// The number of detected screens currently being tracked by the WindowManager.
+    pub fn n_screens(&self) -> usize {
+        self.screens.len()
+    }
+
     /// The current effective screen size of the target screen. Effective screen size is the
     /// physical screen size minus any space reserved for a status bar.
     pub fn screen_size(&self, screen_index: usize) -> Option<Region> {
@@ -872,7 +899,10 @@ mod tests {
     }
 
     fn test_screens() -> Vec<Screen> {
-        vec![Screen::new(Region::new(0, 0, 1366, 768), 0)]
+        vec![
+            Screen::new(Region::new(0, 0, 1366, 768), 0),
+            Screen::new(Region::new(1366, 0, 1366, 768), 0),
+        ]
     }
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
@@ -1015,28 +1045,11 @@ mod tests {
         wm.focus_workspace(&Selector::Index(1));
         add_n_clients(&mut wm, 2, 3);
 
-        assert_eq!(
-            wm.all_clients(&Selector::Condition(&|c: &Client| c.workspace() == 0))
-                .len(),
-            3
-        );
-        assert_eq!(
-            wm.all_clients_mut(&Selector::Condition(&|c: &Client| c.workspace() == 1))
-                .len(),
-            2
-        );
+        let ws_0 = Selector::Condition(&|c: &Client| c.workspace() == 0);
+        let ws_1 = Selector::Condition(&|c: &Client| c.workspace() == 1);
 
-        assert_eq!(
-            wm.all_clients(&Selector::Condition(&|c: &Client| c.workspace() == 0))[0].id(),
-            10
-        );
-        assert_eq!(
-            wm.all_clients_mut(&Selector::Condition(&|_| true))
-                .iter()
-                .map(|c| c.id())
-                .collect::<Vec<_>>(),
-            vec![10, 20, 30, 40, 50]
-        );
+        assert_eq!(wm.all_clients(&ws_0).len(), 3);
+        assert_eq!(wm.all_clients_mut(&ws_1).len(), 2);
     }
 
     #[test]
@@ -1050,5 +1063,50 @@ mod tests {
 
         assert_eq!(wm.all_workspaces(&Selector::WinId(40))[0].name(), "2");
         assert_eq!(wm.all_workspaces_mut(&Selector::WinId(10))[0].name(), "1");
+    }
+
+    #[test]
+    fn selector_screen() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 1, 0);
+
+        assert_eq!(wm.screen(&Selector::Focused), wm.screens.focused());
+        assert_eq!(wm.screen(&Selector::Index(1)), wm.screens.get(1));
+        assert_eq!(wm.screen(&Selector::WinId(10)), wm.screens.get(0));
+        assert_eq!(
+            wm.screen(&Selector::Condition(&|s| s.wix == 1)),
+            wm.screens.get(1)
+        );
+    }
+
+    #[test]
+    fn selector_workspace() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 1, 0);
+
+        assert_eq!(wm.workspace(&Selector::Focused), wm.workspaces.focused());
+        assert_eq!(wm.workspace(&Selector::Index(1)), wm.workspaces.get(1));
+        assert_eq!(wm.workspace(&Selector::WinId(10)), wm.workspaces.get(0));
+        assert_eq!(
+            wm.workspace(&Selector::Condition(&|w| w.name() == "3")),
+            wm.workspaces.get(2)
+        );
+    }
+
+    #[test]
+    fn selector_client() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        add_n_clients(&mut wm, 4, 0);
+
+        assert_eq!(wm.client(&Selector::Focused), wm.client_map.get(&40));
+        assert_eq!(wm.client(&Selector::Index(2)), wm.client_map.get(&20));
+        assert_eq!(wm.client(&Selector::WinId(30)), wm.client_map.get(&30));
+        assert_eq!(
+            wm.client(&Selector::Condition(&|c| c.id() == 10)),
+            wm.client_map.get(&10)
+        );
     }
 }
