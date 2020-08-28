@@ -188,6 +188,33 @@ impl Workspaces {
             }
         }
     }
+
+    fn ws_colors(
+        &self,
+        ix: usize,
+        screen: usize,
+        screen_has_focus: bool,
+        occupied: bool,
+    ) -> (&Color, Option<&Color>) {
+        let focused_here = ix == self.focused_ws[screen];
+        let focused = self.focused_ws.contains(&ix);
+        let focused_other = focused && !focused_here;
+
+        if focused_here && screen_has_focus {
+            let fg = if occupied { &self.fg_1 } else { &self.fg_2 };
+            (fg, Some(&self.bg_1))
+        } else if focused {
+            let fg = if focused_other {
+                &self.bg_1
+            } else {
+                &self.fg_1
+            };
+            (fg, Some(&self.fg_2))
+        } else {
+            let fg = if occupied { &self.fg_1 } else { &self.fg_2 };
+            (fg, None)
+        }
+    }
 }
 
 impl Hook for Workspaces {
@@ -251,17 +278,13 @@ impl Widget for Workspaces {
         let (_, eh) = self.extent.unwrap();
 
         for (i, ws) in self.workspaces.iter().enumerate() {
-            if i == self.focused_ws[screen] {
-                if screen_has_focus {
-                    ctx.color(&self.bg_1);
-                } else {
-                    ctx.color(&self.fg_2);
-                }
+            let (fg, bg) = self.ws_colors(i, screen, screen_has_focus, ws.occupied);
+            if let Some(c) = bg {
+                ctx.color(c);
                 ctx.rectangle(0.0, 0.0, ws.extent.0, h);
             }
 
-            let fg = if ws.occupied { self.fg_1 } else { self.fg_2 };
-            ctx.color(&fg);
+            ctx.color(fg);
             ctx.text(&ws.name, h - eh, (PADDING, PADDING))?;
             ctx.translate(ws.extent.0, 0.0);
         }
