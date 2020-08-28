@@ -24,7 +24,14 @@ pub trait Widget: Hook {
     /**
      * Render the current state of the widget to the status bar window.
      */
-    fn draw(&mut self, ctx: &mut dyn DrawContext, w: f64, h: f64) -> Result<()>;
+    fn draw(
+        &mut self,
+        ctx: &mut dyn DrawContext,
+        screen: usize,
+        screen_has_focus: bool,
+        w: f64,
+        h: f64,
+    ) -> Result<()>;
 
     /// Current required width and height for this widget due to its content
     fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)>;
@@ -44,7 +51,6 @@ pub trait Widget: Hook {
 /// WM_NAME property of the root window.
 pub fn dwm_bar<Ctx: DrawContext>(
     drw: Box<dyn Draw<Ctx = Ctx>>,
-    screen_index: usize,
     height: usize,
     style: &TextStyle,
     highlight: impl Into<Color>,
@@ -56,12 +62,11 @@ pub fn dwm_bar<Ctx: DrawContext>(
     Ok(StatusBar::try_new(
         drw,
         Position::Top,
-        screen_index,
         height,
         style.bg.unwrap_or(0x000000.into()),
         &[&style.font],
         vec![
-            Box::new(Workspaces::new(workspaces, 0, style, highlight, empty_ws)),
+            Box::new(Workspaces::new(workspaces, style, highlight, empty_ws)),
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 &TextStyle {

@@ -34,7 +34,6 @@ fn bar_draw() -> Result<()> {
     let empty_ws = GREY;
     let mut bar = dwm_bar(
         Box::new(XCBDraw::new()?),
-        0,
         HEIGHT,
         &style,
         highlight,
@@ -59,8 +58,8 @@ fn bar_draw() -> Result<()> {
 
 fn simple_draw() -> Result<()> {
     let mut drw = XCBDraw::new()?;
-    let (w, _) = drw.screen_size(0)?;
-    let id = drw.new_window(&WindowType::Dock, 0, 0, w, HEIGHT)?;
+    let (_, _, w, _) = drw.screen_sizes()?[0].values();
+    let id = drw.new_window(&WindowType::Dock, 0, 0, w as usize, HEIGHT)?;
     drw.register_font(PROFONT);
     drw.register_font(SERIF);
     drw.register_font(FIRA);

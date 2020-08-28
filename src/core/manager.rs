@@ -179,8 +179,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn set_screen_from_cursor(&mut self, cursor: Point) -> Option<&Screen> {
-        self.screens
-            .focus(&Selector::Condition(&|s: &Screen| s.contains(cursor)))
+        self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(cursor)))
     }
 
     fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
@@ -189,6 +188,18 @@ impl<'a> WindowManager<'a> {
 
     fn active_ws_index(&self) -> usize {
         self.screens.focused().unwrap().wix
+    }
+
+    fn focus_screen(&mut self, sel: &Selector<Screen>) -> Option<&Screen> {
+        let prev = self.screens.focused_index();
+        self.screens.focus(sel);
+        let new = self.screens.focused_index();
+
+        if new != prev {
+            run_hooks!(screen_change, self, new);
+        }
+
+        self.screens.focused()
     }
 
     fn focused_client(&self) -> Option<&Client> {
@@ -352,9 +363,6 @@ impl<'a> WindowManager<'a> {
         self.set_screen_from_cursor(self.conn.cursor_position());
         let wix = self.screens.focused().unwrap().wix;
         self.workspaces.focus(&Selector::Index(wix));
-
-        let i = self.screens.focused_index();
-        run_hooks!(screen_change, self, i);
     }
 
     // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}

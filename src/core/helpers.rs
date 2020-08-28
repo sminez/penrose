@@ -136,3 +136,106 @@ pub fn parse_key_binding(pattern: impl Into<String>, known_codes: &CodeMap) -> O
         None => None,
     }
 }
+
+// Helper functions for XCB based operations
+pub(crate) mod xcb_util {
+    use crate::{data_types::Region, Result};
+    use anyhow::anyhow;
+    use xcb;
+
+    pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32> {
+        xcb::intern_atom(conn, false, name)
+            .get_reply()
+            .map(|r| r.atom())
+            .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))
+    }
+
+    pub fn create_window(
+        conn: &xcb::Connection,
+        screen: &xcb::Screen,
+        window_type: &str,
+        x: i16,
+        y: i16,
+        w: u16,
+        h: u16,
+    ) -> Result<u32> {
+        let id = conn.generate_id();
+
+        xcb::create_window(
+            &conn,
+            xcb::COPY_FROM_PARENT as u8,
+            id,
+            screen.root(),
+            x,
+            y,
+            w,
+            h,
+            0,
+            xcb::WINDOW_CLASS_INPUT_OUTPUT as u16,
+            0,
+            &[
+                (xcb::CW_BACK_PIXEL, screen.black_pixel()),
+                (xcb::CW_EVENT_MASK, xcb::EVENT_MASK_EXPOSURE),
+            ],
+        );
+
+        xcb::change_property(
+            &conn,                                      // xcb connection to X11
+            xcb::PROP_MODE_REPLACE as u8,               // discard current prop and replace
+            id,                                         // window to change prop on
+            intern_atom(&conn, "_NET_WM_WINDOW_TYPE")?, // prop to change
+            intern_atom(&conn, "UTF8_STRING")?,         // type of prop
+            8,                                          // data format (8/16/32-bit)
+            window_type.as_bytes(),                     // data
+        );
+
+        xcb::map_window(&conn, id);
+        conn.flush();
+
+        Ok(id)
+    }
+
+    pub fn get_visual_type(
+        conn: &xcb::Connection,
+        screen: &xcb::Screen,
+    ) -> Result<xcb::Visualtype> {
+        conn.get_setup()
+            .roots()
+            .flat_map(|r| r.allowed_depths())
+            .flat_map(|d| d.visuals())
+            .find(|v| v.visual_id() == screen.root_visual())
+            .ok_or_else(|| anyhow!("unable to get screen visual type"))
+    }
+
+    pub fn screen_sizes(conn: &xcb::Connection) -> Result<Vec<Region>> {
+        // If we can't unwrap here then there is no screen(!)
+        let root = conn.get_setup().roots().nth(0).unwrap().root();
+        let check_win = conn.generate_id();
+        let class = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
+        xcb::create_window(conn, 0, check_win, root, 0, 0, 1, 1, 0, class, 0, &[]);
+        conn.flush();
+
+        let res = xcb::randr::get_screen_resources(conn, check_win)
+            .get_reply()
+            .map_err(|e| anyhow!("unable to read randr screen resources: {}", e))?
+            .crtcs()
+            .iter()
+            .flat_map(|c| xcb::randr::get_crtc_info(conn, *c, 0).get_reply())
+            .flat_map(|r| {
+                if r.width() > 0 {
+                    Some(Region::new(
+                        r.x() as u32,
+                        r.y() as u32,
+                        r.width() as u32,
+                        r.height() as u32,
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        xcb::destroy_window(&conn, check_win);
+        Ok(res)
+    }
+}
