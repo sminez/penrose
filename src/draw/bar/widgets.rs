@@ -1,7 +1,7 @@
 //! Built in status bar widgets
 use crate::{
     client::Client,
-    data_types::{Selector, WinId},
+    data_types::{Region, Selector, WinId},
     draw::{Color, DrawContext, TextStyle, Widget},
     hooks::Hook,
     Result, WindowManager,
@@ -257,6 +257,11 @@ impl Hook for Workspaces {
     }
 
     fn screen_change(&mut self, _: &mut WindowManager, _: usize) {
+        self.require_draw = true;
+    }
+
+    fn screens_updated(&mut self, wm: &mut WindowManager, _: &Vec<Region>) {
+        self.focused_ws = wm.focused_workspaces();
         self.require_draw = true;
     }
 
