@@ -254,12 +254,6 @@ impl<'a> WindowManager<'a> {
      * mapped to a handler
      */
     pub fn grab_keys_and_run(&mut self, mut bindings: KeyBindings) {
-        // TODO: need to be smarter about this. This will also map all of the systray apps
-        //       as tiled windows currently.
-        // for id in self.conn.query_for_active_windows() {
-        //     self.handle_map_notify(id, false);
-        // }
-
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
         unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) }.unwrap();
 
@@ -279,11 +273,12 @@ impl<'a> WindowManager<'a> {
                     XEvent::Destroy { id } => self.handle_destroy_notify(id),
                     XEvent::ScreenChange => self.handle_screen_change(),
                     XEvent::RandrNotify => self.detect_screens(),
+                    XEvent::ConfigureNotify { id, r, is_root } => {
+                        self.handle_configure_notify(id, r, is_root)
+                    }
                     XEvent::PropertyNotify { id, atom, is_root } => {
                         self.handle_property_notify(id, &atom, is_root)
                     }
-                    // XEvent::ButtonPress => self.handle_button_press(),
-                    // XEvent::ButtonRelease => self.handle_button_release(),
                     _ => (),
                 }
                 run_hooks!(event_handled, self,);
@@ -360,15 +355,17 @@ impl<'a> WindowManager<'a> {
         self.set_screen_from_cursor(rpt);
     }
 
+    fn handle_configure_notify(&mut self, _: WinId, _: Region, is_root: bool) {
+        if is_root {
+            self.detect_screens()
+        }
+    }
+
     fn handle_screen_change(&mut self) {
         self.set_screen_from_cursor(self.conn.cursor_position());
         let wix = self.screens.focused().unwrap().wix;
         self.workspaces.focus(&Selector::Index(wix));
     }
-
-    // fn handle_motion_notify(&mut self, event: &xcb::MotionNotifyEvent) {}
-    // fn handle_button_press(&mut self, event: &xcb::ButtonPressEvent) {}
-    // fn handle_button_release(&mut self, event: &xcb::ButtonReleaseEvent) {}
 
     fn handle_destroy_notify(&mut self, win_id: WinId) {
         debug!("DESTROY_NOTIFY for {}", win_id);

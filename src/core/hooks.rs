@@ -1,5 +1,9 @@
 //! Hook for adding additional functionality around standard WindowManager actions
-use crate::{client::Client, data_types::WinId, manager::WindowManager};
+use crate::{
+    client::Client,
+    data_types::{Region, WinId},
+    manager::WindowManager,
+};
 
 /**
  * impls of Hook can be registered to receive events during WindowManager operation. Each hook
@@ -93,6 +97,11 @@ pub trait Hook {
      * indexing) for the new Screen.
      */
     fn screen_change(&mut self, _wm: &mut WindowManager, _screen_index: usize) {}
+
+    /**
+     * Called when there has been a change to the WindowManager workspace list.
+     */
+    fn screens_updated(&mut self, _wm: &mut WindowManager, _dimensions: &Vec<Region>) {}
 
     /**
      * Called after a new Client gains focus.

@@ -26,7 +26,8 @@ const WM_NAME: &'static str = "penrose";
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
  */
 const WINDOW_CLASS_INPUT_ONLY: u16 = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
-const NOTIFY_MASK: u16 = xcb::randr::NOTIFY_MASK_CRTC_CHANGE as u16;
+const NOTIFY_MASK: u16 =
+    (xcb::randr::NOTIFY_MASK_CRTC_CHANGE | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
 const GRAB_MODE_ASYNC: u8 = xcb::GRAB_MODE_ASYNC as u8;
 const INPUT_FOCUS_PARENT: u8 = xcb::INPUT_FOCUS_PARENT as u8;
 const PROP_MODE_REPLACE: u8 = xcb::PROP_MODE_REPLACE as u8;
@@ -264,6 +265,16 @@ pub enum XEvent {
 
     /// xcb docs: https://www.mankier.com/3/xcb_randr_notify_event_t
     RandrNotify,
+
+    /// xcb docs: https://www.mankier.com/3/xcb_configure_notify_event_t
+    ConfigureNotify {
+        /// The ID of the window that had a property changed
+        id: WinId,
+        /// The new window size
+        r: Region,
+        /// Is this window the root window?
+        is_root: bool,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_property_notify_event_t
     PropertyNotify {
@@ -553,6 +564,20 @@ impl XConn for XcbConnection {
 
                 xcb::randr::SCREEN_CHANGE_NOTIFY => Some(XEvent::ScreenChange),
 
+                xcb::CONFIGURE_NOTIFY => {
+                    let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::ConfigureNotify {
+                        id: e.window(),
+                        r: Region::new(
+                            e.x() as u32,
+                            e.y() as u32,
+                            e.width() as u32,
+                            e.height() as u32,
+                        ),
+                        is_root: e.window() == self.root,
+                    })
+                }
+
                 xcb::PROPERTY_NOTIFY => {
                     let e: &xcb::PropertyNotifyEvent = unsafe { xcb::cast_event(&event) };
                     xcb::xproto::get_atom_name(&self.conn, e.atom())
@@ -841,10 +866,7 @@ impl XConn for XcbConnection {
         };
 
         match self.str_prop(id, "_NET_WM_WINDOW_TYPE") {
-            Ok(s) => {
-                info!("window_type: {}", s);
-                s.split("\0").any(|t| self.auto_float_types.contains(&t))
-            }
+            Ok(s) => s.split("\0").any(|t| self.auto_float_types.contains(&t)),
             Err(_) => false,
         }
     }
@@ -930,8 +952,6 @@ impl XConn for XcbConnection {
     // - Release all of the keybindings we are holding on to
     // - destroy the check window
     // - mark ourselves as no longer being the active root window
-    // - TODO: tidy embedded bar / systray once this is a thing
-    // - TODO: tidy up any graphics context we have
     fn cleanup(&self) {
         // xcb docs: https://www.mankier.com/3/xcb_ungrab_key
         xcb::ungrab_key(

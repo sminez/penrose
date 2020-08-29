@@ -1,7 +1,7 @@
 //! A simple status bar
 use crate::{
     client::Client,
-    data_types::WinId,
+    data_types::{Region, WinId},
     draw::{Color, Draw, DrawContext, Widget, WindowType},
     hooks::Hook,
     Result, WindowManager,
@@ -18,8 +18,10 @@ pub enum Position {
 /// A simple status bar that works via hooks
 pub struct StatusBar<Ctx> {
     drw: Box<dyn Draw<Ctx = Ctx>>,
+    position: Position,
     widgets: Vec<Box<dyn Widget>>,
     screens: Vec<(WinId, f64)>, // window and width
+    hpx: usize,
     h: f64,
     bg: Color,
     active_screen: usize,
@@ -28,42 +30,50 @@ pub struct StatusBar<Ctx> {
 impl<Ctx: DrawContext> StatusBar<Ctx> {
     /// Try to initialise a new empty status bar. Can fail if we are unable to create our window
     pub fn try_new(
-        mut drw: Box<dyn Draw<Ctx = Ctx>>,
+        drw: Box<dyn Draw<Ctx = Ctx>>,
         position: Position,
         h: usize,
         bg: impl Into<Color>,
         fonts: &[&str],
         widgets: Vec<Box<dyn Widget>>,
     ) -> Result<Self> {
-        let screens = drw
+        let mut bar = Self {
+            drw,
+            position,
+            widgets,
+            screens: vec![],
+            hpx: h,
+            h: h as f64,
+            bg: bg.into(),
+            active_screen: 0,
+        };
+        bar.init_for_screens()?;
+        fonts.iter().for_each(|f| bar.drw.register_font(f));
+
+        Ok(bar)
+    }
+
+    fn init_for_screens(&mut self) -> Result<()> {
+        self.screens = self
+            .drw
             .screen_sizes()?
             .iter()
             .map(|r| {
                 let (sx, sy, sw, sh) = r.values();
-                let y = match position {
+                let y = match self.position {
                     Position::Top => sy as usize,
-                    Position::Bottom => sh as usize - h,
+                    Position::Bottom => sh as usize - self.hpx,
                 };
-                let id = drw
-                    .new_window(&WindowType::Dock, sx as usize, y, sw as usize, h)
+                let id = self
+                    .drw
+                    .new_window(&WindowType::Dock, sx as usize, y, sw as usize, self.hpx)
                     .unwrap();
 
                 (id, sw as f64)
             })
             .collect();
 
-        let mut bar = Self {
-            drw,
-            widgets,
-            screens,
-            h: h as f64,
-            bg: bg.into(),
-            active_screen: 0,
-        };
-
-        fonts.iter().for_each(|f| bar.drw.register_font(f));
-
-        Ok(bar)
+        Ok(())
     }
 
     /// Re-render all widgets in this status bar
@@ -165,6 +175,25 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
         self.widgets
             .iter_mut()
             .for_each(|w| w.workspaces_updated(wm, names, active));
+    }
+
+    fn screens_updated(&mut self, wm: &mut WindowManager, dimensions: &Vec<Region>) {
+        self.screens
+            .iter()
+            .for_each(|(id, _)| self.drw.destroy_window(*id));
+        if let Err(e) = self.init_for_screens() {
+            error!("error removing old status bar windows: {}", e)
+        }
+
+        self.widgets
+            .iter_mut()
+            .for_each(|w| w.screens_updated(wm, dimensions));
+
+        // always need to redraw when screen sizes change
+        match self.redraw() {
+            Ok(_) => (),
+            Err(e) => error!("unable to redraw bar: {}", e),
+        }
     }
 
     fn screen_change(&mut self, wm: &mut WindowManager, ix: usize) {

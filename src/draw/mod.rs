@@ -166,6 +166,8 @@ mod inner {
         fn map_window(&self, id: WinId);
         /// Unmap the target window from the screen
         fn unmap_window(&self, id: WinId);
+        /// Destroy the target window
+        fn destroy_window(&self, id: WinId);
     }
 
     /// Used for simple drawing to the screen
@@ -272,6 +274,10 @@ mod inner {
 
         fn unmap_window(&self, id: WinId) {
             xcb::unmap_window(&self.conn, id);
+        }
+
+        fn destroy_window(&self, id: WinId) {
+            xcb::destroy_window(&self.conn, id);
         }
     }
 
