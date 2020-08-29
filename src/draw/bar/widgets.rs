@@ -196,7 +196,10 @@ impl Workspaces {
         screen_has_focus: bool,
         occupied: bool,
     ) -> (&Color, Option<&Color>) {
-        let focused_here = ix == self.focused_ws[screen];
+        let focused_here = match self.focused_ws.get(screen) {
+            Some(&ws) => ix == ws,
+            None => false,
+        };
         let focused = self.focused_ws.contains(&ix);
         let focused_other = focused && !focused_here;
 
@@ -261,7 +264,8 @@ impl Hook for Workspaces {
     }
 
     fn screens_updated(&mut self, wm: &mut WindowManager, _: &Vec<Region>) {
-        self.focused_ws = wm.focused_workspaces();
+        self.focused_ws = (0..wm.n_screens()).collect();
+        self.update_workspace_occupied(wm);
         self.require_draw = true;
     }
 

@@ -417,6 +417,9 @@ impl<'a> WindowManager<'a> {
         visible_workspaces
             .iter()
             .for_each(|wix| self.apply_layout(*wix));
+
+        let regions = self.screens.iter().map(|s| s.region(false)).collect();
+        run_hooks!(screens_updated, self, &regions);
     }
 
     /// Log information out at INFO level for picking up by external programs
