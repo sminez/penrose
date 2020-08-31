@@ -15,7 +15,7 @@ pub struct Client {
     workspace: usize,
     // state flags
     floating: bool,
-    fullscreen: bool,
+    pub(crate) fullscreen: bool,
     pub(crate) mapped: bool,
     pub(crate) wm_managed: bool,
 }

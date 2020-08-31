@@ -25,6 +25,7 @@ const WM_NAME: &'static str = "penrose";
 /*
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
  */
+const XCB_RESPONSE_TYPE_MASK: u8 = 0x7F;
 const WINDOW_CLASS_INPUT_ONLY: u16 = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
 const NOTIFY_MASK: u16 =
     (xcb::randr::NOTIFY_MASK_CRTC_CHANGE | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
@@ -32,6 +33,8 @@ const GRAB_MODE_ASYNC: u8 = xcb::GRAB_MODE_ASYNC as u8;
 const INPUT_FOCUS_PARENT: u8 = xcb::INPUT_FOCUS_PARENT as u8;
 const PROP_MODE_REPLACE: u8 = xcb::PROP_MODE_REPLACE as u8;
 const ATOM_WINDOW: u32 = xcb::xproto::ATOM_WINDOW;
+const ATOM_ATOM: u32 = xcb::xproto::ATOM_ATOM;
+const ATOM_CARDINAL: u32 = xcb::xproto::ATOM_CARDINAL;
 const STACK_ABOVE: u32 = xcb::STACK_MODE_ABOVE as u32;
 const STACK_MODE: u16 = xcb::CONFIG_WINDOW_STACK_MODE as u16;
 const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
@@ -285,6 +288,16 @@ pub enum XEvent {
         /// Is this window the root window?
         is_root: bool,
     },
+
+    /// https://www.mankier.com/3/xcb_client_message_event_t
+    ClientMessage {
+        /// The ID of the window that sent the message
+        id: WinId,
+        /// The data type being set
+        dtype: String,
+        /// The data itself
+        data: Vec<usize>,
+    },
 }
 
 /// A handle on a running X11 connection that we can use for issuing X requests
@@ -348,6 +361,9 @@ pub trait XConn {
     /// Update which desktop a client is currently on
     fn set_client_workspace(&self, id: WinId, wix: usize);
 
+    /// Toggle the fullscreen state of the given client ID with the X server
+    fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool);
+
     /// Determine whether the target window should be tiled or allowed to float
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool;
 
@@ -371,6 +387,9 @@ pub trait XConn {
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32>;
+
+    /// Intern an X atom by name and return the corresponding ID
+    fn intern_atom(&self, atom: &str) -> Result<u32>;
 
     /// Perform any state cleanup required prior to shutting down the window manager
     fn cleanup(&self);
@@ -497,7 +516,7 @@ impl XConn for XcbConnection {
 
     fn wait_for_event(&self) -> Option<XEvent> {
         self.conn.wait_for_event().and_then(|event| {
-            let etype = event.response_type();
+            let etype = event.response_type() & XCB_RESPONSE_TYPE_MASK;
             // Need to apply the randr_base mask as well which doesn't seem to work in 'match'
             if etype == self.randr_base + xcb::randr::NOTIFY {
                 return Some(XEvent::RandrNotify);
@@ -576,6 +595,25 @@ impl XConn for XcbConnection {
                         ),
                         is_root: e.window() == self.root,
                     })
+                }
+
+                xcb::CLIENT_MESSAGE => {
+                    let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
+                    xcb::xproto::get_atom_name(&self.conn, e.type_())
+                        .get_reply()
+                        .ok()
+                        .map(|a| XEvent::ClientMessage {
+                            id: e.window(),
+                            dtype: a.name().to_string(),
+                            data: match e.format() {
+                                8 => e.data().data8().iter().map(|&d| d as usize).collect(),
+                                16 => e.data().data16().iter().map(|&d| d as usize).collect(),
+                                32 => e.data().data32().iter().map(|&d| d as usize).collect(),
+                                _ => unreachable!(
+                                    "ClientMessageEvent.format should really be an enum..."
+                                ),
+                            },
+                        })
                 }
 
                 xcb::PROPERTY_NOTIFY => {
@@ -708,6 +746,33 @@ impl XConn for XcbConnection {
         xcb::change_window_attributes(&self.conn, id, &[(xcb::CW_BORDER_PIXEL, color)]);
     }
 
+    fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
+        let state_prop = self.known_atom("_NET_WM_STATE");
+        let fs_prop = self.known_atom("_NET_WM_STATE_FULLSCREEN");
+
+        if client_is_fullscreen {
+            xcb::change_property(
+                &self.conn,        // xcb connection to X11
+                PROP_MODE_REPLACE, // discard current prop and replace
+                id,                // window to change prop on
+                state_prop,        // prop to change
+                ATOM_ATOM,         // type of prop
+                32,                // data format (8/16/32-bit)
+                &[0; 0],           // data
+            );
+        } else {
+            xcb::change_property(
+                &self.conn,        // xcb connection to X11
+                PROP_MODE_REPLACE, // discard current prop and replace
+                id,                // window to change prop on
+                state_prop,        // prop to change
+                ATOM_ATOM,         // type of prop
+                32,                // data format (8/16/32-bit)
+                &[fs_prop],        // data
+            );
+        }
+    }
+
     fn grab_keys(&self, key_bindings: &KeyBindings) {
         for k in key_bindings.keys() {
             // xcb docs: https://www.mankier.com/3/xcb_grab_key
@@ -790,7 +855,7 @@ impl XConn for XcbConnection {
             PROP_MODE_REPLACE,                 // discard current prop and replace
             self.root,                         // window to change prop on
             self.known_atom("_NET_SUPPORTED"), // prop to change
-            xcb::xproto::ATOM_ATOM,            // type of prop
+            ATOM_ATOM,                         // type of prop
             32,                                // data format (8/16/32-bit)
             &supported,                        // data
         );
@@ -804,7 +869,7 @@ impl XConn for XcbConnection {
             PROP_MODE_REPLACE,                          // discard current prop and replace
             self.root,                                  // window to change prop on
             self.known_atom("_NET_NUMBER_OF_DESKTOPS"), // prop to change
-            xcb::xproto::ATOM_CARDINAL,                 // type of prop
+            ATOM_CARDINAL,                              // type of prop
             32,                                         // data format (8/16/32-bit)
             &[workspaces.len() as u32],                 // data
         );
@@ -949,6 +1014,10 @@ impl XConn for XcbConnection {
         }
     }
 
+    fn intern_atom(&self, atom: &str) -> Result<u32> {
+        self.atom(atom)
+    }
+
     // - Release all of the keybindings we are holding on to
     // - destroy the check window
     // - mark ourselves as no longer being the active root window
@@ -1022,6 +1091,7 @@ impl XConn for MockXConn {
     fn set_current_workspace(&self, _: usize) {}
     fn set_root_window_name(&self, _: &str) {}
     fn set_client_workspace(&self, _: WinId, _: usize) {}
+    fn toggle_client_fullscreen(&self, _: WinId, _: bool) {}
     fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
         false
     }
@@ -1035,5 +1105,10 @@ impl XConn for MockXConn {
     fn atom_prop(&self, id: u32, _: &str) -> Result<u32> {
         Ok(id)
     }
+
+    fn intern_atom(&self, _: &str) -> Result<u32> {
+        Ok(0)
+    }
+
     fn cleanup(&self) {}
 }

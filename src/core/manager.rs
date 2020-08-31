@@ -279,6 +279,9 @@ impl<'a> WindowManager<'a> {
                     XEvent::PropertyNotify { id, atom, is_root } => {
                         self.handle_property_notify(id, &atom, is_root)
                     }
+                    XEvent::ClientMessage { id, dtype, data } => {
+                        self.handle_client_message(id, &dtype, &data)
+                    }
                     _ => (),
                 }
                 run_hooks!(event_handled, self,);
@@ -379,6 +382,49 @@ impl<'a> WindowManager<'a> {
                 self.client_map.get_mut(&id).map(|c| c.set_name(&name));
                 run_hooks!(client_name_updated, self, id, &name, is_root);
             }
+        }
+    }
+
+    fn handle_client_message(&mut self, id: WinId, dtype: &str, data: &Vec<usize>) {
+        if dtype == "_NET_WM_STATE" {
+            let full_screen = self.conn.intern_atom("_NET_WM_STATE_FULLSCREEN").unwrap() as usize;
+            if data.get(1) == Some(&full_screen) || data.get(2) == Some(&full_screen) {
+                let client_is_fullscreen = match self.client_map.get(&id) {
+                    None => return, // unknown client
+                    Some(c) => c.fullscreen,
+                };
+                // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
+                let should_fullscreen = [1, 2].contains(&data[0]) && !client_is_fullscreen;
+                self.set_fullscreen(id, should_fullscreen, client_is_fullscreen);
+            }
+        }
+    }
+
+    fn set_fullscreen(&mut self, id: WinId, should_fullscreen: bool, client_is_fullscreen: bool) {
+        if should_fullscreen && !client_is_fullscreen {
+            self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
+            if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
+                ws.clients().iter().for_each(|&i| {
+                    if i != id {
+                        self.unmap_window_if_needed(i)
+                    }
+                });
+            }
+            let r = self.screen(&Selector::Focused).unwrap().region(false);
+            self.conn.position_window(id, r, 0);
+            self.map_window_if_needed(id);
+            self.client_map.get_mut(&id).map(|c| c.fullscreen = true);
+        } else if !should_fullscreen && client_is_fullscreen {
+            self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
+            if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
+                ws.clients().iter().for_each(|&i| {
+                    if i != id {
+                        self.map_window_if_needed(i)
+                    }
+                });
+            }
+            self.apply_layout(self.active_ws_index());
+            self.client_map.get_mut(&id).map(|c| c.fullscreen = false);
         }
     }
 
@@ -559,7 +605,7 @@ impl<'a> WindowManager<'a> {
 
             for i in 0..self.screens.len() {
                 if self.screens[i].wix == index {
-                    // The work.clonespace we want is currently displayed on another screen so
+                    // The workspace we want is currently displayed on another screen so
                     // pull the target workspace to the focused screen, and place the
                     // workspace we had on the screen where the target was
                     self.screens[i].wix = self.screens.focused().unwrap().wix;
@@ -651,6 +697,15 @@ impl<'a> WindowManager<'a> {
             None => return,
         };
         self.client_to_workspace(&Selector::Index(i));
+    }
+
+    /// Toggle the fullscreen state of the given client ID
+    pub fn toggle_client_fullscreen(&mut self, selector: &Selector<Client>) {
+        let (id, client_is_fullscreen) = match self.client(selector) {
+            None => return, // unknown client
+            Some(c) => (c.id(), c.fullscreen),
+        };
+        self.set_fullscreen(id, !client_is_fullscreen, client_is_fullscreen);
     }
 
     /// Kill the focused client window.
