@@ -82,3 +82,50 @@ macro_rules! gen_keybindings(
         }
     };
 );
+
+/**
+ * Make creating enums for atoms less verbose.
+ * 
+ * Create an enum with `$enum_name` as name  
+ * Implement `as_str` and `from_str` functions  
+ * Create a slice with `$slice_name` as name containing all enum variants  
+ */
+#[macro_export]
+macro_rules! gen_enum_with_slice {
+    {
+        $(#[$enum_meta:meta])*
+        $enum_name:ident, 
+        $(#[$slice_meta:meta])*
+        $slice_name:ident, 
+        { $([$variant:ident, $name_str:expr]),+ $(,)? }
+    } => {
+        $(#[$enum_meta])*
+        pub enum $enum_name {
+            $(
+            #[doc = $name_str]
+            $variant,
+            )+
+        }
+
+        impl $enum_name {
+            pub(crate) fn as_str(&self) -> &str {
+                match self {
+                    $($enum_name::$variant => $name_str,)+
+                }
+            }
+
+            pub(crate) fn from_str(name: &str) -> Self {
+                match name {
+                    $($name_str => $enum_name::$variant,)+
+                    _ => unimplemented!(),
+                }
+            }
+        }
+
+        $(#[$slice_meta])*
+        const $slice_name: &[$enum_name] = &[
+            $($enum_name::$variant,)+
+        ];
+    };
+}
+
