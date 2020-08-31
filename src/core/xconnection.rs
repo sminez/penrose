@@ -53,62 +53,86 @@ const EVENT_MASK: &[(u32, u32)] = &[(
         | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 )];
 
-// TODO: this list has been copied from atoms used in other WMs, not using everything
-//       yet so work out which ones we need to keep and which we can drop.
-const ATOMS: &[&'static str] = &[
-    "MANAGER",
-    "UTF8_STRING",
-    "WM_CLASS",
-    "WM_DELETE_WINDOW",
-    "WM_PROTOCOLS",
-    "WM_STATE",
-    "WM_NAME",
-    "WM_TAKE_FOCUS",
-    "_NET_ACTIVE_WINDOW",
-    "_NET_CLIENT_LIST",
-    "_NET_CURRENT_DESKTOP",
-    "_NET_DESKTOP_NAMES",
-    "_NET_NUMBER_OF_DESKTOPS",
-    "_NET_SUPPORTED",
-    "_NET_SUPPORTING_WM_CHECK",
-    "_NET_SYSTEM_TRAY_OPCODE",
-    "_NET_SYSTEM_TRAY_ORIENTATION",
-    "_NET_SYSTEM_TRAY_ORIENTATION_HORZ",
-    "_NET_SYSTEM_TRAY_S0",
-    "_NET_WM_DESKTOP",
-    "_NET_WM_NAME",
-    "_NET_WM_STATE",
-    "_NET_WM_STATE_FULLSCREEN",
-    "_NET_WM_WINDOW_TYPE",
-    "_XEMBED",
-    "_XEMBED_INFO",
-    // window types
-    "_NET_WM_WINDOW_TYPE_DESKTOP",
-    "_NET_WM_WINDOW_TYPE_DOCK",
-    "_NET_WM_WINDOW_TYPE_TOOLBAR",
-    "_NET_WM_WINDOW_TYPE_MENU",
-    "_NET_WM_WINDOW_TYPE_UTILITY",
-    "_NET_WM_WINDOW_TYPE_SPLASH",
-    "_NET_WM_WINDOW_TYPE_DIALOG",
-    "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
-    "_NET_WM_WINDOW_TYPE_POPUP_MENU",
-    "_NET_WM_WINDOW_TYPE_NOTIFICATION",
-    "_NET_WM_WINDOW_TYPE_COMBO",
-    "_NET_WM_WINDOW_TYPE_DND",
-    "_NET_WM_WINDOW_TYPE_NORMAL",
-];
 
-const AUTO_FLOAT_WINDOW_TYPES: &[&'static str] = &[
-    "_NET_WM_WINDOW_TYPE_DESKTOP",
-    "_NET_WM_WINDOW_TYPE_DIALOG",
-    "_NET_WM_WINDOW_TYPE_DOCK",
-    "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
-    "_NET_WM_WINDOW_TYPE_MENU",
-    "_NET_WM_WINDOW_TYPE_NOTIFICATION",
-    "_NET_WM_WINDOW_TYPE_POPUP_MENU",
-    "_NET_WM_WINDOW_TYPE_SPLASH",
-    "_NET_WM_WINDOW_TYPE_TOOLBAR",
-    "_NET_WM_WINDOW_TYPE_UTILITY",
+gen_enum_with_slice!(
+    /**
+     * Enum with X Atoms. See 'WindowType' for '_NET_WINDOW_TYPE' atoms.
+     */
+    #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+    Atom, 
+    /**
+     * A slice containing all enum variants of `Atom`
+     */
+    ATOMS, 
+{
+    [Manager, "MANAGER"],
+    [UTF8String, "UTF8_STRING"],
+    [WmClass, "WM_CLASS"],
+    [WmDeleteWindow, "WM_DELETE_WINDOW"],
+    [WmProtocols, "WM_PROTOCOLS"],
+    [WmState, "WM_STATE"],
+    [WmName, "WM_NAME"],
+    [WmTakeFocus, "WM_TAKE_FOCUS"],
+    [NetActiveWindow, "_NET_ACTIVE_WINDOW"],
+    [NetClientList, "_NET_CLIENT_LIST"],
+    [NetCurrentDesktop, "_NET_CURRENT_DESKTOP"],
+    [NetDesktopNames, "_NET_DESKTOP_NAMES"],
+    [NetNumberOfDesktops, "_NET_NUMBER_OF_DESKTOPS"],
+    [NetSupported, "_NET_SUPPORTED"],
+    [NetSupportingWmCheck, "_NET_SUPPORTING_WM_CHECK"],
+    [NetSystemTrayOpcode, "_NET_SYSTEM_TRAY_OPCODE"],
+    [NetSystemTrayOrientation, "_NET_SYSTEM_TRAY_ORIENTATION"],
+    [NetSystemTrayOrientationHorz, "_NET_SYSTEM_TRAY_ORIENTATION_HORZ"],
+    [NetSystemTrayS0, "_NET_SYSTEM_TRAY_S0"],
+    [NetWmDesktop, "_NET_WM_DESKTOP"],
+    [NetWmName, "_NET_WM_NAME"],
+    [NetWmState, "_NET_WM_STATE"],
+    [NetWmStateFullscreen, "_NET_WM_STATE_FULLSCREEN"],
+    [NetWmWindowType, "_NET_WM_WINDOW_TYPE"],
+    [XEmbed, "_XEMBED"],
+    [XEmbedInfo, "_XEMBED_INFO"],
+});
+
+gen_enum_with_slice!(
+    /**
+     * Enum with '_NET_WM_WINDOW_TYPE' atoms.
+     */
+    #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+    WindowType, 
+    /**
+     * A slice containing all enum variants of `WindowType`
+     */
+    WINDOW_TYPES, 
+{
+    [Desktop, "_NET_WM_WINDOW_TYPE_DESKTOP"],
+    [Dock, "_NET_WM_WINDOW_TYPE_DOCK"],
+    [Toolbar, "_NET_WM_WINDOW_TYPE_TOOLBAR"],
+    [Menu, "_NET_WM_WINDOW_TYPE_MENU"],
+    [Utility, "_NET_WM_WINDOW_TYPE_UTILITY"],
+    [Splash, "_NET_WM_WINDOW_TYPE_SPLASH"],
+    [Dialog, "_NET_WM_WINDOW_TYPE_DIALOG"],
+    [DropdownMenu, "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU"],
+    [PopupMenu, "_NET_WM_WINDOW_TYPE_POPUP_MENU"],
+    [Notification, "_NET_WM_WINDOW_TYPE_NOTIFICATION"],
+    [Combo, "_NET_WM_WINDOW_TYPE_COMBO"],
+    [Dnd, "_NET_WM_WINDOW_TYPE_DND"],
+    [Normal, "_NET_WM_WINDOW_TYPE_NORMAL"],
+});
+
+/**
+ * A slice containing all Window Types that should be floating
+ */
+const AUTO_FLOAT_WINDOW_TYPES: &[WindowType] = &[
+    WindowType::Desktop,
+    WindowType::Dialog,
+    WindowType::Dock,
+    WindowType::DropdownMenu,
+    WindowType::Menu,
+    WindowType::Notification,
+    WindowType::PopupMenu,
+    WindowType::Splash,
+    WindowType::Toolbar,
+    WindowType::Utility,
 ];
 
 /**
@@ -314,7 +338,7 @@ pub trait XConn {
     fn unmap_window(&self, id: WinId);
 
     /// Send an X event to the target window
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()>;
+    fn send_client_event(&self, id: WinId, atom_name: &Atom) -> Result<()>;
 
     /// Return the client ID of the Client that currently holds X focus
     fn focused_client(&self) -> WinId;
@@ -364,13 +388,13 @@ pub trait XConn {
      * Use the xcb api to query a string property for a window by window ID and poperty name.
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
-    fn str_prop(&self, id: u32, name: &str) -> Result<String>;
+    fn str_prop(&self, id: u32, name: &Atom) -> Result<String>;
 
     /**
      * Fetch an atom prop by name for a particular window ID
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
-    fn atom_prop(&self, id: u32, name: &str) -> Result<u32>;
+    fn atom_prop(&self, id: u32, name: &Atom) -> Result<u32>;
 
     /// Perform any state cleanup required prior to shutting down the window manager
     fn cleanup(&self);
@@ -381,8 +405,9 @@ pub struct XcbConnection {
     conn: xcb::Connection,
     root: WinId,
     check_win: WinId,
-    atoms: HashMap<&'static str, u32>,
-    auto_float_types: Vec<&'static str>,
+    atoms: HashMap<Atom, u32>,
+    window_types: HashMap<WindowType, u32>,
+    auto_float_types: Vec<WindowType>,
     randr_base: u8,
 }
 
@@ -400,20 +425,33 @@ impl XcbConnection {
         };
 
         // https://www.mankier.com/3/xcb_intern_atom
-        let atoms: HashMap<&'static str, u32> = ATOMS
+        let atoms: HashMap<Atom, u32> = ATOMS
             .iter()
             .map(|atom| {
                 // false == always return the atom, even if exists already
-                let val = xcb::intern_atom(&conn, false, atom)
+                let val = xcb::intern_atom(&conn, false, atom.as_str())
                     .get_reply()
                     .unwrap()
                     .atom();
 
-                (*atom, val)
+                (atom.clone(), val)
             })
             .collect();
 
-        let auto_float_types: Vec<&str> = AUTO_FLOAT_WINDOW_TYPES.to_vec();
+        let window_types: HashMap<WindowType, u32> = WINDOW_TYPES
+            .iter()
+            .map(|atom| {
+                // false == always return the atom, even if exists already
+                let val = xcb::intern_atom(&conn, false, atom.as_str())
+                    .get_reply()
+                    .unwrap()
+                    .atom();
+
+                (atom.clone(), val)
+            })
+            .collect();
+
+        let auto_float_types: Vec<WindowType> = AUTO_FLOAT_WINDOW_TYPES.to_vec();
         let check_win = conn.generate_id();
 
         // xcb docs: https://www.mankier.com/3/xcb_create_window
@@ -445,20 +483,32 @@ impl XcbConnection {
             root,
             check_win,
             atoms,
+            window_types,
             auto_float_types,
             randr_base,
         })
     }
 
-    fn atom(&self, name: &str) -> Result<u32> {
+    fn atom(&self, atom: &Atom) -> Result<u32> {
         self.atoms
-            .get(name)
+            .get(atom)
             .map(|a| *a)
-            .ok_or_else(|| anyhow!("{} is not a known atom", name))
+            .ok_or_else(|| anyhow!("{} is not a known atom", atom.as_str()))
     }
 
-    fn known_atom(&self, name: &str) -> u32 {
-        self.atom(name).unwrap()
+    fn known_atom(&self, atom: &Atom) -> u32 {
+        self.atom(atom).unwrap()
+    }
+
+    fn window_type(&self, window_type: &WindowType) -> Result<u32> {
+        self.window_types
+            .get(window_type)
+            .map(|a| *a)
+            .ok_or_else(|| anyhow!("{} is not a known window type", window_type.as_str()))
+    }
+
+    fn known_window_type(&self, window_type: &WindowType) -> u32 {
+        self.window_type(window_type).unwrap()
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
@@ -477,7 +527,7 @@ impl XcbConnection {
             &self.conn,                             // xcb connection to X11
             false,                                  // should the property be deleted
             id,                                     // target window to query
-            self.known_atom("_NET_WM_WINDOW_TYPE"), // the property we want
+            self.known_atom(&Atom::NetWmWindowType),// the property we want
             xcb::ATOM_ANY,                          // the type of the property
             0,                                      // offset in the property to retrieve data from
             2048,                                   // how many 32bit multiples of data to retrieve
@@ -664,9 +714,9 @@ impl XConn for XcbConnection {
         xcb::unmap_window(&self.conn, id);
     }
 
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
+    fn send_client_event(&self, id: WinId, atom_name: &Atom) -> Result<()> {
         let atom = self.atom(atom_name)?;
-        let wm_protocols = self.known_atom("WM_PROTOCOLS");
+        let wm_protocols = self.known_atom(&Atom::WmProtocols);
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
         xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
@@ -682,7 +732,7 @@ impl XConn for XcbConnection {
     }
 
     fn focus_client(&self, id: WinId) {
-        let prop = self.known_atom("_NET_ACTIVE_WINDOW");
+        let prop = self.known_atom(&Atom::NetActiveWindow);
 
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
         xcb::set_input_focus(
@@ -747,116 +797,116 @@ impl XConn for XcbConnection {
     fn set_wm_properties(&self, workspaces: &[&str]) {
         // xcb docs: https://www.mankier.com/3/xcb_change_property
         xcb::change_property(
-            &self.conn,                                  // xcb connection to X11
-            PROP_MODE_REPLACE,                           // discard current prop and replace
-            self.check_win,                              // window to change prop on
-            self.known_atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
-            ATOM_WINDOW,                                 // type of prop
-            32,                                          // data format (8/16/32-bit)
-            &[self.check_win],                           // data
+            &self.conn,                                   // xcb connection to X11
+            PROP_MODE_REPLACE,                            // discard current prop and replace
+            self.check_win,                               // window to change prop on
+            self.known_atom(&Atom::NetSupportingWmCheck), // prop to change
+            ATOM_WINDOW,                                  // type of prop
+            32,                                           // data format (8/16/32-bit)
+            &[self.check_win],                            // data
         );
         xcb::change_property(
-            &self.conn,                      // xcb connection to X11
-            PROP_MODE_REPLACE,               // discard current prop and replace
-            self.check_win,                  // window to change prop on
-            self.known_atom("_NET_WM_NAME"), // prop to change
-            self.known_atom("UTF8_STRING"),  // type of prop
-            8,                               // data format (8/16/32-bit)
-            WM_NAME.as_bytes(),              // data
+            &self.conn,                         // xcb connection to X11
+            PROP_MODE_REPLACE,                  // discard current prop and replace
+            self.check_win,                     // window to change prop on
+            self.known_atom(&Atom::NetWmName),  // prop to change
+            self.known_atom(&Atom::UTF8String), // type of prop
+            8,                                  // data format (8/16/32-bit)
+            WM_NAME.as_bytes(),                 // data
         );
         xcb::change_property(
-            &self.conn,                                  // xcb connection to X11
-            PROP_MODE_REPLACE,                           // discard current prop and replace
-            self.root,                                   // window to change prop on
-            self.known_atom("_NET_SUPPORTING_WM_CHECK"), // prop to change
-            ATOM_WINDOW,                                 // type of prop
-            32,                                          // data format (8/16/32-bit)
-            &[self.check_win],                           // data
+            &self.conn,                                   // xcb connection to X11
+            PROP_MODE_REPLACE,                            // discard current prop and replace
+            self.root,                                    // window to change prop on
+            self.known_atom(&Atom::NetSupportingWmCheck), // prop to change
+            ATOM_WINDOW,                                  // type of prop
+            32,                                           // data format (8/16/32-bit)
+            &[self.check_win],                            // data
         );
         xcb::change_property(
-            &self.conn,                      // xcb connection to X11
-            PROP_MODE_REPLACE,               // discard current prop and replace
-            self.root,                       // window to change prop on
-            self.known_atom("_NET_WM_NAME"), // prop to change
-            self.known_atom("UTF8_STRING"),  // type of prop
-            8,                               // data format (8/16/32-bit)
-            WM_NAME.as_bytes(),              // data
+            &self.conn,                         // xcb connection to X11
+            PROP_MODE_REPLACE,                  // discard current prop and replace
+            self.root,                          // window to change prop on
+            self.known_atom(&Atom::NetWmName),  // prop to change
+            self.known_atom(&Atom::UTF8String), // type of prop
+            8,                                  // data format (8/16/32-bit)
+            WM_NAME.as_bytes(),                 // data
         );
 
         // EWMH support
         let supported: Vec<u32> = ATOMS.iter().map(|a| self.atom(a).unwrap()).collect();
         xcb::change_property(
-            &self.conn,                        // xcb connection to X11
-            PROP_MODE_REPLACE,                 // discard current prop and replace
-            self.root,                         // window to change prop on
-            self.known_atom("_NET_SUPPORTED"), // prop to change
-            xcb::xproto::ATOM_ATOM,            // type of prop
-            32,                                // data format (8/16/32-bit)
-            &supported,                        // data
+            &self.conn,                           // xcb connection to X11
+            PROP_MODE_REPLACE,                    // discard current prop and replace
+            self.root,                            // window to change prop on
+            self.known_atom(&Atom::NetSupported), // prop to change
+            xcb::xproto::ATOM_ATOM,               // type of prop
+            32,                                   // data format (8/16/32-bit)
+            &supported,                           // data
         );
         self.update_desktops(workspaces);
-        xcb::delete_property(&self.conn, self.root, self.known_atom("_NET_CLIENT_LIST"));
+        xcb::delete_property(&self.conn, self.root, self.known_atom(&Atom::NetClientList));
     }
 
     fn update_desktops(&self, workspaces: &[&str]) {
         xcb::change_property(
-            &self.conn,                                 // xcb connection to X11
-            PROP_MODE_REPLACE,                          // discard current prop and replace
-            self.root,                                  // window to change prop on
-            self.known_atom("_NET_NUMBER_OF_DESKTOPS"), // prop to change
-            xcb::xproto::ATOM_CARDINAL,                 // type of prop
-            32,                                         // data format (8/16/32-bit)
-            &[workspaces.len() as u32],                 // data
+            &self.conn,                                  // xcb connection to X11
+            PROP_MODE_REPLACE,                           // discard current prop and replace
+            self.root,                                   // window to change prop on
+            self.known_atom(&Atom::NetNumberOfDesktops), // prop to change
+            xcb::xproto::ATOM_CARDINAL,                  // type of prop
+            32,                                          // data format (8/16/32-bit)
+            &[workspaces.len() as u32],                  // data
         );
         xcb::change_property(
-            &self.conn,                            // xcb connection to X11
-            PROP_MODE_REPLACE,                     // discard current prop and replace
-            self.root,                             // window to change prop on
-            self.known_atom("_NET_DESKTOP_NAMES"), // prop to change
-            self.known_atom("UTF8_STRING"),        // type of prop
-            8,                                     // data format (8/16/32-bit)
-            workspaces.join("\0").as_bytes(),      // data
+            &self.conn,                              // xcb connection to X11
+            PROP_MODE_REPLACE,                       // discard current prop and replace
+            self.root,                               // window to change prop on
+            self.known_atom(&Atom::NetDesktopNames), // prop to change
+            self.known_atom(&Atom::UTF8String),      // type of prop
+            8,                                       // data format (8/16/32-bit)
+            workspaces.join("\0").as_bytes(),        // data
         );
     }
 
     fn set_current_workspace(&self, wix: usize) {
         xcb::change_property(
-            &self.conn,                              // xcb connection to X11
-            PROP_MODE_REPLACE,                       // discard current prop and replace
-            self.root,                               // window to change prop on
-            self.known_atom("_NET_CURRENT_DESKTOP"), // prop to change
-            xcb::xproto::ATOM_CARDINAL,              // type of prop
-            32,                                      // data format (8/16/32-bit)
-            &[wix as u32],                           // data
+            &self.conn,                                // xcb connection to X11
+            PROP_MODE_REPLACE,                         // discard current prop and replace
+            self.root,                                 // window to change prop on
+            self.known_atom(&Atom::NetCurrentDesktop), // prop to change
+            xcb::xproto::ATOM_CARDINAL,                // type of prop
+            32,                                        // data format (8/16/32-bit)
+            &[wix as u32],                             // data
         );
     }
 
     fn set_root_window_name(&self, name: &str) {
         xcb::change_property(
-            &self.conn,                     // xcb connection to X11
-            PROP_MODE_REPLACE,              // discard current prop and replace
-            self.root,                      // window to change prop on
-            self.known_atom("WM_NAME"),     // prop to change
-            self.known_atom("UTF8_STRING"), // type of prop
-            8,                              // data format (8/16/32-bit)
-            name.as_bytes(),                // data
+            &self.conn,                         // xcb connection to X11
+            PROP_MODE_REPLACE,                  // discard current prop and replace
+            self.root,                          // window to change prop on
+            self.known_atom(&Atom::WmName),     // prop to change
+            self.known_atom(&Atom::UTF8String), // type of prop
+            8,                                  // data format (8/16/32-bit)
+            name.as_bytes(),                    // data
         );
     }
 
     fn set_client_workspace(&self, id: WinId, wix: usize) {
         xcb::change_property(
-            &self.conn,                         // xcb connection to X11
-            PROP_MODE_REPLACE,                  // discard current prop and replace
-            id,                                 // window to change prop on
-            self.known_atom("_NET_WM_DESKTOP"), // prop to change
-            xcb::xproto::ATOM_CARDINAL,         // type of prop
-            32,                                 // data format (8/16/32-bit)
-            &[wix as u32],                      // data
+            &self.conn,                           // xcb connection to X11
+            PROP_MODE_REPLACE,                    // discard current prop and replace
+            id,                                   // window to change prop on
+            self.known_atom(&Atom::NetWmDesktop), // prop to change
+            xcb::xproto::ATOM_CARDINAL,           // type of prop
+            32,                                   // data format (8/16/32-bit)
+            &[wix as u32],                        // data
         );
     }
 
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
-        match self.str_prop(id, "WM_CLASS") {
+        match self.str_prop(id, &Atom::WmClass) {
             Ok(s) => {
                 if s.split("\0").any(|c| floating_classes.contains(&c)) {
                     return true;
@@ -865,8 +915,8 @@ impl XConn for XcbConnection {
             Err(_) => (), // no WM_CLASS set
         };
 
-        match self.str_prop(id, "_NET_WM_WINDOW_TYPE") {
-            Ok(s) => s.split("\0").any(|t| self.auto_float_types.contains(&t)),
+        match self.str_prop(id, &Atom::NetWmWindowType) {
+            Ok(s) => s.split("\0").any(|t| self.auto_float_types.contains(&WindowType::from_str(&t))),
             Err(_) => false,
         }
     }
@@ -902,9 +952,9 @@ impl XConn for XcbConnection {
             Ok(reply) => reply.children().into(),
         };
 
-        let dont_manage: Vec<u32> = ["_NET_WM_WINDOW_TYPE_DOCK", "_NET_WM_WINDOW_TYPE_TOOLBAR"]
+        let dont_manage: Vec<u32> = [WindowType::Dock, WindowType::Toolbar]
             .iter()
-            .map(|t| self.known_atom(t))
+            .map(|t| self.known_window_type(t))
             .collect();
 
         all_ids
@@ -914,7 +964,7 @@ impl XConn for XcbConnection {
             .collect()
     }
 
-    fn str_prop(&self, id: u32, name: &str) -> Result<String> {
+    fn str_prop(&self, id: u32, name: &Atom) -> Result<String> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
             &self.conn,       // xcb connection to X11
@@ -929,7 +979,7 @@ impl XConn for XcbConnection {
         Ok(String::from_utf8(cookie.get_reply()?.value().to_vec())?)
     }
 
-    fn atom_prop(&self, id: u32, name: &str) -> Result<u32> {
+    fn atom_prop(&self, id: u32, name: &Atom) -> Result<u32> {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
             &self.conn,       // xcb connection to X11
@@ -943,7 +993,7 @@ impl XConn for XcbConnection {
 
         let reply = cookie.get_reply()?;
         if reply.value_len() <= 0 {
-            Err(anyhow!("property '{}' was empty for id: {}", name, id))
+            Err(anyhow!("property '{}' was empty for id: {}", name.as_str(), id))
         } else {
             Ok(reply.value()[0])
         }
@@ -961,7 +1011,7 @@ impl XConn for XcbConnection {
             xcb::MOD_MASK_ANY as u16,
         );
         xcb::destroy_window(&self.conn, self.check_win);
-        xcb::delete_property(&self.conn, self.root, self.known_atom("_NET_ACTIVE_WINDOW"));
+        xcb::delete_property(&self.conn, self.root, self.known_atom(&Atom::NetActiveWindow));
     }
 }
 
@@ -1006,7 +1056,7 @@ impl XConn for MockXConn {
     fn mark_new_window(&self, _: WinId) {}
     fn map_window(&self, _: WinId) {}
     fn unmap_window(&self, _: WinId) {}
-    fn send_client_event(&self, _: WinId, _: &str) -> Result<()> {
+    fn send_client_event(&self, _: WinId, _: &Atom) -> Result<()> {
         Ok(())
     }
     fn focused_client(&self) -> WinId {
@@ -1029,10 +1079,10 @@ impl XConn for MockXConn {
     fn query_for_active_windows(&self) -> Vec<WinId> {
         Vec::new()
     }
-    fn str_prop(&self, _: u32, name: &str) -> Result<String> {
-        Ok(String::from(name))
+    fn str_prop(&self, _: u32, name: &Atom) -> Result<String> {
+        Ok(String::from(name.as_str()))
     }
-    fn atom_prop(&self, id: u32, _: &str) -> Result<u32> {
+    fn atom_prop(&self, id: u32, _: &Atom) -> Result<u32> {
         Ok(id)
     }
     fn cleanup(&self) {}

@@ -139,15 +139,19 @@ pub fn parse_key_binding(pattern: impl Into<String>, known_codes: &CodeMap) -> O
 
 // Helper functions for XCB based operations
 pub(crate) mod xcb_util {
-    use crate::{data_types::Region, Result};
+    use crate::{
+        data_types::Region, 
+        Result,
+        xconnection::Atom,
+    };
     use anyhow::anyhow;
     use xcb;
 
-    pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32> {
-        xcb::intern_atom(conn, false, name)
+    pub fn intern_atom(conn: &xcb::Connection, name: &Atom) -> Result<u32> {
+        xcb::intern_atom(conn, false, name.as_str())
             .get_reply()
             .map(|r| r.atom())
-            .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))
+            .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name.as_str(), err))
     }
 
     pub fn create_window(
@@ -183,8 +187,8 @@ pub(crate) mod xcb_util {
             &conn,                                      // xcb connection to X11
             xcb::PROP_MODE_REPLACE as u8,               // discard current prop and replace
             id,                                         // window to change prop on
-            intern_atom(&conn, "_NET_WM_WINDOW_TYPE")?, // prop to change
-            intern_atom(&conn, "UTF8_STRING")?,         // type of prop
+            intern_atom(&conn, &Atom::NetWmWindowType)?, // prop to change
+            intern_atom(&conn, &Atom::UTF8String)?,         // type of prop
             8,                                          // data format (8/16/32-bit)
             window_type.as_bytes(),                     // data
         );

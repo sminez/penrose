@@ -7,7 +7,7 @@ use crate::{
     hooks,
     screen::Screen,
     workspace::Workspace,
-    xconnection::{XConn, XEvent},
+    xconnection::{XConn, XEvent, Atom},
 };
 
 use nix::sys::signal::{signal, SigHandler, Signal};
@@ -277,7 +277,7 @@ impl<'a> WindowManager<'a> {
                         self.handle_configure_notify(id, r, is_root)
                     }
                     XEvent::PropertyNotify { id, atom, is_root } => {
-                        self.handle_property_notify(id, &atom, is_root)
+                        self.handle_property_notify(id, &Atom::from_str(&atom), is_root)
                     }
                     _ => (),
                 }
@@ -307,12 +307,12 @@ impl<'a> WindowManager<'a> {
             return;
         }
 
-        let wm_class = match self.conn.str_prop(id, "WM_CLASS") {
+        let wm_class = match self.conn.str_prop(id, &Atom::WmClass) {
             Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
 
-        let wm_name = match self.conn.str_prop(id, "WM_NAME") {
+        let wm_name = match self.conn.str_prop(id, &Atom::WmName) {
             Ok(s) => s,
             Err(_) => String::from("n/a"),
         };
@@ -373,9 +373,9 @@ impl<'a> WindowManager<'a> {
         self.apply_layout(self.active_ws_index());
     }
 
-    fn handle_property_notify(&mut self, id: WinId, atom: &str, is_root: bool) {
-        if atom == "WM_NAME" || atom == "_NET_WM_NAME" {
-            if let Ok(name) = self.conn.str_prop(id, atom) {
+    fn handle_property_notify(&mut self, id: WinId, atom: &Atom, is_root: bool) {
+        if atom == &Atom::WmName || atom == &Atom::NetWmName {
+            if let Ok(name) = self.conn.str_prop(id, &atom) {
                 self.client_map.get_mut(&id).map(|c| c.set_name(&name));
                 run_hooks!(client_name_updated, self, id, &name, is_root);
             }
@@ -656,7 +656,7 @@ impl<'a> WindowManager<'a> {
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         let id = self.conn.focused_client();
-        self.conn.send_client_event(id, "WM_DELETE_WINDOW").unwrap();
+        self.conn.send_client_event(id, &Atom::WmDeleteWindow).unwrap();
         self.conn.flush();
 
         self.remove_client(id);
