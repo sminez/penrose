@@ -44,6 +44,7 @@ fn bar_draw() -> Result<()> {
     let config = Config::default();
     let conn = XcbConnection::new().unwrap();
     let mut wm = WindowManager::init(config, &conn);
+    bar.startup(&mut wm); // ensure widgets are initialised correctly
 
     thread::sleep(time::Duration::from_millis(1000));
     for focused in 1..6 {
