@@ -1,7 +1,7 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
 use crate::{
     client::Client,
-    data_types::{Change, Direction, Region, ResizeAction, Ring, Selector, WinId},
+    data_types::{Change, Direction, InsertPoint, Region, ResizeAction, Ring, Selector, WinId},
     layout::{Layout, LayoutConf},
 };
 
@@ -72,8 +72,8 @@ impl Workspace {
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
-    pub fn add_client(&mut self, id: WinId) {
-        self.clients.insert(0, id);
+    pub fn add_client(&mut self, id: WinId, ip: &InsertPoint) {
+        self.clients.insert_at(ip, id);
     }
 
     /// Focus the client with the given id, returns an option of the previously focused
@@ -208,7 +208,7 @@ mod tests {
     fn add_n_clients(ws: &mut Workspace, n: usize) {
         for i in 0..n {
             let k = ((i + 1) * 10) as u32; // ensure win_id != index
-            ws.add_client(k);
+            ws.add_client(k, &InsertPoint::First);
         }
     }
 

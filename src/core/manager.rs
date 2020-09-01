@@ -2,7 +2,8 @@
 use crate::{
     client::Client,
     data_types::{
-        Change, Config, Direction, KeyBindings, KeyCode, Point, Region, Ring, Selector, WinId,
+        Change, Config, Direction, InsertPoint, KeyBindings, KeyCode, Point, Region, Ring,
+        Selector, WinId,
     },
     hooks,
     screen::Screen,
@@ -46,6 +47,7 @@ pub struct WindowManager<'a> {
     bar_height: u32,
     top_bar: bool,
     hooks: Cell<Vec<Box<dyn hooks::Hook>>>,
+    client_insert_point: InsertPoint,
     focused_client: Option<WinId>,
     running: bool,
 }
@@ -70,6 +72,7 @@ impl<'a> WindowManager<'a> {
             bar_height: config.bar_height,
             top_bar: config.top_bar,
             hooks: Cell::new(config.hooks),
+            client_insert_point: InsertPoint::First,
             focused_client: None,
             running: false,
         };
@@ -326,7 +329,7 @@ impl<'a> WindowManager<'a> {
         run_hooks!(new_client, self, &mut client);
 
         if client.wm_managed && !floating {
-            self.workspaces.get_mut(wix).map(|ws| ws.add_client(id));
+            self.add_client_to_workspace(wix, id);
         }
 
         self.client_map.insert(id, client);
@@ -340,6 +343,13 @@ impl<'a> WindowManager<'a> {
 
         let s = self.screens.focused().unwrap();
         self.conn.warp_cursor(Some(id), s);
+    }
+
+    fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
+        let cip = self.client_insert_point;
+        self.workspaces
+            .get_mut(wix)
+            .map(|ws| ws.add_client(id, &cip));
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -586,6 +596,11 @@ impl<'a> WindowManager<'a> {
         self.conn.set_root_window_name(s);
     }
 
+    /// Set the insert point for new clients. Default is to insert at index 0.
+    pub fn set_client_insert_point(&mut self, cip: InsertPoint) {
+        self.client_insert_point = cip;
+    }
+
     /**
      * Set the displayed workspace for the focused screen to be `index` in the list of
      * workspaces passed at `init`. This will panic if the index passed is out of
@@ -671,7 +686,7 @@ impl<'a> WindowManager<'a> {
                 .and_then(|ws| ws.remove_focused_client());
 
             if let Some(id) = res {
-                self.workspaces.get_mut(index).map(|ws| ws.add_client(id));
+                self.add_client_to_workspace(index, id);
                 self.client_map.get_mut(&id).map(|c| c.set_workspace(index));
                 self.conn.set_client_workspace(id, index);
                 self.apply_layout(self.active_ws_index());

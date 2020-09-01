@@ -124,6 +124,19 @@ pub enum Change {
     Less,
 }
 
+/// Where a given element should be inserted into a Ring
+#[derive(Debug, Copy, Clone)]
+pub enum InsertPoint {
+    /// At the specified index (last if out of bounds)
+    Index(usize),
+    /// In place of the current focused element (pushing focused and later down in the stack)
+    Focused,
+    /// As the first element in the stack
+    First,
+    /// As the last element in the stack
+    Last,
+}
+
 /// X window border kind
 #[derive(Debug)]
 pub enum Border {
@@ -276,6 +289,15 @@ impl<T> Ring<T> {
 
     pub fn len(&self) -> usize {
         self.elements.len()
+    }
+
+    pub fn insert_at(&mut self, insert_point: &InsertPoint, element: T) {
+        match insert_point {
+            InsertPoint::Index(ix) => self.elements.insert(*ix, element),
+            InsertPoint::Focused => self.elements.insert(self.focused_index(), element),
+            InsertPoint::First => self.elements.push_front(element),
+            InsertPoint::Last => self.elements.push_back(element),
+        }
     }
 
     pub fn insert(&mut self, index: usize, element: T) {
@@ -595,5 +617,19 @@ mod tests {
         assert_eq!(r.all_elements_mut(&Selector::WinId(69)), vec![&0; 0]);
 
         assert_eq!(r.as_vec(), vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn insert_points() {
+        let mut r = Ring::new(vec![0, 0]);
+        r.insert_at(&InsertPoint::First, 1);
+        assert_eq!(r.as_vec(), vec![1, 0, 0]);
+        r.insert_at(&InsertPoint::Last, 2);
+        assert_eq!(r.as_vec(), vec![1, 0, 0, 2]);
+        r.insert_at(&InsertPoint::Index(3), 3);
+        assert_eq!(r.as_vec(), vec![1, 0, 0, 3, 2]);
+        r.focus(&Selector::Index(1));
+        r.insert_at(&InsertPoint::Focused, 4);
+        assert_eq!(r.as_vec(), vec![1, 4, 0, 0, 3, 2]);
     }
 }
