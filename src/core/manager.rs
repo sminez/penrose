@@ -339,7 +339,7 @@ impl<'a> WindowManager<'a> {
 
         self.conn.set_client_workspace(id, wix);
         self.apply_layout(wix);
-        self.conn.map_window(id);
+        self.map_window_if_needed(id);
 
         let s = self.screens.focused().unwrap();
         self.conn.warp_cursor(Some(id), s);
@@ -699,7 +699,7 @@ impl<'a> WindowManager<'a> {
                     self.conn.warp_cursor(Some(id), s);
                     self.focus_screen(&Selector::Index(self.active_screen_index()));
                 } else {
-                    self.conn.unmap_window(id);
+                    self.unmap_window_if_needed(id);
                 }
             };
         }
@@ -953,13 +953,13 @@ impl<'a> WindowManager<'a> {
     }
 
     /// Make the Client with ID 'id' visible at its last known position.
-    pub fn show_client(&self, id: WinId) {
-        self.conn.map_window(id);
+    pub fn show_client(&mut self, id: WinId) {
+        self.map_window_if_needed(id);
     }
 
     /// Hide the Client with ID 'id'.
-    pub fn hide_client(&self, id: WinId) {
-        self.conn.unmap_window(id);
+    pub fn hide_client(&mut self, id: WinId) {
+        self.unmap_window_if_needed(id);
     }
 
     /// Layout the workspace currently shown on the given screen index.
