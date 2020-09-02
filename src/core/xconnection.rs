@@ -15,10 +15,59 @@ use crate::{
     screen::Screen,
     Result,
 };
-use std::{cell::Cell, collections::HashMap};
+use std::{cell::Cell, collections::HashMap, convert::TryFrom, convert::TryInto};
 
 use anyhow::anyhow;
 use xcb;
+
+/**
+ * Make creating enums for atoms less verbose.
+ *
+ * Create an enum with `$enum_name` as name  
+ * Implement `Into<&str>` and `TryFrom<&str>` traits  
+ * Create a slice with `$slice_name` as name containing all enum variants  
+ */
+macro_rules! gen_enum_with_slice {
+    {
+        $(#[$enum_meta:meta])*
+        $enum_name:ident,
+        $(#[$slice_meta:meta])*
+        $slice_name:ident,
+        { $([$variant:ident, $name_str:expr]),+ $(,)? }
+    } => {
+        $(#[$enum_meta])*
+        pub enum $enum_name {
+            $(
+            #[doc = $name_str]
+            $variant,
+            )+
+        }
+
+        impl Into<&str> for $enum_name {
+            fn into(self) -> &'static str {
+                match self {
+                    $($enum_name::$variant => $name_str,)+
+                }
+            }
+        }
+
+        impl TryFrom<&str> for $enum_name {
+            type Error = anyhow::Error;
+
+            fn try_from(name: &str) -> Result<Self> {
+                match name {
+                    $($name_str => Ok($enum_name::$variant),)+
+                    _ => Err(anyhow!("failed to create enum from {}", name)),
+                }
+            }
+        }
+
+        $(#[$slice_meta])*
+        const $slice_name: &[$enum_name] = &[
+            $($enum_name::$variant,)+
+        ];
+    };
+}
 
 const WM_NAME: &'static str = "penrose";
 
