@@ -131,6 +131,8 @@ pub enum InsertPoint {
     Index(usize),
     /// In place of the current focused element (pushing focused and later down in the stack)
     Focused,
+    /// After the current focused element (pushing later elements down in the stack)
+    AfterFocused,
     /// As the first element in the stack
     First,
     /// As the last element in the stack
@@ -297,6 +299,14 @@ impl<T> Ring<T> {
             InsertPoint::Focused => self.elements.insert(self.focused_index(), element),
             InsertPoint::First => self.elements.push_front(element),
             InsertPoint::Last => self.elements.push_back(element),
+            InsertPoint::AfterFocused => {
+                let ix = self.focused_index() + 1;
+                if ix > self.elements.len() {
+                    self.elements.push_back(element)
+                } else {
+                    self.elements.insert(ix, element)
+                }
+            }
         }
     }
 
@@ -631,5 +641,10 @@ mod tests {
         r.focus(&Selector::Index(1));
         r.insert_at(&InsertPoint::Focused, 4);
         assert_eq!(r.as_vec(), vec![1, 4, 0, 0, 3, 2]);
+        r.insert_at(&InsertPoint::AfterFocused, 5);
+        assert_eq!(r.as_vec(), vec![1, 4, 5, 0, 0, 3, 2]);
+        r.focus(&Selector::Index(6));
+        r.insert_at(&InsertPoint::AfterFocused, 6);
+        assert_eq!(r.as_vec(), vec![1, 4, 5, 0, 0, 3, 2, 6]);
     }
 }
