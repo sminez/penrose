@@ -455,8 +455,8 @@ pub struct XcbConnection {
     conn: xcb::Connection,
     root: WinId,
     check_win: WinId,
-    atoms: HashMap<Atom, u32>,
-    auto_float_types: Vec<Atom>,
+    atoms: HashMap<&'static str, u32>,
+    auto_float_types: Vec<&'static str>,
     randr_base: u8,
 }
 
@@ -474,7 +474,7 @@ impl XcbConnection {
         };
 
         // https://www.mankier.com/3/xcb_intern_atom
-        let atoms: HashMap<Atom, u32> = ATOMS
+        let atoms: HashMap<&'static str, u32> = ATOMS
             .iter()
             .map(|&atom| {
                 // false == always return the atom, even if exists already
@@ -483,11 +483,15 @@ impl XcbConnection {
                     .unwrap()
                     .atom();
 
-                (atom, val)
+                (atom.into(), val)
             })
             .collect();
 
-        let auto_float_types: Vec<Atom> = AUTO_FLOAT_WINDOW_TYPES.to_vec();
+        let auto_float_types: Vec<&'static str> = AUTO_FLOAT_WINDOW_TYPES
+            .iter()
+            .map(|&atom| atom.into())
+            .collect();
+
         let check_win = conn.generate_id();
 
         // xcb docs: https://www.mankier.com/3/xcb_create_window
@@ -526,9 +530,13 @@ impl XcbConnection {
 
     fn atom(&self, name: &str) -> Result<u32> {
         self.atoms
-            .get(&name.try_into()?)
+            .get(name)
             .map(|a| *a)
             .ok_or_else(|| anyhow!("{} is not a known atom", name))
+    }
+
+    fn known_atom(&self, name: &str) -> u32 {
+        self.atom(name).unwrap()
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
@@ -544,13 +552,13 @@ impl XcbConnection {
     fn window_has_type_in(&self, id: WinId, win_types: &Vec<u32>) -> bool {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let cookie = xcb::get_property(
-            &self.conn,                                       // xcb connection to X11
-            false,                                            // should the property be deleted
-            id,                                               // target window to query
-            *self.atoms.get(&Atom::NetWmWindowType).unwrap(), // the property we want
-            xcb::ATOM_ANY,                                    // the type of the property
-            0,    // offset in the property to retrieve data from
-            2048, // how many 32bit multiples of data to retrieve
+            &self.conn,                                             // xcb connection to X11
+            false, // should the property be deleted
+            id,    // target window to query
+            *self.atoms.get(Atom::NetWmWindowType.into()).unwrap(), // the property we want
+            xcb::ATOM_ANY, // the type of the property
+            0,     // offset in the property to retrieve data from
+            2048,  // how many 32bit multiples of data to retrieve
         );
 
         match cookie.get_reply() {
@@ -755,7 +763,7 @@ impl XConn for XcbConnection {
 
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
         let atom = self.atom(atom_name)?;
-        let wm_protocols = *self.atoms.get(&Atom::WmProtocols).unwrap();
+        let wm_protocols = *self.atoms.get(Atom::WmProtocols.into()).unwrap();
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
         xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
@@ -771,7 +779,7 @@ impl XConn for XcbConnection {
     }
 
     fn focus_client(&self, id: WinId) {
-        let prop = *self.atoms.get(&Atom::NetActiveWindow).unwrap();
+        let prop = *self.atoms.get(Atom::NetActiveWindow.into()).unwrap();
 
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
         xcb::set_input_focus(
@@ -798,8 +806,8 @@ impl XConn for XcbConnection {
     }
 
     fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
-        let state_prop = *self.atoms.get(&Atom::NetWmState).unwrap();
-        let fs_prop = *self.atoms.get(&Atom::NetWmStateFullscreen).unwrap();
+        let state_prop = *self.atoms.get(Atom::NetWmState.into()).unwrap();
+        let fs_prop = *self.atoms.get(Atom::NetWmStateFullscreen.into()).unwrap();
 
         if client_is_fullscreen {
             xcb::change_property(
@@ -863,115 +871,118 @@ impl XConn for XcbConnection {
     fn set_wm_properties(&self, workspaces: &[&str]) {
         // xcb docs: https://www.mankier.com/3/xcb_change_property
         xcb::change_property(
-            &self.conn,                                            // xcb connection to X11
+            &self.conn,                                                  // xcb connection to X11
             PROP_MODE_REPLACE, // discard current prop and replace
             self.check_win,    // window to change prop on
-            *self.atoms.get(&Atom::NetSupportingWmCheck).unwrap(), // prop to change
+            *self.atoms.get(Atom::NetSupportingWmCheck.into()).unwrap(), // prop to change
             ATOM_WINDOW,       // type of prop
             32,                // data format (8/16/32-bit)
             &[self.check_win], // data
         );
         xcb::change_property(
-            &self.conn,                                  // xcb connection to X11
-            PROP_MODE_REPLACE,                           // discard current prop and replace
-            self.check_win,                              // window to change prop on
-            *self.atoms.get(&Atom::NetWmName).unwrap(),  // prop to change
-            *self.atoms.get(&Atom::UTF8String).unwrap(), // type of prop
-            8,                                           // data format (8/16/32-bit)
-            WM_NAME.as_bytes(),                          // data
+            &self.conn,                                        // xcb connection to X11
+            PROP_MODE_REPLACE,                                 // discard current prop and replace
+            self.check_win,                                    // window to change prop on
+            *self.atoms.get(Atom::NetWmName.into()).unwrap(),  // prop to change
+            *self.atoms.get(Atom::UTF8String.into()).unwrap(), // type of prop
+            8,                                                 // data format (8/16/32-bit)
+            WM_NAME.as_bytes(),                                // data
         );
         xcb::change_property(
-            &self.conn,                                            // xcb connection to X11
+            &self.conn,                                                  // xcb connection to X11
             PROP_MODE_REPLACE, // discard current prop and replace
             self.root,         // window to change prop on
-            *self.atoms.get(&Atom::NetSupportingWmCheck).unwrap(), // prop to change
+            *self.atoms.get(Atom::NetSupportingWmCheck.into()).unwrap(), // prop to change
             ATOM_WINDOW,       // type of prop
             32,                // data format (8/16/32-bit)
             &[self.check_win], // data
         );
         xcb::change_property(
-            &self.conn,                                  // xcb connection to X11
-            PROP_MODE_REPLACE,                           // discard current prop and replace
-            self.root,                                   // window to change prop on
-            *self.atoms.get(&Atom::NetWmName).unwrap(),  // prop to change
-            *self.atoms.get(&Atom::UTF8String).unwrap(), // type of prop
-            8,                                           // data format (8/16/32-bit)
-            WM_NAME.as_bytes(),                          // data
+            &self.conn,                                        // xcb connection to X11
+            PROP_MODE_REPLACE,                                 // discard current prop and replace
+            self.root,                                         // window to change prop on
+            *self.atoms.get(Atom::NetWmName.into()).unwrap(),  // prop to change
+            *self.atoms.get(Atom::UTF8String.into()).unwrap(), // type of prop
+            8,                                                 // data format (8/16/32-bit)
+            WM_NAME.as_bytes(),                                // data
         );
 
         // EWMH support
-        let supported: Vec<u32> = ATOMS.iter().map(|a| *self.atoms.get(a).unwrap()).collect();
+        let supported: Vec<u32> = ATOMS
+            .iter()
+            .map(|&a| *self.atoms.get(a.into()).unwrap())
+            .collect();
         xcb::change_property(
-            &self.conn,                                    // xcb connection to X11
-            PROP_MODE_REPLACE,                             // discard current prop and replace
-            self.root,                                     // window to change prop on
-            *self.atoms.get(&Atom::NetSupported).unwrap(), // prop to change
-            ATOM_ATOM,                                     // type of prop
-            32,                                            // data format (8/16/32-bit)
-            &supported,                                    // data
+            &self.conn,                                          // xcb connection to X11
+            PROP_MODE_REPLACE,                                   // discard current prop and replace
+            self.root,                                           // window to change prop on
+            *self.atoms.get(Atom::NetSupported.into()).unwrap(), // prop to change
+            ATOM_ATOM,                                           // type of prop
+            32,                                                  // data format (8/16/32-bit)
+            &supported,                                          // data
         );
         self.update_desktops(workspaces);
         xcb::delete_property(
             &self.conn,
             self.root,
-            *self.atoms.get(&Atom::NetClientList).unwrap(),
+            *self.atoms.get(Atom::NetClientList.into()).unwrap(),
         );
     }
 
     fn update_desktops(&self, workspaces: &[&str]) {
         xcb::change_property(
-            &self.conn,                                           // xcb connection to X11
+            &self.conn,                                                 // xcb connection to X11
             PROP_MODE_REPLACE, // discard current prop and replace
             self.root,         // window to change prop on
-            *self.atoms.get(&Atom::NetNumberOfDesktops).unwrap(), // prop to change
+            *self.atoms.get(Atom::NetNumberOfDesktops.into()).unwrap(), // prop to change
             ATOM_CARDINAL,     // type of prop
             32,                // data format (8/16/32-bit)
             &[workspaces.len() as u32], // data
         );
         xcb::change_property(
-            &self.conn,                                       // xcb connection to X11
-            PROP_MODE_REPLACE,                                // discard current prop and replace
-            self.root,                                        // window to change prop on
-            *self.atoms.get(&Atom::NetDesktopNames).unwrap(), // prop to change
-            *self.atoms.get(&Atom::UTF8String).unwrap(),      // type of prop
-            8,                                                // data format (8/16/32-bit)
-            workspaces.join("\0").as_bytes(),                 // data
+            &self.conn,                                             // xcb connection to X11
+            PROP_MODE_REPLACE, // discard current prop and replace
+            self.root,         // window to change prop on
+            *self.atoms.get(Atom::NetDesktopNames.into()).unwrap(), // prop to change
+            *self.atoms.get(Atom::UTF8String.into()).unwrap(), // type of prop
+            8,                 // data format (8/16/32-bit)
+            workspaces.join("\0").as_bytes(), // data
         );
     }
 
     fn set_current_workspace(&self, wix: usize) {
         xcb::change_property(
-            &self.conn,                                         // xcb connection to X11
-            PROP_MODE_REPLACE,                                  // discard current prop and replace
-            self.root,                                          // window to change prop on
-            *self.atoms.get(&Atom::NetCurrentDesktop).unwrap(), // prop to change
-            xcb::xproto::ATOM_CARDINAL,                         // type of prop
-            32,                                                 // data format (8/16/32-bit)
-            &[wix as u32],                                      // data
+            &self.conn,                                               // xcb connection to X11
+            PROP_MODE_REPLACE, // discard current prop and replace
+            self.root,         // window to change prop on
+            *self.atoms.get(Atom::NetCurrentDesktop.into()).unwrap(), // prop to change
+            xcb::xproto::ATOM_CARDINAL, // type of prop
+            32,                // data format (8/16/32-bit)
+            &[wix as u32],     // data
         );
     }
 
     fn set_root_window_name(&self, name: &str) {
         xcb::change_property(
-            &self.conn,                                  // xcb connection to X11
-            PROP_MODE_REPLACE,                           // discard current prop and replace
-            self.root,                                   // window to change prop on
-            *self.atoms.get(&Atom::WmName).unwrap(),     // prop to change
-            *self.atoms.get(&Atom::UTF8String).unwrap(), // type of prop
-            8,                                           // data format (8/16/32-bit)
-            name.as_bytes(),                             // data
+            &self.conn,                                        // xcb connection to X11
+            PROP_MODE_REPLACE,                                 // discard current prop and replace
+            self.root,                                         // window to change prop on
+            *self.atoms.get(Atom::WmName.into()).unwrap(),     // prop to change
+            *self.atoms.get(Atom::UTF8String.into()).unwrap(), // type of prop
+            8,                                                 // data format (8/16/32-bit)
+            name.as_bytes(),                                   // data
         );
     }
 
     fn set_client_workspace(&self, id: WinId, wix: usize) {
         xcb::change_property(
-            &self.conn,                                    // xcb connection to X11
-            PROP_MODE_REPLACE,                             // discard current prop and replace
-            id,                                            // window to change prop on
-            *self.atoms.get(&Atom::NetWmDesktop).unwrap(), // prop to change
-            xcb::xproto::ATOM_CARDINAL,                    // type of prop
-            32,                                            // data format (8/16/32-bit)
-            &[wix as u32],                                 // data
+            &self.conn,                                          // xcb connection to X11
+            PROP_MODE_REPLACE,                                   // discard current prop and replace
+            id,                                                  // window to change prop on
+            *self.atoms.get(Atom::NetWmDesktop.into()).unwrap(), // prop to change
+            xcb::xproto::ATOM_CARDINAL,                          // type of prop
+            32,                                                  // data format (8/16/32-bit)
+            &[wix as u32],                                       // data
         );
     }
 
@@ -1027,7 +1038,7 @@ impl XConn for XcbConnection {
 
         let dont_manage: Vec<u32> = [Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar]
             .iter()
-            .map(|t| *self.atoms.get(t).unwrap())
+            .map(|&t| *self.atoms.get(t.into()).unwrap())
             .collect();
 
         all_ids
@@ -1091,7 +1102,7 @@ impl XConn for XcbConnection {
         xcb::delete_property(
             &self.conn,
             self.root,
-            *self.atoms.get(&Atom::NetActiveWindow).unwrap(),
+            *self.atoms.get(Atom::NetActiveWindow.into()).unwrap(),
         );
     }
 }
