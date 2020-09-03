@@ -14,7 +14,6 @@ pub struct Client {
     wm_class: String,
     workspace: usize,
     // state flags
-    floating: bool,
     pub(crate) fullscreen: bool,
     pub(crate) mapped: bool,
     pub(crate) wm_managed: bool,
@@ -27,14 +26,12 @@ impl Client {
         wm_name: String,
         wm_class: String,
         workspace: usize,
-        floating: bool,
     ) -> Client {
         Client {
             id,
             wm_name,
             wm_class,
             workspace,
-            floating: floating,
             fullscreen: false,
             mapped: false,
             wm_managed: true,

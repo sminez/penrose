@@ -267,6 +267,9 @@ impl<'a> WindowManager<'a> {
                 debug!("got XEvent: {:?}", event);
                 match event {
                     XEvent::KeyPress { code } => self.handle_key_press(code, &mut bindings),
+                    XEvent::ButtonPress { btn, id } => self.handle_mouse_button_press(btn, id),
+                    XEvent::ButtonRelease { btn } => self.handle_mouse_button_release(btn),
+                    XEvent::MotionNotify { id, rpt, wpt } => self.handle_mouse_movement(id, rpt, wpt),
                     XEvent::MapRequest { id, ignore } => self.handle_map_request(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
                     XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
@@ -305,6 +308,44 @@ impl<'a> WindowManager<'a> {
         }
     }
 
+    fn handle_mouse_button_press(&mut self, btn: u8, id: WinId) {
+        // 1. Focus the clicked window
+        if let Some(current) = self.focused_client() {
+            if current.id() != id {
+                self.client_lost_focus(current.id());
+            }
+        }
+        self.client_gained_focus(id);
+        // FIXME: is screen focus needed? it should've been handled by the EntryNotify event
+        // handler anyway
+
+        // 2. Initiate the move/resize action
+        match btn {
+            1 => {
+                // left click
+
+                // let old_action = self.
+            }
+            2 => {
+                // right click
+                // TODO
+            }
+            3 => {
+                // middle click
+                self.kill_client();
+            }
+            _ => {}
+        }
+    }
+
+    fn handle_mouse_button_release(&mut self, _btn: u8) {
+        // TODO
+    }
+
+    fn handle_mouse_movement(&mut self, _id: WinId, _rpt: Point, _wpt: Point) {
+        // TODO
+    }
+
     fn handle_map_request(&mut self, id: WinId, override_redirect: bool) {
         if override_redirect || self.client_map.contains_key(&id) {
             return;
@@ -322,7 +363,7 @@ impl<'a> WindowManager<'a> {
 
         let floating = self.conn.window_should_float(id, self.floating_classes);
         let wix = self.active_ws_index();
-        let mut client = Client::new(id, wm_name, wm_class, wix, floating);
+        let mut client = Client::new(id, wm_name, wm_class, wix);
         run_hooks!(new_client, self, &mut client);
 
         if client.wm_managed && !floating {
@@ -708,6 +749,21 @@ impl<'a> WindowManager<'a> {
         self.set_fullscreen(id, !client_is_fullscreen, client_is_fullscreen);
     }
 
+    /// Toggle the workspace focus between Tiled and Floating windows (if possible)
+    pub fn toggle_workspace_focus(&mut self) {
+        if let Some(ws) = self.workspaces.focused_mut() {
+            ws.toggle_focus();
+            self.focused_client = ws.focused_client();
+        }
+    }
+
+    /// Toggles the focused client window between Tiled and Floating mode
+    pub fn toggle_client_floating(&mut self) {
+        if let (Some(ws), Some(c)) = (self.workspaces.focused_mut(), self.focused_client) {
+            ws.toggle_client_floating(c);
+        }
+    }
+
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         let id = self.conn.focused_client();
@@ -959,6 +1015,27 @@ impl<'a> WindowManager<'a> {
         self.screens.focused_index()
     }
 }
+
+enum DragAction{
+    Move {
+        id: WinId,
+    },
+    Resize,
+}
+
+impl DragAction {
+    fn cancel(self) {
+        match self {
+            DragAction::Move { id } => {
+                // TODO
+            }
+            DragAction::Resize => {
+                // TODO
+            }
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

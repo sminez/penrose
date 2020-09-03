@@ -20,8 +20,16 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Workspace {
     name: String,
-    clients: Ring<WinId>,
+    floating_clients: Ring<WinId>,
+    tiled_clients: Ring<WinId>,
+    focus: WorkspaceFocus,
     layouts: Ring<Layout>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum WorkspaceFocus {
+    Floating,
+    Tiled,
 }
 
 impl Workspace {
@@ -33,7 +41,9 @@ impl Workspace {
 
         Workspace {
             name: name.into(),
-            clients: Ring::new(Vec::new()),
+            floating_clients: Ring::new(Vec::new()),
+            tiled_clients: Ring::new(Vec::new()),
+            focus: WorkspaceFocus::Tiled,
             layouts: Ring::new(layouts),
         }
     }
@@ -49,54 +59,104 @@ impl Workspace {
 
     /// The number of clients currently on this workspace
     pub fn len(&self) -> usize {
-        self.clients.len()
+        self.tiled_clients.len() + self.floating_clients.len()
     }
 
     /// Iterate over the clients on this workspace in position order
-    pub fn iter(&self) -> std::collections::vec_deque::Iter<WinId> {
-        self.clients.iter()
+    pub fn iter(&self) -> impl Iterator<Item = &WinId> {
+        self.tiled_clients.iter()
+            .chain(self.floating_clients.iter())
     }
 
     /// Iterate over the clients on this workspace in position order
-    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<WinId> {
-        self.clients.iter_mut()
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut WinId> {
+        self.tiled_clients.iter_mut()
+            .chain(self.floating_clients.iter_mut())
     }
 
     pub(crate) fn clients(&self) -> Vec<WinId> {
-        self.clients.as_vec()
+        self.iter()
+            .cloned()
+            .collect()
     }
 
     /// A reference to the currently focused client if there is one
     pub fn focused_client(&self) -> Option<WinId> {
-        self.clients.focused().map(|c| *c)
+        match self.focus {
+            WorkspaceFocus::Tiled => {
+                self.tiled_clients.focused().map(|c| *c)
+            }
+            WorkspaceFocus::Floating => {
+                self.floating_clients.focused().map(|c| *c)
+            }
+        }
+    }
+
+    /// Toggles WorkspaceFocus between Tiled and Floating
+    pub fn toggle_focus(&mut self) {
+        match self.focus {
+            WorkspaceFocus::Tiled if self.floating_clients.len() > 0 => {
+                self.focus = WorkspaceFocus::Floating;
+            }
+            _ => {
+                self.focus = WorkspaceFocus::Tiled;
+            }
+        }
+        debug!("WorkspaceFocus::{:?}", self.focus);
+    }
+
+    pub(crate) fn toggle_client_floating(&mut self, id: WinId) {
+        info!("window swapped floating {}", id);
+        if self.tiled_clients.focused() == Some(&id) {
+            self.tiled_clients.remove(&Selector::Focused);
+            self.floating_clients.push(id);
+        } else if self.floating_clients.focused() == Some(&id) {
+            self.floating_clients.remove(&Selector::Focused);
+            self.tiled_clients.push(id);
+        } else {
+            error!("unreachable");
+        }
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
     pub fn add_client(&mut self, id: WinId) {
-        self.clients.insert(0, id);
+        match self.focus {
+            WorkspaceFocus::Tiled => {
+                self.tiled_clients.insert(0, id);
+            }
+            WorkspaceFocus::Floating => {
+                self.floating_clients.insert(0, id);
+            }
+        }
     }
 
     /// Focus the client with the given id, returns an option of the previously focused
     /// client if there was one
     pub fn focus_client(&mut self, id: WinId) -> Option<WinId> {
-        let prev = match self.clients.focused() {
-            Some(c) => *c,
-            None => return None,
+        let prev = match self.focus {
+            WorkspaceFocus::Tiled => self.tiled_clients.focused().copied(),
+            WorkspaceFocus::Floating => self.floating_clients.focused().copied(),
         };
-        self.clients.focus(&Selector::Condition(&|c| *c == id));
-        Some(prev)
+
+        if self.tiled_clients.focus(&Selector::Condition(&|c| *c == id)).is_none() {
+            self.floating_clients.focus(&Selector::Condition(&|c| *c == id));
+        }
+
+        prev
     }
 
     /// Remove a target client, retaining focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
-        self.clients.remove(&Selector::Condition(&|c| *c == id))
+        self.tiled_clients.remove(&Selector::Condition(&|c| *c == id))
+            .or_else(|| self.floating_clients.remove(&Selector::Condition(&|c| *c == id)))
     }
 
     /// Remove the currently focused client, keeping focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
     pub fn remove_focused_client(&mut self) -> Option<WinId> {
-        self.clients.remove(&Selector::Focused)
+        self.tiled_clients.remove(&Selector::Focused)
+            .or_else(|| self.floating_clients.remove(&Selector::Focused))
     }
 
     /// Run the current layout function, generating a list of resize actions to be
@@ -106,20 +166,20 @@ impl Workspace {
         screen_region: Region,
         client_map: &HashMap<WinId, Client>,
     ) -> Vec<ResizeAction> {
-        if self.clients.len() > 0 {
+        if self.tiled_clients.len() > 0 {
             let layout = self.layouts.focused().unwrap();
-            let clients: Vec<&Client> = self
-                .clients
+            let tiled_clients: Vec<&Client> = self
+                .tiled_clients
                 .iter()
                 .map(|id| client_map.get(id).unwrap())
                 .collect();
             debug!(
                 "applying '{}' layout for {} clients on workspace '{}'",
                 layout.symbol,
-                self.clients.len(),
+                self.tiled_clients.len(),
                 self.name
             );
-            layout.arrange(&clients, self.focused_client(), &screen_region)
+            layout.arrange(&tiled_clients, self.focused_client(), &screen_region)
         } else {
             vec![]
         }
@@ -153,15 +213,33 @@ impl Workspace {
 
     /// Cycle focus through the clients on this workspace
     pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
-        if self.clients.len() < 2 {
-            return None; // need at least two clients to cycle
-        }
-        if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
-            return None;
-        }
+        let clients = match self.focus {
+            WorkspaceFocus::Tiled => {
+                if self.tiled_clients.len() < 2 {
+                    return None; // need at least two clients to cycle
+                }
 
-        let prev = *self.clients.focused()?;
-        let new = *self.clients.cycle_focus(direction)?;
+                if !self.layout_conf().allow_wrapping && self.tiled_clients.would_wrap(direction) {
+                    return None;
+                }
+
+                &mut self.tiled_clients
+            }
+            WorkspaceFocus::Floating => {
+                if self.floating_clients.len() < 2 {
+                    return None; // need at least two clients to cycle
+                }
+
+                if !self.layout_conf().allow_wrapping && self.floating_clients.would_wrap(direction) {
+                    return None;
+                }
+
+                &mut self.floating_clients
+            }
+        };
+
+        let prev = *clients.focused()?;
+        let new = *clients.cycle_focus(direction)?;
 
         if prev != new {
             Some((prev, new))
@@ -174,10 +252,13 @@ impl Workspace {
      * Drag the focused client through the stack, retaining focus
      */
     pub fn drag_client(&mut self, direction: Direction) -> Option<WinId> {
-        if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
+        if matches!(self.focus, WorkspaceFocus::Floating) {
             return None;
         }
-        self.clients.drag_focused(direction).map(|c| *c)
+        if !self.layout_conf().allow_wrapping && self.tiled_clients.would_wrap(direction) {
+            return None;
+        }
+        self.tiled_clients.drag_focused(direction).map(|c| *c)
     }
 
     /// Increase or decrease the number of possible clients in the main area of the current Layout

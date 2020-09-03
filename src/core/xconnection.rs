@@ -205,10 +205,28 @@ const AUTO_FLOAT_WINDOW_TYPES: &[&'static str] = &[
 #[derive(Debug, Clone)]
 pub enum XEvent {
     /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
-    ButtonPress,
+    ButtonPress {
+        /// The ID of the window that was clicked
+        id: WinId,
+        /// Number of the relevant mouse button
+        btn: u8,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
-    ButtonRelease,
+    ButtonRelease {
+        /// Number of the relevant mouse button
+        btn: u8,
+    },
+
+    /// xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
+    MotionNotify {
+        /// The ID of the window that was moved across
+        id: WinId,
+        /// Absolute coordinate of the event
+        rpt: Point,
+        /// Coordinate of the event relative to top-left of the window itself
+        wpt: Point,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
     KeyPress {
@@ -523,9 +541,29 @@ impl XConn for XcbConnection {
             }
 
             match etype {
-                xcb::BUTTON_PRESS => None,
+                xcb::BUTTON_PRESS => {
+                    let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::ButtonPress {
+                        id: e.event(),
+                        btn: e.detail(),
+                    })
+                }
 
-                xcb::BUTTON_RELEASE => None,
+                xcb::BUTTON_RELEASE => {
+                    let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::ButtonRelease {
+                        btn: e.detail(),
+                    })
+                }
+
+                xcb::MOTION_NOTIFY => {
+                    let e: &xcb::MotionNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::MotionNotify {
+                        id: e.event(),
+                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                    })
+                }
 
                 xcb::KEY_PRESS => {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
@@ -788,7 +826,7 @@ impl XConn for XcbConnection {
         }
 
         // TODO: this needs to be more configurable by the user
-        for mouse_button in &[1, 3] {
+        for mouse_button in &[1, 2, 3] {
             // xcb docs: https://www.mankier.com/3/xcb_grab_button
             xcb::grab_button(
                 &self.conn,             // xcb connection to X11
@@ -800,7 +838,7 @@ impl XConn for XcbConnection {
                 xcb::NONE,              // don't confine the cursor to a specific window
                 xcb::NONE,              // don't change the cursor type
                 *mouse_button,          // the button to grab
-                xcb::MOD_MASK_4 as u16, // modifiers to grab
+                xcb::MOD_MASK_1 as u16, // modifiers to grab
             );
         }
 
