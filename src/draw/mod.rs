@@ -5,7 +5,7 @@ pub use bar::*;
 pub use inner::{Color, Draw, DrawContext, TextStyle, WindowType, XCBDraw, XCBDrawContext};
 
 mod inner {
-    use std::{collections::HashMap, convert::TryFrom};
+    use std::{collections::HashMap, convert::TryFrom, convert::TryInto};
 
     use crate::{
         core::data_types::{Region, WinId},
@@ -70,24 +70,35 @@ mod inner {
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]
-    /// A simple RGB based color
+    /// A simple RGBA based color
     pub struct Color {
         r: f64,
         g: f64,
         b: f64,
+        a: f64,
     }
     impl Color {
-        /// Create a new Color from a hex encoded u32: 0xRRGGBB
-        pub fn new_from_hex(hex: u32) -> Self {
-            let floats: Vec<f64> = hex
-                .to_be_bytes()
+        /// Create a new Color from a hex encoded u32: 0xRRGGBBAA
+        pub fn new_from_hex_rgba(hex: u32) -> Self {
+            let floats: Vec<f64> = hex.to_be_bytes()
                 .iter()
-                .skip(1)
                 .map(|n| *n as f64 / 255.0)
                 .collect();
 
+            let (r, g, b, a) = (floats[0], floats[1], floats[2], floats[3]);
+            Self { r, g, b, a }
+        }
+
+        /// Create a new Color from a hex encoded u32: 0xRRGGBB
+        pub fn new_from_hex_rgb(hex: u32) -> Self {
+            let floats: Vec<f64> = hex.to_be_bytes()
+                .iter()
+                .map(|n| *n as f64 / 255.0)
+                .skip(1)
+                .collect();
+
             let (r, g, b) = (floats[0], floats[1], floats[2]);
-            Self { r, g, b }
+            Self { r, g, b, a: 1.0 }
         }
 
         /// The RGB information of this color as 0.0-1.0 range floats representing
@@ -95,29 +106,58 @@ mod inner {
         pub fn rgb(&self) -> (f64, f64, f64) {
             (self.r, self.g, self.b)
         }
+
+        /// The RGBA information of this color as 0.0-1.0 range floats representing
+        /// proportions of 255 for each of R, G, B, A
+        pub fn rgba(&self) -> (f64, f64, f64, f64) {
+            (self.r, self.g, self.b, self.a)
+        }
     }
 
     impl From<u32> for Color {
         fn from(hex: u32) -> Self {
-            Self::new_from_hex(hex)
+            Self::new_from_hex_rgb(hex)
         }
     }
 
     impl From<(f64, f64, f64)> for Color {
         fn from(rgb: (f64, f64, f64)) -> Self {
             let (r, g, b) = rgb;
-            Self { r, g, b }
+            Self { r, g, b, a: 1.0 }
+        }
+    }
+
+    impl From<(f64, f64, f64, f64)> for Color {
+        fn from(rgba: (f64, f64, f64, f64)) -> Self {
+            let (r, g, b, a) = rgba;
+            Self { r, g, b, a }
         }
     }
 
     impl TryFrom<String> for Color {
-        type Error = std::num::ParseIntError;
+        type Error = anyhow::Error;
 
-        fn try_from(s: String) -> std::result::Result<Color, Self::Error> {
-            Ok(Self::new_from_hex(u32::from_str_radix(
+        fn try_from(s: String) -> Result<Color> {
+            (&s[..]).try_into()
+        }
+    }
+
+    impl TryFrom<&str> for Color {
+        type Error = anyhow::Error;
+
+        fn try_from(s: &str) -> Result<Color> {
+            let hex = u32::from_str_radix(
                 s.strip_prefix('#').unwrap_or_else(|| &s),
                 16,
-            )?))
+            )?;
+
+            if s.len() == 7 {
+                Ok(Self::new_from_hex_rgb(hex))
+            } else if s.len() == 9 {
+                Ok(Self::new_from_hex_rgba(hex))
+            } else {
+                Err(anyhow!("failed to parse {} into a Color, invalid length", &s))
+            }
         }
     }
 
