@@ -103,6 +103,62 @@ mod inner {
             Self { r, g, b, a: 1.0 }
         }
 
+        /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
+        pub fn new_from_hex(hex: u32) -> Self {
+            let a = if hex > 0x00FFFFFF { (hex >> 24 & 0xFF) as f64 / 255.0 } else { 1.0 };
+            let r = (hex >> 16 & 0xFF) as f64 / 255.0;
+            let g = (hex >> 8 & 0xFF) as f64 / 255.0;
+            let b = (hex >> 0 & 0xFF) as f64 / 255.0;
+
+            Self { r, g, b, a }
+            
+            /*
+            let s = if (hex & 0x00FFFFFF) != 0 && (hex & 0xFF000000) == 0 {
+                println!("rgb");
+                8
+            } else { 
+                println!("rgba");
+                0 
+            };
+
+            // If no alpha value was supplied, everything must be shifted 8 bits and
+            // the alpha value should be set to 1.0
+            //
+            // 0x00RRGGBB -> 0xRRGGBBFF
+            //
+            // For example, when extracting 'r', we should only shift it 16 bits instead of 24
+            // bits when an alpha value is supplied. 
+            let r = (hex >> 24 - s & 0xFF) as f64 / 255.0;
+            let g = (hex >> 16 - s & 0xFF) as f64 / 255.0;
+            let b = (hex >> 8 - s & 0xFF) as f64 / 255.0;
+            let a = if s == 0 { (hex >> 0 & 0xFF) as f64 / 255.0 } else { 1.0 };
+
+            Self { r, g, b, a }
+            */
+
+            /*
+            let bytes = hex.to_le_bytes();
+            let byte_iter = bytes.iter();
+
+            println!("{:#x} -> {:?}", hex, bytes);
+
+            if byte_iter.clone().take(3).any(|b| *b != 0) && *byte_iter.clone().last().unwrap() == 0 {
+                println!("rgb");
+                let floats: Vec<f64> = byte_iter.clone()
+                    .map(|n| *n as f64 / 255.0)
+                    .collect();
+                let (r, g, b, a) = (floats[2], floats[1], floats[0], 1.0);
+                Self { r, g, b, a }
+            } else {
+                println!("rgba");
+                let floats: Vec<f64> = byte_iter.clone()
+                    .map(|n| *n as f64 / 255.0)
+                    .collect();
+                let (r, g, b, a) = (floats[2], floats[1], floats[0], floats[3]);
+                Self { r, g, b, a }
+            }*/
+        }
+
         /// The RGB information of this color as 0.0-1.0 range floats representing
         /// proportions of 255 for each of R, G, B
         pub fn rgb(&self) -> (f64, f64, f64) {
@@ -118,7 +174,7 @@ mod inner {
 
     impl From<u32> for Color {
         fn from(hex: u32) -> Self {
-            Self::new_from_hex_rgb(hex)
+            Self::new_from_hex(hex)
         }
     }
 
@@ -412,5 +468,28 @@ mod inner {
         fn flush(&self) {
             self.ctx.get_target().flush();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_color_from_hex_rgba() {
+        //assert_eq!(Color::from(0x00000000), Color::from((0.0, 0.0, 0.0, 0.0)));
+        assert_eq!(Color::from(0xFF00FFFF), Color::from((0.0, 1.0, 1.0, 1.0)));
+        assert_eq!(Color::from(0xFFFFFFFF), Color::from((1.0, 1.0, 1.0, 1.0)));
+        assert_eq!(Color::from(0xFFFF00FF), Color::from((1.0, 0.0, 1.0, 1.0)));
+        assert_eq!(Color::from(0xFFFF0000), Color::from((1.0, 0.0, 0.0, 1.0)));
+        assert_eq!(Color::from(0xFF000000), Color::from((0.0, 0.0, 0.0, 1.0)));
+    }
+
+    #[test]
+    fn test_color_from_hex_rgb() {
+        assert_eq!(Color::from(0x000000), Color::from((0.0, 0.0, 0.0, 1.0)));
+        assert_eq!(Color::from(0xFFFFFF), Color::from((1.0, 1.0, 1.0, 1.0)));
+        assert_eq!(Color::from(0xFF00FF), Color::from((1.0, 0.0, 1.0, 1.0)));
+        assert_eq!(Color::from(0x0000FF), Color::from((0.0, 0.0, 1.0, 1.0)));
     }
 }
