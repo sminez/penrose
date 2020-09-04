@@ -32,7 +32,9 @@ mod inner {
         h: i32,
     ) -> Result<(u32, XCBSurface)> {
         let id = xcb_util::create_window(conn, screen, wt.as_ewmh_str(), x, y, w as u16, h as u16)?;
-        let mut visualtype = xcb_util::get_visual_type(&conn, screen)?;
+
+        let depth = xcb_util::get_depth(screen)?;
+        let mut visualtype = xcb_util::get_visual_type(&depth)?;
 
         let surface = unsafe {
             let conn_ptr = conn.get_raw_conn() as *mut cairo_sys::xcb_connection_t;
@@ -216,6 +218,8 @@ mod inner {
         fn font(&mut self, font_name: &str, point_size: i32) -> Result<()>;
         /// Set the color used for subsequent drawing operations
         fn color(&mut self, color: &Color);
+        /// Clears the context
+        fn clear(&mut self);
         /// Translate this context by (dx, dy) from its current position
         fn translate(&self, dx: f64, dy: f64);
         /// Set the x offset for this context absolutely
@@ -341,8 +345,15 @@ mod inner {
         }
 
         fn color(&mut self, color: &Color) {
-            let (r, g, b) = color.rgb();
-            self.ctx.set_source_rgb(r, g, b);
+            let (r, g, b, a) = color.rgba();
+            self.ctx.set_source_rgba(r, g, b, a);
+        }
+
+        fn clear(&mut self) {
+            self.ctx.save();
+            self.ctx.set_operator(cairo::Operator::Clear);
+            self.ctx.paint();
+            self.ctx.restore();
         }
 
         fn translate(&self, dx: f64, dy: f64) {
