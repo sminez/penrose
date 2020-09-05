@@ -227,8 +227,8 @@ impl<'a> WindowManager<'a> {
     }
 
     fn client_gained_focus(&mut self, id: WinId) {
-        self.focused_client()
-            .map(|c| self.client_lost_focus(c.id()));
+        let prev_focused = self.focused_client().map(|c| c.id());
+        prev_focused.map(|id| self.client_lost_focus(id));
 
         self.conn.set_client_border_color(id, self.focused_border);
         self.conn.focus_client(id);
@@ -236,7 +236,8 @@ impl<'a> WindowManager<'a> {
         if let Some(wix) = self.workspace_index_for_client(id) {
             if let Some(ws) = self.workspaces.get_mut(wix) {
                 ws.focus_client(id);
-                if ws.layout_conf().follow_focus {
+                let prev_was_in_ws = prev_focused.map_or(false, |id| ws.clients().contains(&id));
+                if ws.layout_conf().follow_focus && prev_was_in_ws {
                     self.apply_layout(wix);
                 }
             }

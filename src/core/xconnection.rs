@@ -84,8 +84,6 @@ const PROP_MODE_REPLACE: u8 = xcb::PROP_MODE_REPLACE as u8;
 const ATOM_WINDOW: u32 = xcb::xproto::ATOM_WINDOW;
 const ATOM_ATOM: u32 = xcb::xproto::ATOM_ATOM;
 const ATOM_CARDINAL: u32 = xcb::xproto::ATOM_CARDINAL;
-const STACK_ABOVE: u32 = xcb::STACK_MODE_ABOVE as u32;
-const STACK_MODE: u16 = xcb::CONFIG_WINDOW_STACK_MODE as u16;
 const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
 const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
@@ -743,7 +741,6 @@ impl XConn for XcbConnection {
                 (WIN_WIDTH, w),
                 (WIN_HEIGHT, h),
                 (WIN_BORDER, border),
-                (STACK_MODE, STACK_ABOVE),
             ],
         );
     }
