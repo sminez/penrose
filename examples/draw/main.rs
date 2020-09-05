@@ -8,12 +8,12 @@ const PROFONT: &'static str = "ProFont For Powerline";
 const FIRA: &'static str = "Fira Code";
 const SERIF: &'static str = "Serif";
 
-const BLACK: u32 = 0x282828;
-const GREY: u32 = 0x3c3836;
-const WHITE: u32 = 0xebdbb2;
-const PURPLE: u32 = 0xb16286;
-const BLUE: u32 = 0x458588;
-const RED: u32 = 0xcc241d;
+const BLACK: u32 = 0x282828ff;
+const GREY: u32 = 0x3c3836ff;
+const WHITE: u32 = 0xebdbb2ff;
+const PURPLE: u32 = 0xb16286ff;
+const BLUE: u32 = 0x458588ff;
+const RED: u32 = 0xcc241dff;
 
 fn main() -> Result<()> {
     bar_draw()?;

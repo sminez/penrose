@@ -160,10 +160,22 @@ pub(crate) mod xcb_util {
         h: u16,
     ) -> Result<u32> {
         let id = conn.generate_id();
+        let colormap = conn.generate_id();
+
+        let depth = get_depth(screen)?;
+        let visual = get_visual_type(&depth)?;
+
+        xcb::xproto::create_colormap(
+            &conn,
+            xcb::COLORMAP_ALLOC_NONE as u8,
+            colormap,
+            screen.root(),
+            visual.visual_id(),
+        );
 
         xcb::create_window(
             &conn,
-            xcb::COPY_FROM_PARENT as u8,
+            depth.depth(),
             id,
             screen.root(),
             x,
@@ -172,9 +184,10 @@ pub(crate) mod xcb_util {
             h,
             0,
             xcb::WINDOW_CLASS_INPUT_OUTPUT as u16,
-            0,
+            visual.visual_id(),
             &[
-                (xcb::CW_BACK_PIXEL, screen.black_pixel()),
+                (xcb::CW_BORDER_PIXEL, screen.black_pixel()),
+                (xcb::CW_COLORMAP, colormap),
                 (xcb::CW_EVENT_MASK, xcb::EVENT_MASK_EXPOSURE),
             ],
         );
@@ -195,16 +208,18 @@ pub(crate) mod xcb_util {
         Ok(id)
     }
 
-    pub fn get_visual_type(
-        conn: &xcb::Connection,
-        screen: &xcb::Screen,
-    ) -> Result<xcb::Visualtype> {
-        conn.get_setup()
-            .roots()
-            .flat_map(|r| r.allowed_depths())
-            .flat_map(|d| d.visuals())
-            .find(|v| v.visual_id() == screen.root_visual())
-            .ok_or_else(|| anyhow!("unable to get screen visual type"))
+    pub fn get_depth<'a>(screen: &'a xcb::Screen) -> Result<xcb::Depth<'a>> {
+        screen
+            .allowed_depths()
+            .max_by(|x, y| x.depth().cmp(&y.depth()))
+            .ok_or_else(|| anyhow!("unable to get screen depth"))
+    }
+
+    pub fn get_visual_type<'a>(depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
+        depth
+            .visuals()
+            .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
+            .ok_or_else(|| anyhow!("unable to get visual type"))
     }
 
     pub fn screen_sizes(conn: &xcb::Connection) -> Result<Vec<Region>> {
