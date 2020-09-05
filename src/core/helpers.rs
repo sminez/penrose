@@ -170,7 +170,7 @@ pub(crate) mod xcb_util {
             xcb::COLORMAP_ALLOC_NONE as u8,
             colormap,
             screen.root(),
-            visual.visual_id(), 
+            visual.visual_id(),
         );
 
         xcb::create_window(
@@ -208,18 +208,16 @@ pub(crate) mod xcb_util {
         Ok(id)
     }
 
-    pub fn get_depth<'a>(
-        screen: &'a xcb::Screen,
-    ) -> Result<xcb::Depth<'a>> {
-        screen.allowed_depths()
+    pub fn get_depth<'a>(screen: &'a xcb::Screen) -> Result<xcb::Depth<'a>> {
+        screen
+            .allowed_depths()
             .max_by(|x, y| x.depth().cmp(&y.depth()))
             .ok_or_else(|| anyhow!("unable to get screen depth"))
     }
 
-    pub fn get_visual_type<'a>(
-        depth: &xcb::Depth<'a>,
-    ) -> Result<xcb::Visualtype> {
-        depth.visuals()
+    pub fn get_visual_type<'a>(depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
+        depth
+            .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
             .ok_or_else(|| anyhow!("unable to get visual type"))
     }
