@@ -420,6 +420,9 @@ pub trait XConn {
     /// Determine whether the target window should be tiled or allowed to float
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool;
 
+    /// Return the current (x, y, w, h) dimensions of the requested window
+    fn window_geometry(&self, id: WinId) -> Result<Region>;
+
     /**
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
@@ -540,16 +543,6 @@ impl XcbConnection {
     // All 'Atom' variants were interned on init so this should always be safe to unwrap
     fn known_atom(&self, atom: Atom) -> u32 {
         *self.atoms.get(atom.into()).unwrap()
-    }
-
-    fn window_geometry(&self, id: WinId) -> Result<Region> {
-        let res = xcb::get_geometry(&self.conn, id).get_reply()?;
-        Ok(Region::new(
-            res.x() as u32,
-            res.y() as u32,
-            res.width() as u32,
-            res.height() as u32,
-        ))
     }
 
     fn window_has_type_in(&self, id: WinId, win_types: &Vec<u32>) -> bool {
@@ -1004,6 +997,16 @@ impl XConn for XcbConnection {
         }
     }
 
+    fn window_geometry(&self, id: WinId) -> Result<Region> {
+        let res = xcb::get_geometry(&self.conn, id).get_reply()?;
+        Ok(Region::new(
+            res.x() as u32,
+            res.y() as u32,
+            res.width() as u32,
+            res.height() as u32,
+        ))
+    }
+
     fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen) {
         let (x, y, id) = match win_id {
             Some(id) => {
@@ -1168,6 +1171,9 @@ impl XConn for MockXConn {
         false
     }
     fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
+    fn window_geometry(&self, _: WinId) -> Result<Region> {
+        Ok(Region::new(0, 0, 0, 0))
+    }
     fn query_for_active_windows(&self) -> Vec<WinId> {
         Vec::new()
     }
