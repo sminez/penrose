@@ -17,3 +17,8 @@ watch:
 .PHONY: test-and-publish
 test-and-publish:
 	cargo test && cargo publish
+
+
+.PHONY: run-embeded
+run-embeded:
+	cargo build --examples && ./scripts/xephyr.sh
