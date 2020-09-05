@@ -182,9 +182,9 @@ pub struct KeyCode {
 
 impl KeyCode {
     /// Build a new KeyCode from an XCB KeyPressEvent
-    pub fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
+    pub fn from_key_press(k: &xcb::KeyPressEvent, ignored_mask: u16) -> KeyCode {
         KeyCode {
-            mask: k.state(),
+            mask: k.state() & !ignored_mask,
             code: k.detail(),
         }
     }
