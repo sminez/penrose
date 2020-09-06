@@ -12,6 +12,7 @@
  */
 use crate::{
     data_types::{KeyBindings, KeyCode, Point, Region, WinId},
+    helpers::ignored_modifier_masks,
     screen::Screen,
     Result,
 };
@@ -102,14 +103,6 @@ const EVENT_MASK: &[(u32, u32)] = &[(
         | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
         | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 )];
-
-const IGNORED_MODIFIERS: &[u16] = &[
-    0, 
-    xcb::MOD_MASK_2 as u16,
-    xcb::MOD_MASK_LOCK as u16,
-    (xcb::MOD_MASK_2 | xcb::MOD_MASK_LOCK) as u16,
-];
-const IGNORED_MOD_MASK: u16 = (xcb::MOD_MASK_2 | xcb::MOD_MASK_LOCK) as u16;
 
 gen_enum_with_slice!(
     /// Enum with X Atoms.
@@ -464,6 +457,7 @@ pub struct XcbConnection {
     atoms: HashMap<&'static str, u32>,
     auto_float_types: Vec<&'static str>,
     randr_base: u8,
+    ignored_modifiers: Vec<u16>,
 }
 
 impl XcbConnection {
@@ -524,6 +518,8 @@ impl XcbConnection {
         // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
         xcb::randr::select_input(&conn, root, NOTIFY_MASK).request_check()?;
 
+        let ignored_modifiers = ignored_modifier_masks(&["Num_Lock", "Caps_Lock"]);
+
         Ok(XcbConnection {
             conn,
             root,
@@ -531,6 +527,7 @@ impl XcbConnection {
             atoms,
             auto_float_types,
             randr_base,
+            ignored_modifiers,
         })
     }
 
@@ -594,9 +591,9 @@ impl XConn for XcbConnection {
 
                 xcb::KEY_PRESS => {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::KeyPress {
-                        code: KeyCode::from_key_press(e, IGNORED_MOD_MASK),
-                    })
+                    let mut code = KeyCode::from_key_press(e);
+                    code.ignore_modifiers(&self.ignored_modifiers);
+                    Some(XEvent::KeyPress { code })
                 }
 
                 xcb::MAP_REQUEST => {
@@ -839,7 +836,7 @@ impl XConn for XcbConnection {
 
     fn grab_keys(&self, key_bindings: &KeyBindings) {
         for k in key_bindings.keys() {
-            for m in IGNORED_MODIFIERS {
+            for m in &self.ignored_modifiers {
                 // xcb docs: https://www.mankier.com/3/xcb_grab_key
                 xcb::grab_key(
                     &self.conn,      // xcb connection to X11

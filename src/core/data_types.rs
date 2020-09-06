@@ -182,11 +182,17 @@ pub struct KeyCode {
 
 impl KeyCode {
     /// Build a new KeyCode from an XCB KeyPressEvent
-    pub fn from_key_press(k: &xcb::KeyPressEvent, ignored_mask: u16) -> KeyCode {
+    pub fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
         KeyCode {
-            mask: k.state() & !ignored_mask,
+            mask: k.state(),
             code: k.detail(),
         }
+    }
+
+    /// Removes the given mask from the modifier mask
+    pub fn ignore_modifiers(&mut self, modifier_masks: &[u16]) {
+        let mask = modifier_masks.iter().max().unwrap(); // The largest number is the combination of all masks
+        self.mask = self.mask & !mask;
     }
 }
 
