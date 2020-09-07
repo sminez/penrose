@@ -180,6 +180,11 @@ impl Workspace {
         self.clients.drag_focused(direction).map(|c| *c)
     }
 
+    /// Rotate the client stack in the given direction
+    pub fn rotate_clients(&mut self, direction: Direction) {
+        self.clients.rotate(direction)
+    }
+
     /// Increase or decrease the number of possible clients in the main area of the current Layout
     pub fn update_max_main(&mut self, change: Change) {
         if let Some(layout) = self.layouts.focused_mut() {

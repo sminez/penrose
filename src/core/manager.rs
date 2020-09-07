@@ -530,6 +530,14 @@ impl<'a> WindowManager<'a> {
             });
     }
 
+    /// Rotate the client stack on the active Workspace
+    pub fn rotate_clients(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
+        self.workspaces
+            .get_mut(wix)
+            .map(|ws| ws.rotate_clients(direction));
+    }
+
     /// Move the focused Client through the stack of Clients on the active Workspace
     pub fn drag_client(&mut self, direction: Direction) {
         if let Some(id) = self.focused_client().and_then(|c| Some(c.id())) {
