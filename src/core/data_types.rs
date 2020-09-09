@@ -24,6 +24,9 @@ pub type ResizeAction = (WinId, Option<Region>);
 /// Map xmodmap key names to their X key code so that we can bind them by name
 pub type CodeMap = HashMap<String, u8>;
 
+/// Map xmodmap key names to their modifier mask
+pub type ModMap = HashMap<String, u16>;
+
 /// An X window ID
 pub type WinId = u32;
 
@@ -190,9 +193,8 @@ impl KeyCode {
     }
 
     /// Removes the given mask from the modifier mask
-    pub fn ignore_modifiers(&mut self, modifier_masks: &[u16]) {
-        let mask = modifier_masks.iter().max().unwrap(); // The largest number is the combination of all masks
-        self.mask = self.mask & !mask;
+    pub fn ignore_modifiers(&mut self, modifier_mask: u16) {
+        self.mask = self.mask & !modifier_mask;
     }
 }
 

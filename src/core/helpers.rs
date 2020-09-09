@@ -1,6 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
-    data_types::{CodeMap, KeyCode},
+    data_types::{CodeMap, KeyCode, ModMap},
     Result,
 };
 
@@ -95,88 +95,46 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
 }
 
 /**
- * Run the xmodmap command to dump a list of mod masks from the given
- * key names.
+ * Run the xmodmap command to dump the system modifier key table
  */
-pub fn modifiers_from_xmodmap(key_names: &[&str]) -> Vec<u16> {
+pub fn modifiers_from_xmodmap() -> ModMap {
+    let mut mod_map = ModMap::new();
+
     match Command::new("xmodmap").arg("-pm").output() {
         Err(e) => panic!("unable to fetch modifiers via xmodmap: {}", e),
         Ok(o) => match String::from_utf8(o.stdout) {
             Err(e) => panic!("invalid utf8 from xmodmap: {}", e),
-            Ok(s) => s
-                .lines()
-                .filter_map(|l| {
-                    // <mod name> = <key name (keycode) ...>
-                    if key_names.iter().any(|key| l.contains(key)) {
-                        let mut words = l.split_whitespace();
-                        words.next().map(|name| match name {
-                            "shift" => xcb::MOD_MASK_SHIFT,
-                            "lock" => xcb::MOD_MASK_LOCK,
-                            "control" => xcb::MOD_MASK_CONTROL,
-                            "mod1" => xcb::MOD_MASK_1,
-                            "mod2" => xcb::MOD_MASK_2,
-                            "mod3" => xcb::MOD_MASK_3,
-                            "mod4" => xcb::MOD_MASK_4,
-                            "mod5" => xcb::MOD_MASK_5,
-                            _ => panic!("unknown modifier: {}", name),
-                        } as u16)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<u16>>(),
+            Ok(s) => s.lines().skip(2).for_each(|l| {
+                // words == <mod name> <keyname (keycode), ...>
+                let mut words = l.split_whitespace();
+                let mask = words.next().map(|name| match name {
+                    "shift" => xcb::MOD_MASK_SHIFT,
+                    "lock" => xcb::MOD_MASK_LOCK,
+                    "control" => xcb::MOD_MASK_CONTROL,
+                    "mod1" => xcb::MOD_MASK_1,
+                    "mod2" => xcb::MOD_MASK_2,
+                    "mod3" => xcb::MOD_MASK_3,
+                    "mod4" => xcb::MOD_MASK_4,
+                    "mod5" => xcb::MOD_MASK_5,
+                    _ => panic!("unknown modifier: {}", name),
+                } as u16);
+
+                if let Some(mask) = mask {
+                    // remainder == <keyname(keycode), ...>
+                    let remainder = words.collect::<String>();
+
+                    remainder.split(',').for_each(|key| {
+                        // key == <keyname(keycode)>
+                        if let Some(name) = key.split('(').next() {
+                            mod_map.insert(name.into(), mask);
+                        }
+                    });
+                }
+            }),
         },
     }
-}
 
-/**
- * All possible masks that should be ignored.
- *
- * Calls 'modifiers_from_xmodmap' to get all individual masks and computes the power set 
- * with each element reduced to a single mask with the binary 'or' operator.
- */
-pub fn ignored_modifier_masks(key_names: &[&str]) -> Vec<u16> {
-    let modifiers = modifiers_from_xmodmap(key_names);
-
-    (0..((2 as u32).pow(modifiers.len() as u32)))
-        .into_iter()
-        .map(|c| {
-            modifiers
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| c & (1 << i) > 0)
-                .fold(0, |acc, (_, m)| acc | m)
-        })
-        .collect()
-}
-
-// Tests will probably have to be removed, because they rely on specific modmap configuration
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn ignored_modifiers() {
-        let mut result = modifiers_from_xmodmap(&["Num_Lock", "Caps_Lock"]);
-        result.sort();
-        let mut expected = vec![xcb::MOD_MASK_2 as u16, xcb::MOD_MASK_LOCK as u16];
-        expected.sort();
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn ignored_mod_masks() {
-        let mut result = ignored_modifier_masks(&["Num_Lock", "Caps_Lock"]);
-        result.sort();
-        let mut expected = vec![
-            0,
-            xcb::MOD_MASK_2 as u16,
-            xcb::MOD_MASK_LOCK as u16,
-            (xcb::MOD_MASK_2 | xcb::MOD_MASK_LOCK) as u16,
-        ];
-        expected.sort();
-        assert_eq!(result, expected);
-    }
+    mod_map
 }
 
 /**
