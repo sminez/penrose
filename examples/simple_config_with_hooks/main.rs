@@ -17,6 +17,7 @@ use penrose::{
         layouts::paper,
     },
     data_types::Selector,
+    helpers::modifiers_from_xmodmap,
     hooks::Hook,
     layout::{bottom_stack, side_stack, Layout, LayoutConf},
     Backward, Config, Forward, Less, More, WindowManager, XcbConnection,
@@ -170,7 +171,13 @@ fn main() {
     // reference implementation of this trait that uses the XCB library to communicate with the X
     // server. You are free to provide your own implementation if you wish, see xconnection.rs for
     // details of the required methods and expected behaviour.
-    let conn = XcbConnection::new().unwrap();
+    let mut conn = XcbConnection::new().unwrap();
+
+    let modifier_map = modifiers_from_xmodmap();
+
+    if let Some(&numlock_mask) = modifier_map.get("Num_Lock") {
+        conn.set_numlock_mask(numlock_mask);
+    }
 
     // Create the WindowManager instance with the config we have built and a connection to the X
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions

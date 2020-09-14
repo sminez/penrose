@@ -11,8 +11,7 @@
  *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
 use crate::{
-    data_types::{KeyBindings, KeyCode, ModMap, Point, Region, WinId},
-    helpers::modifiers_from_xmodmap,
+    data_types::{KeyBindings, KeyCode, Point, Region, WinId},
     screen::Screen,
     Result,
 };
@@ -460,7 +459,7 @@ pub struct XcbConnection {
     atoms: HashMap<&'static str, u32>,
     auto_float_types: Vec<&'static str>,
     randr_base: u8,
-    modifier_map: ModMap,
+    numlock_mask: Option<u16>,
 }
 
 impl XcbConnection {
@@ -522,8 +521,6 @@ impl XcbConnection {
         // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
         xcb::randr::select_input(&conn, root, NOTIFY_MASK).request_check()?;
 
-        let modifier_map = modifiers_from_xmodmap();
-
         Ok(XcbConnection {
             conn,
             root,
@@ -531,8 +528,13 @@ impl XcbConnection {
             atoms,
             auto_float_types,
             randr_base,
-            modifier_map,
+            numlock_mask: None,
         })
+    }
+
+    /// Set the numlock mask, allowing it to be ignored
+    pub fn set_numlock_mask(&mut self, mask: u16) {
+        self.numlock_mask = Some(mask);
     }
 
     // Return the cached atom if it's one we know, falling back to interning the atom if we need to.
@@ -592,9 +594,7 @@ impl XConn for XcbConnection {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
                     let mut code = KeyCode::from_key_press(e);
 
-                    if let Some(&numlock_mask) = self.modifier_map.get("Num_Lock") {
-                        code.ignore_modifiers(numlock_mask);
-                    }
+                    self.numlock_mask.map(|m| code.ignore_modifiers(m));
 
                     Some(XEvent::KeyPress { code })
                 }
@@ -840,9 +840,7 @@ impl XConn for XcbConnection {
     fn grab_keys(&self, key_bindings: &KeyBindings) {
         let mut modifiers = vec![0];
 
-        if let Some(&numlock_mask) = self.modifier_map.get("Num_Lock") {
-            modifiers.push(numlock_mask);
-        }
+        self.numlock_mask.map(|m| modifiers.push(m));
 
         for k in key_bindings.keys() {
             for m in &modifiers {
