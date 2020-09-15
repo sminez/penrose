@@ -829,7 +829,7 @@ impl XConn for XcbConnection {
                 xcb::NONE,              // don't confine the cursor to a specific window
                 xcb::NONE,              // don't change the cursor type
                 *mouse_button,          // the button to grab
-                xcb::MOD_MASK_1 as u16, // modifiers to grab
+                xcb::MOD_MASK_4 as u16, // modifiers to grab
             );
         }
 
