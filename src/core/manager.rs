@@ -270,6 +270,18 @@ impl<'a> WindowManager<'a> {
             if let Some(event) = self.conn.wait_for_event() {
                 debug!("got XEvent: {:?}", event);
                 match event {
+                    XEvent::ButtonPress {
+                        id,
+                        rpt,
+                        wpt,
+                        state,
+                    } => self.handle_mouse(id, rpt, wpt, state, true),
+                    XEvent::ButtonRelease {
+                        id,
+                        rpt,
+                        wpt,
+                        state,
+                    } => self.handle_mouse(id, rpt, wpt, state, false),
                     XEvent::KeyPress { code } => self.handle_key_press(code, &mut bindings),
                     XEvent::MapRequest { id, ignore } => self.handle_map_request(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
@@ -351,6 +363,14 @@ impl<'a> WindowManager<'a> {
         self.workspaces
             .get_mut(wix)
             .map(|ws| ws.add_client(id, &cip));
+    }
+
+    fn handle_mouse(&mut self, id: WinId, rpt: Point, wpt: Point, state: KeyCode, press: bool) {
+        if press {
+            info!("CLICK :: {} {:?} {:?} {:#018b}", id, rpt, wpt, state.mask);
+        } else {
+            info!("RELES :: {} {:?} {:?} {:#018b}", id, rpt, wpt, state.mask);
+        }
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -530,6 +550,14 @@ impl<'a> WindowManager<'a> {
             });
     }
 
+    /// Rotate the client stack on the active Workspace
+    pub fn rotate_clients(&mut self, direction: Direction) {
+        let wix = self.active_ws_index();
+        self.workspaces
+            .get_mut(wix)
+            .map(|ws| ws.rotate_clients(direction));
+    }
+
     /// Move the focused Client through the stack of Clients on the active Workspace
     pub fn drag_client(&mut self, direction: Direction) {
         if let Some(id) = self.focused_client().and_then(|c| Some(c.id())) {
@@ -636,6 +664,7 @@ impl<'a> WindowManager<'a> {
                         .and_then(|ws| ws.focused_client())
                         .map(|id| self.client_gained_focus(id));
 
+                    self.workspaces.focus(&Selector::Index(index));
                     run_hooks!(workspace_change, self, active, index);
                     return;
                 }
@@ -664,6 +693,7 @@ impl<'a> WindowManager<'a> {
                 .and_then(|ws| ws.focused_client())
                 .map(|id| self.client_gained_focus(id));
 
+            self.workspaces.focus(&Selector::Index(index));
             run_hooks!(workspace_change, self, active, index);
         }
     }
@@ -1135,6 +1165,17 @@ mod tests {
         wm.client_gained_focus(10);
 
         assert_eq!(wm.workspaces[0].focused_client(), Some(10));
+    }
+
+    #[test]
+    fn focus_workspace_sets_focus_in_ring() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        assert_eq!(wm.workspaces.focused_index(), 0);
+        assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
+        wm.focus_workspace(&Selector::Index(3));
+        assert_eq!(wm.workspaces.focused_index(), 3);
+        assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
     }
 
     #[test]
