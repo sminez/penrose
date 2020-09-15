@@ -4,13 +4,15 @@ extern crate penrose;
 use penrose::core::helpers::spawn_for_output;
 use penrose::core::{Layout, WindowManager, XcbConnection};
 use penrose::layout::{bottom_stack, side_stack, LayoutConf};
-use penrose::{Backward, Config, Forward, Less, More};
-
-use penrose::contrib::actions::create_or_switch_to_workspace;
-use penrose::contrib::extensions::Scratchpad;
-use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces};
-use penrose::contrib::layouts::paper;
-use penrose::helpers::modifiers_from_xmodmap;
+use penrose::{
+    contrib::{
+        actions::create_or_switch_to_workspace,
+        extensions::Scratchpad,
+        hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces},
+        layouts::paper,
+    },
+    Backward, Config, Forward, Less, More, Result,
+};
 
 use simplelog::{LevelFilter, SimpleLogger};
 use std::env;
@@ -32,8 +34,8 @@ fn my_layouts() -> Vec<Layout> {
     ]
 }
 
-fn main() {
-    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default()).unwrap();
+fn main() -> Result<()> {
+    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())?;
     let mut config = Config::default();
     config.workspaces = vec!["main"];
     config.layouts = my_layouts();
@@ -98,8 +100,9 @@ fn main() {
         }
     };
 
-    let modifier_map = modifiers_from_xmodmap();
-    let conn = XcbConnection::new(modifier_map.get("Num_Lock").map(|m| *m)).unwrap();
+    let conn = XcbConnection::new(Some(xcb::MOD_MASK_2 as u16))?;
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings);
+
+    Ok(())
 }

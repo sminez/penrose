@@ -7,9 +7,9 @@
 #[macro_use]
 extern crate penrose;
 
-use penrose::{Backward, Config, Forward, Less, More, WindowManager, XcbConnection};
+use penrose::{Backward, Config, Forward, Less, More, Result, WindowManager, XcbConnection};
 
-fn main() {
+fn main() -> Result<()> {
     let config = Config::default();
     let key_bindings = gen_keybindings! {
         "M-j" => run_internal!(cycle_client, Forward),
@@ -38,7 +38,9 @@ fn main() {
         }
     };
 
-    let conn = XcbConnection::new(None).unwrap();
+    let conn = XcbConnection::new(None)?;
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings);
+
+    Ok(())
 }
