@@ -38,7 +38,7 @@ fn main() {
         }
     };
 
-    let conn = XcbConnection::new().unwrap();
+    let conn = XcbConnection::new(None).unwrap();
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings);
 }

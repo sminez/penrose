@@ -464,7 +464,7 @@ pub struct XcbConnection {
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new() -> Result<XcbConnection> {
+    pub fn new(numlock_mask: Option<u16>) -> Result<XcbConnection> {
         let (conn, _) = match xcb::Connection::connect(None) {
             Err(e) => return Err(anyhow!("unable to establish connection to X server: {}", e)),
             Ok(conn) => conn,
@@ -528,13 +528,8 @@ impl XcbConnection {
             atoms,
             auto_float_types,
             randr_base,
-            numlock_mask: None,
+            numlock_mask,
         })
-    }
-
-    /// Set the numlock mask, allowing it to be ignored
-    pub fn set_numlock_mask(&mut self, mask: u16) {
-        self.numlock_mask = Some(mask);
     }
 
     // Return the cached atom if it's one we know, falling back to interning the atom if we need to.

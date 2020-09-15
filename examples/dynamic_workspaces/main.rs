@@ -10,6 +10,7 @@ use penrose::contrib::actions::create_or_switch_to_workspace;
 use penrose::contrib::extensions::Scratchpad;
 use penrose::contrib::hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces};
 use penrose::contrib::layouts::paper;
+use penrose::helpers::modifiers_from_xmodmap;
 
 use simplelog::{LevelFilter, SimpleLogger};
 use std::env;
@@ -97,7 +98,8 @@ fn main() {
         }
     };
 
-    let conn = XcbConnection::new().unwrap();
+    let modifier_map = modifiers_from_xmodmap();
+    let conn = XcbConnection::new(modifier_map.get("Num_Lock").map(|m| *m)).unwrap();
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings);
 }
