@@ -408,11 +408,12 @@ pub struct XcbConnection {
     atoms: HashMap<&'static str, u32>,
     auto_float_types: Vec<&'static str>,
     randr_base: u8,
+    numlock_mask: Option<u16>,
 }
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new() -> Result<XcbConnection> {
+    pub fn new(numlock_mask: Option<u16>) -> Result<XcbConnection> {
         let (conn, _) = match xcb::Connection::connect(None) {
             Err(e) => return Err(anyhow!("unable to establish connection to X server: {}", e)),
             Ok(conn) => conn,
@@ -476,6 +477,7 @@ impl XcbConnection {
             atoms,
             auto_float_types,
             randr_base,
+            numlock_mask,
         })
     }
 
@@ -556,12 +558,9 @@ impl XConn for XcbConnection {
 
                 xcb::KEY_PRESS => {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::KeyPress {
-                        code: KeyCode {
-                            mask: e.state(),
-                            code: e.detail(),
-                        },
-                    })
+                    let mut code = KeyCode::from_key_press(e);
+                    self.numlock_mask.map(|m| code.ignore_modifiers(m));
+                    Some(XEvent::KeyPress { code })
                 }
 
                 xcb::MAP_REQUEST => {
@@ -803,17 +802,23 @@ impl XConn for XcbConnection {
     }
 
     fn grab_keys(&self, key_bindings: &KeyBindings) {
+        let mut modifiers = vec![0];
+
+        self.numlock_mask.map(|m| modifiers.push(m));
+
         for k in key_bindings.keys() {
-            // xcb docs: https://www.mankier.com/3/xcb_grab_key
-            xcb::grab_key(
-                &self.conn,      // xcb connection to X11
-                false,           // don't pass grabbed events through to the client
-                self.root,       // the window to grab: in this case the root window
-                k.mask,          // modifiers to grab
-                k.code,          // keycode to grab
-                GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
-                GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
-            );
+            for m in &modifiers {
+                // xcb docs: https://www.mankier.com/3/xcb_grab_key
+                xcb::grab_key(
+                    &self.conn,      // xcb connection to X11
+                    false,           // don't pass grabbed events through to the client
+                    self.root,       // the window to grab: in this case the root window
+                    k.mask | m,      // modifiers to grab
+                    k.code,          // keycode to grab
+                    GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
+                    GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
+                );
+            }
         }
 
         // TODO: this needs to be more configurable by the user

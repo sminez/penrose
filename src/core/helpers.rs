@@ -1,6 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
-    data_types::{CodeMap, KeyCode},
+    data_types::{CodeMap, KeyCode, ModMap},
     Result,
 };
 
@@ -92,6 +92,49 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
                 .collect::<CodeMap>(),
         },
     }
+}
+
+/**
+ * Run the xmodmap command to dump the system modifier key table
+ */
+pub fn modifiers_from_xmodmap() -> ModMap {
+    let mut mod_map = ModMap::new();
+
+    match Command::new("xmodmap").arg("-pm").output() {
+        Err(e) => panic!("unable to fetch modifiers via xmodmap: {}", e),
+        Ok(o) => match String::from_utf8(o.stdout) {
+            Err(e) => panic!("invalid utf8 from xmodmap: {}", e),
+            Ok(s) => s.lines().skip(2).for_each(|l| {
+                // words == <mod name> <keyname (keycode), ...>
+                let mut words = l.split_whitespace();
+                let mask = words.next().map(|name| match name {
+                    "shift" => xcb::MOD_MASK_SHIFT,
+                    "lock" => xcb::MOD_MASK_LOCK,
+                    "control" => xcb::MOD_MASK_CONTROL,
+                    "mod1" => xcb::MOD_MASK_1,
+                    "mod2" => xcb::MOD_MASK_2,
+                    "mod3" => xcb::MOD_MASK_3,
+                    "mod4" => xcb::MOD_MASK_4,
+                    "mod5" => xcb::MOD_MASK_5,
+                    _ => panic!("unknown modifier: {}", name),
+                } as u16);
+
+                if let Some(mask) = mask {
+                    // remainder == <keyname(keycode), ...>
+                    let remainder = words.collect::<String>();
+
+                    remainder.split(',').for_each(|key| {
+                        // key == <keyname(keycode)>
+                        if let Some(name) = key.split('(').next() {
+                            mod_map.insert(name.into(), mask);
+                        }
+                    });
+                }
+            }),
+        },
+    }
+
+    mod_map
 }
 
 /**
