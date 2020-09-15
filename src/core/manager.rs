@@ -664,6 +664,7 @@ impl<'a> WindowManager<'a> {
                         .and_then(|ws| ws.focused_client())
                         .map(|id| self.client_gained_focus(id));
 
+                    self.workspaces.focus(&Selector::Index(index));
                     run_hooks!(workspace_change, self, active, index);
                     return;
                 }
@@ -692,6 +693,7 @@ impl<'a> WindowManager<'a> {
                 .and_then(|ws| ws.focused_client())
                 .map(|id| self.client_gained_focus(id));
 
+            self.workspaces.focus(&Selector::Index(index));
             run_hooks!(workspace_change, self, active, index);
         }
     }
@@ -1163,6 +1165,17 @@ mod tests {
         wm.client_gained_focus(10);
 
         assert_eq!(wm.workspaces[0].focused_client(), Some(10));
+    }
+
+    #[test]
+    fn focus_workspace_sets_focus_in_ring() {
+        let conn = MockXConn::new(test_screens(), vec![]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        assert_eq!(wm.workspaces.focused_index(), 0);
+        assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
+        wm.focus_workspace(&Selector::Index(3));
+        assert_eq!(wm.workspaces.focused_index(), 3);
+        assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
     }
 
     #[test]
