@@ -270,6 +270,18 @@ impl<'a> WindowManager<'a> {
             if let Some(event) = self.conn.wait_for_event() {
                 debug!("got XEvent: {:?}", event);
                 match event {
+                    XEvent::ButtonPress {
+                        id,
+                        rpt,
+                        wpt,
+                        state,
+                    } => self.handle_mouse(id, rpt, wpt, state, true),
+                    XEvent::ButtonRelease {
+                        id,
+                        rpt,
+                        wpt,
+                        state,
+                    } => self.handle_mouse(id, rpt, wpt, state, false),
                     XEvent::KeyPress { code } => self.handle_key_press(code, &mut bindings),
                     XEvent::MapRequest { id, ignore } => self.handle_map_request(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
@@ -351,6 +363,14 @@ impl<'a> WindowManager<'a> {
         self.workspaces
             .get_mut(wix)
             .map(|ws| ws.add_client(id, &cip));
+    }
+
+    fn handle_mouse(&mut self, id: WinId, rpt: Point, wpt: Point, state: KeyCode, press: bool) {
+        if press {
+            info!("CLICK :: {} {:?} {:?} {:#018b}", id, rpt, wpt, state.mask);
+        } else {
+            info!("RELES :: {} {:?} {:?} {:#018b}", id, rpt, wpt, state.mask);
+        }
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {

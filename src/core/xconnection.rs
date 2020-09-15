@@ -175,93 +175,42 @@ const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
  *
  * https://tronche.com/gui/x/xlib/events/types.html
  * https://github.com/rtbo/rust-xcb/xml/xproto.xml
- *
- * ### XCB Level events
- *
- * *MapNotify* - a window was mapped
- *   - _event_ (WinId):
- *     The window which was mapped or its parent, depending on
- *     whether `StructureNotify` or `SubstructureNotify` was selected.
- *   - _window_ (WinId):
- *     The window that was mapped.
- *   - _override_redirect_ (bool):
- *     We should ignore this window if true
- *
- * *UnmapNotify* - a window was unmapped
- *   - _event_ (WinId):
- *     The window which was unmapped or its parent, depending on
- *     whether `StructureNotify` or `SubstructureNotify` was selected.
- *   - _window_ (WinId):
- *     The window that was unmapped.
- *   - _from-configure_ (bool):
- *     - 'true' if the event was generated as a result of a resizing of
- *       the window's parent when `window` had a win_gravity of `UnmapGravity`.
- *
- * *EnterNotify* - the pointer is now in a different window
- *   - _event_ (WinId):
- *     The window on which the event was generated.
- *   - _child_ (WinId):
- *     If the window has sub-windows then this is the ID of the window
- *     that the pointer ended on, XCB_WINDOW_NONE otherwise.
- *   - _root_ (WinId):
- *     The root window for the final cursor position.
- *   - _root-x, root-y_ (i16, i16):
- *     The coordinates of the pointer relative to 'root's origin.
- *   - _event-x, event-y_ (i16, i16):
- *     The coordinates of the pointer relative to the event window's origin.
- *   - _mode_ (NotifyMode enum)
- *     - Normal, Grab, Ungrab, WhileGrabbed
- *
- * *LeaveNotify* - the pointer has left a window
- *   - Same fields as *EnterNotify*
- *
- * *DestroyNotify* - a window has been destroyed
- *   - _event_ (WinId):
- *     The reconfigured window or its parent, depending on whether
- *     `StructureNotify` or `SubstructureNotify` was selected.
- *   - _window_ (WinId):
- *     The window that was destroyed.
- *
- * *KeyPress* - a keyboard key was pressed / released
- *   - _detail_ (u8):
- *     Keycode of the key that was pressed
- *   - _event_ (u16):
- *     The modifier masks being held when the key was pressed
- *   - _child_ (WinId):
- *     If the window has sub-windows then this is the ID of the window
- *     that the pointer ended on, XCB_WINDOW_NONE otherwise.
- *   - _root_ (WinId):
- *     The root window for the final cursor position.
- *   - _root-x, root-y_ (i16, i16):
- *     The coordinates of the pointer relative to 'root's origin.
- *   - _event-x, event-y_ (i16, i16):
- *     The coordinates of the pointer relative to the event window's origin.
- *
- * *ButtonPress* - a mouse button was pressed
- *   - _detail_ (u8):
- *     The button that was pressed
- *   - _event_ (u16):
- *     The modifier masks being held when the button was pressed
- *   - _child_ (WinId):
- *     If the window has sub-windows then this is the ID of the window
- *     that the pointer ended on, XCB_WINDOW_NONE otherwise.
- *   - _root_ (WinId):
- *     The root window for the final cursor position.
- *   - _root-x, root-y_ (i16, i16):
- *     The coordinates of the pointer relative to 'root's origin.
- *   - _event-x, event-y_ (i16, i16):
- *     The coordinates of the pointer relative to the event window's origin.
- *
- * *ButtonRelease* - a mouse button was released
- *   - same fields as *ButtonPress*
  */
 #[derive(Debug, Clone)]
 pub enum XEvent {
-    /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
-    ButtonPress,
+    /// xcb docs: https://www.mankier.com/3/xcb_button_press_event_t
+    ButtonPress {
+        /// The ID of the window that was contained the click
+        id: WinId,
+        /// Absolute coordinate of the event
+        rpt: Point,
+        /// Coordinate of the event relative to top-left of the window itself
+        wpt: Point,
+        /// The modifier and button code that was received
+        state: KeyCode,
+    },
 
-    /// xcb docs: https://www.mankier.com/3/xcb_input_raw_button_press_event_t
-    ButtonRelease,
+    /// xcb docs: https://www.mankier.com/3/xcb_button_press_event_t
+    ButtonRelease {
+        /// The ID of the window that was contained the click
+        id: WinId,
+        /// Absolute coordinate of the event
+        rpt: Point,
+        /// Coordinate of the event relative to top-left of the window itself
+        wpt: Point,
+        /// The modifier and button code that was received
+        state: KeyCode,
+    },
+
+    /// xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
+    MotionNotify {
+        /// The ID of the window that was moved across
+        id: WinId,
+        /// Absolute coordinate of the event
+        rpt: Point,
+        /// Coordinate of the event relative to top-left of the window itself
+        wpt: Point,
+    },
 
     /// xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
     KeyPress {
@@ -579,14 +528,39 @@ impl XConn for XcbConnection {
             }
 
             match etype {
-                xcb::BUTTON_PRESS => None,
+                xcb::BUTTON_PRESS => {
+                    let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::ButtonPress {
+                        id: e.event(),
+                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                        state: KeyCode {
+                            mask: e.state(),
+                            code: e.detail(),
+                        },
+                    })
+                }
 
-                xcb::BUTTON_RELEASE => None,
+                xcb::BUTTON_RELEASE => {
+                    let e: &xcb::ButtonReleaseEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::ButtonRelease {
+                        id: e.event(),
+                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                        state: KeyCode {
+                            mask: e.state(),
+                            code: e.detail(),
+                        },
+                    })
+                }
 
                 xcb::KEY_PRESS => {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
                     Some(XEvent::KeyPress {
-                        code: KeyCode::from_key_press(e),
+                        code: KeyCode {
+                            mask: e.state(),
+                            code: e.detail(),
+                        },
                     })
                 }
 
@@ -843,7 +817,7 @@ impl XConn for XcbConnection {
         }
 
         // TODO: this needs to be more configurable by the user
-        for mouse_button in &[1, 3] {
+        for mouse_button in &[1, 2, 3] {
             // xcb docs: https://www.mankier.com/3/xcb_grab_button
             xcb::grab_button(
                 &self.conn,             // xcb connection to X11
@@ -855,7 +829,7 @@ impl XConn for XcbConnection {
                 xcb::NONE,              // don't confine the cursor to a specific window
                 xcb::NONE,              // don't change the cursor type
                 *mouse_button,          // the button to grab
-                xcb::MOD_MASK_4 as u16, // modifiers to grab
+                xcb::MOD_MASK_1 as u16, // modifiers to grab
             );
         }
 
