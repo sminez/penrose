@@ -24,9 +24,6 @@ pub type ResizeAction = (WinId, Option<Region>);
 /// Map xmodmap key names to their X key code so that we can bind them by name
 pub type CodeMap = HashMap<String, u8>;
 
-/// Map xmodmap key names to their modifier mask
-pub type ModMap = HashMap<String, u16>;
-
 /// An X window ID
 pub type WinId = u32;
 

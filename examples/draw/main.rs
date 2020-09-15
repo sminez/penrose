@@ -42,7 +42,7 @@ fn bar_draw() -> Result<()> {
     )?;
 
     let config = Config::default();
-    let conn = XcbConnection::new(None).unwrap();
+    let conn = XcbConnection::new()?;
     let mut wm = WindowManager::init(config, &conn);
     bar.startup(&mut wm); // ensure widgets are initialised correctly
 

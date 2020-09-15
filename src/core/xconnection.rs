@@ -75,6 +75,7 @@ const WM_NAME: &'static str = "penrose";
  * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
  */
 const XCB_RESPONSE_TYPE_MASK: u8 = 0x7F;
+const NUMLOCK_MASK: u16 = xcb::MOD_MASK_2 as u16;
 const WINDOW_CLASS_INPUT_ONLY: u16 = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
 const NOTIFY_MASK: u16 =
     (xcb::randr::NOTIFY_MASK_CRTC_CHANGE | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
@@ -410,12 +411,11 @@ pub struct XcbConnection {
     atoms: HashMap<&'static str, u32>,
     auto_float_types: Vec<&'static str>,
     randr_base: u8,
-    numlock_mask: Option<u16>,
 }
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new(numlock_mask: Option<u16>) -> Result<XcbConnection> {
+    pub fn new() -> Result<XcbConnection> {
         let (conn, _) = match xcb::Connection::connect(None) {
             Err(e) => return Err(anyhow!("unable to establish connection to X server: {}", e)),
             Ok(conn) => conn,
@@ -479,7 +479,6 @@ impl XcbConnection {
             atoms,
             auto_float_types,
             randr_base,
-            numlock_mask,
         })
     }
 
@@ -561,7 +560,7 @@ impl XConn for XcbConnection {
                 xcb::KEY_PRESS => {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
                     let mut code = KeyCode::from_key_press(e);
-                    self.numlock_mask.map(|m| code.ignore_modifiers(m));
+                    code.ignore_modifiers(NUMLOCK_MASK);
                     Some(XEvent::KeyPress { code })
                 }
 
@@ -804,12 +803,13 @@ impl XConn for XcbConnection {
     }
 
     fn grab_keys(&self, key_bindings: &KeyBindings) {
-        let mut modifiers = vec![0];
-
-        self.numlock_mask.map(|m| modifiers.push(m));
+        // We need to explicitly grab NumLock as an additional modifier and then drop it later on
+        // when we are passing events through to the WindowManager as NumLock alters the modifier
+        // mask when it is active.
+        let modifiers = &[0, NUMLOCK_MASK];
 
         for k in key_bindings.keys() {
-            for m in &modifiers {
+            for m in modifiers.iter() {
                 // xcb docs: https://www.mankier.com/3/xcb_grab_key
                 xcb::grab_key(
                     &self.conn,      // xcb connection to X11
