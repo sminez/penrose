@@ -114,7 +114,7 @@ impl<'a> WindowManager<'a> {
                     if let Some(region) = region {
                         let (x, y, w, h) = region.values();
                         let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
-                        self.conn.position_window(id, r, self.border_px);
+                        self.conn.position_window(id, r, self.border_px, false);
                         self.map_window_if_needed(id);
                     } else {
                         self.unmap_window_if_needed(id);
@@ -442,7 +442,7 @@ impl<'a> WindowManager<'a> {
                 });
             }
             let r = self.screen(&Selector::Focused).unwrap().region(false);
-            self.conn.position_window(id, r, 0);
+            self.conn.position_window(id, r, 0, false);
             self.map_window_if_needed(id);
             self.client_map.get_mut(&id).map(|c| c.fullscreen = true);
         } else if !should_fullscreen && client_is_fullscreen {
@@ -979,8 +979,9 @@ impl<'a> WindowManager<'a> {
 
     /// Position an individual client on the display. (x,y) coordinates are absolute (i.e. relative
     /// to the root window not any individual screen).
-    pub fn position_client(&self, id: WinId, region: Region) {
-        self.conn.position_window(id, region, self.border_px);
+    pub fn position_client(&self, id: WinId, region: Region, stack_above: bool) {
+        self.conn
+            .position_window(id, region, self.border_px, stack_above);
     }
 
     /// Make the Client with ID 'id' visible at its last known position.

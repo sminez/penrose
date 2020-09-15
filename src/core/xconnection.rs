@@ -84,6 +84,8 @@ const PROP_MODE_REPLACE: u8 = xcb::PROP_MODE_REPLACE as u8;
 const ATOM_WINDOW: u32 = xcb::xproto::ATOM_WINDOW;
 const ATOM_ATOM: u32 = xcb::xproto::ATOM_ATOM;
 const ATOM_CARDINAL: u32 = xcb::xproto::ATOM_CARDINAL;
+const STACK_MODE: u16 = xcb::CONFIG_WINDOW_STACK_MODE as u16;
+const STACK_ABOVE: u32 = xcb::STACK_MODE_ABOVE as u32;
 const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
 const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
 const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
@@ -317,7 +319,7 @@ pub trait XConn {
     fn cursor_position(&self) -> Point;
 
     /// Reposition the window identified by 'id' to the specifed region
-    fn position_window(&self, id: WinId, r: Region, border: u32);
+    fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool);
 
     /// Mark the given window as newly created
     fn mark_new_window(&self, id: WinId);
@@ -700,21 +702,21 @@ impl XConn for XcbConnection {
         }
     }
 
-    fn position_window(&self, id: WinId, r: Region, border: u32) {
+    fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool) {
         let (x, y, w, h) = r.values();
+        let mut args = vec![
+            (WIN_X, x),
+            (WIN_Y, y),
+            (WIN_WIDTH, w),
+            (WIN_HEIGHT, h),
+            (WIN_BORDER, border),
+        ];
+        if stack_above {
+            args.push((STACK_MODE, STACK_ABOVE));
+        }
 
         // xcb docs: https://www.mankier.com/3/xcb_configure_window
-        xcb::configure_window(
-            &self.conn,
-            id,
-            &[
-                (WIN_X, x),
-                (WIN_Y, y),
-                (WIN_WIDTH, w),
-                (WIN_HEIGHT, h),
-                (WIN_BORDER, border),
-            ],
-        );
+        xcb::configure_window(&self.conn, id, &args);
     }
 
     fn mark_new_window(&self, id: WinId) {
@@ -1125,7 +1127,7 @@ impl XConn for MockXConn {
     fn cursor_position(&self) -> Point {
         Point::new(0, 0)
     }
-    fn position_window(&self, _: WinId, _: Region, _: u32) {}
+    fn position_window(&self, _: WinId, _: Region, _: u32, _: bool) {}
     fn mark_new_window(&self, _: WinId) {}
     fn map_window(&self, _: WinId) {}
     fn unmap_window(&self, _: WinId) {}

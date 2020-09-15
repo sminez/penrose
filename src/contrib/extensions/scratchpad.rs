@@ -123,7 +123,7 @@ impl Hook for Scratchpad {
                         let h = (sh as f32 * self.h) as u32;
                         let x = sx + (sw - w) / 2;
                         let y = sy + (sh - h) / 2;
-                        wm.position_client(id, Region::new(x, y, w, h));
+                        wm.position_client(id, Region::new(x, y, w, h), true); // stack above
                     }
                     wm.show_client(id);
                 }
