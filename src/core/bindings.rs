@@ -7,6 +7,7 @@ use crate::{
 use std::{collections::HashMap, convert::TryFrom};
 
 use anyhow::anyhow;
+use strum::{EnumIter, IntoEnumIterator};
 use xcb;
 
 /// Some action to be run by a user key binding
@@ -65,6 +66,18 @@ pub enum MouseButton {
     ScrollDown,
 }
 
+impl From<MouseButton> for u8 {
+    fn from(b: MouseButton) -> u8 {
+        match b {
+            MouseButton::Left => 1,
+            MouseButton::Middle => 2,
+            MouseButton::Right => 3,
+            MouseButton::ScrollUp => 4,
+            MouseButton::ScrollDown => 5,
+        }
+    }
+}
+
 impl TryFrom<u8> for MouseButton {
     type Error = anyhow::Error;
 
@@ -81,7 +94,7 @@ impl TryFrom<u8> for MouseButton {
 }
 
 /// Known modifier keys for bindings
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ModifierKey {
     /// Control
     Ctrl,
@@ -93,6 +106,12 @@ pub enum ModifierKey {
     Meta,
 }
 
+impl ModifierKey {
+    pub(crate) fn was_held(&self, mask: u16) -> bool {
+        mask & u16::from(*self) > 0
+    }
+}
+
 impl From<ModifierKey> for u16 {
     fn from(m: ModifierKey) -> u16 {
         (match m {
@@ -102,11 +121,6 @@ impl From<ModifierKey> for u16 {
             ModifierKey::Meta => xcb::MOD_MASK_4,
         }) as u16
     }
-}
-
-/// Combine together zero or more modifiers into a single bitmask
-pub fn combined_mask(modifiers: Vec<ModifierKey>) -> u16 {
-    modifiers.iter().fold(0, |acc, &val| acc | u16::from(val))
 }
 
 impl TryFrom<&str> for ModifierKey {
@@ -137,11 +151,22 @@ impl MouseState {
     }
 
     pub(crate) fn from_event(e: &xcb::ButtonPressEvent) -> Result<Self> {
-        debug!("{:?} {:?}", e.state(), e.detail());
         Ok(Self {
             button: MouseButton::try_from(e.detail())?,
-            modifiers: vec![],
+            modifiers: ModifierKey::iter()
+                .filter(|m| m.was_held(e.state()))
+                .collect(),
         })
+    }
+
+    pub(crate) fn mask(&self) -> u16 {
+        self.modifiers
+            .iter()
+            .fold(0, |acc, &val| acc | u16::from(val))
+    }
+
+    pub(crate) fn button(&self) -> u8 {
+        self.button.into()
     }
 }
 

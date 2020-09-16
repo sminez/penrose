@@ -761,20 +761,19 @@ impl XConn for XcbConnection {
                 );
             }
 
-            // TODO: this needs to be more configurable by the user
-            for mouse_button in &[1, 2, 3] {
+            for b in mouse_bindings.keys() {
                 // xcb docs: https://www.mankier.com/3/xcb_grab_button
                 xcb::grab_button(
-                    &self.conn,             // xcb connection to X11
-                    false,                  // don't pass grabbed events through to the client
-                    self.root,              // the window to grab: in this case the root window
-                    MOUSE_MASK,             // which events are reported to the client
-                    GRAB_MODE_ASYNC,        // don't lock pointer input while grabbing
-                    GRAB_MODE_ASYNC,        // don't lock keyboard input while grabbing
-                    xcb::NONE,              // don't confine the cursor to a specific window
-                    xcb::NONE,              // don't change the cursor type
-                    *mouse_button,          // the button to grab
-                    xcb::MOD_MASK_1 as u16, // modifiers to grab
+                    &self.conn,      // xcb connection to X11
+                    false,           // don't pass grabbed events through to the client
+                    self.root,       // the window to grab: in this case the root window
+                    MOUSE_MASK,      // which events are reported to the client
+                    GRAB_MODE_ASYNC, // don't lock pointer input while grabbing
+                    GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
+                    xcb::NONE,       // don't confine the cursor to a specific window
+                    xcb::NONE,       // don't change the cursor type
+                    b.button(),      // the button to grab
+                    b.mask() | m,    // modifiers to grab
                 );
             }
         }
