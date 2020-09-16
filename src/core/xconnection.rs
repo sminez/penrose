@@ -16,59 +16,12 @@ use crate::{
     screen::Screen,
     Result,
 };
-use std::{cell::Cell, collections::HashMap, convert::TryFrom, convert::TryInto};
+
+use std::{cell::Cell, collections::HashMap, convert::TryInto, str::FromStr};
 
 use anyhow::anyhow;
+use strum::*;
 use xcb;
-
-/**
- * Make creating enums for atoms less verbose.
- *
- * Create an enum with `$enum_name` as name  
- * Implement `Into<&str>` and `TryFrom<&str>` traits  
- * Create a slice with `$slice_name` as name containing all enum variants  
- */
-macro_rules! gen_enum_with_slice {
-    {
-        $(#[$enum_meta:meta])*
-        $enum_name:ident,
-        $(#[$slice_meta:meta])*
-        $slice_name:ident,
-        { $([$variant:ident, $name_str:expr]),+ $(,)? }
-    } => {
-        $(#[$enum_meta])*
-        pub enum $enum_name {
-            $(
-            #[doc = $name_str]
-            $variant,
-            )+
-        }
-
-        impl Into<&str> for $enum_name {
-            fn into(self) -> &'static str {
-                match self {
-                    $($enum_name::$variant => $name_str,)+
-                }
-            }
-        }
-
-        impl TryFrom<&str> for $enum_name {
-            type Error = anyhow::Error;
-
-            fn try_from(name: &str) -> Result<Self> {
-                match name {
-                    $($name_str => Ok($enum_name::$variant),)+
-                    _ => Err(anyhow!("failed to create enum from {}", name)),
-                }
-            }
-        }
-
-        $(#[$slice_meta])*
-        const $slice_name: &[$enum_name] = &[
-            $($enum_name::$variant,)+
-        ];
-    };
-}
 
 const WM_NAME: &'static str = "penrose";
 
@@ -108,57 +61,90 @@ const EVENT_MASK: &[(u32, u32)] = &[(
         | xcb::EVENT_MASK_BUTTON_MOTION,
 )];
 
-gen_enum_with_slice!(
-    /// Enum with X Atoms.
-    #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-    Atom,
-    /// A slice containing all enum variants of `Atom`
-    ATOMS,
-{
-    [Manager, "MANAGER"],
-    [UTF8String, "UTF8_STRING"],
-    [WmClass, "WM_CLASS"],
-    [WmDeleteWindow, "WM_DELETE_WINDOW"],
-    [WmProtocols, "WM_PROTOCOLS"],
-    [WmState, "WM_STATE"],
-    [WmName, "WM_NAME"],
-    [WmTakeFocus, "WM_TAKE_FOCUS"],
-    [NetActiveWindow, "_NET_ACTIVE_WINDOW"],
-    [NetClientList, "_NET_CLIENT_LIST"],
-    [NetCurrentDesktop, "_NET_CURRENT_DESKTOP"],
-    [NetDesktopNames, "_NET_DESKTOP_NAMES"],
-    [NetNumberOfDesktops, "_NET_NUMBER_OF_DESKTOPS"],
-    [NetSupported, "_NET_SUPPORTED"],
-    [NetSupportingWmCheck, "_NET_SUPPORTING_WM_CHECK"],
-    [NetSystemTrayOpcode, "_NET_SYSTEM_TRAY_OPCODE"],
-    [NetSystemTrayOrientation, "_NET_SYSTEM_TRAY_ORIENTATION"],
-    [NetSystemTrayOrientationHorz, "_NET_SYSTEM_TRAY_ORIENTATION_HORZ"],
-    [NetSystemTrayS0, "_NET_SYSTEM_TRAY_S0"],
-    [NetWmDesktop, "_NET_WM_DESKTOP"],
-    [NetWmName, "_NET_WM_NAME"],
-    [NetWmState, "_NET_WM_STATE"],
-    [NetWmStateFullscreen, "_NET_WM_STATE_FULLSCREEN"],
-    [NetWmWindowType, "_NET_WM_WINDOW_TYPE"],
-    [XEmbed, "_XEMBED"],
-    [XEmbedInfo, "_XEMBED_INFO"],
+#[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+enum Atom {
+    #[strum(serialize = "MANAGER")]
+    Manager,
+    #[strum(serialize = "UTF8_STRING")]
+    UTF8String,
+    #[strum(serialize = "WM_CLASS")]
+    WmClass,
+    #[strum(serialize = "WM_DELETE_WINDOW")]
+    WmDeleteWindow,
+    #[strum(serialize = "WM_PROTOCOLS")]
+    WmProtocols,
+    #[strum(serialize = "WM_STATE")]
+    WmState,
+    #[strum(serialize = "WM_NAME")]
+    WmName,
+    #[strum(serialize = "WM_TAKE_FOCUS")]
+    WmTakeFocus,
+    #[strum(serialize = "_NET_ACTIVE_WINDOW")]
+    NetActiveWindow,
+    #[strum(serialize = "_NET_CLIENT_LIST")]
+    NetClientList,
+    #[strum(serialize = "_NET_CURRENT_DESKTOP")]
+    NetCurrentDesktop,
+    #[strum(serialize = "_NET_DESKTOP_NAMES")]
+    NetDesktopNames,
+    #[strum(serialize = "_NET_NUMBER_OF_DESKTOPS")]
+    NetNumberOfDesktops,
+    #[strum(serialize = "_NET_SUPPORTED")]
+    NetSupported,
+    #[strum(serialize = "_NET_SUPPORTING_WM_CHECK")]
+    NetSupportingWmCheck,
+    #[strum(serialize = "_NET_SYSTEM_TRAY_OPCODE")]
+    NetSystemTrayOpcode,
+    #[strum(serialize = "_NET_SYSTEM_TRAY_ORIENTATION")]
+    NetSystemTrayOrientation,
+    #[strum(serialize = "_NET_SYSTEM_TRAY_ORIENTATION_HORZ")]
+    NetSystemTrayOrientationHorz,
+    #[strum(serialize = "_NET_SYSTEM_TRAY_S0")]
+    NetSystemTrayS0,
+    #[strum(serialize = "_NET_WM_DESKTOP")]
+    NetWmDesktop,
+    #[strum(serialize = "_NET_WM_NAME")]
+    NetWmName,
+    #[strum(serialize = "_NET_WM_STATE")]
+    NetWmState,
+    #[strum(serialize = "_NET_WM_STATE_FULLSCREEN")]
+    NetWmStateFullscreen,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE")]
+    NetWmWindowType,
+    #[strum(serialize = "_XEMBED")]
+    XEmbed,
+    #[strum(serialize = "_XEMBED_INFO")]
+    XEmbedInfo,
 
     // Window Types
-    [NetWindowTypeDesktop, "_NET_WM_WINDOW_TYPE_DESKTOP"],
-    [NetWindowTypeDock, "_NET_WM_WINDOW_TYPE_DOCK"],
-    [NetWindowTypeToolbar, "_NET_WM_WINDOW_TYPE_TOOLBAR"],
-    [NetWindowTypeMenu, "_NET_WM_WINDOW_TYPE_MENU"],
-    [NetWindowTypeUtility, "_NET_WM_WINDOW_TYPE_UTILITY"],
-    [NetWindowTypeSplash, "_NET_WM_WINDOW_TYPE_SPLASH"],
-    [NetWindowTypeDialog, "_NET_WM_WINDOW_TYPE_DIALOG"],
-    [NetWindowTypeDropdownMenu, "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU"],
-    [NetWindowTypePopupMenu, "_NET_WM_WINDOW_TYPE_POPUP_MENU"],
-    [NetWindowTypeNotification, "_NET_WM_WINDOW_TYPE_NOTIFICATION"],
-    [NetWindowTypeCombo, "_NET_WM_WINDOW_TYPE_COMBO"],
-    [NetWindowTypeDnd, "_NET_WM_WINDOW_TYPE_DND"],
-    [NetWindowTypeNormal, "_NET_WM_WINDOW_TYPE_NORMAL"],
-});
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DESKTOP")]
+    NetWindowTypeDesktop,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DOCK")]
+    NetWindowTypeDock,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_TOOLBAR")]
+    NetWindowTypeToolbar,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_MENU")]
+    NetWindowTypeMenu,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_UTILITY")]
+    NetWindowTypeUtility,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_SPLASH")]
+    NetWindowTypeSplash,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DIALOG")]
+    NetWindowTypeDialog,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU")]
+    NetWindowTypeDropdownMenu,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_POPUP_MENU")]
+    NetWindowTypePopupMenu,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_NOTIFICATION")]
+    NetWindowTypeNotification,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_COMBO")]
+    NetWindowTypeCombo,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DND")]
+    NetWindowTypeDnd,
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_NORMAL")]
+    NetWindowTypeNormal,
+}
 
-/// A slice containing all Window Types that should be floating
 const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeDesktop,
     Atom::NetWindowTypeDialog,
@@ -365,7 +351,7 @@ pub struct XcbConnection {
     conn: xcb::Connection,
     root: WinId,
     check_win: WinId,
-    atoms: HashMap<&'static str, u32>,
+    atoms: HashMap<Atom, u32>,
     auto_float_types: Vec<&'static str>,
     randr_base: u8,
 }
@@ -384,23 +370,21 @@ impl XcbConnection {
         };
 
         // https://www.mankier.com/3/xcb_intern_atom
-        let atoms: HashMap<&'static str, u32> = ATOMS
-            .iter()
-            .map(|&atom| {
-                let a = atom.into();
+        let atoms: HashMap<Atom, u32> = Atom::iter()
+            .map(|atom| {
                 // false == always return the atom, even if exists already
-                let val = xcb::intern_atom(&conn, false, a)
+                let val = xcb::intern_atom(&conn, false, atom.as_ref())
                     .get_reply()
                     .unwrap()
                     .atom();
 
-                (a, val)
+                (atom, val)
             })
             .collect();
 
         let auto_float_types: Vec<&'static str> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
-            .map(|&atom| atom.into())
+            .map(|atom| atom.as_ref())
             .collect();
 
         let check_win = conn.generate_id();
@@ -441,7 +425,7 @@ impl XcbConnection {
 
     // Return the cached atom if it's one we know, falling back to interning the atom if we need to.
     fn atom(&self, name: &str) -> Result<u32> {
-        Ok(match self.atoms.get(name) {
+        Ok(match self.atoms.get(&Atom::from_str(name)?) {
             Some(&a) => a,
             None => xcb::intern_atom(&self.conn, false, name)
                 .get_reply()?
@@ -451,7 +435,7 @@ impl XcbConnection {
 
     // All 'Atom' variants were interned on init so this should always be safe to unwrap
     fn known_atom(&self, atom: Atom) -> u32 {
-        *self.atoms.get(atom.into()).unwrap()
+        *self.atoms.get(&atom).unwrap()
     }
 
     fn window_has_type_in(&self, id: WinId, win_types: &Vec<u32>) -> bool {
@@ -672,7 +656,7 @@ impl XConn for XcbConnection {
 
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
         let atom = self.atom(atom_name)?;
-        let wm_protocols = *self.atoms.get(Atom::WmProtocols.into()).unwrap();
+        let wm_protocols = self.known_atom(Atom::WmProtocols);
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
         xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
@@ -823,10 +807,7 @@ impl XConn for XcbConnection {
         );
 
         // EWMH support
-        let supported: Vec<u32> = ATOMS
-            .iter()
-            .map(|&a| *self.atoms.get(a.into()).unwrap())
-            .collect();
+        let supported: Vec<u32> = Atom::iter().map(|a| self.known_atom(a)).collect();
         xcb::change_property(
             &self.conn,                          // xcb connection to X11
             PROP_MODE_REPLACE,                   // discard current prop and replace
@@ -898,7 +879,7 @@ impl XConn for XcbConnection {
     }
 
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
-        match self.str_prop(id, Atom::WmClass.into()) {
+        match self.str_prop(id, Atom::WmClass.as_ref()) {
             Ok(s) => {
                 if s.split("\0").any(|c| floating_classes.contains(&c)) {
                     return true;
@@ -907,7 +888,7 @@ impl XConn for XcbConnection {
             Err(_) => (), // no WM_CLASS set
         };
 
-        match self.str_prop(id, Atom::NetWmWindowType.into()) {
+        match self.str_prop(id, Atom::NetWmWindowType.as_ref()) {
             Ok(s) => s.split("\0").any(|t| {
                 t.try_into()
                     .map_or(false, |w| self.auto_float_types.contains(&w))
