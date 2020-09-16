@@ -1,9 +1,10 @@
 use penrose::{
-    data_types::{FireAndForget, KeyBindings, KeyCode, Region, Selector},
+    core::bindings::{FireAndForget, KeyBindings, KeyCode},
+    data_types::Region,
     layout::*,
     screen::Screen,
     workspace::Workspace,
-    Forward, WindowManager,
+    Forward, Selector, WindowManager,
 };
 
 use std::collections::HashMap;

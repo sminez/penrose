@@ -6,7 +6,7 @@ use penrose::{
     {Config, WindowManager},
 };
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 mod common;
 
@@ -95,14 +95,14 @@ macro_rules! hook_test(
             config.hooks.push(Box::new(hook_2));
 
             let mut events = $evts.clone();
-            events.push(XEvent::KeyPress { code: common::EXIT_CODE });
+            events.push(XEvent::KeyPress(common::EXIT_CODE));
 
             let conn = MockXConn::new(
                 vec![common::simple_screen(0), common::simple_screen(1)],
                 events
             );
             let mut wm = WindowManager::init(config, &conn);
-            wm.grab_keys_and_run(common::test_bindings());
+            wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
             drop(wm);
 
             assert_eq!(
@@ -135,9 +135,7 @@ hook_test!(
             id: 1,
             ignore: false
         },
-        XEvent::KeyPress {
-            code: common::KILL_CLIENT_CODE
-        }
+        XEvent::KeyPress(common::KILL_CLIENT_CODE)
     ]
 );
 
@@ -163,47 +161,35 @@ hook_test!(
     expected_calls => 3, // Initial layout application for each screen and then due to the change
     "layout_applied",
     test_layout_applied_hooks,
-    vec![XEvent::KeyPress {
-        code: common::LAYOUT_CHANGE_CODE
-    },
-    ]
+    vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)]
 );
 
 hook_test!(
     expected_calls => 1,
     "layout_change",
     test_layout_change_hooks,
-    vec![XEvent::KeyPress {
-        code: common::LAYOUT_CHANGE_CODE
-    },
-    ]
+    vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)]
 );
 
 hook_test!(
     expected_calls => 1,
     "workspace_change",
     test_workspace_change_hooks,
-    vec![XEvent::KeyPress {
-        code: common::WORKSPACE_CHANGE_CODE
-    }]
+    vec![XEvent::KeyPress(common::WORKSPACE_CHANGE_CODE)]
 );
 
 hook_test!(
     expected_calls => 1,
     "workspaces_updated",
     test_workspace_update_hooks,
-    vec![XEvent::KeyPress {
-        code: common::ADD_WORKSPACE_CODE
-    }]
+    vec![XEvent::KeyPress(common::ADD_WORKSPACE_CODE)]
 );
 
 hook_test!(
     expected_calls => 1,
     "screen_change",
     test_screen_change_hooks,
-    vec![XEvent::KeyPress {
-        code: common::SCREEN_CHANGE_CODE
-    }]
+    vec![XEvent::KeyPress(common::SCREEN_CHANGE_CODE)]
 );
 
 hook_test!(
@@ -219,10 +205,7 @@ hook_test!(
             id: 2,
             ignore: false
         },
-        XEvent::KeyPress {
-            code: common::FOCUS_CHANGE_CODE
-        }
-    ]
+        XEvent::KeyPress(common::FOCUS_CHANGE_CODE)]
 );
 
 hook_test!(
