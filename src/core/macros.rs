@@ -71,7 +71,7 @@ macro_rules! gen_keybindings(
                             key_code,
                             run_internal!(
                                 $ws_action,
-                                &$crate::data_types::Selector::Index(i)
+                                &$crate::core::ring::Selector::Index(i)
                             )
                         ),
                     };

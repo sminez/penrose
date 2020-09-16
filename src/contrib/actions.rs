@@ -1,8 +1,7 @@
 //! Additional helper functions and actions for use with penrose.
 use crate::{
     bindings::FireAndForget,
-    core::{Client, Layout, WindowManager, Workspace},
-    data_types::Selector,
+    core::{ring::Selector, Client, Layout, WindowManager, Workspace},
     helpers::spawn,
 };
 

@@ -1,7 +1,8 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
 use crate::{
     client::Client,
-    data_types::{Change, Direction, InsertPoint, Region, ResizeAction, Ring, Selector, WinId},
+    core::ring::{Direction, InsertPoint, Ring, Selector},
+    data_types::{Change, Region, ResizeAction, WinId},
     layout::{Layout, LayoutConf},
 };
 
@@ -203,7 +204,7 @@ impl Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_types::Direction;
+    use crate::core::ring::Direction;
     use crate::layout::*;
 
     fn test_layouts() -> Vec<Layout> {

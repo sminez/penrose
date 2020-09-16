@@ -16,10 +16,9 @@ use penrose::{
         hooks::{DefaultWorkspace, LayoutSymbolAsRootName},
         layouts::paper,
     },
-    data_types::Selector,
     hooks::Hook,
     layout::{bottom_stack, side_stack, Layout, LayoutConf},
-    Backward, Config, Forward, Less, More, Result, WindowManager, XcbConnection,
+    Backward, Config, Forward, Less, More, Result, Selector, WindowManager, XcbConnection,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};

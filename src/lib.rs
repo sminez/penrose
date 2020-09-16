@@ -24,7 +24,8 @@ pub use crate::core::screen;
 pub use crate::core::workspace;
 pub use crate::core::xconnection;
 
-pub use data_types::{Change::*, Config, Direction::*};
+pub use crate::core::ring::{Direction::*, InsertPoint, Selector};
+pub use data_types::{Change::*, Config};
 pub use manager::WindowManager;
 pub use xconnection::XcbConnection;
 

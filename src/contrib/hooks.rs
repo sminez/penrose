@@ -1,6 +1,6 @@
 //! Additional common hooks that can be used out of the box with minimal config.
 use crate::core::{
-    client::Client, data_types::Selector, helpers::spawn, hooks::Hook, manager::WindowManager,
+    client::Client, helpers::spawn, hooks::Hook, manager::WindowManager, ring::Selector,
 };
 
 /**

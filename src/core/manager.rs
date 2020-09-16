@@ -2,7 +2,8 @@
 use crate::{
     bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     client::Client,
-    data_types::{Change, Config, Direction, InsertPoint, Point, Region, Ring, Selector, WinId},
+    core::ring::{Direction, InsertPoint, Ring, Selector},
+    data_types::{Change, Config, Point, Region, WinId},
     hooks,
     screen::Screen,
     workspace::Workspace,
@@ -999,7 +1000,8 @@ impl<'a> WindowManager<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_types::{Direction::*, *};
+    use crate::core::ring::Direction::*;
+    use crate::data_types::*;
     use crate::layout::*;
     use crate::screen::*;
     use crate::xconnection::*;
