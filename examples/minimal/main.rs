@@ -7,8 +7,10 @@
 #[macro_use]
 extern crate penrose;
 
-use penrose::{Backward, Config, Forward, Less, More, Result, WindowManager, XcbConnection};
-use std::collections::HashMap;
+use penrose::{
+    bindings::MouseEvent, Backward, Config, Forward, Less, More, Result, WindowManager,
+    XcbConnection,
+};
 
 fn main() -> Result<()> {
     let config = Config::default();
@@ -39,9 +41,14 @@ fn main() -> Result<()> {
         }
     };
 
+    let mouse_bindings = gen_mousebindings! {
+        Press Right + [Alt, Ctrl] => |wm: &mut WindowManager, _: &MouseEvent| wm.cycle_workspace(Forward),
+        Press Left + [Alt, Ctrl] => |wm: &mut WindowManager, _: &MouseEvent| wm.cycle_workspace(Backward)
+    };
+
     let conn = XcbConnection::new()?;
     let mut wm = WindowManager::init(config, &conn);
-    wm.grab_keys_and_run(key_bindings, HashMap::new());
+    wm.grab_keys_and_run(key_bindings, mouse_bindings);
 
     Ok(())
 }

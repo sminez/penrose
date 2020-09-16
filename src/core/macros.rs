@@ -14,7 +14,7 @@ macro_rules! run_external(
     };
 );
 
-/// kick off an internal method on the window manager as part of a key/mouse binding
+/// kick off an internal method on the window manager as part of a key binding
 #[macro_export]
 macro_rules! run_internal(
     ($func:ident) => {
@@ -77,6 +77,37 @@ macro_rules! gen_keybindings(
                     };
                 )+
             })+
+
+            _map
+        }
+    };
+);
+
+/// make creating all of the mouse bindings less verbose
+#[macro_export]
+macro_rules! gen_mousebindings(
+    {
+        $($kind:ident $button:ident + [$($modifier:ident),+] => $action:expr),+
+    } => {
+        {
+            // HashMap<(MouseEventKind, MouseState), MouseEventHandler>
+            let mut _map = ::std::collections::HashMap::new();
+
+            $(
+                let mut modifiers = Vec::new();
+                $(modifiers.push($crate::core::bindings::ModifierKey::$modifier);)+
+
+                let state = $crate::core::bindings::MouseState::new(
+                    $crate::core::bindings::MouseButton::$button,
+                    modifiers
+                );
+
+                let kind = $crate::core::bindings::MouseEventKind::$kind;
+                _map.insert(
+                    (kind, state),
+                    Box::new($action) as $crate::bindings::MouseEventHandler
+                );
+            )+
 
             _map
         }

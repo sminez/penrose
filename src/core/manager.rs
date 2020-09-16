@@ -306,15 +306,15 @@ impl<'a> WindowManager<'a> {
      * ourselves)
      */
     fn handle_key_press(&mut self, key_code: KeyCode, bindings: &mut KeyBindings) {
+        debug!("handling key code: {:?}", key_code);
         if let Some(action) = bindings.get_mut(&key_code) {
-            debug!("handling key code: {:?}", key_code);
             action(self); // ignoring Child handlers and SIGCHILD
         }
     }
 
     fn handle_mouse_event(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
-        if let Some(action) = bindings.get_mut(&e.state) {
-            debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
+        debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
+        if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
             action(self, &e); // ignoring Child handlers and SIGCHILD
         }
     }

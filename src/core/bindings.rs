@@ -16,11 +16,17 @@ pub type FireAndForget = Box<dyn FnMut(&mut WindowManager) -> ()>;
 /// An action to be run in response to a mouse event
 pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent) -> ()>;
 
+// impl From<FireAndForget> for MouseEventHandler {
+//     fn from(func: FireAndForget) -> Self {
+//         Box::new(|wm: &mut WindowManager, _: &MouseEvent| func(wm))
+//     }
+// }
+
 /// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
 
 /// User defined mouse bindings
-pub type MouseBindings = HashMap<MouseState, MouseEventHandler>;
+pub type MouseBindings = HashMap<(MouseEventKind, MouseState), MouseEventHandler>;
 
 pub(crate) type CodeMap = HashMap<String, u8>;
 
@@ -94,7 +100,7 @@ impl TryFrom<u8> for MouseButton {
 }
 
 /// Known modifier keys for bindings
-#[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub enum ModifierKey {
     /// Control
     Ctrl,
@@ -146,7 +152,8 @@ pub struct MouseState {
 
 impl MouseState {
     /// Construct a new MouseState
-    pub fn new(button: MouseButton, modifiers: Vec<ModifierKey>) -> Self {
+    pub fn new(button: MouseButton, mut modifiers: Vec<ModifierKey>) -> Self {
+        modifiers.sort();
         Self { button, modifiers }
     }
 
@@ -171,7 +178,7 @@ impl MouseState {
 }
 
 /// The types of mouse events represented by a MouseEvent
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum MouseEventKind {
     /// A button was pressed
     Press,
