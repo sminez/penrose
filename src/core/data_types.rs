@@ -2,27 +2,15 @@
 use crate::{
     hooks,
     layout::{side_stack, Layout, LayoutConf},
-    manager::WindowManager,
 };
 
 use std::{
-    collections::{HashMap, VecDeque},
-    ops,
+    collections::VecDeque,
+    ops::{Index, IndexMut},
 };
-
-use xcb;
-
-/// Some action to be run by a user key binding
-pub type FireAndForget = Box<dyn FnMut(&mut WindowManager) -> ()>;
-
-/// User defined key bindings
-pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
 
 /// Output of a Layout function: the new position a window should take
 pub type ResizeAction = (WinId, Option<Region>);
-
-/// Map xmodmap key names to their X key code so that we can bind them by name
-pub type CodeMap = HashMap<String, u8>;
 
 /// An X window ID
 pub type WinId = u32;
@@ -168,30 +156,6 @@ impl Region {
     /// Destructure this Region into its component values (x, y, w, h).
     pub fn values(&self) -> (u32, u32, u32, u32) {
         (self.x, self.y, self.w, self.h)
-    }
-}
-
-/// An X key-code along with a modifier mask
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct KeyCode {
-    /// Modifier key bit mask
-    pub mask: u16,
-    /// X key code
-    pub code: u8,
-}
-
-impl KeyCode {
-    /// Build a new KeyCode from an XCB KeyPressEvent
-    pub fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
-        KeyCode {
-            mask: k.state(),
-            code: k.detail(),
-        }
-    }
-
-    /// Removes the given mask from the modifier mask
-    pub fn ignore_modifiers(&mut self, modifier_mask: u16) {
-        self.mask = self.mask & !modifier_mask;
     }
 }
 
@@ -465,7 +429,7 @@ impl<T: Clone> Ring<T> {
     }
 }
 
-impl<T> ops::Index<usize> for Ring<T> {
+impl<T> Index<usize> for Ring<T> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -473,7 +437,7 @@ impl<T> ops::Index<usize> for Ring<T> {
     }
 }
 
-impl<T> ops::IndexMut<usize> for Ring<T> {
+impl<T> IndexMut<usize> for Ring<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.elements[index]
     }

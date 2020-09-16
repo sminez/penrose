@@ -23,6 +23,7 @@ use penrose::{
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
+use std::collections::HashMap;
 
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
 // be run each time a new client program is spawned.
@@ -181,7 +182,7 @@ fn main() -> Result<()> {
     // grab_keys_and_run will start listening to events from the X server and drop into the main
     // event loop. From this point on, program control passes to the WindowManager so make sure
     // that any logic you wish to run is done before here!
-    wm.grab_keys_and_run(key_bindings);
+    wm.grab_keys_and_run(key_bindings, HashMap::new());
 
     Ok(())
 }

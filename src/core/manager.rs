@@ -1,10 +1,8 @@
 //! Main logic for running Penrose
 use crate::{
+    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     client::Client,
-    data_types::{
-        Change, Config, Direction, InsertPoint, KeyBindings, KeyCode, Point, Region, Ring,
-        Selector, WinId,
-    },
+    data_types::{Change, Config, Direction, InsertPoint, Point, Region, Ring, Selector, WinId},
     hooks,
     screen::Screen,
     workspace::Workspace,
@@ -257,11 +255,15 @@ impl<'a> WindowManager<'a> {
      * Everything is driven by incoming events from the X server with each event type being
      * mapped to a handler
      */
-    pub fn grab_keys_and_run(&mut self, mut bindings: KeyBindings) {
+    pub fn grab_keys_and_run(
+        &mut self,
+        mut bindings: KeyBindings,
+        mut mouse_bindings: MouseBindings,
+    ) {
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
         unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) }.unwrap();
 
-        self.conn.grab_keys(&bindings);
+        self.conn.grab_keys(&bindings, &mouse_bindings);
         self.focus_workspace(&Selector::Index(0));
         run_hooks!(startup, self,);
         self.running = true;
@@ -270,19 +272,8 @@ impl<'a> WindowManager<'a> {
             if let Some(event) = self.conn.wait_for_event() {
                 debug!("got XEvent: {:?}", event);
                 match event {
-                    XEvent::ButtonPress {
-                        id,
-                        rpt,
-                        wpt,
-                        state,
-                    } => self.handle_mouse(id, rpt, wpt, state, true),
-                    XEvent::ButtonRelease {
-                        id,
-                        rpt,
-                        wpt,
-                        state,
-                    } => self.handle_mouse(id, rpt, wpt, state, false),
-                    XEvent::KeyPress { code } => self.handle_key_press(code, &mut bindings),
+                    XEvent::MouseEvent(e) => self.handle_mouse_event(e, &mut mouse_bindings),
+                    XEvent::KeyPress(code) => self.handle_key_press(code, &mut bindings),
                     XEvent::MapRequest { id, ignore } => self.handle_map_request(id, ignore),
                     XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
                     XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
@@ -298,7 +289,6 @@ impl<'a> WindowManager<'a> {
                     XEvent::ClientMessage { id, dtype, data } => {
                         self.handle_client_message(id, &dtype, &data)
                     }
-                    _ => (),
                 }
                 run_hooks!(event_handled, self,);
             }
@@ -318,6 +308,13 @@ impl<'a> WindowManager<'a> {
         if let Some(action) = bindings.get_mut(&key_code) {
             debug!("handling key code: {:?}", key_code);
             action(self); // ignoring Child handlers and SIGCHILD
+        }
+    }
+
+    fn handle_mouse_event(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
+        if let Some(action) = bindings.get_mut(&e.state) {
+            debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
+            action(self, &e); // ignoring Child handlers and SIGCHILD
         }
     }
 
@@ -363,14 +360,6 @@ impl<'a> WindowManager<'a> {
         self.workspaces
             .get_mut(wix)
             .map(|ws| ws.add_client(id, &cip));
-    }
-
-    fn handle_mouse(&mut self, id: WinId, rpt: Point, wpt: Point, state: KeyCode, press: bool) {
-        if press {
-            info!("CLICK :: {} {:?} {:?} {:#018b}", id, rpt, wpt, state.mask);
-        } else {
-            info!("RELES :: {} {:?} {:?} {:#018b}", id, rpt, wpt, state.mask);
-        }
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {

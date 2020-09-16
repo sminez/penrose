@@ -1,7 +1,8 @@
 //! A scratchpad that holds a single client
 use crate::core::{
+    bindings::FireAndForget,
     client::Client,
-    data_types::{Config, FireAndForget, Region, WinId},
+    data_types::{Config, Region, WinId},
     helpers::spawn,
     hooks::Hook,
     manager::WindowManager,

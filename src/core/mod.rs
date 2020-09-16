@@ -2,6 +2,7 @@
 #[macro_use]
 pub mod macros;
 
+pub mod bindings;
 pub mod client;
 pub mod data_types;
 pub mod helpers;
@@ -12,8 +13,9 @@ pub mod screen;
 pub mod workspace;
 pub mod xconnection;
 
+pub use bindings::{FireAndForget, MouseEventHandler};
 pub use client::Client;
-pub use data_types::{Config, FireAndForget, Selector};
+pub use data_types::{Config, Selector};
 pub use hooks::Hook;
 pub use layout::Layout;
 pub use manager::WindowManager;

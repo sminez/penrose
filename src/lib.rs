@@ -13,6 +13,7 @@ pub mod contrib;
 pub mod draw;
 
 // top level re-exports
+pub use crate::core::bindings;
 pub use crate::core::client;
 pub use crate::core::data_types;
 pub use crate::core::helpers;

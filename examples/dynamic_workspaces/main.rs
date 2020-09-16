@@ -15,7 +15,7 @@ use penrose::{
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
-use std::env;
+use std::{collections::HashMap, env};
 
 fn my_layouts() -> Vec<Layout> {
     let n_main = 1;
@@ -102,7 +102,7 @@ fn main() -> Result<()> {
 
     let conn = XcbConnection::new()?;
     let mut wm = WindowManager::init(config, &conn);
-    wm.grab_keys_and_run(key_bindings);
+    wm.grab_keys_and_run(key_bindings, HashMap::new());
 
     Ok(())
 }

@@ -11,7 +11,8 @@
  *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
 use crate::{
-    data_types::{KeyBindings, KeyCode, Point, Region, WinId},
+    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent, MouseEventKind, MouseState},
+    data_types::{Point, Region, WinId},
     screen::Screen,
     Result,
 };
@@ -103,7 +104,8 @@ const EVENT_MASK: &[(u32, u32)] = &[(
     xcb::CW_EVENT_MASK,
     xcb::EVENT_MASK_PROPERTY_CHANGE
         | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
-        | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY,
+        | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
+        | xcb::EVENT_MASK_BUTTON_MOTION,
 )];
 
 gen_enum_with_slice!(
@@ -182,44 +184,11 @@ const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
 #[derive(Debug, Clone)]
 pub enum XEvent {
     /// xcb docs: https://www.mankier.com/3/xcb_button_press_event_t
-    ButtonPress {
-        /// The ID of the window that was contained the click
-        id: WinId,
-        /// Absolute coordinate of the event
-        rpt: Point,
-        /// Coordinate of the event relative to top-left of the window itself
-        wpt: Point,
-        /// The modifier and button code that was received
-        state: KeyCode,
-    },
-
-    /// xcb docs: https://www.mankier.com/3/xcb_button_press_event_t
-    ButtonRelease {
-        /// The ID of the window that was contained the click
-        id: WinId,
-        /// Absolute coordinate of the event
-        rpt: Point,
-        /// Coordinate of the event relative to top-left of the window itself
-        wpt: Point,
-        /// The modifier and button code that was received
-        state: KeyCode,
-    },
-
     /// xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
-    MotionNotify {
-        /// The ID of the window that was moved across
-        id: WinId,
-        /// Absolute coordinate of the event
-        rpt: Point,
-        /// Coordinate of the event relative to top-left of the window itself
-        wpt: Point,
-    },
+    MouseEvent(MouseEvent),
 
     /// xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
-    KeyPress {
-        /// The X11 key code that was received along with any modifiers that were held
-        code: KeyCode,
-    },
+    KeyPress(KeyCode),
 
     /// xcb docs: https://www.mankier.com/3/xcb_map_request_event_t
     MapRequest {
@@ -247,18 +216,6 @@ pub enum XEvent {
         rpt: Point,
         /// Coordinate of the event relative to top-left of the window itself
         wpt: Point,
-    },
-
-    /// xcb docs: https://www.mankier.com/3/xcb_focus_in_event_t
-    FocusIn {
-        /// The ID of the window that gained focus
-        id: WinId,
-    },
-
-    /// xcb docs: https://www.mankier.com/3/xcb_focus_out_event_t
-    FocusOut {
-        /// The ID of the window that lost focus
-        id: WinId,
     },
 
     /// MapNotifyEvent
@@ -349,7 +306,7 @@ pub trait XConn {
      * is what determines which key press events end up being sent through in the
      * main event loop for the WindowManager.
      */
-    fn grab_keys(&self, key_bindings: &KeyBindings);
+    fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings);
 
     /// Set required EWMH properties to ensure compatability with external programs
     fn set_wm_properties(&self, workspaces: &[&str]);
@@ -531,37 +488,29 @@ impl XConn for XcbConnection {
             }
 
             match etype {
-                xcb::BUTTON_PRESS => {
+                xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
                     let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::ButtonPress {
-                        id: e.event(),
-                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                        state: KeyCode {
-                            mask: e.state(),
-                            code: e.detail(),
-                        },
-                    })
-                }
-
-                xcb::BUTTON_RELEASE => {
-                    let e: &xcb::ButtonReleaseEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::ButtonRelease {
-                        id: e.event(),
-                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                        state: KeyCode {
-                            mask: e.state(),
-                            code: e.detail(),
-                        },
+                    MouseState::from_event(&e).ok().map(|state| {
+                        XEvent::MouseEvent(MouseEvent {
+                            id: e.event(),
+                            rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                            wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                            state,
+                            kind: match etype {
+                                xcb::BUTTON_PRESS => MouseEventKind::Press,
+                                xcb::BUTTON_RELEASE => MouseEventKind::Release,
+                                xcb::MOTION_NOTIFY => MouseEventKind::Motion,
+                                _ => unreachable!(),
+                            },
+                        })
                     })
                 }
 
                 xcb::KEY_PRESS => {
                     let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
-                    let mut code = KeyCode::from_key_press(e);
-                    code.ignore_modifiers(NUMLOCK_MASK);
-                    Some(XEvent::KeyPress { code })
+                    Some(XEvent::KeyPress(
+                        KeyCode::from_key_press(e).ignoring_modifier(NUMLOCK_MASK),
+                    ))
                 }
 
                 xcb::MAP_REQUEST => {
@@ -594,16 +543,6 @@ impl XConn for XcbConnection {
                         rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
                         wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
                     })
-                }
-
-                xcb::FOCUS_IN => {
-                    let e: &xcb::FocusInEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::FocusIn { id: e.event() })
-                }
-
-                xcb::FOCUS_OUT => {
-                    let e: &xcb::FocusOutEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::FocusOut { id: e.event() })
                 }
 
                 xcb::DESTROY_NOTIFY => {
@@ -802,14 +741,14 @@ impl XConn for XcbConnection {
         }
     }
 
-    fn grab_keys(&self, key_bindings: &KeyBindings) {
+    fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings) {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
         let modifiers = &[0, NUMLOCK_MASK];
 
-        for k in key_bindings.keys() {
-            for m in modifiers.iter() {
+        for m in modifiers.iter() {
+            for k in key_bindings.keys() {
                 // xcb docs: https://www.mankier.com/3/xcb_grab_key
                 xcb::grab_key(
                     &self.conn,      // xcb connection to X11
@@ -821,23 +760,23 @@ impl XConn for XcbConnection {
                     GRAB_MODE_ASYNC, // don't lock keyboard input while grabbing
                 );
             }
-        }
 
-        // TODO: this needs to be more configurable by the user
-        for mouse_button in &[1, 2, 3] {
-            // xcb docs: https://www.mankier.com/3/xcb_grab_button
-            xcb::grab_button(
-                &self.conn,             // xcb connection to X11
-                false,                  // don't pass grabbed events through to the client
-                self.root,              // the window to grab: in this case the root window
-                MOUSE_MASK,             // which events are reported to the client
-                GRAB_MODE_ASYNC,        // don't lock pointer input while grabbing
-                GRAB_MODE_ASYNC,        // don't lock keyboard input while grabbing
-                xcb::NONE,              // don't confine the cursor to a specific window
-                xcb::NONE,              // don't change the cursor type
-                *mouse_button,          // the button to grab
-                xcb::MOD_MASK_4 as u16, // modifiers to grab
-            );
+            // TODO: this needs to be more configurable by the user
+            for mouse_button in &[1, 2, 3] {
+                // xcb docs: https://www.mankier.com/3/xcb_grab_button
+                xcb::grab_button(
+                    &self.conn,             // xcb connection to X11
+                    false,                  // don't pass grabbed events through to the client
+                    self.root,              // the window to grab: in this case the root window
+                    MOUSE_MASK,             // which events are reported to the client
+                    GRAB_MODE_ASYNC,        // don't lock pointer input while grabbing
+                    GRAB_MODE_ASYNC,        // don't lock keyboard input while grabbing
+                    xcb::NONE,              // don't confine the cursor to a specific window
+                    xcb::NONE,              // don't change the cursor type
+                    *mouse_button,          // the button to grab
+                    xcb::MOD_MASK_1 as u16, // modifiers to grab
+                );
+            }
         }
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
@@ -1141,7 +1080,7 @@ impl XConn for MockXConn {
         self.focused.replace(id);
     }
     fn set_client_border_color(&self, _: WinId, _: u32) {}
-    fn grab_keys(&self, _: &KeyBindings) {}
+    fn grab_keys(&self, _: &KeyBindings, _: &MouseBindings) {}
     fn set_wm_properties(&self, _: &[&str]) {}
     fn update_desktops(&self, _: &[&str]) {}
     fn set_current_workspace(&self, _: usize) {}

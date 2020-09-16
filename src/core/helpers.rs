@@ -1,6 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
-    data_types::{CodeMap, KeyCode},
+    bindings::{CodeMap, KeyCode},
     Result,
 };
 
