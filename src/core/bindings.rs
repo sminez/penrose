@@ -16,12 +16,6 @@ pub type FireAndForget = Box<dyn FnMut(&mut WindowManager) -> ()>;
 /// An action to be run in response to a mouse event
 pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent) -> ()>;
 
-// impl From<FireAndForget> for MouseEventHandler {
-//     fn from(func: FireAndForget) -> Self {
-//         Box::new(|wm: &mut WindowManager, _: &MouseEvent| func(wm))
-//     }
-// }
-
 /// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
 
@@ -40,16 +34,14 @@ pub struct KeyCode {
 }
 
 impl KeyCode {
-    /// Create a new KeyCode from an xcb keypress event
-    pub fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
+    pub(crate) fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
         KeyCode {
             mask: k.state(),
             code: k.detail(),
         }
     }
 
-    /// Create a new KeyCode from an existing one, removing the given modifier mask
-    pub fn ignoring_modifier(&self, mask: u16) -> KeyCode {
+    pub(crate) fn ignoring_modifier(&self, mask: u16) -> KeyCode {
         KeyCode {
             mask: self.mask & !mask,
             code: self.code,
@@ -157,12 +149,10 @@ impl MouseState {
         Self { button, modifiers }
     }
 
-    pub(crate) fn from_event(e: &xcb::ButtonPressEvent) -> Result<Self> {
+    pub(crate) fn from_event(detail: u8, state: u16) -> Result<Self> {
         Ok(Self {
-            button: MouseButton::try_from(e.detail())?,
-            modifiers: ModifierKey::iter()
-                .filter(|m| m.was_held(e.state()))
-                .collect(),
+            button: MouseButton::try_from(detail)?,
+            modifiers: ModifierKey::iter().filter(|m| m.was_held(state)).collect(),
         })
     }
 
@@ -201,4 +191,63 @@ pub struct MouseEvent {
     pub state: MouseState,
     /// Was this press, release or motion?
     pub kind: MouseEventKind,
+}
+
+impl MouseEvent {
+    fn new(
+        id: WinId,
+        rx: i16,
+        ry: i16,
+        ex: i16,
+        ey: i16,
+        state: MouseState,
+        kind: MouseEventKind,
+    ) -> Self {
+        MouseEvent {
+            id,
+            rpt: Point::new(rx as u32, ry as u32),
+            wpt: Point::new(ex as u32, ey as u32),
+            state,
+            kind,
+        }
+    }
+
+    pub(crate) fn from_press(e: &xcb::ButtonPressEvent) -> Result<Self> {
+        let state = MouseState::from_event(e.detail(), e.state())?;
+        Ok(Self::new(
+            e.event(),
+            e.root_x(),
+            e.root_y(),
+            e.event_x(),
+            e.event_y(),
+            state,
+            MouseEventKind::Press,
+        ))
+    }
+
+    pub(crate) fn from_release(e: &xcb::ButtonReleaseEvent) -> Result<Self> {
+        let state = MouseState::from_event(e.detail(), e.state())?;
+        Ok(Self::new(
+            e.event(),
+            e.root_x(),
+            e.root_y(),
+            e.event_x(),
+            e.event_y(),
+            state,
+            MouseEventKind::Release,
+        ))
+    }
+
+    pub(crate) fn from_motion(e: &xcb::MotionNotifyEvent) -> Result<Self> {
+        let state = MouseState::from_event(e.detail(), e.state())?;
+        Ok(Self::new(
+            e.event(),
+            e.root_x(),
+            e.root_y(),
+            e.event_x(),
+            e.event_y(),
+            state,
+            MouseEventKind::Motion,
+        ))
+    }
 }

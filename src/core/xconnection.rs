@@ -11,7 +11,7 @@
  *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
 use crate::{
-    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent, MouseEventKind, MouseState},
+    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     data_types::{Point, Region, WinId},
     screen::Screen,
     Result,
@@ -472,22 +472,19 @@ impl XConn for XcbConnection {
             }
 
             match etype {
-                xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
+                xcb::BUTTON_PRESS => {
                     let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&event) };
-                    MouseState::from_event(&e).ok().map(|state| {
-                        XEvent::MouseEvent(MouseEvent {
-                            id: e.event(),
-                            rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                            wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                            state,
-                            kind: match etype {
-                                xcb::BUTTON_PRESS => MouseEventKind::Press,
-                                xcb::BUTTON_RELEASE => MouseEventKind::Release,
-                                xcb::MOTION_NOTIFY => MouseEventKind::Motion,
-                                _ => unreachable!(),
-                            },
-                        })
-                    })
+                    Some(XEvent::MouseEvent(MouseEvent::from_press(e).ok()?))
+                }
+
+                xcb::BUTTON_RELEASE => {
+                    let e: &xcb::ButtonReleaseEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::MouseEvent(MouseEvent::from_release(e).ok()?))
+                }
+
+                xcb::MOTION_NOTIFY => {
+                    let e: &xcb::MotionNotifyEvent = unsafe { xcb::cast_event(&event) };
+                    Some(XEvent::MouseEvent(MouseEvent::from_motion(e).ok()?))
                 }
 
                 xcb::KEY_PRESS => {
