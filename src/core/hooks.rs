@@ -89,7 +89,7 @@ pub trait Hook {
     /**
      * Called when there has been a change to the WindowManager workspace list.
      */
-    fn workspaces_updated(&mut self, _wm: &mut WindowManager, _names: &Vec<&str>, _active: usize) {}
+    fn workspaces_updated(&mut self, _wm: &mut WindowManager, _names: &[&str], _active: usize) {}
 
     /**
      * Called after focus moves to a new Screen.
@@ -101,7 +101,7 @@ pub trait Hook {
     /**
      * Called when there has been a change to the WindowManager workspace list.
      */
-    fn screens_updated(&mut self, _wm: &mut WindowManager, _dimensions: &Vec<Region>) {}
+    fn screens_updated(&mut self, _wm: &mut WindowManager, _dimensions: &[Region]) {}
 
     /**
      * Called after a new Client gains focus.

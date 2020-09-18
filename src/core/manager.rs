@@ -56,7 +56,7 @@ impl<'a> WindowManager<'a> {
     pub fn init(config: Config, conn: &'a dyn XConn) -> WindowManager<'a> {
         let layouts = config.layouts.clone();
         let mut wm = WindowManager {
-            conn: conn,
+            conn,
             screens: Ring::new(vec![]),
             workspaces: Ring::new(vec![]),
             client_map: HashMap::new(),
@@ -87,7 +87,7 @@ impl<'a> WindowManager<'a> {
         conn.set_wm_properties(&config.workspaces);
         wm.conn.warp_cursor(None, &wm.screens[0]);
 
-        return wm;
+        wm
     }
 
     fn apply_layout(&mut self, wix: usize) {
@@ -104,16 +104,16 @@ impl<'a> WindowManager<'a> {
         if let Some((i, s)) = self.indexed_screen_for_workspace(wix) {
             let lc = ws.layout_conf();
             if !lc.floating {
-                let r = s.region(self.show_bar);
+                let reg = s.region(self.show_bar);
                 let gpx = if lc.gapless { 0 } else { self.gap_px };
                 let padding = 2 * (self.border_px + gpx);
 
-                for (id, region) in ws.arrange(r, &self.client_map) {
+                for (id, region) in ws.arrange(reg, &self.client_map) {
                     debug!("configuring {} with {:?}", id, region);
                     if let Some(region) = region {
                         let (x, y, w, h) = region.values();
-                        let r = Region::new(x + gpx, y + gpx, w - padding, h - padding);
-                        self.conn.position_window(id, r, self.border_px, false);
+                        let reg = Region::new(x + gpx, y + gpx, w - padding, h - padding);
+                        self.conn.position_window(id, reg, self.border_px, false);
                         self.map_window_if_needed(id);
                     } else {
                         self.unmap_window_if_needed(id);
@@ -148,9 +148,9 @@ impl<'a> WindowManager<'a> {
                 self.workspaces
                     .get_mut(client.workspace())
                     .and_then(|ws| ws.remove_client(id));
-                self.client_map.remove(&id).map(|c| {
+                if let Some(c) = self.client_map.remove(&id) {
                     debug!("removing ref to client {} ({})", c.id(), c.class());
-                });
+                }
 
                 if self.focused_client == Some(id) {
                     self.focused_client = None;
@@ -227,7 +227,9 @@ impl<'a> WindowManager<'a> {
 
     fn client_gained_focus(&mut self, id: WinId) {
         let prev_focused = self.focused_client().map(|c| c.id());
-        prev_focused.map(|id| self.client_lost_focus(id));
+        if let Some(id) = prev_focused {
+            self.client_lost_focus(id)
+        }
 
         self.conn.set_client_border_color(id, self.focused_border);
         self.conn.focus_client(id);
@@ -325,7 +327,7 @@ impl<'a> WindowManager<'a> {
         }
 
         let wm_class = match self.conn.str_prop(id, "WM_CLASS") {
-            Ok(s) => s.split("\0").collect::<Vec<&str>>()[0].into(),
+            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
 
@@ -358,9 +360,9 @@ impl<'a> WindowManager<'a> {
 
     fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
         let cip = self.client_insert_point;
-        self.workspaces
-            .get_mut(wix)
-            .map(|ws| ws.add_client(id, &cip));
+        if let Some(ws) = self.workspaces.get_mut(wix) {
+            ws.add_client(id, &cip)
+        };
     }
 
     fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
@@ -400,13 +402,15 @@ impl<'a> WindowManager<'a> {
     fn handle_property_notify(&mut self, id: WinId, atom: &str, is_root: bool) {
         if atom == "WM_NAME" || atom == "_NET_WM_NAME" {
             if let Ok(name) = self.conn.str_prop(id, atom) {
-                self.client_map.get_mut(&id).map(|c| c.set_name(&name));
+                if let Some(c) = self.client_map.get_mut(&id) {
+                    c.set_name(&name)
+                }
                 run_hooks!(client_name_updated, self, id, &name, is_root);
             }
         }
     }
 
-    fn handle_client_message(&mut self, id: WinId, dtype: &str, data: &Vec<usize>) {
+    fn handle_client_message(&mut self, id: WinId, dtype: &str, data: &[usize]) {
         if dtype == "_NET_WM_STATE" {
             let full_screen = self.conn.intern_atom("_NET_WM_STATE_FULLSCREEN").unwrap() as usize;
             if data.get(1) == Some(&full_screen) || data.get(2) == Some(&full_screen) {
@@ -434,7 +438,9 @@ impl<'a> WindowManager<'a> {
             let r = self.screen(&Selector::Focused).unwrap().region(false);
             self.conn.position_window(id, r, 0, false);
             self.map_window_if_needed(id);
-            self.client_map.get_mut(&id).map(|c| c.fullscreen = true);
+            if let Some(c) = self.client_map.get_mut(&id) {
+                c.fullscreen = true
+            };
         } else if !should_fullscreen && client_is_fullscreen {
             self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
             if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
@@ -445,7 +451,9 @@ impl<'a> WindowManager<'a> {
                 });
             }
             self.apply_layout(self.active_ws_index());
-            self.client_map.get_mut(&id).map(|c| c.fullscreen = false);
+            if let Some(c) = self.client_map.get_mut(&id) {
+                c.fullscreen = false
+            };
         }
     }
 
@@ -485,7 +493,7 @@ impl<'a> WindowManager<'a> {
             .iter()
             .for_each(|wix| self.apply_layout(*wix));
 
-        let regions = self.screens.iter().map(|s| s.region(false)).collect();
+        let regions: Vec<_> = self.screens.iter().map(|s| s.region(false)).collect();
         run_hooks!(screens_updated, self, &regions);
     }
 
@@ -529,28 +537,29 @@ impl<'a> WindowManager<'a> {
     /// Cycle between Clients for the active Workspace
     pub fn cycle_client(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
-        self.workspaces
+        let res = self
+            .workspaces
             .get_mut(wix)
-            .and_then(|ws| ws.cycle_client(direction))
-            .map(|(prev, new)| {
-                self.client_lost_focus(prev);
-                self.client_gained_focus(new);
-                self.conn
-                    .warp_cursor(Some(new), self.screens.focused().unwrap());
-            });
+            .and_then(|ws| ws.cycle_client(direction));
+        if let Some((prev, new)) = res {
+            self.client_lost_focus(prev);
+            self.client_gained_focus(new);
+            let screen = self.screens.focused().unwrap();
+            self.conn.warp_cursor(Some(new), screen);
+        }
     }
 
     /// Rotate the client stack on the active Workspace
     pub fn rotate_clients(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
-        self.workspaces
-            .get_mut(wix)
-            .map(|ws| ws.rotate_clients(direction));
+        if let Some(ws) = self.workspaces.get_mut(wix) {
+            ws.rotate_clients(direction)
+        };
     }
 
     /// Move the focused Client through the stack of Clients on the active Workspace
     pub fn drag_client(&mut self, direction: Direction) {
-        if let Some(id) = self.focused_client().and_then(|c| Some(c.id())) {
+        if let Some(id) = self.focused_client().map(|c| c.id()) {
             let wix = self.active_ws_index();
             self.workspaces
                 .get_mut(wix)
@@ -565,9 +574,9 @@ impl<'a> WindowManager<'a> {
     /// Cycle between Layouts for the active Workspace
     pub fn cycle_layout(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
-        self.workspaces.get_mut(wix).map(|ws| {
+        if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.cycle_layout(direction);
-        });
+        }
         run_hooks!(layout_change, self, wix, self.active_screen_index());
         self.apply_layout(wix);
     }
@@ -575,9 +584,9 @@ impl<'a> WindowManager<'a> {
     /// Increase or decrease the number of clients in the main area by 1
     pub fn update_max_main(&mut self, change: Change) {
         let wix = self.active_ws_index();
-        self.workspaces
-            .get_mut(wix)
-            .map(|ws| ws.update_max_main(change));
+        if let Some(ws) = self.workspaces.get_mut(wix) {
+            ws.update_max_main(change)
+        };
         self.apply_layout(wix);
     }
 
@@ -585,9 +594,9 @@ impl<'a> WindowManager<'a> {
     pub fn update_main_ratio(&mut self, change: Change) {
         let step = self.main_ratio_step;
         let wix = self.active_ws_index();
-        self.workspaces
-            .get_mut(wix)
-            .map(|ws| ws.update_main_ratio(change, step));
+        if let Some(ws) = self.workspaces.get_mut(wix) {
+            ws.update_main_ratio(change, step)
+        }
         self.apply_layout(wix);
     }
 
@@ -649,10 +658,10 @@ impl<'a> WindowManager<'a> {
                     self.apply_layout(active);
                     self.apply_layout(index);
 
-                    self.workspaces
-                        .get(index)
-                        .and_then(|ws| ws.focused_client())
-                        .map(|id| self.client_gained_focus(id));
+                    let ws = self.workspaces.get(index);
+                    if let Some(id) = ws.and_then(|ws| ws.focused_client()) {
+                        self.client_gained_focus(id)
+                    };
 
                     self.workspaces.focus(&Selector::Index(index));
                     run_hooks!(workspace_change, self, active, index);
@@ -678,10 +687,10 @@ impl<'a> WindowManager<'a> {
             self.apply_layout(index);
             self.conn.set_current_workspace(index);
 
-            self.workspaces
-                .get(index)
-                .and_then(|ws| ws.focused_client())
-                .map(|id| self.client_gained_focus(id));
+            let ws = self.workspaces.get(index);
+            if let Some(id) = ws.and_then(|ws| ws.focused_client()) {
+                self.client_gained_focus(id)
+            };
 
             self.workspaces.focus(&Selector::Index(index));
             run_hooks!(workspace_change, self, active, index);
@@ -708,7 +717,9 @@ impl<'a> WindowManager<'a> {
 
             if let Some(id) = res {
                 self.add_client_to_workspace(index, id);
-                self.client_map.get_mut(&id).map(|c| c.set_workspace(index));
+                if let Some(c) = self.client_map.get_mut(&id) {
+                    c.set_workspace(index)
+                };
                 self.conn.set_client_workspace(id, index);
                 self.apply_layout(self.active_ws_index());
 
@@ -801,7 +812,7 @@ impl<'a> WindowManager<'a> {
         self.focus_workspace(&Selector::Index(ix));
 
         self.update_x_workspace_details();
-        return Some(ws);
+        Some(ws)
     }
 
     /// Get a reference to the first Workspace satisfying 'selector'. WinId selectors will return
@@ -823,7 +834,7 @@ impl<'a> WindowManager<'a> {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
                 self.workspaces.get_mut(wix)
             } else {
-                return None;
+                None
             }
         } else {
             self.workspaces.element_mut(&selector)
@@ -862,9 +873,9 @@ impl<'a> WindowManager<'a> {
 
     /// Set the name of the selected Workspace
     pub fn set_workspace_name(&mut self, name: impl Into<String>, selector: Selector<Workspace>) {
-        self.workspaces
-            .element_mut(&selector)
-            .map(|ws| ws.set_name(name));
+        if let Some(ws) = self.workspaces.element_mut(&selector) {
+            ws.set_name(name)
+        };
         self.update_x_workspace_details();
     }
 
@@ -915,7 +926,7 @@ impl<'a> WindowManager<'a> {
                     .iter()
                     .flat_map(|(_, v)| if f(v) { Some(v) } else { None })
                     .collect::<Vec<_>>();
-                clients.sort_by(|a, b| a.id().cmp(&b.id()));
+                clients.sort_by_key(|&a| a.id());
                 clients
             }
             Selector::Index(i) => self
@@ -940,7 +951,7 @@ impl<'a> WindowManager<'a> {
                     .iter_mut()
                     .flat_map(|(_, v)| if f(v) { Some(v) } else { None })
                     .collect::<Vec<_>>();
-                clients.sort_by(|a, b| a.id().cmp(&b.id()));
+                clients.sort_by_key(|a| a.id());
                 clients
             }
             Selector::Index(i) => match self
@@ -1071,7 +1082,7 @@ mod tests {
         assert_eq!(wm.workspaces[0].focused_client(), Some(40));
         wm.kill_client(); // remove 40, focus 30
 
-        let ids: Vec<WinId> = wm.workspaces[0].iter().map(|c| *c).collect();
+        let ids: Vec<WinId> = wm.workspaces[0].iter().cloned().collect();
         assert_eq!(ids, vec![50, 30, 20, 10]);
         assert_eq!(wm.workspaces[0].focused_client(), Some(30));
     }

@@ -114,20 +114,17 @@ impl Hook for Scratchpad {
     }
 
     fn layout_applied(&mut self, wm: &mut WindowManager, _: usize, screen_index: usize) {
-        match *self.client.borrow() {
-            None => return, // no active scratchpad client
-            Some(id) => {
-                if *self.visible.borrow() {
-                    if let Some(region) = wm.screen_size(screen_index) {
-                        let (sx, sy, sw, sh) = region.values();
-                        let w = (sw as f32 * self.w) as u32;
-                        let h = (sh as f32 * self.h) as u32;
-                        let x = sx + (sw - w) / 2;
-                        let y = sy + (sh - h) / 2;
-                        wm.position_client(id, Region::new(x, y, w, h), true); // stack above
-                    }
-                    wm.show_client(id);
+        if let Some(id) = *self.client.borrow() {
+            if *self.visible.borrow() {
+                if let Some(region) = wm.screen_size(screen_index) {
+                    let (sx, sy, sw, sh) = region.values();
+                    let w = (sw as f32 * self.w) as u32;
+                    let h = (sh as f32 * self.h) as u32;
+                    let x = sx + (sw - w) / 2;
+                    let y = sy + (sh - h) / 2;
+                    wm.position_client(id, Region::new(x, y, w, h), true); // stack above
                 }
+                wm.show_client(id);
             }
         }
     }

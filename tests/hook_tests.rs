@@ -51,7 +51,7 @@ impl Hook for TestHook {
         self.mark_called("workspace_change");
     }
 
-    fn workspaces_updated(&mut self, _: &mut WindowManager, _: &Vec<&str>, _: usize) {
+    fn workspaces_updated(&mut self, _: &mut WindowManager, _: &[&str], _: usize) {
         self.mark_called("workspaces_updated");
     }
 

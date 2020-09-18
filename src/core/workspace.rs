@@ -28,7 +28,7 @@ pub struct Workspace {
 impl Workspace {
     /// Construct a new Workspace with the given name and choice of Layouts
     pub fn new(name: impl Into<String>, layouts: Vec<Layout>) -> Workspace {
-        if layouts.len() == 0 {
+        if layouts.is_empty() {
             panic!("{}: require at least one layout function", name.into());
         }
 
@@ -53,6 +53,11 @@ impl Workspace {
         self.clients.len()
     }
 
+    /// Is this Workspace currently empty?
+    pub fn is_empty(&self) -> bool {
+        self.clients.len() == 0
+    }
+
     /// Iterate over the clients on this workspace in position order
     pub fn iter(&self) -> std::collections::vec_deque::Iter<WinId> {
         self.clients.iter()
@@ -69,7 +74,7 @@ impl Workspace {
 
     /// A reference to the currently focused client if there is one
     pub fn focused_client(&self) -> Option<WinId> {
-        self.clients.focused().map(|c| *c)
+        self.clients.focused().copied()
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
@@ -178,7 +183,7 @@ impl Workspace {
         if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
             return None;
         }
-        self.clients.drag_focused(direction).map(|c| *c)
+        self.clients.drag_focused(direction).copied()
     }
 
     /// Rotate the client stack in the given direction
@@ -261,7 +266,7 @@ mod tests {
     fn adding_a_client() {
         let mut ws = Workspace::new("test", test_layouts());
         add_n_clients(&mut ws, 3);
-        let ids: Vec<WinId> = ws.clients.iter().map(|c| *c).collect();
+        let ids: Vec<WinId> = ws.clients.iter().copied().collect();
         assert_eq!(ids, vec![30, 20, 10], "not pushing at the top of the stack")
     }
 

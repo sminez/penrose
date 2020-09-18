@@ -257,7 +257,7 @@ mod inner {
 
         fn new_window(
             &mut self,
-            t: &WindowType,
+            win_type: &WindowType,
             x: usize,
             y: usize,
             w: usize,
@@ -265,7 +265,7 @@ mod inner {
         ) -> Result<WinId> {
             let screen = self.screen(0)?;
             let (id, surface) = new_cairo_surface(
-                &self.conn, &screen, t, x as i16, y as i16, w as i32, h as i32,
+                &self.conn, &screen, win_type, x as i16, y as i16, w as i32, h as i32,
             )?;
             self.surfaces.insert(id, surface);
 
@@ -296,7 +296,9 @@ mod inner {
         }
 
         fn flush(&self, id: WinId) {
-            self.surfaces.get(&id).map(|s| s.flush());
+            if let Some(s) = self.surfaces.get(&id) {
+                s.flush()
+            };
             self.map_window(id);
             self.conn.flush();
         }
@@ -366,13 +368,13 @@ mod inner {
             self.ctx.fill();
         }
 
-        fn text(&self, s: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)> {
+        fn text(&self, txt: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)> {
             let layout = pango_layout(&self.ctx)?;
             if let Some(ref font) = self.font {
                 layout.set_font_description(Some(font));
             }
 
-            layout.set_text(s);
+            layout.set_text(txt);
             layout.set_ellipsize(EllipsizeMode::End);
 
             let (w, h) = layout.get_pixel_size();

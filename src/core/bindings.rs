@@ -8,13 +8,12 @@ use std::{collections::HashMap, convert::TryFrom};
 
 use anyhow::anyhow;
 use strum::{EnumIter, IntoEnumIterator};
-use xcb;
 
 /// Some action to be run by a user key binding
-pub type FireAndForget = Box<dyn FnMut(&mut WindowManager) -> ()>;
+pub type FireAndForget = Box<dyn FnMut(&mut WindowManager)>;
 
 /// An action to be run in response to a mouse event
-pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent) -> ()>;
+pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent)>;
 
 /// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, FireAndForget>;

@@ -276,12 +276,12 @@ impl<T> Ring<T> {
             Selector::Focused => {
                 let c = self.elements.remove(self.focused);
                 self.clamp_focus();
-                return c;
+                c
             }
             Selector::Index(i) => {
                 let c = self.elements.remove(*i);
                 self.clamp_focus();
-                return c;
+                c
             }
             Selector::Condition(f) => {
                 if let Some((i, _)) = self.element_by(f) {

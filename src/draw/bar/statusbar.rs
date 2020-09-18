@@ -173,13 +173,13 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
             .for_each(|w| w.workspace_change(wm, prev, new));
     }
 
-    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &Vec<&str>, active: usize) {
+    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &[&str], active: usize) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.workspaces_updated(wm, names, active));
     }
 
-    fn screens_updated(&mut self, wm: &mut WindowManager, dimensions: &Vec<Region>) {
+    fn screens_updated(&mut self, wm: &mut WindowManager, dimensions: &[Region]) {
         self.screens
             .iter()
             .for_each(|(id, _)| self.drw.destroy_window(*id));

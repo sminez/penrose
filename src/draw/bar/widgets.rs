@@ -165,7 +165,7 @@ impl Workspaces {
             fg_1: style.fg,
             fg_2: empty_fg.into(),
             bg_1: highlight.into(),
-            bg_2: style.bg.unwrap_or(0x000000.into()),
+            bg_2: style.bg.unwrap_or_else(|| 0x000000.into()),
         }
     }
 
@@ -177,7 +177,7 @@ impl Workspaces {
         for ws in self.workspaces.iter_mut() {
             let now_occupied =
                 if let Some(ws) = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name)) {
-                    ws.len() > 0
+                    ws.is_empty()
                 } else {
                     false
                 };
@@ -223,7 +223,7 @@ impl Workspaces {
 impl Hook for Workspaces {
     fn new_client(&mut self, _: &mut WindowManager, c: &mut Client) {
         if let Some(ws) = self.workspaces.get_mut(c.workspace()) {
-            self.require_draw = ws.occupied == false;
+            self.require_draw = !ws.occupied;
             ws.occupied = true;
         }
     }
@@ -239,7 +239,7 @@ impl Hook for Workspaces {
             if let Some(ws) = self.workspaces.get_mut(new) {
                 let res = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name));
                 ws.occupied = if let Some(w) = res {
-                    w.len() > 0
+                    w.is_empty()
                 } else {
                     false
                 };
@@ -249,8 +249,8 @@ impl Hook for Workspaces {
         }
     }
 
-    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &Vec<&str>, _: usize) {
-        if names != &self.names() {
+    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &[&str], _: usize) {
+        if names != self.names().as_slice() {
             self.focused_ws = wm.focused_workspaces();
             self.workspaces = meta_from_names(names);
             self.update_workspace_occupied(wm);
@@ -263,7 +263,7 @@ impl Hook for Workspaces {
         self.require_draw = true;
     }
 
-    fn screens_updated(&mut self, wm: &mut WindowManager, _: &Vec<Region>) {
+    fn screens_updated(&mut self, wm: &mut WindowManager, _: &[Region]) {
         self.focused_ws = (0..wm.n_screens()).collect();
         self.update_workspace_occupied(wm);
         self.require_draw = true;
@@ -420,10 +420,8 @@ impl Hook for ActiveWindowName {
     }
 
     fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, name: &str, root: bool) {
-        if !root {
-            if Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
-                self.set_text(name);
-            }
+        if !root && Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
+            self.set_text(name);
         }
     }
 

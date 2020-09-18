@@ -18,7 +18,7 @@ impl Screen {
     /// Create a new screen instance directly
     pub fn new(region: Region, wix: usize) -> Screen {
         Screen {
-            true_region: region.clone(),
+            true_region: region,
             effective_region: region,
             wix,
         }
@@ -67,6 +67,6 @@ impl Screen {
         let (x1, y1, w, h) = self.true_region.values();
         let (x2, y2) = (x1 + w, x1 + h);
 
-        return p.x >= x1 && p.x < x2 && p.y >= y1 && p.y < y2;
+        p.x >= x1 && p.x < x2 && p.y >= y1 && p.y < y2
     }
 }

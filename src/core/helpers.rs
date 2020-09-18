@@ -10,7 +10,6 @@ use std::{
 };
 
 use anyhow::anyhow;
-use xcb;
 
 /**
  * Run an external command
@@ -113,17 +112,17 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
  */
 pub fn parse_key_binding(pattern: impl Into<String>, known_codes: &CodeMap) -> Option<KeyCode> {
     let s = pattern.into();
-    let mut parts: Vec<&str> = s.split("-").collect();
+    let mut parts: Vec<&str> = s.split('-').collect();
     match known_codes.get(parts.remove(parts.len() - 1)) {
         Some(code) => {
             let mask = parts
                 .iter()
-                .map(|s| match s {
-                    &"A" => xcb::MOD_MASK_1,
-                    &"M" => xcb::MOD_MASK_4,
-                    &"S" => xcb::MOD_MASK_SHIFT,
-                    &"C" => xcb::MOD_MASK_CONTROL,
-                    &_ => panic!("invalid key binding prefix: {}", s),
+                .map(|&s| match s {
+                    "A" => xcb::MOD_MASK_1,
+                    "M" => xcb::MOD_MASK_4,
+                    "S" => xcb::MOD_MASK_SHIFT,
+                    "C" => xcb::MOD_MASK_CONTROL,
+                    _ => panic!("invalid key binding prefix: {}", s),
                 })
                 .fold(0, |acc, v| acc | v);
 
@@ -141,7 +140,6 @@ pub fn parse_key_binding(pattern: impl Into<String>, known_codes: &CodeMap) -> O
 pub(crate) mod xcb_util {
     use crate::{data_types::Region, Result};
     use anyhow::anyhow;
-    use xcb;
 
     pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32> {
         xcb::intern_atom(conn, false, name)
@@ -224,7 +222,7 @@ pub(crate) mod xcb_util {
 
     pub fn screen_sizes(conn: &xcb::Connection) -> Result<Vec<Region>> {
         // If we can't unwrap here then there is no screen(!)
-        let root = conn.get_setup().roots().nth(0).unwrap().root();
+        let root = conn.get_setup().roots().next().unwrap().root();
         let check_win = conn.generate_id();
         let class = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
         xcb::create_window(conn, 0, check_win, root, 0, 0, 1, 1, 0, class, 0, &[]);

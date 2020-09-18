@@ -17,13 +17,12 @@ use crate::{
     Result,
 };
 
-use std::{cell::Cell, collections::HashMap, convert::TryInto, str::FromStr};
+use std::{cell::Cell, collections::HashMap, str::FromStr};
 
 use anyhow::anyhow;
 use strum::*;
-use xcb;
 
-const WM_NAME: &'static str = "penrose";
+const WM_NAME: &str = "penrose";
 
 // xcb argument enums
 const WINDOW_CLASS_INPUT_ONLY: u16 = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
@@ -380,7 +379,7 @@ impl XcbConnection {
         let root = conn
             .get_setup()
             .roots()
-            .nth(0)
+            .next()
             .ok_or_else(|| anyhow!("unable to get handle for screen"))?
             .root();
 
@@ -453,7 +452,7 @@ impl XcbConnection {
         *self.atoms.get(&atom).unwrap()
     }
 
-    fn window_has_type_in(&self, id: WinId, win_types: &Vec<u32>) -> bool {
+    fn window_has_type_in(&self, id: WinId, win_types: &[u32]) -> bool {
         // xcb docs: https://www.mankier.com/3/xcb_get_property
         let atom = self.known_atom(Atom::NetWmWindowType);
         let cookie = xcb::get_property(
@@ -514,11 +513,9 @@ impl XConn for XcbConnection {
                     xcb::xproto::get_window_attributes(&self.conn, id)
                         .get_reply()
                         .ok()
-                        .and_then(|r| {
-                            Some(XEvent::MapRequest {
-                                id,
-                                ignore: r.override_redirect(),
-                            })
+                        .map(|r| XEvent::MapRequest {
+                            id,
+                            ignore: r.override_redirect(),
                         })
                 }
 
@@ -636,8 +633,8 @@ impl XConn for XcbConnection {
         )
     }
 
-    fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool) {
-        let (x, y, w, h) = r.values();
+    fn position_window(&self, id: WinId, reg: Region, border: u32, stack_above: bool) {
+        let (x, y, w, h) = reg.values();
         let mut args = vec![
             (WIN_X, x),
             (WIN_Y, y),
@@ -883,17 +880,14 @@ impl XConn for XcbConnection {
 
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
         if let Ok(s) = self.str_prop(id, Atom::WmClass.as_ref()) {
-            if s.split("\0").any(|c| floating_classes.contains(&c)) {
+            if s.split('\0').any(|c| floating_classes.contains(&c)) {
                 return true;
             }
         }
 
         self.str_prop(id, Atom::NetWmWindowType.as_ref())
             .map_or(false, |s| {
-                s.split("\0").any(|t| {
-                    t.try_into()
-                        .map_or(false, |w| self.auto_float_types.contains(&w))
-                })
+                s.split('\0').any(|t| self.auto_float_types.contains(&t))
             })
     }
 
@@ -978,7 +972,7 @@ impl XConn for XcbConnection {
         );
 
         let reply = cookie.get_reply()?;
-        if reply.value_len() <= 0 {
+        if reply.value_len() == 0 {
             Err(anyhow!("property '{}' was empty for id: {}", name, id))
         } else {
             Ok(reply.value()[0])
@@ -1033,7 +1027,7 @@ impl XConn for MockXConn {
     }
     fn wait_for_event(&self) -> Option<XEvent> {
         let mut remaining = self.events.replace(vec![]);
-        if remaining.len() == 0 {
+        if remaining.is_empty() {
             return None;
         }
         let next = remaining.remove(0);

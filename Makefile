@@ -2,8 +2,16 @@
 build:
 	cargo build
 
+.PHONY: fmt
+fmt:
+	cargo fmt --all -- --check && cargo clippy --workspace --all-targets
+
+.PHONY: check
+check: fmt
+	cargo test
+
 .PHONY: build-release
-build-release:
+build-release: check
 	cargo build --release
 
 .PHONY: examples
@@ -17,7 +25,6 @@ watch:
 .PHONY: test-and-publish
 test-and-publish:
 	cargo test && cargo publish
-
 
 .PHONY: run-embeded
 run-embeded:

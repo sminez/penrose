@@ -204,7 +204,7 @@ pub fn client_breakdown<T>(clients: &[T], n_main: u32) -> (u32, u32) {
 pub(crate) fn mock_layout(
     clients: &[&Client],
     _: Option<WinId>,
-    r: &Region,
+    region: &Region,
     _: u32,
     _: f32,
 ) -> Vec<ResizeAction> {
@@ -212,9 +212,9 @@ pub(crate) fn mock_layout(
         .iter()
         .enumerate()
         .map(|(i, c)| {
-            let (x, y, w, h) = r.values();
-            let k = i as u32;
-            (c.id(), Some(Region::new(x + k, y + k, w - k, h - k)))
+            let (x, y, w, h) = region.values();
+            let _k = i as u32;
+            (c.id(), Some(Region::new(x + _k, y + _k, w - _k, h - _k)))
         })
         .collect()
 }

@@ -1,8 +1,8 @@
 //! Status bars
-pub mod bar;
+pub mod statusbar;
 pub mod widgets;
 
-pub use bar::{Position, StatusBar};
+pub use statusbar::{Position, StatusBar};
 pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspaces};
 
 use crate::{
@@ -63,7 +63,7 @@ pub fn dwm_bar<Ctx: DrawContext>(
         drw,
         Position::Top,
         height,
-        style.bg.unwrap_or(0x000000.into()),
+        style.bg.unwrap_or_else(|| 0x000000.into()),
         &[&style.font],
         vec![
             Box::new(Workspaces::new(workspaces, style, highlight, empty_ws)),

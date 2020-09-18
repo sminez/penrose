@@ -4,9 +4,9 @@ use penrose::{core::hooks::Hook, draw::*, Config, Result, WindowManager, XcbConn
 
 const HEIGHT: usize = 18;
 
-const PROFONT: &'static str = "ProFont For Powerline";
-const FIRA: &'static str = "Fira Code";
-const SERIF: &'static str = "Serif";
+const PROFONT: &str = "ProFont For Powerline";
+const FIRA: &str = "Fira Code";
+const SERIF: &str = "Serif";
 
 const BLACK: u32 = 0x282828ff;
 const GREY: u32 = 0x3c3836ff;

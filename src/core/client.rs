@@ -34,7 +34,7 @@ impl Client {
             wm_name,
             wm_class,
             workspace,
-            floating: floating,
+            floating,
             fullscreen: false,
             mapped: false,
             wm_managed: true,
