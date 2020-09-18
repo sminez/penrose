@@ -25,20 +25,18 @@ use xcb;
 
 const WM_NAME: &'static str = "penrose";
 
-/*
- * pulling out bitmasks to make the following xcb / xrandr calls easier to parse visually
- */
-const XCB_RESPONSE_TYPE_MASK: u8 = 0x7F;
-const NUMLOCK_MASK: u16 = xcb::MOD_MASK_2 as u16;
+// xcb argument enums
 const WINDOW_CLASS_INPUT_ONLY: u16 = xcb::xproto::WINDOW_CLASS_INPUT_ONLY as u16;
-const NOTIFY_MASK: u16 =
-    (xcb::randr::NOTIFY_MASK_CRTC_CHANGE | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
 const GRAB_MODE_ASYNC: u8 = xcb::GRAB_MODE_ASYNC as u8;
 const INPUT_FOCUS_PARENT: u8 = xcb::INPUT_FOCUS_PARENT as u8;
 const PROP_MODE_REPLACE: u8 = xcb::PROP_MODE_REPLACE as u8;
+
+// atoms
 const ATOM_WINDOW: u32 = xcb::xproto::ATOM_WINDOW;
 const ATOM_ATOM: u32 = xcb::xproto::ATOM_ATOM;
 const ATOM_CARDINAL: u32 = xcb::xproto::ATOM_CARDINAL;
+
+// window props
 const STACK_MODE: u16 = xcb::CONFIG_WINDOW_STACK_MODE as u16;
 const STACK_ABOVE: u32 = xcb::STACK_MODE_ABOVE as u32;
 const WIN_BORDER: u16 = xcb::CONFIG_WINDOW_BORDER_WIDTH as u16;
@@ -46,21 +44,26 @@ const WIN_HEIGHT: u16 = xcb::CONFIG_WINDOW_HEIGHT as u16;
 const WIN_WIDTH: u16 = xcb::CONFIG_WINDOW_WIDTH as u16;
 const WIN_X: u16 = xcb::CONFIG_WINDOW_X as u16;
 const WIN_Y: u16 = xcb::CONFIG_WINDOW_Y as u16;
-const NEW_WINDOW_MASK: &[(u32, u32)] = &[(
-    xcb::CW_EVENT_MASK,
-    xcb::EVENT_MASK_ENTER_WINDOW | xcb::EVENT_MASK_LEAVE_WINDOW | xcb::EVENT_MASK_PROPERTY_CHANGE,
-)];
+
+// masks
+const XCB_RESPONSE_TYPE_MASK: u8 = 0x7F;
+const NUMLOCK_MASK: u16 = xcb::MOD_MASK_2 as u16;
+const NOTIFY_MASK: u16 = (xcb::randr::NOTIFY_MASK_OUTPUT_CHANGE
+    | xcb::randr::NOTIFY_MASK_CRTC_CHANGE
+    | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
+const NEW_WINDOW_MASK: u32 = xcb::EVENT_MASK_ENTER_WINDOW
+    | xcb::EVENT_MASK_LEAVE_WINDOW
+    | xcb::EVENT_MASK_PROPERTY_CHANGE
+    | xcb::EVENT_MASK_STRUCTURE_NOTIFY;
 const MOUSE_MASK: u16 = (xcb::EVENT_MASK_BUTTON_PRESS
     | xcb::EVENT_MASK_BUTTON_RELEASE
-    | xcb::EVENT_MASK_POINTER_MOTION) as u16;
-const EVENT_MASK: &[(u32, u32)] = &[(
-    xcb::CW_EVENT_MASK,
-    xcb::EVENT_MASK_PROPERTY_CHANGE
-        | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
-        | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
-        | xcb::EVENT_MASK_BUTTON_MOTION,
-)];
+    | xcb::EVENT_MASK_BUTTON_MOTION) as u16;
+const EVENT_MASK: u32 = xcb::EVENT_MASK_PROPERTY_CHANGE
+    | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
+    | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
+    | xcb::EVENT_MASK_BUTTON_MOTION;
 
+// Internal representation of X atoms to get a little bit of type safety around their use
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 enum Atom {
     #[strum(serialize = "MANAGER")]
@@ -145,6 +148,7 @@ enum Atom {
     NetWindowTypeNormal,
 }
 
+// Clients with one of these window types will be auto floated
 const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeDesktop,
     Atom::NetWindowTypeDialog,
@@ -157,6 +161,8 @@ const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeToolbar,
     Atom::NetWindowTypeUtility,
 ];
+
+const UNMANAGED_WINDOW_TYPES: &[Atom] = &[Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar];
 
 /**
  * Wrapper around the low level XCB event types that require casting to work with.
@@ -204,7 +210,6 @@ pub enum XEvent {
         wpt: Point,
     },
 
-    /// MapNotifyEvent
     /// xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
     Destroy {
         /// The ID of the window being destroyed
@@ -248,7 +253,14 @@ pub enum XEvent {
     },
 }
 
-/// A handle on a running X11 connection that we can use for issuing X requests
+/**
+ * A handle on a running X11 connection that we can use for issuing X requests.
+ *
+ * XConn is intended as an abstraction layer to allow for communication with the underlying display
+ * system (assumed to be X) using whatever mechanism the implementer wishes. In theory, it should
+ * be possible to write an implementation that allows penrose to run on systems not using X as the
+ * windowing system but X idioms and high level event types / client interations are assumed.
+ **/
 pub trait XConn {
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
@@ -346,7 +358,12 @@ pub trait XConn {
     fn cleanup(&self);
 }
 
-/// Handles communication with an X server via xcb
+/**
+ * Handles communication with an X server via the XCB library.
+ *
+ * XcbConnection is a minimal implementation that does not make use of the full asyc capabilities
+ * of the underlying C XCB library.
+ **/
 pub struct XcbConnection {
     conn: xcb::Connection,
     root: WinId,
@@ -359,15 +376,13 @@ pub struct XcbConnection {
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
     pub fn new() -> Result<XcbConnection> {
-        let (conn, _) = match xcb::Connection::connect(None) {
-            Err(e) => return Err(anyhow!("unable to establish connection to X server: {}", e)),
-            Ok(conn) => conn,
-        };
-
-        let root = match conn.get_setup().roots().nth(0) {
-            None => return Err(anyhow!("unable to get handle for screen")),
-            Some(s) => s.root(),
-        };
+        let (conn, _) = xcb::Connection::connect(None)?;
+        let root = conn
+            .get_setup()
+            .roots()
+            .nth(0)
+            .ok_or_else(|| anyhow!("unable to get handle for screen"))?
+            .root();
 
         // https://www.mankier.com/3/xcb_intern_atom
         let atoms: HashMap<Atom, u32> = Atom::iter()
@@ -451,10 +466,9 @@ impl XcbConnection {
             2048,          // how many 32bit multiples of data to retrieve
         );
 
-        match cookie.get_reply() {
-            Err(_) => false,
-            Ok(types) => types.value().iter().any(|t| win_types.contains(t)),
-        }
+        cookie.get_reply().map_or(false, |types| {
+            types.value().iter().any(|t| win_types.contains(t))
+        })
     }
 }
 
@@ -615,10 +629,11 @@ impl XConn for XcbConnection {
 
     fn cursor_position(&self) -> Point {
         let cookie = xcb::query_pointer(&self.conn, self.root);
-        match cookie.get_reply() {
-            Err(_) => Point::new(0, 0),
-            Ok(reply) => Point::new(reply.root_x() as u32, reply.root_y() as u32),
-        }
+
+        cookie.get_reply().map_or_else(
+            |_| Point::new(0, 0),
+            |reply| Point::new(reply.root_x() as u32, reply.root_y() as u32),
+        )
     }
 
     fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool) {
@@ -640,7 +655,7 @@ impl XConn for XcbConnection {
 
     fn mark_new_window(&self, id: WinId) {
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
-        xcb::change_window_attributes(&self.conn, id, NEW_WINDOW_MASK);
+        xcb::change_window_attributes(&self.conn, id, &[(xcb::CW_EVENT_MASK, NEW_WINDOW_MASK)]);
     }
 
     fn map_window(&self, id: WinId) {
@@ -662,10 +677,9 @@ impl XConn for XcbConnection {
 
     fn focused_client(&self) -> WinId {
         // xcb docs: https://www.mankier.com/3/xcb_get_input_focus
-        match xcb::get_input_focus(&self.conn).get_reply() {
-            Err(_) => 0,
-            Ok(resp) => resp.focus(),
-        }
+        xcb::get_input_focus(&self.conn)
+            .get_reply()
+            .map_or(0, |resp| resp.focus())
     }
 
     fn focus_client(&self, id: WinId) {
@@ -697,29 +711,21 @@ impl XConn for XcbConnection {
 
     fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
         let state_prop = self.known_atom(Atom::NetWmState);
-        let fs_prop = self.known_atom(Atom::NetWmStateFullscreen);
-
-        if client_is_fullscreen {
-            xcb::change_property(
-                &self.conn,        // xcb connection to X11
-                PROP_MODE_REPLACE, // discard current prop and replace
-                id,                // window to change prop on
-                state_prop,        // prop to change
-                ATOM_ATOM,         // type of prop
-                32,                // data format (8/16/32-bit)
-                &[0; 0],           // data
-            );
+        let data = if client_is_fullscreen {
+            0
         } else {
-            xcb::change_property(
-                &self.conn,        // xcb connection to X11
-                PROP_MODE_REPLACE, // discard current prop and replace
-                id,                // window to change prop on
-                state_prop,        // prop to change
-                ATOM_ATOM,         // type of prop
-                32,                // data format (8/16/32-bit)
-                &[fs_prop],        // data
-            );
-        }
+            self.known_atom(Atom::NetWmStateFullscreen)
+        };
+
+        xcb::change_property(
+            &self.conn,        // xcb connection to X11
+            PROP_MODE_REPLACE, // discard current prop and replace
+            id,                // window to change prop on
+            state_prop,        // prop to change
+            ATOM_ATOM,         // type of prop
+            32,                // data format (8/16/32-bit)
+            &[data],           // data
+        );
     }
 
     fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings) {
@@ -760,7 +766,7 @@ impl XConn for XcbConnection {
         }
 
         // xcb docs: https://www.mankier.com/3/xcb_change_window_attributes
-        xcb::change_window_attributes(&self.conn, self.root, EVENT_MASK);
+        xcb::change_window_attributes(&self.conn, self.root, &[(xcb::CW_EVENT_MASK, EVENT_MASK)]);
         self.conn.flush();
     }
 
@@ -876,22 +882,19 @@ impl XConn for XcbConnection {
     }
 
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
-        match self.str_prop(id, Atom::WmClass.as_ref()) {
-            Ok(s) => {
-                if s.split("\0").any(|c| floating_classes.contains(&c)) {
-                    return true;
-                }
+        if let Ok(s) = self.str_prop(id, Atom::WmClass.as_ref()) {
+            if s.split("\0").any(|c| floating_classes.contains(&c)) {
+                return true;
             }
-            Err(_) => (), // no WM_CLASS set
-        };
-
-        match self.str_prop(id, Atom::NetWmWindowType.as_ref()) {
-            Ok(s) => s.split("\0").any(|t| {
-                t.try_into()
-                    .map_or(false, |w| self.auto_float_types.contains(&w))
-            }),
-            Err(_) => false,
         }
+
+        self.str_prop(id, Atom::NetWmWindowType.as_ref())
+            .map_or(false, |s| {
+                s.split("\0").any(|t| {
+                    t.try_into()
+                        .map_or(false, |w| self.auto_float_types.contains(&w))
+                })
+            })
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
@@ -935,7 +938,7 @@ impl XConn for XcbConnection {
             Ok(reply) => reply.children().into(),
         };
 
-        let dont_manage: Vec<u32> = [Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar]
+        let dont_manage: Vec<u32> = UNMANAGED_WINDOW_TYPES
             .iter()
             .map(|&t| self.known_atom(t))
             .collect();
