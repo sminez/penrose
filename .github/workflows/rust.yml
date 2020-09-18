@@ -10,19 +10,61 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_LOG: info
+  RUST_BACKTRACE: 1
 
 jobs:
-  build:
+  test:
+    name: Test Rust ${{ matrix.rust }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, beta, nightly]
 
+    steps:
+    - uses: actions/checkout@v2
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+
+    - name: Install C deps
+      run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
+
+    - name: Run tests
+      run: cargo test --verbose
+
+  rustfmt:
+    name: Ensure rustfmt is happy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        components: rustfmt
+    - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Lint the codebase with clippy
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -Dwarnings
+    steps:
+    - uses: actions/checkout@v2
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        components: clippy
+    - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
+    - run: cargo clippy --workspace --all-targets --verbose
+
+  rustdoc-links:
+    name: Check doc links are valid
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install C deps
-      run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
-    - name: Check Formatting
-      run: cargo fmt -- --check
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: nightly
+    - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
+    - run: cargo rustdoc --all-features -- -D warnings
