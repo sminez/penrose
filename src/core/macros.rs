@@ -47,6 +47,94 @@ macro_rules! map(
 /// make creating all of the key bindings less verbose
 #[macro_export]
 macro_rules! gen_keybindings(
+    // parse a single simple key binding
+    {   @parse $map:expr, $codes:expr,
+        $binding:expr => $action:expr;
+        $($tail:tt)*
+    } => {
+        match $crate::helpers::parse_key_binding($binding, &$codes) {
+            None => panic!("invalid key binding: {}", $binding),
+            Some(key_code) => $map.insert(key_code, $action),
+        };
+        gen_keybindings!(@parse $map, $codes, $($tail)*);
+    };
+
+    // parse a map block for WindowManager methods with a single arg
+    {   @parse $map:expr, $codes:expr,
+        map [ $from:expr ] in { $($patt:expr => $method:ident [ $to:expr ];)+ };
+        $($tail:tt)*
+    } => {
+        {
+            $(
+                for (k, arg) in $from.into_iter().zip($to.clone()) {
+                    let binding = format!($patt, k);
+                    match $crate::helpers::parse_key_binding(binding.clone(), &$codes) {
+                        None => panic!("invalid key binding: {}", binding),
+                        Some(key_code) => $map.insert(key_code, run_internal!($method, arg)),
+                    };
+                }
+            )+
+            gen__keybindings!(@parse $map, $codes, $($tail)*);
+        }
+    };
+
+    // parse a map by reference block for WindowManager methods with a single ref arg
+    {   @parse $map:expr, $codes:expr,
+        refmap [ $from:expr ] in { $($patt:expr => $method:ident [ $to:expr ];)+ };
+        $($tail:tt)*
+    } => {
+        {
+            $(
+                for (k, arg) in $from.into_iter().zip($to.clone()) {
+                    let binding = format!($patt, k);
+                    match $crate::helpers::parse_key_binding(binding.clone(), &$codes) {
+                        None => panic!("invalid key binding: {}", binding),
+                        Some(key_code) => $map.insert(key_code, run_internal!($method, &arg)),
+                    };
+                }
+            )+
+            gen_keybindings!(@parse $map, $codes, $($tail)*);
+        }
+    };
+
+    // base case (out of tokens)
+    {   @parse $map:expr, $codes:expr,
+        $($tail:tt)*
+    } => {
+        // shouldn't have any tokens here!
+        $(compile_error!(
+            stringify!(unexpected tokens in keybinging macro: $tail)
+        );)*
+    };
+
+    // TODO: remove this depricated method of doing keybindings
+    {   $($binding:expr => $action:expr),+;
+        $(forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, })+
+    } => {
+        gen_keybindings_depricated!(
+            $($binding => $action),+;
+            $(forall_workspaces: $ws_array => { $($ws_binding => $ws_action),+, })+
+        );
+    };
+
+    // NOTE: this is the public entry point to the macro
+    { $($tokens:tt)+ } => {
+        {
+            let mut map = ::std::collections::HashMap::new();
+            let codes = $crate::helpers::keycodes_from_xmodmap();
+            gen_keybindings!(@parse map, codes, $($tokens)+);
+            map
+        }
+    };
+);
+
+/// depricated: please use [gen_keybindings] as shown in the examples.
+#[deprecated(
+    since = "0.0.11",
+    note = "This macro will be removed entirely in an upcoming release."
+)]
+#[macro_export]
+macro_rules! gen_keybindings_depricated(
     {
         $($binding:expr => $action:expr),+;
         $(forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, })+

@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate penrose;
 
-use penrose::core::helpers::spawn_for_output;
-use penrose::core::{Layout, WindowManager, XcbConnection};
-use penrose::layout::{bottom_stack, side_stack, LayoutConf};
 use penrose::{
     contrib::{
         actions::create_or_switch_to_workspace,
@@ -11,7 +8,9 @@ use penrose::{
         hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces},
         layouts::paper,
     },
-    Backward, Config, Forward, Less, More, Result,
+    helpers::{index_selectors, spawn_for_output},
+    layout::{bottom_stack, side_stack, Layout, LayoutConf},
+    Backward, Config, Forward, Less, More, Result, WindowManager, XcbConnection,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -54,16 +53,16 @@ fn main() -> Result<()> {
 
     let key_bindings = gen_keybindings! {
         // Program launch
-        "M-semicolon" => run_external!("dmenu_run"),
-        "M-Return" => run_external!("st"),
+        "M-semicolon" => run_external!("dmenu_run");
+        "M-Return" => run_external!("st");
 
         // client management
-        "M-j" => run_internal!(cycle_client, Forward),
-        "M-k" => run_internal!(cycle_client, Backward),
-        "M-S-j" => run_internal!(drag_client, Forward),
-        "M-S-k" => run_internal!(drag_client, Backward),
-        "M-S-q" => run_internal!(kill_client),
-        "M-slash" => sp.toggle(),
+        "M-j" => run_internal!(cycle_client, Forward);
+        "M-k" => run_internal!(cycle_client, Backward);
+        "M-S-j" => run_internal!(drag_client, Forward);
+        "M-S-k" => run_internal!(drag_client, Backward);
+        "M-S-q" => run_internal!(kill_client);
+        "M-slash" => sp.toggle();
 
         // workspace management
         "M-w" => create_or_switch_to_workspace(
@@ -74,30 +73,29 @@ fn main() -> Result<()> {
                 output.trim_end().to_string()
             },
             my_layouts()
-        ),
-        "M-Tab" => run_internal!(toggle_workspace),
-        "M-bracketright" => run_internal!(cycle_screen, Forward),
-        "M-bracketleft" => run_internal!(cycle_screen, Backward),
-        "M-S-bracketright" => run_internal!(drag_workspace, Forward),
-        "M-S-bracketleft" => run_internal!(drag_workspace, Backward),
+        );
+        "M-Tab" => run_internal!(toggle_workspace);
+        "M-bracketright" => run_internal!(cycle_screen, Forward);
+        "M-bracketleft" => run_internal!(cycle_screen, Backward);
+        "M-S-bracketright" => run_internal!(drag_workspace, Forward);
+        "M-S-bracketleft" => run_internal!(drag_workspace, Backward);
 
         // Layout management
-        "M-grave" => run_internal!(cycle_layout, Forward),
-        "M-S-grave" => run_internal!(cycle_layout, Backward),
-        "M-A-Up" => run_internal!(update_max_main, More),
-        "M-A-Down" => run_internal!(update_max_main, Less),
-        "M-A-Right" => run_internal!(update_main_ratio, More),
-        "M-A-Left" => run_internal!(update_main_ratio, Less),
+        "M-grave" => run_internal!(cycle_layout, Forward);
+        "M-S-grave" => run_internal!(cycle_layout, Backward);
+        "M-A-Up" => run_internal!(update_max_main, More);
+        "M-A-Down" => run_internal!(update_max_main, Less);
+        "M-A-Right" => run_internal!(update_main_ratio, More);
+        "M-A-Left" => run_internal!(update_main_ratio, Less);
 
-        "M-A-s" => run_internal!(detect_screens),
-
+        "M-A-s" => run_internal!(detect_screens);
         "M-A-Escape" => run_internal!(exit);
 
         // setting up bindings for 6 possible workspaces
-        forall_workspaces: &[1, 2, 3, 4, 5, 6] => {
-            "M-{}" => focus_workspace,
-            "M-S-{}" => client_to_workspace,
-        }
+        refmap [ 1..7 ] in {
+            "M-{}" => focus_workspace [ index_selectors(6) ];
+            "M-S-{}" => client_to_workspace [ index_selectors(6) ];
+        };
     };
 
     let conn = XcbConnection::new()?;

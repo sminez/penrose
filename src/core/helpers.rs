@@ -1,7 +1,7 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
     bindings::{CodeMap, KeyCode},
-    Result,
+    Result, Selector,
 };
 
 use std::{
@@ -134,6 +134,11 @@ pub fn parse_key_binding(pattern: impl Into<String>, known_codes: &CodeMap) -> O
         }
         None => None,
     }
+}
+
+/// Create a Vec of index selectors for the given input slice
+pub fn index_selectors<'a, T>(len: usize) -> Vec<Selector<'a, T>> {
+    (0..len).map(Selector::Index).collect()
 }
 
 // Helper functions for XCB based operations

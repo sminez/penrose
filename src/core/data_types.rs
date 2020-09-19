@@ -75,6 +75,11 @@ impl<'a> Config<'a> {
             hooks: vec![],
         }
     }
+
+    /// Create a range from 1 -> n_workspaces for use in keybindings
+    pub fn ws_range(&self) -> std::ops::Range<usize> {
+        1..(self.workspaces.len() + 1)
+    }
 }
 
 /* Argument enums */
