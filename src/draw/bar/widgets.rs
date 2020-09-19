@@ -177,7 +177,7 @@ impl Workspaces {
         for ws in self.workspaces.iter_mut() {
             let now_occupied =
                 if let Some(ws) = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name)) {
-                    ws.is_empty()
+                    !ws.is_empty()
                 } else {
                     false
                 };
@@ -239,7 +239,7 @@ impl Hook for Workspaces {
             if let Some(ws) = self.workspaces.get_mut(new) {
                 let res = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name));
                 ws.occupied = if let Some(w) = res {
-                    w.is_empty()
+                    !w.is_empty()
                 } else {
                     false
                 };
