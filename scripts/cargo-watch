@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# https://doc.rust-lang.org/cargo/reference/external-tools.html#custom-subcommands
+# Run the current test suite under entr, watching for file changes in git
+
+# cargo commands have to be 'cargo-$CMD_NAME' in order to be picked up by cargo
+CMD_NAME="$(basename $0:A | cut -d'-' -f2)"
+
+if [[ $2 == "--help" ]]; then
+  echo "run tests under entr, watching git for changes"
+  exit
+fi
+
+function error_and_exit {
+  echo -e "\033[31m\033[1merror:\033[0m '$1' is required for $CMD_NAME to run"
+  exit 1
+}
+
+function require {
+  for prog in $*; do
+    [ -x "$(command -v $prog)" ] || error_and_exit $prog
+  done
+}
+
+require git entr
+
+git ls-files | entr -ac cargo test
