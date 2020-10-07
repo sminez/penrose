@@ -123,4 +123,40 @@ impl Region {
     pub fn values(&self) -> (u32, u32, u32, u32) {
         (self.x, self.y, self.w, self.h)
     }
+
+    /// Divides this region into two columns where the first has the given width.
+    ///
+    /// Panics if new_width is not within the region.
+    pub fn split_at_width(&self, new_width: u32) -> (Region, Region) {
+        assert!(new_width < self.w, "Split out of range.");
+        (
+            Region {
+                w: new_width,
+                ..*self
+            },
+            Region {
+                x: self.x + new_width,
+                w: self.w - new_width,
+                ..*self
+            },
+        )
+    }
+
+    /// Divides this region into two rows where the first has the given height.
+    ///
+    /// Panics if new_height is not within the region.
+    pub fn split_at_height(&self, new_height: u32) -> (Region, Region) {
+        assert!(new_height < self.h, "Split out of range.");
+        (
+            Region {
+                h: new_height,
+                ..*self
+            },
+            Region {
+                y: self.y + new_height,
+                h: self.h - new_height,
+                ..*self
+            },
+        )
+    }
 }
