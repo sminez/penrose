@@ -48,6 +48,11 @@ impl Text {
         }
     }
 
+    /// Borrows the current contents of the widget.
+    pub fn get_text(&self) -> &String {
+        &self.txt
+    }
+
     /// Set the rendered text and trigger a redraw
     pub fn set_text(&mut self, txt: impl Into<String>) {
         let new_text = txt.into();
@@ -74,7 +79,7 @@ impl Widget for Text {
             ctx.rectangle(0.0, 0.0, w, h);
         }
 
-        let (ew, eh) = self.extent.unwrap();
+        let (ew, eh) = self.current_extent(ctx, h)?;
         ctx.font(&self.font, self.point_size)?;
         ctx.color(&self.fg);
 
