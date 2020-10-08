@@ -1,6 +1,7 @@
 //! A tiling window manager in the style of Xmonad
 #![warn(missing_docs)]
 #![deny(clippy::all)]
+#![feature(const_fn_floating_point_arithmetic)]
 
 #[macro_use]
 extern crate log;

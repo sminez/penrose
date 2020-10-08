@@ -36,7 +36,7 @@ impl Text {
     ) -> Self {
         Self {
             txt: txt.into(),
-            font: style.font.clone(),
+            font: style.font.to_string(),
             point_size: style.point_size,
             fg: style.fg,
             bg: style.bg,
@@ -162,7 +162,7 @@ impl Workspaces {
     ) -> Self {
         Self {
             workspaces: meta_from_names(workspace_names),
-            font: style.font.clone(),
+            font: style.font.to_string(),
             point_size: style.point_size,
             focused_ws: vec![], // set in startup hook
             require_draw: false,

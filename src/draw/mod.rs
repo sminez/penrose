@@ -58,9 +58,9 @@ mod inner {
 
     #[derive(Clone, Debug, PartialEq)]
     /// A set of styling options for a text string
-    pub struct TextStyle {
+    pub struct TextStyle<'s> {
         /// Pango font name to use for rendering
-        pub font: String,
+        pub font: &'s str,
         /// Point size to render the font at
         pub point_size: i32,
         /// Foreground color in 0xRRGGBB format
@@ -82,6 +82,7 @@ mod inner {
     impl Color {
         /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
         pub fn new_from_hex(hex: u32) -> Self {
+            // TODO: double check if this produces correct results when alpha is omitted.
             let floats: Vec<f64> = hex
                 .to_be_bytes()
                 .iter()
@@ -90,6 +91,26 @@ mod inner {
 
             let (r, g, b, a) = (floats[0], floats[1], floats[2], floats[3]);
             Self { r, g, b, a }
+        }
+
+        /// Creates a new Color from its R, G and B channels.
+        pub const fn from_rgb(r: u8, g: u8, b: u8) -> Self {
+            Self {
+                r: r as f64 / 255.0,
+                g: g as f64 / 255.0,
+                b: b as f64 / 255.0,
+                a: 1.0,
+            }
+        }
+
+        /// Creates a new Color from its R, G, B and A channels.
+        pub const fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
+            Self {
+                r: r as f64 / 255.0,
+                g: g as f64 / 255.0,
+                b: b as f64 / 255.0,
+                a: a as f64 / 255.0,
+            }
         }
 
         /// The RGB information of this color as 0.0-1.0 range floats representing
