@@ -86,14 +86,14 @@ mod inner {
                 Self {
                     r: (hex >> 24) as u8,
                     g: (hex >> 16) as u8,
-                    b: (hex >> 08) as u8,
-                    a: (hex >> 00) as u8,
+                    b: (hex >> 8) as u8,
+                    a: (hex >> 0) as u8,
                 }
             } else {
                 Self {
                     r: (hex >> 16) as u8,
-                    g: (hex >> 08) as u8,
-                    b: (hex >> 00) as u8,
+                    g: (hex >> 8) as u8,
+                    b: (hex >> 0) as u8,
                     a: 0xFF,
                 }
             }
