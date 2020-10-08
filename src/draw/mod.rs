@@ -112,7 +112,11 @@ mod inner {
         /// The RGB information of this color as 0.0-1.0 range floats representing
         /// proportions of 255 for each of R, G, B
         pub fn rgb(&self) -> (f64, f64, f64) {
-            (self.r as f64 / 255.0, self.g as f64 / 255.0, self.b as f64 / 255.0)
+            (
+                self.r as f64 / 255.0,
+                self.g as f64 / 255.0,
+                self.b as f64 / 255.0,
+            )
         }
 
         /// The RGBA information of this color as 0.0-1.0 range floats representing
