@@ -8,12 +8,20 @@ const PROFONT: &str = "ProFont For Powerline";
 const FIRA: &str = "Fira Code";
 const SERIF: &str = "Serif";
 
-const BLACK: u32 = 0x282828ff;
-const GREY: u32 = 0x3c3836ff;
-const WHITE: u32 = 0xebdbb2ff;
-const PURPLE: u32 = 0xb16286ff;
-const BLUE: u32 = 0x458588ff;
-const RED: u32 = 0xcc241dff;
+const BLACK: Color = Color::new_from_hex(0x2828_28FF);
+const GREY: Color = Color::new_from_hex(0x3C38_36FF);
+const WHITE: Color = Color::new_from_hex(0xEBDB_B2FF);
+const PURPLE: Color = Color::new_from_hex(0xB162_86FF);
+const BLUE: Color = Color::new_from_hex(0x4585_88FF);
+const RED: Color = Color::new_from_hex(0xCC24_1DFF);
+
+const STYLE: TextStyle = TextStyle {
+    font: PROFONT,
+    point_size: 11,
+    fg: WHITE,
+    bg: Some(BLACK),
+    padding: (2.0, 2.0),
+};
 
 fn main() -> Result<()> {
     bar_draw()?;
@@ -23,19 +31,12 @@ fn main() -> Result<()> {
 
 fn bar_draw() -> Result<()> {
     let workspaces = &["1", "2", "3", "4", "5", "6"];
-    let style = TextStyle {
-        font: PROFONT.to_string(),
-        point_size: 11,
-        fg: WHITE.into(),
-        bg: Some(BLACK.into()),
-        padding: (2.0, 2.0),
-    };
     let highlight = BLUE;
     let empty_ws = GREY;
     let mut bar = dwm_bar(
         Box::new(XCBDraw::new()?),
         HEIGHT,
-        &style,
+        &STYLE,
         highlight,
         empty_ws,
         workspaces,

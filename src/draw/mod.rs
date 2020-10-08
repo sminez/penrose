@@ -58,9 +58,9 @@ mod inner {
 
     #[derive(Clone, Debug, PartialEq)]
     /// A set of styling options for a text string
-    pub struct TextStyle {
+    pub struct TextStyle<'s> {
         /// Pango font name to use for rendering
-        pub font: String,
+        pub font: &'s str,
         /// Point size to render the font at
         pub point_size: i32,
         /// Foreground color in 0xRRGGBB format
@@ -74,34 +74,56 @@ mod inner {
     #[derive(Clone, Copy, Debug, PartialEq)]
     /// A simple RGBA based color
     pub struct Color {
-        r: f64,
-        g: f64,
-        b: f64,
-        a: f64,
+        r: u8,
+        g: u8,
+        b: u8,
+        a: u8,
     }
     impl Color {
         /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
-        pub fn new_from_hex(hex: u32) -> Self {
-            let floats: Vec<f64> = hex
-                .to_be_bytes()
-                .iter()
-                .map(|n| *n as f64 / 255.0)
-                .collect();
+        pub const fn new_from_hex(hex: u32) -> Self {
+            if hex >= 0x100_0000 {
+                Self {
+                    r: (hex >> 24) as u8,
+                    g: (hex >> 16) as u8,
+                    b: (hex >> 08) as u8,
+                    a: (hex >> 00) as u8,
+                }
+            } else {
+                Self {
+                    r: (hex >> 16) as u8,
+                    g: (hex >> 08) as u8,
+                    b: (hex >> 00) as u8,
+                    a: 0xFF,
+                }
+            }
+        }
 
-            let (r, g, b, a) = (floats[0], floats[1], floats[2], floats[3]);
+        /// Creates a new Color from its R, G and B channels.
+        pub const fn from_rgb(r: u8, g: u8, b: u8) -> Self {
+            Self { r, g, b, a: 0xFF }
+        }
+
+        /// Creates a new Color from its R, G, B and A channels.
+        pub const fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
             Self { r, g, b, a }
         }
 
         /// The RGB information of this color as 0.0-1.0 range floats representing
         /// proportions of 255 for each of R, G, B
         pub fn rgb(&self) -> (f64, f64, f64) {
-            (self.r, self.g, self.b)
+            (self.r as f64 / 255.0, self.g as f64 / 255.0, self.b as f64 / 255.0)
         }
 
         /// The RGBA information of this color as 0.0-1.0 range floats representing
         /// proportions of 255 for each of R, G, B, A
         pub fn rgba(&self) -> (f64, f64, f64, f64) {
-            (self.r, self.g, self.b, self.a)
+            (
+                self.r as f64 / 255.0,
+                self.g as f64 / 255.0,
+                self.b as f64 / 255.0,
+                self.a as f64 / 255.0,
+            )
         }
     }
 
@@ -114,14 +136,19 @@ mod inner {
     impl From<(f64, f64, f64)> for Color {
         fn from(rgb: (f64, f64, f64)) -> Self {
             let (r, g, b) = rgb;
-            Self { r, g, b, a: 1.0 }
+            (r, g, b, 1.0).into()
         }
     }
 
     impl From<(f64, f64, f64, f64)> for Color {
         fn from(rgba: (f64, f64, f64, f64)) -> Self {
             let (r, g, b, a) = rgba;
-            Self { r, g, b, a }
+            Self {
+                r: (r * 255.0) as u8,
+                g: (g * 255.0) as u8,
+                b: (b * 255.0) as u8,
+                a: (a * 255.0) as u8,
+            }
         }
     }
 
@@ -138,17 +165,7 @@ mod inner {
 
         fn try_from(s: &str) -> Result<Color> {
             let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or_else(|| &s), 16)?;
-
-            if s.len() == 7 {
-                Ok(Self::new_from_hex((hex << 8) + 0xFF))
-            } else if s.len() == 9 {
-                Ok(Self::new_from_hex(hex))
-            } else {
-                Err(anyhow!(
-                    "failed to parse {} into a Color, invalid length",
-                    &s
-                ))
-            }
+            Ok(Self::new_from_hex(hex))
         }
     }
 
@@ -414,13 +431,11 @@ mod tests {
 
     #[test]
     fn test_color_from_hex_rgba() {
-        assert_eq!(Color::from(0x00000000), Color::from((0.0, 0.0, 0.0, 0.0)));
         assert_eq!(Color::from(0xFF00FFFF), Color::from((1.0, 0.0, 1.0, 1.0)));
         assert_eq!(Color::from(0xFFFFFFFF), Color::from((1.0, 1.0, 1.0, 1.0)));
         assert_eq!(Color::from(0xFFFF00FF), Color::from((1.0, 1.0, 0.0, 1.0)));
         assert_eq!(Color::from(0xFFFF0000), Color::from((1.0, 1.0, 0.0, 0.0)));
         assert_eq!(Color::from(0xFF000000), Color::from((1.0, 0.0, 0.0, 0.0)));
-        assert_eq!(Color::from(0x000000FF), Color::from((0.0, 0.0, 0.0, 1.0)));
     }
 
     #[test]
@@ -437,10 +452,6 @@ mod tests {
 
     #[test]
     fn test_color_from_str_rgba() {
-        assert_eq!(
-            Color::try_from("#000000FF").unwrap(),
-            Color::from((0.0, 0.0, 0.0, 1.0))
-        );
         assert_eq!(
             Color::try_from("#FF00FF00").unwrap(),
             Color::from((1.0, 0.0, 1.0, 0.0))
