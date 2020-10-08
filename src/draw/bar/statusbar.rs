@@ -8,6 +8,7 @@ use crate::{
 };
 
 /// The position of a status bar
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Position {
     /// Top of the screen
     Top,

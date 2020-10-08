@@ -153,6 +153,7 @@ mod inner {
     }
 
     /// An EWMH Window type
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub enum WindowType {
         /// A dock / status bar
         Dock,
