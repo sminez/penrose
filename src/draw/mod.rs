@@ -212,6 +212,10 @@ mod inner {
         fn clear(&mut self);
         /// Translate this context by (dx, dy) from its current position
         fn translate(&self, dx: f64, dy: f64);
+        /// Gets the current absolute x offset.
+        fn get_x_offset(&self) -> f64;
+        /// Gets the current absolute y offset.
+        fn get_y_offset(&self) -> f64;
         /// Set the x offset for this context absolutely
         fn set_x_offset(&self, x: f64);
         /// Set the y offset for this context absolutely
@@ -350,6 +354,16 @@ mod inner {
 
         fn translate(&self, dx: f64, dy: f64) {
             self.ctx.translate(dx, dy)
+        }
+
+        fn get_x_offset(&self) -> f64 {
+            // TODO: is this right, or do I need to transform 0,0 as below?
+            self.ctx.get_matrix().x0
+        }
+
+        fn get_y_offset(&self) -> f64 {
+            // TODO: is this right, or do I need to transform 0,0 as below?
+            self.ctx.get_matrix().y0
         }
 
         fn set_x_offset(&self, x: f64) {

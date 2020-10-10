@@ -159,6 +159,11 @@ impl Layout {
         }
     }
 
+    /// Returns the current number of clients that can be in the main area.
+    pub fn get_max_main(&self) -> u32 {
+        self.max_main
+    }
+
     /// Increase/decrease the size of the main area relative to secondary.
     /// (clamps at 1.0 and 0.0 respectively)
     pub fn update_main_ratio(&mut self, change: Change, step: f32) {

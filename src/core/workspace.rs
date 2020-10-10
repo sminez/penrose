@@ -198,6 +198,14 @@ impl Workspace {
         }
     }
 
+    /// Returns the current number of clients that can be in the main area.
+    pub fn get_max_main(&self) -> u32 {
+        match self.layouts.focused() {
+            Some(layout) => layout.get_max_main(),
+            _ => 0,
+        }
+    }
+
     /// Increase or decrease the size of the main area for the current Layout
     pub fn update_main_ratio(&mut self, change: Change, step: f32) {
         if let Some(layout) = self.layouts.focused_mut() {
