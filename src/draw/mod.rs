@@ -92,6 +92,16 @@ mod inner {
             Self { r, g, b, a }
         }
 
+        /// Creates a new Color from its constituent parts.
+        pub fn from_rgb(r: u8, g: u8, b: u8) -> Color {
+            Color {
+                r: r as f64 / 255.0,
+                g: g as f64 / 255.0,
+                b: b as f64 / 255.0,
+                a: 1.0,
+            }
+        }
+
         /// The RGB information of this color as 0.0-1.0 range floats representing
         /// proportions of 255 for each of R, G, B
         pub fn rgb(&self) -> (f64, f64, f64) {
@@ -357,12 +367,10 @@ mod inner {
         }
 
         fn get_x_offset(&self) -> f64 {
-            // TODO: is this right, or do I need to transform 0,0 as below?
             self.ctx.get_matrix().x0
         }
 
         fn get_y_offset(&self) -> f64 {
-            // TODO: is this right, or do I need to transform 0,0 as below?
             self.ctx.get_matrix().y0
         }
 
