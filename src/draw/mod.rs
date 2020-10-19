@@ -94,11 +94,16 @@ mod inner {
 
         /// Creates a new Color from its constituent parts.
         pub fn from_rgb(r: u8, g: u8, b: u8) -> Color {
+            Color::from_rgba(r, g, b, 0xFF)
+        }
+
+        /// Creates a new Color from its constituent parts.
+        pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
             Color {
                 r: r as f64 / 255.0,
                 g: g as f64 / 255.0,
                 b: b as f64 / 255.0,
-                a: 1.0,
+                a: a as f64 / 255.0,
             }
         }
 
