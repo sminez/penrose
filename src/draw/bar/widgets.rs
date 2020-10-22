@@ -65,14 +65,18 @@ impl Text {
 
     /// Changes the color of the text.
     pub fn set_fg(&mut self, color: Color) {
-        self.require_draw |= color != self.fg;
-        self.fg = color;
+        if self.fg != color {
+            self.fg = color;
+            self.require_draw = true;
+        }
     }
 
     /// Changes the color of the background.
     pub fn set_bg(&mut self, color: Option<Color>) {
-        self.require_draw |= color != self.bg;
-        self.bg = color;
+        if self.bg != color {
+            self.bg = color;
+            self.require_draw = true;
+        }
     }
 
     /// Force this text widget to redraw on the next render request.
