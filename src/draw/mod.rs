@@ -137,7 +137,7 @@ mod inner {
         type Error = anyhow::Error;
 
         fn try_from(s: &str) -> Result<Color> {
-            let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or_else(|| &s), 16)?;
+            let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(&s), 16)?;
 
             if s.len() == 7 {
                 Ok(Self::new_from_hex((hex << 8) + 0xFF))

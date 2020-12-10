@@ -6,7 +6,7 @@ use crate::{
 
 /**
  * A layout that aims to mimic the feel of having multiple pieces of paper fanned out on a desk,
- * inspired by http://10gui.com/
+ * inspired by <http://10gui.com/>
  *
  * Without access to the custom hardware required for 10gui, we instead have to rely on the WM
  * actions we have available: n_main is ignored and instead, the focused client takes up ratio% of

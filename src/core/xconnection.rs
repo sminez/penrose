@@ -169,19 +169,19 @@ const UNMANAGED_WINDOW_TYPES: &[Atom] = &[Atom::NetWindowTypeDock, Atom::NetWind
  * accordingly if you need access to something that isn't currently passed through
  * to the WindowManager event loop.
  *
- * https://tronche.com/gui/x/xlib/events/types.html
- * https://github.com/rtbo/rust-xcb/xml/xproto.xml
+ * <https://tronche.com/gui/x/xlib/events/types.html>
+ * <https://github.com/rtbo/rust-xcb/xml/xproto.xml>
  */
 #[derive(Debug, Clone)]
 pub enum XEvent {
-    /// xcb docs: https://www.mankier.com/3/xcb_button_press_event_t
-    /// xcb docs: https://www.mankier.com/3/xcb_motion_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_button_press_event_t>
+    /// xcb docs: <https://www.mankier.com/3/xcb_motion_notify_event_t>
     MouseEvent(MouseEvent),
 
-    /// xcb docs: https://www.mankier.com/3/xcb_input_device_key_press_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_input_device_key_press_event_t>
     KeyPress(KeyCode),
 
-    /// xcb docs: https://www.mankier.com/3/xcb_map_request_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_map_request_event_t>
     MapRequest {
         /// The ID of the window that wants to be mapped
         id: WinId,
@@ -189,7 +189,7 @@ pub enum XEvent {
         ignore: bool,
     },
 
-    /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_enter_notify_event_t>
     Enter {
         /// The ID of the window that was entered
         id: WinId,
@@ -199,7 +199,7 @@ pub enum XEvent {
         wpt: Point,
     },
 
-    /// xcb docs: https://www.mankier.com/3/xcb_enter_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_enter_notify_event_t>
     Leave {
         /// The ID of the window that was left
         id: WinId,
@@ -209,19 +209,19 @@ pub enum XEvent {
         wpt: Point,
     },
 
-    /// xcb docs: https://www.mankier.com/3/xcb_destroy_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_destroy_notify_event_t>
     Destroy {
         /// The ID of the window being destroyed
         id: WinId,
     },
 
-    /// xcb docs: https://www.mankier.com/3/xcb_randr_screen_change_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_randr_screen_change_notify_event_t>
     ScreenChange,
 
-    /// xcb docs: https://www.mankier.com/3/xcb_randr_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_randr_notify_event_t>
     RandrNotify,
 
-    /// xcb docs: https://www.mankier.com/3/xcb_configure_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_configure_notify_event_t>
     ConfigureNotify {
         /// The ID of the window that had a property changed
         id: WinId,
@@ -231,7 +231,7 @@ pub enum XEvent {
         is_root: bool,
     },
 
-    /// xcb docs: https://www.mankier.com/3/xcb_property_notify_event_t
+    /// xcb docs: <https://www.mankier.com/3/xcb_property_notify_event_t>
     PropertyNotify {
         /// The ID of the window that had a property changed
         id: WinId,
@@ -241,7 +241,7 @@ pub enum XEvent {
         is_root: bool,
     },
 
-    /// https://www.mankier.com/3/xcb_client_message_event_t
+    /// <https://www.mankier.com/3/xcb_client_message_event_t>
     ClientMessage {
         /// The ID of the window that sent the message
         id: WinId,
