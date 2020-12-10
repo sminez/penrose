@@ -337,25 +337,28 @@ impl<'a> WindowManager<'a> {
         };
 
         let floating = self.conn.window_should_float(id, self.floating_classes);
-        let wix = self.active_ws_index();
-        let mut client = Client::new(id, wm_name, wm_class, wix, floating);
+        let mut client = Client::new(id, wm_name, wm_class, self.active_ws_index(), floating);
         run_hooks!(new_client, self, &mut client);
+        let wix = client.workspace();
 
         if client.wm_managed && !floating {
             self.add_client_to_workspace(wix, id);
         }
 
         self.client_map.insert(id, client);
-        self.conn.mark_new_window(id);
-        self.conn.focus_client(id);
-        self.client_gained_focus(id);
-
         self.conn.set_client_workspace(id, wix);
-        self.apply_layout(wix);
-        self.map_window_if_needed(id);
 
-        let s = self.screens.focused().unwrap();
-        self.conn.warp_cursor(Some(id), s);
+        if wix == self.active_ws_index() {
+            self.conn.mark_new_window(id);
+            self.conn.focus_client(id);
+            self.client_gained_focus(id);
+
+            self.apply_layout(wix);
+            self.map_window_if_needed(id);
+
+            let s = self.screens.focused().unwrap();
+            self.conn.warp_cursor(Some(id), s);
+        }
     }
 
     fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
