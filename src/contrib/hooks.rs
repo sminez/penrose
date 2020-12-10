@@ -2,6 +2,7 @@
 use crate::core::{
     client::Client, helpers::spawn, hooks::Hook, manager::WindowManager, ring::Selector,
 };
+use std::collections::HashMap;
 
 /**
  * Automatically set the X root window WM_NAME property to be the WM_NAME of the
@@ -101,5 +102,62 @@ impl<'a> Hook for RemoveEmptyWorkspaces<'a> {
                 wm.remove_workspace(&sel);
             }
         };
+    }
+}
+
+/// An individual workspace mapping for ClientSpawnRules
+pub enum SpawnRule {
+    /// Target a client by WM_CLASS
+    ClassName(&'static str, usize),
+    /// Target a client by WM_NAME
+    WMName(&'static str, usize),
+}
+
+/**
+ * Move clients with a matching WM_NAME to a target workspace when they are spawned.
+ * The Strings used to identify the clients that should be moved are their WM_NAME
+ * and WM_CLASS X11 properties.
+ * ```
+ * # #[macro_use] extern crate penrose; fn main() {
+ * use penrose::contrib::hooks::{SpawnRule, ClientSpawnRules};
+ *
+ * let my_hook = ClientSpawnRules::new(vec![
+ *     SpawnRule::ClassName("xterm-256color" , 3),
+ *     SpawnRule::WMName("Firefox Developer Edition" , 7),
+ * ]);
+ * # }
+ */
+pub struct ClientSpawnRules {
+    class_rules: HashMap<&'static str, usize>,
+    name_rules: HashMap<&'static str, usize>,
+}
+impl ClientSpawnRules {
+    /// Create a new ClientSpawnRules that is pre-boxed for adding to your workspace hooks.
+    pub fn new(rules: Vec<SpawnRule>) -> Box<Self> {
+        let mut class_rules = HashMap::new();
+        let mut name_rules = HashMap::new();
+
+        for rule in rules.into_iter() {
+            match rule {
+                SpawnRule::ClassName(s, i) => class_rules.insert(s, i),
+                SpawnRule::WMName(s, i) => name_rules.insert(s, i),
+            };
+        }
+
+        Box::new(Self {
+            class_rules,
+            name_rules,
+        })
+    }
+}
+impl Hook for ClientSpawnRules {
+    /// This sets the client workspace to the desired value which is then picked up and
+    /// trigers the spawn on that workspace in WindowManager.handle_map_request
+    fn new_client(&mut self, _: &mut WindowManager, c: &mut Client) {
+        if let Some(wix) = self.class_rules.get(c.wm_class()) {
+            c.set_workspace(*wix);
+        } else if let Some(wix) = self.name_rules.get(c.wm_name()) {
+            c.set_workspace(*wix);
+        }
     }
 }

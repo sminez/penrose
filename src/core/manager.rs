@@ -337,9 +337,9 @@ impl<'a> WindowManager<'a> {
         };
 
         let floating = self.conn.window_should_float(id, self.floating_classes);
-        let wix = self.active_ws_index();
-        let mut client = Client::new(id, wm_name, wm_class, wix, floating);
+        let mut client = Client::new(id, wm_name, wm_class, self.active_ws_index(), floating);
         run_hooks!(new_client, self, &mut client);
+        let wix = client.workspace();
 
         if client.wm_managed && !floating {
             self.add_client_to_workspace(wix, id);
