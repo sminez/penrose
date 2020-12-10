@@ -346,16 +346,19 @@ impl<'a> WindowManager<'a> {
         }
 
         self.client_map.insert(id, client);
-        self.conn.mark_new_window(id);
-        self.conn.focus_client(id);
-        self.client_gained_focus(id);
-
         self.conn.set_client_workspace(id, wix);
-        self.apply_layout(wix);
-        self.map_window_if_needed(id);
 
-        let s = self.screens.focused().unwrap();
-        self.conn.warp_cursor(Some(id), s);
+        if wix == self.active_ws_index() {
+            self.conn.mark_new_window(id);
+            self.conn.focus_client(id);
+            self.client_gained_focus(id);
+
+            self.apply_layout(wix);
+            self.map_window_if_needed(id);
+
+            let s = self.screens.focused().unwrap();
+            self.conn.warp_cursor(Some(id), s);
+        }
     }
 
     fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
