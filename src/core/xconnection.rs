@@ -368,7 +368,7 @@ pub struct XcbConnection {
     root: WinId,
     check_win: WinId,
     atoms: HashMap<Atom, u32>,
-    auto_float_types: Vec<&'static str>,
+    auto_float_types: Vec<u32>,
     randr_base: u8,
 }
 
@@ -396,9 +396,9 @@ impl XcbConnection {
             })
             .collect();
 
-        let auto_float_types: Vec<&'static str> = AUTO_FLOAT_WINDOW_TYPES
+        let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
-            .map(|atom| atom.as_ref())
+            .map(|atom| *atoms.get(&atom).unwrap())
             .collect();
 
         let check_win = conn.generate_id();
@@ -883,12 +883,11 @@ impl XConn for XcbConnection {
             if s.split('\0').any(|c| floating_classes.contains(&c)) {
                 return true;
             }
+        } else if let Ok(atom) = self.atom_prop(id, Atom::NetWmWindowType.as_ref()) {
+            return self.auto_float_types.contains(&atom);
         }
 
-        self.str_prop(id, Atom::NetWmWindowType.as_ref())
-            .map_or(false, |s| {
-                s.split('\0').any(|t| self.auto_float_types.contains(&t))
-            })
+        false
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
