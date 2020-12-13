@@ -883,7 +883,9 @@ impl XConn for XcbConnection {
             if s.split('\0').any(|c| floating_classes.contains(&c)) {
                 return true;
             }
-        } else if let Ok(atom) = self.atom_prop(id, Atom::NetWmWindowType.as_ref()) {
+        }
+
+        if let Ok(atom) = self.atom_prop(id, Atom::NetWmWindowType.as_ref()) {
             return self.auto_float_types.contains(&atom);
         }
 
