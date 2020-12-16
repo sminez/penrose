@@ -1,0 +1,13 @@
+{
+  "name": "danger",
+  "version": "1.0.0",
+  "description": "danger.js for penrose GithHub repo",
+  "main": "danger.ts",
+  "license": "MIT",
+  "devDependencies": {
+    "danger": "^10.5.4",
+    "eslint": "^7.15.0",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.3"
+  }
+}
