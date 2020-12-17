@@ -1,6 +1,6 @@
 [package]
 name = "penrose"
-version = "0.1.12"
+version = "0.2.0"
 edition = "2018"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license = "MIT"

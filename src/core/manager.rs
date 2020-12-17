@@ -90,6 +90,13 @@ impl<'a> WindowManager<'a> {
         wm
     }
 
+    fn pad_region(&self, region: &Region, gapless: bool) -> Region {
+        let gpx = if gapless { 0 } else { self.gap_px };
+        let padding = 2 * (self.border_px + gpx);
+        let (x, y, w, h) = region.values();
+        Region::new(x + gpx, y + gpx, w - padding, h - padding)
+    }
+
     fn apply_layout(&mut self, wix: usize) {
         let ws = match self.workspaces.get(wix) {
             Some(ws) => ws,
@@ -105,19 +112,22 @@ impl<'a> WindowManager<'a> {
             let lc = ws.layout_conf();
             if !lc.floating {
                 let reg = s.region(self.show_bar);
-                let gpx = if lc.gapless { 0 } else { self.gap_px };
-                let padding = 2 * (self.border_px + gpx);
+                let arrange_result = ws.arrange(reg, &self.client_map);
 
-                for (id, region) in ws.arrange(reg, &self.client_map) {
+                // Tile first then place floating clients on top
+                for (id, region) in arrange_result.actions {
                     debug!("configuring {} with {:?}", id, region);
                     if let Some(region) = region {
-                        let (x, y, w, h) = region.values();
-                        let reg = Region::new(x + gpx, y + gpx, w - padding, h - padding);
+                        let reg = self.pad_region(&region, lc.gapless);
                         self.conn.position_window(id, reg, self.border_px, false);
                         self.map_window_if_needed(id);
                     } else {
                         self.unmap_window_if_needed(id);
                     }
+                }
+
+                for id in arrange_result.floating {
+                    self.conn.raise_window(id);
                 }
             }
             run_hooks!(layout_applied, self, wix, i);
@@ -341,8 +351,21 @@ impl<'a> WindowManager<'a> {
         run_hooks!(new_client, self, &mut client);
         let wix = client.workspace();
 
-        if client.wm_managed && !floating {
+        if client.wm_managed {
             self.add_client_to_workspace(wix, id);
+        }
+
+        if client.floating {
+            if let Ok(default_position) = self.conn.window_geometry(id) {
+                let (mut x, mut y, w, h) = default_position.values();
+                if let Some((_, s)) = self.indexed_screen_for_workspace(wix) {
+                    let (sx, sy, _, _) = s.region(self.show_bar).values();
+                    x = if x < sx { sx } else { x };
+                    y = if y < sy { sy } else { y };
+                    let reg = self.pad_region(&Region::new(x, y, w, h), false);
+                    self.conn.position_window(id, reg, self.border_px, false);
+                }
+            }
         }
 
         self.client_map.insert(id, client);

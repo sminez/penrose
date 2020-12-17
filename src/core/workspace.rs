@@ -8,6 +8,11 @@ use crate::{
 
 use std::collections::HashMap;
 
+pub(crate) struct ArrangeActions {
+    pub(crate) actions: Vec<ResizeAction>,
+    pub(crate) floating: Vec<WinId>,
+}
+
 /**
  * A Workspace represents a named set of clients that are tiled according
  * to a specific layout. Layout properties are tracked per workspace and
@@ -111,23 +116,31 @@ impl Workspace {
         &self,
         screen_region: Region,
         client_map: &HashMap<WinId, Client>,
-    ) -> Vec<ResizeAction> {
+    ) -> ArrangeActions {
         if self.clients.len() > 0 {
             let layout = self.layouts.focused().unwrap();
-            let clients: Vec<&Client> = self
+            let (floating, tiled): (Vec<&Client>, Vec<&Client>) = self
                 .clients
                 .iter()
                 .map(|id| client_map.get(id).unwrap())
-                .collect();
+                .partition(|c| c.floating);
+
             debug!(
                 "applying '{}' layout for {} clients on workspace '{}'",
                 layout.symbol,
-                self.clients.len(),
+                tiled.len(),
                 self.name
             );
-            layout.arrange(&clients, self.focused_client(), &screen_region)
+
+            ArrangeActions {
+                actions: layout.arrange(&tiled, self.focused_client(), &screen_region),
+                floating: floating.iter().map(|c| c.id()).collect(),
+            }
         } else {
-            vec![]
+            ArrangeActions {
+                actions: vec![],
+                floating: vec![],
+            }
         }
     }
 
@@ -279,8 +292,8 @@ mod tests {
             2 => Client::new(2, "".into(), "".into(), 1, false),
             3 => Client::new(3, "".into(), "".into(), 1, false),
         };
-        let actions = ws.arrange(Region::new(0, 0, 2000, 1000), &client_map);
-        assert_eq!(actions.len(), 3, "actions are not 1-1 for clients")
+        let res = ws.arrange(Region::new(0, 0, 2000, 1000), &client_map);
+        assert_eq!(res.actions.len(), 3, "actions are not 1-1 for clients")
     }
 
     #[test]

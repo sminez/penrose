@@ -14,7 +14,7 @@ pub struct Client {
     wm_class: String,
     workspace: usize,
     // state flags
-    floating: bool,
+    pub(crate) floating: bool,
     pub(crate) fullscreen: bool,
     pub(crate) mapped: bool,
     pub(crate) wm_managed: bool,
@@ -22,7 +22,7 @@ pub struct Client {
 
 impl Client {
     /// Track a new client window on a specific workspace
-    pub fn new(
+    pub(crate) fn new(
         id: WinId,
         wm_name: String,
         wm_class: String,

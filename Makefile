@@ -24,3 +24,21 @@ check-all:
 	cargo fmt --all -- --check
 	cargo clippy --workspace --all-targets
 	cargo rustdoc --all-features -- -D warnings
+
+
+# GitHub helpers using the official gh GitHub CLI
+.PHONY: pr
+pr:
+	gh pr create
+
+.PHONY: list-prs
+list-prs:
+	gh pr list
+
+.PHONY: list-issues
+list-issues:
+	gh issue list
+
+.PHONY: new-issue
+new-issue:
+	gh issue create
