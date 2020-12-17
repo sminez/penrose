@@ -276,6 +276,9 @@ pub trait XConn {
     /// Reposition the window identified by 'id' to the specifed region
     fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool);
 
+    /// Raise the window to the top of the stack so it renders above peers
+    fn raise_window(&self, id: WinId);
+
     /// Mark the given window as newly created
     fn mark_new_window(&self, id: WinId);
 
@@ -648,6 +651,11 @@ impl XConn for XcbConnection {
 
         // xcb docs: https://www.mankier.com/3/xcb_configure_window
         xcb::configure_window(&self.conn, id, &args);
+    }
+
+    fn raise_window(&self, id: WinId) {
+        // xcb docs: https://www.mankier.com/3/xcb_configure_window
+        xcb::configure_window(&self.conn, id, &[(STACK_MODE, STACK_ABOVE)]);
     }
 
     fn mark_new_window(&self, id: WinId) {
@@ -1042,6 +1050,7 @@ impl XConn for MockXConn {
         Point::new(0, 0)
     }
     fn position_window(&self, _: WinId, _: Region, _: u32, _: bool) {}
+    fn raise_window(&self, _: WinId) {}
     fn mark_new_window(&self, _: WinId) {}
     fn map_window(&self, _: WinId) {}
     fn unmap_window(&self, _: WinId) {}
