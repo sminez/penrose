@@ -1021,15 +1021,17 @@ pub struct MockXConn {
     screens: Vec<Screen>,
     events: Cell<Vec<XEvent>>,
     focused: Cell<WinId>,
+    unmanaged_ids: Vec<WinId>,
 }
 
 impl MockXConn {
     /// Set up a new MockXConn with pre-defined Screens and an event stream to pull from
-    pub fn new(screens: Vec<Screen>, events: Vec<XEvent>) -> Self {
+    pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> Self {
         MockXConn {
             screens,
             events: Cell::new(events),
             focused: Cell::new(0),
+            unmanaged_ids,
         }
     }
 }
@@ -1078,8 +1080,8 @@ impl XConn for MockXConn {
     fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
         false
     }
-    fn is_managed_window(&self, _: WinId) -> bool {
-        true
+    fn is_managed_window(&self, id: WinId) -> bool {
+        !self.unmanaged_ids.contains(&id)
     }
     fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
     fn window_geometry(&self, _: WinId) -> Result<Region> {
