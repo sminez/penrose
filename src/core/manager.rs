@@ -159,7 +159,12 @@ impl<'a> WindowManager<'a> {
                     .get_mut(client.workspace())
                     .and_then(|ws| ws.remove_client(id));
                 if let Some(c) = self.client_map.remove(&id) {
-                    debug!("removing ref to client {} ({})", c.id(), c.class());
+                    debug!(
+                        "removing ref to client name[{}] id[{}] class[{}]",
+                        c.wm_name(),
+                        c.id(),
+                        c.class()
+                    );
                 }
 
                 if self.focused_client == Some(id) {
@@ -345,6 +350,25 @@ impl<'a> WindowManager<'a> {
             Ok(s) => s,
             Err(_) => String::from("n/a"),
         };
+
+        let wm_type = match self.conn.str_prop(id, "_NET_WM_WINDOW_TYPE") {
+            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
+            Err(_) => String::new(),
+        };
+
+        if !self.conn.is_managed_window(id) {
+            debug!(
+                "Handling map request for non-managed client: name[{}] id[{}] class[{}] type[{}]",
+                wm_name, id, wm_class, wm_type
+            );
+            self.conn.map_window(id);
+            return;
+        }
+
+        debug!(
+            "Handling map request: name[{}] id[{}] class[{}] type[{}]",
+            wm_name, id, wm_class, wm_type
+        );
 
         let floating = self.conn.window_should_float(id, self.floating_classes);
         let mut client = Client::new(id, wm_name, wm_class, self.active_ws_index(), floating);

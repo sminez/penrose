@@ -64,7 +64,7 @@ const EVENT_MASK: u32 = xcb::EVENT_MASK_PROPERTY_CHANGE
 
 // Internal representation of X atoms to get a little bit of type safety around their use
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-enum Atom {
+pub(crate) enum Atom {
     #[strum(serialize = "MANAGER")]
     Manager,
     #[strum(serialize = "UTF8_STRING")]
@@ -329,6 +329,9 @@ pub trait XConn {
     /// Determine whether the target window should be tiled or allowed to float
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool;
 
+    /// Check to see if this window is one that we should be handling or not
+    fn is_managed_window(&self, id: WinId) -> bool;
+
     /// Return the current (x, y, w, h) dimensions of the requested window
     fn window_geometry(&self, id: WinId) -> Result<Region>;
 
@@ -372,6 +375,7 @@ pub struct XcbConnection {
     check_win: WinId,
     atoms: HashMap<Atom, u32>,
     auto_float_types: Vec<u32>,
+    dont_manage_types: Vec<String>,
     randr_base: u8,
 }
 
@@ -402,6 +406,11 @@ impl XcbConnection {
         let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
             .map(|atom| *atoms.get(&atom).unwrap())
+            .collect();
+
+        let dont_manage_types: Vec<String> = UNMANAGED_WINDOW_TYPES
+            .iter()
+            .map(|&atom| atom.as_ref().to_string())
             .collect();
 
         let check_win = conn.generate_id();
@@ -436,6 +445,7 @@ impl XcbConnection {
             check_win,
             atoms,
             auto_float_types,
+            dont_manage_types,
             randr_base,
         })
     }
@@ -456,21 +466,10 @@ impl XcbConnection {
     }
 
     fn window_has_type_in(&self, id: WinId, win_types: &[u32]) -> bool {
-        // xcb docs: https://www.mankier.com/3/xcb_get_property
-        let atom = self.known_atom(Atom::NetWmWindowType);
-        let cookie = xcb::get_property(
-            &self.conn,    // xcb connection to X11
-            false,         // should the property be deleted
-            id,            // target window to query
-            atom,          // the property we want
-            xcb::ATOM_ANY, // the type of the property
-            0,             // offset in the property to retrieve data from
-            2048,          // how many 32bit multiples of data to retrieve
-        );
-
-        cookie.get_reply().map_or(false, |types| {
-            types.value().iter().any(|t| win_types.contains(t))
-        })
+        if let Ok(atom) = self.atom_prop(id, Atom::NetWmWindowType.as_ref()) {
+            return win_types.contains(&atom);
+        }
+        false
     }
 }
 
@@ -893,11 +892,16 @@ impl XConn for XcbConnection {
             }
         }
 
-        if let Ok(atom) = self.atom_prop(id, Atom::NetWmWindowType.as_ref()) {
-            return self.auto_float_types.contains(&atom);
-        }
+        self.window_has_type_in(id, &self.auto_float_types)
+    }
 
-        false
+    fn is_managed_window(&self, id: WinId) -> bool {
+        if let Ok(s) = self.str_prop(id, Atom::NetWmWindowType.as_ref()) {
+            let ty = s.split('\0').collect::<Vec<&str>>()[0].to_string();
+            !self.dont_manage_types.contains(&ty)
+        } else {
+            true // manage window by default
+        }
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
@@ -1073,6 +1077,9 @@ impl XConn for MockXConn {
     fn toggle_client_fullscreen(&self, _: WinId, _: bool) {}
     fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
         false
+    }
+    fn is_managed_window(&self, _: WinId) -> bool {
+        true
     }
     fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
     fn window_geometry(&self, _: WinId) -> Result<Region> {
