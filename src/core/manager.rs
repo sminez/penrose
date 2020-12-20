@@ -7,7 +7,7 @@ use crate::{
     hooks,
     screen::Screen,
     workspace::Workspace,
-    xconnection::{XConn, XEvent},
+    xconnection::{Atom, XConn, XEvent},
 };
 
 use nix::sys::signal::{signal, SigHandler, Signal};
@@ -341,17 +341,17 @@ impl<'a> WindowManager<'a> {
             return;
         }
 
-        let wm_class = match self.conn.str_prop(id, "WM_CLASS") {
+        let wm_class = match self.conn.str_prop(id, Atom::WmClass.as_ref()) {
             Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
 
-        let wm_name = match self.conn.str_prop(id, "WM_NAME") {
+        let wm_name = match self.conn.str_prop(id, Atom::WmName.as_ref()) {
             Ok(s) => s,
             Err(_) => String::from("n/a"),
         };
 
-        let wm_type = match self.conn.str_prop(id, "_NET_WM_WINDOW_TYPE") {
+        let wm_type = match self.conn.str_prop(id, Atom::NetWmWindowType.as_ref()) {
             Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
             Err(_) => String::new(),
         };
@@ -450,7 +450,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn handle_property_notify(&mut self, id: WinId, atom: &str, is_root: bool) {
-        if atom == "WM_NAME" || atom == "_NET_WM_NAME" {
+        if atom == Atom::WmName.as_ref() || atom == Atom::NetWmName.as_ref() {
             if let Ok(name) = self.conn.str_prop(id, atom) {
                 if let Some(c) = self.client_map.get_mut(&id) {
                     c.set_name(&name)
@@ -462,7 +462,10 @@ impl<'a> WindowManager<'a> {
 
     fn handle_client_message(&mut self, id: WinId, dtype: &str, data: &[usize]) {
         if dtype == "_NET_WM_STATE" {
-            let full_screen = self.conn.intern_atom("_NET_WM_STATE_FULLSCREEN").unwrap() as usize;
+            let full_screen = self
+                .conn
+                .intern_atom(Atom::NetWmStateFullscreen.as_ref())
+                .unwrap() as usize;
             if data.get(1) == Some(&full_screen) || data.get(2) == Some(&full_screen) {
                 let client_is_fullscreen = match self.client_map.get(&id) {
                     None => return, // unknown client
@@ -808,7 +811,9 @@ impl<'a> WindowManager<'a> {
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         let id = self.conn.focused_client();
-        self.conn.send_client_event(id, "WM_DELETE_WINDOW").unwrap();
+        self.conn
+            .send_client_event(id, Atom::WmDeleteWindow.as_ref())
+            .unwrap();
         self.conn.flush();
 
         self.remove_client(id);
