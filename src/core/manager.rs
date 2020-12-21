@@ -1348,4 +1348,20 @@ mod tests {
             wm.client_map.get(&10)
         );
     }
+
+    #[test]
+    fn unmanaged_window_types_are_not_tracked() {
+        // Setting the unmanaged window IDs here sets the return of
+        // MockXConn.is_managed_window to false for those IDs
+        let conn = MockXConn::new(test_screens(), vec![], vec![10]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+
+        wm.handle_map_request(10, false); // should not be tiled
+        assert!(wm.client_map.get(&10).is_none());
+        assert!(wm.workspaces[0].is_empty());
+
+        wm.handle_map_request(20, false); // should be tiled
+        assert!(wm.client_map.get(&20).is_some());
+        assert!(wm.workspaces[0].len() == 1);
+    }
 }
