@@ -339,7 +339,7 @@ pub trait XConn {
      * Warp the cursor to be within the specified window. If win_id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
      */
-    fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen);
+    fn warp_cursor(&self, id: Option<WinId>, screen: &Screen);
 
     /// Run on startup/restart to determine already running windows that we need to track
     fn query_for_active_windows(&self) -> Vec<WinId>;
@@ -361,6 +361,239 @@ pub trait XConn {
 
     /// Perform any state cleanup required prior to shutting down the window manager
     fn cleanup(&self);
+}
+
+/**
+ * A really simple stub implementation of XConn to simplify setting up test cases.
+ *
+ * Intended use is to override the mock_* methods that you need for running your test
+ * case in order to inject behaviour into a WindowManager instance which is driven
+ * by X server state. StubXConn will then implement XConn and call through to your
+ * overwritten methods or the provided default.
+ *
+ * This is being done to avoid providing broken default methods on the real XConn trait
+ * that would make writing real impls more error prone if and when new methods are
+ * added to the trait.
+ */
+pub trait StubXConn {
+    /// Mocked
+    fn mock_flush(&self) -> bool {
+        true
+    }
+
+    /// Mocked
+    fn mock_wait_for_event(&self) -> Option<XEvent> {
+        None
+    }
+
+    /// Mocked
+    fn mock_current_outputs(&self) -> Vec<Screen> {
+        vec![]
+    }
+
+    /// Mocked
+    fn mock_cursor_position(&self) -> Point {
+        Point::new(0, 0)
+    }
+
+    /// Mocked
+    fn mock_send_client_event(&self, _: WinId, _: &str) -> Result<()> {
+        Ok(())
+    }
+
+    /// Mocked
+    fn mock_focused_client(&self) -> WinId {
+        0
+    }
+
+    /// Mocked
+    fn mock_window_should_float(&self, _: WinId, _: &[&str]) -> bool {
+        false
+    }
+
+    /// Mocked
+    fn mock_is_managed_window(&self, _: WinId) -> bool {
+        true
+    }
+
+    /// Mocked
+    fn mock_window_geometry(&self, _: WinId) -> Result<Region> {
+        Ok(Region::new(0, 0, 0, 0))
+    }
+
+    /// Mocked
+    fn mock_query_for_active_windows(&self) -> Vec<WinId> {
+        Vec::new()
+    }
+
+    /// Mocked
+    fn mock_str_prop(&self, _: u32, name: &str) -> Result<String> {
+        Ok(String::from(name))
+    }
+
+    /// Mocked
+    fn mock_atom_prop(&self, id: u32, _: &str) -> Result<u32> {
+        Ok(id)
+    }
+
+    /// Mocked
+    fn mock_intern_atom(&self, _: &str) -> Result<u32> {
+        Ok(0)
+    }
+
+    /// Mocked
+    fn mock_warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
+    /// Mocked
+    fn mock_focus_client(&self, _: WinId) {}
+    /// Mocked
+    fn mock_position_window(&self, _: WinId, _: Region, _: u32, _: bool) {}
+    /// Mocked
+    fn mock_raise_window(&self, _: WinId) {}
+    /// Mocked
+    fn mock_mark_new_window(&self, _: WinId) {}
+    /// Mocked
+    fn mock_map_window(&self, _: WinId) {}
+    /// Mocked
+    fn mock_unmap_window(&self, _: WinId) {}
+    /// Mocked
+    fn mock_set_client_border_color(&self, _: WinId, _: u32) {}
+    /// Mocked
+    fn mock_grab_keys(&self, _: &KeyBindings, _: &MouseBindings) {}
+    /// Mocked
+    fn mock_set_wm_properties(&self, _: &[&str]) {}
+    /// Mocked
+    fn mock_update_desktops(&self, _: &[&str]) {}
+    /// Mocked
+    fn mock_set_current_workspace(&self, _: usize) {}
+    /// Mocked
+    fn mock_set_root_window_name(&self, _: &str) {}
+    /// Mocked
+    fn mock_set_client_workspace(&self, _: WinId, _: usize) {}
+    /// Mocked
+    fn mock_toggle_client_fullscreen(&self, _: WinId, _: bool) {}
+    /// Mocked
+    fn mock_cleanup(&self) {}
+}
+
+impl<T> XConn for T
+where
+    T: StubXConn,
+{
+    fn flush(&self) -> bool {
+        self.mock_flush()
+    }
+
+    fn wait_for_event(&self) -> Option<XEvent> {
+        self.mock_wait_for_event()
+    }
+
+    fn current_outputs(&self) -> Vec<Screen> {
+        self.mock_current_outputs()
+    }
+
+    fn cursor_position(&self) -> Point {
+        self.mock_cursor_position()
+    }
+
+    fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool) {
+        self.mock_position_window(id, r, border, stack_above)
+    }
+
+    fn raise_window(&self, id: WinId) {
+        self.mock_raise_window(id)
+    }
+
+    fn mark_new_window(&self, id: WinId) {
+        self.mock_mark_new_window(id)
+    }
+
+    fn map_window(&self, id: WinId) {
+        self.mock_map_window(id)
+    }
+
+    fn unmap_window(&self, id: WinId) {
+        self.mock_unmap_window(id)
+    }
+
+    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
+        self.mock_send_client_event(id, atom_name)
+    }
+
+    fn focused_client(&self) -> WinId {
+        self.mock_focused_client()
+    }
+
+    fn focus_client(&self, id: WinId) {
+        self.mock_focus_client(id)
+    }
+
+    fn set_client_border_color(&self, id: WinId, color: u32) {
+        self.mock_set_client_border_color(id, color)
+    }
+
+    fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings) {
+        self.mock_grab_keys(key_bindings, mouse_bindings)
+    }
+
+    fn set_wm_properties(&self, workspaces: &[&str]) {
+        self.mock_set_wm_properties(workspaces)
+    }
+
+    fn update_desktops(&self, workspaces: &[&str]) {
+        self.mock_update_desktops(workspaces)
+    }
+
+    fn set_current_workspace(&self, wix: usize) {
+        self.mock_set_current_workspace(wix)
+    }
+
+    fn set_root_window_name(&self, name: &str) {
+        self.mock_set_root_window_name(name)
+    }
+
+    fn set_client_workspace(&self, id: WinId, wix: usize) {
+        self.mock_set_client_workspace(id, wix)
+    }
+
+    fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
+        self.mock_toggle_client_fullscreen(id, client_is_fullscreen)
+    }
+
+    fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
+        self.mock_window_should_float(id, floating_classes)
+    }
+
+    fn is_managed_window(&self, id: WinId) -> bool {
+        self.mock_is_managed_window(id)
+    }
+
+    fn window_geometry(&self, id: WinId) -> Result<Region> {
+        self.mock_window_geometry(id)
+    }
+
+    fn warp_cursor(&self, id: Option<WinId>, screen: &Screen) {
+        self.mock_warp_cursor(id, screen)
+    }
+
+    fn query_for_active_windows(&self) -> Vec<WinId> {
+        self.mock_query_for_active_windows()
+    }
+
+    fn str_prop(&self, id: u32, name: &str) -> Result<String> {
+        self.mock_str_prop(id, name)
+    }
+
+    fn atom_prop(&self, id: u32, name: &str) -> Result<u32> {
+        self.mock_atom_prop(id, name)
+    }
+
+    fn intern_atom(&self, atom: &str) -> Result<u32> {
+        self.mock_intern_atom(atom)
+    }
+
+    fn cleanup(&self) {
+        self.mock_cleanup()
+    }
 }
 
 /**
@@ -1036,11 +1269,8 @@ impl MockXConn {
     }
 }
 
-impl XConn for MockXConn {
-    fn flush(&self) -> bool {
-        true
-    }
-    fn wait_for_event(&self) -> Option<XEvent> {
+impl StubXConn for MockXConn {
+    fn mock_wait_for_event(&self) -> Option<XEvent> {
         let mut remaining = self.events.replace(vec![]);
         if remaining.is_empty() {
             return None;
@@ -1049,57 +1279,20 @@ impl XConn for MockXConn {
         self.events.set(remaining);
         Some(next)
     }
-    fn current_outputs(&self) -> Vec<Screen> {
+
+    fn mock_current_outputs(&self) -> Vec<Screen> {
         self.screens.clone()
     }
-    fn cursor_position(&self) -> Point {
-        Point::new(0, 0)
-    }
-    fn position_window(&self, _: WinId, _: Region, _: u32, _: bool) {}
-    fn raise_window(&self, _: WinId) {}
-    fn mark_new_window(&self, _: WinId) {}
-    fn map_window(&self, _: WinId) {}
-    fn unmap_window(&self, _: WinId) {}
-    fn send_client_event(&self, _: WinId, _: &str) -> Result<()> {
-        Ok(())
-    }
-    fn focused_client(&self) -> WinId {
+
+    fn mock_focused_client(&self) -> WinId {
         self.focused.get()
     }
-    fn focus_client(&self, id: WinId) {
+
+    fn mock_focus_client(&self, id: WinId) {
         self.focused.replace(id);
     }
-    fn set_client_border_color(&self, _: WinId, _: u32) {}
-    fn grab_keys(&self, _: &KeyBindings, _: &MouseBindings) {}
-    fn set_wm_properties(&self, _: &[&str]) {}
-    fn update_desktops(&self, _: &[&str]) {}
-    fn set_current_workspace(&self, _: usize) {}
-    fn set_root_window_name(&self, _: &str) {}
-    fn set_client_workspace(&self, _: WinId, _: usize) {}
-    fn toggle_client_fullscreen(&self, _: WinId, _: bool) {}
-    fn window_should_float(&self, _: WinId, _: &[&str]) -> bool {
-        false
-    }
-    fn is_managed_window(&self, id: WinId) -> bool {
+
+    fn mock_is_managed_window(&self, id: WinId) -> bool {
         !self.unmanaged_ids.contains(&id)
     }
-    fn warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
-    fn window_geometry(&self, _: WinId) -> Result<Region> {
-        Ok(Region::new(0, 0, 0, 0))
-    }
-    fn query_for_active_windows(&self) -> Vec<WinId> {
-        Vec::new()
-    }
-    fn str_prop(&self, _: u32, name: &str) -> Result<String> {
-        Ok(String::from(name))
-    }
-    fn atom_prop(&self, id: u32, _: &str) -> Result<u32> {
-        Ok(id)
-    }
-
-    fn intern_atom(&self, _: &str) -> Result<u32> {
-        Ok(0)
-    }
-
-    fn cleanup(&self) {}
 }
