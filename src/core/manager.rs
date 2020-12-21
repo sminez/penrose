@@ -90,13 +90,6 @@ impl<'a> WindowManager<'a> {
         wm
     }
 
-    fn pad_region(&self, region: &Region, gapless: bool) -> Region {
-        let gpx = if gapless { 0 } else { self.gap_px };
-        let padding = 2 * (self.border_px + gpx);
-        let (x, y, w, h) = region.values();
-        Region::new(x + gpx, y + gpx, w - padding, h - padding)
-    }
-
     fn apply_layout(&mut self, wix: usize) {
         let ws = match self.workspaces.get(wix) {
             Some(ws) => ws,
@@ -189,8 +182,34 @@ impl<'a> WindowManager<'a> {
     }
 
     /*
-     * Helpers for indexing into WindowManager state
+     * Helpers
      */
+
+    fn pad_region(&self, region: &Region, gapless: bool) -> Region {
+        let gpx = if gapless { 0 } else { self.gap_px };
+        let padding = 2 * (self.border_px + gpx);
+        let (x, y, w, h) = region.values();
+        Region::new(x + gpx, y + gpx, w - padding, h - padding)
+    }
+
+    fn client_str_props(&self, id: WinId) -> (String, String, String) {
+        let name = match self.conn.str_prop(id, Atom::WmName.as_ref()) {
+            Ok(s) => s,
+            Err(_) => String::from("n/a"),
+        };
+
+        let class = match self.conn.str_prop(id, Atom::WmClass.as_ref()) {
+            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
+            Err(_) => String::new(),
+        };
+
+        let ty = match self.conn.str_prop(id, Atom::NetWmWindowType.as_ref()) {
+            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
+            Err(_) => String::new(),
+        };
+
+        (name, class, ty)
+    }
 
     fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
         self.screens.iter().enumerate().find(|(_, s)| s.wix == wix)
@@ -338,28 +357,21 @@ impl<'a> WindowManager<'a> {
 
     fn handle_map_request(&mut self, id: WinId, override_redirect: bool) {
         if override_redirect || self.client_map.contains_key(&id) {
+            let reason = if override_redirect {
+                "override_redirect"
+            } else {
+                "client already known"
+            };
+            debug!("Ignoring map_request for id[{}]: {}", id, reason);
             return;
         }
 
-        let wm_class = match self.conn.str_prop(id, Atom::WmClass.as_ref()) {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
-        };
-
-        let wm_name = match self.conn.str_prop(id, Atom::WmName.as_ref()) {
-            Ok(s) => s,
-            Err(_) => String::from("n/a"),
-        };
-
-        let wm_type = match self.conn.str_prop(id, Atom::NetWmWindowType.as_ref()) {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
-        };
+        let (name, class, ty) = self.client_str_props(id);
 
         if !self.conn.is_managed_window(id) {
             debug!(
                 "Handling map request for non-managed client: name[{}] id[{}] class[{}] type[{}]",
-                wm_name, id, wm_class, wm_type
+                name, id, class, ty
             );
             self.conn.map_window(id);
             return;
@@ -367,11 +379,11 @@ impl<'a> WindowManager<'a> {
 
         debug!(
             "Handling map request: name[{}] id[{}] class[{}] type[{}]",
-            wm_name, id, wm_class, wm_type
+            name, id, class, ty
         );
 
         let floating = self.conn.window_should_float(id, self.floating_classes);
-        let mut client = Client::new(id, wm_name, wm_class, self.active_ws_index(), floating);
+        let mut client = Client::new(id, name, class, self.active_ws_index(), floating);
         run_hooks!(new_client, self, &mut client);
         let wix = client.workspace();
 
@@ -1096,7 +1108,7 @@ mod tests {
     }
 
     #[test]
-    fn worspace_switching_with_active_clients() {
+    fn workspace_switching_with_active_clients() {
         let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
 
