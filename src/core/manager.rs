@@ -7,7 +7,7 @@ use crate::{
     hooks,
     screen::Screen,
     workspace::Workspace,
-    xconnection::{XConn, XEvent},
+    xconnection::{Atom, XConn, XEvent},
 };
 
 use nix::sys::signal::{signal, SigHandler, Signal};
@@ -90,13 +90,6 @@ impl<'a> WindowManager<'a> {
         wm
     }
 
-    fn pad_region(&self, region: &Region, gapless: bool) -> Region {
-        let gpx = if gapless { 0 } else { self.gap_px };
-        let padding = 2 * (self.border_px + gpx);
-        let (x, y, w, h) = region.values();
-        Region::new(x + gpx, y + gpx, w - padding, h - padding)
-    }
-
     fn apply_layout(&mut self, wix: usize) {
         let ws = match self.workspaces.get(wix) {
             Some(ws) => ws,
@@ -159,7 +152,12 @@ impl<'a> WindowManager<'a> {
                     .get_mut(client.workspace())
                     .and_then(|ws| ws.remove_client(id));
                 if let Some(c) = self.client_map.remove(&id) {
-                    debug!("removing ref to client {} ({})", c.id(), c.class());
+                    debug!(
+                        "removing ref to client name[{}] id[{}] class[{}]",
+                        c.wm_name(),
+                        c.id(),
+                        c.class()
+                    );
                 }
 
                 if self.focused_client == Some(id) {
@@ -184,8 +182,34 @@ impl<'a> WindowManager<'a> {
     }
 
     /*
-     * Helpers for indexing into WindowManager state
+     * Helpers
      */
+
+    fn pad_region(&self, region: &Region, gapless: bool) -> Region {
+        let gpx = if gapless { 0 } else { self.gap_px };
+        let padding = 2 * (self.border_px + gpx);
+        let (x, y, w, h) = region.values();
+        Region::new(x + gpx, y + gpx, w - padding, h - padding)
+    }
+
+    fn client_str_props(&self, id: WinId) -> (String, String, String) {
+        let name = match self.conn.str_prop(id, Atom::WmName.as_ref()) {
+            Ok(s) => s,
+            Err(_) => String::from("n/a"),
+        };
+
+        let class = match self.conn.str_prop(id, Atom::WmClass.as_ref()) {
+            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
+            Err(_) => String::new(),
+        };
+
+        let ty = match self.conn.str_prop(id, Atom::NetWmWindowType.as_ref()) {
+            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
+            Err(_) => String::new(),
+        };
+
+        (name, class, ty)
+    }
 
     fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
         self.screens.iter().enumerate().find(|(_, s)| s.wix == wix)
@@ -333,21 +357,33 @@ impl<'a> WindowManager<'a> {
 
     fn handle_map_request(&mut self, id: WinId, override_redirect: bool) {
         if override_redirect || self.client_map.contains_key(&id) {
+            let reason = if override_redirect {
+                "override_redirect"
+            } else {
+                "client already known"
+            };
+            debug!("Ignoring map_request for id[{}]: {}", id, reason);
             return;
         }
 
-        let wm_class = match self.conn.str_prop(id, "WM_CLASS") {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
-        };
+        let (name, class, ty) = self.client_str_props(id);
 
-        let wm_name = match self.conn.str_prop(id, "WM_NAME") {
-            Ok(s) => s,
-            Err(_) => String::from("n/a"),
-        };
+        if !self.conn.is_managed_window(id) {
+            debug!(
+                "Handling map request for non-managed client: name[{}] id[{}] class[{}] type[{}]",
+                name, id, class, ty
+            );
+            self.conn.map_window(id);
+            return;
+        }
+
+        debug!(
+            "Handling map request: name[{}] id[{}] class[{}] type[{}]",
+            name, id, class, ty
+        );
 
         let floating = self.conn.window_should_float(id, self.floating_classes);
-        let mut client = Client::new(id, wm_name, wm_class, self.active_ws_index(), floating);
+        let mut client = Client::new(id, name, class, self.active_ws_index(), floating);
         run_hooks!(new_client, self, &mut client);
         let wix = client.workspace();
 
@@ -426,7 +462,7 @@ impl<'a> WindowManager<'a> {
     }
 
     fn handle_property_notify(&mut self, id: WinId, atom: &str, is_root: bool) {
-        if atom == "WM_NAME" || atom == "_NET_WM_NAME" {
+        if atom == Atom::WmName.as_ref() || atom == Atom::NetWmName.as_ref() {
             if let Ok(name) = self.conn.str_prop(id, atom) {
                 if let Some(c) = self.client_map.get_mut(&id) {
                     c.set_name(&name)
@@ -438,7 +474,10 @@ impl<'a> WindowManager<'a> {
 
     fn handle_client_message(&mut self, id: WinId, dtype: &str, data: &[usize]) {
         if dtype == "_NET_WM_STATE" {
-            let full_screen = self.conn.intern_atom("_NET_WM_STATE_FULLSCREEN").unwrap() as usize;
+            let full_screen = self
+                .conn
+                .intern_atom(Atom::NetWmStateFullscreen.as_ref())
+                .unwrap() as usize;
             if data.get(1) == Some(&full_screen) || data.get(2) == Some(&full_screen) {
                 let client_is_fullscreen = match self.client_map.get(&id) {
                     None => return, // unknown client
@@ -784,7 +823,9 @@ impl<'a> WindowManager<'a> {
     /// Kill the focused client window.
     pub fn kill_client(&mut self) {
         let id = self.conn.focused_client();
-        self.conn.send_client_event(id, "WM_DELETE_WINDOW").unwrap();
+        self.conn
+            .send_client_event(id, Atom::WmDeleteWindow.as_ref())
+            .unwrap();
         self.conn.flush();
 
         self.remove_client(id);
@@ -1067,8 +1108,8 @@ mod tests {
     }
 
     #[test]
-    fn worspace_switching_with_active_clients() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+    fn workspace_switching_with_active_clients() {
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
 
         // add clients to the first workspace: final client should have focus
@@ -1090,7 +1131,7 @@ mod tests {
 
     #[test]
     fn killing_a_client_removes_it_from_the_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 1, 0);
         wm.kill_client();
@@ -1100,7 +1141,7 @@ mod tests {
 
     #[test]
     fn kill_client_kills_focused_not_first() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // 50 40 30 20 10, 50 focused
         assert_eq!(wm.active_ws_index(), 0);
@@ -1115,7 +1156,7 @@ mod tests {
 
     #[test]
     fn moving_then_deleting_clients() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 2, 0);
         wm.client_to_workspace(&Selector::Index(1));
@@ -1129,7 +1170,7 @@ mod tests {
 
     #[test]
     fn client_to_workspace_inserts_at_head() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 2, 0); // [20, 10]
         wm.client_to_workspace(&Selector::Index(1)); // 20 -> ws::1
@@ -1144,7 +1185,7 @@ mod tests {
 
     #[test]
     fn client_to_workspace_sets_focus() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 2, 0); // [20, 10]
         wm.client_to_workspace(&Selector::Index(1)); // 20 -> ws::1
@@ -1156,7 +1197,7 @@ mod tests {
 
     #[test]
     fn client_to_invalid_workspace_is_noop() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 1, 0); // [20, 10]
 
@@ -1167,7 +1208,7 @@ mod tests {
 
     #[test]
     fn client_to_screen_sets_correct_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 1, 0); // [20, 10]
 
@@ -1177,7 +1218,7 @@ mod tests {
 
     #[test]
     fn client_to_invalid_screen_is_noop() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 1, 0); // [20, 10]
 
@@ -1188,7 +1229,7 @@ mod tests {
 
     #[test]
     fn x_focus_events_set_workspace_focus() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
         wm.client_gained_focus(10);
@@ -1198,7 +1239,7 @@ mod tests {
 
     #[test]
     fn focus_workspace_sets_focus_in_ring() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         assert_eq!(wm.workspaces.focused_index(), 0);
         assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
@@ -1209,7 +1250,7 @@ mod tests {
 
     #[test]
     fn dragging_clients_forward_from_index_0() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 5, 0); // focus on last client (50) ix == 0
 
@@ -1236,7 +1277,7 @@ mod tests {
 
     #[test]
     fn getting_all_clients_on_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
 
         add_n_clients(&mut wm, 3, 0);
@@ -1252,7 +1293,7 @@ mod tests {
 
     #[test]
     fn getting_all_workspaces_of_window() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
 
         add_n_clients(&mut wm, 3, 0);
@@ -1265,7 +1306,7 @@ mod tests {
 
     #[test]
     fn selector_screen() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 1, 0);
 
@@ -1280,7 +1321,7 @@ mod tests {
 
     #[test]
     fn selector_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 1, 0);
 
@@ -1295,7 +1336,7 @@ mod tests {
 
     #[test]
     fn selector_client() {
-        let conn = MockXConn::new(test_screens(), vec![]);
+        let conn = MockXConn::new(test_screens(), vec![], vec![]);
         let mut wm = wm_with_mock_conn(test_layouts(), &conn);
         add_n_clients(&mut wm, 4, 0);
 
@@ -1306,5 +1347,21 @@ mod tests {
             wm.client(&Selector::Condition(&|c| c.id() == 10)),
             wm.client_map.get(&10)
         );
+    }
+
+    #[test]
+    fn unmanaged_window_types_are_not_tracked() {
+        // Setting the unmanaged window IDs here sets the return of
+        // MockXConn.is_managed_window to false for those IDs
+        let conn = MockXConn::new(test_screens(), vec![], vec![10]);
+        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+
+        wm.handle_map_request(10, false); // should not be tiled
+        assert!(wm.client_map.get(&10).is_none());
+        assert!(wm.workspaces[0].is_empty());
+
+        wm.handle_map_request(20, false); // should be tiled
+        assert!(wm.client_map.get(&20).is_some());
+        assert!(wm.workspaces[0].len() == 1);
     }
 }

@@ -1,3 +1,4 @@
+// Check that each Hook variant is called at the expected points
 use penrose::{
     client::Client,
     data_types::WinId,
@@ -99,7 +100,8 @@ macro_rules! hook_test(
 
             let conn = MockXConn::new(
                 vec![common::simple_screen(0), common::simple_screen(1)],
-                events
+                events,
+                vec![],
             );
             let mut wm = WindowManager::init(config, &conn);
             wm.grab_keys_and_run(common::test_bindings(), HashMap::new());

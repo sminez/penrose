@@ -143,7 +143,7 @@ pub fn index_selectors<'a, T>(len: usize) -> Vec<Selector<'a, T>> {
 
 // Helper functions for XCB based operations
 pub(crate) mod xcb_util {
-    use crate::{data_types::Region, Result};
+    use crate::{data_types::Region, xconnection::Atom, Result};
     use anyhow::anyhow;
 
     pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32> {
@@ -196,13 +196,13 @@ pub(crate) mod xcb_util {
         );
 
         xcb::change_property(
-            &conn,                                      // xcb connection to X11
-            xcb::PROP_MODE_REPLACE as u8,               // discard current prop and replace
-            id,                                         // window to change prop on
-            intern_atom(&conn, "_NET_WM_WINDOW_TYPE")?, // prop to change
-            intern_atom(&conn, "UTF8_STRING")?,         // type of prop
-            8,                                          // data format (8/16/32-bit)
-            window_type.as_bytes(),                     // data
+            &conn,                                               // xcb connection to X11
+            xcb::PROP_MODE_REPLACE as u8,                        // discard current prop and replace
+            id,                                                  // window to change prop on
+            intern_atom(&conn, Atom::NetWmWindowType.as_ref())?, // prop to change
+            intern_atom(&conn, Atom::UTF8String.as_ref())?,      // type of prop
+            8,                                                   // data format (8/16/32-bit)
+            window_type.as_bytes(),                              // data
         );
 
         xcb::map_window(&conn, id);
