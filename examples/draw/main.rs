@@ -16,8 +16,8 @@ const BLUE: u32 = 0x458588ff;
 const RED: u32 = 0xcc241dff;
 
 fn main() -> Result<()> {
-    bar_draw()?;
     simple_draw()?;
+    bar_draw()?;
     Ok(())
 }
 
@@ -60,7 +60,7 @@ fn bar_draw() -> Result<()> {
 fn simple_draw() -> Result<()> {
     let mut drw = XCBDraw::new()?;
     let (_, _, w, _) = drw.screen_sizes()?[0].values();
-    let id = drw.new_window(&WindowType::Dock, 0, 0, w as usize, HEIGHT)?;
+    let id = drw.new_window(&WindowType::Normal, true, 0, 0, w as usize, HEIGHT)?;
     drw.register_font(PROFONT);
     drw.register_font(SERIF);
     drw.register_font(FIRA);

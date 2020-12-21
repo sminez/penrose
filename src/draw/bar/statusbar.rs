@@ -67,7 +67,14 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
                 };
                 let id = self
                     .drw
-                    .new_window(&WindowType::Dock, sx as usize, y, sw as usize, self.hpx)
+                    .new_window(
+                        &WindowType::Dock,
+                        true, // override_redirect
+                        sx as usize,
+                        y,
+                        sw as usize,
+                        self.hpx,
+                    )
                     .unwrap();
 
                 (id, sw as f64)

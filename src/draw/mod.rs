@@ -26,12 +26,22 @@ mod inner {
         conn: &xcb::Connection,
         screen: &xcb::Screen,
         wt: &WindowType,
+        override_redirect: bool,
         x: i16,
         y: i16,
         w: i32,
         h: i32,
     ) -> Result<(u32, XCBSurface)> {
-        let id = xcb_util::create_window(conn, screen, wt.as_ewmh_str(), x, y, w as u16, h as u16)?;
+        let id = xcb_util::create_window(
+            conn,
+            screen,
+            wt.as_ewmh_str(),
+            override_redirect,
+            x,
+            y,
+            w as u16,
+            h as u16,
+        )?;
 
         let depth = xcb_util::get_depth(screen)?;
         let mut visualtype = xcb_util::get_visual_type(&depth)?;
@@ -181,6 +191,7 @@ mod inner {
         fn new_window(
             &mut self,
             t: &WindowType,
+            override_redirect: bool,
             x: usize,
             y: usize,
             w: usize,
@@ -259,6 +270,7 @@ mod inner {
         fn new_window(
             &mut self,
             win_type: &WindowType,
+            override_redirect: bool,
             x: usize,
             y: usize,
             w: usize,
@@ -266,7 +278,14 @@ mod inner {
         ) -> Result<WinId> {
             let screen = self.screen(0)?;
             let (id, surface) = new_cairo_surface(
-                &self.conn, &screen, win_type, x as i16, y as i16, w as i32, h as i32,
+                &self.conn,
+                &screen,
+                win_type,
+                override_redirect,
+                x as i16,
+                y as i16,
+                w as i32,
+                h as i32,
             )?;
             self.surfaces.insert(id, surface);
 

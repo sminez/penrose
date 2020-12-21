@@ -157,6 +157,7 @@ pub(crate) mod xcb_util {
         conn: &xcb::Connection,
         screen: &xcb::Screen,
         window_type: &str,
+        override_redirect: bool,
         x: i16,
         y: i16,
         w: u16,
@@ -176,6 +177,16 @@ pub(crate) mod xcb_util {
             visual.visual_id(),
         );
 
+        let mut data = vec![
+            (xcb::CW_BORDER_PIXEL, screen.black_pixel()),
+            (xcb::CW_COLORMAP, colormap),
+            (xcb::CW_EVENT_MASK, xcb::EVENT_MASK_EXPOSURE),
+        ];
+
+        if override_redirect {
+            data.push((xcb::CW_OVERRIDE_REDIRECT, 1))
+        }
+
         xcb::create_window(
             &conn,
             depth.depth(),
@@ -188,11 +199,7 @@ pub(crate) mod xcb_util {
             0,
             xcb::WINDOW_CLASS_INPUT_OUTPUT as u16,
             visual.visual_id(),
-            &[
-                (xcb::CW_BORDER_PIXEL, screen.black_pixel()),
-                (xcb::CW_COLORMAP, colormap),
-                (xcb::CW_EVENT_MASK, xcb::EVENT_MASK_EXPOSURE),
-            ],
+            &data,
         );
 
         xcb::change_property(
