@@ -4,6 +4,7 @@ use crate::{
     data_types::{Region, WinId},
     draw::{Color, Draw, DrawContext, Widget, WindowType},
     hooks::Hook,
+    xconnection::Atom,
     Result, WindowManager,
 };
 
@@ -55,6 +56,10 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     }
 
     fn init_for_screens(&mut self) -> Result<()> {
+        let name = Atom::NetWmName.as_ref();
+        let class = Atom::WmClass.as_ref();
+        let s = "penrose-statusbar";
+
         self.screens = self
             .drw
             .screen_sizes()?
@@ -65,21 +70,20 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
                     Position::Top => sy as usize,
                     Position::Bottom => sh as usize - self.hpx,
                 };
-                let id = self
-                    .drw
-                    .new_window(
-                        &WindowType::Dock,
-                        true, // override_redirect
-                        sx as usize,
-                        y,
-                        sw as usize,
-                        self.hpx,
-                    )
-                    .unwrap();
+                let id = self.drw.new_window(
+                    &WindowType::Dock,
+                    true, // override_redirect
+                    sx as usize,
+                    y,
+                    sw as usize,
+                    self.hpx,
+                )?;
+                self.drw.set_str_prop(id, name, s)?;
+                self.drw.set_str_prop(id, class, s)?;
 
-                (id, sw as f64)
+                Ok((id, sw as f64))
             })
-            .collect();
+            .collect::<Result<Vec<(u32, f64)>>>()?;
 
         Ok(())
     }

@@ -211,6 +211,10 @@ mod inner {
         fn unmap_window(&self, id: WinId);
         /// Destroy the target window
         fn destroy_window(&self, id: WinId);
+        /// Set a string property on the target window
+        fn set_str_prop(&self, id: WinId, prop: &str, value: &str) -> Result<()>;
+        /// Set an atom property on the target window
+        fn set_atom_prop(&self, id: WinId, prop: &str, value: u32) -> Result<()>;
     }
 
     /// Used for simple drawing to the screen
@@ -333,6 +337,14 @@ mod inner {
 
         fn destroy_window(&self, id: WinId) {
             xcb::destroy_window(&self.conn, id);
+        }
+
+        fn set_str_prop(&self, id: WinId, prop: &str, value: &str) -> Result<()> {
+            xcb_util::set_str_prop(&self.conn, id, prop, value)
+        }
+
+        fn set_atom_prop(&self, id: WinId, prop: &str, value: u32) -> Result<()> {
+            xcb_util::set_atom_prop(&self.conn, id, prop, value)
         }
     }
 
