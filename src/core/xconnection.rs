@@ -65,6 +65,12 @@ const EVENT_MASK: u32 = xcb::EVENT_MASK_PROPERTY_CHANGE
 // Internal representation of X atoms to get a little bit of type safety around their use
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub(crate) enum Atom {
+    #[strum(serialize = "ATOM")]
+    Atom,
+    #[strum(serialize = "ATOM_WINDOW")]
+    Window,
+    #[strum(serialize = "ATOM_CARDINAL")]
+    Cardinal,
     #[strum(serialize = "MANAGER")]
     Manager,
     #[strum(serialize = "UTF8_STRING")]
@@ -608,7 +614,7 @@ pub struct XcbConnection {
     check_win: WinId,
     atoms: HashMap<Atom, u32>,
     auto_float_types: Vec<u32>,
-    dont_manage_types: Vec<String>,
+    dont_manage_types: Vec<u32>,
     randr_base: u8,
 }
 
@@ -641,9 +647,9 @@ impl XcbConnection {
             .map(|atom| *atoms.get(&atom).unwrap())
             .collect();
 
-        let dont_manage_types: Vec<String> = UNMANAGED_WINDOW_TYPES
+        let dont_manage_types: Vec<u32> = UNMANAGED_WINDOW_TYPES
             .iter()
-            .map(|&atom| atom.as_ref().to_string())
+            .map(|atom| *atoms.get(&atom).unwrap())
             .collect();
 
         let check_win = conn.generate_id();
@@ -685,12 +691,13 @@ impl XcbConnection {
 
     // Return the cached atom if it's one we know, falling back to interning the atom if we need to.
     fn atom(&self, name: &str) -> Result<u32> {
-        Ok(match self.atoms.get(&Atom::from_str(name)?) {
-            Some(&a) => a,
+        match self.atoms.get(&Atom::from_str(name)?) {
+            Some(&a) => Ok(a),
             None => xcb::intern_atom(&self.conn, false, name)
-                .get_reply()?
-                .atom(),
-        })
+                .get_reply()
+                .map(|r| r.atom())
+                .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err)),
+        }
     }
 
     // All 'Atom' variants were interned on init so this should always be safe to unwrap
@@ -1129,12 +1136,7 @@ impl XConn for XcbConnection {
     }
 
     fn is_managed_window(&self, id: WinId) -> bool {
-        if let Ok(s) = self.str_prop(id, Atom::NetWmWindowType.as_ref()) {
-            let ty = s.split('\0').collect::<Vec<&str>>()[0].to_string();
-            !self.dont_manage_types.contains(&ty)
-        } else {
-            true // manage window by default
-        }
+        !self.window_has_type_in(id, &self.dont_manage_types)
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {

@@ -143,14 +143,52 @@ pub fn index_selectors<'a, T>(len: usize) -> Vec<Selector<'a, T>> {
 
 // Helper functions for XCB based operations
 pub(crate) mod xcb_util {
-    use crate::{data_types::Region, xconnection::Atom, Result};
+    use crate::{
+        data_types::{Region, WinId},
+        xconnection::Atom,
+        Result,
+    };
     use anyhow::anyhow;
+
+    pub(crate) fn intern_enum_atom(conn: &xcb::Connection, atom: Atom) -> Result<u32> {
+        intern_atom(conn, atom.as_ref())
+    }
 
     pub fn intern_atom(conn: &xcb::Connection, name: &str) -> Result<u32> {
         xcb::intern_atom(conn, false, name)
             .get_reply()
             .map(|r| r.atom())
             .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))
+    }
+
+    pub fn set_str_prop(conn: &xcb::Connection, id: WinId, prop: &str, value: &str) -> Result<()> {
+        xcb::change_property(
+            &conn,                                      // xcb connection to X11
+            xcb::PROP_MODE_REPLACE as u8,               // discard current prop and replace
+            id,                                         // window to change prop on
+            intern_atom(&conn, prop)?,                  // prop to change
+            intern_enum_atom(&conn, Atom::UTF8String)?, // type of prop
+            8,                                          // data format (8/16/32-bit)
+            value.as_bytes(),                           // data
+        );
+
+        conn.flush();
+        Ok(())
+    }
+
+    pub fn set_atom_prop(conn: &xcb::Connection, id: WinId, prop: &str, value: u32) -> Result<()> {
+        xcb::change_property(
+            &conn,                                // xcb connection to X11
+            xcb::PROP_MODE_REPLACE as u8,         // discard current prop and replace
+            id,                                   // window to change prop on
+            intern_atom(&conn, prop)?,            // prop to change
+            intern_enum_atom(&conn, Atom::Atom)?, // type of prop
+            32,                                   // data format (8/16/32-bit)
+            &[value],                             // data
+        );
+
+        conn.flush();
+        Ok(())
     }
 
     pub fn create_window(
@@ -202,15 +240,8 @@ pub(crate) mod xcb_util {
             &data,
         );
 
-        xcb::change_property(
-            &conn,                                               // xcb connection to X11
-            xcb::PROP_MODE_REPLACE as u8,                        // discard current prop and replace
-            id,                                                  // window to change prop on
-            intern_atom(&conn, Atom::NetWmWindowType.as_ref())?, // prop to change
-            intern_atom(&conn, Atom::UTF8String.as_ref())?,      // type of prop
-            8,                                                   // data format (8/16/32-bit)
-            window_type.as_bytes(),                              // data
-        );
+        let net_name = Atom::NetWmWindowType.as_ref();
+        set_atom_prop(&conn, id, net_name, intern_atom(&conn, window_type)?)?;
 
         xcb::map_window(&conn, id);
         conn.flush();
