@@ -614,7 +614,7 @@ pub struct XcbConnection {
     check_win: WinId,
     atoms: HashMap<Atom, u32>,
     auto_float_types: Vec<u32>,
-    dont_manage_types: Vec<String>,
+    dont_manage_types: Vec<u32>,
     randr_base: u8,
 }
 
@@ -647,9 +647,9 @@ impl XcbConnection {
             .map(|atom| *atoms.get(&atom).unwrap())
             .collect();
 
-        let dont_manage_types: Vec<String> = UNMANAGED_WINDOW_TYPES
+        let dont_manage_types: Vec<u32> = UNMANAGED_WINDOW_TYPES
             .iter()
-            .map(|&atom| atom.as_ref().to_string())
+            .map(|atom| *atoms.get(&atom).unwrap())
             .collect();
 
         let check_win = conn.generate_id();
@@ -1136,12 +1136,7 @@ impl XConn for XcbConnection {
     }
 
     fn is_managed_window(&self, id: WinId) -> bool {
-        if let Ok(s) = self.str_prop(id, Atom::NetWmWindowType.as_ref()) {
-            let ty = s.split('\0').collect::<Vec<&str>>()[0].to_string();
-            !self.dont_manage_types.contains(&ty)
-        } else {
-            true // manage window by default
-        }
+        !self.window_has_type_in(id, &self.dont_manage_types)
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
