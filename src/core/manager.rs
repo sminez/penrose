@@ -163,6 +163,7 @@ impl<'a> WindowManager<'a> {
                 if self.focused_client == Some(id) {
                     self.focused_client = None;
                 }
+                self.update_x_known_clients();
                 run_hooks!(remove_client, self, id);
             }
             None => warn!("attempt to remove unknown client {}", id),
@@ -179,6 +180,11 @@ impl<'a> WindowManager<'a> {
 
         self.conn.update_desktops(&names);
         run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
+    }
+
+    fn update_x_known_clients(&self) {
+        let clients: Vec<WinId> = self.client_map.keys().copied().collect();
+        self.conn.update_known_clients(&clients);
     }
 
     /*
@@ -366,6 +372,7 @@ impl<'a> WindowManager<'a> {
             return;
         }
 
+        self.update_x_known_clients();
         let (name, class, ty) = self.client_str_props(id);
 
         if !self.conn.is_managed_window(id) {

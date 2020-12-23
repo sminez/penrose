@@ -169,6 +169,23 @@ const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
 
 const UNMANAGED_WINDOW_TYPES: &[Atom] = &[Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar];
 
+const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
+    Atom::NetActiveWindow,
+    Atom::NetClientList,
+    Atom::NetCurrentDesktop,
+    Atom::NetDesktopNames,
+    Atom::NetNumberOfDesktops,
+    Atom::NetSupported,
+    Atom::NetSupportingWmCheck,
+    // Atom::NetSystemTrayS0,
+    // Atom::NetSystemTrayOpcode,
+    // Atom::NetSystemTrayOrientationHorz,
+    Atom::NetWmName,
+    Atom::NetWmState,
+    Atom::NetWmStateFullscreen,
+    Atom::NetWmWindowType,
+];
+
 /**
  * Wrapper around the low level XCB event types that require casting to work with.
  * Not all event fields are extracted so check the XCB documentation and update
@@ -320,6 +337,9 @@ pub trait XConn {
     /// Update the root window properties with the current desktop details
     fn update_desktops(&self, workspaces: &[&str]);
 
+    /// Update the root window properties with the current client details
+    fn update_known_clients(&self, clients: &[WinId]);
+
     /// Update which desktop is currently focused
     fn set_current_workspace(&self, wix: usize);
 
@@ -470,6 +490,8 @@ pub trait StubXConn {
     /// Mocked
     fn mock_update_desktops(&self, _: &[&str]) {}
     /// Mocked
+    fn mock_update_known_clients(&self, _: &[WinId]) {}
+    /// Mocked
     fn mock_set_current_workspace(&self, _: usize) {}
     /// Mocked
     fn mock_set_root_window_name(&self, _: &str) {}
@@ -547,6 +569,10 @@ where
 
     fn update_desktops(&self, workspaces: &[&str]) {
         self.mock_update_desktops(workspaces)
+    }
+
+    fn update_known_clients(&self, clients: &[WinId]) {
+        self.mock_update_known_clients(clients)
     }
 
     fn set_current_workspace(&self, wix: usize) {
@@ -1054,7 +1080,11 @@ impl XConn for XcbConnection {
         );
 
         // EWMH support
-        let supported: Vec<u32> = Atom::iter().map(|a| self.known_atom(a)).collect();
+        let supported: Vec<u32> = EWMH_SUPPORTED_ATOMS
+            .iter()
+            .map(|a| self.known_atom(*a))
+            .collect();
+
         xcb::change_property(
             &self.conn,                          // xcb connection to X11
             PROP_MODE_REPLACE,                   // discard current prop and replace
@@ -1086,6 +1116,18 @@ impl XConn for XcbConnection {
             self.known_atom(Atom::UTF8String),      // type of prop
             8,                                      // data format (8/16/32-bit)
             workspaces.join("\0").as_bytes(),       // data
+        );
+    }
+
+    fn update_known_clients(&self, clients: &[WinId]) {
+        xcb::change_property(
+            &self.conn,                           // xcb connection to X11
+            PROP_MODE_REPLACE,                    // discard current prop and replace
+            self.root,                            // window to change prop on
+            self.known_atom(Atom::NetClientList), // prop to change
+            self.known_atom(Atom::Window),        // type of prop
+            32,                                   // data format (8/16/32-bit)
+            clients,                              // data
         );
     }
 
