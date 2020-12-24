@@ -1,11 +1,10 @@
 /*!
  * An abstraciton layer for talking to an underlying X server.
  *
- * An implementation of the [`XConn`] trait is required
- * for running a [`core::manager::WindowManager`]. The choice of back end
- * (e.g. xlib, xcb...) is an implementation detail that does not surface in
- * the WindowManager itself. All low level details of working with the X
- * server should be captured in this trait.
+ * An implementation of the [`XConn`] trait is required for running a
+ * [`crate::core::manager::WindowManager`]. The choice of back end (e.g. xlib, xcb...) is an
+ * implementation detail that does not surface in the WindowManager itself. All low level details
+ * of working with the X server should be captured in this trait.
  */
 use crate::{
     core::{
@@ -23,9 +22,9 @@ use strum::*;
 /**
  * A Penrose internal representation of X atoms.
  *
- * Atom names are shared between all X11 API libraries so this enum allows us to get
- * a little bit of type safety around their use. Implementors of [`XConn`] should
- * accept any variant of [`Atom`] that they are passed by client code.
+ * Atom names are shared between all X11 API libraries so this enum allows us to get a little bit
+ * of type safety around their use. Implementors of [`XConn`] should accept any variant of [`Atom`]
+ * that they are passed by client code.
  */
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Atom {
@@ -294,7 +293,7 @@ pub trait XConn {
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
 
-    /// Wait for the next event from the X server and return it as an XEvent
+    /// Wait for the next event from the X server and return it as an [`XEvent`]
     fn wait_for_event(&self) -> Option<XEvent>;
 
     /// Determine the currently connected CRTCs and return their details
@@ -321,10 +320,10 @@ pub trait XConn {
     /// Send an X event to the target window
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()>;
 
-    /// Return the client ID of the Client that currently holds X focus
+    /// Return the client ID of the [`crate::core::client::Client`] that currently holds X focus
     fn focused_client(&self) -> WinId;
 
-    /// Mark the given client as having focus
+    /// Mark the given [`crate::core::client::Client`] as having focus
     fn focus_client(&self, id: WinId);
 
     /// Change the border color for the given client
@@ -369,7 +368,7 @@ pub trait XConn {
     fn window_geometry(&self, id: WinId) -> Result<Region>;
 
     /**
-     * Warp the cursor to be within the specified window. If win_id == None then behaviour is
+     * Warp the cursor to be within the specified window. If id == None then behaviour is
      * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
      */
     fn warp_cursor(&self, id: Option<WinId>, screen: &Screen);
@@ -378,7 +377,7 @@ pub trait XConn {
     fn query_for_active_windows(&self) -> Vec<WinId>;
 
     /**
-     * Use the xcb api to query a string property for a window by window ID and poperty name.
+     * Query a string property for a window by window ID and poperty name.
      * Can fail if the property name is invalid or we get a malformed response from xcb.
      */
     fn str_prop(&self, id: u32, name: &str) -> Result<String>;
@@ -397,16 +396,15 @@ pub trait XConn {
 }
 
 /**
- * A really simple stub implementation of XConn to simplify setting up test cases.
+ * A really simple stub implementation of [`XConn`] to simplify setting up test cases.
  *
- * Intended use is to override the mock_* methods that you need for running your test
- * case in order to inject behaviour into a WindowManager instance which is driven
- * by X server state. StubXConn will then implement XConn and call through to your
- * overwritten methods or the provided default.
+ * Intended use is to override the mock_* methods that you need for running your test case in order
+ * to inject behaviour into a WindowManager instance which is driven by X server state.
+ * [`StubXConn`] will then implement [`XConn`] and call through to your overwritten methods or the
+ * provided default.
  *
- * This is being done to avoid providing broken default methods on the real XConn trait
- * that would make writing real impls more error prone if and when new methods are
- * added to the trait.
+ * This is being done to avoid providing broken default methods on the real XConn trait that would
+ * make writing real impls more error prone if and when new methods are added to the trait.
  */
 pub trait StubXConn {
     /// Mocked version of flush
@@ -635,7 +633,7 @@ where
     }
 }
 
-/// A dummy XConn implementation for testing
+/// A dummy [`XConn`] implementation for testing
 pub struct MockXConn {
     screens: Vec<Screen>,
     events: Cell<Vec<XEvent>>,
@@ -644,7 +642,7 @@ pub struct MockXConn {
 }
 
 impl MockXConn {
-    /// Set up a new MockXConn with pre-defined Screens and an event stream to pull from
+    /// Set up a new [`MockXConn`] with pre-defined [`Screen`]s and an event stream to pull from
     pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> Self {
         MockXConn {
             screens,

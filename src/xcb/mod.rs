@@ -10,11 +10,13 @@ use crate::{
 pub mod api;
 pub mod xconn;
 
+#[doc(inline)]
 pub use api::Api;
+#[doc(inline)]
 pub use xconn::XcbConnection;
 
-/// Construct a default [`XcbConnection`] using the penrose provided [`xcb::Api`]
-/// implementation of [`xcb::XcbApi`].
+/// Construct a default [`XcbConnection`] using the penrose provided [`Api`]
+/// implementation of [`XcbApi`].
 pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
     XcbConnection::new(Api::new()?)
 }
@@ -23,13 +25,13 @@ pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
 ///
 /// Variants correspond to the X property types being set.
 pub enum PropVal<'a> {
-    /// A slice of interned [`crate::xconnection::Atom`] values
+    /// A slice of interned [`Atom`] values
     Atom(&'a [u32]),
     /// A slice of cardinal u32s
     Cardinal(&'a [u32]),
     /// A string valued property
     Str(&'a str),
-    /// One or more [`crate::data_types::WinId`] values
+    /// One or more [`WinId`] values
     Window(&'a [WinId]),
 }
 
@@ -39,7 +41,7 @@ pub enum WinType {
     CheckWin,
     /// A window that receives input only (not queryable)
     InputOnly,
-    /// A regular window. The [`crate::xconnection::Atom`] passed should be a
+    /// A regular window. The [`Atom`] passed should be a
     /// valid _NET_WM_WINDOW_TYPE (this is not enforced)
     InputOutput(Atom),
 }
@@ -48,7 +50,7 @@ pub enum WinType {
 pub enum WinConfig {
     /// The border width in pixels
     BorderPx(u32),
-    /// Absolute size and position on the screen as a [`core::data_types::Region`]
+    /// Absolute size and position on the screen as a [`Region`]
     Position(Region),
     /// Mark this window as stacking on top of its peers
     StackAbove,
@@ -117,13 +119,13 @@ pub trait XcbApi {
      *
      * Can fail if the atom name is not a known X atom or if there
      * is an issue with communicating with the X server. For known
-     * atoms that are included in the [`core::xconnection::Atom`] enum,
-     * the [`known_atom`] method should be used instead.
+     * atoms that are included in the [`Atom`] enum,
+     * the [`XcbApi::known_atom`] method should be used instead.
      */
     fn atom(&self, name: &str) -> Result<u32>;
 
     /**
-     * Fetch the id value of a known [`core::xconnection::Atom`] variant.
+     * Fetch the id value of a known [`Atom`] variant.
      *
      * This operation is expected to always succeed as known atoms should
      * either be interned on init of the implementing struct or statically
@@ -133,7 +135,7 @@ pub trait XcbApi {
 
     /// Delete a known property from a window
     fn delete_prop(&self, id: WinId, prop: Atom);
-    /// Fetch an [`core::xconnection::Atom`] property for a given window
+    /// Fetch an [`Atom`] property for a given window
     fn get_atom_prop(&self, id: WinId, atom: Atom) -> Result<u32>;
     /// Fetch an String property for a given window
     fn get_str_prop(&self, id: WinId, name: &str) -> Result<String>;
@@ -155,7 +157,7 @@ pub trait XcbApi {
     fn destroy_window(&self, id: WinId);
     /// The client that the X server currently considers to be focused
     fn focused_client(&self) -> Result<WinId>;
-    /// Send a [`core::xconnection::XEvent::MapRequest`] for the target window
+    /// Send a [`XEvent::MapRequest`] for the target window
     fn map_window(&self, id: WinId);
     /// Mark the given window as currently having focus in the X server state
     fn mark_focused_window(&self, id: WinId);
@@ -169,16 +171,16 @@ pub trait XcbApi {
     fn window_geometry(&self, id: WinId) -> Result<Region>;
 
     /// Query the randr API for current outputs and return the details as penrose
-    /// [`core::screen::Screen`] structs.
+    /// [`Screen`] structs.
     fn current_screens(&self) -> Result<Vec<Screen>>;
     /// Query the randr API for current outputs and return the size of each screen
     fn screen_sizes(&self) -> Result<Vec<Region>>;
 
     /// The current (x, y) position of the cursor relative to the root window
     fn cursor_position(&self) -> Point;
-    /// Register intercepts for each given [`core::bindings::KeyCode']
+    /// Register intercepts for each given [`KeyCode']
     fn grab_keys(&self, keys: &[&KeyCode]);
-    /// Register intercepts for each given [`core::bindings::MouseState']
+    /// Register intercepts for each given [`MouseState']
     fn grab_mouse_buttons(&self, states: &[&MouseState]);
     /// Drop all active intercepts for key combinations
     fn ungrab_keys(&self);
@@ -195,8 +197,8 @@ pub trait XcbApi {
      * Block until the next event from the X event loop is ready then return it.
      *
      * This method should handle all of the mapping of xcb events to penrose
-     * [`core::xconnection::XEvent`] instances, returning None when the event
-     * channel from the X server is closed.
+     * [`XEvent`] instances, returning None when the event channel from the
+     * X server is closed.
      */
     fn wait_for_event(&self) -> Option<XEvent>;
     /// Move the cursor to the given (x, y) position inside the specified window.

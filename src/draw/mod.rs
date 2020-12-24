@@ -1,7 +1,9 @@
 //! Utilities for rendering custom windows
 pub mod bar;
 
+#[doc(inline)]
 pub use bar::*;
+#[doc(inline)]
 pub use inner::{Color, Draw, DrawContext, TextStyle, WindowType, XCBDraw, XCBDrawContext};
 
 mod inner {

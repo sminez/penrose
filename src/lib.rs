@@ -6,6 +6,10 @@
 )]
 #![deny(clippy::all)]
 #![allow(clippy::too_many_arguments)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
+    issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
+)]
 
 #[macro_use]
 extern crate log;
@@ -22,6 +26,7 @@ pub mod draw;
 pub mod xcb;
 
 // top level re-exports
+#[doc(inline)]
 pub use crate::core::{
     bindings, client,
     data_types::{self, Change::*, Config},
@@ -32,6 +37,7 @@ pub use crate::core::{
 };
 
 #[cfg(feature = "xcb_layer")]
+#[doc(inline)]
 pub use crate::xcb::{new_xcb_connection, XcbConnection};
 
 /// A default 'anyhow' based result type

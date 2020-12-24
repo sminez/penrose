@@ -2,7 +2,9 @@
 pub mod statusbar;
 pub mod widgets;
 
+#[doc(inline)]
 pub use statusbar::{Position, StatusBar};
+#[doc(inline)]
 pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspaces};
 
 use crate::{

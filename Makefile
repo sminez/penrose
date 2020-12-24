@@ -6,18 +6,6 @@ build:
 build-release:
 	cargo lint && cargo build --release
 
-.PHONY: examples
-examples:
-	cargo build --examples
-
-.PHONY: test-and-publish
-test-and-publish:
-	cargo test && cargo publish
-
-.PHONY: run-embeded
-run-embeded:
-	cargo build --examples && ./scripts/xephyr.sh
-
 .PHONY: check-all
 check-all:
 	cargo test
@@ -25,20 +13,36 @@ check-all:
 	cargo clippy --workspace --all-targets
 	cargo rustdoc --all-features -- -D warnings
 
+.PHONY: doc
+doc:
+	cargo doc --open
+
+.PHONY: examples
+examples:
+	cargo build --examples
+
+.PHONY: run-embeded
+run-embeded:
+	cargo build --examples && ./scripts/xephyr.sh
+
+.PHONY: test-and-publish
+test-and-publish:
+	cargo test && cargo publish
+
 
 # GitHub helpers using the official gh GitHub CLI
-.PHONY: pr
-pr:
-	gh pr create
+.PHONY: list-issues
+list-issues:
+	gh issue list
 
 .PHONY: list-prs
 list-prs:
 	gh pr list
 
-.PHONY: list-issues
-list-issues:
-	gh issue list
-
 .PHONY: new-issue
 new-issue:
 	gh issue create
+
+.PHONY: pr
+pr:
+	gh pr create
