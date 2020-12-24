@@ -1,6 +1,6 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    data_types::{Point, WinId},
+    core::data_types::{Point, WinId},
     Result, WindowManager,
 };
 

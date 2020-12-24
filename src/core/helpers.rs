@@ -1,6 +1,6 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
-    bindings::{CodeMap, KeyCode},
+    core::bindings::{CodeMap, KeyCode},
     Result, Selector,
 };
 

@@ -1,6 +1,6 @@
 //! Simple data types and enums
-use crate::{
-    hooks,
+use crate::core::{
+    hooks::Hook,
     layout::{side_stack, Layout, LayoutConf},
 };
 
@@ -51,7 +51,7 @@ pub struct Config<'a> {
     /// Height of space reserved for status bars in pixels
     pub bar_height: u32,
     /// User supplied Hooks for modifying WindowManager behaviour
-    pub hooks: Vec<Box<dyn hooks::Hook>>,
+    pub hooks: Vec<Box<dyn Hook>>,
 }
 
 impl<'a> Config<'a> {

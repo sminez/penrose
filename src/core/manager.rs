@@ -1,10 +1,10 @@
 //! Main logic for running Penrose
-use crate::{
+use crate::core::{
     bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     client::Client,
-    core::ring::{Direction, InsertPoint, Ring, Selector},
     data_types::{Change, Config, Point, Region, WinId},
-    hooks,
+    hooks::Hook,
+    ring::{Direction, InsertPoint, Ring, Selector},
     screen::Screen,
     workspace::Workspace,
     xconnection::{Atom, XConn, XEvent},
@@ -45,7 +45,7 @@ pub struct WindowManager<'a> {
     show_bar: bool,
     bar_height: u32,
     top_bar: bool,
-    hooks: Cell<Vec<Box<dyn hooks::Hook>>>,
+    hooks: Cell<Vec<Box<dyn Hook>>>,
     client_insert_point: InsertPoint,
     focused_client: Option<WinId>,
     running: bool,

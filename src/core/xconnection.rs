@@ -8,9 +8,11 @@
  * server should be captured in this trait.
  */
 use crate::{
-    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
-    data_types::{Point, Region, WinId},
-    screen::Screen,
+    core::{
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
+        data_types::{Point, Region, WinId},
+        screen::Screen,
+    },
     Result,
 };
 
