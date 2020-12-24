@@ -1,5 +1,9 @@
 //! A tiling window manager in the style of Xmonad
-#![warn(missing_docs)]
+#![warn(
+    missing_docs,
+    // rust_2018_idioms,
+    broken_intra_doc_links
+)]
 #![deny(clippy::all)]
 #![allow(clippy::too_many_arguments)]
 
@@ -13,6 +17,9 @@ pub mod contrib;
 
 #[cfg(feature = "draw")]
 pub mod draw;
+
+#[cfg(feature = "xcb_layer")]
+pub mod xcb;
 
 // top level re-exports
 pub use crate::core::bindings;
@@ -31,7 +38,7 @@ pub use data_types::{Change::*, Config};
 pub use manager::WindowManager;
 
 #[cfg(feature = "xcb_layer")]
-pub use crate::core::xcb::xconn::XcbConnection;
+pub use crate::xcb::xconn::XcbConnection;
 
 /// A default 'anyhow' based result type
 pub type Result<T> = anyhow::Result<T>;

@@ -14,12 +14,6 @@ pub mod screen;
 pub mod workspace;
 pub mod xconnection;
 
-#[cfg(feature = "xcb_layer")]
-pub mod xcb;
-
-#[cfg(feature = "xcb_layer")]
-pub use self::xcb::xconn::XcbConnection;
-
 pub use bindings::{FireAndForget, MouseEventHandler};
 pub use client::Client;
 pub use data_types::Config;

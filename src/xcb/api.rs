@@ -1,9 +1,12 @@
+//! A wrapper around the underlying xcb api layer that only exposes Penrose types
 use crate::{
-    bindings::{KeyCode, MouseEvent, MouseState},
-    core::xcb::{PropVal, WinAttr, WinConfig, WinType, XcbApi},
-    data_types::{Point, Region, WinId},
-    screen::Screen,
-    xconnection::{Atom, XEvent},
+    core::{
+        bindings::{KeyCode, MouseEvent, MouseState},
+        data_types::{Point, Region, WinId},
+        screen::Screen,
+        xconnection::{Atom, XEvent},
+    },
+    xcb::{PropVal, WinAttr, WinConfig, WinType, XcbApi},
     Result,
 };
 use anyhow::anyhow;
@@ -231,7 +234,7 @@ impl XcbApi for Api {
     }
 
     fn configure_window(&self, id: WinId, conf: &[WinConfig]) {
-        let data: Vec<(u16, u32)> = conf.iter().flat_map(|c| c.as_data()).collect();
+        let data: Vec<(u16, u32)> = conf.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
         xcb::configure_window(&self.conn, id, &data);
     }
 
@@ -266,7 +269,7 @@ impl XcbApi for Api {
     }
 
     fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) {
-        let data: Vec<(u32, u32)> = attrs.iter().flat_map(|c| c.as_data()).collect();
+        let data: Vec<(u32, u32)> = attrs.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
         xcb::change_window_attributes(&self.conn, id, &data);
     }
 
@@ -397,7 +400,7 @@ impl XcbApi for Api {
         self.root
     }
 
-    fn set_notify_mask(&self) -> Result<()> {
+    fn set_randr_notify_mask(&self) -> Result<()> {
         let mask = (xcb::randr::NOTIFY_MASK_OUTPUT_CHANGE
             | xcb::randr::NOTIFY_MASK_CRTC_CHANGE
             | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;

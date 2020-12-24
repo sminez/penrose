@@ -11,13 +11,16 @@
  *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
 use crate::{
-    bindings::{KeyBindings, MouseBindings},
-    core::xcb::{PropVal, WinAttr, WinConfig, WinType, XcbApi},
-    data_types::{Point, Region, WinId},
-    screen::Screen,
-    xconnection::{
-        Atom, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS, UNMANAGED_WINDOW_TYPES,
+    core::{
+        bindings::{KeyBindings, MouseBindings},
+        data_types::{Point, Region, WinId},
+        screen::Screen,
+        xconnection::{
+            Atom, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS,
+            UNMANAGED_WINDOW_TYPES,
+        },
     },
+    xcb::{PropVal, WinAttr, WinConfig, WinType, XcbApi},
     Result,
 };
 
@@ -31,16 +34,16 @@ const WM_NAME: &str = "penrose";
  * XcbConnection is a minimal implementation that does not make use of the full asyc capabilities
  * of the underlying C XCB library.
  **/
-pub struct XcbConnection<'a> {
-    api: &'a dyn XcbApi,
+pub struct XcbConnection<X: XcbApi> {
+    api: X,
     check_win: WinId,
     auto_float_types: Vec<u32>,
     dont_manage_types: Vec<u32>,
 }
 
-impl<'a> XcbConnection<'a> {
+impl<X: XcbApi> XcbConnection<X> {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new(api: &'a dyn XcbApi) -> Result<Self> {
+    pub fn new(api: X) -> Result<Self> {
         let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
             .map(|a| api.known_atom(*a))
@@ -50,7 +53,7 @@ impl<'a> XcbConnection<'a> {
             .map(|a| api.known_atom(*a))
             .collect();
 
-        api.set_notify_mask()?;
+        api.set_randr_notify_mask()?;
         let check_win = api.create_window(WinType::CheckWin, Region::new(0, 0, 1, 1), 0, false)?;
 
         Ok(Self {
@@ -69,7 +72,7 @@ impl<'a> XcbConnection<'a> {
     }
 }
 
-impl<'a> XConn for XcbConnection<'a> {
+impl<X: XcbApi> XConn for XcbConnection<X> {
     fn flush(&self) -> bool {
         self.api.flush()
     }
