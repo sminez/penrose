@@ -1,7 +1,10 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::data_types::{Point, WinId},
-    Result, WindowManager,
+    core::{
+        data_types::{Point, WinId},
+        manager::WindowManager,
+    },
+    Result,
 };
 
 use std::{collections::HashMap, convert::TryFrom};

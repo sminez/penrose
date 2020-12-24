@@ -1,7 +1,10 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
-    core::bindings::{CodeMap, KeyCode},
-    Result, Selector,
+    core::{
+        bindings::{CodeMap, KeyCode},
+        ring::Selector,
+    },
+    Result,
 };
 
 use std::{
