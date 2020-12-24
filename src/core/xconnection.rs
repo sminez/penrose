@@ -62,9 +62,9 @@ const EVENT_MASK: u32 = xcb::EVENT_MASK_PROPERTY_CHANGE
     | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
     | xcb::EVENT_MASK_BUTTON_MOTION;
 
-// Internal representation of X atoms to get a little bit of type safety around their use
+/// Internal representation of X atoms to get a little bit of type safety around their use
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub(crate) enum Atom {
+pub enum Atom {
     #[strum(serialize = "ATOM")]
     Atom,
     #[strum(serialize = "ATOM_WINDOW")]
@@ -154,7 +154,7 @@ pub(crate) enum Atom {
 }
 
 // Clients with one of these window types will be auto floated
-const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
+pub(crate) const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeDesktop,
     Atom::NetWindowTypeDialog,
     Atom::NetWindowTypeDock,
@@ -167,9 +167,10 @@ const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeUtility,
 ];
 
-const UNMANAGED_WINDOW_TYPES: &[Atom] = &[Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar];
+pub(crate) const UNMANAGED_WINDOW_TYPES: &[Atom] =
+    &[Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar];
 
-const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
+pub(crate) const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
     Atom::NetActiveWindow,
     Atom::NetClientList,
     Atom::NetCurrentDesktop,

@@ -29,7 +29,9 @@ pub use crate::core::xconnection;
 pub use crate::core::ring::{Direction::*, InsertPoint, Selector};
 pub use data_types::{Change::*, Config};
 pub use manager::WindowManager;
-pub use xconnection::XcbConnection;
+
+#[cfg(feature = "xcb_layer")]
+pub use crate::core::xcb::xconn::XcbConnection;
 
 /// A default 'anyhow' based result type
 pub type Result<T> = anyhow::Result<T>;
