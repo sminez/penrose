@@ -1,6 +1,6 @@
 use std::{thread, time};
 
-use penrose::{core::hooks::Hook, draw::*, Config, Result, WindowManager, XcbConnection};
+use penrose::{core::hooks::Hook, draw::*, new_xcb_connection, Config, Result, WindowManager};
 
 const HEIGHT: usize = 18;
 
@@ -42,7 +42,7 @@ fn bar_draw() -> Result<()> {
     )?;
 
     let config = Config::default();
-    let conn = XcbConnection::new()?;
+    let conn = new_xcb_connection()?;
     let mut wm = WindowManager::init(config, &conn);
     bar.startup(&mut wm); // ensure widgets are initialised correctly
 

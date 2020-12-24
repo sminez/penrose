@@ -8,9 +8,11 @@ use penrose::{
         hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces},
         layouts::paper,
     },
-    helpers::{index_selectors, spawn_for_output},
-    layout::{bottom_stack, side_stack, Layout, LayoutConf},
-    Backward, Config, Forward, Less, More, Result, WindowManager, XcbConnection,
+    core::{
+        helpers::{index_selectors, spawn_for_output},
+        layout::{bottom_stack, side_stack, Layout, LayoutConf},
+    },
+    new_xcb_connection, Backward, Config, Forward, Less, More, Result, WindowManager,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -98,7 +100,7 @@ fn main() -> Result<()> {
         };
     };
 
-    let conn = XcbConnection::new()?;
+    let conn = new_xcb_connection()?;
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings, HashMap::new());
 

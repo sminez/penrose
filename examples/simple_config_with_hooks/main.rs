@@ -10,16 +10,18 @@
 extern crate penrose;
 
 use penrose::{
-    client::Client,
     contrib::{
         extensions::Scratchpad,
         hooks::{DefaultWorkspace, LayoutSymbolAsRootName},
         layouts::paper,
     },
-    helpers::index_selectors,
-    hooks::Hook,
-    layout::{bottom_stack, side_stack, Layout, LayoutConf},
-    Backward, Config, Forward, Less, More, Result, Selector, WindowManager, XcbConnection,
+    core::{
+        client::Client,
+        helpers::index_selectors,
+        hooks::Hook,
+        layout::{bottom_stack, side_stack, Layout, LayoutConf},
+    },
+    new_xcb_connection, Backward, Config, Forward, Less, More, Result, Selector, WindowManager,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -170,7 +172,7 @@ fn main() -> Result<()> {
     // reference implementation of this trait that uses the XCB library to communicate with the X
     // server. You are free to provide your own implementation if you wish, see xconnection.rs for
     // details of the required methods and expected behaviour.
-    let conn = XcbConnection::new()?;
+    let conn = new_xcb_connection()?;
 
     // Create the WindowManager instance with the config we have built and a connection to the X
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
