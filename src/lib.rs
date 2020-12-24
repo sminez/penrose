@@ -22,23 +22,17 @@ pub mod draw;
 pub mod xcb;
 
 // top level re-exports
-pub use crate::core::bindings;
-pub use crate::core::client;
-pub use crate::core::data_types;
-pub use crate::core::helpers;
-pub use crate::core::hooks;
-pub use crate::core::layout;
-pub use crate::core::manager;
-pub use crate::core::screen;
-pub use crate::core::workspace;
-pub use crate::core::xconnection;
-
-pub use crate::core::ring::{Direction::*, InsertPoint, Selector};
-pub use data_types::{Change::*, Config};
-pub use manager::WindowManager;
+pub use crate::core::{
+    bindings, client,
+    data_types::{self, Change::*, Config},
+    helpers, hooks, layout,
+    manager::{self, WindowManager},
+    ring::{Direction::*, InsertPoint, Selector},
+    screen, workspace, xconnection,
+};
 
 #[cfg(feature = "xcb_layer")]
-pub use crate::xcb::xconn::XcbConnection;
+pub use crate::xcb::{new_xcb_connection, XcbConnection};
 
 /// A default 'anyhow' based result type
 pub type Result<T> = anyhow::Result<T>;

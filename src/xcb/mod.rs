@@ -10,6 +10,15 @@ use crate::{
 pub mod api;
 pub mod xconn;
 
+pub use api::Api;
+pub use xconn::XcbConnection;
+
+/// Construct a default [`XcbConnection`] using the penrose provided [`xcb::Api`]
+/// implementation of [`xcb::XcbApi`].
+pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
+    XcbConnection::new(Api::new()?)
+}
+
 /// A client propert value that can be set.
 ///
 /// Variants correspond to the X property types being set.
