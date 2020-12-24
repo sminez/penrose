@@ -301,7 +301,15 @@ impl XcbApi for Api {
             .iter()
             .flat_map(|c| xcb::randr::get_crtc_info(&self.conn, *c, 0).get_reply())
             .enumerate()
-            .map(|(i, r)| Screen::from_crtc_info_reply(r, i))
+            .map(|(i, r)| {
+                let region = Region::new(
+                    r.x() as u32,
+                    r.y() as u32,
+                    r.width() as u32,
+                    r.height() as u32,
+                );
+                Screen::new(region, i)
+            })
             .filter(|s| {
                 let (_, _, w, _) = s.region(false).values();
                 w > 0

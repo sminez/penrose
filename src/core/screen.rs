@@ -1,9 +1,5 @@
 //! Information on connected displays
-use crate::data_types::{Point, Region};
-
-use xcb::{base::Reply, ffi::randr::xcb_randr_get_crtc_info_reply_t};
-
-type CRTCInfoReply = Reply<xcb_randr_get_crtc_info_reply_t>;
+use crate::core::data_types::{Point, Region};
 
 /// Display information for a connected screen
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -17,22 +13,6 @@ pub struct Screen {
 impl Screen {
     /// Create a new screen instance directly
     pub fn new(region: Region, wix: usize) -> Screen {
-        Screen {
-            true_region: region,
-            effective_region: region,
-            wix,
-        }
-    }
-
-    /// Create a new Screen from information obtained from the X server
-    pub fn from_crtc_info_reply(r: CRTCInfoReply, wix: usize) -> Screen {
-        let region = Region::new(
-            r.x() as u32,
-            r.y() as u32,
-            r.width() as u32,
-            r.height() as u32,
-        );
-
         Screen {
             true_region: region,
             effective_region: region,
