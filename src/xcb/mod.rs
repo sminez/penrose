@@ -1,9 +1,11 @@
 //! Helpers and utilities for using XCB as a back end for penrose
 use crate::{
-    bindings::{KeyCode, MouseState},
-    data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
-    screen::Screen,
-    xconnection::{Atom, XEvent},
+    core::{
+        bindings::{KeyCode, MouseState},
+        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        screen::Screen,
+        xconnection::{Atom, XEvent},
+    },
     Result,
 };
 

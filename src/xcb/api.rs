@@ -2,11 +2,11 @@
 use crate::{
     core::{
         bindings::{KeyCode, MouseEvent, MouseState},
-        data_types::{Point, Region, WinId},
+        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         screen::Screen,
         xconnection::{Atom, XEvent},
     },
-    xcb::{PropVal, WinAttr, WinConfig, WinType, XcbApi},
+    xcb::XcbApi,
     Result,
 };
 use anyhow::anyhow;
@@ -95,10 +95,11 @@ impl XcbApi for Api {
                 return Ok(*atom);
             }
         }
-        xcb::intern_atom(&self.conn, false, name)
+
+        Ok(xcb::intern_atom(&self.conn, false, name)
             .get_reply()
-            .map(|r| r.atom())
-            .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))
+            .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))?
+            .atom())
     }
 
     fn known_atom(&self, atom: Atom) -> u32 {
