@@ -1,6 +1,16 @@
 use std::{thread, time};
 
-use penrose::{core::hooks::Hook, draw::*, new_xcb_connection, Config, Result, WindowManager};
+use penrose::{
+    core::{
+        data_types::{Config, Region, WinType},
+        hooks::Hook,
+        manager::WindowManager,
+        xconnection::Atom,
+    },
+    draw::{bar::dwm_bar, Draw, DrawContext, TextStyle},
+    xcb::{new_xcb_connection, XcbDraw},
+    Result,
+};
 
 const HEIGHT: usize = 18;
 
@@ -33,7 +43,7 @@ fn bar_draw() -> Result<()> {
     let highlight = BLUE;
     let empty_ws = GREY;
     let mut bar = dwm_bar(
-        Box::new(XCBDraw::new()?),
+        Box::new(XcbDraw::new()?),
         HEIGHT,
         &style,
         highlight,
@@ -58,9 +68,14 @@ fn bar_draw() -> Result<()> {
 }
 
 fn simple_draw() -> Result<()> {
-    let mut drw = XCBDraw::new()?;
+    let mut drw = XcbDraw::new()?;
     let (_, _, w, _) = drw.screen_sizes()?[0].values();
-    let id = drw.new_window(&WindowType::Normal, true, 0, 0, w as usize, HEIGHT)?;
+    let id = drw.new_window(
+        WinType::InputOutput(Atom::NetWindowTypeNormal),
+        Region::new(0, 0, w, HEIGHT as u32),
+        0,
+        false,
+    )?;
     drw.register_font(PROFONT);
     drw.register_font(SERIF);
     drw.register_font(FIRA);
