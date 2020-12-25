@@ -2,6 +2,7 @@
 use crate::core::{
     hooks::Hook,
     layout::{side_stack, Layout, LayoutConf},
+    xconnection::Atom,
 };
 
 /// Output of a Layout function: the new position a window should take
@@ -9,6 +10,91 @@ pub type ResizeAction = (WinId, Option<Region>);
 
 /// An X window ID
 pub type WinId = u32;
+
+/// A client propert value that can be set.
+///
+/// Variants correspond to the X property types being set.
+pub enum PropVal<'a> {
+    /// A slice of interned [`Atom`] values
+    Atom(&'a [u32]),
+    /// A slice of cardinal u32s
+    Cardinal(&'a [u32]),
+    /// A string valued property
+    Str(&'a str),
+    /// One or more [`WinId`] values
+    Window(&'a [WinId]),
+}
+
+/// A window type to be specified when creating a new window in the X server
+pub enum WinType {
+    /// A simple hidden stub window for facilitating other API calls
+    CheckWin,
+    /// A window that receives input only (not queryable)
+    InputOnly,
+    /// A regular window. The [`Atom`] passed should be a
+    /// valid _NET_WM_WINDOW_TYPE (this is not enforced)
+    InputOutput(Atom),
+}
+
+/// Config options for X windows (not all are currently implemented)
+pub enum WinConfig {
+    /// The border width in pixels
+    BorderPx(u32),
+    /// Absolute size and position on the screen as a [`Region`]
+    Position(Region),
+    /// Mark this window as stacking on top of its peers
+    StackAbove,
+}
+
+impl From<&WinConfig> for Vec<(u16, u32)> {
+    fn from(w: &WinConfig) -> Vec<(u16, u32)> {
+        match w {
+            WinConfig::BorderPx(px) => vec![(xcb::CONFIG_WINDOW_BORDER_WIDTH as u16, *px)],
+            WinConfig::Position(region) => {
+                let (x, y, w, h) = region.values();
+                vec![
+                    (xcb::CONFIG_WINDOW_X as u16, x),
+                    (xcb::CONFIG_WINDOW_Y as u16, y),
+                    (xcb::CONFIG_WINDOW_WIDTH as u16, w),
+                    (xcb::CONFIG_WINDOW_HEIGHT as u16, h),
+                ]
+            }
+            WinConfig::StackAbove => {
+                vec![(xcb::CONFIG_WINDOW_STACK_MODE as u16, xcb::STACK_MODE_ABOVE)]
+            }
+        }
+    }
+}
+
+/// Window attributes for an X11 client window (not all are curently implemented)
+pub enum WinAttr {
+    /// Border color as an argb hex value
+    BorderColor(u32),
+    /// Set the pre-defined client event mask
+    ClientEventMask,
+    /// Set the pre-defined root event mask
+    RootEventMask,
+}
+
+impl From<&WinAttr> for Vec<(u32, u32)> {
+    fn from(w: &WinAttr) -> Vec<(u32, u32)> {
+        let client_event_mask = xcb::EVENT_MASK_ENTER_WINDOW
+            | xcb::EVENT_MASK_LEAVE_WINDOW
+            | xcb::EVENT_MASK_PROPERTY_CHANGE
+            | xcb::EVENT_MASK_STRUCTURE_NOTIFY;
+
+        let root_event_mask = xcb::EVENT_MASK_PROPERTY_CHANGE
+            | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
+            | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
+            | xcb::EVENT_MASK_BUTTON_MOTION;
+
+        match w {
+            WinAttr::BorderColor(c) => vec![(xcb::CW_BORDER_PIXEL, *c)],
+            WinAttr::ClientEventMask => vec![(xcb::CW_EVENT_MASK, client_event_mask)],
+            WinAttr::RootEventMask => vec![(xcb::CW_EVENT_MASK, root_event_mask)],
+        }
+    }
+}
 
 /// An x,y coordinate pair
 #[derive(Debug, Copy, Clone)]

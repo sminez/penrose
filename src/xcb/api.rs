@@ -54,7 +54,11 @@ impl Api {
         Ok(api)
     }
 
-    fn screen(&self, ix: usize) -> Result<xcb::Screen> {
+    pub(crate) fn conn(&self) -> &xcb::Connection {
+        &self.conn
+    }
+
+    pub(crate) fn screen(&self, ix: usize) -> Result<xcb::Screen> {
         self.conn
             .get_setup()
             .roots()
@@ -62,14 +66,14 @@ impl Api {
             .ok_or_else(|| anyhow!("Screen index out of bounds"))
     }
 
-    fn get_depth<'a>(&self, screen: &'a xcb::Screen) -> Result<xcb::Depth<'a>> {
+    pub(crate) fn get_depth<'a>(&self, screen: &'a xcb::Screen) -> Result<xcb::Depth<'a>> {
         screen
             .allowed_depths()
             .max_by(|x, y| x.depth().cmp(&y.depth()))
             .ok_or_else(|| anyhow!("unable to get screen depth"))
     }
 
-    fn get_visual_type<'a>(&self, depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
+    pub(crate) fn get_visual_type<'a>(&self, depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
         depth
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
