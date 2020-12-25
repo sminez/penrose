@@ -8,8 +8,8 @@
 extern crate penrose;
 
 use penrose::{
-    helpers::index_selectors, Backward, Config, Forward, Less, More, Result, WindowManager,
-    XcbConnection,
+    core::helpers::index_selectors, new_xcb_connection, Backward, Config, Forward, Less, More,
+    Result, WindowManager,
 };
 
 use std::collections::HashMap;
@@ -46,7 +46,7 @@ fn main() -> Result<()> {
         };
     };
 
-    let conn = XcbConnection::new()?;
+    let conn = new_xcb_connection()?;
     let mut wm = WindowManager::init(config, &conn);
     wm.grab_keys_and_run(key_bindings, HashMap::new());
 

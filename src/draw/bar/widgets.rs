@@ -1,10 +1,14 @@
 //! Built in status bar widgets
 use crate::{
-    client::Client,
-    data_types::{Region, WinId},
+    core::{
+        client::Client,
+        data_types::{Region, WinId},
+        hooks::Hook,
+        manager::WindowManager,
+        ring::Selector,
+    },
     draw::{Color, DrawContext, TextStyle, Widget},
-    hooks::Hook,
-    Result, Selector, WindowManager,
+    Result,
 };
 
 const PADDING: f64 = 3.0;

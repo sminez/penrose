@@ -1,10 +1,10 @@
 //! Main logic for running Penrose
-use crate::{
+use crate::core::{
     bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     client::Client,
-    core::ring::{Direction, InsertPoint, Ring, Selector},
     data_types::{Change, Config, Point, Region, WinId},
-    hooks,
+    hooks::Hook,
+    ring::{Direction, InsertPoint, Ring, Selector},
     screen::Screen,
     workspace::Workspace,
     xconnection::{Atom, XConn, XEvent},
@@ -15,13 +15,13 @@ use nix::sys::signal::{signal, SigHandler, Signal};
 use std::{cell::Cell, collections::HashMap};
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
-macro_rules! run_hooks(
+macro_rules! run_hooks {
     ($method:ident, $_self:expr, $($arg:expr),*) => {
         let mut hooks = $_self.hooks.replace(vec![]);
         hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),*));
         $_self.hooks.replace(hooks);
     };
-);
+}
 
 /**
  * WindowManager is the primary struct / owner of the event loop for penrose.
@@ -45,7 +45,7 @@ pub struct WindowManager<'a> {
     show_bar: bool,
     bar_height: u32,
     top_bar: bool,
-    hooks: Cell<Vec<Box<dyn hooks::Hook>>>,
+    hooks: Cell<Vec<Box<dyn Hook>>>,
     client_insert_point: InsertPoint,
     focused_client: Option<WinId>,
     running: bool,

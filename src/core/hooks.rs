@@ -1,5 +1,5 @@
 //! Hook for adding additional functionality around standard WindowManager actions
-use crate::{
+use crate::core::{
     client::Client,
     data_types::{Region, WinId},
     manager::WindowManager,

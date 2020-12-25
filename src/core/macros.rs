@@ -4,19 +4,17 @@
 /// kick off an external program as part of a key/mouse binding.
 /// explicitly redirects stderr to /dev/null
 #[macro_export]
-macro_rules! run_external(
-    ($cmd:tt) => {
-        {
-            Box::new(move |_: &mut $crate::manager::WindowManager| {
-                $crate::helpers::spawn($cmd);
-            }) as $crate::bindings::FireAndForget
-        }
-    };
-);
+macro_rules! run_external {
+    ($cmd:tt) => {{
+        Box::new(move |_: &mut $crate::manager::WindowManager| {
+            $crate::helpers::spawn($cmd);
+        }) as $crate::bindings::FireAndForget
+    }};
+}
 
 /// kick off an internal method on the window manager as part of a key binding
 #[macro_export]
-macro_rules! run_internal(
+macro_rules! run_internal {
     ($func:ident) => {
         Box::new(|wm: &mut $crate::manager::WindowManager| {
             wm.$func();
@@ -28,11 +26,11 @@ macro_rules! run_internal(
             wm.$func($($arg),+);
         }) as $crate::bindings::FireAndForget
     };
-);
+}
 
 /// make creating a hash-map a little less verbose
 #[macro_export]
-macro_rules! map(
+macro_rules! map {
     {} => { ::std::collections::HashMap::new(); };
 
     { $($key:expr => $value:expr),+, } => {
@@ -42,11 +40,11 @@ macro_rules! map(
             _map
         }
     };
-);
+}
 
 /// make creating all of the key bindings less verbose
 #[macro_export]
-macro_rules! gen_keybindings(
+macro_rules! gen_keybindings {
     // parse a single simple key binding
     {   @parse $map:expr, $codes:expr,
         $binding:expr => $action:expr;
@@ -107,16 +105,6 @@ macro_rules! gen_keybindings(
         );)*
     };
 
-    // TODO: remove this depricated method of doing keybindings
-    {   $($binding:expr => $action:expr),+;
-        $(forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, })+
-    } => {
-        gen_keybindings_depricated!(
-            $($binding => $action),+;
-            $(forall_workspaces: $ws_array => { $($ws_binding => $ws_action),+, })+
-        );
-    };
-
     // NOTE: this is the public entry point to the macro
     { $($tokens:tt)+ } => {
         {
@@ -126,54 +114,11 @@ macro_rules! gen_keybindings(
             map
         }
     };
-);
-
-/// depricated: please use [gen_keybindings] as shown in the examples.
-#[deprecated(
-    since = "0.0.11",
-    note = "This macro will be removed entirely in an upcoming release."
-)]
-#[macro_export]
-macro_rules! gen_keybindings_depricated(
-    {
-        $($binding:expr => $action:expr),+;
-        $(forall_workspaces: $ws_array:expr => { $($ws_binding:expr => $ws_action:tt),+, })+
-    } => {
-        {
-            let mut _map = ::std::collections::HashMap::new();
-            let keycodes = $crate::helpers::keycodes_from_xmodmap();
-
-            $(
-                match $crate::helpers::parse_key_binding($binding, &keycodes) {
-                    None => panic!("invalid key binding: {}", $binding),
-                    Some(key_code) => _map.insert(key_code, $action),
-                };
-            )+
-
-            $(for i in 0..$ws_array.len() {
-                $(
-                    let for_ws = format!($ws_binding, i+1);
-                    match $crate::helpers::parse_key_binding(for_ws.clone(), &keycodes) {
-                        None => panic!("invalid key binding: {}", for_ws),
-                        Some(key_code) => _map.insert(
-                            key_code,
-                            run_internal!(
-                                $ws_action,
-                                &$crate::core::ring::Selector::Index(i)
-                            )
-                        ),
-                    };
-                )+
-            })+
-
-            _map
-        }
-    };
-);
+}
 
 /// make creating all of the mouse bindings less verbose
 #[macro_export]
-macro_rules! gen_mousebindings(
+macro_rules! gen_mousebindings {
     {
         $($kind:ident $button:ident + [$($modifier:ident),+] => $action:expr),+
     } => {
@@ -200,4 +145,4 @@ macro_rules! gen_mousebindings(
             _map
         }
     };
-);
+}

@@ -1,5 +1,5 @@
 //! Metadata around X clients and manipulating them
-use crate::data_types::WinId;
+use crate::core::data_types::WinId;
 
 /**
  * Meta-data around a client window that we are handling.

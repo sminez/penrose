@@ -1,7 +1,7 @@
 //! An internal data structure and associated helpers for simplifying actions around
 //! manipulating focusable ordered collections.
 
-use crate::data_types::WinId;
+use crate::core::data_types::WinId;
 
 use std::{
     collections::VecDeque,

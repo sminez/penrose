@@ -73,7 +73,7 @@ impl Hook for TestHook {
     }
 }
 
-macro_rules! hook_test(
+macro_rules! hook_test {
     (expected_calls => $n:expr, $method: expr, $testname:ident, $evts:expr) => {
         #[test]
         fn $testname() {
@@ -112,11 +112,12 @@ macro_rules! hook_test(
                 [
                     format!("{}:{}", "hook_1", $method).as_str(),
                     format!("{}:{}", "hook_2", $method).as_str()
-                ].repeat($n)
+                ]
+                .repeat($n)
             );
         }
     };
-);
+}
 
 hook_test!(
     expected_calls => 1,

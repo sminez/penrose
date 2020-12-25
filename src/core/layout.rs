@@ -9,7 +9,7 @@
  * that clients.len() > 0. r is the monitor Region defining the size of the monitor
  * for the layout to position windows.
  */
-use crate::{
+use crate::core::{
     client::Client,
     data_types::{Change, Region, ResizeAction, WinId},
 };
