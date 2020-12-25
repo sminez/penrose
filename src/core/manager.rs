@@ -15,13 +15,13 @@ use nix::sys::signal::{signal, SigHandler, Signal};
 use std::{cell::Cell, collections::HashMap};
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
-macro_rules! run_hooks(
+macro_rules! run_hooks {
     ($method:ident, $_self:expr, $($arg:expr),*) => {
         let mut hooks = $_self.hooks.replace(vec![]);
         hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),*));
         $_self.hooks.replace(hooks);
     };
-);
+}
 
 /**
  * WindowManager is the primary struct / owner of the event loop for penrose.
