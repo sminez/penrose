@@ -8,8 +8,8 @@ pub use statusbar::{Position, StatusBar};
 pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspaces};
 
 use crate::{
+    core::hooks::Hook,
     draw::{Color, Draw, DrawContext, TextStyle},
-    hooks::Hook,
     Result,
 };
 

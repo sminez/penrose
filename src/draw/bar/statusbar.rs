@@ -1,11 +1,14 @@
 //! A simple status bar
 use crate::{
-    client::Client,
-    data_types::{Region, WinId},
-    draw::{Color, Draw, DrawContext, Widget, WindowType},
-    hooks::Hook,
-    xconnection::Atom,
-    Result, WindowManager,
+    core::{
+        client::Client,
+        data_types::{PropVal, Region, WinId, WinType},
+        hooks::Hook,
+        manager::WindowManager,
+        xconnection::Atom,
+    },
+    draw::{Color, Draw, DrawContext, Widget},
+    Result,
 };
 
 /// The position of a status bar
@@ -56,30 +59,28 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     }
 
     fn init_for_screens(&mut self) -> Result<()> {
-        let name = Atom::NetWmName.as_ref();
-        let class = Atom::WmClass.as_ref();
-        let s = "penrose-statusbar";
-
         self.screens = self
             .drw
             .screen_sizes()?
             .iter()
-            .map(|r| {
+            .enumerate()
+            .map(|(i, r)| {
                 let (sx, sy, sw, sh) = r.values();
                 let y = match self.position {
                     Position::Top => sy as usize,
                     Position::Bottom => sh as usize - self.hpx,
                 };
                 let id = self.drw.new_window(
-                    &WindowType::Dock,
-                    true, // override_redirect
-                    sx as usize,
-                    y,
-                    sw as usize,
-                    self.hpx,
+                    WinType::InputOutput(Atom::NetWindowTypeDock),
+                    Region::new(sx, y as u32, sw, self.hpx as u32),
+                    i,
+                    false,
                 )?;
-                self.drw.set_str_prop(id, name, s)?;
-                self.drw.set_str_prop(id, class, s)?;
+
+                let s = "penrose-statusbar";
+                self.drw.replace_prop(id, Atom::NetWmName, PropVal::Str(s));
+                self.drw.replace_prop(id, Atom::WmName, PropVal::Str(s));
+                self.drw.replace_prop(id, Atom::WmClass, PropVal::Str(s));
 
                 Ok((id, sw as f64))
             })
