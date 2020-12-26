@@ -1,5 +1,5 @@
 //! Additional layout functions
-use crate::{
+use crate::core::{
     client::Client,
     data_types::{Region, ResizeAction, WinId},
 };

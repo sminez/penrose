@@ -6,9 +6,9 @@
 #[macro_export]
 macro_rules! run_external {
     ($cmd:tt) => {{
-        Box::new(move |_: &mut $crate::manager::WindowManager| {
-            $crate::helpers::spawn($cmd);
-        }) as $crate::bindings::FireAndForget
+        Box::new(move |_: &mut $crate::core::manager::WindowManager| {
+            $crate::core::helpers::spawn($cmd);
+        }) as $crate::core::bindings::FireAndForget
     }};
 }
 
@@ -16,15 +16,15 @@ macro_rules! run_external {
 #[macro_export]
 macro_rules! run_internal {
     ($func:ident) => {
-        Box::new(|wm: &mut $crate::manager::WindowManager| {
+        Box::new(|wm: &mut $crate::core::manager::WindowManager| {
             wm.$func();
-        }) as $crate::bindings::FireAndForget
+        }) as $crate::core::bindings::FireAndForget
     };
 
     ($func:ident, $($arg:expr),+) => {
-        Box::new(move |wm: &mut $crate::manager::WindowManager| {
+        Box::new(move |wm: &mut $crate::core::manager::WindowManager| {
             wm.$func($($arg),+);
-        }) as $crate::bindings::FireAndForget
+        }) as $crate::core::bindings::FireAndForget
     };
 }
 
@@ -50,7 +50,7 @@ macro_rules! gen_keybindings {
         $binding:expr => $action:expr;
         $($tail:tt)*
     } => {
-        match $crate::helpers::parse_key_binding($binding, &$codes) {
+        match $crate::core::helpers::parse_key_binding($binding, &$codes) {
             None => panic!("invalid key binding: {}", $binding),
             Some(key_code) => $map.insert(key_code, $action),
         };
@@ -66,7 +66,7 @@ macro_rules! gen_keybindings {
             $(
                 for (k, arg) in $from.into_iter().zip($to.clone()) {
                     let binding = format!($patt, k);
-                    match $crate::helpers::parse_key_binding(binding.clone(), &$codes) {
+                    match $crate::core::helpers::parse_key_binding(binding.clone(), &$codes) {
                         None => panic!("invalid key binding: {}", binding),
                         Some(key_code) => $map.insert(key_code, run_internal!($method, arg)),
                     };
@@ -85,7 +85,7 @@ macro_rules! gen_keybindings {
             $(
                 for (k, arg) in $from.into_iter().zip($to.clone()) {
                     let binding = format!($patt, k);
-                    match $crate::helpers::parse_key_binding(binding.clone(), &$codes) {
+                    match $crate::core::helpers::parse_key_binding(binding.clone(), &$codes) {
                         None => panic!("invalid key binding: {}", binding),
                         Some(key_code) => $map.insert(key_code, run_internal!($method, &arg)),
                     };
@@ -109,7 +109,7 @@ macro_rules! gen_keybindings {
     { $($tokens:tt)+ } => {
         {
             let mut map = ::std::collections::HashMap::new();
-            let codes = $crate::helpers::keycodes_from_xmodmap();
+            let codes = $crate::core::helpers::keycodes_from_xmodmap();
             gen_keybindings!(@parse map, codes, $($tokens)+);
             map
         }
@@ -138,7 +138,7 @@ macro_rules! gen_mousebindings {
                 let kind = $crate::core::bindings::MouseEventKind::$kind;
                 _map.insert(
                     (kind, state),
-                    Box::new($action) as $crate::bindings::MouseEventHandler
+                    Box::new($action) as $crate::core::bindings::MouseEventHandler
                 );
             )+
 

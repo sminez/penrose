@@ -28,17 +28,14 @@ pub mod xcb;
 // top level re-exports
 #[doc(inline)]
 pub use crate::core::{
-    bindings, client,
-    data_types::{self, Change::*, Config},
-    helpers, hooks, layout,
-    manager::{self, WindowManager},
+    data_types::{Change::*, Config},
+    manager::WindowManager,
     ring::{Direction::*, InsertPoint, Selector},
-    screen, workspace, xconnection,
 };
 
 #[cfg(feature = "xcb_layer")]
 #[doc(inline)]
-pub use crate::xcb::{new_xcb_connection, XcbConnection};
+pub use crate::xcb::{new_xcb_backed_window_manager, new_xcb_connection, XcbConnection};
 
 /// A default 'anyhow' based result type
 pub type Result<T> = anyhow::Result<T>;
