@@ -1,6 +1,13 @@
 //! A tiling window manager in the style of Xmonad
-#![warn(missing_docs, rust_2018_idioms, broken_intra_doc_links)]
-#![deny(clippy::all)]
+#![warn(
+    broken_intra_doc_links,
+    missing_debug_implementations,
+    future_incompatible,
+    missing_docs,
+    // missing_doc_code_examples,
+    rust_2018_idioms,
+)]
+#![warn(clippy::all)]
 #![allow(clippy::too_many_arguments)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",

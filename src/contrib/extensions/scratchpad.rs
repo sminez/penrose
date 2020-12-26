@@ -8,7 +8,7 @@ use crate::core::{
     manager::WindowManager,
 };
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt, rc::Rc};
 
 /**
  * A Scratchpad spawns and manages a single Client which can then be shown above the current layout
@@ -26,6 +26,19 @@ pub struct Scratchpad {
     prog: &'static str,
     w: f32,
     h: f32,
+}
+
+impl fmt::Debug for Scratchpad {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Scratchpad")
+            .field("client_id", &self.client.borrow())
+            .field("pending", &self.pending.borrow())
+            .field("visible", &self.visible.borrow())
+            .field("prog", &self.prog)
+            .field("w", &self.w)
+            .field("h", &self.h)
+            .finish()
+    }
 }
 
 impl Scratchpad {

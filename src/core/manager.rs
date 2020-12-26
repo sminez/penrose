@@ -12,7 +12,7 @@ use crate::core::{
 
 use nix::sys::signal::{signal, SigHandler, Signal};
 
-use std::{cell::Cell, collections::HashMap};
+use std::{cell::Cell, collections::HashMap, fmt};
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks {
@@ -49,6 +49,31 @@ pub struct WindowManager {
     client_insert_point: InsertPoint,
     focused_client: Option<WinId>,
     running: bool,
+}
+
+impl fmt::Debug for WindowManager {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WindowManager")
+            .field("conn", &stringify!(self.conn))
+            .field("screens", &self.screens)
+            .field("workspaces", &self.workspaces)
+            .field("client_map", &self.client_map)
+            .field("previous_workspace", &self.previous_workspace)
+            .field("floating_classes", &self.floating_classes)
+            .field("focused_border", &self.focused_border)
+            .field("unfocused_border", &self.unfocused_border)
+            .field("border_px", &self.border_px)
+            .field("gap_px", &self.gap_px)
+            .field("main_ratio_step", &self.main_ratio_step)
+            .field("show_bar", &self.show_bar)
+            .field("top_bar", &self.top_bar)
+            .field("bar_height", &self.bar_height)
+            .field("hooks", &stringify!(self.hooks))
+            .field("client_insert_point", &self.client_insert_point)
+            .field("focused_client", &self.focused_client)
+            .field("running", &self.running)
+            .finish()
+    }
 }
 
 impl WindowManager {
@@ -933,7 +958,10 @@ impl WindowManager {
     /// Get a vector of mutable references to Workspaces satisfying 'selector'. WinId selectors will
     /// return a vector with the workspace containing that Client if the client is known. Otherwise
     /// an empty vector will be returned.
-    pub fn all_workspaces_mut(&mut self, selector: &Selector<'_, Workspace>) -> Vec<&mut Workspace> {
+    pub fn all_workspaces_mut(
+        &mut self,
+        selector: &Selector<'_, Workspace>,
+    ) -> Vec<&mut Workspace> {
         if let Selector::WinId(id) = selector {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
                 self.workspaces.all_elements_mut(&Selector::Index(wix))
@@ -946,7 +974,11 @@ impl WindowManager {
     }
 
     /// Set the name of the selected Workspace
-    pub fn set_workspace_name(&mut self, name: impl Into<String>, selector: Selector<'_, Workspace>) {
+    pub fn set_workspace_name(
+        &mut self,
+        name: impl Into<String>,
+        selector: Selector<'_, Workspace>,
+    ) {
         if let Some(ws) = self.workspaces.element_mut(&selector) {
             ws.set_name(name)
         };

@@ -12,6 +12,7 @@ use std::collections::HashMap;
  * exposing state.
  * NOTE: currently, WM_NAME is read when the window is first mapped only.
  */
+#[derive(Clone, Copy, Debug)]
 pub struct ActiveClientAsRootName {}
 impl ActiveClientAsRootName {
     /// Construct a pre-boxed instance of the ActiveClientAsRootName hook
@@ -31,6 +32,7 @@ impl Hook for ActiveClientAsRootName {
  * This is intended for use with external programs such as Polybar as a way of
  * exposing state.
  */
+#[derive(Clone, Copy, Debug)]
 pub struct LayoutSymbolAsRootName {}
 impl LayoutSymbolAsRootName {
     /// Construct a pre-boxed instance of the LayoutSymbolAsRootName hook
@@ -52,6 +54,7 @@ impl Hook for LayoutSymbolAsRootName {
  * have focus and the the clients will be arranged based on the order they are
  * spawned.
  */
+#[derive(Clone, Debug)]
 pub struct DefaultWorkspace<'a> {
     defaults: Vec<&'a str>,
     layout: &'static str,
@@ -85,6 +88,7 @@ impl<'a> Hook for DefaultWorkspace<'a> {
  * are always available. This hook is most useful when combined with `DefaultWorkspace` to provide
  * a set of ephemeral workspace configurations that can be created on demand.
  */
+#[derive(Clone, Debug)]
 pub struct RemoveEmptyWorkspaces<'a> {
     protected: Vec<&'a str>,
 }
@@ -106,6 +110,7 @@ impl<'a> Hook for RemoveEmptyWorkspaces<'a> {
 }
 
 /// An individual workspace mapping for ClientSpawnRules
+#[derive(Clone, Debug)]
 pub enum SpawnRule {
     /// Target a client by WM_CLASS
     ClassName(&'static str, usize),
@@ -127,6 +132,7 @@ pub enum SpawnRule {
  * ]);
  * # }
  */
+#[derive(Clone, Debug)]
 pub struct ClientSpawnRules {
     class_rules: HashMap<&'static str, usize>,
     name_rules: HashMap<&'static str, usize>,

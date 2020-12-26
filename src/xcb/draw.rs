@@ -30,6 +30,7 @@ mod inner {
         create_layout(ctx).ok_or_else(|| anyhow!("unable to create pango layout"))
     }
 
+    #[derive(Clone, Debug)]
     /// An XCB based [`Draw`] implementation backed by pango and cairo
     pub struct XcbDraw {
         api: crate::xcb::Api,
@@ -136,6 +137,7 @@ mod inner {
         }
     }
 
+    #[derive(Clone, Debug)]
     /// An XCB based drawing context using pango and cairo
     pub struct XcbDrawContext {
         ctx: cairo::Context,

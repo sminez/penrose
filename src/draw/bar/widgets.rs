@@ -17,6 +17,7 @@ const PADDING: f64 = 3.0;
 ///
 /// Can be used as a simple static element in a status bar or as an inner element for rendering
 /// more complex text based widgets.
+#[derive(Clone, Debug)]
 pub struct Text {
     txt: String,
     font: String,
@@ -124,7 +125,7 @@ impl Widget for Text {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct WSMeta {
     name: String,
     occupied: bool,
@@ -143,6 +144,7 @@ fn meta_from_names(names: &[&str]) -> Vec<WSMeta> {
 }
 
 /// A simple workspace indicator for a status bar
+#[derive(Clone, Debug)]
 pub struct Workspaces {
     workspaces: Vec<WSMeta>,
     font: String,
@@ -346,6 +348,7 @@ impl Widget for Workspaces {
 }
 
 /// A text widget that is set via updating the root window name a la dwm
+#[derive(Clone, Debug)]
 pub struct RootWindowName {
     txt: Text,
 }
@@ -386,6 +389,7 @@ impl Widget for RootWindowName {
 }
 
 /// A text widget that is set via updating the root window name a la dwm
+#[derive(Clone, Debug)]
 pub struct ActiveWindowName {
     txt: Text,
     max_chars: usize,
@@ -469,6 +473,7 @@ impl Widget for ActiveWindowName {
 }
 
 /// A simple widget that displays the active layout symbol
+#[derive(Clone, Debug)]
 pub struct CurrentLayout {
     txt: Text,
 }

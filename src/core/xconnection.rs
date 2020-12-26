@@ -15,7 +15,7 @@ use crate::{
     Result,
 };
 
-use std::cell::Cell;
+use std::{cell::Cell, fmt};
 
 use strum::*;
 
@@ -641,6 +641,17 @@ pub struct MockXConn {
     unmanaged_ids: Vec<WinId>,
 }
 
+impl fmt::Debug for MockXConn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MockXConn")
+            .field("screens", &self.screens)
+            .field("remaining_events", &self.remaining_events())
+            .field("focused", &self.focused.get())
+            .field("unmanaged_ids", &self.unmanaged_ids)
+            .finish()
+    }
+}
+
 impl MockXConn {
     /// Set up a new [`MockXConn`] with pre-defined [`Screen`]s and an event stream to pull from
     pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> Self {
@@ -650,6 +661,11 @@ impl MockXConn {
             focused: Cell::new(0),
             unmanaged_ids,
         }
+    }
+    fn remaining_events(&self) -> Vec<XEvent> {
+        let remaining = self.events.replace(vec![]);
+        self.events.set(remaining.clone());
+        remaining
     }
 }
 

@@ -11,6 +11,8 @@ use crate::{
     Result,
 };
 
+use std::fmt;
+
 /// The position of a status bar
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Position {
@@ -30,6 +32,20 @@ pub struct StatusBar<Ctx> {
     h: f64,
     bg: Color,
     active_screen: usize,
+}
+
+impl<Ctx> fmt::Debug for StatusBar<Ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("StatusBar")
+            .field("drw", &stringify!(self.drw))
+            .field("position", &self.position)
+            .field("widgets", &stringify!(self.widgets))
+            .field("screens", &self.screens)
+            .field("hpx", &self.hpx)
+            .field("bg", &self.bg)
+            .field("active_screen", &self.active_screen)
+            .finish()
+    }
 }
 
 impl<Ctx: DrawContext> StatusBar<Ctx> {

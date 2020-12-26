@@ -5,6 +5,8 @@ use crate::core::{
     xconnection::Atom,
 };
 
+use std::fmt;
+
 /// Output of a Layout function: the new position a window should take
 pub type ResizeAction = (WinId, Option<Region>);
 
@@ -14,6 +16,7 @@ pub type WinId = u32;
 /// A client propert value that can be set.
 ///
 /// Variants correspond to the X property types being set.
+#[derive(Clone, Copy, Debug)]
 pub enum PropVal<'a> {
     /// A slice of interned [`Atom`] values
     Atom(&'a [u32]),
@@ -26,6 +29,7 @@ pub enum PropVal<'a> {
 }
 
 /// A window type to be specified when creating a new window in the X server
+#[derive(Clone, Copy, Debug)]
 pub enum WinType {
     /// A simple hidden stub window for facilitating other API calls
     CheckWin,
@@ -37,6 +41,7 @@ pub enum WinType {
 }
 
 /// Config options for X windows (not all are currently implemented)
+#[derive(Clone, Copy, Debug)]
 pub enum WinConfig {
     /// The border width in pixels
     BorderPx(u32),
@@ -67,6 +72,7 @@ impl From<&WinConfig> for Vec<(u16, u32)> {
 }
 
 /// Window attributes for an X11 client window (not all are curently implemented)
+#[derive(Clone, Copy, Debug)]
 pub enum WinAttr {
     /// Border color as an argb hex value
     BorderColor(u32),
@@ -138,6 +144,25 @@ pub struct Config<'a> {
     pub bar_height: u32,
     /// User supplied Hooks for modifying WindowManager behaviour
     pub hooks: Vec<Box<dyn Hook>>,
+}
+
+impl<'a> fmt::Debug for Config<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Config")
+            .field("workspaces", &self.workspaces)
+            .field("floating_classes", &self.floating_classes)
+            .field("layouts", &self.layouts)
+            .field("focused_border", &self.focused_border)
+            .field("unfocused_border", &self.unfocused_border)
+            .field("border_px", &self.border_px)
+            .field("gap_px", &self.gap_px)
+            .field("main_ratio_step", &self.main_ratio_step)
+            .field("show_bar", &self.show_bar)
+            .field("top_bar", &self.top_bar)
+            .field("bar_height", &self.bar_height)
+            .field("hooks", &stringify!(self.hooks))
+            .finish()
+    }
 }
 
 impl<'a> Config<'a> {

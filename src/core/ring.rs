@@ -5,6 +5,7 @@ use crate::core::data_types::WinId;
 
 use std::{
     collections::VecDeque,
+    fmt,
     ops::{Index, IndexMut},
 };
 
@@ -54,6 +55,20 @@ pub enum Selector<'a, T> {
     WinId(WinId),
     /// The first element satisfying this condition.
     Condition(&'a dyn Fn(&T) -> bool),
+}
+
+impl<'a, T> fmt::Debug for Selector<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Focused => f.debug_struct("Selector::Focused").finish(),
+            Self::Index(i) => f.debug_struct("Selector::Index").field("index", i).finish(),
+            Self::WinId(i) => f.debug_struct("Selector::WinId").field("id", i).finish(),
+            Self::Condition(_func) => f
+                .debug_struct("Selector::Condition")
+                .field("condition", &stringify!(_func))
+                .finish(),
+        }
+    }
 }
 
 /**

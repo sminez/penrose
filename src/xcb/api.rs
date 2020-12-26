@@ -12,7 +12,7 @@ use crate::{
 use anyhow::anyhow;
 use strum::*;
 
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, fmt, str::FromStr};
 
 /// A connection to the X server using the XCB C API
 pub struct Api {
@@ -20,6 +20,29 @@ pub struct Api {
     root: WinId,
     randr_base: u8,
     atoms: HashMap<Atom, u32>,
+}
+
+impl fmt::Debug for Api {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("XCB Api")
+            .field("root", &self.root)
+            .field("randr_base", &self.randr_base)
+            .field("atoms", &self.atoms)
+            .finish()
+    }
+}
+
+impl Clone for Api {
+    fn clone(&self) -> Self {
+        // Safety: If we were able to connect initially then we are ok to reuse the pointer.
+        let conn = unsafe { xcb::Connection::from_raw_conn(self.conn.get_raw_conn()) };
+        Self {
+            conn,
+            root: self.root,
+            randr_base: self.randr_base,
+            atoms: self.atoms.clone(),
+        }
+    }
 }
 
 impl Api {

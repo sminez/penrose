@@ -29,6 +29,7 @@ use std::str::FromStr;
 
 const WM_NAME: &str = "penrose";
 
+#[derive(Clone, Debug)]
 /**
  * Handles communication with an X server via the XCB library.
  *
