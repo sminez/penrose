@@ -30,8 +30,8 @@ macro_rules! run_hooks {
  * and bound on init and then triggered via grabbed X events in the main loop
  * along with everything else.
  */
-pub struct WindowManager<'a> {
-    conn: &'a dyn XConn,
+pub struct WindowManager {
+    conn: Box<dyn XConn>,
     screens: Ring<Screen>,
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
@@ -51,9 +51,9 @@ pub struct WindowManager<'a> {
     running: bool,
 }
 
-impl<'a> WindowManager<'a> {
+impl WindowManager {
     /// Initialise a new window manager instance using an existing connection to the X server.
-    pub fn init(config: Config, conn: &'a dyn XConn) -> WindowManager<'a> {
+    pub fn init(config: Config, conn: Box<dyn XConn>) -> WindowManager {
         let layouts = config.layouts.clone();
         let mut wm = WindowManager {
             conn,
@@ -84,7 +84,7 @@ impl<'a> WindowManager<'a> {
                 .collect(),
         );
         wm.detect_screens();
-        conn.set_wm_properties(&config.workspaces);
+        wm.conn.set_wm_properties(&config.workspaces);
         wm.conn.warp_cursor(None, &wm.screens[0]);
 
         wm
@@ -1091,10 +1091,11 @@ mod tests {
     use crate::screen::*;
     use crate::xconnection::*;
 
-    fn wm_with_mock_conn<'a>(layouts: Vec<Layout>, conn: &'a MockXConn) -> WindowManager<'a> {
+    fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> WindowManager {
+        let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
         let mut conf = Config::default();
-        conf.layouts = layouts;
-        WindowManager::init(conf, conn)
+        conf.layouts = test_layouts();
+        WindowManager::init(conf, Box::new(conn))
     }
 
     fn test_layouts() -> Vec<Layout> {
@@ -1116,8 +1117,7 @@ mod tests {
 
     #[test]
     fn workspace_switching_with_active_clients() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
 
         // add clients to the first workspace: final client should have focus
         add_n_clients(&mut wm, 3, 0);
@@ -1138,8 +1138,7 @@ mod tests {
 
     #[test]
     fn killing_a_client_removes_it_from_the_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0);
         wm.kill_client();
 
@@ -1148,8 +1147,7 @@ mod tests {
 
     #[test]
     fn kill_client_kills_focused_not_first() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 5, 0); // 50 40 30 20 10, 50 focused
         assert_eq!(wm.active_ws_index(), 0);
         wm.cycle_client(Forward); // 40 focused
@@ -1163,8 +1161,7 @@ mod tests {
 
     #[test]
     fn moving_then_deleting_clients() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 2, 0);
         wm.client_to_workspace(&Selector::Index(1));
         wm.client_to_workspace(&Selector::Index(1));
@@ -1177,8 +1174,7 @@ mod tests {
 
     #[test]
     fn client_to_workspace_inserts_at_head() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 2, 0); // [20, 10]
         wm.client_to_workspace(&Selector::Index(1)); // 20 -> ws::1
         wm.client_to_workspace(&Selector::Index(1)); // 10 -> ws::1, [10, 20]
@@ -1192,8 +1188,7 @@ mod tests {
 
     #[test]
     fn client_to_workspace_sets_focus() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 2, 0); // [20, 10]
         wm.client_to_workspace(&Selector::Index(1)); // 20 -> ws::1
         wm.client_to_workspace(&Selector::Index(1)); // 10 -> ws::1, [10, 20]
@@ -1204,8 +1199,7 @@ mod tests {
 
     #[test]
     fn client_to_invalid_workspace_is_noop() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0); // [20, 10]
 
         assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(0));
@@ -1215,8 +1209,7 @@ mod tests {
 
     #[test]
     fn client_to_screen_sets_correct_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0); // [20, 10]
 
         wm.client_to_screen(&Selector::Index(1));
@@ -1225,8 +1218,7 @@ mod tests {
 
     #[test]
     fn client_to_invalid_screen_is_noop() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0); // [20, 10]
 
         assert_eq!(wm.client_map.get(&10).map(|c| c.workspace()), Some(0));
@@ -1236,8 +1228,7 @@ mod tests {
 
     #[test]
     fn x_focus_events_set_workspace_focus() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
         wm.client_gained_focus(10);
 
@@ -1246,8 +1237,7 @@ mod tests {
 
     #[test]
     fn focus_workspace_sets_focus_in_ring() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         assert_eq!(wm.workspaces.focused_index(), 0);
         assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
         wm.focus_workspace(&Selector::Index(3));
@@ -1257,8 +1247,7 @@ mod tests {
 
     #[test]
     fn dragging_clients_forward_from_index_0() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 5, 0); // focus on last client (50) ix == 0
 
         let clients = |w: &mut WindowManager| {
@@ -1284,8 +1273,7 @@ mod tests {
 
     #[test]
     fn getting_all_clients_on_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
 
         add_n_clients(&mut wm, 3, 0);
         wm.focus_workspace(&Selector::Index(1));
@@ -1300,8 +1288,7 @@ mod tests {
 
     #[test]
     fn getting_all_workspaces_of_window() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
 
         add_n_clients(&mut wm, 3, 0);
         wm.focus_workspace(&Selector::Index(1));
@@ -1313,8 +1300,7 @@ mod tests {
 
     #[test]
     fn selector_screen() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0);
 
         assert_eq!(wm.screen(&Selector::Focused), wm.screens.focused());
@@ -1328,8 +1314,7 @@ mod tests {
 
     #[test]
     fn selector_workspace() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0);
 
         assert_eq!(wm.workspace(&Selector::Focused), wm.workspaces.focused());
@@ -1343,8 +1328,7 @@ mod tests {
 
     #[test]
     fn selector_client() {
-        let conn = MockXConn::new(test_screens(), vec![], vec![]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 4, 0);
 
         assert_eq!(wm.client(&Selector::Focused), wm.client_map.get(&40));
@@ -1360,8 +1344,7 @@ mod tests {
     fn unmanaged_window_types_are_not_tracked() {
         // Setting the unmanaged window IDs here sets the return of
         // MockXConn.is_managed_window to false for those IDs
-        let conn = MockXConn::new(test_screens(), vec![], vec![10]);
-        let mut wm = wm_with_mock_conn(test_layouts(), &conn);
+        let mut wm = wm_with_mock_conn(vec![], vec![10]);
 
         wm.handle_map_request(10, false); // should not be tiled
         assert!(wm.client_map.get(&10).is_none());

@@ -12,7 +12,8 @@ use penrose::{
         helpers::{index_selectors, spawn_for_output},
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
     },
-    new_xcb_connection, Backward, Config, Forward, Less, More, Result, WindowManager,
+    xcb::new_xcb_backed_window_manager,
+    Backward, Config, Forward, Less, More, Result,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -100,8 +101,7 @@ fn main() -> Result<()> {
         };
     };
 
-    let conn = new_xcb_connection()?;
-    let mut wm = WindowManager::init(config, &conn);
+    let mut wm = new_xcb_backed_window_manager(config)?;
     wm.grab_keys_and_run(key_bindings, HashMap::new());
 
     Ok(())

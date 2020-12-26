@@ -2,7 +2,8 @@
 use crate::{
     core::{
         bindings::{KeyCode, MouseState},
-        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        data_types::{Config, Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        manager::WindowManager,
         screen::Screen,
         xconnection::{Atom, XEvent},
     },
@@ -26,6 +27,12 @@ pub use xconn::XcbConnection;
 /// implementation of [`XcbApi`].
 pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
     XcbConnection::new(Api::new()?)
+}
+
+/// Construct a penrose [`WindowManager`] backed by the default [`crate::xcb`] backend.
+pub fn new_xcb_backed_window_manager(conf: Config) -> Result<WindowManager> {
+    let conn = XcbConnection::new(Api::new()?)?;
+    Ok(WindowManager::init(conf, Box::new(conn)))
 }
 
 /**

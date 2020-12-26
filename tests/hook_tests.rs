@@ -103,7 +103,7 @@ macro_rules! hook_test {
                 events,
                 vec![],
             );
-            let mut wm = WindowManager::init(config, &conn);
+            let mut wm = WindowManager::init(config, Box::new(conn));
             wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
             drop(wm);
 

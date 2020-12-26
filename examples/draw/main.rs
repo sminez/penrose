@@ -4,11 +4,10 @@ use penrose::{
     core::{
         data_types::{Config, Region, WinType},
         hooks::Hook,
-        manager::WindowManager,
         xconnection::Atom,
     },
     draw::{bar::dwm_bar, Draw, DrawContext, TextStyle},
-    xcb::{new_xcb_connection, XcbDraw},
+    xcb::{new_xcb_backed_window_manager, XcbDraw},
     Result,
 };
 
@@ -51,9 +50,7 @@ fn bar_draw() -> Result<()> {
         workspaces,
     )?;
 
-    let config = Config::default();
-    let conn = new_xcb_connection()?;
-    let mut wm = WindowManager::init(config, &conn);
+    let mut wm = new_xcb_backed_window_manager(Config::default())?;
     bar.startup(&mut wm); // ensure widgets are initialised correctly
 
     thread::sleep(time::Duration::from_millis(1000));

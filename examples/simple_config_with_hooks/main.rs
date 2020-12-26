@@ -20,8 +20,11 @@ use penrose::{
         helpers::index_selectors,
         hooks::Hook,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
+        manager::WindowManager,
+        ring::Selector,
     },
-    new_xcb_connection, Backward, Config, Forward, Less, More, Result, Selector, WindowManager,
+    xcb::new_xcb_connection,
+    Backward, Config, Forward, Less, More, Result,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -171,14 +174,21 @@ fn main() -> Result<()> {
     // The underlying connection to the X server is handled as a trait: XConn. XcbConnection is the
     // reference implementation of this trait that uses the XCB library to communicate with the X
     // server. You are free to provide your own implementation if you wish, see xconnection.rs for
-    // details of the required methods and expected behaviour.
+    // details of the required methods and expected behaviour and xcb/xconn.rs for the
+    // implementation of XcbConnection.
     let conn = new_xcb_connection()?;
 
     // Create the WindowManager instance with the config we have built and a connection to the X
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
     // such as configuring initial WindowManager state, running custom code / hooks or spawning
     // external processes such as a start-up script.
-    let mut wm = WindowManager::init(config, &conn);
+    let mut wm = WindowManager::init(config, Box::new(conn));
+
+    // NOTE: If you are using the default XCB backend provided in the penrose xcb module, then the
+    //       construction of the XcbConnection and resulting WindowManager can be done using the
+    //       new_xcb_backed_window_manager helper function like so:
+    //
+    // let mut wm = new_xcb_backed_window_manager(config)?;
 
     // grab_keys_and_run will start listening to events from the X server and drop into the main
     // event loop. From this point on, program control passes to the WindowManager so make sure
