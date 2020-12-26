@@ -140,7 +140,7 @@ pub trait Draw {
      * See the documentation for the C level XCB API for the correct property
      * type for each prop.
      */
-    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal);
+    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>);
 }
 
 /// Used for simple drawing to the screen

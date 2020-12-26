@@ -1,9 +1,5 @@
 //! A tiling window manager in the style of Xmonad
-#![warn(
-    missing_docs,
-    // rust_2018_idioms,
-    broken_intra_doc_links
-)]
+#![warn(missing_docs, rust_2018_idioms, broken_intra_doc_links)]
 #![deny(clippy::all)]
 #![allow(clippy::too_many_arguments)]
 #![doc(

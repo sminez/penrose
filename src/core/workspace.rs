@@ -64,12 +64,12 @@ impl Workspace {
     }
 
     /// Iterate over the clients on this workspace in position order
-    pub fn iter(&self) -> std::collections::vec_deque::Iter<WinId> {
+    pub fn iter(&self) -> std::collections::vec_deque::Iter<'_, WinId> {
         self.clients.iter()
     }
 
     /// Iterate over the clients on this workspace in position order
-    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<WinId> {
+    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<'_, WinId> {
         self.clients.iter_mut()
     }
 
@@ -222,8 +222,7 @@ impl Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::ring::Direction;
-    use crate::layout::*;
+    use crate::core::{layout::*, ring::Direction};
 
     fn test_layouts() -> Vec<Layout> {
         vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)]

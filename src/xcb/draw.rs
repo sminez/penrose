@@ -131,7 +131,7 @@ mod inner {
             self.api.destroy_window(id);
         }
 
-        fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal) {
+        fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
             self.api.replace_prop(id, prop, val);
         }
     }

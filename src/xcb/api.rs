@@ -58,7 +58,7 @@ impl Api {
         &self.conn
     }
 
-    pub(crate) fn screen(&self, ix: usize) -> Result<xcb::Screen> {
+    pub(crate) fn screen(&self, ix: usize) -> Result<xcb::Screen<'_>> {
         self.conn
             .get_setup()
             .roots()
@@ -66,7 +66,7 @@ impl Api {
             .ok_or_else(|| anyhow!("Screen index out of bounds"))
     }
 
-    pub(crate) fn get_depth<'a>(&self, screen: &'a xcb::Screen) -> Result<xcb::Depth<'a>> {
+    pub(crate) fn get_depth<'a>(&self, screen: &'a xcb::Screen<'_>) -> Result<xcb::Depth<'a>> {
         screen
             .allowed_depths()
             .max_by(|x, y| x.depth().cmp(&y.depth()))
@@ -130,7 +130,7 @@ impl XcbApi for Api {
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_change_property
-    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal) {
+    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
         let mode = xcb::PROP_MODE_REPLACE as u8;
         let a = self.known_atom(prop);
 

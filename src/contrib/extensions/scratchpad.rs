@@ -60,7 +60,7 @@ impl Scratchpad {
 
     /// Register the required hooks for managing this Scratchpad. Must be called before
     /// WindowManager.init.
-    pub fn register(&self, conf: &mut Config) {
+    pub fn register(&self, conf: &mut Config<'_>) {
         conf.hooks.push(self.boxed_clone())
     }
 

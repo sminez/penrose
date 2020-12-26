@@ -53,7 +53,7 @@ pub struct WindowManager {
 
 impl WindowManager {
     /// Initialise a new window manager instance using an existing connection to the X server.
-    pub fn init(config: Config, conn: Box<dyn XConn>) -> WindowManager {
+    pub fn init(config: Config<'_>, conn: Box<dyn XConn>) -> WindowManager {
         let layouts = config.layouts.clone();
         let mut wm = WindowManager {
             conn,
@@ -233,7 +233,7 @@ impl WindowManager {
         self.screens.focused().unwrap().wix
     }
 
-    fn focus_screen(&mut self, sel: &Selector<Screen>) -> Option<&Screen> {
+    fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
         let prev = self.screens.focused_index();
         self.screens.focus(sel);
         let new = self.screens.focused_index();
@@ -708,7 +708,7 @@ impl WindowManager {
      * invalid index. You should almost always be using the `gen_keybindings!` macro
      * to set up your keybindings so this is not normally an issue.
      */
-    pub fn focus_workspace(&mut self, selector: &Selector<Workspace>) {
+    pub fn focus_workspace(&mut self, selector: &Selector<'_, Workspace>) {
         let active_ws = Selector::Index(self.screens.focused().unwrap().wix);
         if self.workspaces.equivalent_selectors(selector, &active_ws) {
             return;
@@ -775,7 +775,7 @@ impl WindowManager {
     }
 
     /// Move the focused client to the workspace matching 'selector'.
-    pub fn client_to_workspace(&mut self, selector: &Selector<Workspace>) {
+    pub fn client_to_workspace(&mut self, selector: &Selector<'_, Workspace>) {
         let active_ws = Selector::Index(self.screens.focused().unwrap().wix);
         if self.workspaces.equivalent_selectors(&selector, &active_ws) {
             return;
@@ -810,7 +810,7 @@ impl WindowManager {
     }
 
     /// Move the focused client to the active workspace on the screen matching 'selector'.
-    pub fn client_to_screen(&mut self, selector: &Selector<Screen>) {
+    pub fn client_to_screen(&mut self, selector: &Selector<'_, Screen>) {
         let i = match self.screen(selector) {
             Some(s) => s.wix,
             None => return,
@@ -819,7 +819,7 @@ impl WindowManager {
     }
 
     /// Toggle the fullscreen state of the given client ID
-    pub fn toggle_client_fullscreen(&mut self, selector: &Selector<Client>) {
+    pub fn toggle_client_fullscreen(&mut self, selector: &Selector<'_, Client>) {
         let (id, client_is_fullscreen) = match self.client(selector) {
             None => return, // unknown client
             Some(c) => (c.id(), c.fullscreen),
@@ -842,7 +842,7 @@ impl WindowManager {
     /// Get a reference to the first Screen satisfying 'selector'. WinId selectors will return
     /// the screen containing that Client if the client is known.
     /// NOTE: It is not possible to get a mutable reference to a Screen.
-    pub fn screen(&self, selector: &Selector<Screen>) -> Option<&Screen> {
+    pub fn screen(&self, selector: &Selector<'_, Screen>) -> Option<&Screen> {
         if let Selector::WinId(id) = selector {
             self.client_map.get(&id).and_then(|c| {
                 self.screens
@@ -872,7 +872,7 @@ impl WindowManager {
 
     /// Remove a Workspace from the WindowManager. All clients that were present on the removed
     /// workspace will be destroyed. WinId selectors will be ignored.
-    pub fn remove_workspace(&mut self, selector: &Selector<Workspace>) -> Option<Workspace> {
+    pub fn remove_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Option<Workspace> {
         if self.workspaces.len() == 1 {
             return None; // not allowed to remove the last workspace
         }
@@ -891,7 +891,7 @@ impl WindowManager {
 
     /// Get a reference to the first Workspace satisfying 'selector'. WinId selectors will return
     /// the workspace containing that Client if the client is known.
-    pub fn workspace(&self, selector: &Selector<Workspace>) -> Option<&Workspace> {
+    pub fn workspace(&self, selector: &Selector<'_, Workspace>) -> Option<&Workspace> {
         if let Selector::WinId(id) = selector {
             self.client_map
                 .get(&id)
@@ -903,7 +903,7 @@ impl WindowManager {
 
     /// Get a mutable reference to the first Workspace satisfying 'selector'. WinId selectors will
     /// return the workspace containing that Client if the client is known.
-    pub fn workspace_mut(&mut self, selector: &Selector<Workspace>) -> Option<&mut Workspace> {
+    pub fn workspace_mut(&mut self, selector: &Selector<'_, Workspace>) -> Option<&mut Workspace> {
         if let Selector::WinId(id) = selector {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
                 self.workspaces.get_mut(wix)
@@ -918,7 +918,7 @@ impl WindowManager {
     /// Get a vector of references to Workspaces satisfying 'selector'. WinId selectors will return
     /// a vector with the workspace containing that Client if the client is known. Otherwise an
     /// empty vector will be returned.
-    pub fn all_workspaces(&self, selector: &Selector<Workspace>) -> Vec<&Workspace> {
+    pub fn all_workspaces(&self, selector: &Selector<'_, Workspace>) -> Vec<&Workspace> {
         if let Selector::WinId(id) = selector {
             self.client_map
                 .get(&id)
@@ -933,7 +933,7 @@ impl WindowManager {
     /// Get a vector of mutable references to Workspaces satisfying 'selector'. WinId selectors will
     /// return a vector with the workspace containing that Client if the client is known. Otherwise
     /// an empty vector will be returned.
-    pub fn all_workspaces_mut(&mut self, selector: &Selector<Workspace>) -> Vec<&mut Workspace> {
+    pub fn all_workspaces_mut(&mut self, selector: &Selector<'_, Workspace>) -> Vec<&mut Workspace> {
         if let Selector::WinId(id) = selector {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
                 self.workspaces.all_elements_mut(&Selector::Index(wix))
@@ -946,7 +946,7 @@ impl WindowManager {
     }
 
     /// Set the name of the selected Workspace
-    pub fn set_workspace_name(&mut self, name: impl Into<String>, selector: Selector<Workspace>) {
+    pub fn set_workspace_name(&mut self, name: impl Into<String>, selector: Selector<'_, Workspace>) {
         if let Some(ws) = self.workspaces.element_mut(&selector) {
             ws.set_name(name)
         };
@@ -954,7 +954,7 @@ impl WindowManager {
     }
 
     /// Take a reference to the first Client found matching 'selector'
-    pub fn client(&self, selector: &Selector<Client>) -> Option<&Client> {
+    pub fn client(&self, selector: &Selector<'_, Client>) -> Option<&Client> {
         match selector {
             Selector::Focused => self.focused_client(),
             Selector::WinId(id) => self.client_map.get(&id),
@@ -968,7 +968,7 @@ impl WindowManager {
     }
 
     /// Take a mutable reference to the first Client found matching 'selector'
-    pub fn client_mut(&mut self, selector: &Selector<Client>) -> Option<&mut Client> {
+    pub fn client_mut(&mut self, selector: &Selector<'_, Client>) -> Option<&mut Client> {
         match selector {
             Selector::Focused => self.focused_client_mut(),
             Selector::WinId(id) => self.client_map.get_mut(&id),
@@ -990,7 +990,7 @@ impl WindowManager {
 
     /// Get a vector of references to the Clients found matching 'selector'.
     /// The resulting vector is sorted by Client id.
-    pub fn all_clients(&self, selector: &Selector<Client>) -> Vec<&Client> {
+    pub fn all_clients(&self, selector: &Selector<'_, Client>) -> Vec<&Client> {
         match selector {
             Selector::Focused => self.focused_client().into_iter().collect(),
             Selector::WinId(id) => self.client_map.get(&id).into_iter().collect(),
@@ -1015,7 +1015,7 @@ impl WindowManager {
 
     /// Get a vector of mutable references to the Clients found matching 'selector'.
     /// The resulting vector is sorted by Client id.
-    pub fn all_clients_mut(&mut self, selector: &Selector<Client>) -> Vec<&mut Client> {
+    pub fn all_clients_mut(&mut self, selector: &Selector<'_, Client>) -> Vec<&mut Client> {
         match selector {
             Selector::Focused => self.focused_client_mut().into_iter().collect(),
             Selector::WinId(id) => self.client_map.get_mut(&id).into_iter().collect(),
@@ -1085,11 +1085,7 @@ impl WindowManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::ring::Direction::*;
-    use crate::data_types::*;
-    use crate::layout::*;
-    use crate::screen::*;
-    use crate::xconnection::*;
+    use crate::core::{data_types::*, layout::*, ring::Direction::*, screen::*, xconnection::*};
 
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> WindowManager {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);

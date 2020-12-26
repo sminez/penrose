@@ -170,11 +170,11 @@ impl<T> Ring<T> {
         self.elements.push_back(element);
     }
 
-    pub fn iter(&self) -> std::collections::vec_deque::Iter<T> {
+    pub fn iter(&self) -> std::collections::vec_deque::Iter<'_, T> {
         self.elements.iter()
     }
 
-    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<T> {
+    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<'_, T> {
         self.elements.iter_mut()
     }
 
@@ -200,7 +200,7 @@ impl<T> Ring<T> {
         self.elements.iter_mut().enumerate().find(|(_, e)| cond(*e))
     }
 
-    pub fn index(&self, s: &Selector<T>) -> Option<usize> {
+    pub fn index(&self, s: &Selector<'_, T>) -> Option<usize> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => Some(self.focused_index()),
@@ -215,7 +215,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn element(&self, s: &Selector<T>) -> Option<&T> {
+    pub fn element(&self, s: &Selector<'_, T>) -> Option<&T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => self.focused(),
@@ -224,7 +224,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn element_mut(&mut self, s: &Selector<T>) -> Option<&mut T> {
+    pub fn element_mut(&mut self, s: &Selector<'_, T>) -> Option<&mut T> {
         match s {
             Selector::Focused => self.focused_mut(),
             Selector::Index(i) => self.elements.get_mut(*i),
@@ -233,7 +233,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn all_elements(&self, s: &Selector<T>) -> Vec<&T> {
+    pub fn all_elements(&self, s: &Selector<'_, T>) -> Vec<&T> {
         match s {
             Selector::WinId(_) => vec![], // ignored
             Selector::Focused => self.focused().into_iter().collect(),
@@ -242,7 +242,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn all_elements_mut(&mut self, s: &Selector<T>) -> Vec<&mut T> {
+    pub fn all_elements_mut(&mut self, s: &Selector<'_, T>) -> Vec<&mut T> {
         match s {
             Selector::WinId(_) => vec![], // ignored
             Selector::Focused => self.focused_mut().into_iter().collect(),
@@ -251,7 +251,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn focus(&mut self, s: &Selector<T>) -> Option<&T> {
+    pub fn focus(&mut self, s: &Selector<'_, T>) -> Option<&T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => self.focused(),
@@ -270,7 +270,7 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn remove(&mut self, s: &Selector<T>) -> Option<T> {
+    pub fn remove(&mut self, s: &Selector<'_, T>) -> Option<T> {
         match s {
             Selector::WinId(_) => None, // ignored
             Selector::Focused => {
@@ -297,7 +297,7 @@ impl<T> Ring<T> {
 }
 
 impl<T: PartialEq> Ring<T> {
-    pub fn equivalent_selectors(&self, s: &Selector<T>, t: &Selector<T>) -> bool {
+    pub fn equivalent_selectors(&self, s: &Selector<'_, T>, t: &Selector<'_, T>) -> bool {
         match (self.element(&s), self.element(&t)) {
             (Some(e), Some(f)) => e == f,
             _ => false,

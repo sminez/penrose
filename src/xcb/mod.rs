@@ -30,7 +30,7 @@ pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
 }
 
 /// Construct a penrose [`WindowManager`] backed by the default [`crate::xcb`] backend.
-pub fn new_xcb_backed_window_manager(conf: Config) -> Result<WindowManager> {
+pub fn new_xcb_backed_window_manager(conf: Config<'_>) -> Result<WindowManager> {
     let conn = XcbConnection::new(Api::new()?)?;
     Ok(WindowManager::init(conf, Box::new(conn)))
 }
@@ -74,7 +74,7 @@ pub trait XcbApi {
      * See the documentation for the C level XCB API for the correct property
      * type for each prop.
      */
-    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal);
+    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>);
 
     /// Create a new client window
     fn create_window(&self, ty: WinType, r: Region, screen: usize, managed: bool) -> Result<WinId>;

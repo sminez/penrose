@@ -1,10 +1,10 @@
 // Check that each Hook variant is called at the expected points
-use penrose::{
+use penrose::core::{
     client::Client,
-    data_types::WinId,
+    data_types::{Config, WinId},
     hooks::Hook,
+    manager::WindowManager,
     xconnection::{MockXConn, XEvent},
-    {Config, WindowManager},
 };
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
