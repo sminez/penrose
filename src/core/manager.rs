@@ -2,7 +2,8 @@
 use crate::core::{
     bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     client::Client,
-    data_types::{Change, Config, Point, Region, WinId},
+    config::Config,
+    data_types::{Change, Point, Region, WinId},
     hooks::Hook,
     ring::{Direction, InsertPoint, Ring, Selector},
     screen::Screen,

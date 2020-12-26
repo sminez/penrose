@@ -2,7 +2,8 @@
 use crate::{
     core::{
         bindings::{KeyCode, MouseState},
-        data_types::{Config, Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        config::Config,
+        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         hooks::Hook,
         manager::WindowManager,
         screen::Screen,

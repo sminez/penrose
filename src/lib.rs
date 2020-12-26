@@ -31,7 +31,8 @@ pub mod xcb;
 // top level re-exports
 #[doc(inline)]
 pub use crate::core::{
-    data_types::{Change::*, Config},
+    config::Config,
+    data_types::Change::*,
     manager::WindowManager,
     ring::{Direction::*, InsertPoint, Selector},
 };

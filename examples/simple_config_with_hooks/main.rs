@@ -17,6 +17,7 @@ use penrose::{
     },
     core::{
         client::Client,
+        config::Config,
         helpers::index_selectors,
         hooks::{Hook, Hooks},
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
@@ -24,7 +25,7 @@ use penrose::{
         ring::Selector,
     },
     xcb::new_xcb_connection,
-    Backward, Config, Forward, Less, More, Result,
+    Backward, Forward, Less, More, Result,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -50,20 +51,13 @@ fn main() -> Result<()> {
     let mut config = Config::default();
 
     // Created at startup. See keybindings below for how to access them
-    config.workspaces = vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-        .iter()
-        .map(|w| w.to_string())
-        .collect();
-
-    // Windows with a matching WM_CLASS will always float
-    config.floating_classes = vec!["dmenu", "dunst", "polybar"]
-        .iter()
-        .map(|w| w.to_string())
-        .collect();
-
-    // Client border colors are set based on X focus
-    config.focused_border = 0xcc241d; // #cc241d
-    config.unfocused_border = 0x3c3836; // #3c3836
+    config
+        .workspaces(vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"])
+        // Windows with a matching WM_CLASS will always float
+        .floating_classes(vec!["dmenu", "dunst", "polybar"])
+        // Client border colors are set based on X focus
+        .focused_border(0xcc241d) // #cc241d
+        .unfocused_border(0x3c3836); // #3c3836
 
     // When specifying a layout, most of the time you will want LayoutConf::default() as shown
     // below, which will honour gap settings and will not be run on focus changes (only when
@@ -84,12 +78,12 @@ fn main() -> Result<()> {
 
     // Layouts to be used on each workspace. Currently all workspaces have the same set of Layouts
     // available to them, though they track modifications to n_main and ratio independently.
-    config.layouts = vec![
+    config.layouts(vec![
         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
         Layout::floating("[----]"),
-    ];
+    ]);
 
     // NOTE: change these to programs that you have installed!
     let my_program_launcher = "dmenu_run";

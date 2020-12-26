@@ -4,6 +4,7 @@ pub mod macros;
 
 pub mod bindings;
 pub mod client;
+pub mod config;
 pub mod data_types;
 pub mod helpers;
 pub mod hooks;
@@ -19,7 +20,7 @@ pub use bindings::{FireAndForget, MouseEventHandler};
 #[doc(inline)]
 pub use client::Client;
 #[doc(inline)]
-pub use data_types::Config;
+pub use config::Config;
 #[doc(inline)]
 pub use hooks::Hook;
 #[doc(inline)]

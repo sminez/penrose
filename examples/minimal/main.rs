@@ -8,9 +8,11 @@
 extern crate penrose;
 
 use penrose::{
-    core::{bindings::MouseEvent, helpers::index_selectors, manager::WindowManager},
+    core::{
+        bindings::MouseEvent, config::Config, helpers::index_selectors, manager::WindowManager,
+    },
     xcb::new_xcb_backed_window_manager,
-    Backward, Config, Forward, Less, More, Result,
+    Backward, Forward, Less, More, Result,
 };
 
 fn main() -> Result<()> {

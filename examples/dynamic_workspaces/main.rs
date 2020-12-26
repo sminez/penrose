@@ -9,12 +9,13 @@ use penrose::{
         layouts::paper,
     },
     core::{
+        config::Config,
         helpers::{index_selectors, spawn_for_output},
         hooks::Hook,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
     },
     xcb::new_xcb_backed_window_manager,
-    Backward, Config, Forward, Less, More, Result,
+    Backward, Forward, Less, More, Result,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -40,8 +41,8 @@ fn my_layouts() -> Vec<Layout> {
 fn main() -> Result<()> {
     SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())?;
     let mut config = Config::default();
-    config.workspaces = vec!["main".to_string()];
-    config.layouts = my_layouts();
+    config.workspaces(vec!["main"]);
+    config.layouts(my_layouts());
     let sp = Scratchpad::new("st", 0.8, 0.8);
 
     let hooks: Vec<Box<dyn Hook>> = vec![

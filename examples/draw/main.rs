@@ -2,7 +2,8 @@ use std::{thread, time};
 
 use penrose::{
     core::{
-        data_types::{Config, Region, WinType},
+        config::Config,
+        data_types::{Region, WinType},
         hooks::Hook,
         xconnection::Atom,
     },

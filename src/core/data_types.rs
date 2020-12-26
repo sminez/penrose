@@ -1,10 +1,5 @@
 //! Simple data types and enums
-use crate::core::{
-    layout::{side_stack, Layout, LayoutConf},
-    xconnection::Atom,
-};
-
-use std::fmt;
+use crate::core::xconnection::Atom;
 
 /// Output of a Layout function: the new position a window should take
 pub type ResizeAction = (WinId, Option<Region>);
@@ -114,80 +109,6 @@ impl Point {
     /// Create a new Point.
     pub fn new(x: u32, y: u32) -> Point {
         Point { x, y }
-    }
-}
-
-/// The main user facing configuration details
-pub struct Config {
-    /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
-    pub workspaces: Vec<String>,
-    /// WM_CLASS values that should always be treated as floating.
-    pub floating_classes: Vec<String>,
-    /// Default Layouts to be given to every workspace.
-    pub layouts: Vec<Layout>,
-    /// Focused boder color
-    pub focused_border: u32,
-    /// Unfocused boder color
-    pub unfocused_border: u32,
-    /// The width of window borders in pixels
-    pub border_px: u32,
-    /// The size of gaps between windows in pixels.
-    pub gap_px: u32,
-    /// The percentage change in main_ratio to be applied when increasing / decreasing.
-    pub main_ratio_step: f32,
-    /// Whether or not space should be reserved for a status bar
-    pub show_bar: bool,
-    /// True if the status bar should be at the top of the screen, false if it should be at the bottom
-    pub top_bar: bool,
-    /// Height of space reserved for status bars in pixels
-    pub bar_height: u32,
-}
-
-impl fmt::Debug for Config {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Config")
-            .field("workspaces", &self.workspaces)
-            .field("floating_classes", &self.floating_classes)
-            .field("layouts", &self.layouts)
-            .field("focused_border", &self.focused_border)
-            .field("unfocused_border", &self.unfocused_border)
-            .field("border_px", &self.border_px)
-            .field("gap_px", &self.gap_px)
-            .field("main_ratio_step", &self.main_ratio_step)
-            .field("show_bar", &self.show_bar)
-            .field("top_bar", &self.top_bar)
-            .field("bar_height", &self.bar_height)
-            .finish()
-    }
-}
-
-impl Config {
-    /// Initialise a default Config, giving sensible (but minimal) values for all fields.
-    pub fn default() -> Config {
-        Config {
-            workspaces: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
-            floating_classes: ["dmenu", "dunst"].iter().map(|s| s.to_string()).collect(),
-            layouts: vec![
-                Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
-                Layout::floating("[----]"),
-            ],
-            focused_border: 0xcc241d,   // #cc241d
-            unfocused_border: 0x3c3836, // #3c3836
-            border_px: 2,
-            gap_px: 5,
-            main_ratio_step: 0.05,
-            show_bar: true,
-            top_bar: true,
-            bar_height: 18,
-        }
-    }
-
-    /// Create a range from 1 -> n_workspaces for use in keybindings
-    pub fn ws_range(&self) -> std::ops::Range<usize> {
-        1..(self.workspaces.len() + 1)
     }
 }
 

@@ -1,7 +1,8 @@
 // Check that each Hook variant is called at the expected points
 use penrose::core::{
     client::Client,
-    data_types::{Config, WinId},
+    config::Config,
+    data_types::WinId,
     hooks::{Hook, Hooks},
     manager::WindowManager,
     xconnection::{MockXConn, XEvent},
