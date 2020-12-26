@@ -57,9 +57,10 @@ pub fn dwm_bar<Ctx: DrawContext>(
     style: &TextStyle,
     highlight: impl Into<Color>,
     empty_ws: impl Into<Color>,
-    workspaces: &[&str],
+    workspaces: Vec<impl Into<String>>,
 ) -> Result<StatusBar<Ctx>> {
     let highlight = highlight.into();
+    let workspaces: Vec<String> = workspaces.into_iter().map(|w| w.into()).collect();
 
     Ok(StatusBar::try_new(
         drw,
@@ -68,7 +69,7 @@ pub fn dwm_bar<Ctx: DrawContext>(
         style.bg.unwrap_or_else(|| 0x000000.into()),
         &[&style.font],
         vec![
-            Box::new(Workspaces::new(workspaces, style, highlight, empty_ws)),
+            Box::new(Workspaces::new(&workspaces, style, highlight, empty_ws)),
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 &TextStyle {

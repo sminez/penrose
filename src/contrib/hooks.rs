@@ -55,28 +55,32 @@ impl Hook for LayoutSymbolAsRootName {
  * spawned.
  */
 #[derive(Clone, Debug)]
-pub struct DefaultWorkspace<'a> {
-    defaults: Vec<&'a str>,
-    layout: &'static str,
-    name: &'static str,
+pub struct DefaultWorkspace {
+    defaults: Vec<String>,
+    layout: String,
+    name: String,
 }
-impl<'a> DefaultWorkspace<'a> {
+impl DefaultWorkspace {
     /// Create a new DefaultWorkspace that is pre-boxed for adding to your workspace hooks
-    pub fn new(name: &'static str, layout: &'static str, defaults: Vec<&'a str>) -> Box<Self> {
+    pub fn new(
+        name: impl Into<String>,
+        layout: impl Into<String>,
+        defaults: Vec<impl Into<String>>,
+    ) -> Box<Self> {
         Box::new(Self {
-            name,
-            layout,
-            defaults,
+            name: name.into(),
+            layout: layout.into(),
+            defaults: defaults.into_iter().map(|d| d.into()).collect(),
         })
     }
 }
-impl<'a> Hook for DefaultWorkspace<'a> {
+impl Hook for DefaultWorkspace {
     fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
         if let Some(ws) = wm.workspace_mut(&Selector::Index(new)) {
             if ws.name() == self.name && ws.is_empty() {
                 // can fail if the layout symbol is wrong
-                ws.try_set_layout(self.layout);
-                self.defaults.iter().for_each(|prog| spawn(*prog));
+                ws.try_set_layout(&self.layout);
+                self.defaults.iter().for_each(spawn);
             }
         }
     }
@@ -89,20 +93,22 @@ impl<'a> Hook for DefaultWorkspace<'a> {
  * a set of ephemeral workspace configurations that can be created on demand.
  */
 #[derive(Clone, Debug)]
-pub struct RemoveEmptyWorkspaces<'a> {
-    protected: Vec<&'a str>,
+pub struct RemoveEmptyWorkspaces {
+    protected: Vec<String>,
 }
-impl<'a> RemoveEmptyWorkspaces<'a> {
+impl RemoveEmptyWorkspaces {
     /// Create a new RemoveEmptyWorkspaces that is pre-boxed for adding to your workspace hooks.
-    pub fn new(protected: Vec<&'a str>) -> Box<Self> {
-        Box::new(Self { protected })
+    pub fn new(protected: Vec<impl Into<String>>) -> Box<Self> {
+        Box::new(Self {
+            protected: protected.into_iter().map(|d| d.into()).collect(),
+        })
     }
 }
-impl<'a> Hook for RemoveEmptyWorkspaces<'a> {
+impl Hook for RemoveEmptyWorkspaces {
     fn workspace_change(&mut self, wm: &mut WindowManager, old: usize, _: usize) {
         let sel = Selector::Index(old);
         if let Some(ws) = wm.workspace(&sel) {
-            if !self.protected.contains(&ws.name()) && ws.is_empty() {
+            if !self.protected.iter().any(|p| p == ws.name()) && ws.is_empty() {
                 wm.remove_workspace(&sel);
             }
         };
@@ -111,11 +117,11 @@ impl<'a> Hook for RemoveEmptyWorkspaces<'a> {
 
 /// An individual workspace mapping for ClientSpawnRules
 #[derive(Clone, Debug)]
-pub enum SpawnRule {
+pub enum SpawnRule<'a> {
     /// Target a client by WM_CLASS
-    ClassName(&'static str, usize),
+    ClassName(&'a str, usize),
     /// Target a client by WM_NAME
-    WMName(&'static str, usize),
+    WMName(&'a str, usize),
 }
 
 /**
@@ -134,19 +140,19 @@ pub enum SpawnRule {
  */
 #[derive(Clone, Debug)]
 pub struct ClientSpawnRules {
-    class_rules: HashMap<&'static str, usize>,
-    name_rules: HashMap<&'static str, usize>,
+    class_rules: HashMap<String, usize>,
+    name_rules: HashMap<String, usize>,
 }
 impl ClientSpawnRules {
     /// Create a new ClientSpawnRules that is pre-boxed for adding to your workspace hooks.
-    pub fn new(rules: Vec<SpawnRule>) -> Box<Self> {
+    pub fn new(rules: Vec<SpawnRule<'_>>) -> Box<Self> {
         let mut class_rules = HashMap::new();
         let mut name_rules = HashMap::new();
 
         for rule in rules.into_iter() {
             match rule {
-                SpawnRule::ClassName(s, i) => class_rules.insert(s, i),
-                SpawnRule::WMName(s, i) => name_rules.insert(s, i),
+                SpawnRule::ClassName(s, i) => class_rules.insert(s.into(), i),
+                SpawnRule::WMName(s, i) => name_rules.insert(s.into(), i),
             };
         }
 

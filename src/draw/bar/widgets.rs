@@ -132,11 +132,11 @@ struct WSMeta {
     extent: (f64, f64),
 }
 
-fn meta_from_names(names: &[&str]) -> Vec<WSMeta> {
+fn meta_from_names(names: &[String]) -> Vec<WSMeta> {
     names
         .iter()
-        .map(|&s| WSMeta {
-            name: s.to_string(),
+        .map(|s| WSMeta {
+            name: s.clone(),
             occupied: false,
             extent: (0.0, 0.0),
         })
@@ -161,7 +161,7 @@ pub struct Workspaces {
 impl Workspaces {
     /// Construct a new WorkspaceWidget
     pub fn new(
-        workspace_names: &[&str],
+        workspace_names: &[String],
         style: &TextStyle,
         highlight: impl Into<Color>,
         empty_fg: impl Into<Color>,
@@ -262,8 +262,9 @@ impl Hook for Workspaces {
 
     fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &[&str], _: usize) {
         if names != self.names().as_slice() {
+            let names: Vec<String> = names.iter().map(|s| s.to_string()).collect();
             self.focused_ws = wm.focused_workspaces();
-            self.workspaces = meta_from_names(names);
+            self.workspaces = meta_from_names(&names);
             self.update_workspace_occupied(wm);
             self.extent = None;
             self.require_draw = true;

@@ -15,6 +15,7 @@ use penrose::{
 
 fn main() -> Result<()> {
     let config = Config::default();
+    let hooks = vec![];
 
     let key_bindings = gen_keybindings! {
         "M-j" => run_internal!(cycle_client, Forward);
@@ -50,7 +51,7 @@ fn main() -> Result<()> {
         Press Left + [Meta] => |wm: &mut WindowManager, _: &MouseEvent| wm.cycle_workspace(Backward)
     };
 
-    let mut wm = new_xcb_backed_window_manager(config)?;
+    let mut wm = new_xcb_backed_window_manager(config, hooks)?;
     wm.grab_keys_and_run(key_bindings, mouse_bindings);
 
     Ok(())

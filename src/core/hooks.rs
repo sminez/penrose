@@ -5,6 +5,9 @@ use crate::core::{
     manager::WindowManager,
 };
 
+/// Utility type for defining hooks in your penrose configuration.
+pub type Hooks = Vec<Box<dyn Hook>>;
+
 /**
  * impls of Hook can be registered to receive events during WindowManager operation. Each hook
  * point is documented as individual methods detailing when and how they will be called. All Hook

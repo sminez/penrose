@@ -31,7 +31,7 @@ fn main() -> Result<()> {
 }
 
 fn bar_draw() -> Result<()> {
-    let workspaces = &["1", "2", "3", "4", "5", "6"];
+    let workspaces = vec!["1", "2", "3", "4", "5", "6"];
     let style = TextStyle {
         font: PROFONT.to_string(),
         point_size: 11,
@@ -50,7 +50,7 @@ fn bar_draw() -> Result<()> {
         workspaces,
     )?;
 
-    let mut wm = new_xcb_backed_window_manager(Config::default())?;
+    let mut wm = new_xcb_backed_window_manager(Config::default(), vec![])?;
     bar.startup(&mut wm); // ensure widgets are initialised correctly
 
     thread::sleep(time::Duration::from_millis(1000));

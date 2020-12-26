@@ -2,7 +2,7 @@
 use crate::core::{
     bindings::FireAndForget,
     client::Client,
-    data_types::{Config, Region, WinId},
+    data_types::{Region, WinId},
     helpers::spawn,
     hooks::Hook,
     manager::WindowManager,
@@ -23,7 +23,7 @@ pub struct Scratchpad {
     client: Rc<RefCell<Option<WinId>>>,
     pending: Rc<RefCell<bool>>,
     visible: Rc<RefCell<bool>>,
-    prog: &'static str,
+    prog: String,
     w: f32,
     h: f32,
 }
@@ -45,7 +45,7 @@ impl Scratchpad {
     /// Create a new Scratchpad for holding 'prog'. 'w' and 'h' are the percentage width and height
     /// of the active screen that you want the client to take up when visible.
     /// NOTE: this function will panic if 'w' or 'h' are not within the range 0.0 - 1.0
-    pub fn new(prog: &'static str, w: f32, h: f32) -> Scratchpad {
+    pub fn new(prog: impl Into<String>, w: f32, h: f32) -> Scratchpad {
         if w < 0.0 || w > 1.0 || h < 0.0 || h > 1.0 {
             panic!("Scratchpad: w & h must be between 0.0 and 1.0");
         }
@@ -54,27 +54,29 @@ impl Scratchpad {
             client: Rc::new(RefCell::new(None)),
             pending: Rc::new(RefCell::new(false)),
             visible: Rc::new(RefCell::new(false)),
-            prog,
+            prog: prog.into(),
             w,
             h,
         }
     }
 
-    fn boxed_clone(&self) -> Box<Scratchpad> {
-        Box::new(Scratchpad {
+    fn boxed_clone(&self) -> Box<Self> {
+        Box::new(Self {
             client: Rc::clone(&self.client),
             pending: Rc::clone(&self.pending),
             visible: Rc::clone(&self.visible),
-            prog: self.prog,
+            prog: self.prog.clone(),
             w: self.w,
             h: self.h,
         })
     }
 
-    /// Register the required hooks for managing this Scratchpad. Must be called before
-    /// WindowManager.init.
-    pub fn register(&self, conf: &mut Config<'_>) {
-        conf.hooks.push(self.boxed_clone())
+    /// Construct the associated [`Hook`] for adding to the [`WindowManager`].
+    ///
+    /// NOTE: If the hook is not registered, [`Scratchpad`] will not be able to
+    ///       capture and manage spawned [`Client`] windows.
+    pub fn get_hook(&self) -> Box<Self> {
+        self.boxed_clone()
     }
 
     /// Show / hide the bound client. If there is no client currently, then spawn one.
@@ -89,7 +91,7 @@ impl Scratchpad {
             None => {
                 self.pending.replace(true);
                 self.visible.replace(false);
-                spawn(self.prog); // caught by new_client
+                spawn(&self.prog); // caught by new_client
                 return;
             }
         };

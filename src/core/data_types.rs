@@ -1,6 +1,5 @@
 //! Simple data types and enums
 use crate::core::{
-    hooks::Hook,
     layout::{side_stack, Layout, LayoutConf},
     xconnection::Atom,
 };
@@ -119,11 +118,11 @@ impl Point {
 }
 
 /// The main user facing configuration details
-pub struct Config<'a> {
+pub struct Config {
     /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
-    pub workspaces: Vec<&'a str>,
+    pub workspaces: Vec<String>,
     /// WM_CLASS values that should always be treated as floating.
-    pub floating_classes: &'static [&'static str],
+    pub floating_classes: Vec<String>,
     /// Default Layouts to be given to every workspace.
     pub layouts: Vec<Layout>,
     /// Focused boder color
@@ -142,11 +141,9 @@ pub struct Config<'a> {
     pub top_bar: bool,
     /// Height of space reserved for status bars in pixels
     pub bar_height: u32,
-    /// User supplied Hooks for modifying WindowManager behaviour
-    pub hooks: Vec<Box<dyn Hook>>,
 }
 
-impl<'a> fmt::Debug for Config<'a> {
+impl fmt::Debug for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
             .field("workspaces", &self.workspaces)
@@ -160,17 +157,19 @@ impl<'a> fmt::Debug for Config<'a> {
             .field("show_bar", &self.show_bar)
             .field("top_bar", &self.top_bar)
             .field("bar_height", &self.bar_height)
-            .field("hooks", &stringify!(self.hooks))
             .finish()
     }
 }
 
-impl<'a> Config<'a> {
+impl Config {
     /// Initialise a default Config, giving sensible (but minimal) values for all fields.
-    pub fn default() -> Config<'a> {
+    pub fn default() -> Config {
         Config {
-            workspaces: vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-            floating_classes: &["dmenu", "dunst"],
+            workspaces: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            floating_classes: ["dmenu", "dunst"].iter().map(|s| s.to_string()).collect(),
             layouts: vec![
                 Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
                 Layout::floating("[----]"),
@@ -183,7 +182,6 @@ impl<'a> Config<'a> {
             show_bar: true,
             top_bar: true,
             bar_height: 18,
-            hooks: vec![],
         }
     }
 

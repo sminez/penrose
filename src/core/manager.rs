@@ -12,7 +12,7 @@ use crate::core::{
 
 use nix::sys::signal::{signal, SigHandler, Signal};
 
-use std::{cell::Cell, collections::HashMap, fmt};
+use std::{cell::Cell, collections::HashMap, fmt, ops::Deref};
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks {
@@ -32,20 +32,12 @@ macro_rules! run_hooks {
  */
 pub struct WindowManager {
     conn: Box<dyn XConn>,
+    config: Config,
     screens: Ring<Screen>,
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
-    previous_workspace: usize,
-    floating_classes: &'static [&'static str],
-    focused_border: u32,
-    unfocused_border: u32,
-    border_px: u32,
-    gap_px: u32,
-    main_ratio_step: f32,
-    show_bar: bool,
-    bar_height: u32,
-    top_bar: bool,
     hooks: Cell<Vec<Box<dyn Hook>>>,
+    previous_workspace: usize,
     client_insert_point: InsertPoint,
     focused_client: Option<WinId>,
     running: bool,
@@ -55,20 +47,12 @@ impl fmt::Debug for WindowManager {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WindowManager")
             .field("conn", &stringify!(self.conn))
+            .field("config", &self.config)
             .field("screens", &self.screens)
             .field("workspaces", &self.workspaces)
             .field("client_map", &self.client_map)
-            .field("previous_workspace", &self.previous_workspace)
-            .field("floating_classes", &self.floating_classes)
-            .field("focused_border", &self.focused_border)
-            .field("unfocused_border", &self.unfocused_border)
-            .field("border_px", &self.border_px)
-            .field("gap_px", &self.gap_px)
-            .field("main_ratio_step", &self.main_ratio_step)
-            .field("show_bar", &self.show_bar)
-            .field("top_bar", &self.top_bar)
-            .field("bar_height", &self.bar_height)
             .field("hooks", &stringify!(self.hooks))
+            .field("previous_workspace", &self.previous_workspace)
             .field("client_insert_point", &self.client_insert_point)
             .field("focused_client", &self.focused_client)
             .field("running", &self.running)
@@ -76,40 +60,39 @@ impl fmt::Debug for WindowManager {
     }
 }
 
+impl Deref for WindowManager {
+    type Target = Config;
+
+    fn deref(&self) -> &Self::Target {
+        &self.config
+    }
+}
+
 impl WindowManager {
     /// Initialise a new window manager instance using an existing connection to the X server.
-    pub fn init(config: Config<'_>, conn: Box<dyn XConn>) -> WindowManager {
+    pub fn init(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
         let layouts = config.layouts.clone();
+        let workspaces = config
+            .workspaces
+            .iter()
+            .map(|name| Workspace::new(name, layouts.to_vec()))
+            .collect();
+
         let mut wm = WindowManager {
             conn,
+            config,
             screens: Ring::new(vec![]),
-            workspaces: Ring::new(vec![]),
+            workspaces: Ring::new(workspaces),
             client_map: HashMap::new(),
             previous_workspace: 0,
-            floating_classes: config.floating_classes,
-            focused_border: config.focused_border,
-            unfocused_border: config.unfocused_border,
-            border_px: config.border_px,
-            gap_px: config.gap_px,
-            main_ratio_step: config.main_ratio_step,
-            show_bar: config.show_bar,
-            bar_height: config.bar_height,
-            top_bar: config.top_bar,
-            hooks: Cell::new(config.hooks),
+            hooks: Cell::new(hooks),
             client_insert_point: InsertPoint::First,
             focused_client: None,
             running: false,
         };
 
-        wm.workspaces = Ring::new(
-            config
-                .workspaces
-                .iter()
-                .map(|name| Workspace::new(*name, layouts.to_vec()))
-                .collect(),
-        );
         wm.detect_screens();
-        wm.conn.set_wm_properties(&config.workspaces);
+        wm.conn.set_wm_properties(str_slice!(wm.config.workspaces));
         wm.conn.warp_cursor(None, &wm.screens[0]);
 
         wm
@@ -414,7 +397,9 @@ impl WindowManager {
             name, id, class, ty
         );
 
-        let floating = self.conn.window_should_float(id, self.floating_classes);
+        let floating = self
+            .conn
+            .window_should_float(id, str_slice!(self.floating_classes));
         let mut client = Client::new(id, name, class, self.active_ws_index(), floating);
         run_hooks!(new_client, self, &mut client);
         let wix = client.workspace();
@@ -1123,7 +1108,7 @@ mod tests {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
         let mut conf = Config::default();
         conf.layouts = test_layouts();
-        WindowManager::init(conf, Box::new(conn))
+        WindowManager::init(conf, Box::new(conn), vec![])
     }
 
     fn test_layouts() -> Vec<Layout> {

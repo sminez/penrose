@@ -18,7 +18,7 @@ use penrose::{
     core::{
         client::Client,
         helpers::index_selectors,
-        hooks::Hook,
+        hooks::{Hook, Hooks},
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
         manager::WindowManager,
         ring::Selector,
@@ -50,10 +50,16 @@ fn main() -> Result<()> {
     let mut config = Config::default();
 
     // Created at startup. See keybindings below for how to access them
-    config.workspaces = vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    config.workspaces = vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        .iter()
+        .map(|w| w.to_string())
+        .collect();
 
     // Windows with a matching WM_CLASS will always float
-    config.floating_classes = &["dmenu", "dunst", "polybar"];
+    config.floating_classes = vec!["dmenu", "dunst", "polybar"]
+        .iter()
+        .map(|w| w.to_string())
+        .collect();
 
     // Client border colors are set based on X focus
     config.focused_border = 0xcc241d; // #cc241d
@@ -99,17 +105,18 @@ fn main() -> Result<()> {
      * that they are defined. Hooks may maintain their own internal state which they can use to
      * modify their behaviour if desired.
      */
-    config.hooks.push(Box::new(MyClientHook {}));
+    let mut hooks: Hooks = vec![];
+    hooks.push(Box::new(MyClientHook {}));
 
     // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
     // method that returns a boxed instance of the hook with any configuration performed so that it
     // is ready to push onto the corresponding *_hooks vec.
-    config.hooks.push(LayoutSymbolAsRootName::new());
+    hooks.push(LayoutSymbolAsRootName::new());
 
     // Here we are using a contrib hook that requires configuration to set up a default workspace
     // on workspace "9". This will set the layout and spawn the supplied programs if we make
     // workspace "9" active while it has no clients.
-    config.hooks.push(DefaultWorkspace::new(
+    hooks.push(DefaultWorkspace::new(
         "9",
         "[botm]",
         vec![my_terminal, my_terminal, my_file_manager],
@@ -119,7 +126,7 @@ fn main() -> Result<()> {
     // additionally provides a 'toggle' method that can be bound to a key combination in order to
     // trigger the bound scratchpad client.
     let sp = Scratchpad::new("st", 0.8, 0.8);
-    sp.register(&mut config);
+    hooks.push(sp.get_hook());
 
     /* The gen_keybindings macro parses user friendly key binding definitions into X keycodes and
      * modifier masks. It uses the 'xmodmap' program to determine your current keymap and create
@@ -182,7 +189,7 @@ fn main() -> Result<()> {
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
     // such as configuring initial WindowManager state, running custom code / hooks or spawning
     // external processes such as a start-up script.
-    let mut wm = WindowManager::init(config, Box::new(conn));
+    let mut wm = WindowManager::init(config, Box::new(conn), hooks);
 
     // NOTE: If you are using the default XCB backend provided in the penrose xcb module, then the
     //       construction of the XcbConnection and resulting WindowManager can be done using the

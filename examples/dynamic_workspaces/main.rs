@@ -10,6 +10,7 @@ use penrose::{
     },
     core::{
         helpers::{index_selectors, spawn_for_output},
+        hooks::Hook,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
     },
     xcb::new_xcb_backed_window_manager,
@@ -39,9 +40,11 @@ fn my_layouts() -> Vec<Layout> {
 fn main() -> Result<()> {
     SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())?;
     let mut config = Config::default();
-    config.workspaces = vec!["main"];
+    config.workspaces = vec!["main".to_string()];
     config.layouts = my_layouts();
-    config.hooks = vec![
+    let sp = Scratchpad::new("st", 0.8, 0.8);
+
+    let hooks: Vec<Box<dyn Hook>> = vec![
         LayoutSymbolAsRootName::new(),
         RemoveEmptyWorkspaces::new(config.workspaces.clone()),
         DefaultWorkspace::new("1term", "[side]", vec!["st"]),
@@ -49,10 +52,8 @@ fn main() -> Result<()> {
         DefaultWorkspace::new("3term", "[side]", vec!["st", "st", "st"]),
         DefaultWorkspace::new("web", "[papr]", vec!["firefox"]),
         DefaultWorkspace::new("files", "[botm]", vec!["thunar"]),
+        sp.get_hook(),
     ];
-
-    let sp = Scratchpad::new("st", 0.8, 0.8);
-    sp.register(&mut config);
 
     let key_bindings = gen_keybindings! {
         // Program launch
@@ -101,7 +102,7 @@ fn main() -> Result<()> {
         };
     };
 
-    let mut wm = new_xcb_backed_window_manager(config)?;
+    let mut wm = new_xcb_backed_window_manager(config, hooks)?;
     wm.grab_keys_and_run(key_bindings, HashMap::new());
 
     Ok(())

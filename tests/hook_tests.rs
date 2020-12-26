@@ -2,7 +2,7 @@
 use penrose::core::{
     client::Client,
     data_types::{Config, WinId},
-    hooks::Hook,
+    hooks::{Hook, Hooks},
     manager::WindowManager,
     xconnection::{MockXConn, XEvent},
 };
@@ -91,9 +91,8 @@ macro_rules! hook_test {
                 calls: Rc::clone(&calls),
             };
 
-            let mut config = Config::default();
-            config.hooks.push(Box::new(hook_1));
-            config.hooks.push(Box::new(hook_2));
+            let config = Config::default();
+            let hooks: Hooks = vec![Box::new(hook_1), Box::new(hook_2)];
 
             let mut events = $evts.clone();
             events.push(XEvent::KeyPress(common::EXIT_CODE));
@@ -103,7 +102,7 @@ macro_rules! hook_test {
                 events,
                 vec![],
             );
-            let mut wm = WindowManager::init(config, Box::new(conn));
+            let mut wm = WindowManager::init(config, Box::new(conn), hooks);
             wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
             drop(wm);
 

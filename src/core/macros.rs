@@ -146,3 +146,10 @@ macro_rules! gen_mousebindings {
         }
     };
 }
+
+// Helper for converting Vec<String> -> &[&str]
+macro_rules! str_slice {
+    ($string_vec:expr) => {
+        &$string_vec.iter().map(AsRef::as_ref).collect::<Vec<&str>>();
+    };
+}
