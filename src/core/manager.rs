@@ -1429,7 +1429,7 @@ mod tests {
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
         assert_eq!(wm.screens.get(2).unwrap().wix, 2);
 
-        // Focus WS 3 on screen 1, drop down to
+        // Focus WS 3 on screen 1, drop down to 1 screen: it should still have WS 3
         wm.focus_workspace(&Selector::Index(3));
         wm.conn.set_root_window_name("reset the screen count to 1");
         wm.detect_screens(); // Should now have one screen
