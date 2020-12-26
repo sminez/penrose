@@ -98,6 +98,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
                 self.drw.replace_prop(id, Atom::WmName, PropVal::Str(s));
                 self.drw.replace_prop(id, Atom::WmClass, PropVal::Str(s));
 
+                self.drw.flush(id);
                 Ok((id, sw as f64))
             })
             .collect::<Result<Vec<(u32, f64)>>>()?;
@@ -163,6 +164,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
                 Ok(_) => (),
                 Err(e) => error!("unable to redraw bar: {}", e),
             }
+            self.screens.iter().for_each(|(id, _)| self.drw.flush(*id));
         }
     }
 }
