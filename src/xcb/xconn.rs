@@ -14,14 +14,14 @@
 use crate::{
     core::{
         bindings::{KeyBindings, MouseBindings},
-        data_types::{Point, Region, WinId},
+        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         screen::Screen,
         xconnection::{
             Atom, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS,
             UNMANAGED_WINDOW_TYPES,
         },
     },
-    xcb::{PropVal, WinAttr, WinConfig, WinType, XcbApi},
+    xcb::XcbApi,
     Result,
 };
 
