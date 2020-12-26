@@ -230,6 +230,10 @@ impl WindowManager {
         self.screens.iter().enumerate().find(|(_, s)| s.wix == wix)
     }
 
+    fn visible_workspaces(&self) -> Vec<usize> {
+        self.screens.iter().map(|s| s.wix).collect()
+    }
+
     fn set_screen_from_cursor(&mut self, cursor: Point) -> Option<&Screen> {
         self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(cursor)))
     }
@@ -549,6 +553,15 @@ impl WindowManager {
 
     /// Reset the current known screens based on currently detected outputs
     pub fn detect_screens(&mut self) {
+        // Keeping the currently displayed workspaces on the active screens if possible
+        // and then filling in with remaining workspaces in ascending order
+        let mut workspaces = self.visible_workspaces();
+        workspaces.append(
+            &mut (0..self.workspaces.len())
+                .filter(|w| !workspaces.contains(w))
+                .collect(),
+        );
+
         let screens: Vec<Screen> = self
             .conn
             .current_outputs()
@@ -556,7 +569,7 @@ impl WindowManager {
             .enumerate()
             .map(|(i, mut s)| {
                 s.update_effective_region(self.bar_height, self.top_bar);
-                s.wix = i;
+                s.wix = workspaces[i];
                 s
             })
             .collect();
@@ -571,8 +584,7 @@ impl WindowManager {
         }
 
         self.screens = Ring::new(screens);
-        let visible_workspaces: Vec<_> = self.screens.iter().map(|s| s.wix).collect();
-        visible_workspaces
+        self.visible_workspaces()
             .iter()
             .for_each(|wix| self.apply_layout(*wix));
 
@@ -1105,6 +1117,8 @@ mod tests {
     use super::*;
     use crate::core::{data_types::*, layout::*, ring::Direction::*, screen::*, xconnection::*};
 
+    use std::cell::Cell;
+
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> WindowManager {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
         let mut conf = Config::default();
@@ -1367,5 +1381,59 @@ mod tests {
         wm.handle_map_request(20, false); // should be tiled
         assert!(wm.client_map.get(&20).is_some());
         assert!(wm.workspaces[0].len() == 1);
+    }
+
+    struct ScreenChangingXConn {
+        num_screens: Cell<usize>,
+    }
+    impl StubXConn for ScreenChangingXConn {
+        fn mock_current_outputs(&self) -> Vec<Screen> {
+            let num_screens = self.num_screens.get();
+            let screens = (0..(num_screens))
+                .map(|n| Screen::new(Region::new(800 * n as u32, 600 * n as u32, 800, 600), n))
+                .collect();
+            self.num_screens.set(num_screens + 1);
+            screens
+        }
+
+        // Hack to reset the screen count without needing RefCell
+        fn mock_set_root_window_name(&self, _: &str) {
+            self.num_screens.set(1);
+        }
+    }
+
+    #[test]
+    fn updating_screens_retains_focused_workspaces() {
+        let conn = ScreenChangingXConn {
+            num_screens: Cell::new(1),
+        };
+        let conf = Config::default();
+        let mut wm = WindowManager::init(conf, Box::new(conn), vec![]);
+
+        // detect_screens is called on init so should have one screen
+        assert_eq!(wm.screens.len(), 1);
+        assert_eq!(wm.screens.focused().unwrap().wix, 0);
+
+        // Focus workspace 1 the redetect screens: should have 1 and 0
+        wm.focus_workspace(&Selector::Index(1));
+        assert_eq!(wm.screens.focused().unwrap().wix, 1);
+        wm.detect_screens(); // adds a screen due to ScreenChangingXConn impl
+        assert_eq!(wm.screens.len(), 2);
+        assert_eq!(wm.screens.get(0).unwrap().wix, 1);
+        assert_eq!(wm.screens.get(1).unwrap().wix, 0);
+
+        // Adding another screen should now have WS 2 as 1 is taken
+        wm.detect_screens(); // adds a screen due to ScreenChangingXConn impl
+        assert_eq!(wm.screens.len(), 3);
+        assert_eq!(wm.screens.get(0).unwrap().wix, 1);
+        assert_eq!(wm.screens.get(1).unwrap().wix, 0);
+        assert_eq!(wm.screens.get(2).unwrap().wix, 2);
+
+        // Focus WS 3 on screen 1, drop down to 1 screen: it should still have WS 3
+        wm.focus_workspace(&Selector::Index(3));
+        wm.conn.set_root_window_name("reset the screen count to 1");
+        wm.detect_screens(); // Should now have one screen
+        assert_eq!(wm.screens.len(), 1);
+        assert_eq!(wm.screens.get(0).unwrap().wix, 3);
     }
 }
