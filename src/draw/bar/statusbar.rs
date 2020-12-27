@@ -11,6 +11,8 @@ use crate::{
     Result,
 };
 
+use anyhow::Context;
+
 use std::fmt;
 
 /// The position of a status bar
@@ -68,16 +70,18 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
             bg: bg.into(),
             active_screen: 0,
         };
-        bar.init_for_screens()?;
+        bar.init_for_screens()
+            .with_context(|| "failing to initilise StatusBar")?;
         fonts.iter().for_each(|f| bar.drw.register_font(f));
 
         Ok(bar)
     }
 
     fn init_for_screens(&mut self) -> Result<()> {
-        self.screens = self
-            .drw
-            .screen_sizes()?
+        let screen_sizes = self.drw.screen_sizes()?;
+        let n = screen_sizes.len();
+
+        self.screens = screen_sizes
             .iter()
             .enumerate()
             .map(|(i, r)| {
@@ -86,12 +90,17 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
                     Position::Top => sy as usize,
                     Position::Bottom => sh as usize - self.hpx,
                 };
-                let id = self.drw.new_window(
-                    WinType::InputOutput(Atom::NetWindowTypeDock),
-                    Region::new(sx, y as u32, sw, self.hpx as u32),
-                    i,
-                    false,
-                )?;
+                let id = self
+                    .drw
+                    .new_window(
+                        WinType::InputOutput(Atom::NetWindowTypeDock),
+                        Region::new(sx, y as u32, sw, self.hpx as u32),
+                        i,
+                        false,
+                    )
+                    .with_context(|| {
+                        format!("failed to initialise bar on screen {} of {}", i, n)
+                    })?;
 
                 let s = "penrose-statusbar";
                 self.drw.replace_prop(id, Atom::NetWmName, PropVal::Str(s));
@@ -110,7 +119,10 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     pub fn redraw(&mut self) -> Result<()> {
         for (i, &(id, w)) in self.screens.clone().iter().enumerate() {
             let screen_has_focus = self.active_screen == i;
-            let mut ctx = self.drw.context_for(id)?;
+            let mut ctx = self
+                .drw
+                .context_for(id)
+                .with_context(|| format!("unable to get DrawContext for {}", id))?;
 
             ctx.clear();
 
