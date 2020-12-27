@@ -21,7 +21,7 @@ mod inner {
         Result,
     };
 
-    use anyhow::anyhow;
+    use anyhow::{anyhow, Context};
     use pangocairo::functions::{create_layout, show_layout};
 
     use std::collections::HashMap;
@@ -60,10 +60,28 @@ mod inner {
             managed: bool,
         ) -> Result<WinId> {
             let (_, _, w, h) = r.values();
-            let id = self.api.create_window(ty, r, screen, managed)?;
-            let xcb_screen = self.api.screen(0)?;
-            let depth = self.api.get_depth(&xcb_screen)?;
-            let mut visualtype = self.api.get_visual_type(&depth)?;
+            let id = self
+                .api
+                .create_window(ty, r, screen, managed)
+                .with_context(|| format!("failed to create XcbDraw window on screen {}", screen))?;
+            let xcb_screen = self.api.screen(screen).with_context(|| {
+                format!(
+                    "failed to get XCB handle for screen {} while creating XcbDraw window",
+                    screen
+                )
+            })?;
+            let depth = self.api.get_depth(&xcb_screen).with_context(|| {
+                format!(
+                    "failed to get depth for screen {} while creating XcbDraw window",
+                    screen
+                )
+            })?;
+            let mut visualtype = self.api.get_visual_type(&depth).with_context(|| {
+                format!(
+                    "failed to get visual_type for screen {} while creating XcbDraw window",
+                    screen
+                )
+            })?;
 
             let surface = unsafe {
                 let conn_ptr = self.api.conn().get_raw_conn() as *mut cairo_sys::xcb_connection_t;
@@ -78,7 +96,7 @@ mod inner {
                     w as i32,
                     h as i32,
                 )
-                .map_err(|err| anyhow!("Error creating surface: {}", err))?
+                .with_context(|| "Error creating cairo surface in XcbDraw")?
             };
 
             surface.set_size(w as i32, h as i32).unwrap();
@@ -213,7 +231,8 @@ mod inner {
         }
 
         fn text_extent(&self, s: &str) -> Result<(f64, f64)> {
-            let layout = pango_layout(&self.ctx)?;
+            let layout = pango_layout(&self.ctx)
+                .with_context(|| "failed creating pango layout in XcbDraw")?;
             if let Some(ref font) = self.font {
                 layout.set_font_description(Some(font));
             }
