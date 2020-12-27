@@ -82,11 +82,13 @@ impl Api {
     }
 
     pub(crate) fn screen(&self, ix: usize) -> Result<xcb::Screen<'_>> {
+        let mut len = 0;
         self.conn
             .get_setup()
             .roots()
+            .inspect(|_| len += 1)
             .nth(ix)
-            .ok_or_else(|| anyhow!("Screen index out of bounds"))
+            .ok_or_else(|| anyhow!("Screen index {} is out of bounds (n_screens={})", ix, len))
     }
 
     pub(crate) fn get_depth<'a>(&self, screen: &'a xcb::Screen<'_>) -> Result<xcb::Depth<'a>> {
