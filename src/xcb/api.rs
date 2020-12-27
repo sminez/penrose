@@ -9,7 +9,7 @@ use crate::{
     xcb::XcbApi,
     Result,
 };
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use strum::*;
 
 use std::{collections::HashMap, fmt, str::FromStr};
@@ -48,11 +48,12 @@ impl Clone for Api {
 impl Api {
     /// Connect to the X server using the XCB API
     pub fn new() -> Result<Self> {
-        let (conn, _) = xcb::Connection::connect(None)?;
+        let (conn, _) =
+            xcb::Connection::connect(None).with_context(|| "unable to connect to the X server")?;
         let root = if let Some(r) = conn.get_setup().roots().next() {
             r.root()
         } else {
-            return Err(anyhow!("No screens!"));
+            return Err(anyhow!("No screens detected in response from X server!"));
         };
         let randr_base = conn
             .get_extension_data(&mut xcb::randr::id())
@@ -123,7 +124,7 @@ impl XcbApi for Api {
 
         Ok(xcb::intern_atom(&self.conn, false, name)
             .get_reply()
-            .map_err(|err| anyhow!("unable to intern xcb atom '{}': {}", name, err))?
+            .with_context(|| format!("unable to intern xcb atom '{}'", name))?
             .atom())
     }
 
@@ -151,7 +152,14 @@ impl XcbApi for Api {
     fn get_str_prop(&self, id: WinId, name: &str) -> Result<String> {
         let a = self.atom(name)?;
         let cookie = xcb::get_property(&self.conn, false, id, a, xcb::ATOM_ANY, 0, 1024);
-        Ok(String::from_utf8(cookie.get_reply()?.value().to_vec())?)
+        Ok(String::from_utf8(
+            cookie
+                .get_reply()
+                .with_context(|| format!("error fetching string property for {}", id))?
+                .value()
+                .to_vec(),
+        )
+        .with_context(|| format!("invalid UTF8 in string property '{}' for {}", name, id))?)
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_change_property
@@ -201,9 +209,15 @@ impl XcbApi for Api {
 
             WinType::InputOutput(a) => {
                 let colormap = self.conn.generate_id();
-                let screen = self.screen(screen_index)?;
-                let depth = self.get_depth(&screen)?;
-                let visual = self.get_visual_type(&depth)?;
+                let screen = self.screen(screen_index).with_context(|| {
+                    "failed to get requested screen when creating InputOutput Window"
+                })?;
+                let depth = self.get_depth(&screen).with_context(|| {
+                    "failed to get screen depth when creating InputOutput Window"
+                })?;
+                let visual = self.get_visual_type(&depth).with_context(|| {
+                    "failed to get visual_type when creating InputOutput Window"
+                })?;
 
                 xcb::xproto::create_colormap(
                     &self.conn,
@@ -289,7 +303,9 @@ impl XcbApi for Api {
     }
 
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
-        let atom = self.atom(atom_name)?;
+        let atom = self
+            .atom(atom_name)
+            .with_context(|| format!("failed to intern {}", atom_name))?;
         let wm_protocols = self.known_atom(Atom::WmProtocols);
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
@@ -308,7 +324,9 @@ impl XcbApi for Api {
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
-        let res = xcb::get_geometry(&self.conn, id).get_reply()?;
+        let res = xcb::get_geometry(&self.conn, id)
+            .get_reply()
+            .with_context(|| format!("failed to get window geometry for {}", id))?;
         Ok(Region::new(
             res.x() as u32,
             res.y() as u32,
@@ -326,7 +344,7 @@ impl XcbApi for Api {
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_crtc_info
         let res = resources
             .get_reply()
-            .map_err(|e| anyhow!("unable to read randr screen resources: {}", e))?
+            .with_context(|| "unable to read randr screen resources")?
             .crtcs()
             .iter()
             .flat_map(|c| xcb::randr::get_crtc_info(&self.conn, *c, 0).get_reply())
@@ -444,7 +462,9 @@ impl XcbApi for Api {
             | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
-        xcb::randr::select_input(&self.conn, self.root, mask).request_check()?;
+        xcb::randr::select_input(&self.conn, self.root, mask)
+            .request_check()
+            .with_context(|| "failed to set randr notify mask")?;
         self.flush();
         Ok(())
     }

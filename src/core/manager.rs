@@ -73,6 +73,8 @@ impl WindowManager {
     /// Initialise a new window manager instance using an existing connection to the X server.
     pub fn init(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
         let layouts = config.layouts.clone();
+
+        debug!("Building initial workspaces");
         let workspaces = config
             .workspaces
             .iter()
@@ -92,8 +94,13 @@ impl WindowManager {
             running: false,
         };
 
+        debug!("Attempting initial screen detection");
         wm.detect_screens();
+
+        debug!("Setting EWMH properties");
         wm.conn.set_wm_properties(str_slice!(wm.config.workspaces));
+
+        debug!("Forcing cursor to first screen");
         wm.conn.warp_cursor(None, &wm.screens[0]);
 
         wm
@@ -561,6 +568,7 @@ impl WindowManager {
                 .filter(|w| !workspaces.contains(w))
                 .collect(),
         );
+        debug!("Current workspace ordering: {:?}", workspaces);
 
         let screens: Vec<Screen> = self
             .conn
@@ -569,12 +577,13 @@ impl WindowManager {
             .enumerate()
             .map(|(i, mut s)| {
                 s.update_effective_region(self.bar_height, self.top_bar);
+                debug!("Setting focused workspace for screen {}", i);
                 s.wix = workspaces[i];
                 s
             })
             .collect();
 
-        info!("updating known screens: {} screens detected", screens.len());
+        info!("Updating known screens: {} screens detected", screens.len());
         for (i, s) in screens.iter().enumerate() {
             info!("screen ({}) :: {:?}", i, s);
         }
