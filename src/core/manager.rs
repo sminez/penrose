@@ -324,16 +324,20 @@ impl WindowManager {
         mut mouse_bindings: MouseBindings,
     ) {
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
+        debug!("Registering SIGCHILD signal handler");
         unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) }.unwrap();
 
+        debug!("Grabbing key and mouse bindings");
         self.conn.grab_keys(&bindings, &mouse_bindings);
         self.focus_workspace(&Selector::Index(0));
+        debug!("Running startup hooks");
         run_hooks!(startup, self,);
         self.running = true;
 
+        debug!("Entering main event loop");
         while self.running {
             if let Some(event) = self.conn.wait_for_event() {
-                debug!("got XEvent: {:?}", event);
+                debug!("Got XEvent: {:?}", event);
                 match event {
                     XEvent::MouseEvent(e) => self.handle_mouse_event(e, &mut mouse_bindings),
                     XEvent::KeyPress(code) => self.handle_key_press(code, &mut bindings),
@@ -353,6 +357,7 @@ impl WindowManager {
                         self.handle_client_message(id, &dtype, &data)
                     }
                 }
+                debug!("Running event_handled hooks");
                 run_hooks!(event_handled, self,);
             }
 
