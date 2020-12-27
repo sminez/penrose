@@ -52,36 +52,23 @@ mod inner {
     impl Draw for XcbDraw {
         type Ctx = XcbDrawContext;
 
-        fn new_window(
-            &mut self,
-            ty: WinType,
-            r: Region,
-            screen: usize,
-            managed: bool,
-        ) -> Result<WinId> {
+        fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<WinId> {
             let (_, _, w, h) = r.values();
             let id = self
                 .api
-                .create_window(ty, r, screen, managed)
-                .with_context(|| format!("failed to create XcbDraw window on screen {}", screen))?;
-            let xcb_screen = self.api.screen(screen).with_context(|| {
-                format!(
-                    "failed to get XCB handle for screen {} while creating XcbDraw window",
-                    screen
-                )
+                .create_window(ty, r, managed)
+                .with_context(|| "failed to create XcbDraw window")?;
+            let xcb_screen = self.api.screen(0).with_context(|| {
+                "failed to get XCB handle for screen while creating XcbDraw window"
             })?;
-            let depth = self.api.get_depth(&xcb_screen).with_context(|| {
-                format!(
-                    "failed to get depth for screen {} while creating XcbDraw window",
-                    screen
-                )
-            })?;
-            let mut visualtype = self.api.get_visual_type(&depth).with_context(|| {
-                format!(
-                    "failed to get visual_type for screen {} while creating XcbDraw window",
-                    screen
-                )
-            })?;
+            let depth = self
+                .api
+                .get_depth(&xcb_screen)
+                .with_context(|| "failed to get depth while creating XcbDraw window")?;
+            let mut visualtype = self
+                .api
+                .get_visual_type(&depth)
+                .with_context(|| "failed to get visual_type while creating XcbDraw window")?;
 
             let surface = unsafe {
                 let conn_ptr = self.api.conn().get_raw_conn() as *mut cairo_sys::xcb_connection_t;

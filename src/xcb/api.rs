@@ -83,13 +83,13 @@ impl Api {
     }
 
     pub(crate) fn screen(&self, ix: usize) -> Result<xcb::Screen<'_>> {
-        let mut len = 0;
-        self.conn
-            .get_setup()
-            .roots()
-            .inspect(|_| len += 1)
-            .nth(ix)
-            .ok_or_else(|| anyhow!("Screen index {} is out of bounds (n_screens={})", ix, len))
+        let mut roots: Vec<_> = self.conn.get_setup().roots().collect();
+        let len = roots.len();
+        if ix >= len {
+            Err(anyhow!("Screen index {} out of bounds (len={})", ix, len))
+        } else {
+            Ok(roots.remove(ix))
+        }
     }
 
     pub(crate) fn get_depth<'a>(&self, screen: &'a xcb::Screen<'_>) -> Result<xcb::Depth<'a>> {
@@ -108,7 +108,7 @@ impl Api {
 
     fn check_win(&self) -> WinId {
         let r = Region::new(0, 0, 1, 1);
-        self.create_window(WinType::CheckWin, r, 0, false).unwrap()
+        self.create_window(WinType::CheckWin, r, false).unwrap()
     }
 }
 
@@ -181,13 +181,7 @@ impl XcbApi for Api {
         xcb::change_property(&self.conn, mode, id, a, ty, 32, data);
     }
 
-    fn create_window(
-        &self,
-        ty: WinType,
-        reg: Region,
-        screen_index: usize,
-        managed: bool,
-    ) -> Result<WinId> {
+    fn create_window(&self, ty: WinType, reg: Region, managed: bool) -> Result<WinId> {
         let (ty, mut data, class, root, depth, visual_id) = match ty {
             WinType::CheckWin => (
                 None,
@@ -209,7 +203,7 @@ impl XcbApi for Api {
 
             WinType::InputOutput(a) => {
                 let colormap = self.conn.generate_id();
-                let screen = self.screen(screen_index).with_context(|| {
+                let screen = self.screen(0).with_context(|| {
                     "failed to get requested screen when creating InputOutput Window"
                 })?;
                 let depth = self.get_depth(&screen).with_context(|| {

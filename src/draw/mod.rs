@@ -118,8 +118,7 @@ pub trait Draw {
     type Ctx: DrawContext;
 
     /// Create a new client window with a canvas for drawing
-    fn new_window(&mut self, ty: WinType, r: Region, screen: usize, managed: bool)
-        -> Result<WinId>;
+    fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<WinId>;
     /// Get the size of the target screen in pixels
     fn screen_sizes(&self) -> Result<Vec<Region>>;
     /// Register a font by name for later use

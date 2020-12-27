@@ -82,7 +82,7 @@ pub trait XcbApi {
     fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>);
 
     /// Create a new client window
-    fn create_window(&self, ty: WinType, r: Region, screen: usize, managed: bool) -> Result<WinId>;
+    fn create_window(&self, ty: WinType, r: Region, managed: bool) -> Result<WinId>;
     /// Apply a set of config options to a window
     fn configure_window(&self, id: WinId, conf: &[WinConfig]);
     /// The list of currently active clients known to the X server

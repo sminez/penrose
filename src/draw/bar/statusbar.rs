@@ -95,7 +95,6 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
                     .new_window(
                         WinType::InputOutput(Atom::NetWindowTypeDock),
                         Region::new(sx, y as u32, sw, self.hpx as u32),
-                        i,
                         false,
                     )
                     .with_context(|| {

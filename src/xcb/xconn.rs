@@ -56,7 +56,7 @@ impl<X: XcbApi> XcbConnection<X> {
             .collect();
 
         api.set_randr_notify_mask()?;
-        let check_win = api.create_window(WinType::CheckWin, Region::new(0, 0, 1, 1), 0, false)?;
+        let check_win = api.create_window(WinType::CheckWin, Region::new(0, 0, 1, 1), false)?;
 
         Ok(Self {
             api,

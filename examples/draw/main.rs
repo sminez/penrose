@@ -71,7 +71,6 @@ fn simple_draw() -> Result<()> {
     let id = drw.new_window(
         WinType::InputOutput(Atom::NetWindowTypeNormal),
         Region::new(0, 0, w, HEIGHT as u32),
-        0,
         false,
     )?;
     drw.register_font(PROFONT);
