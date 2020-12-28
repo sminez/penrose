@@ -85,7 +85,15 @@ impl Deref for WindowManager {
 }
 
 impl WindowManager {
-    /// Initialise a new window manager instance using an existing connection to the X server.
+    /**
+     * Initialise a new window manager instance using a chosen [`XConn`] backed to communicate
+     * with the X server.
+     *
+     * This initialises the [`WindowManager`] internal state but does not start processing any
+     * events from the X server. If you need to perform any custom setup logic with the
+     * [`WindowManager`] itself, it should be run after calling this method and before
+     * [`WindowManager::grab_keys_and_run`].
+     */
     pub fn init(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
         let layouts = config.layouts.clone();
 
@@ -121,172 +129,65 @@ impl WindowManager {
         wm
     }
 
-    fn apply_layout(&mut self, wix: usize) {
-        debug!("Attempting to layout workspace {}", wix);
-        let ws = self.workspaces.get(wix).unwrap();
-        let indexed_screen = self.indexed_screen_for_workspace(wix);
-        if indexed_screen.is_none() {
-            return; // workspace is not currently visible
-        }
-        let (i, s) = indexed_screen.unwrap();
-        let region = s.region(self.show_bar);
-        let (border, gap) = (self.border_px, self.gap_px);
-        apply_layout(&self.conn, ws, region, &mut self.client_map, border, gap);
-        run_hooks!(layout_applied, self, wix, i);
-    }
-
-    fn remove_client(&mut self, id: WinId) {
-        if let Some(client) = self.client_map.get(&id) {
-            let wix = client.workspace();
-            self.workspaces.apply_to(&Selector::Index(wix), |ws| {
-                ws.remove_client(id);
-            });
-
-            self.client_map.remove(&id);
-
-            if self.focused_client == Some(id) {
-                self.focused_client = None;
-            }
-
-            if wix == self.active_ws_index() {
-                self.apply_layout(self.active_ws_index());
-            }
-
-            self.update_x_known_clients();
-            run_hooks!(remove_client, self, id);
-        } else {
-            warn!("attempt to remove unknown client {}", id);
+    // Subset of current immutable state that is needed for processing XEvents into EventActions
+    fn current_state(&self) -> WmState<'_> {
+        WmState {
+            client_map: &self.client_map,
+            focused_client: self.focused_client,
+            full_screen_atom: self
+                .conn
+                .intern_atom(Atom::NetWmStateFullscreen.as_ref())
+                .unwrap() as usize,
         }
     }
 
-    fn client_name_updated(&mut self, id: WinId) -> Result<()> {
-        let name = window_name(&self.conn, id)?;
-        if let Some(c) = self.client_map.get_mut(&id) {
-            c.set_name(&name)
+    // Each XEvent from the XConn can result in multiple EventActions that need processing
+    // depending on the current WindowManager state.
+    fn handle_event_action(
+        &mut self,
+        action: EventAction,
+        key_bindings: &mut KeyBindings,
+        mouse_bindings: &mut MouseBindings,
+    ) -> Result<()> {
+        debug!("Handling event action: {:?}", action);
+        match action {
+            EventAction::ClientFocusGained(id) => self.client_gained_focus(id),
+            EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
+            EventAction::ClientNameChanged(id) => self.client_name_changed(id)?,
+            EventAction::DestroyClient(id) => self.remove_client(id),
+            EventAction::DetectScreens => self.detect_screens(),
+            EventAction::MapWindow(id) => self.handle_map_request(id),
+            EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
+            EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
+            EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p),
+            EventAction::ToggleClientFullScreen(id, should_fullscreen, client_is_fullscreen) => {
+                self.set_fullscreen(id, should_fullscreen, client_is_fullscreen)
+            }
+            EventAction::UnknownPropertyChange(..) => {}
         }
-        run_hooks!(client_name_updated, self, id, &name, false);
         Ok(())
     }
 
-    fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings) {
-        debug!("handling key code: {:?}", k);
-        if let Some(action) = bindings.get_mut(&k) {
-            action(self); // ignoring Child handlers and SIGCHILD
-        }
-    }
-
-    fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
-        debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
-        if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
-            action(self, &e); // ignoring Child handlers and SIGCHILD
-        }
-    }
-
-    fn update_x_workspace_details(&mut self) {
-        let names = self.workspaces.vec_map(|w| w.name().to_string());
-        let names = vec_string_to_str(&names);
-        self.conn.update_desktops(&names);
-        run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
-    }
-
-    fn update_x_known_clients(&self) {
-        let clients: Vec<WinId> = self.client_map.keys().copied().collect();
-        self.conn.update_known_clients(&clients);
-    }
-
-    /*
-     * Helpers
-     */
-
-    fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
-        self.screens
-            .indexed_element(&Selector::Condition(&|s| s.wix == wix))
-    }
-
-    fn visible_workspaces(&self) -> Vec<usize> {
-        self.screens.vec_map(|s| s.wix)
-    }
-
-    fn set_screen_from_point(&mut self, cursor: Option<Point>) {
-        let point = cursor.unwrap_or_else(|| self.conn.cursor_position());
-        self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(point)));
-    }
-
-    fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
-        self.client_map.get(&id).map(|c| c.workspace())
-    }
-
-    fn active_ws_index(&self) -> usize {
-        self.screens.focused().expect("there were no screens").wix
-    }
-
-    fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
-        if let Some((changed, _)) = self.screens.focus(sel) {
-            if changed {
-                run_hooks!(screen_change, self, self.screens.focused_index());
-            }
-        }
-        let wix = self.screens.focused().unwrap().wix;
-        self.workspaces.focus(&Selector::Index(wix));
-        self.screens.focused()
-    }
-
-    fn focused_client_id(&self) -> Option<WinId> {
-        self.focused_client.or_else(|| {
-            self.workspaces
-                .get(self.active_ws_index())
-                .and_then(|ws| ws.focused_client())
-        })
-    }
-
-    fn focused_client(&self) -> Option<&Client> {
-        self.focused_client_id()
-            .and_then(move |id| self.client_map.get(&id))
-    }
-
-    fn focused_client_mut(&mut self) -> Option<&mut Client> {
-        self.focused_client_id()
-            .and_then(move |id| self.client_map.get_mut(&id))
-    }
-
-    fn client_gained_focus(&mut self, id: WinId) {
-        let prev_focused = self.focused_client().map(|c| c.id());
-        if let Some(id) = prev_focused {
-            self.client_lost_focus(id)
-        }
-
-        self.conn.set_client_border_color(id, self.focused_border);
-        self.conn.focus_client(id);
-
-        if let Some(wix) = self.workspace_index_for_client(id) {
-            if let Some(ws) = self.workspaces.get_mut(wix) {
-                ws.focus_client(id);
-                let prev_was_in_ws = prev_focused.map_or(false, |id| ws.clients().contains(&id));
-                if ws.layout_conf().follow_focus && prev_was_in_ws {
-                    self.apply_layout(wix);
-                }
-            }
-        }
-
-        self.focused_client = Some(id);
-        run_hooks!(focus_change, self, id);
-    }
-
-    fn client_lost_focus(&self, id: WinId) {
-        let color = self.unfocused_border;
-        self.conn.set_client_border_color(id, color);
-    }
-
     /**
-     * main event loop for the window manager.
-     * Everything is driven by incoming events from the X server with each event type being
-     * mapped to a handler
+     * This is the main event loop for the [`WindowManager`].
+     *
+     * The [`XConn::wait_for_event`] method is called to fetch the next event from the X server,
+     * after which it is processed into a set of internal EventActions which are then processed
+     * by the [`WindowManager`] to update state and perform actions. This method is an infinite
+     * loop until the [`WindowManager::exit`] method is called, which triggers [`XConn::cleanup`]
+     * before exiting the loop. You can provide any additional teardown logic you need your
+     * main.rs after the call to [`WindowManager::grab_keys_and_run`] and all internal state
+     * will still be accessible (though methods requiring the use of the [`XConn`] will fail.
      */
     pub fn grab_keys_and_run(
         &mut self,
         mut key_bindings: KeyBindings,
         mut mouse_bindings: MouseBindings,
     ) {
+        if self.running {
+            panic!("Attempt to call grab_keys_and_run while already running");
+        }
+
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
         debug!("Registering SIGCHILD signal handler");
         unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) }.unwrap();
@@ -315,49 +216,171 @@ impl WindowManager {
         }
     }
 
-    fn handle_event_action(
-        &mut self,
-        event: EventAction,
-        key_bindings: &mut KeyBindings,
-        mouse_bindings: &mut MouseBindings,
-    ) -> Result<()> {
-        debug!("Handling event action: {:?}", event);
-        match event {
-            EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
-            EventAction::ClientFocusGained(id) => self.client_gained_focus(id),
-            EventAction::ClientNameChanged(id) => self.client_name_updated(id)?,
-            EventAction::DestroyClient(id) => self.remove_client(id),
-            EventAction::DetectScreens => self.detect_screens(),
-            EventAction::MapWindow(id) => self.handle_map_request(id),
-            EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
-            EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
-            EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p),
-            EventAction::ToggleClientFullScreen(id, should_fullscreen, client_is_fullscreen) => {
-                self.set_fullscreen(id, should_fullscreen, client_is_fullscreen)
-            }
-            EventAction::UnknownPropertyChange(..) => {}
-        }
-        Ok(())
+    /*
+     * Common state queries that we re-use in multiple places.
+     */
+
+    // If the requsted workspace index is out of bounds or not currently visible then return None.
+    fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
+        self.screens
+            .indexed_element(&Selector::Condition(&|s| s.wix == wix))
     }
 
-    fn current_state(&self) -> WmState<'_> {
-        WmState {
-            client_map: &self.client_map,
-            focused_client: self.focused_client,
-            full_screen_atom: self
-                .conn
-                .intern_atom(Atom::NetWmStateFullscreen.as_ref())
-                .unwrap() as usize,
-        }
+    // We always have at least one [`Screen`] so no need for an Option.
+    fn active_ws_index(&self) -> usize {
+        self.screens.focused().expect("there were no screens").wix
+    }
+
+    // The ordered list of currently visible [`Workspace'] indices (one per screen).
+    fn visible_workspaces(&self) -> Vec<usize> {
+        self.screens.vec_map(|s| s.wix)
+    }
+
+    // The index of the [`Workspace`] holding the requested X window ID. This can return None if
+    // the id does not map to a [`WindowManager`] managed [`Client`] which happens if the window
+    // is unmanaged (e.g. a dock or toolbar) or if a client [`Hook`] has requested ownership
+    // of that particular [`Client`].
+    fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
+        self.client_map.get(&id).map(|c| c.workspace())
+    }
+
+    // TODO: should this be mutable and update self.focused_client?
+    fn focused_client_id(&self) -> Option<WinId> {
+        self.focused_client.or_else(|| {
+            self.workspaces
+                .get(self.active_ws_index())
+                .and_then(|ws| ws.focused_client())
+        })
+    }
+
+    fn focused_client(&self) -> Option<&Client> {
+        self.focused_client_id()
+            .and_then(move |id| self.client_map.get(&id))
+    }
+
+    fn focused_client_mut(&mut self) -> Option<&mut Client> {
+        self.focused_client_id()
+            .and_then(move |id| self.client_map.get_mut(&id))
     }
 
     /*
-     * X Event handler functions
-     * These are called in response to incoming XEvents so calling them directly should
-     * only be done if the intent is to act as if the corresponding XEvent had been
-     * received from the X event loop (i.e. to avoid emitting and picking up the event
-     * ourselves)
+     * Top Level EventAction handlers
      */
+
+    // The given X window ID is now considered focused by the X server
+    fn client_gained_focus(&mut self, id: WinId) {
+        let prev_focused = self.focused_client().map(|c| c.id());
+        if let Some(id) = prev_focused {
+            self.client_lost_focus(id)
+        }
+
+        self.conn.set_client_border_color(id, self.focused_border);
+        self.conn.focus_client(id);
+
+        if let Some(wix) = self.workspace_index_for_client(id) {
+            if let Some(ws) = self.workspaces.get_mut(wix) {
+                ws.focus_client(id);
+                let prev_was_in_ws = prev_focused.map_or(false, |id| ws.clients().contains(&id));
+                if ws.layout_conf().follow_focus && prev_was_in_ws {
+                    self.apply_layout(wix);
+                }
+            }
+        }
+
+        self.focused_client = Some(id);
+        run_hooks!(focus_change, self, id);
+    }
+
+    // The given X window ID lost focus according to the X server
+    fn client_lost_focus(&mut self, id: WinId) {
+        if self.focused_client == Some(id) {
+            self.focused_client = None;
+        }
+
+        self.conn.set_client_border_color(id, self.unfocused_border);
+    }
+
+    // The given window ID has had its EWMH name updated by something
+    fn client_name_changed(&mut self, id: WinId) -> Result<()> {
+        let name = window_name(&self.conn, id)?;
+        if let Some(c) = self.client_map.get_mut(&id) {
+            c.set_name(&name)
+        }
+        run_hooks!(client_name_updated, self, id, &name, false);
+        Ok(())
+    }
+
+    // The given window ID has been destroyed so remove our internal state referencing it.
+    fn remove_client(&mut self, id: WinId) {
+        if let Some(client) = self.client_map.get(&id) {
+            let wix = client.workspace();
+            self.workspaces.apply_to(&Selector::Index(wix), |ws| {
+                ws.remove_client(id);
+            });
+
+            self.client_map.remove(&id);
+
+            if self.focused_client == Some(id) {
+                self.focused_client = None;
+            }
+
+            if wix == self.active_ws_index() {
+                self.apply_layout(self.active_ws_index());
+            }
+
+            self.update_x_known_clients();
+            run_hooks!(remove_client, self, id);
+        } else {
+            warn!("attempt to remove unknown client {}", id);
+        }
+    }
+
+    /// Query the [`XConn`] for the current connected [`Screen`] list and reposition displayed
+    /// [`Workspace`] instances if needed.
+    pub fn detect_screens(&mut self) {
+        // Keeping the currently displayed workspaces on the active screens if possible
+        // and then filling in with remaining workspaces in ascending order
+        let mut workspaces = self.visible_workspaces();
+        workspaces.append(
+            &mut (0..self.workspaces.len())
+                .filter(|w| !workspaces.contains(w))
+                .collect(),
+        );
+        debug!("Current workspace ordering: {:?}", workspaces);
+
+        let screens: Vec<Screen> = self
+            .conn
+            .current_outputs()
+            .into_iter()
+            .enumerate()
+            .map(|(i, mut s)| {
+                s.update_effective_region(self.bar_height, self.top_bar);
+                debug!("Setting focused workspace for screen {}", i);
+                s.wix = workspaces[i];
+                s
+            })
+            .collect();
+
+        info!("Updating known screens: {} screens detected", screens.len());
+        for (i, s) in screens.iter().enumerate() {
+            info!("screen ({}) :: {:?}", i, s);
+        }
+
+        if screens == self.screens.as_vec() {
+            return;
+        }
+
+        self.screens = Ring::new(screens);
+        self.visible_workspaces()
+            .iter()
+            .for_each(|wix| self.apply_layout(*wix));
+
+        let regions: Vec<_> = self.screens.iter().map(|s| s.region(false)).collect();
+        run_hooks!(screens_updated, self, &regions);
+    }
+
+    // Map a new client window.
+    // TODO: This _really_ needs breaking down into smaller pieces if possible!
     fn handle_map_request(&mut self, id: WinId) {
         let props = client_str_props(&self.conn, id);
         if !self.conn.is_managed_window(id) {
@@ -419,15 +442,43 @@ impl WindowManager {
         }
     }
 
-    fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
-        let cip = self.client_insert_point;
-        if let Some(ws) = self.workspaces.get_mut(wix) {
-            ws.add_client(id, &cip);
-            self.conn.set_client_workspace(id, wix);
-        };
+    // NOTE: This defers control of the [`WindowManager`] to the user's key-binding action
+    //       which can lead to arbitrary calls to public methods on the [`WindowManager`]
+    //       including mutable methods.
+    fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings) {
+        debug!("handling key code: {:?}", k);
+        if let Some(action) = bindings.get_mut(&k) {
+            action(self); // ignoring Child handlers and SIGCHILD
+        }
     }
 
+    // NOTE: This defers control of the [`WindowManager`] to the user's mouse-binding action
+    //       which can lead to arbitrary calls to public methods on the [`WindowManager`]
+    //       including mutable methods.
+    fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
+        debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
+        if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
+            action(self, &e); // ignoring Child handlers and SIGCHILD
+        }
+    }
+
+    // Set the active [`Screen`] based on an (x, y) [`Point`]. If point is None then we set
+    // based on the current cursor position instead.
+    fn set_screen_from_point(&mut self, point: Option<Point>) {
+        let point = point.unwrap_or_else(|| self.conn.cursor_position());
+        self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(point)));
+    }
+
+    // Toggle the given client fullscreen. This has knock on effects for other windows and can
+    // be triggered by user key bindings as well as applications requesting full screen as well.
+    // TODO: - having two bools is disgusting, there must be a better way to do this
+    //       - should something going fullscreen also hide unmaged windows?
+    //       - the logic here in general needs tidying up: far too messy
     fn set_fullscreen(&mut self, id: WinId, should_fullscreen: bool, client_is_fullscreen: bool) {
+        if client_is_fullscreen == should_fullscreen {
+            return; // Client is already in the correct state, we shouldn't have been called
+        }
+
         if should_fullscreen {
             self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
             if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
@@ -443,7 +494,7 @@ impl WindowManager {
             if let Some(c) = self.client_map.get_mut(&id) {
                 c.fullscreen = true
             };
-        } else if !should_fullscreen && client_is_fullscreen {
+        } else {
             self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
             if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
                 ws.clients().iter().for_each(|&i| {
@@ -460,54 +511,58 @@ impl WindowManager {
     }
 
     /*
-     * Public methods that can be triggered by user bindings
-     *
-     * User defined hooks can be implemented by adding additional logic to these
-     * handlers which will then be run each time they are triggered
+     * Common mid level actions that make up larger event response handlers.
      */
 
-    /// Reset the current known screens based on currently detected outputs
-    pub fn detect_screens(&mut self) {
-        // Keeping the currently displayed workspaces on the active screens if possible
-        // and then filling in with remaining workspaces in ascending order
-        let mut workspaces = self.visible_workspaces();
-        workspaces.append(
-            &mut (0..self.workspaces.len())
-                .filter(|w| !workspaces.contains(w))
-                .collect(),
-        );
-        debug!("Current workspace ordering: {:?}", workspaces);
-
-        let screens: Vec<Screen> = self
-            .conn
-            .current_outputs()
-            .into_iter()
-            .enumerate()
-            .map(|(i, mut s)| {
-                s.update_effective_region(self.bar_height, self.top_bar);
-                debug!("Setting focused workspace for screen {}", i);
-                s.wix = workspaces[i];
-                s
-            })
-            .collect();
-
-        info!("Updating known screens: {} screens detected", screens.len());
-        for (i, s) in screens.iter().enumerate() {
-            info!("screen ({}) :: {:?}", i, s);
+    fn apply_layout(&mut self, wix: usize) {
+        debug!("Attempting to layout workspace {}", wix);
+        let ws = self.workspaces.get(wix).unwrap();
+        let indexed_screen = self.indexed_screen_for_workspace(wix);
+        if indexed_screen.is_none() {
+            return; // workspace is not currently visible
         }
-
-        if screens == self.screens.as_vec() {
-            return;
-        }
-
-        self.screens = Ring::new(screens);
-        self.visible_workspaces()
-            .iter()
-            .for_each(|wix| self.apply_layout(*wix));
-
-        let regions: Vec<_> = self.screens.iter().map(|s| s.region(false)).collect();
-        run_hooks!(screens_updated, self, &regions);
+        let (i, s) = indexed_screen.unwrap();
+        let region = s.region(self.show_bar);
+        let (border, gap) = (self.border_px, self.gap_px);
+        apply_layout(&self.conn, ws, region, &mut self.client_map, border, gap);
+        run_hooks!(layout_applied, self, wix, i);
     }
+
+    fn update_x_workspace_details(&mut self) {
+        let names = self.workspaces.vec_map(|w| w.name().to_string());
+        let names = vec_string_to_str(&names);
+        self.conn.update_desktops(&names);
+        run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
+    }
+
+    fn update_x_known_clients(&self) {
+        let clients: Vec<WinId> = self.client_map.keys().copied().collect();
+        self.conn.update_known_clients(&clients);
+    }
+
+    fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
+        if let Some((changed, _)) = self.screens.focus(sel) {
+            if changed {
+                run_hooks!(screen_change, self, self.screens.focused_index());
+            }
+        }
+        let wix = self.screens.focused().unwrap().wix;
+        self.workspaces.focus(&Selector::Index(wix));
+        self.screens.focused()
+    }
+
+    fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
+        let cip = self.client_insert_point;
+        if let Some(ws) = self.workspaces.get_mut(wix) {
+            ws.add_client(id, &cip);
+            self.conn.set_client_workspace(id, wix);
+        };
+    }
+
+    /*
+     * Public methods that can be triggered by user bindings or directly in the
+     * user's main.rs
+     */
 
     /// Log information out at INFO level for picking up by external programs
     pub fn log(&self, msg: &str) {
@@ -621,11 +676,7 @@ impl WindowManager {
 
     /// The layout symbol for the Layout currently being used on the active workspace
     pub fn current_layout_symbol(&self) -> &str {
-        self.layout_symbol(self.active_ws_index())
-    }
-
-    fn layout_symbol(&self, wix: usize) -> &str {
-        match self.workspaces.get(wix) {
+        match self.workspaces.get(self.active_ws_index()) {
             Some(ws) => ws.layout_symbol(),
             None => "???",
         }
