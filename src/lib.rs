@@ -8,7 +8,7 @@
     rust_2018_idioms,
 )]
 #![warn(clippy::all)]
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::clippy::borrowed_box)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
