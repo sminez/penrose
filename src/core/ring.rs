@@ -211,17 +211,9 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn map_selected<U, F: Fn(&T) -> U>(&mut self, s: &Selector<'_, T>, f: F) -> Option<U> {
-        self.index(s).map(|i| f(&mut self.elements[i]))
+    pub fn map_selected<U, F: Fn(&T) -> U>(&self, s: &Selector<'_, T>, f: F) -> Option<U> {
+        self.index(s).map(|i| f(&self.elements[i]))
     }
-
-    // pub fn for_each<F: FnMut(&T)>(&mut self, f: F) {
-    //     self.elements.iter().for_each(f)
-    // }
-
-    // pub fn for_each_mut<F: FnMut(&mut T)>(&mut self, f: F) {
-    //     self.elements.iter_mut().for_each(f)
-    // }
 
     fn clamp_focus(&mut self) {
         if self.focused > 0 && self.focused >= self.elements.len() - 1 {
@@ -584,7 +576,7 @@ mod tests {
     #[test]
     fn map_selected() {
         let contents = vec!["badgers", "love", "worms"];
-        let mut r = Ring::new(contents.clone());
+        let r = Ring::new(contents.clone());
         assert_eq!(r.map_selected(&Selector::Index(1), |s| s.len()), Some(4));
     }
 }

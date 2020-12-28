@@ -247,13 +247,12 @@ impl WindowManager {
         self.client_map.get(&id).map(|c| c.workspace())
     }
 
-    // TODO: should this be mutable and update self.focused_client?
     fn focused_client_id(&self) -> Option<WinId> {
-        self.focused_client.or_else(|| {
-            self.workspaces
-                .get(self.active_ws_index())
-                .and_then(|ws| ws.focused_client())
-        })
+        self.focused_client.or(self
+            .workspaces
+            .map_selected(&Selector::Index(self.active_ws_index()), |ws| {
+                ws.focused_client()
+            })?)
     }
 
     fn focused_client(&self) -> Option<&Client> {
