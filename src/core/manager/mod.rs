@@ -1,23 +1,38 @@
-//! Main logic for running Penrose
-use crate::core::{
-    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
-    client::Client,
-    config::Config,
-    data_types::{Change, Point, Region, WinId},
-    hooks::Hook,
-    ring::{Direction, InsertPoint, Ring, Selector},
-    screen::Screen,
-    workspace::Workspace,
-    xconnection::{Atom, XConn, XEvent},
+//! The main user API and control logic for Penrose.
+use crate::{
+    core::{
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
+        client::Client,
+        config::Config,
+        data_types::{Change, Point, Region, WinId},
+        hooks::Hook,
+        ring::{Direction, InsertPoint, Ring, Selector},
+        screen::Screen,
+        workspace::Workspace,
+        xconnection::{Atom, XConn},
+    },
+    Result,
 };
 
 use nix::sys::signal::{signal, SigHandler, Signal};
 
 use std::{cell::Cell, collections::HashMap, fmt, ops::Deref};
 
+mod event;
+mod util;
+mod workspace;
+
+use event::{process_next_event, EventAction, WmState};
+use util::{
+    client_str_props, map_window_if_needed, position_floating_client, unmap_window_if_needed,
+    vec_string_to_str, window_name,
+};
+use workspace::apply_layout;
+
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks {
     ($method:ident, $_self:expr, $($arg:expr),*) => {
+        debug!("Running {} hooks", stringify!($method));
         let mut hooks = $_self.hooks.replace(vec![]);
         hooks.iter_mut().for_each(|h| h.$method($_self, $($arg),*));
         $_self.hooks.replace(hooks);
@@ -107,93 +122,69 @@ impl WindowManager {
     }
 
     fn apply_layout(&mut self, wix: usize) {
-        let ws = match self.workspaces.get(wix) {
-            Some(ws) => ws,
-            None => {
-                let len = self.workspaces.len();
-                warn!("layout: wix out of bounds {} {}", wix, len);
-                return;
-            }
-        };
-
-        // Don't apply layouts if the workspace is not currently visible
-        if let Some((i, s)) = self.indexed_screen_for_workspace(wix) {
-            let lc = ws.layout_conf();
-            if !lc.floating {
-                let reg = s.region(self.show_bar);
-                let arrange_result = ws.arrange(reg, &self.client_map);
-
-                // Tile first then place floating clients on top
-                for (id, region) in arrange_result.actions {
-                    debug!("configuring {} with {:?}", id, region);
-                    if let Some(region) = region {
-                        let reg = self.pad_region(&region, lc.gapless);
-                        self.conn.position_window(id, reg, self.border_px, false);
-                        self.map_window_if_needed(id);
-                    } else {
-                        self.unmap_window_if_needed(id);
-                    }
-                }
-
-                for id in arrange_result.floating {
-                    self.conn.raise_window(id);
-                }
-            }
-            run_hooks!(layout_applied, self, wix, i);
+        debug!("Attempting to layout workspace {}", wix);
+        let ws = self.workspaces.get(wix).unwrap();
+        let indexed_screen = self.indexed_screen_for_workspace(wix);
+        if indexed_screen.is_none() {
+            return; // workspace is not currently visible
         }
-    }
-
-    fn map_window_if_needed(&mut self, id: WinId) {
-        if let Some(c) = self.client_map.get_mut(&id) {
-            if !c.mapped {
-                c.mapped = true;
-                self.conn.map_window(id);
-            }
-        }
-    }
-
-    fn unmap_window_if_needed(&mut self, id: WinId) {
-        if let Some(c) = self.client_map.get_mut(&id) {
-            if c.mapped {
-                c.mapped = false;
-                self.conn.unmap_window(id);
-            }
-        }
+        let (i, s) = indexed_screen.unwrap();
+        let region = s.region(self.show_bar);
+        let (border, gap) = (self.border_px, self.gap_px);
+        apply_layout(&self.conn, ws, region, &mut self.client_map, border, gap);
+        run_hooks!(layout_applied, self, wix, i);
     }
 
     fn remove_client(&mut self, id: WinId) {
-        match self.client_map.get(&id) {
-            Some(client) => {
-                self.workspaces
-                    .get_mut(client.workspace())
-                    .and_then(|ws| ws.remove_client(id));
-                if let Some(c) = self.client_map.remove(&id) {
-                    debug!(
-                        "removing ref to client name[{}] id[{}] class[{}]",
-                        c.wm_name(),
-                        c.id(),
-                        c.class()
-                    );
-                }
+        if let Some(client) = self.client_map.get(&id) {
+            let wix = client.workspace();
+            self.workspaces.apply_to(&Selector::Index(wix), |ws| {
+                ws.remove_client(id);
+            });
 
-                if self.focused_client == Some(id) {
-                    self.focused_client = None;
-                }
-                self.update_x_known_clients();
-                run_hooks!(remove_client, self, id);
+            self.client_map.remove(&id);
+
+            if self.focused_client == Some(id) {
+                self.focused_client = None;
             }
-            None => warn!("attempt to remove unknown client {}", id),
+
+            if wix == self.active_ws_index() {
+                self.apply_layout(self.active_ws_index());
+            }
+
+            self.update_x_known_clients();
+            run_hooks!(remove_client, self, id);
+        } else {
+            warn!("attempt to remove unknown client {}", id);
+        }
+    }
+
+    fn client_name_updated(&mut self, id: WinId) -> Result<()> {
+        let name = window_name(&self.conn, id)?;
+        if let Some(c) = self.client_map.get_mut(&id) {
+            c.set_name(&name)
+        }
+        run_hooks!(client_name_updated, self, id, &name, false);
+        Ok(())
+    }
+
+    fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings) {
+        debug!("handling key code: {:?}", k);
+        if let Some(action) = bindings.get_mut(&k) {
+            action(self); // ignoring Child handlers and SIGCHILD
+        }
+    }
+
+    fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
+        debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
+        if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
+            action(self, &e); // ignoring Child handlers and SIGCHILD
         }
     }
 
     fn update_x_workspace_details(&mut self) {
-        let string_names: Vec<String> = self
-            .workspaces
-            .iter()
-            .map(|ws| ws.name().to_string())
-            .collect();
-        let names: Vec<&str> = string_names.iter().map(|s| s.as_ref()).collect();
-
+        let names = self.workspaces.vec_map(|w| w.name().to_string());
+        let names = vec_string_to_str(&names);
         self.conn.update_desktops(&names);
         run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
     }
@@ -207,42 +198,18 @@ impl WindowManager {
      * Helpers
      */
 
-    fn pad_region(&self, region: &Region, gapless: bool) -> Region {
-        let gpx = if gapless { 0 } else { self.gap_px };
-        let padding = 2 * (self.border_px + gpx);
-        let (x, y, w, h) = region.values();
-        Region::new(x + gpx, y + gpx, w - padding, h - padding)
-    }
-
-    fn client_str_props(&self, id: WinId) -> (String, String, String) {
-        let name = match self.conn.str_prop(id, Atom::WmName.as_ref()) {
-            Ok(s) => s,
-            Err(_) => String::from("n/a"),
-        };
-
-        let class = match self.conn.str_prop(id, Atom::WmClass.as_ref()) {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
-        };
-
-        let ty = match self.conn.str_prop(id, Atom::NetWmWindowType.as_ref()) {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
-        };
-
-        (name, class, ty)
-    }
-
     fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
-        self.screens.iter().enumerate().find(|(_, s)| s.wix == wix)
+        self.screens
+            .indexed_element(&Selector::Condition(&|s| s.wix == wix))
     }
 
     fn visible_workspaces(&self) -> Vec<usize> {
-        self.screens.iter().map(|s| s.wix).collect()
+        self.screens.vec_map(|s| s.wix)
     }
 
-    fn set_screen_from_cursor(&mut self, cursor: Point) -> Option<&Screen> {
-        self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(cursor)))
+    fn set_screen_from_point(&mut self, cursor: Option<Point>) {
+        let point = cursor.unwrap_or_else(|| self.conn.cursor_position());
+        self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(point)));
     }
 
     fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
@@ -250,38 +217,35 @@ impl WindowManager {
     }
 
     fn active_ws_index(&self) -> usize {
-        self.screens.focused().unwrap().wix
+        self.screens.focused().expect("there were no screens").wix
     }
 
     fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
-        let prev = self.screens.focused_index();
-        self.screens.focus(sel);
-        let new = self.screens.focused_index();
-
-        if new != prev {
-            run_hooks!(screen_change, self, new);
+        if let Some((changed, _)) = self.screens.focus(sel) {
+            if changed {
+                run_hooks!(screen_change, self, self.screens.focused_index());
+            }
         }
-
+        let wix = self.screens.focused().unwrap().wix;
+        self.workspaces.focus(&Selector::Index(wix));
         self.screens.focused()
     }
 
+    fn focused_client_id(&self) -> Option<WinId> {
+        self.focused_client.or_else(|| {
+            self.workspaces
+                .get(self.active_ws_index())
+                .and_then(|ws| ws.focused_client())
+        })
+    }
+
     fn focused_client(&self) -> Option<&Client> {
-        self.focused_client
-            .or_else(|| {
-                self.workspaces
-                    .get(self.active_ws_index())
-                    .and_then(|ws| ws.focused_client())
-            })
-            .and_then(|id| self.client_map.get(&id))
+        self.focused_client_id()
+            .and_then(move |id| self.client_map.get(&id))
     }
 
     fn focused_client_mut(&mut self) -> Option<&mut Client> {
-        self.focused_client
-            .or_else(|| {
-                self.workspaces
-                    .get(self.active_ws_index())
-                    .and_then(|ws| ws.focused_client())
-            })
+        self.focused_client_id()
             .and_then(move |id| self.client_map.get_mut(&id))
     }
 
@@ -320,7 +284,7 @@ impl WindowManager {
      */
     pub fn grab_keys_and_run(
         &mut self,
-        mut bindings: KeyBindings,
+        mut key_bindings: KeyBindings,
         mut mouse_bindings: MouseBindings,
     ) {
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
@@ -328,9 +292,9 @@ impl WindowManager {
         unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) }.unwrap();
 
         debug!("Grabbing key and mouse bindings");
-        self.conn.grab_keys(&bindings, &mouse_bindings);
+        self.conn.grab_keys(&key_bindings, &mouse_bindings);
+        debug!("Forcing focus to first Workspace");
         self.focus_workspace(&Selector::Index(0));
-        debug!("Running startup hooks");
         run_hooks!(startup, self,);
         self.running = true;
 
@@ -338,30 +302,52 @@ impl WindowManager {
         while self.running {
             if let Some(event) = self.conn.wait_for_event() {
                 debug!("Got XEvent: {:?}", event);
-                match event {
-                    XEvent::MouseEvent(e) => self.handle_mouse_event(e, &mut mouse_bindings),
-                    XEvent::KeyPress(code) => self.handle_key_press(code, &mut bindings),
-                    XEvent::MapRequest { id, ignore } => self.handle_map_request(id, ignore),
-                    XEvent::Enter { id, rpt, wpt } => self.handle_enter_notify(id, rpt, wpt),
-                    XEvent::Leave { id, rpt, wpt } => self.handle_leave_notify(id, rpt, wpt),
-                    XEvent::Destroy { id } => self.handle_destroy_notify(id),
-                    XEvent::ScreenChange => self.handle_screen_change(),
-                    XEvent::RandrNotify => self.detect_screens(),
-                    XEvent::ConfigureNotify { id, r, is_root } => {
-                        self.handle_configure_notify(id, r, is_root)
-                    }
-                    XEvent::PropertyNotify { id, atom, is_root } => {
-                        self.handle_property_notify(id, &atom, is_root)
-                    }
-                    XEvent::ClientMessage { id, dtype, data } => {
-                        self.handle_client_message(id, &dtype, &data)
+                for action in process_next_event(event, self.current_state()) {
+                    if let Err(e) =
+                        self.handle_event_action(action, &mut key_bindings, &mut mouse_bindings)
+                    {
+                        warn!("Error handling event: {}", e);
                     }
                 }
-                debug!("Running event_handled hooks");
                 run_hooks!(event_handled, self,);
             }
-
             self.conn.flush();
+        }
+    }
+
+    fn handle_event_action(
+        &mut self,
+        event: EventAction,
+        key_bindings: &mut KeyBindings,
+        mouse_bindings: &mut MouseBindings,
+    ) -> Result<()> {
+        debug!("Handling event action: {:?}", event);
+        match event {
+            EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
+            EventAction::ClientFocusGained(id) => self.client_gained_focus(id),
+            EventAction::ClientNameChanged(id) => self.client_name_updated(id)?,
+            EventAction::DestroyClient(id) => self.remove_client(id),
+            EventAction::DetectScreens => self.detect_screens(),
+            EventAction::MapWindow(id) => self.handle_map_request(id),
+            EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
+            EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
+            EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p),
+            EventAction::ToggleClientFullScreen(id, should_fullscreen, client_is_fullscreen) => {
+                self.set_fullscreen(id, should_fullscreen, client_is_fullscreen)
+            }
+            EventAction::UnknownPropertyChange(..) => {}
+        }
+        Ok(())
+    }
+
+    fn current_state(&self) -> WmState<'_> {
+        WmState {
+            client_map: &self.client_map,
+            focused_client: self.focused_client,
+            full_screen_atom: self
+                .conn
+                .intern_atom(Atom::NetWmStateFullscreen.as_ref())
+                .unwrap() as usize,
         }
     }
 
@@ -372,38 +358,12 @@ impl WindowManager {
      * received from the X event loop (i.e. to avoid emitting and picking up the event
      * ourselves)
      */
-    fn handle_key_press(&mut self, key_code: KeyCode, bindings: &mut KeyBindings) {
-        debug!("handling key code: {:?}", key_code);
-        if let Some(action) = bindings.get_mut(&key_code) {
-            action(self); // ignoring Child handlers and SIGCHILD
-        }
-    }
-
-    fn handle_mouse_event(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
-        debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
-        if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
-            action(self, &e); // ignoring Child handlers and SIGCHILD
-        }
-    }
-
-    fn handle_map_request(&mut self, id: WinId, override_redirect: bool) {
-        if override_redirect || self.client_map.contains_key(&id) {
-            let reason = if override_redirect {
-                "override_redirect"
-            } else {
-                "client already known"
-            };
-            debug!("Ignoring map_request for id[{}]: {}", id, reason);
-            return;
-        }
-
-        self.update_x_known_clients();
-        let (name, class, ty) = self.client_str_props(id);
-
+    fn handle_map_request(&mut self, id: WinId) {
+        let props = client_str_props(&self.conn, id);
         if !self.conn.is_managed_window(id) {
             debug!(
-                "Handling map request for non-managed client: name[{}] id[{}] class[{}] type[{}]",
-                name, id, class, ty
+                "Mapping non-managed client: name[{}] id[{}] class[{}] type[{}]",
+                props.name, id, props.class, props.ty
             );
             self.conn.map_window(id);
             return;
@@ -411,13 +371,22 @@ impl WindowManager {
 
         debug!(
             "Handling map request: name[{}] id[{}] class[{}] type[{}]",
-            name, id, class, ty
+            props.name, id, props.class, props.ty
         );
 
         let floating = self
             .conn
             .window_should_float(id, str_slice!(self.floating_classes));
-        let mut client = Client::new(id, name, class, self.active_ws_index(), floating);
+
+        let mut client = Client::new(
+            id,
+            props.name,
+            props.class,
+            self.active_ws_index(),
+            floating,
+        );
+
+        // Run hooks to allow them to modify the client
         run_hooks!(new_client, self, &mut client);
         let wix = client.workspace();
 
@@ -426,29 +395,25 @@ impl WindowManager {
         }
 
         if client.floating {
-            if let Ok(default_position) = self.conn.window_geometry(id) {
-                let (mut x, mut y, w, h) = default_position.values();
-                if let Some((_, s)) = self.indexed_screen_for_workspace(wix) {
-                    let (sx, sy, _, _) = s.region(self.show_bar).values();
-                    x = if x < sx { sx } else { x };
-                    y = if y < sy { sy } else { y };
-                    let reg = self.pad_region(&Region::new(x, y, w, h), false);
-                    self.conn.position_window(id, reg, self.border_px, false);
-                }
+            if let Some((_, s)) = self.indexed_screen_for_workspace(wix) {
+                position_floating_client(
+                    &self.conn,
+                    id,
+                    s.region(self.show_bar),
+                    self.gap_px,
+                    self.border_px,
+                )
             }
         }
 
         self.client_map.insert(id, client);
-        self.conn.set_client_workspace(id, wix);
+        self.client_gained_focus(id);
+        self.update_x_known_clients();
 
         if wix == self.active_ws_index() {
             self.conn.mark_new_window(id);
-            self.conn.focus_client(id);
-            self.client_gained_focus(id);
-
             self.apply_layout(wix);
-            self.map_window_if_needed(id);
-
+            map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
             let s = self.screens.focused().unwrap();
             self.conn.warp_cursor(Some(id), s);
         }
@@ -457,86 +422,24 @@ impl WindowManager {
     fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
         let cip = self.client_insert_point;
         if let Some(ws) = self.workspaces.get_mut(wix) {
-            ws.add_client(id, &cip)
+            ws.add_client(id, &cip);
+            self.conn.set_client_workspace(id, wix);
         };
     }
 
-    fn handle_enter_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
-        if let Some(current) = self.focused_client() {
-            if current.id() != id {
-                self.client_lost_focus(current.id());
-            }
-        }
-
-        self.client_gained_focus(id);
-        self.set_screen_from_cursor(rpt);
-    }
-
-    fn handle_leave_notify(&mut self, id: WinId, rpt: Point, _wpt: Point) {
-        self.client_lost_focus(id);
-        self.set_screen_from_cursor(rpt);
-    }
-
-    fn handle_configure_notify(&mut self, _: WinId, _: Region, is_root: bool) {
-        if is_root {
-            self.detect_screens()
-        }
-    }
-
-    fn handle_screen_change(&mut self) {
-        self.set_screen_from_cursor(self.conn.cursor_position());
-        let wix = self.screens.focused().unwrap().wix;
-        self.workspaces.focus(&Selector::Index(wix));
-    }
-
-    fn handle_destroy_notify(&mut self, win_id: WinId) {
-        debug!("DESTROY_NOTIFY for {}", win_id);
-        self.remove_client(win_id);
-        self.apply_layout(self.active_ws_index());
-    }
-
-    fn handle_property_notify(&mut self, id: WinId, atom: &str, is_root: bool) {
-        if atom == Atom::WmName.as_ref() || atom == Atom::NetWmName.as_ref() {
-            if let Ok(name) = self.conn.str_prop(id, atom) {
-                if let Some(c) = self.client_map.get_mut(&id) {
-                    c.set_name(&name)
-                }
-                run_hooks!(client_name_updated, self, id, &name, is_root);
-            }
-        }
-    }
-
-    fn handle_client_message(&mut self, id: WinId, dtype: &str, data: &[usize]) {
-        if dtype == "_NET_WM_STATE" {
-            let full_screen = self
-                .conn
-                .intern_atom(Atom::NetWmStateFullscreen.as_ref())
-                .unwrap() as usize;
-            if data.get(1) == Some(&full_screen) || data.get(2) == Some(&full_screen) {
-                let client_is_fullscreen = match self.client_map.get(&id) {
-                    None => return, // unknown client
-                    Some(c) => c.fullscreen,
-                };
-                // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
-                let should_fullscreen = [1, 2].contains(&data[0]) && !client_is_fullscreen;
-                self.set_fullscreen(id, should_fullscreen, client_is_fullscreen);
-            }
-        }
-    }
-
     fn set_fullscreen(&mut self, id: WinId, should_fullscreen: bool, client_is_fullscreen: bool) {
-        if should_fullscreen && !client_is_fullscreen {
+        if should_fullscreen {
             self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
             if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
                 ws.clients().iter().for_each(|&i| {
                     if i != id {
-                        self.unmap_window_if_needed(i)
+                        unmap_window_if_needed(&self.conn, self.client_map.get_mut(&i))
                     }
                 });
             }
             let r = self.screen(&Selector::Focused).unwrap().region(false);
             self.conn.position_window(id, r, 0, false);
-            self.map_window_if_needed(id);
+            map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
             if let Some(c) = self.client_map.get_mut(&id) {
                 c.fullscreen = true
             };
@@ -545,7 +448,7 @@ impl WindowManager {
             if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
                 ws.clients().iter().for_each(|&i| {
                     if i != id {
-                        self.map_window_if_needed(i)
+                        map_window_if_needed(&self.conn, self.client_map.get_mut(&i));
                     }
                 });
             }
@@ -783,13 +686,13 @@ impl WindowManager {
             if let Some(ws) = self.workspaces.get(active) {
                 ws.clients()
                     .iter()
-                    .for_each(|id| self.unmap_window_if_needed(*id));
+                    .for_each(|id| unmap_window_if_needed(&self.conn, self.client_map.get_mut(id)));
             }
 
             if let Some(ws) = self.workspaces.get(index) {
                 ws.clients()
                     .iter()
-                    .for_each(|id| self.map_window_if_needed(*id));
+                    .for_each(|id| map_window_if_needed(&self.conn, self.client_map.get_mut(id)));
             }
 
             self.screens.focused_mut().unwrap().wix = index;
@@ -829,7 +732,6 @@ impl WindowManager {
                 if let Some(c) = self.client_map.get_mut(&id) {
                     c.set_workspace(index)
                 };
-                self.conn.set_client_workspace(id, index);
                 self.apply_layout(self.active_ws_index());
 
                 // layout & focus the screen we just landed on if the workspace is displayed
@@ -840,7 +742,7 @@ impl WindowManager {
                     self.conn.warp_cursor(Some(id), s);
                     self.focus_screen(&Selector::Index(self.active_screen_index()));
                 } else {
-                    self.unmap_window_if_needed(id);
+                    unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id))
                 }
             };
         }
@@ -1105,12 +1007,13 @@ impl WindowManager {
 
     /// Make the Client with ID 'id' visible at its last known position.
     pub fn show_client(&mut self, id: WinId) {
-        self.map_window_if_needed(id);
+        map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
+        self.conn.set_client_workspace(id, self.active_ws_index());
     }
 
     /// Hide the Client with ID 'id'.
     pub fn hide_client(&mut self, id: WinId) {
-        self.unmap_window_if_needed(id);
+        unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id));
     }
 
     /// Layout the workspace currently shown on the given screen index.
@@ -1153,7 +1056,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.handle_map_request(10 * (i + offset + 1) as u32, false);
+            wm.handle_map_request(10 * (i + offset + 1) as u32);
         }
     }
 
@@ -1388,11 +1291,11 @@ mod tests {
         // MockXConn.is_managed_window to false for those IDs
         let mut wm = wm_with_mock_conn(vec![], vec![10]);
 
-        wm.handle_map_request(10, false); // should not be tiled
+        wm.handle_map_request(10); // should not be tiled
         assert!(wm.client_map.get(&10).is_none());
         assert!(wm.workspaces[0].is_empty());
 
-        wm.handle_map_request(20, false); // should be tiled
+        wm.handle_map_request(20); // should be tiled
         assert!(wm.client_map.get(&20).is_some());
         assert!(wm.workspaces[0].len() == 1);
     }
