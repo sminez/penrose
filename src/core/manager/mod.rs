@@ -22,7 +22,10 @@ mod event;
 mod util;
 mod workspace;
 
-use event::{process_next_event, EventAction, WmState};
+#[doc(inline)]
+pub use event::EventAction;
+
+use event::{process_next_event, WmState};
 use util::{
     client_str_props, map_window_if_needed, position_floating_client, unmap_window_if_needed,
     vec_string_to_str, window_name,

@@ -13,18 +13,33 @@ pub struct WmState<'a> {
     pub(super) full_screen_atom: usize,
 }
 
+/// Actions that will be carried out by the [`crate::core::manager::WindowManager`] in response to
+/// individual each [`XEvent`] received from the provided [`crate::core::xconnection::XConn`].
+///
+/// Note that each action is processed independently.
 #[derive(Debug, Clone)]
 pub enum EventAction {
+    /// An X window gained focus
     ClientFocusLost(WinId),
+    /// An X window lost focus
     ClientFocusGained(WinId),
+    /// An X window had its WM_NAME or _NET_WM_NAME property changed
     ClientNameChanged(WinId),
+    /// An X window was destroyed
     DestroyClient(WinId),
+    /// Screens should be redetected
     DetectScreens,
+    /// A new X window needs to be mapped
     MapWindow(WinId),
+    /// A grabbed keybinding was triggered
     RunKeyBinding(KeyCode),
+    /// A grabbed mouse state was triggered
     RunMouseBinding(MouseEvent),
+    /// The active screen should be set based on point location
     SetScreenFromPoint(Option<Point>),
+    /// An X window should be set fullscreen
     ToggleClientFullScreen(WinId, bool, bool),
+    /// An unknown property was changed on an X window
     UnknownPropertyChange(WinId, String, bool),
 }
 
