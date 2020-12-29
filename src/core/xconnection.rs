@@ -28,133 +28,136 @@ use strum::*;
  */
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Atom {
-    #[strum(serialize = "ATOM")]
     /// ATOM
+    #[strum(serialize = "ATOM")]
     Atom,
-    #[strum(serialize = "ATOM_WINDOW")]
     /// ATOM_WINDOW
+    #[strum(serialize = "ATOM_WINDOW")]
     Window,
-    #[strum(serialize = "ATOM_CARDINAL")]
     /// ATOM_CARDINAL
+    #[strum(serialize = "ATOM_CARDINAL")]
     Cardinal,
-    #[strum(serialize = "MANAGER")]
     /// MANAGER
+    #[strum(serialize = "MANAGER")]
     Manager,
-    #[strum(serialize = "UTF8_STRING")]
     /// UTF8_STRING
+    #[strum(serialize = "UTF8_STRING")]
     UTF8String,
-    #[strum(serialize = "WM_CLASS")]
     /// WM_CLASS
+    #[strum(serialize = "WM_CLASS")]
     WmClass,
-    #[strum(serialize = "WM_DELETE_WINDOW")]
     /// WM_DELETE_WINDOW
+    #[strum(serialize = "WM_DELETE_WINDOW")]
     WmDeleteWindow,
-    #[strum(serialize = "WM_PROTOCOLS")]
     /// WM_PROTOCOLS
+    #[strum(serialize = "WM_PROTOCOLS")]
     WmProtocols,
-    #[strum(serialize = "WM_STATE")]
     /// WM_STATE
+    #[strum(serialize = "WM_STATE")]
     WmState,
-    #[strum(serialize = "WM_NAME")]
     /// WM_NAME
+    #[strum(serialize = "WM_NAME")]
     WmName,
-    #[strum(serialize = "WM_TAKE_FOCUS")]
     /// WM_TAKE_FOCUS
+    #[strum(serialize = "WM_TAKE_FOCUS")]
     WmTakeFocus,
-    #[strum(serialize = "_NET_ACTIVE_WINDOW")]
     /// _NET_ACTIVE_WINDOW
+    #[strum(serialize = "_NET_ACTIVE_WINDOW")]
     NetActiveWindow,
-    #[strum(serialize = "_NET_CLIENT_LIST")]
     /// _NET_CLIENT_LIST
+    #[strum(serialize = "_NET_CLIENT_LIST")]
     NetClientList,
-    #[strum(serialize = "_NET_CURRENT_DESKTOP")]
+    /// _NET_CLIENT_LIST
+    #[strum(serialize = "_NET_CLIENT_LIST_STACKING")]
+    NetClientListStacking,
     /// _NET_CURRENT_DESKTOP
+    #[strum(serialize = "_NET_CURRENT_DESKTOP")]
     NetCurrentDesktop,
-    #[strum(serialize = "_NET_DESKTOP_NAMES")]
     /// _NET_DESKTOP_NAMES
+    #[strum(serialize = "_NET_DESKTOP_NAMES")]
     NetDesktopNames,
-    #[strum(serialize = "_NET_NUMBER_OF_DESKTOPS")]
     /// _NET_NUMBER_OF_DESKTOPS
+    #[strum(serialize = "_NET_NUMBER_OF_DESKTOPS")]
     NetNumberOfDesktops,
-    #[strum(serialize = "_NET_SUPPORTED")]
     /// _NET_SUPPORTED
+    #[strum(serialize = "_NET_SUPPORTED")]
     NetSupported,
-    #[strum(serialize = "_NET_SUPPORTING_WM_CHECK")]
     /// _NET_SUPPORTING_WM_CHECK
+    #[strum(serialize = "_NET_SUPPORTING_WM_CHECK")]
     NetSupportingWmCheck,
-    #[strum(serialize = "_NET_SYSTEM_TRAY_OPCODE")]
     /// _NET_SYSTEM_TRAY_OPCODE
+    #[strum(serialize = "_NET_SYSTEM_TRAY_OPCODE")]
     NetSystemTrayOpcode,
-    #[strum(serialize = "_NET_SYSTEM_TRAY_ORIENTATION")]
     /// _NET_SYSTEM_TRAY_ORIENTATION
+    #[strum(serialize = "_NET_SYSTEM_TRAY_ORIENTATION")]
     NetSystemTrayOrientation,
-    #[strum(serialize = "_NET_SYSTEM_TRAY_ORIENTATION_HORZ")]
     /// _NET_SYSTEM_TRAY_ORIENTATION_HORZ
+    #[strum(serialize = "_NET_SYSTEM_TRAY_ORIENTATION_HORZ")]
     NetSystemTrayOrientationHorz,
-    #[strum(serialize = "_NET_SYSTEM_TRAY_S0")]
     /// _NET_SYSTEM_TRAY_S0
+    #[strum(serialize = "_NET_SYSTEM_TRAY_S0")]
     NetSystemTrayS0,
-    #[strum(serialize = "_NET_WM_DESKTOP")]
     /// _NET_WM_DESKTOP
+    #[strum(serialize = "_NET_WM_DESKTOP")]
     NetWmDesktop,
-    #[strum(serialize = "_NET_WM_NAME")]
     /// _NET_WM_NAME
+    #[strum(serialize = "_NET_WM_NAME")]
     NetWmName,
-    #[strum(serialize = "_NET_WM_STATE")]
     /// _NET_WM_STATE
+    #[strum(serialize = "_NET_WM_STATE")]
     NetWmState,
-    #[strum(serialize = "_NET_WM_STATE_FULLSCREEN")]
     /// _NET_WM_STATE_FULLSCREEN
+    #[strum(serialize = "_NET_WM_STATE_FULLSCREEN")]
     NetWmStateFullscreen,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE")]
     /// _NET_WM_WINDOW_TYPE
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE")]
     NetWmWindowType,
-    #[strum(serialize = "_XEMBED")]
     /// _XEMBED
+    #[strum(serialize = "_XEMBED")]
     XEmbed,
-    #[strum(serialize = "_XEMBED_INFO")]
     /// _XEMBED_INFO
+    #[strum(serialize = "_XEMBED_INFO")]
     XEmbedInfo,
 
     // Window Types
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DESKTOP")]
     /// _NET_WM_WINDOW_TYPE_DESKTOP
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DESKTOP")]
     NetWindowTypeDesktop,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DOCK")]
     /// _NET_WM_WINDOW_TYPE_DOCK
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DOCK")]
     NetWindowTypeDock,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_TOOLBAR")]
     /// _NET_WM_WINDOW_TYPE_TOOLBAR
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_TOOLBAR")]
     NetWindowTypeToolbar,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_MENU")]
     /// _NET_WM_WINDOW_TYPE_MENU
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_MENU")]
     NetWindowTypeMenu,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_UTILITY")]
     /// _NET_WM_WINDOW_TYPE_UTILITY
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_UTILITY")]
     NetWindowTypeUtility,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_SPLASH")]
     /// _NET_WM_WINDOW_TYPE_SPLASH
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_SPLASH")]
     NetWindowTypeSplash,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DIALOG")]
     /// _NET_WM_WINDOW_TYPE_DIALOG
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DIALOG")]
     NetWindowTypeDialog,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU")]
     /// _NET_WM_WINDOW_TYPE_DROPDOWN_MENU
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU")]
     NetWindowTypeDropdownMenu,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_POPUP_MENU")]
     /// _NET_WM_WINDOW_TYPE_POPUP_MENU
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_POPUP_MENU")]
     NetWindowTypePopupMenu,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_NOTIFICATION")]
     /// _NET_WM_WINDOW_TYPE_NOTIFICATION
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_NOTIFICATION")]
     NetWindowTypeNotification,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_COMBO")]
     /// _NET_WM_WINDOW_TYPE_COMBO
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_COMBO")]
     NetWindowTypeCombo,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DND")]
     /// _NET_WM_WINDOW_TYPE_DND
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_DND")]
     NetWindowTypeDnd,
-    #[strum(serialize = "_NET_WM_WINDOW_TYPE_NORMAL")]
     /// _NET_WM_WINDOW_TYPE_NORMAL
+    #[strum(serialize = "_NET_WM_WINDOW_TYPE_NORMAL")]
     NetWindowTypeNormal,
 }
 
@@ -178,6 +181,7 @@ pub(crate) const UNMANAGED_WINDOW_TYPES: &[Atom] =
 pub(crate) const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
     Atom::NetActiveWindow,
     Atom::NetClientList,
+    Atom::NetClientListStacking,
     Atom::NetCurrentDesktop,
     Atom::NetDesktopNames,
     Atom::NetNumberOfDesktops,

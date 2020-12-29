@@ -204,6 +204,11 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
             Atom::NetClientList,
             PropVal::Window(clients),
         );
+        self.api.replace_prop(
+            self.api.root(),
+            Atom::NetClientListStacking,
+            PropVal::Window(clients),
+        );
     }
 
     fn set_current_workspace(&self, wix: usize) {
