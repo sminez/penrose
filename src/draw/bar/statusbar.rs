@@ -197,6 +197,12 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
             .for_each(|w| w.client_name_updated(wm, id, s, is_root));
     }
 
+    fn client_added_to_workspace(&mut self, wm: &mut WindowManager, id: WinId, wix: usize) {
+        self.widgets
+            .iter_mut()
+            .for_each(|w| w.client_added_to_workspace(wm, id, wix));
+    }
+
     fn layout_applied(&mut self, wm: &mut WindowManager, ws_ix: usize, s_ix: usize) {
         self.widgets
             .iter_mut()

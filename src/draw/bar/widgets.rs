@@ -243,6 +243,10 @@ impl Hook for Workspaces {
         self.update_workspace_occupied(wm);
     }
 
+    fn client_added_to_workspace(&mut self, wm: &mut WindowManager, _: WinId, _: usize) {
+        self.update_workspace_occupied(wm);
+    }
+
     fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
         let screen = wm.active_screen_index();
         if self.focused_ws[screen] != new {
@@ -276,7 +280,7 @@ impl Hook for Workspaces {
     }
 
     fn screens_updated(&mut self, wm: &mut WindowManager, _: &[Region]) {
-        self.focused_ws = (0..wm.n_screens()).collect();
+        self.focused_ws = wm.focused_workspaces();
         self.update_workspace_occupied(wm);
         self.require_draw = true;
     }
