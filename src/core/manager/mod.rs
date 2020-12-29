@@ -26,10 +26,6 @@ mod workspace;
 pub use event::EventAction;
 
 use event::{process_next_event, WmState};
-use util::{
-    client_str_props, get_screens, map_window_if_needed, position_floating_client,
-    toggle_fullscreen, unmap_window_if_needed, vec_string_to_str, window_name,
-};
 use workspace::apply_layout;
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
@@ -304,7 +300,7 @@ impl WindowManager {
 
     // The given window ID has had its EWMH name updated by something
     fn client_name_changed(&mut self, id: WinId) -> Result<()> {
-        let name = window_name(&self.conn, id)?;
+        let name = util::window_name(&self.conn, id)?;
         if let Some(c) = self.client_map.get_mut(&id) {
             c.set_name(&name)
         }
@@ -338,7 +334,7 @@ impl WindowManager {
     /// Query the [`XConn`] for the current connected [`Screen`] list and reposition displayed
     /// [`Workspace`] instances if needed.
     pub fn detect_screens(&mut self) {
-        let screens = get_screens(
+        let screens = util::get_screens(
             &self.conn,
             self.visible_workspaces(),
             self.workspaces.len(),
@@ -362,7 +358,7 @@ impl WindowManager {
 
     // Map a new client window.
     fn handle_map_request(&mut self, id: WinId) -> Result<()> {
-        let props = client_str_props(&self.conn, id);
+        let props = util::client_str_props(&self.conn, id);
         debug!(
             "Handling map request: name[{}] id[{}] class[{}] type[{}]",
             props.name, id, props.class, props.ty
@@ -393,7 +389,7 @@ impl WindowManager {
 
         if client.floating {
             if let Some((_, s)) = self.indexed_screen_for_workspace(wix) {
-                position_floating_client(
+                util::position_floating_client(
                     &self.conn,
                     id,
                     s.region(self.show_bar),
@@ -410,7 +406,7 @@ impl WindowManager {
 
         if wix == self.active_ws_index() {
             self.apply_layout(wix);
-            map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
+            util::map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
             let s = self.screens.focused().unwrap();
             self.conn.warp_cursor(Some(id), s);
         }
@@ -461,7 +457,7 @@ impl WindowManager {
             .screen(&Selector::Condition(&|s| s.wix == wix))?
             .region(false);
         let workspace = self.workspaces.get_mut(wix)?;
-        if toggle_fullscreen(&self.conn, id, &mut self.client_map, workspace, r) {
+        if util::toggle_fullscreen(&self.conn, id, &mut self.client_map, workspace, r) {
             self.apply_layout(wix);
         }
 
@@ -488,7 +484,7 @@ impl WindowManager {
 
     fn update_x_workspace_details(&mut self) {
         let names = self.workspaces.vec_map(|w| w.name().to_string());
-        let names = vec_string_to_str(&names);
+        let names = util::vec_string_to_str(&names);
         self.conn.update_desktops(&names);
         run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
     }
@@ -693,15 +689,15 @@ impl WindowManager {
             // target not currently displayed so unmap what we currently have
             // displayed and replace it with the target workspace
             if let Some(ws) = self.workspaces.get(active) {
-                ws.clients()
-                    .iter()
-                    .for_each(|id| unmap_window_if_needed(&self.conn, self.client_map.get_mut(id)));
+                ws.clients().iter().for_each(|id| {
+                    util::unmap_window_if_needed(&self.conn, self.client_map.get_mut(id))
+                });
             }
 
             if let Some(ws) = self.workspaces.get(index) {
-                ws.clients()
-                    .iter()
-                    .for_each(|id| map_window_if_needed(&self.conn, self.client_map.get_mut(id)));
+                ws.clients().iter().for_each(|id| {
+                    util::map_window_if_needed(&self.conn, self.client_map.get_mut(id))
+                });
             }
 
             self.screens.focused_mut().unwrap().wix = index;
@@ -751,7 +747,7 @@ impl WindowManager {
                     self.conn.warp_cursor(Some(id), s);
                     self.focus_screen(&Selector::Index(self.active_screen_index()));
                 } else {
-                    unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id))
+                    util::unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id))
                 }
             };
         }
@@ -1016,13 +1012,13 @@ impl WindowManager {
 
     /// Make the Client with ID 'id' visible at its last known position.
     pub fn show_client(&mut self, id: WinId) {
-        map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
+        util::map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
         self.conn.set_client_workspace(id, self.active_ws_index());
     }
 
     /// Hide the Client with ID 'id'.
     pub fn hide_client(&mut self, id: WinId) {
-        unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id));
+        util::unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id));
     }
 
     /// Layout the workspace currently shown on the given screen index.
