@@ -41,6 +41,10 @@ impl Hook for TestHook {
         self.mark_called("client_name_updated");
     }
 
+    fn client_added_to_workspace(&mut self, _: &mut WindowManager, _: WinId, _: usize) {
+        self.mark_called("client_added_to_workspace");
+    }
+
     fn layout_applied(&mut self, _: &mut WindowManager, _: usize, _: usize) {
         self.mark_called("layout_applied");
     }
@@ -157,6 +161,16 @@ hook_test!(
             atom: "_NET_WM_NAME".to_string(),
             is_root: false
         },
+    ]
+);
+
+hook_test!(
+    expected_calls => 2,  // Initial mapping and then on the move to WS1
+    "client_added_to_workspace",
+    test_client_to_workspace_hooks,
+    vec![
+        XEvent::MapRequest { id: 1, ignore: false },
+        XEvent::KeyPress(common::CLIENT_TO_WORKSPACE_CODE)
     ]
 );
 

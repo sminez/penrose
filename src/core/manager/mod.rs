@@ -514,6 +514,7 @@ impl WindowManager {
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.add_client(id, &cip);
             self.conn.set_client_workspace(id, wix);
+            run_hooks!(client_added_to_workspace, self, id, wix);
         };
     }
 

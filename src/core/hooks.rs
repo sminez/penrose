@@ -49,6 +49,11 @@ pub trait Hook {
     }
 
     /**
+     * Called whenever an existing [Client] is added to a [Workspace][crate::core::workspace::Workspace]
+     */
+    fn client_added_to_workspace(&mut self, _wm: &mut WindowManager, _id: WinId, _wix: usize) {}
+
+    /**
      * Called after a Layout is applied to the active Workspace.
      * Arguments are indices into the WindowManager workspace and screen arrays (internal data
      * structures that support indexing) which can be used to fetch references to the active Workspace

@@ -22,6 +22,7 @@ pub const SCREEN_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 3 };
 pub const FOCUS_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 4 };
 pub const KILL_CLIENT_CODE: KeyCode = KeyCode { mask: 0, code: 5 };
 pub const ADD_WORKSPACE_CODE: KeyCode = KeyCode { mask: 0, code: 6 };
+pub const CLIENT_TO_WORKSPACE_CODE: KeyCode = KeyCode { mask: 0, code: 7 };
 
 pub fn simple_screen(n: usize) -> Screen {
     Screen::new(
@@ -69,6 +70,11 @@ pub fn test_bindings() -> KeyBindings {
     bindings.insert(
         KILL_CLIENT_CODE,
         Box::new(|wm: &mut WindowManager| wm.kill_client()) as FireAndForget,
+    );
+    bindings.insert(
+        CLIENT_TO_WORKSPACE_CODE,
+        Box::new(|wm: &mut WindowManager| wm.client_to_workspace(&Selector::Index(1)))
+            as FireAndForget,
     );
 
     bindings
