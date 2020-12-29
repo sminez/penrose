@@ -1,8 +1,8 @@
 /*!
  * An abstraciton layer for talking to an underlying X server.
  *
- * An implementation of the [`XConn`] trait is required for running a
- * [`crate::core::manager::WindowManager`]. The choice of back end (e.g. xlib, xcb...) is an
+ * An implementation of the [XConn] trait is required for running a
+ * [crate::core::manager::WindowManager]. The choice of back end (e.g. xlib, xcb...) is an
  * implementation detail that does not surface in the WindowManager itself. All low level details
  * of working with the X server should be captured in this trait.
  */
@@ -23,7 +23,7 @@ use strum::*;
  * A Penrose internal representation of X atoms.
  *
  * Atom names are shared between all X11 API libraries so this enum allows us to get a little bit
- * of type safety around their use. Implementors of [`XConn`] should accept any variant of [`Atom`]
+ * of type safety around their use. Implementors of [XConn] should accept any variant of [Atom]
  * that they are passed by client code.
  */
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -293,7 +293,7 @@ pub trait XConn {
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
 
-    /// Wait for the next event from the X server and return it as an [`XEvent`]
+    /// Wait for the next event from the X server and return it as an [XEvent]
     fn wait_for_event(&self) -> Option<XEvent>;
 
     /// Determine the currently connected CRTCs and return their details
@@ -320,10 +320,10 @@ pub trait XConn {
     /// Send an X event to the target window
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()>;
 
-    /// Return the client ID of the [`crate::core::client::Client`] that currently holds X focus
+    /// Return the client ID of the [crate::core::client::Client] that currently holds X focus
     fn focused_client(&self) -> WinId;
 
-    /// Mark the given [`crate::core::client::Client`] as having focus
+    /// Mark the given [crate::core::client::Client] as having focus
     fn focus_client(&self, id: WinId);
 
     /// Change the border color for the given client
@@ -396,11 +396,11 @@ pub trait XConn {
 }
 
 /**
- * A really simple stub implementation of [`XConn`] to simplify setting up test cases.
+ * A really simple stub implementation of [XConn] to simplify setting up test cases.
  *
  * Intended use is to override the mock_* methods that you need for running your test case in order
  * to inject behaviour into a WindowManager instance which is driven by X server state.
- * [`StubXConn`] will then implement [`XConn`] and call through to your overwritten methods or the
+ * [StubXConn] will then implement [XConn] and call through to your overwritten methods or the
  * provided default.
  *
  * This is being done to avoid providing broken default methods on the real XConn trait that would
@@ -633,7 +633,7 @@ where
     }
 }
 
-/// A dummy [`XConn`] implementation for testing
+/// A dummy [XConn] implementation for testing
 pub struct MockXConn {
     screens: Vec<Screen>,
     events: Cell<Vec<XEvent>>,
@@ -653,7 +653,7 @@ impl fmt::Debug for MockXConn {
 }
 
 impl MockXConn {
-    /// Set up a new [`MockXConn`] with pre-defined [`Screen`]s and an event stream to pull from
+    /// Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
     pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> Self {
         MockXConn {
             screens,

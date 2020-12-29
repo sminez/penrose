@@ -149,6 +149,7 @@ impl Workspace {
     pub fn try_set_layout(&mut self, symbol: &str) -> Option<&Layout> {
         self.layouts
             .focus(&Selector::Condition(&|l| l.symbol == symbol))
+            .map(|(_, layout)| layout)
     }
 
     /// Cycle through the available layouts on this workspace

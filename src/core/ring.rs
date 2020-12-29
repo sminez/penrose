@@ -201,6 +201,20 @@ impl<T> Ring<T> {
         self.elements.get_mut(index)
     }
 
+    pub fn vec_map<F: FnMut(&T) -> U, U>(&self, f: F) -> Vec<U> {
+        self.elements.iter().map(f).collect()
+    }
+
+    pub fn apply_to<F: FnMut(&mut T)>(&mut self, s: &Selector<'_, T>, mut f: F) {
+        if let Some(index) = self.index(s) {
+            f(&mut self.elements[index]);
+        }
+    }
+
+    pub fn map_selected<U, F: Fn(&T) -> U>(&self, s: &Selector<'_, T>, f: F) -> Option<U> {
+        self.index(s).map(|i| f(&self.elements[i]))
+    }
+
     fn clamp_focus(&mut self) {
         if self.focused > 0 && self.focused >= self.elements.len() - 1 {
             self.focused -= 1;
@@ -228,6 +242,10 @@ impl<T> Ring<T> {
             }
             Selector::Condition(f) => self.element_by(f).map(|(i, _)| i),
         }
+    }
+
+    pub fn indexed_element(&self, s: &Selector<'_, T>) -> Option<(usize, &T)> {
+        self.index(s).map(|i| (i, &self.elements[i]))
     }
 
     pub fn element(&self, s: &Selector<'_, T>) -> Option<&T> {
@@ -266,18 +284,22 @@ impl<T> Ring<T> {
         }
     }
 
-    pub fn focus(&mut self, s: &Selector<'_, T>) -> Option<&T> {
+    pub fn focus(&mut self, s: &Selector<'_, T>) -> Option<(bool, &T)> {
+        if self.index(s) == Some(self.focused) {
+            return Some((false, &self.elements[self.focused]));
+        }
+
         match s {
             Selector::WinId(_) => None, // ignored
-            Selector::Focused => self.focused(),
+            Selector::Focused => self.focused().map(|t| (true, t)),
             Selector::Index(i) => {
                 self.focused = *i;
-                self.focused()
+                self.focused().map(|t| (true, t))
             }
             Selector::Condition(f) => {
                 if let Some((i, _)) = self.element_by(f) {
                     self.focused = i;
-                    Some(&self.elements[self.focused])
+                    Some((true, &self.elements[self.focused]))
                 } else {
                     None
                 }
@@ -421,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_by() {
+    fn remove() {
         let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
         r.focused = 3;
         assert_eq!(r.focused(), Some(&4));
@@ -430,9 +452,17 @@ mod tests {
     }
 
     #[test]
-    fn focus_by() {
+    fn focus() {
         let mut r = Ring::new(vec![1, 2, 3, 4, 5, 6]);
-        assert_eq!(r.focus(&Selector::Condition(&|e| e % 2 == 0)), Some(&2));
+        assert_eq!(r.focused, 0);
+        assert_eq!(
+            r.focus(&Selector::Condition(&|e| e % 2 == 0)),
+            Some((true, &2)) // focus point updated
+        );
+        assert_eq!(
+            r.focus(&Selector::Condition(&|e| e % 2 == 0)),
+            Some((false, &2)) // no focus change this time
+        );
         assert_eq!(r.focus(&Selector::Condition(&|e| e % 7 == 0)), None);
     }
 
@@ -467,6 +497,17 @@ mod tests {
         assert_eq!(r.element_mut(&Selector::WinId(69)), None);
 
         assert_eq!(r.as_vec(), vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn indexed_element() {
+        let r = Ring::new(vec![2, 3, 5, 7, 11]);
+        assert_eq!(r.indexed_element(&Selector::Focused), Some((0, &2)));
+        assert_eq!(r.indexed_element(&Selector::Index(3)), Some((3, &7)));
+        assert_eq!(
+            r.indexed_element(&Selector::Condition(&|n| n % 5 == 0)),
+            Some((2, &5))
+        );
     }
 
     #[test]
@@ -513,5 +554,29 @@ mod tests {
         r.focus(&Selector::Index(6));
         r.insert_at(&InsertPoint::AfterFocused, 6);
         assert_eq!(r.as_vec(), vec![1, 4, 5, 0, 0, 3, 2, 6]);
+    }
+
+    #[test]
+    fn vec_map() {
+        let contents = vec!["this", "is", "a", "lot", "nicer"];
+        let r = Ring::new(contents.clone());
+        let lens = r.vec_map(|s| s.len());
+        assert_eq!(lens, vec![4, 2, 1, 3, 5]);
+        assert_eq!(r.as_vec(), contents);
+    }
+
+    #[test]
+    fn apply_to() {
+        let contents = vec!["original", "original", "original"];
+        let mut r = Ring::new(contents.clone());
+        r.apply_to(&Selector::Index(2), |s| *s = "mutated");
+        assert_eq!(r.as_vec(), vec!["original", "original", "mutated"]);
+    }
+
+    #[test]
+    fn map_selected() {
+        let contents = vec!["badgers", "love", "worms"];
+        let r = Ring::new(contents.clone());
+        assert_eq!(r.map_selected(&Selector::Index(1), |s| s.len()), Some(4));
     }
 }

@@ -11,13 +11,13 @@ use crate::core::{
 use std::{cell::RefCell, fmt, rc::Rc};
 
 /**
- * A Scratchpad spawns and manages a single Client which can then be shown above the current layout
- * using the 'toggle' method when bound to a key combination in your main.rs. The
- * Scratchpad.register method must be called before creating your WindowManager struct in order to
- * register the necessary hooks to spawn, capture and manage the embedded client. The client is
- * spawned when 'toggle' is called and there is no existing client, after that 'toggle' will
- * show/hide the client on the active screen. If the client is removed, calling 'toggle' again will
- * spawn a new client in the same way.
+ * Spawn and manage a single [Client] which can then be shown above the current layout.
+ *
+ * The [get_hook][Scratchpad::get_hook] method must be called to pass the associated [Hook] to your
+ * [WindowManager] before calling init in order to register the necessary hooks to spawn, capture
+ * and manage the embedded client. The client is spawned when 'toggle' is called and there is no
+ * existing client, after that 'toggle' will show/hide the client on the active screen. If the
+ * client is removed, calling 'toggle' again will spawn a new client in the same way.
  */
 pub struct Scratchpad {
     client: Rc<RefCell<Option<WinId>>>,
@@ -71,10 +71,10 @@ impl Scratchpad {
         })
     }
 
-    /// Construct the associated [`Hook`] for adding to the [`WindowManager`].
+    /// Construct the associated [Hook] for adding to the [WindowManager].
     ///
-    /// NOTE: If the hook is not registered, [`Scratchpad`] will not be able to
-    ///       capture and manage spawned [`Client`] windows.
+    /// NOTE: If the hook is not registered, [Scratchpad] will not be able to
+    ///       capture and manage spawned [Client] windows.
     pub fn get_hook(&self) -> Box<Self> {
         self.boxed_clone()
     }

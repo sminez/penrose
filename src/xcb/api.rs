@@ -18,6 +18,7 @@ use std::{collections::HashMap, fmt, str::FromStr};
 pub struct Api {
     conn: xcb::Connection,
     root: WinId,
+    check_win: WinId,
     randr_base: u8,
     atoms: HashMap<Atom, u32>,
 }
@@ -39,9 +40,16 @@ impl Clone for Api {
         Self {
             conn,
             root: self.root,
+            check_win: self.check_win,
             randr_base: self.randr_base,
             atoms: self.atoms.clone(),
         }
+    }
+}
+
+impl Drop for Api {
+    fn drop(&mut self) {
+        self.destroy_window(self.check_win)
     }
 }
 
@@ -60,21 +68,25 @@ impl Api {
             .ok_or_else(|| anyhow!("unable to fetch extension data"))?
             .first_event();
 
+        let check_win = conn.generate_id();
+        xcb::create_window(&conn, 0, check_win, root, 0, 0, 1, 1, 0, 0, 0, &[]);
+        conn.flush();
+
         let mut api = Self {
             conn,
             root,
+            check_win,
             randr_base,
             atoms: HashMap::new(),
         };
 
-        let atoms: HashMap<Atom, u32> = Atom::iter()
+        api.atoms = Atom::iter()
             .map(|atom| {
                 let val = api.atom(atom.as_ref())?;
                 Ok((atom, val))
             })
             .collect::<Result<HashMap<_, _>>>()?;
 
-        api.atoms = atoms;
         Ok(api)
     }
 
@@ -104,11 +116,6 @@ impl Api {
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
             .ok_or_else(|| anyhow!("unable to get visual type"))
-    }
-
-    fn check_win(&self) -> WinId {
-        let r = Region::new(0, 0, 1, 1);
-        self.create_window(WinType::CheckWin, r, false).unwrap()
     }
 }
 
@@ -329,14 +336,13 @@ impl XcbApi for Api {
         ))
     }
 
+    // logic taken from https://github.com/rtbo/rust-xcb/blob/master/examples/randr_crtc_info.rs
     fn current_screens(&self) -> Result<Vec<Screen>> {
-        let check_win = self.check_win();
-
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_screen_resources
-        let resources = xcb::randr::get_screen_resources(&self.conn, check_win);
+        let resources = xcb::randr::get_screen_resources(&self.conn, self.check_win);
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_crtc_info
-        let res = resources
+        Ok(resources
             .get_reply()
             .with_context(|| "unable to read randr screen resources")?
             .crtcs()
@@ -356,10 +362,7 @@ impl XcbApi for Api {
                 let (_, _, w, _) = s.region(false).values();
                 w > 0
             })
-            .collect();
-
-        self.destroy_window(check_win);
-        Ok(res)
+            .collect())
     }
 
     fn screen_sizes(&self) -> Result<Vec<Region>> {

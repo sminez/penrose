@@ -1,6 +1,6 @@
 /*!
- * API layer implementing [`crate::draw::Draw`] and [`crate::draw::DrawContext`] using
- * XCB, pango and cairo.
+ * API layer implementing [Draw][crate::draw::Draw] and [DrawContext][crate::draw::DrawContext]
+ * using XCB, pango and cairo.
  *
  * This is a reference implementation and requires that you have the relevant C dependencies
  * installed on your system for it to work.
@@ -31,7 +31,7 @@ mod inner {
     }
 
     #[derive(Clone, Debug)]
-    /// An XCB based [`Draw`] implementation backed by pango and cairo
+    /// An XCB based [Draw] implementation backed by pango and cairo
     pub struct XcbDraw {
         api: crate::xcb::Api,
         fonts: HashMap<String, pango::FontDescription>,
@@ -39,7 +39,7 @@ mod inner {
     }
 
     impl XcbDraw {
-        /// Create a new empty [`XcbDraw`]. Fails if unable to connect to the X server
+        /// Create a new empty [XcbDraw]. Fails if unable to connect to the X server
         pub fn new() -> Result<Self> {
             Ok(Self {
                 api: crate::xcb::Api::new()?,
