@@ -27,8 +27,8 @@ pub use event::EventAction;
 
 use event::{process_next_event, WmState};
 use util::{
-    client_str_props, map_window_if_needed, position_floating_client, unmap_window_if_needed,
-    vec_string_to_str, window_name,
+    client_str_props, get_screens, map_window_if_needed, position_floating_client,
+    toggle_fullscreen, unmap_window_if_needed, vec_string_to_str, window_name,
 };
 use workspace::apply_layout;
 
@@ -159,12 +159,12 @@ impl WindowManager {
             EventAction::ClientNameChanged(id) => self.client_name_changed(id)?,
             EventAction::DestroyClient(id) => self.remove_client(id),
             EventAction::DetectScreens => self.detect_screens(),
-            EventAction::MapWindow(id) => self.handle_map_request(id),
+            EventAction::MapWindow(id) => self.handle_map_request(id)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
             EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
             EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p),
-            EventAction::ToggleClientFullScreen(id, should_fullscreen, client_is_fullscreen) => {
-                self.set_fullscreen(id, should_fullscreen, client_is_fullscreen)
+            EventAction::ToggleClientFullScreen(id, should_fullscreen) => {
+                self.set_fullscreen(id, should_fullscreen);
             }
             EventAction::UnknownPropertyChange(..) => {}
         }
@@ -314,13 +314,11 @@ impl WindowManager {
 
     // The given window ID has been destroyed so remove our internal state referencing it.
     fn remove_client(&mut self, id: WinId) {
-        if let Some(client) = self.client_map.get(&id) {
+        if let Some(client) = self.client_map.remove(&id) {
             let wix = client.workspace();
             self.workspaces.apply_to(&Selector::Index(wix), |ws| {
                 ws.remove_client(id);
             });
-
-            self.client_map.remove(&id);
 
             if self.focused_client == Some(id) {
                 self.focused_client = None;
@@ -340,69 +338,43 @@ impl WindowManager {
     /// Query the [`XConn`] for the current connected [`Screen`] list and reposition displayed
     /// [`Workspace`] instances if needed.
     pub fn detect_screens(&mut self) {
-        // Keeping the currently displayed workspaces on the active screens if possible
-        // and then filling in with remaining workspaces in ascending order
-        let mut workspaces = self.visible_workspaces();
-        workspaces.append(
-            &mut (0..self.workspaces.len())
-                .filter(|w| !workspaces.contains(w))
-                .collect(),
+        let screens = get_screens(
+            &self.conn,
+            self.visible_workspaces(),
+            self.workspaces.len(),
+            self.bar_height,
+            self.top_bar,
         );
-        debug!("Current workspace ordering: {:?}", workspaces);
-
-        let screens: Vec<Screen> = self
-            .conn
-            .current_outputs()
-            .into_iter()
-            .enumerate()
-            .map(|(i, mut s)| {
-                s.update_effective_region(self.bar_height, self.top_bar);
-                debug!("Setting focused workspace for screen {}", i);
-                s.wix = workspaces[i];
-                s
-            })
-            .collect();
-
-        info!("Updating known screens: {} screens detected", screens.len());
-        for (i, s) in screens.iter().enumerate() {
-            info!("screen ({}) :: {:?}", i, s);
-        }
 
         if screens == self.screens.as_vec() {
-            return;
+            return; // nothing changed
         }
 
+        info!("Updating known screens: {} screens detected", screens.len());
         self.screens = Ring::new(screens);
-        self.visible_workspaces()
-            .iter()
-            .for_each(|wix| self.apply_layout(*wix));
+        for wix in self.visible_workspaces() {
+            self.apply_layout(wix);
+        }
 
-        let regions: Vec<_> = self.screens.iter().map(|s| s.region(false)).collect();
+        let regions = self.screens.vec_map(|s| s.region(false));
         run_hooks!(screens_updated, self, &regions);
     }
 
     // Map a new client window.
-    // TODO: This _really_ needs breaking down into smaller pieces if possible!
-    fn handle_map_request(&mut self, id: WinId) {
+    fn handle_map_request(&mut self, id: WinId) -> Result<()> {
         let props = client_str_props(&self.conn, id);
-        if !self.conn.is_managed_window(id) {
-            debug!(
-                "Mapping non-managed client: name[{}] id[{}] class[{}] type[{}]",
-                props.name, id, props.class, props.ty
-            );
-            self.conn.map_window(id);
-            return;
-        }
-
         debug!(
             "Handling map request: name[{}] id[{}] class[{}] type[{}]",
             props.name, id, props.class, props.ty
         );
 
-        let floating = self
-            .conn
-            .window_should_float(id, str_slice!(self.floating_classes));
+        if !self.conn.is_managed_window(id) {
+            self.conn.map_window(id);
+            return Ok(());
+        }
 
+        let classes = str_slice!(self.floating_classes);
+        let floating = self.conn.window_should_float(id, classes);
         let mut client = Client::new(
             id,
             props.name,
@@ -427,21 +399,23 @@ impl WindowManager {
                     s.region(self.show_bar),
                     self.gap_px,
                     self.border_px,
-                )
+                )?
             }
         }
 
         self.client_map.insert(id, client);
+        self.conn.mark_new_window(id);
         self.client_gained_focus(id);
         self.update_x_known_clients();
 
         if wix == self.active_ws_index() {
-            self.conn.mark_new_window(id);
             self.apply_layout(wix);
             map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
             let s = self.screens.focused().unwrap();
             self.conn.warp_cursor(Some(id), s);
         }
+
+        Ok(())
     }
 
     // NOTE: This defers control of the [`WindowManager`] to the user's key-binding action
@@ -473,43 +447,25 @@ impl WindowManager {
 
     // Toggle the given client fullscreen. This has knock on effects for other windows and can
     // be triggered by user key bindings as well as applications requesting full screen as well.
-    // TODO: - having two bools is disgusting, there must be a better way to do this
-    //       - should something going fullscreen also hide unmaged windows?
-    //       - the logic here in general needs tidying up: far too messy
-    fn set_fullscreen(&mut self, id: WinId, should_fullscreen: bool, client_is_fullscreen: bool) {
-        if client_is_fullscreen == should_fullscreen {
-            return; // Client is already in the correct state, we shouldn't have been called
+    // TODO: should something going fullscreen also hide unmaged windows?
+    fn set_fullscreen(&mut self, id: WinId, should_fullscreen: bool) -> Option<()> {
+        let (currently_fullscreen, wix) = self
+            .client_map
+            .get_mut(&id)
+            .map(|c| (c.fullscreen, c.workspace()))?;
+        if currently_fullscreen == should_fullscreen {
+            return None; // Client is already in the correct state, we shouldn't have been called
         }
 
-        if should_fullscreen {
-            self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
-            if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
-                ws.clients().iter().for_each(|&i| {
-                    if i != id {
-                        unmap_window_if_needed(&self.conn, self.client_map.get_mut(&i))
-                    }
-                });
-            }
-            let r = self.screen(&Selector::Focused).unwrap().region(false);
-            self.conn.position_window(id, r, 0, false);
-            map_window_if_needed(&self.conn, self.client_map.get_mut(&id));
-            if let Some(c) = self.client_map.get_mut(&id) {
-                c.fullscreen = true
-            };
-        } else {
-            self.conn.toggle_client_fullscreen(id, client_is_fullscreen);
-            if let Some(ws) = self.workspaces.get(self.active_ws_index()) {
-                ws.clients().iter().for_each(|&i| {
-                    if i != id {
-                        map_window_if_needed(&self.conn, self.client_map.get_mut(&i));
-                    }
-                });
-            }
-            self.apply_layout(self.active_ws_index());
-            if let Some(c) = self.client_map.get_mut(&id) {
-                c.fullscreen = false
-            };
+        let r = self
+            .screen(&Selector::Condition(&|s| s.wix == wix))?
+            .region(false);
+        let workspace = self.workspaces.get_mut(wix)?;
+        if toggle_fullscreen(&self.conn, id, &mut self.client_map, workspace, r) {
+            self.apply_layout(wix);
         }
+
+        None
     }
 
     /*
@@ -816,7 +772,7 @@ impl WindowManager {
             None => return, // unknown client
             Some(c) => (c.id(), c.fullscreen),
         };
-        self.set_fullscreen(id, !client_is_fullscreen, client_is_fullscreen);
+        self.set_fullscreen(id, !client_is_fullscreen);
     }
 
     /// Kill the focused client window.
@@ -1109,7 +1065,7 @@ mod tests {
 
     fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
         for i in 0..n {
-            wm.handle_map_request(10 * (i + offset + 1) as u32);
+            wm.handle_map_request(10 * (i + offset + 1) as u32).unwrap();
         }
     }
 
@@ -1344,11 +1300,11 @@ mod tests {
         // MockXConn.is_managed_window to false for those IDs
         let mut wm = wm_with_mock_conn(vec![], vec![10]);
 
-        wm.handle_map_request(10); // should not be tiled
+        wm.handle_map_request(10).unwrap(); // should not be tiled
         assert!(wm.client_map.get(&10).is_none());
         assert!(wm.workspaces[0].is_empty());
 
-        wm.handle_map_request(20); // should be tiled
+        wm.handle_map_request(20).unwrap(); // should be tiled
         assert!(wm.client_map.get(&20).is_some());
         assert!(wm.workspaces[0].len() == 1);
     }

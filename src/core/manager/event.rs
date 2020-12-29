@@ -38,7 +38,7 @@ pub enum EventAction {
     /// The active screen should be set based on point location
     SetScreenFromPoint(Option<Point>),
     /// An X window should be set fullscreen
-    ToggleClientFullScreen(WinId, bool, bool),
+    ToggleClientFullScreen(WinId, bool),
     /// An unknown property was changed on an X window
     UnknownPropertyChange(WinId, String, bool),
 }
@@ -74,20 +74,11 @@ fn process_client_message(
     data: &[usize],
 ) -> Vec<EventAction> {
     let is_full_screen = [data.get(1), data.get(2)].contains(&Some(&state.full_screen_atom));
-
     match Atom::from_str(&dtype) {
         Ok(Atom::NetWmState) if is_full_screen => {
-            if let Some(c) = state.client_map.get(&id) {
-                // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
-                let should_fullscreen = [1, 2].contains(&data[0]) && !c.fullscreen;
-                vec![EventAction::ToggleClientFullScreen(
-                    id,
-                    should_fullscreen,
-                    c.fullscreen,
-                )]
-            } else {
-                vec![]
-            }
+            // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
+            let should_fullscreen = [1, 2].contains(&data[0]);
+            vec![EventAction::ToggleClientFullScreen(id, should_fullscreen)]
         }
         _ => vec![],
     }
