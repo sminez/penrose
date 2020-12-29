@@ -16,7 +16,7 @@ use crate::{
 
 use nix::sys::signal::{signal, SigHandler, Signal};
 
-use std::{cell::Cell, collections::HashMap, fmt, ops::Deref};
+use std::{cell::Cell, collections::HashMap, fmt};
 
 mod event;
 mod util;
@@ -70,14 +70,6 @@ impl fmt::Debug for WindowManager {
             .field("focused_client", &self.focused_client)
             .field("running", &self.running)
             .finish()
-    }
-}
-
-impl Deref for WindowManager {
-    type Target = Config;
-
-    fn deref(&self) -> &Self::Target {
-        &self.config
     }
 }
 
@@ -270,7 +262,8 @@ impl WindowManager {
             self.client_lost_focus(id)
         }
 
-        self.conn.set_client_border_color(id, self.focused_border);
+        self.conn
+            .set_client_border_color(id, self.config.focused_border);
         self.conn.focus_client(id);
 
         if let Some(wix) = self.workspace_index_for_client(id) {
@@ -293,7 +286,8 @@ impl WindowManager {
             self.focused_client = None;
         }
 
-        self.conn.set_client_border_color(id, self.unfocused_border);
+        self.conn
+            .set_client_border_color(id, self.config.unfocused_border);
     }
 
     // The given window ID has had its EWMH name updated by something
@@ -336,8 +330,8 @@ impl WindowManager {
             &self.conn,
             self.visible_workspaces(),
             self.workspaces.len(),
-            self.bar_height,
-            self.top_bar,
+            self.config.bar_height,
+            self.config.top_bar,
         );
 
         if screens == self.screens.as_vec() {
@@ -367,7 +361,7 @@ impl WindowManager {
             return Ok(());
         }
 
-        let classes = str_slice!(self.floating_classes);
+        let classes = str_slice!(self.config.floating_classes);
         let floating = self.conn.window_should_float(id, classes);
         let mut client = Client::new(
             id,
@@ -390,9 +384,9 @@ impl WindowManager {
                 util::position_floating_client(
                     &self.conn,
                     id,
-                    s.region(self.show_bar),
-                    self.gap_px,
-                    self.border_px,
+                    s.region(self.config.show_bar),
+                    self.config.gap_px,
+                    self.config.border_px,
                 )?
             }
         }
@@ -477,8 +471,8 @@ impl WindowManager {
         let (i, s) = indexed_screen.unwrap();
         let lc = ws.layout_conf();
         if !lc.floating {
-            let region = s.region(self.show_bar);
-            let (border, gap) = (self.border_px, self.gap_px);
+            let region = s.region(self.config.show_bar);
+            let (border, gap) = (self.config.border_px, self.config.gap_px);
             util::apply_arrange_actions(
                 &self.conn,
                 ws.arrange(region, &self.client_map),
@@ -625,7 +619,7 @@ impl WindowManager {
     /// Increase or decrease the current [layout][crate::core::layout::Layout] main_ratio by
     /// main_ratio_step
     pub fn update_main_ratio(&mut self, change: Change) {
-        let step = self.main_ratio_step;
+        let step = self.config.main_ratio_step;
         let wix = self.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.update_main_ratio(change, step)
@@ -1013,14 +1007,14 @@ impl WindowManager {
     pub fn screen_size(&self, screen_index: usize) -> Option<Region> {
         self.screens
             .get(screen_index)
-            .map(|s| s.region(self.show_bar))
+            .map(|s| s.region(self.config.show_bar))
     }
 
     /// Position an individual client on the display. (x,y) coordinates are absolute (i.e. relative
     /// to the root window not any individual screen).
     pub fn position_client(&self, id: WinId, region: Region, stack_above: bool) {
         self.conn
-            .position_window(id, region, self.border_px, stack_above);
+            .position_window(id, region, self.config.border_px, stack_above);
     }
 
     /// Make the Client with ID 'id' visible at its last known position.
