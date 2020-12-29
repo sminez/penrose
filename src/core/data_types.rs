@@ -12,13 +12,13 @@ pub type WinId = u32;
 /// Variants correspond to the X property types being set.
 #[derive(Clone, Copy, Debug)]
 pub enum PropVal<'a> {
-    /// A slice of interned [`Atom`] values
+    /// A slice of interned [Atom] values
     Atom(&'a [u32]),
     /// A slice of cardinal u32s
     Cardinal(&'a [u32]),
     /// A string valued property
     Str(&'a str),
-    /// One or more [`WinId`] values
+    /// One or more [WinId] values
     Window(&'a [WinId]),
 }
 
@@ -29,7 +29,7 @@ pub enum WinType {
     CheckWin,
     /// A window that receives input only (not queryable)
     InputOnly,
-    /// A regular window. The [`Atom`] passed should be a
+    /// A regular window. The [Atom] passed should be a
     /// valid _NET_WM_WINDOW_TYPE (this is not enforced)
     InputOutput(Atom),
 }
@@ -39,7 +39,7 @@ pub enum WinType {
 pub enum WinConfig {
     /// The border width in pixels
     BorderPx(u32),
-    /// Absolute size and position on the screen as a [`Region`]
+    /// Absolute size and position on the screen as a [Region]
     Position(Region),
     /// Mark this window as stacking on top of its peers
     StackAbove,

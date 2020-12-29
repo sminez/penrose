@@ -1,4 +1,4 @@
-//! User facing configuration of the penrose [`crate::core::manager::WindowManager`].
+//! User facing configuration of the penrose [WindowManager][crate::core::manager::WindowManager].
 use crate::core::layout::{side_stack, Layout, LayoutConf};
 
 use std::fmt;

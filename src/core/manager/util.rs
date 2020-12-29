@@ -2,8 +2,9 @@ use crate::{
     core::{
         client::Client,
         data_types::{Region, WinId},
+        layout::LayoutConf,
         screen::Screen,
-        workspace::Workspace,
+        workspace::{ArrangeActions, Workspace},
         xconnection::{Atom, XConn},
     },
     Result,
@@ -151,6 +152,32 @@ pub(super) fn toggle_fullscreen(
     // need to apply layout if true as we just came back from being fullscreen and
     // there are newly mapped windows that need to be laid out
     client_currently_fullscreen
+}
+
+pub(super) fn apply_arrange_actions(
+    conn: &Box<dyn XConn>,
+    actions: ArrangeActions,
+    lc: &LayoutConf,
+    client_map: &mut HashMap<WinId, Client>,
+    border_px: u32,
+    gap_px: u32,
+) {
+    // Tile first then place floating clients on top
+    for (id, region) in actions.actions {
+        let possible_client = client_map.get_mut(&id);
+        debug!("configuring {} with {:?}", id, region);
+        if let Some(region) = region {
+            let reg = pad_region(&region, lc.gapless, gap_px, border_px);
+            conn.position_window(id, reg, border_px, false);
+            map_window_if_needed(conn, possible_client);
+        } else {
+            unmap_window_if_needed(conn, possible_client);
+        }
+    }
+
+    for id in actions.floating {
+        conn.raise_window(id);
+    }
 }
 
 #[cfg(test)]

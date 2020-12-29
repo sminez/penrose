@@ -15,7 +15,7 @@ check-all:
 
 .PHONY: doc
 doc:
-	cargo doc --open
+	cargo doc --open &
 
 .PHONY: examples
 examples:

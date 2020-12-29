@@ -20,13 +20,11 @@ use std::{cell::Cell, collections::HashMap, fmt, ops::Deref};
 
 mod event;
 mod util;
-mod workspace;
 
 #[doc(inline)]
 pub use event::EventAction;
 
 use event::{process_next_event, WmState};
-use workspace::apply_layout;
 
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks {
@@ -85,13 +83,13 @@ impl Deref for WindowManager {
 
 impl WindowManager {
     /**
-     * Initialise a new window manager instance using a chosen [`XConn`] backed to communicate
+     * Initialise a new window manager instance using a chosen [XConn] backed to communicate
      * with the X server.
      *
-     * This initialises the [`WindowManager`] internal state but does not start processing any
+     * This initialises the [WindowManager] internal state but does not start processing any
      * events from the X server. If you need to perform any custom setup logic with the
-     * [`WindowManager`] itself, it should be run after calling this method and before
-     * [`WindowManager::grab_keys_and_run`].
+     * [WindowManager] itself, it should be run after calling this method and before
+     * [WindowManager::grab_keys_and_run].
      */
     pub fn init(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
         let layouts = config.layouts.clone();
@@ -168,15 +166,15 @@ impl WindowManager {
     }
 
     /**
-     * This is the main event loop for the [`WindowManager`].
+     * This is the main event loop for the [WindowManager].
      *
-     * The [`XConn::wait_for_event`] method is called to fetch the next event from the X server,
+     * The [XConn::wait_for_event] method is called to fetch the next event from the X server,
      * after which it is processed into a set of internal EventActions which are then processed
-     * by the [`WindowManager`] to update state and perform actions. This method is an infinite
-     * loop until the [`WindowManager::exit`] method is called, which triggers [`XConn::cleanup`]
+     * by the [WindowManager] to update state and perform actions. This method is an infinite
+     * loop until the [WindowManager::exit] method is called, which triggers [XConn::cleanup]
      * before exiting the loop. You can provide any additional teardown logic you need your
-     * main.rs after the call to [`WindowManager::grab_keys_and_run`] and all internal state
-     * will still be accessible (though methods requiring the use of the [`XConn`] will fail.
+     * main.rs after the call to [WindowManager::grab_keys_and_run] and all internal state
+     * will still be accessible (though methods requiring the use of the [XConn] will fail.
      */
     pub fn grab_keys_and_run(
         &mut self,
@@ -225,20 +223,20 @@ impl WindowManager {
             .indexed_element(&Selector::Condition(&|s| s.wix == wix))
     }
 
-    // We always have at least one [`Screen`] so no need for an Option.
+    // We always have at least one `Screen] so no need for an Option.
     fn active_ws_index(&self) -> usize {
         self.screens.focused().expect("there were no screens").wix
     }
 
-    // The ordered list of currently visible [`Workspace'] indices (one per screen).
+    // The ordered list of currently visible [Workspace] indices (one per screen).
     fn visible_workspaces(&self) -> Vec<usize> {
         self.screens.vec_map(|s| s.wix)
     }
 
-    // The index of the [`Workspace`] holding the requested X window ID. This can return None if
-    // the id does not map to a [`WindowManager`] managed [`Client`] which happens if the window
-    // is unmanaged (e.g. a dock or toolbar) or if a client [`Hook`] has requested ownership
-    // of that particular [`Client`].
+    // The index of the [Workspace] holding the requested X window ID. This can return None if
+    // the id does not map to a [WindowManager] managed [Client] which happens if the window
+    // is unmanaged (e.g. a dock or toolbar) or if a client [Hook] has requested ownership
+    // of that particular [Client].
     fn workspace_index_for_client(&mut self, id: WinId) -> Option<usize> {
         self.client_map.get(&id).map(|c| c.workspace())
     }
@@ -331,8 +329,8 @@ impl WindowManager {
         }
     }
 
-    /// Query the [`XConn`] for the current connected [`Screen`] list and reposition displayed
-    /// [`Workspace`] instances if needed.
+    /// Query the [XConn] for the current connected [Screen] list and reposition displayed
+    /// [Workspace] instances if needed.
     pub fn detect_screens(&mut self) {
         let screens = util::get_screens(
             &self.conn,
@@ -414,8 +412,8 @@ impl WindowManager {
         Ok(())
     }
 
-    // NOTE: This defers control of the [`WindowManager`] to the user's key-binding action
-    //       which can lead to arbitrary calls to public methods on the [`WindowManager`]
+    // NOTE: This defers control of the [WindowManager] to the user's key-binding action
+    //       which can lead to arbitrary calls to public methods on the [WindowManager]
     //       including mutable methods.
     fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings) {
         debug!("handling key code: {:?}", k);
@@ -424,8 +422,8 @@ impl WindowManager {
         }
     }
 
-    // NOTE: This defers control of the [`WindowManager`] to the user's mouse-binding action
-    //       which can lead to arbitrary calls to public methods on the [`WindowManager`]
+    // NOTE: This defers control of the [WindowManager] to the user's mouse-binding action
+    //       which can lead to arbitrary calls to public methods on the [WindowManager]
     //       including mutable methods.
     fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
         debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
@@ -434,7 +432,7 @@ impl WindowManager {
         }
     }
 
-    // Set the active [`Screen`] based on an (x, y) [`Point`]. If point is None then we set
+    // Set the active [Screen] based on an (x, y) [Point]. If point is None then we set
     // based on the current cursor position instead.
     fn set_screen_from_point(&mut self, point: Option<Point>) {
         let point = point.unwrap_or_else(|| self.conn.cursor_position());
@@ -475,10 +473,22 @@ impl WindowManager {
         if indexed_screen.is_none() {
             return; // workspace is not currently visible
         }
+
         let (i, s) = indexed_screen.unwrap();
-        let region = s.region(self.show_bar);
-        let (border, gap) = (self.border_px, self.gap_px);
-        apply_layout(&self.conn, ws, region, &mut self.client_map, border, gap);
+        let lc = ws.layout_conf();
+        if !lc.floating {
+            let region = s.region(self.show_bar);
+            let (border, gap) = (self.border_px, self.gap_px);
+            util::apply_arrange_actions(
+                &self.conn,
+                ws.arrange(region, &self.client_map),
+                &lc,
+                &mut self.client_map,
+                border,
+                gap,
+            );
+        }
+
         run_hooks!(layout_applied, self, wix, i);
     }
 
@@ -523,7 +533,7 @@ impl WindowManager {
         info!("{}", msg);
     }
 
-    /// Cycle between known screens. Does not wrap from first to last
+    /// Cycle between known [screens][Screen]. Does not wrap from first to last
     pub fn cycle_screen(&mut self, direction: Direction) {
         if !self.screens.would_wrap(direction) {
             self.screens.cycle_focus(direction);
@@ -539,8 +549,8 @@ impl WindowManager {
     }
 
     /**
-     * Cycle between workspaces on the current Screen. This will pull workspaces
-     * to the screen if they are currently displayed on another screen.
+     * Cycle between [workspaces][Workspace] on the current [screen][Screen]. This will pull
+     * workspaces to the screen if they are currently displayed on another screen.
      */
     pub fn cycle_workspace(&mut self, direction: Direction) {
         self.workspaces.cycle_focus(direction);
@@ -548,14 +558,14 @@ impl WindowManager {
         self.focus_workspace(&Selector::Index(i));
     }
 
-    /// Move the currently focused workspace to the next Screen in 'direction'
+    /// Move the currently focused [workspace][Workspace] to the next [screen][Screen] in 'direction'
     pub fn drag_workspace(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
         self.cycle_screen(direction);
         self.focus_workspace(&Selector::Index(wix)); // focus_workspace will pull it to the new screen
     }
 
-    /// Cycle between Clients for the active Workspace
+    /// Cycle between [clients][Client] for the active [workspace][Workspace]
     pub fn cycle_client(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
         let res = self
@@ -570,7 +580,7 @@ impl WindowManager {
         }
     }
 
-    /// Rotate the client stack on the active Workspace
+    /// Rotate the [client][Client] stack on the active [workspace][Workspace]
     pub fn rotate_clients(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
@@ -578,7 +588,8 @@ impl WindowManager {
         };
     }
 
-    /// Move the focused Client through the stack of Clients on the active Workspace
+    /// Move the focused [client][Client] through the stack of clients on the active
+    /// [workspace][Workspace]
     pub fn drag_client(&mut self, direction: Direction) {
         if let Some(id) = self.focused_client().map(|c| c.id()) {
             let wix = self.active_ws_index();
@@ -592,7 +603,7 @@ impl WindowManager {
         }
     }
 
-    /// Cycle between Layouts for the active Workspace
+    /// Cycle between [layouts][crate::core::layout::Layout] for the active [workspace][Workspace]
     pub fn cycle_layout(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
@@ -611,7 +622,8 @@ impl WindowManager {
         self.apply_layout(wix);
     }
 
-    /// Increase or decrease the current Layout main_ratio by main_ratio_step
+    /// Increase or decrease the current [layout][crate::core::layout::Layout] main_ratio by
+    /// main_ratio_step
     pub fn update_main_ratio(&mut self, change: Change) {
         let step = self.main_ratio_step;
         let wix = self.active_ws_index();
@@ -628,7 +640,8 @@ impl WindowManager {
         self.running = false;
     }
 
-    /// The layout symbol for the Layout currently being used on the active workspace
+    /// The layout symbol for the [layout][crate::core::layout::Layout] currently being used on the
+    /// active workspace
     pub fn current_layout_symbol(&self) -> &str {
         match self.workspaces.get(self.active_ws_index()) {
             Some(ws) => ws.layout_symbol(),

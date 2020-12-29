@@ -13,8 +13,8 @@ pub struct WmState<'a> {
     pub(super) full_screen_atom: usize,
 }
 
-/// Actions that will be carried out by the [`crate::core::manager::WindowManager`] in response to
-/// individual each [`XEvent`] received from the provided [`crate::core::xconnection::XConn`].
+/// Actions that will be carried out by the [WindowManager][crate::core::manager::WindowManager] in response to
+/// individual each [XEvent] received from the provided [XConn][crate::core::xconnection::XConn].
 ///
 /// Note that each action is processed independently.
 #[derive(Debug, Clone)]

@@ -25,13 +25,13 @@ pub use draw::{XcbDraw, XcbDrawContext};
 #[doc(inline)]
 pub use xconn::XcbConnection;
 
-/// Construct a default [`XcbConnection`] using the penrose provided [`Api`]
-/// implementation of [`XcbApi`].
+/// Construct a default [XcbConnection] using the penrose provided [Api]
+/// implementation of [XcbApi].
 pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
     XcbConnection::new(Api::new()?)
 }
 
-/// Construct a penrose [`WindowManager`] backed by the default [`crate::xcb`] backend.
+/// Construct a penrose [WindowManager] backed by the default [xcb][crate::xcb] backend.
 pub fn new_xcb_backed_window_manager(
     config: Config,
     hooks: Vec<Box<dyn Hook>>,
@@ -53,13 +53,13 @@ pub trait XcbApi {
      *
      * Can fail if the atom name is not a known X atom or if there
      * is an issue with communicating with the X server. For known
-     * atoms that are included in the [`Atom`] enum,
-     * the [`XcbApi::known_atom`] method should be used instead.
+     * atoms that are included in the [Atom] enum,
+     * the [XcbApi::known_atom] method should be used instead.
      */
     fn atom(&self, name: &str) -> Result<u32>;
 
     /**
-     * Fetch the id value of a known [`Atom`] variant.
+     * Fetch the id value of a known [Atom] variant.
      *
      * This operation is expected to always succeed as known atoms should
      * either be interned on init of the implementing struct or statically
@@ -69,7 +69,7 @@ pub trait XcbApi {
 
     /// Delete a known property from a window
     fn delete_prop(&self, id: WinId, prop: Atom);
-    /// Fetch an [`Atom`] property for a given window
+    /// Fetch an [Atom] property for a given window
     fn get_atom_prop(&self, id: WinId, atom: Atom) -> Result<u32>;
     /// Fetch an String property for a given window
     fn get_str_prop(&self, id: WinId, name: &str) -> Result<String>;
@@ -91,7 +91,7 @@ pub trait XcbApi {
     fn destroy_window(&self, id: WinId);
     /// The client that the X server currently considers to be focused
     fn focused_client(&self) -> Result<WinId>;
-    /// Send a [`XEvent::MapRequest`] for the target window
+    /// Send a [XEvent::MapRequest] for the target window
     fn map_window(&self, id: WinId);
     /// Mark the given window as currently having focus in the X server state
     fn mark_focused_window(&self, id: WinId);
@@ -105,16 +105,16 @@ pub trait XcbApi {
     fn window_geometry(&self, id: WinId) -> Result<Region>;
 
     /// Query the randr API for current outputs and return the details as penrose
-    /// [`Screen`] structs.
+    /// [Screen] structs.
     fn current_screens(&self) -> Result<Vec<Screen>>;
     /// Query the randr API for current outputs and return the size of each screen
     fn screen_sizes(&self) -> Result<Vec<Region>>;
 
     /// The current (x, y) position of the cursor relative to the root window
     fn cursor_position(&self) -> Point;
-    /// Register intercepts for each given [`KeyCode']
+    /// Register intercepts for each given [KeyCode]
     fn grab_keys(&self, keys: &[&KeyCode]);
-    /// Register intercepts for each given [`MouseState']
+    /// Register intercepts for each given [MouseState]
     fn grab_mouse_buttons(&self, states: &[&MouseState]);
     /// Drop all active intercepts for key combinations
     fn ungrab_keys(&self);
@@ -131,7 +131,7 @@ pub trait XcbApi {
      * Block until the next event from the X event loop is ready then return it.
      *
      * This method should handle all of the mapping of xcb events to penrose
-     * [`XEvent`] instances, returning None when the event channel from the
+     * [XEvent] instances, returning None when the event channel from the
      * X server is closed.
      */
     fn wait_for_event(&self) -> Option<XEvent>;
