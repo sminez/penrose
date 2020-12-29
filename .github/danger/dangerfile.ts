@@ -112,6 +112,7 @@ update_labels(
     { path: "src/core", label: "core" },
     { path: "src/draw", label: "core" },
     { path: "src/contrib", label: "contrib" },
+    { path: "src/xcb", label: "xcb" },
   ],
 );
 
