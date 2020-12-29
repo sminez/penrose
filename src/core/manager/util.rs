@@ -18,10 +18,6 @@ pub(super) struct ClientProps {
     pub(super) ty: String,
 }
 
-pub(super) fn vec_string_to_str(v: &[String]) -> Vec<&str> {
-    v.iter().map(|s| s.as_ref()).collect()
-}
-
 pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px: u32) -> Region {
     let gpx = if gapless { 0 } else { gap_px };
     let padding = 2 * (border_px + gpx);

@@ -493,10 +493,10 @@ impl WindowManager {
     }
 
     fn update_x_workspace_details(&mut self) {
-        let names = self.workspaces.vec_map(|w| w.name().to_string());
-        let names = util::vec_string_to_str(&names);
-        self.conn.update_desktops(&names);
-        run_hooks!(workspaces_updated, self, &names, self.active_ws_index());
+        let vec_names = self.workspaces.vec_map(|w| w.name().to_string());
+        let names = str_slice!(vec_names);
+        self.conn.update_desktops(names);
+        run_hooks!(workspaces_updated, self, names, self.active_ws_index());
     }
 
     fn update_x_known_clients(&self) {
