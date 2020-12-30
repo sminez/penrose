@@ -44,6 +44,7 @@ pub enum DrawError {
 /// Result type for fallible methods on [Draw] and [DrawContext]
 pub type Result<T> = std::result::Result<T, DrawError>;
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq)]
 /// A set of styling options for a text string
 pub struct TextStyle {
@@ -59,6 +60,7 @@ pub struct TextStyle {
     pub padding: (f64, f64),
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 /// A simple RGBA based color
 pub struct Color {

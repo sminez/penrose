@@ -1,9 +1,12 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
-use crate::core::{
-    client::Client,
-    data_types::{Change, Region, ResizeAction, WinId},
-    layout::{Layout, LayoutConf},
-    ring::{Direction, InsertPoint, Ring, Selector},
+use crate::{
+    core::{
+        client::Client,
+        data_types::{Change, Region, ResizeAction, WinId},
+        layout::{Layout, LayoutConf, LayoutFunc},
+        ring::{Direction, InsertPoint, Ring, Selector},
+    },
+    PenroseError, Result,
 };
 
 use std::collections::HashMap;
@@ -23,6 +26,7 @@ pub(crate) struct ArrangeActions {
  * point of view of the X server by checking focus at the Workspace level
  * whenever a new Workspace becomes active.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Workspace {
     name: String,
@@ -32,7 +36,10 @@ pub struct Workspace {
 
 impl Workspace {
     /// Construct a new Workspace with the given name and choice of Layouts
-    pub fn new(name: impl Into<String>, layouts: Vec<Layout>) -> Workspace {
+    pub fn new<S>(name: S, layouts: Vec<Layout>) -> Workspace
+    where
+        S: Into<String>,
+    {
         if layouts.is_empty() {
             panic!("{}: require at least one layout function", name.into());
         }
@@ -49,8 +56,34 @@ impl Workspace {
         &self.name
     }
 
-    pub(crate) fn set_name(&mut self, name: impl Into<String>) {
+    pub(crate) fn set_name<S>(&mut self, name: S)
+    where
+        S: Into<String>,
+    {
         self.name = name.into();
+    }
+
+    pub(crate) fn restore_layout_functions(
+        &mut self,
+        layout_funcs: &HashMap<&str, LayoutFunc>,
+    ) -> Result<()> {
+        self.layouts
+            .iter_mut()
+            .map(|layout| {
+                let s = &layout.symbol;
+                match layout_funcs.get(s.as_str()) {
+                    Some(f) => {
+                        layout.set_layout_function(f.clone());
+                        Ok(())
+                    }
+                    None => Err(PenroseError::HydrationState(format!(
+                        "'{}' is not a known layout symbol: {:?}",
+                        layout.symbol,
+                        layout_funcs.keys()
+                    ))),
+                }
+            })
+            .collect::<Result<()>>()
     }
 
     /// The number of clients currently on this workspace
@@ -160,7 +193,7 @@ impl Workspace {
 
     /// The symbol of the currently used layout (passed on creation)
     pub fn layout_symbol(&self) -> &str {
-        self.layouts.focused().unwrap().symbol
+        &self.layouts.focused().unwrap().symbol
     }
 
     /**

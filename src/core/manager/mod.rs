@@ -6,6 +6,7 @@ use crate::{
         config::Config,
         data_types::{Change, Point, Region, WinId},
         hooks::Hook,
+        layout::LayoutFunc,
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
@@ -36,6 +37,31 @@ macro_rules! run_hooks {
     };
 }
 
+// NOTE: Helpers for stubbing out non-serializable state from the WindowManager
+//       when deserializing with serde. WindowManager::hydrate_and_init MUST
+//       be called following serialization otherwise the WindowManager will
+//       panic on init.
+
+#[cfg(feature = "serde")]
+struct StubConn {}
+#[cfg(feature = "serde")]
+impl crate::core::xconnection::StubXConn for StubConn {
+    // NOTE: panicing here as it is the first XConn method to be called in __init
+    fn mock_current_outputs(&self) -> Vec<Screen> {
+        panic!("StubConn is not usable as a real XConn impl: call hydrate_and_init instead");
+    }
+}
+
+#[cfg(feature = "serde")]
+fn default_conn() -> Box<dyn XConn> {
+    Box::new(StubConn {})
+}
+
+#[cfg(feature = "serde")]
+fn default_hooks() -> Cell<Vec<Box<dyn Hook>>> {
+    Cell::new(Vec::new())
+}
+
 /**
  * WindowManager is the primary struct / owner of the event loop for penrose.
  * It handles most (if not all) of the communication with XCB and responds to
@@ -43,12 +69,15 @@ macro_rules! run_hooks {
  * and bound on init and then triggered via grabbed X events in the main loop
  * along with everything else.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager {
+    #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
     conn: Box<dyn XConn>,
     config: Config,
     screens: Ring<Screen>,
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
+    #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
     hooks: Cell<Vec<Box<dyn Hook>>>,
     previous_workspace: usize,
     client_insert_point: InsertPoint,
@@ -93,11 +122,11 @@ impl WindowManager {
             .map(|name| Workspace::new(name, layouts.to_vec()))
             .collect();
 
-        let mut wm = WindowManager {
+        let mut wm = Self {
             conn,
             config,
             screens: Ring::new(vec![]),
-            workspaces: Ring::new(workspaces),
+            workspaces,
             client_map: HashMap::new(),
             previous_workspace: 0,
             hooks: Cell::new(hooks),
@@ -106,16 +135,41 @@ impl WindowManager {
             running: false,
         };
 
+        wm.__init();
+        wm
+    }
+
+    /// Restore missing state following serde deserialization
+    pub fn hydrate_and_init(
+        mut self,
+        conn: Box<dyn XConn>,
+        hooks: Vec<Box<dyn Hook>>,
+        layout_funcs: HashMap<&str, LayoutFunc>,
+    ) -> Result<()> {
+        self.conn = conn;
+        self.hooks.set(hooks);
+        self.__init();
+        self.workspaces
+            .iter_mut()
+            .map(|w| w.restore_layout_functions(&layout_funcs))
+            .collect::<Result<()>>()?;
+
+        // TODO: check that the deserialized state is internally consistent
+        self.__init();
+        Ok(())
+    }
+
+    // Run startup actions with provided state
+    fn __init(&mut self) {
         debug!("Attempting initial screen detection");
-        wm.detect_screens();
+        self.detect_screens();
 
         debug!("Setting EWMH properties");
-        wm.conn.set_wm_properties(str_slice!(wm.config.workspaces));
+        self.conn
+            .set_wm_properties(str_slice!(self.config.workspaces));
 
         debug!("Forcing cursor to first screen");
-        wm.conn.warp_cursor(None, &wm.screens[0]);
-
-        wm
+        self.conn.warp_cursor(None, &self.screens[0]);
     }
 
     // Subset of current immutable state that is needed for processing XEvents into EventActions

@@ -24,6 +24,7 @@ pub enum PropVal<'a> {
 
 /// A window type to be specified when creating a new window in the X server
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WinType {
     /// A simple hidden stub window for facilitating other API calls
     CheckWin,
@@ -36,6 +37,7 @@ pub enum WinType {
 
 /// Config options for X windows (not all are currently implemented)
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WinConfig {
     /// The border width in pixels
     BorderPx(u32),
@@ -66,6 +68,7 @@ impl From<&WinConfig> for Vec<(u16, u32)> {
 }
 
 /// Window attributes for an X11 client window (not all are curently implemented)
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Copy, Debug)]
 pub enum WinAttr {
     /// Border color as an argb hex value
@@ -97,6 +100,7 @@ impl From<&WinAttr> for Vec<(u32, u32)> {
 }
 
 /// An x,y coordinate pair
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
     /// An absolute x coordinate relative to the root window
@@ -115,6 +119,7 @@ impl Point {
 /* Argument enums */
 
 /// Increment / decrement a value
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone)]
 pub enum Change {
     /// increase the value
@@ -124,6 +129,7 @@ pub enum Change {
 }
 
 /// X window border kind
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub enum Border {
     /// window is urgent
@@ -135,6 +141,7 @@ pub enum Border {
 }
 
 /// An X window / screen position: top left corner + extent
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Region {
     x: u32,

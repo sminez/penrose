@@ -26,6 +26,7 @@ use strum::*;
  * of type safety around their use. Implementors of [XConn] should accept any variant of [Atom]
  * that they are passed by client code.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Atom {
     /// ATOM
@@ -205,6 +206,7 @@ pub(crate) const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
  * <https://tronche.com/gui/x/xlib/events/types.html>
  * <https://github.com/rtbo/rust-xcb/xml/xproto.xml>
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub enum XEvent {
     /// xcb docs: <https://www.mankier.com/3/xcb_button_press_event_t>

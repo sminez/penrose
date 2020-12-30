@@ -7,6 +7,7 @@ use crate::core::data_types::WinId;
  * Primarily state flags and information used when determining which clients
  * to show for a given monitor and how they are tiled.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
 pub struct Client {
     id: WinId,

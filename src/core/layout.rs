@@ -18,7 +18,11 @@ use std::{cmp, fmt};
 
 /**
  * When and how a Layout should be applied.
+ *
+ * The default layout config that only triggers when clients are added / removed and follows user
+ * defined config options.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LayoutConf {
     /// If true, this layout function will not be called to produce resize actions
@@ -31,11 +35,9 @@ pub struct LayoutConf {
     pub allow_wrapping: bool,
 }
 
-impl LayoutConf {
-    /// A layout config that only triggers when clients are added / removed and follows user
-    /// defined config options.
-    pub fn default() -> LayoutConf {
-        LayoutConf {
+impl Default for LayoutConf {
+    fn default() -> Self {
+        Self {
             floating: false,
             gapless: false,
             follow_focus: false,
@@ -67,13 +69,15 @@ pub type LayoutFunc = fn(&[&Client], Option<WinId>, &Region, u32, f32) -> Vec<Re
  * maintain their own state for number of clients in the main area and ratio which will be passed
  * through to the layout function when it is called.
  */
-#[derive(Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone)]
 pub struct Layout {
     pub(crate) conf: LayoutConf,
-    pub(crate) symbol: &'static str,
+    pub(crate) symbol: String,
     max_main: u32,
     ratio: f32,
-    f: LayoutFunc,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    f: Option<LayoutFunc>,
 }
 
 impl cmp::PartialEq<Layout> for Layout {
@@ -105,36 +109,42 @@ fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<
 
 impl Layout {
     /// Create a new Layout for a specific monitor
-    pub fn new(
-        symbol: &'static str,
-        conf: LayoutConf,
-        f: LayoutFunc,
-        max_main: u32,
-        ratio: f32,
-    ) -> Layout {
+    pub fn new<S>(symbol: S, conf: LayoutConf, f: LayoutFunc, max_main: u32, ratio: f32) -> Layout
+    where
+        S: Into<String>,
+    {
         Layout {
-            symbol,
+            symbol: symbol.into(),
             conf,
             max_main,
             ratio,
-            f,
+            f: Some(f),
         }
     }
 
     /// A default floating layout that will not attempt to manage windows
-    pub fn floating(symbol: &'static str) -> Layout {
+    pub fn floating<S>(symbol: S) -> Layout
+    where
+        S: Into<String>,
+    {
         Layout {
-            symbol,
+            symbol: symbol.into(),
             conf: LayoutConf {
                 floating: true,
                 gapless: false,
                 follow_focus: false,
                 allow_wrapping: true,
             },
-            f: floating,
+            f: Some(floating),
             max_main: 1,
             ratio: 1.0,
         }
+    }
+
+    // NOTE: Used when rehydrating from serde based deserialization. The layout will panic if
+    //       used before setting the LayoutFunc. See [WindowManager::hydrate_and_init]
+    pub(crate) fn set_layout_function(&mut self, f: LayoutFunc) {
+        self.f = Some(f);
     }
 
     /// Apply the embedded layout function using the current n_main and ratio
@@ -144,7 +154,7 @@ impl Layout {
         focused: Option<WinId>,
         r: &Region,
     ) -> Vec<ResizeAction> {
-        (self.f)(clients, focused, r, self.max_main, self.ratio)
+        (self.f.expect("missing layout function"))(clients, focused, r, self.max_main, self.ratio)
     }
 
     /// Increase/decrease the number of clients in the main area by 1

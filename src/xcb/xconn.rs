@@ -29,13 +29,13 @@ use std::str::FromStr;
 
 const WM_NAME: &str = "penrose";
 
-#[derive(Clone, Debug)]
 /**
  * Handles communication with an X server via the XCB library.
  *
  * XcbConnection is a minimal implementation that does not make use of the full asyc capabilities
  * of the underlying C XCB library.
  **/
+#[derive(Clone, Debug)]
 pub struct XcbConnection<X: XcbApi> {
     api: X,
     check_win: WinId,
