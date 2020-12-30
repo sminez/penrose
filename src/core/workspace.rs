@@ -73,7 +73,7 @@ impl Workspace {
                 let s = &layout.symbol;
                 match layout_funcs.get(s.as_str()) {
                     Some(f) => {
-                        layout.set_layout_function(f.clone());
+                        layout.set_layout_function(*f);
                         Ok(())
                     }
                     None => Err(PenroseError::HydrationState(format!(
