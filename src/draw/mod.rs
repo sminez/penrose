@@ -9,7 +9,7 @@ use crate::core::{
     xconnection::Atom,
 };
 
-#[cfg(feature = "xcb_layer")]
+#[cfg(feature = "xcb")]
 use crate::xcb::XcbError;
 
 use std::{convert::TryFrom, convert::TryInto};
@@ -30,13 +30,13 @@ pub enum DrawError {
     UnknownFont(String),
 
     /// Wrapper around XCB implementation errors for [draw][crate::draw] traits
-    #[cfg(feature = "xcb_layer")]
+    #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] XcbError),
 
     /// An attempt to use the cairo C API failed when using an XCB implementation
     /// of [Draw] or [DrawContext]
-    #[cfg(feature = "xcb_layer")]
+    #[cfg(feature = "xcb")]
     #[error("Error calling Cairo API: {0}")]
     Cairo(#[from] cairo::Error),
 }

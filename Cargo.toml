@@ -7,14 +7,18 @@ license = "MIT"
 repository = "https://github.com/sminez/penrose"
 documentation = "https://docs.rs/penrose"
 readme = "README.md"
-description = """
-A tiling window manager library/WM for X11 in the style of dwm and Xmonad.
-"""
+description = "A tiling window manager library inspired by dwm and xmonad"
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md"
+]
+keywords = [ "windowmanager", "window", "manager", "x11" ]
+categories = [ "window manager" ]
 
 [features]
-default = ["draw", "xcb_layer"]
-draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
-xcb_layer = ["xcb"]
+default = ["xcb", "xcb_draw"]
+xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 
 [dependencies]
 log = "0.4.8"

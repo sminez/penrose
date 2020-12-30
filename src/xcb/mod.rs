@@ -10,14 +10,14 @@ use crate::core::{
 };
 
 pub mod api;
-#[cfg(feature = "draw")]
+#[cfg(feature = "xcb_draw")]
 pub mod draw;
 pub mod xconn;
 
 #[doc(inline)]
 pub use api::Api;
 #[doc(inline)]
-#[cfg(feature = "draw")]
+#[cfg(feature = "xcb_draw")]
 pub use draw::{XcbDraw, XcbDrawContext};
 #[doc(inline)]
 pub use xconn::XcbConnection;
@@ -63,12 +63,12 @@ pub enum XcbError {
     XcbGeneric(#[from] ::xcb::Error<::xcb::ffi::base::xcb_generic_error_t>),
 
     /// Error in using the pango API
-    #[cfg(feature = "draw")]
+    #[cfg(feature = "xcb_draw")]
     #[error("Error calling Pango API: {0}")]
     Pango(String),
 
     /// An attempt was made to fetch a surface for a client before creating it
-    #[cfg(feature = "draw")]
+    #[cfg(feature = "xcb_draw")]
     #[error("no cairo surface for {0}")]
     UnintialisedSurface(WinId),
 }

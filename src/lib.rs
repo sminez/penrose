@@ -21,11 +21,9 @@ extern crate log;
 pub mod core;
 
 pub mod contrib;
-
-#[cfg(feature = "draw")]
 pub mod draw;
 
-#[cfg(feature = "xcb_layer")]
+#[cfg(feature = "xcb")]
 pub mod xcb;
 
 // top level re-exports
@@ -37,7 +35,7 @@ pub use crate::core::{
     ring::{Direction::*, InsertPoint, Selector},
 };
 
-#[cfg(feature = "xcb_layer")]
+#[cfg(feature = "xcb")]
 #[doc(inline)]
 pub use crate::xcb::{new_xcb_backed_window_manager, new_xcb_connection, XcbConnection};
 
@@ -47,7 +45,6 @@ pub enum PenroseError {
     /// Something went wrong using the [draw] module.
     ///
     /// See [DrawError][crate::draw::DrawError] for variants.
-    #[cfg(feature = "draw")]
     #[error(transparent)]
     Draw(#[from] crate::draw::DrawError),
 
@@ -90,7 +87,7 @@ pub enum PenroseError {
     /// Something went wrong using the [xcb] module.
     ///
     /// See [XcbError][crate::xcb::XcbError] for variants.
-    #[cfg(feature = "xcb_layer")]
+    #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] crate::xcb::XcbError),
 }

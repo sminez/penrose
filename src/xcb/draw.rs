@@ -5,11 +5,11 @@
  * This is a reference implementation and requires that you have the relevant C dependencies
  * installed on your system for it to work.
  */
-#[cfg(feature = "draw")]
+#[cfg(feature = "xcb_draw")]
 #[doc(inline)]
 pub use inner::{XcbDraw, XcbDrawContext};
 
-#[cfg(feature = "draw")]
+#[cfg(feature = "xcb_draw")]
 mod inner {
     use crate::{
         core::{
