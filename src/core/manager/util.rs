@@ -179,14 +179,16 @@ pub(super) fn apply_arrange_actions(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{
-        layout::{mock_layout, Layout, LayoutConf},
-        ring::InsertPoint,
-        workspace::Workspace,
-        xconnection::StubXConn,
+    use crate::{
+        core::{
+            layout::{mock_layout, Layout, LayoutConf},
+            ring::InsertPoint,
+            workspace::Workspace,
+            xconnection::StubXConn,
+        },
+        PenroseError,
     };
 
-    use anyhow::anyhow;
     use test_case::test_case;
 
     use std::{cell::RefCell, collections::HashMap, rc::Rc, str::FromStr};
@@ -209,7 +211,7 @@ mod tests {
             match Atom::from_str(name)? {
                 Atom::WmName if self.wm_name => Ok("wm_name".into()),
                 Atom::NetWmName if self.net_wm_name => Ok("net_wm_name".into()),
-                _ => Err(anyhow!("")),
+                _ => Err(PenroseError::Raw("".into())),
             }
         }
     }

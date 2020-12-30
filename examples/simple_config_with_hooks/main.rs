@@ -44,7 +44,8 @@ fn main() -> Result<()> {
     // penrose will log useful information about the current state of the WindowManager during
     // normal operation that can be used to drive scripts and related programs. Additional debug
     // output can be helpful if you are hitting issues.
-    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())?;
+    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())
+        .expect("failed to init logging");
 
     // Config structs can be intiialised directly as all fields are public.
     // A default config is provided which sets sensible (but minimal) values for each field.

@@ -4,12 +4,11 @@ use crate::{
         data_types::{Point, WinId},
         manager::WindowManager,
     },
-    Result,
+    PenroseError, Result,
 };
 
 use std::{collections::HashMap, convert::TryFrom};
 
-use anyhow::anyhow;
 use strum::{EnumIter, IntoEnumIterator};
 
 /// Some action to be run by a user key binding
@@ -79,7 +78,7 @@ impl From<MouseButton> for u8 {
 }
 
 impl TryFrom<u8> for MouseButton {
-    type Error = anyhow::Error;
+    type Error = PenroseError;
 
     fn try_from(n: u8) -> Result<Self> {
         match n {
@@ -88,7 +87,7 @@ impl TryFrom<u8> for MouseButton {
             3 => Ok(Self::Right),
             4 => Ok(Self::ScrollUp),
             5 => Ok(Self::ScrollDown),
-            _ => Err(anyhow!("unknown mouse button {}", n)),
+            _ => Err(PenroseError::UnknownMouseButton(n)),
         }
     }
 }
@@ -124,7 +123,7 @@ impl From<ModifierKey> for u16 {
 }
 
 impl TryFrom<&str> for ModifierKey {
-    type Error = anyhow::Error;
+    type Error = PenroseError;
 
     fn try_from(s: &str) -> Result<Self> {
         match s {
@@ -132,7 +131,7 @@ impl TryFrom<&str> for ModifierKey {
             "A" => Ok(Self::Alt),
             "S" => Ok(Self::Shift),
             "M" => Ok(Self::Meta),
-            _ => Err(anyhow!("unknown modifier {}", s)),
+            _ => Err(PenroseError::UnknownModifier(s.into())),
         }
     }
 }

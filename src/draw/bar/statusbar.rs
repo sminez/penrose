@@ -7,11 +7,8 @@ use crate::{
         manager::WindowManager,
         xconnection::Atom,
     },
-    draw::{Color, Draw, DrawContext, Widget},
-    Result,
+    draw::{Color, Draw, DrawContext, Result, Widget},
 };
-
-use anyhow::Context;
 
 use std::fmt;
 
@@ -70,8 +67,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
             bg: bg.into(),
             active_screen: 0,
         };
-        bar.init_for_screens()
-            .with_context(|| "failing to initilise StatusBar")?;
+        bar.init_for_screens()?;
         fonts.iter().for_each(|f| bar.drw.register_font(f));
 
         Ok(bar)
@@ -79,27 +75,19 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
 
     fn init_for_screens(&mut self) -> Result<()> {
         let screen_sizes = self.drw.screen_sizes()?;
-        let n = screen_sizes.len();
-
         self.screens = screen_sizes
             .iter()
-            .enumerate()
-            .map(|(i, r)| {
+            .map(|r| {
                 let (sx, sy, sw, sh) = r.values();
                 let y = match self.position {
                     Position::Top => sy as usize,
                     Position::Bottom => sh as usize - self.hpx,
                 };
-                let id = self
-                    .drw
-                    .new_window(
-                        WinType::InputOutput(Atom::NetWindowTypeDock),
-                        Region::new(sx, y as u32, sw, self.hpx as u32),
-                        false,
-                    )
-                    .with_context(|| {
-                        format!("failed to initialise bar on screen {} of {}", i, n)
-                    })?;
+                let id = self.drw.new_window(
+                    WinType::InputOutput(Atom::NetWindowTypeDock),
+                    Region::new(sx, y as u32, sw, self.hpx as u32),
+                    false,
+                )?;
 
                 let s = "penrose-statusbar";
                 self.drw.replace_prop(id, Atom::NetWmName, PropVal::Str(s));
@@ -118,10 +106,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     pub fn redraw(&mut self) -> Result<()> {
         for (i, &(id, w)) in self.screens.clone().iter().enumerate() {
             let screen_has_focus = self.active_screen == i;
-            let mut ctx = self
-                .drw
-                .context_for(id)
-                .with_context(|| format!("unable to get DrawContext for {}", id))?;
+            let mut ctx = self.drw.context_for(id)?;
 
             ctx.clear();
 

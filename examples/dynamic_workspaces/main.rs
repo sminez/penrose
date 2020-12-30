@@ -39,7 +39,9 @@ fn my_layouts() -> Vec<Layout> {
 }
 
 fn main() -> Result<()> {
-    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())?;
+    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())
+        .expect("failed to init logging");
+
     let mut config = Config::default();
     config.workspaces(vec!["main"]);
     config.layouts(my_layouts());

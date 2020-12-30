@@ -6,10 +6,8 @@ use crate::{
         screen::Screen,
         xconnection::{Atom, XEvent},
     },
-    xcb::XcbApi,
-    Result,
+    xcb::{Result, XcbApi, XcbError},
 };
-use anyhow::{anyhow, Context};
 use strum::*;
 
 use std::{collections::HashMap, fmt, str::FromStr};
@@ -56,16 +54,14 @@ impl Drop for Api {
 impl Api {
     /// Connect to the X server using the XCB API
     pub fn new() -> Result<Self> {
-        let (conn, _) =
-            xcb::Connection::connect(None).with_context(|| "unable to connect to the X server")?;
-        let root = if let Some(r) = conn.get_setup().roots().next() {
-            r.root()
-        } else {
-            return Err(anyhow!("No screens detected in response from X server!"));
+        let (conn, _) = xcb::Connection::connect(None)?;
+        let root = match conn.get_setup().roots().next() {
+            Some(r) => r.root(),
+            None => return Err(XcbError::NoScreens),
         };
         let randr_base = conn
             .get_extension_data(&mut xcb::randr::id())
-            .ok_or_else(|| anyhow!("unable to fetch extension data"))?
+            .ok_or_else(|| XcbError::Randr("unable to fetch extension data".into()))?
             .first_event();
 
         let check_win = conn.generate_id();
@@ -98,7 +94,7 @@ impl Api {
         let mut roots: Vec<_> = self.conn.get_setup().roots().collect();
         let len = roots.len();
         if ix >= len {
-            Err(anyhow!("Screen index {} out of bounds (len={})", ix, len))
+            Err(XcbError::UnknownScreen(ix, len - 1))
         } else {
             Ok(roots.remove(ix))
         }
@@ -108,14 +104,14 @@ impl Api {
         screen
             .allowed_depths()
             .max_by(|x, y| x.depth().cmp(&y.depth()))
-            .ok_or_else(|| anyhow!("unable to get screen depth"))
+            .ok_or_else(|| XcbError::QueryFailed("screen depth"))
     }
 
     pub(crate) fn get_visual_type<'a>(&self, depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
         depth
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
-            .ok_or_else(|| anyhow!("unable to get visual type"))
+            .ok_or_else(|| XcbError::QueryFailed("visual typw"))
     }
 }
 
@@ -130,8 +126,7 @@ impl XcbApi for Api {
         }
 
         Ok(xcb::intern_atom(&self.conn, false, name)
-            .get_reply()
-            .with_context(|| format!("unable to intern xcb atom '{}'", name))?
+            .get_reply()?
             .atom())
     }
 
@@ -149,7 +144,7 @@ impl XcbApi for Api {
         let cookie = xcb::get_property(&self.conn, false, id, a, xcb::ATOM_ANY, 0, 1024);
         let reply = cookie.get_reply()?;
         if reply.value_len() == 0 {
-            Err(anyhow!("'{}' was empty for client: {}", atom.as_ref(), id))
+            Err(XcbError::MissingProp(atom, id))
         } else {
             Ok(reply.value()[0])
         }
@@ -159,14 +154,7 @@ impl XcbApi for Api {
     fn get_str_prop(&self, id: WinId, name: &str) -> Result<String> {
         let a = self.atom(name)?;
         let cookie = xcb::get_property(&self.conn, false, id, a, xcb::ATOM_ANY, 0, 1024);
-        Ok(String::from_utf8(
-            cookie
-                .get_reply()
-                .with_context(|| format!("error fetching string property for {}", id))?
-                .value()
-                .to_vec(),
-        )
-        .with_context(|| format!("invalid UTF8 in string property '{}' for {}", name, id))?)
+        Ok(String::from_utf8(cookie.get_reply()?.value().to_vec())?)
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_change_property
@@ -210,15 +198,9 @@ impl XcbApi for Api {
 
             WinType::InputOutput(a) => {
                 let colormap = self.conn.generate_id();
-                let screen = self.screen(0).with_context(|| {
-                    "failed to get requested screen when creating InputOutput Window"
-                })?;
-                let depth = self.get_depth(&screen).with_context(|| {
-                    "failed to get screen depth when creating InputOutput Window"
-                })?;
-                let visual = self.get_visual_type(&depth).with_context(|| {
-                    "failed to get visual_type when creating InputOutput Window"
-                })?;
+                let screen = self.screen(0)?;
+                let depth = self.get_depth(&screen)?;
+                let visual = self.get_visual_type(&depth)?;
 
                 xcb::xproto::create_colormap(
                     &self.conn,
@@ -304,9 +286,7 @@ impl XcbApi for Api {
     }
 
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
-        let atom = self
-            .atom(atom_name)
-            .with_context(|| format!("failed to intern {}", atom_name))?;
+        let atom = self.atom(atom_name)?;
         let wm_protocols = self.known_atom(Atom::WmProtocols);
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
@@ -325,9 +305,7 @@ impl XcbApi for Api {
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
-        let res = xcb::get_geometry(&self.conn, id)
-            .get_reply()
-            .with_context(|| format!("failed to get window geometry for {}", id))?;
+        let res = xcb::get_geometry(&self.conn, id).get_reply()?;
         Ok(Region::new(
             res.x() as u32,
             res.y() as u32,
@@ -343,8 +321,7 @@ impl XcbApi for Api {
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_crtc_info
         Ok(resources
-            .get_reply()
-            .with_context(|| "unable to read randr screen resources")?
+            .get_reply()?
             .crtcs()
             .iter()
             .flat_map(|c| xcb::randr::get_crtc_info(&self.conn, *c, 0).get_reply())
@@ -371,10 +348,9 @@ impl XcbApi for Api {
     }
 
     fn current_clients(&self) -> Result<Vec<WinId>> {
-        xcb::query_tree(&self.conn, self.root)
+        Ok(xcb::query_tree(&self.conn, self.root)
             .get_reply()
-            .map_err(|e| anyhow!("unable to read current active clients: {}", e))
-            .map(|reply| reply.children().into())
+            .map(|reply| reply.children().into())?)
     }
 
     fn cursor_position(&self) -> Point {
@@ -459,9 +435,7 @@ impl XcbApi for Api {
             | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
-        xcb::randr::select_input(&self.conn, self.root, mask)
-            .request_check()
-            .with_context(|| "failed to set randr notify mask")?;
+        xcb::randr::select_input(&self.conn, self.root, mask).request_check()?;
         self.flush();
         Ok(())
     }

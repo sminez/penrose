@@ -1,15 +1,12 @@
 //! Helpers and utilities for using XCB as a back end for penrose
-use crate::{
-    core::{
-        bindings::{KeyCode, MouseState},
-        config::Config,
-        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
-        hooks::Hook,
-        manager::WindowManager,
-        screen::Screen,
-        xconnection::{Atom, XEvent},
-    },
-    Result,
+use crate::core::{
+    bindings::{KeyCode, MouseState},
+    config::Config,
+    data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+    hooks::Hook,
+    manager::WindowManager,
+    screen::Screen,
+    xconnection::{Atom, XEvent},
 };
 
 pub mod api;
@@ -25,17 +22,71 @@ pub use draw::{XcbDraw, XcbDrawContext};
 #[doc(inline)]
 pub use xconn::XcbConnection;
 
+/// Enum to store the various ways that operations can fail inside of the
+/// XCB implementations of penrose traits.
+#[derive(thiserror::Error, Debug)]
+pub enum XcbError {
+    /// Unable to establish a connection to the X server
+    #[error("Unable to connect to the X server via XCB")]
+    Connection(#[from] ::xcb::ConnError),
+
+    /// A xcb query failed to return a value
+    #[error("Xcb query returned None: {0}")]
+    EmptyResponse(String),
+
+    /// A requested client property was empty
+    #[error("'{}' prop is not set for client {1}", .0.as_ref())]
+    MissingProp(Atom, WinId),
+
+    /// No screens were found
+    #[error("Unable to fetch setup roots from XCB")]
+    NoScreens,
+
+    /// A string property on a window was invalid utf8
+    #[error("Requested property was not valid UTF8")]
+    NonUtf8Prop(#[from] std::string::FromUtf8Error),
+
+    /// An attempt to determine a certain property of the running system failed
+    #[error("Unable to determine required value: {0}")]
+    QueryFailed(&'static str),
+
+    /// A query via the randr API was unsuccessful
+    #[error("randr query failed: {0}")]
+    Randr(String),
+
+    /// Screen data for an unknown screen was requested
+    #[error("The requested screen index was out of bounds: {0} > {1}")]
+    UnknownScreen(usize, usize),
+
+    /// Wrapper around low level XCB C API errors
+    #[error("Error making xcb query")]
+    XcbGeneric(#[from] ::xcb::Error<::xcb::ffi::base::xcb_generic_error_t>),
+
+    /// Error in using the pango API
+    #[cfg(feature = "draw")]
+    #[error("Error calling Pango API: {0}")]
+    Pango(String),
+
+    /// An attempt was made to fetch a surface for a client before creating it
+    #[cfg(feature = "draw")]
+    #[error("no cairo surface for {0}")]
+    UnintialisedSurface(WinId),
+}
+
+/// Result type for fallible methods using XCB
+pub type Result<T> = std::result::Result<T, XcbError>;
+
 /// Construct a default [XcbConnection] using the penrose provided [Api]
 /// implementation of [XcbApi].
-pub fn new_xcb_connection() -> Result<XcbConnection<Api>> {
-    XcbConnection::new(Api::new()?)
+pub fn new_xcb_connection() -> crate::Result<XcbConnection<Api>> {
+    Ok(XcbConnection::new(Api::new()?)?)
 }
 
 /// Construct a penrose [WindowManager] backed by the default [xcb][crate::xcb] backend.
 pub fn new_xcb_backed_window_manager(
     config: Config,
     hooks: Vec<Box<dyn Hook>>,
-) -> Result<WindowManager> {
+) -> crate::Result<WindowManager> {
     let conn = XcbConnection::new(Api::new()?)?;
     Ok(WindowManager::init(config, Box::new(conn), hooks))
 }

@@ -1,5 +1,5 @@
 //! Simple data types and enums
-use crate::core::xconnection::Atom;
+use crate::{core::xconnection::Atom, PenroseError, Result};
 
 /// Output of a Layout function: the new position a window should take
 pub type ResizeAction = (WinId, Option<Region>);
@@ -155,38 +155,40 @@ impl Region {
     }
 
     /// Divides this region into two columns where the first has the given width.
-    ///
-    /// Panics if new_width is not within the region.
-    pub fn split_at_width(&self, new_width: u32) -> (Region, Region) {
-        assert!(new_width < self.w, "Split out of range.");
-        (
-            Region {
-                w: new_width,
-                ..*self
-            },
-            Region {
-                x: self.x + new_width,
-                w: self.w - new_width,
-                ..*self
-            },
-        )
+    pub fn split_at_width(&self, new_width: u32) -> Result<(Region, Region)> {
+        if new_width > self.w {
+            Err(PenroseError::SplitError(new_width, self.w))
+        } else {
+            Ok((
+                Region {
+                    w: new_width,
+                    ..*self
+                },
+                Region {
+                    x: self.x + new_width,
+                    w: self.w - new_width,
+                    ..*self
+                },
+            ))
+        }
     }
 
     /// Divides this region into two rows where the first has the given height.
-    ///
-    /// Panics if new_height is not within the region.
-    pub fn split_at_height(&self, new_height: u32) -> (Region, Region) {
-        assert!(new_height < self.h, "Split out of range.");
-        (
-            Region {
-                h: new_height,
-                ..*self
-            },
-            Region {
-                y: self.y + new_height,
-                h: self.h - new_height,
-                ..*self
-            },
-        )
+    pub fn split_at_height(&self, new_height: u32) -> Result<(Region, Region)> {
+        if new_height > self.h {
+            Err(PenroseError::SplitError(new_height, self.h))
+        } else {
+            Ok((
+                Region {
+                    h: new_height,
+                    ..*self
+                },
+                Region {
+                    y: self.y + new_height,
+                    h: self.h - new_height,
+                    ..*self
+                },
+            ))
+        }
     }
 }

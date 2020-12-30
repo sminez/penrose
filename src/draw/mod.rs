@@ -4,17 +4,45 @@ pub mod bar;
 #[doc(inline)]
 pub use bar::*;
 
-use crate::{
-    core::{
-        data_types::{PropVal, Region, WinId, WinType},
-        xconnection::Atom,
-    },
-    Result,
+use crate::core::{
+    data_types::{PropVal, Region, WinId, WinType},
+    xconnection::Atom,
 };
 
-use anyhow::anyhow;
+#[cfg(feature = "xcb_layer")]
+use crate::xcb::XcbError;
 
 use std::{convert::TryFrom, convert::TryInto};
+
+/// Enum to store the various ways that operations can fail when rendering windows
+#[derive(thiserror::Error, Debug)]
+pub enum DrawError {
+    /// A hex literal provided to create a [Color] was not RGB / RGBA
+    #[error("Invalid Hex color code: {0}")]
+    InvalidHexColor(String),
+
+    /// A string hex code was invalid as a hex literal
+    #[error("Invalid Hex color code")]
+    ParseInt(#[from] std::num::ParseIntError),
+
+    /// An attempt was made to use a font that had not beed registered
+    #[error("'{0}' is has not been registered as a font")]
+    UnknownFont(String),
+
+    /// Wrapper around XCB implementation errors for [draw][crate::draw] traits
+    #[cfg(feature = "xcb_layer")]
+    #[error(transparent)]
+    Xcb(#[from] XcbError),
+
+    /// An attempt to use the cairo C API failed when using an XCB implementation
+    /// of [Draw] or [DrawContext]
+    #[cfg(feature = "xcb_layer")]
+    #[error("Error calling Cairo API: {0}")]
+    Cairo(#[from] cairo::Error),
+}
+
+/// Result type for fallible methods on [Draw] and [DrawContext]
+pub type Result<T> = std::result::Result<T, DrawError>;
 
 #[derive(Clone, Debug, PartialEq)]
 /// A set of styling options for a text string
@@ -86,7 +114,7 @@ impl From<(f64, f64, f64, f64)> for Color {
 }
 
 impl TryFrom<String> for Color {
-    type Error = anyhow::Error;
+    type Error = DrawError;
 
     fn try_from(s: String) -> Result<Color> {
         (&s[..]).try_into()
@@ -94,7 +122,7 @@ impl TryFrom<String> for Color {
 }
 
 impl TryFrom<&str> for Color {
-    type Error = anyhow::Error;
+    type Error = DrawError;
 
     fn try_from(s: &str) -> Result<Color> {
         let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(&s), 16)?;
@@ -104,10 +132,7 @@ impl TryFrom<&str> for Color {
         } else if s.len() == 9 {
             Ok(Self::new_from_hex(hex))
         } else {
-            Err(anyhow!(
-                "failed to parse {} into a Color, invalid length",
-                &s
-            ))
+            Err(DrawError::InvalidHexColor(s.into()))
         }
     }
 }

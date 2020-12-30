@@ -17,11 +17,11 @@ draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 xcb_layer = ["xcb"]
 
 [dependencies]
-anyhow = "1.0.32"
 log = "0.4.8"
 nix = "0.17.0"
 strum = { version = "0.19.2", features = ["derive"] }
 strum_macros = "0.19.2"
+thiserror = "1.0"
 
 cairo-rs = { version = "0.9.1", features = ["xcb"], optional = true }
 cairo-sys-rs = { version = "0.10.0", optional = true }

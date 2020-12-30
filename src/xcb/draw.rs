@@ -16,18 +16,16 @@ mod inner {
             data_types::{PropVal, Region, WinId, WinType},
             xconnection::Atom,
         },
-        draw::{Color, Draw, DrawContext},
-        xcb::XcbApi,
-        Result,
+        draw::{Color, Draw, DrawContext, DrawError, Result},
+        xcb::{XcbApi, XcbError},
     };
 
-    use anyhow::{anyhow, Context};
     use pangocairo::functions::{create_layout, show_layout};
 
     use std::collections::HashMap;
 
     fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
-        create_layout(ctx).ok_or_else(|| anyhow!("unable to create pango layout"))
+        Ok(create_layout(ctx).ok_or_else(|| XcbError::Pango("unable to create layout".into()))?)
     }
 
     #[derive(Clone, Debug)]
@@ -54,21 +52,10 @@ mod inner {
 
         fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<WinId> {
             let (_, _, w, h) = r.values();
-            let id = self
-                .api
-                .create_window(ty, r, managed)
-                .with_context(|| "failed to create XcbDraw window")?;
-            let xcb_screen = self.api.screen(0).with_context(|| {
-                "failed to get XCB handle for screen while creating XcbDraw window"
-            })?;
-            let depth = self
-                .api
-                .get_depth(&xcb_screen)
-                .with_context(|| "failed to get depth while creating XcbDraw window")?;
-            let mut visualtype = self
-                .api
-                .get_visual_type(&depth)
-                .with_context(|| "failed to get visual_type while creating XcbDraw window")?;
+            let id = self.api.create_window(ty, r, managed)?;
+            let xcb_screen = self.api.screen(0)?;
+            let depth = self.api.get_depth(&xcb_screen)?;
+            let mut visualtype = self.api.get_visual_type(&depth)?;
 
             let surface = unsafe {
                 let conn_ptr = self.api.conn().get_raw_conn() as *mut cairo_sys::xcb_connection_t;
@@ -82,8 +69,7 @@ mod inner {
                     ),
                     w as i32,
                     h as i32,
-                )
-                .with_context(|| "Error creating cairo surface in XcbDraw")?
+                )?
             };
 
             surface.set_size(w as i32, h as i32).unwrap();
@@ -93,7 +79,7 @@ mod inner {
         }
 
         fn screen_sizes(&self) -> Result<Vec<Region>> {
-            self.api.screen_sizes()
+            Ok(self.api.screen_sizes()?)
         }
 
         fn register_font(&mut self, font_name: &str) {
@@ -107,7 +93,7 @@ mod inner {
             let ctx = cairo::Context::new(
                 self.surfaces
                     .get(&id)
-                    .ok_or_else(|| anyhow!("uninitilaised window surface: {}", id))?,
+                    .ok_or_else(|| XcbError::UnintialisedSurface(id))?,
             );
 
             Ok(Self::Ctx {
@@ -155,7 +141,7 @@ mod inner {
             let mut font = self
                 .fonts
                 .get_mut(font_name)
-                .ok_or_else(|| anyhow!("unknown font: {}", font_name))?
+                .ok_or_else(|| DrawError::UnknownFont(font_name.into()))?
                 .clone();
             font.set_size(point_size * pango::SCALE);
             self.font = Some(font);
@@ -218,8 +204,7 @@ mod inner {
         }
 
         fn text_extent(&self, s: &str) -> Result<(f64, f64)> {
-            let layout = pango_layout(&self.ctx)
-                .with_context(|| "failed creating pango layout in XcbDraw")?;
+            let layout = pango_layout(&self.ctx)?;
             if let Some(ref font) = self.font {
                 layout.set_font_description(Some(font));
             }

@@ -7,8 +7,7 @@ use crate::{
         manager::WindowManager,
         ring::Selector,
     },
-    draw::{Color, DrawContext, TextStyle, Widget},
-    Result,
+    draw::{Color, DrawContext, Result, TextStyle, Widget},
 };
 
 const PADDING: f64 = 3.0;

@@ -9,8 +9,7 @@ pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspa
 
 use crate::{
     core::hooks::Hook,
-    draw::{Color, Draw, DrawContext, TextStyle},
-    Result,
+    draw::{Color, Draw, DrawContext, Result, TextStyle},
 };
 
 const MAX_ACTIVE_WINDOW_CHARS: usize = 80;

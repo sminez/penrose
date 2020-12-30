@@ -120,7 +120,7 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
     }
 
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
-        self.api.send_client_event(id, atom_name)
+        Ok(self.api.send_client_event(id, atom_name)?)
     }
 
     fn focused_client(&self) -> WinId {
@@ -246,7 +246,7 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
-        self.api.window_geometry(id)
+        Ok(self.api.window_geometry(id)?)
     }
 
     fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen) {
@@ -276,15 +276,15 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
     }
 
     fn str_prop(&self, id: u32, name: &str) -> Result<String> {
-        self.api.get_str_prop(id, name)
+        Ok(self.api.get_str_prop(id, name)?)
     }
 
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32> {
-        self.api.get_atom_prop(id, Atom::from_str(name)?)
+        Ok(self.api.get_atom_prop(id, Atom::from_str(name)?)?)
     }
 
     fn intern_atom(&self, atom: &str) -> Result<u32> {
-        self.api.atom(atom)
+        Ok(self.api.atom(atom)?)
     }
 
     // - Release all of the keybindings we are holding on to
