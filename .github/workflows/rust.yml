@@ -55,7 +55,7 @@ jobs:
       with:
         components: clippy
     - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
-    - run: cargo clippy --workspace --all-targets --verbose
+    - run: cargo clippy --workspace --all-targets --all-features --examples --tests --verbose
 
   rustdoc-links:
     name: Check doc links are valid

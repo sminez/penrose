@@ -104,14 +104,14 @@ impl Api {
         screen
             .allowed_depths()
             .max_by(|x, y| x.depth().cmp(&y.depth()))
-            .ok_or_else(|| XcbError::QueryFailed("screen depth"))
+            .ok_or(XcbError::QueryFailed("screen depth"))
     }
 
     pub(crate) fn get_visual_type<'a>(&self, depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
         depth
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
-            .ok_or_else(|| XcbError::QueryFailed("visual typw"))
+            .ok_or(XcbError::QueryFailed("visual type"))
     }
 }
 

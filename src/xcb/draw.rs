@@ -93,7 +93,7 @@ mod inner {
             let ctx = cairo::Context::new(
                 self.surfaces
                     .get(&id)
-                    .ok_or_else(|| XcbError::UnintialisedSurface(id))?,
+                    .ok_or(XcbError::UnintialisedSurface(id))?,
             );
 
             Ok(Self::Ctx {

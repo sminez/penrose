@@ -8,10 +8,10 @@ build-release:
 
 .PHONY: check-all
 check-all:
-	cargo test
 	cargo fmt --all -- --check
-	cargo clippy --workspace --all-targets
+	cargo clippy --workspace --all-targets --all-features --examples --tests
 	cargo rustdoc --all-features -- -D warnings
+	cargo test
 
 .PHONY: doc
 doc:

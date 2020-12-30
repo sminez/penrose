@@ -64,7 +64,7 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
     let mut buff = String::new();
     Ok(child
         .stdout
-        .ok_or_else(|| PenroseError::SpawnProc(s))?
+        .ok_or(PenroseError::SpawnProc(s))?
         .read_to_string(&mut buff)
         .map(|_| buff)?)
 }
