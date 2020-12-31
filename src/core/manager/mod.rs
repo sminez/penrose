@@ -147,8 +147,7 @@ impl WindowManager {
         self.hooks.set(hooks);
         self.workspaces
             .iter_mut()
-            .map(|w| w.restore_layout_functions(&layout_funcs))
-            .collect::<Result<()>>()?;
+            .try_for_each(|w| w.restore_layout_functions(&layout_funcs))?;
 
         util::validate_hydrated_wm_state(self)?;
         self.init();
@@ -1106,8 +1105,10 @@ mod tests {
 
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> WindowManager {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
-        let mut conf = Config::default();
-        conf.layouts = test_layouts();
+        let conf = Config {
+            layouts: test_layouts(),
+            ..Default::default()
+        };
         let mut wm = WindowManager::new(conf, Box::new(conn), vec![]);
         wm.init();
 

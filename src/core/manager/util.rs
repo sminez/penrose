@@ -188,24 +188,21 @@ pub(super) fn validate_hydrated_wm_state(wm: &mut WindowManager) -> Result<()> {
         .cloned()
         .collect();
 
-    if missing_ids.len() > 0 {
-        missing_ids.sort();
+    if !missing_ids.is_empty() {
+        missing_ids.sort_unstable();
         return Err(PenroseError::MissingClientIds(missing_ids));
     }
 
     // Workspace clients are all need to be present in the client_map
-    wm.workspaces
-        .iter()
-        .map(|w| {
-            if w.iter().all(|id| wm.client_map.contains_key(id)) {
-                Ok(())
-            } else {
-                Err(PenroseError::HydrationState(
-                    "one or more workspace clients we not in known client state".into(),
-                ))
-            }
-        })
-        .collect::<Result<()>>()?;
+    wm.workspaces.iter().try_for_each(|w| {
+        if w.iter().all(|id| wm.client_map.contains_key(id)) {
+            Ok(())
+        } else {
+            Err(PenroseError::HydrationState(
+                "one or more workspace clients we not in known client state".into(),
+            ))
+        }
+    })?;
 
     // If current focused client is not in the client_map then it was most likely being
     // managed by a user defined hook.

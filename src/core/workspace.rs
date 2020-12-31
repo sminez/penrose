@@ -67,23 +67,20 @@ impl Workspace {
         &mut self,
         layout_funcs: &HashMap<&str, LayoutFunc>,
     ) -> Result<()> {
-        self.layouts
-            .iter_mut()
-            .map(|layout| {
-                let s = &layout.symbol;
-                match layout_funcs.get(s.as_str()) {
-                    Some(f) => {
-                        layout.set_layout_function(*f);
-                        Ok(())
-                    }
-                    None => Err(PenroseError::HydrationState(format!(
-                        "'{}' is not a known layout symbol: {:?}",
-                        layout.symbol,
-                        layout_funcs.keys()
-                    ))),
+        self.layouts.iter_mut().try_for_each(|layout| {
+            let s = &layout.symbol;
+            match layout_funcs.get(s.as_str()) {
+                Some(f) => {
+                    layout.set_layout_function(*f);
+                    Ok(())
                 }
-            })
-            .collect::<Result<()>>()
+                None => Err(PenroseError::HydrationState(format!(
+                    "'{}' is not a known layout symbol: {:?}",
+                    layout.symbol,
+                    layout_funcs.keys()
+                ))),
+            }
+        })
     }
 
     /// The number of clients currently on this workspace

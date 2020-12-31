@@ -13,7 +13,7 @@ use penrose::{
     },
     PenroseError,
 };
-use serde_json;
+
 use std::collections::HashMap;
 
 mod common;
