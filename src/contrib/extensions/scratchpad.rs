@@ -45,8 +45,11 @@ impl Scratchpad {
     /// Create a new Scratchpad for holding 'prog'. 'w' and 'h' are the percentage width and height
     /// of the active screen that you want the client to take up when visible.
     /// NOTE: this function will panic if 'w' or 'h' are not within the range 0.0 - 1.0
-    pub fn new(prog: impl Into<String>, w: f32, h: f32) -> Scratchpad {
-        if w < 0.0 || w > 1.0 || h < 0.0 || h > 1.0 {
+    pub fn new<S>(prog: S, w: f32, h: f32) -> Scratchpad
+    where
+        S: Into<String>,
+    {
+        if !(0.0..=1.0).contains(&w) || !(0.0..=1.0).contains(&h) {
             panic!("Scratchpad: w & h must be between 0.0 and 1.0");
         }
 

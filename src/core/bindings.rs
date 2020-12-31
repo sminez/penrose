@@ -27,6 +27,7 @@ pub(crate) type CodeMap = HashMap<String, u8>;
 
 /// A key press and held modifiers
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct KeyCode {
     /// The held modifier mask
     pub mask: u16,
@@ -52,6 +53,7 @@ impl KeyCode {
 
 /// Known mouse buttons for binding actions
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MouseButton {
     /// 1
     Left,
@@ -94,6 +96,7 @@ impl TryFrom<u8> for MouseButton {
 
 /// Known modifier keys for bindings
 #[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ModifierKey {
     /// Control
     Ctrl,
@@ -138,6 +141,7 @@ impl TryFrom<&str> for ModifierKey {
 
 /// A mouse state specification indicating the button and modifiers held
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MouseState {
     button: MouseButton,
     modifiers: Vec<ModifierKey>,
@@ -170,6 +174,7 @@ impl MouseState {
 
 /// The types of mouse events represented by a MouseEvent
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MouseEventKind {
     /// A button was pressed
     Press,
@@ -181,6 +186,7 @@ pub enum MouseEventKind {
 
 /// A mouse movement or button event
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MouseEvent {
     /// The ID of the window that was contained the click
     pub id: WinId,

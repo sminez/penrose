@@ -6,6 +6,7 @@ use crate::{
         config::Config,
         data_types::{Change, Point, Region, WinId},
         hooks::Hook,
+        layout::LayoutFunc,
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
@@ -36,6 +37,36 @@ macro_rules! run_hooks {
     };
 }
 
+// NOTE: Helpers for stubbing out non-serializable state from the WindowManager
+//       when deserializing with serde. WindowManager::hydrate_and_init MUST
+//       be called following serialization otherwise the WindowManager will
+//       panic on init.
+
+#[cfg(feature = "serde")]
+struct StubConn {}
+#[cfg(feature = "serde")]
+impl crate::core::xconnection::StubXConn for StubConn {
+    // NOTE: panicking here as it is the first XConn method to be called in __init
+    fn mock_current_outputs(&self) -> Vec<Screen> {
+        panic!("StubConn is not usable as a real XConn impl: call hydrate_and_init instead");
+    }
+
+    // NOTE: panicking here as it is the first XConn method to be called in grab_keys_and_run
+    fn mock_wait_for_event(&self) -> Option<crate::core::xconnection::XEvent> {
+        panic!("StubConn is not usable as a real XConn impl: call hydrate_and_init instead");
+    }
+}
+
+#[cfg(feature = "serde")]
+fn default_conn() -> Box<dyn XConn> {
+    Box::new(StubConn {})
+}
+
+#[cfg(feature = "serde")]
+fn default_hooks() -> Cell<Vec<Box<dyn Hook>>> {
+    Cell::new(Vec::new())
+}
+
 /**
  * WindowManager is the primary struct / owner of the event loop for penrose.
  * It handles most (if not all) of the communication with XCB and responds to
@@ -43,12 +74,15 @@ macro_rules! run_hooks {
  * and bound on init and then triggered via grabbed X events in the main loop
  * along with everything else.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager {
+    #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
     conn: Box<dyn XConn>,
     config: Config,
     screens: Ring<Screen>,
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
+    #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
     hooks: Cell<Vec<Box<dyn Hook>>>,
     previous_workspace: usize,
     client_insert_point: InsertPoint,
@@ -75,15 +109,10 @@ impl fmt::Debug for WindowManager {
 
 impl WindowManager {
     /**
-     * Initialise a new window manager instance using a chosen [XConn] backed to communicate
+     * Construct a new window manager instance using a chosen [XConn] backed to communicate
      * with the X server.
-     *
-     * This initialises the [WindowManager] internal state but does not start processing any
-     * events from the X server. If you need to perform any custom setup logic with the
-     * [WindowManager] itself, it should be run after calling this method and before
-     * [WindowManager::grab_keys_and_run].
      */
-    pub fn init(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
+    pub fn new(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
         let layouts = config.layouts.clone();
 
         debug!("Building initial workspaces");
@@ -93,29 +122,54 @@ impl WindowManager {
             .map(|name| Workspace::new(name, layouts.to_vec()))
             .collect();
 
-        let mut wm = WindowManager {
+        Self {
             conn,
             config,
             screens: Ring::new(vec![]),
-            workspaces: Ring::new(workspaces),
+            workspaces,
             client_map: HashMap::new(),
             previous_workspace: 0,
             hooks: Cell::new(hooks),
             client_insert_point: InsertPoint::First,
             focused_client: None,
             running: false,
-        };
+        }
+    }
 
+    /// Restore missing state following serde deserialization
+    pub fn hydrate_and_init(
+        &mut self,
+        conn: Box<dyn XConn>,
+        hooks: Vec<Box<dyn Hook>>,
+        layout_funcs: HashMap<&str, LayoutFunc>,
+    ) -> Result<()> {
+        self.conn = conn;
+        self.hooks.set(hooks);
+        self.workspaces
+            .iter_mut()
+            .try_for_each(|w| w.restore_layout_functions(&layout_funcs))?;
+
+        util::validate_hydrated_wm_state(self)?;
+        self.init();
+        Ok(())
+    }
+
+    /**
+     * This initialises the [WindowManager] internal state but does not start processing any
+     * events from the X server. If you need to perform any custom setup logic with the
+     * [WindowManager] itself, it should be run after calling this method and before
+     * [WindowManager::grab_keys_and_run].
+     */
+    pub fn init(&mut self) {
         debug!("Attempting initial screen detection");
-        wm.detect_screens();
+        self.detect_screens();
 
         debug!("Setting EWMH properties");
-        wm.conn.set_wm_properties(str_slice!(wm.config.workspaces));
+        self.conn
+            .set_wm_properties(str_slice!(self.config.workspaces));
 
         debug!("Forcing cursor to first screen");
-        wm.conn.warp_cursor(None, &wm.screens[0]);
-
-        wm
+        self.conn.warp_cursor(None, &self.screens[0]);
     }
 
     // Subset of current immutable state that is needed for processing XEvents into EventActions
@@ -1051,9 +1105,14 @@ mod tests {
 
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> WindowManager {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
-        let mut conf = Config::default();
-        conf.layouts = test_layouts();
-        WindowManager::init(conf, Box::new(conn), vec![])
+        let conf = Config {
+            layouts: test_layouts(),
+            ..Default::default()
+        };
+        let mut wm = WindowManager::new(conf, Box::new(conn), vec![]);
+        wm.init();
+
+        wm
     }
 
     fn test_layouts() -> Vec<Layout> {
@@ -1338,7 +1397,8 @@ mod tests {
             num_screens: Cell::new(1),
         };
         let conf = Config::default();
-        let mut wm = WindowManager::init(conf, Box::new(conn), vec![]);
+        let mut wm = WindowManager::new(conf, Box::new(conn), vec![]);
+        wm.init();
 
         // detect_screens is called on init so should have one screen
         assert_eq!(wm.screens.len(), 1);

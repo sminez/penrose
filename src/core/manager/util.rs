@@ -3,11 +3,12 @@ use crate::{
         client::Client,
         data_types::{Region, WinId},
         layout::LayoutConf,
+        manager::WindowManager,
         screen::Screen,
         workspace::{ArrangeActions, Workspace},
         xconnection::{Atom, XConn},
     },
-    Result,
+    PenroseError, Result,
 };
 
 use std::collections::HashMap;
@@ -174,6 +175,44 @@ pub(super) fn apply_arrange_actions(
     for id in actions.floating {
         conn.raise_window(id);
     }
+}
+
+pub(super) fn validate_hydrated_wm_state(wm: &mut WindowManager) -> Result<()> {
+    // If the current clients known to the X server aren't what we have in the client_map
+    // then we can't proceed any further
+    let active_windows = wm.conn.query_for_active_windows();
+    let mut missing_ids: Vec<WinId> = wm
+        .client_map
+        .keys()
+        .filter(|id| !active_windows.contains(id))
+        .cloned()
+        .collect();
+
+    if !missing_ids.is_empty() {
+        missing_ids.sort_unstable();
+        return Err(PenroseError::MissingClientIds(missing_ids));
+    }
+
+    // Workspace clients are all need to be present in the client_map
+    wm.workspaces.iter().try_for_each(|w| {
+        if w.iter().all(|id| wm.client_map.contains_key(id)) {
+            Ok(())
+        } else {
+            Err(PenroseError::HydrationState(
+                "one or more workspace clients we not in known client state".into(),
+            ))
+        }
+    })?;
+
+    // If current focused client is not in the client_map then it was most likely being
+    // managed by a user defined hook.
+    if let Some(id) = wm.focused_client {
+        if !wm.client_map.contains_key(&id) {
+            wm.focused_client = None;
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

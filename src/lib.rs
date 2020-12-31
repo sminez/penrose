@@ -17,6 +17,10 @@
 #[macro_use]
 extern crate log;
 
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
+
 #[macro_use]
 pub mod core;
 
@@ -47,6 +51,14 @@ pub enum PenroseError {
     /// See [DrawError][crate::draw::DrawError] for variants.
     #[error(transparent)]
     Draw(#[from] crate::draw::DrawError),
+
+    /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
+    #[error("unable to rehydrate from serialized state: {0}")]
+    HydrationState(String),
+
+    /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
+    #[error("the following serialized client IDs were not known to the X server: {0:?}")]
+    MissingClientIds(Vec<WinId>),
 
     /// An [IO Error][std::io::Error] was encountered
     #[error(transparent)]

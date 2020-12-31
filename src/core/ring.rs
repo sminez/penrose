@@ -6,10 +6,12 @@ use crate::core::data_types::WinId;
 use std::{
     collections::VecDeque,
     fmt,
+    iter::{FromIterator, IntoIterator},
     ops::{Index, IndexMut},
 };
 
 /// A direction to permute a Ring
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Direction {
     /// increase the index, wrapping if needed
@@ -29,7 +31,8 @@ impl Direction {
 }
 
 /// Where a given element should be inserted into a Ring
-#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum InsertPoint {
     /// At the specified index (last if out of bounds)
     Index(usize),
@@ -78,6 +81,7 @@ impl<'a, T> fmt::Debug for Selector<'a, T> {
  * Supports rotating the position of the elements and rotating which element
  * is focused independently of one another.
  */
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Ring<T> {
     elements: VecDeque<T>,
@@ -360,6 +364,46 @@ impl<T> Index<usize> for Ring<T> {
 impl<T> IndexMut<usize> for Ring<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.elements[index]
+    }
+}
+
+impl<T> FromIterator<T> for Ring<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut ring = Ring::new(Vec::new());
+        for element in iter {
+            ring.push(element);
+        }
+
+        ring
+    }
+}
+
+impl<T> IntoIterator for Ring<T> {
+    type Item = T;
+    type IntoIter = std::collections::vec_deque::IntoIter<T>;
+
+    /// Consumes the `VecDeque` into a front-to-back iterator yielding elements by
+    /// value.
+    fn into_iter(self) -> std::collections::vec_deque::IntoIter<T> {
+        self.elements.into_iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a Ring<T> {
+    type Item = &'a T;
+    type IntoIter = std::collections::vec_deque::Iter<'a, T>;
+
+    fn into_iter(self) -> std::collections::vec_deque::Iter<'a, T> {
+        self.iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut Ring<T> {
+    type Item = &'a mut T;
+    type IntoIter = std::collections::vec_deque::IterMut<'a, T>;
+
+    fn into_iter(self) -> std::collections::vec_deque::IterMut<'a, T> {
+        self.iter_mut()
     }
 }
 

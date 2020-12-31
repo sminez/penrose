@@ -4,6 +4,8 @@ use crate::core::layout::{side_stack, Layout, LayoutConf};
 use std::fmt;
 
 /// The main user facing configuration details
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, PartialEq)]
 pub struct Config {
     /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
     pub workspaces: Vec<String>,

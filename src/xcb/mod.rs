@@ -88,7 +88,10 @@ pub fn new_xcb_backed_window_manager(
     hooks: Vec<Box<dyn Hook>>,
 ) -> crate::Result<WindowManager> {
     let conn = XcbConnection::new(Api::new()?)?;
-    Ok(WindowManager::init(config, Box::new(conn), hooks))
+    let mut wm = WindowManager::new(config, Box::new(conn), hooks);
+    wm.init();
+
+    Ok(wm)
 }
 
 /**

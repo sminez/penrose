@@ -28,8 +28,8 @@ mod inner {
         Ok(create_layout(ctx).ok_or_else(|| XcbError::Pango("unable to create layout".into()))?)
     }
 
-    #[derive(Clone, Debug)]
     /// An XCB based [Draw] implementation backed by pango and cairo
+    #[derive(Clone, Debug)]
     pub struct XcbDraw {
         api: crate::xcb::Api,
         fonts: HashMap<String, pango::FontDescription>,
@@ -128,8 +128,8 @@ mod inner {
         }
     }
 
-    #[derive(Clone, Debug)]
     /// An XCB based drawing context using pango and cairo
+    #[derive(Clone, Debug)]
     pub struct XcbDrawContext {
         ctx: cairo::Context,
         font: Option<pango::FontDescription>,
