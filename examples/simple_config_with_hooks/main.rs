@@ -184,7 +184,8 @@ fn main() -> Result<()> {
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
     // such as configuring initial WindowManager state, running custom code / hooks or spawning
     // external processes such as a start-up script.
-    let mut wm = WindowManager::init(config, Box::new(conn), hooks);
+    let mut wm = WindowManager::new(config, Box::new(conn), hooks);
+    wm.init();
 
     // NOTE: If you are using the default XCB backend provided in the penrose xcb module, then the
     //       construction of the XcbConnection and resulting WindowManager can be done using the

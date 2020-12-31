@@ -11,7 +11,7 @@ check-all:
 	cargo fmt --all -- --check
 	cargo clippy --workspace --all-targets --all-features --examples --tests
 	cargo rustdoc --all-features -- -D warnings
-	cargo test
+	cargo test --all-features
 
 .PHONY: doc
 doc:
@@ -25,9 +25,13 @@ examples:
 run-embeded:
 	cargo build --examples && ./scripts/xephyr.sh
 
+.PHONY: test
+test:
+	cargo test --all-features
+
 .PHONY: test-and-publish
 test-and-publish:
-	cargo test && cargo publish
+	cargo test --all-features && cargo publish
 
 
 # GitHub helpers using the official gh GitHub CLI

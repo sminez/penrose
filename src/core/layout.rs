@@ -102,8 +102,8 @@ impl fmt::Debug for Layout {
     }
 }
 
-// A no-op floating layout that simply satisfies the type required for Layout
-fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+/// A no-op floating layout that simply satisfies the type required for Layout
+pub fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     vec![]
 }
 

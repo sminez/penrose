@@ -56,6 +56,10 @@ pub enum PenroseError {
     #[error("unable to rehydrate from serialized state: {0}")]
     HydrationState(String),
 
+    /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
+    #[error("the following serialized client IDs were not known to the X server: {0:?}")]
+    MissingClientIds(Vec<WinId>),
+
     /// An [IO Error][std::io::Error] was encountered
     #[error(transparent)]
     Io(#[from] std::io::Error),
