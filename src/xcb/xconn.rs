@@ -15,17 +15,18 @@ use crate::{
     core::{
         bindings::{KeyBindings, MouseBindings},
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        manager::WindowManager,
         screen::Screen,
         xconnection::{
             Atom, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS,
             UNMANAGED_WINDOW_TYPES,
         },
     },
-    xcb::XcbApi,
+    xcb::{Api, XcbApi},
     Result,
 };
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 const WM_NAME: &str = "penrose";
 
@@ -71,6 +72,32 @@ impl<X: XcbApi> XcbConnection<X> {
             return win_types.contains(&atom);
         }
         false
+    }
+}
+
+impl XcbConnection<Api> {
+    /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [API]
+    /// to communicate with the X server.
+    pub fn xcb_connectction(&self) -> &xcb::Connection {
+        &self.api.conn()
+    }
+
+    /// The current interned [Atom] values known to the underlying [Api] connection
+    pub fn known_atoms(&self) -> &HashMap<Atom, u32> {
+        &self.api.known_atoms()
+    }
+}
+
+impl WindowManager<XcbConnection<Api>> {
+    /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [API]
+    /// to communicate with the X server.
+    pub fn xcb_connectction(&self) -> &xcb::Connection {
+        &self.conn().xcb_connectction()
+    }
+
+    /// The current interned [Atom] values known to the underlying [XcbConnection]
+    pub fn known_atoms(&self) -> &HashMap<Atom, u32> {
+        &self.conn().known_atoms()
     }
 }
 

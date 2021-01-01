@@ -113,6 +113,10 @@ impl Api {
         Ok(())
     }
 
+    pub(crate) fn known_atoms(&self) -> &HashMap<Atom, u32> {
+        &self.atoms
+    }
+
     pub(crate) fn conn(&self) -> &xcb::Connection {
         &self.conn
     }
