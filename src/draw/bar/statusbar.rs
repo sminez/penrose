@@ -30,7 +30,7 @@ where
 {
     drw: D,
     position: Position,
-    widgets: Vec<Box<dyn HookableWidget<C, X>>>,
+    widgets: Vec<Box<dyn HookableWidget<X>>>,
     screens: Vec<(WinId, f64)>, // window and width
     hpx: usize,
     h: f64,
@@ -70,7 +70,7 @@ where
         h: usize,
         bg: impl Into<Color>,
         fonts: &[&str],
-        widgets: Vec<Box<dyn HookableWidget<C, X>>>,
+        widgets: Vec<Box<dyn HookableWidget<X>>>,
     ) -> Result<Self> {
         let mut bar = Self {
             drw,

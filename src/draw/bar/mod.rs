@@ -21,34 +21,26 @@ const MAX_ACTIVE_WINDOW_CHARS: usize = 80;
  * HookableWidgets should _not_ be manually registered as hooks: they will be automatically
  * registered by the [StatusBar] containing them on startup.
  */
-pub trait HookableWidget<C, X>: Hook<X> + Widget<C>
+pub trait HookableWidget<X>: Hook<X> + Widget
 where
-    C: DrawContext,
     X: XConn,
 {
 }
 
-impl<C, X, T> HookableWidget<C, X> for T
+// Blanket implementation for anything that implements both Hook and Widget
+impl<X, T> HookableWidget<X> for T
 where
-    C: DrawContext,
     X: XConn,
-    T: Hook<X> + Widget<C>,
+    T: Hook<X> + Widget,
 {
 }
 
-/**
- * A status bar widget that can be rendered using a [DrawContext]
- */
-pub trait Widget<C>
-where
-    C: DrawContext,
-{
-    /**
-     * Render the current state of the widget to the status bar window.
-     */
+/// A status bar widget that can be rendered using a [DrawContext]
+pub trait Widget {
+    /// Render the current state of the widget to the status bar window.
     fn draw(
         &mut self,
-        ctx: &mut C,
+        ctx: &mut dyn DrawContext,
         screen: usize,
         screen_has_focus: bool,
         w: f64,
@@ -56,7 +48,7 @@ where
     ) -> Result<()>;
 
     /// Current required width and height for this widget due to its content
-    fn current_extent(&mut self, ctx: &mut C, h: f64) -> Result<(f64, f64)>;
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)>;
 
     /// Does this widget currently require re-rendering? (should be updated when 'draw' is called)
     fn require_draw(&self) -> bool;

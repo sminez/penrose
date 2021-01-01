@@ -11,8 +11,6 @@ use crate::{
     draw::{Color, DrawContext, Result, TextStyle, Widget},
 };
 
-use std::marker::PhantomData;
-
 const PADDING: f64 = 3.0;
 
 /// A simple piece of static text with an optional background color.
@@ -20,13 +18,7 @@ const PADDING: f64 = 3.0;
 /// Can be used as a simple static element in a status bar or as an inner element for rendering
 /// more complex text based widgets.
 #[derive(Clone, Debug)]
-pub struct Text<C>
-where
-    C: DrawContext,
-{
-    // NOTE: PhantomData is here so that any widget this is embedded into has _its_ DrawContext
-    //       impl aligned with the one for rendering the Text.
-    phantom: PhantomData<C>,
+pub struct Text {
     txt: String,
     font: String,
     point_size: i32,
@@ -39,10 +31,7 @@ where
     require_draw: bool,
 }
 
-impl<C> Text<C>
-where
-    C: DrawContext,
-{
+impl Text {
     /// Construct a new Text
     pub fn new(
         txt: impl Into<String>,
@@ -51,7 +40,6 @@ where
         right_justified: bool,
     ) -> Self {
         Self {
-            phantom: PhantomData,
             txt: txt.into(),
             font: style.font.clone(),
             point_size: style.point_size,
@@ -87,18 +75,10 @@ where
     }
 }
 
-impl<C, X> Hook<X> for Text<C>
-where
-    C: DrawContext,
-    X: XConn,
-{
-}
+impl<X> Hook<X> for Text where X: XConn {}
 
-impl<C> Widget<C> for Text<C>
-where
-    C: DrawContext,
-{
-    fn draw(&mut self, ctx: &mut C, _: usize, _: bool, w: f64, h: f64) -> Result<()> {
+impl Widget for Text {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, _: usize, _: bool, w: f64, h: f64) -> Result<()> {
         if let Some(color) = self.bg {
             ctx.color(&color);
             ctx.rectangle(0.0, 0.0, w, h);
@@ -122,7 +102,7 @@ where
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &mut C, _h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, _h: f64) -> Result<(f64, f64)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
@@ -314,13 +294,10 @@ where
     }
 }
 
-impl<C> Widget<C> for Workspaces
-where
-    C: DrawContext,
-{
+impl Widget for Workspaces {
     fn draw(
         &mut self,
-        ctx: &mut C,
+        ctx: &mut dyn DrawContext,
         screen: usize,
         screen_has_focus: bool,
         w: f64,
@@ -348,7 +325,7 @@ where
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &mut C, _h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, _h: f64) -> Result<(f64, f64)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
@@ -380,17 +357,11 @@ where
 
 /// A text widget that is set via updating the root window name a la dwm
 #[derive(Clone, Debug)]
-pub struct RootWindowName<C>
-where
-    C: DrawContext,
-{
-    txt: Text<C>,
+pub struct RootWindowName {
+    txt: Text,
 }
 
-impl<C> RootWindowName<C>
-where
-    C: DrawContext,
-{
+impl RootWindowName {
     /// Create a new RootWindowName widget
     pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
@@ -399,9 +370,8 @@ where
     }
 }
 
-impl<C, X> Hook<X> for RootWindowName<C>
+impl<X> Hook<X> for RootWindowName
 where
-    C: DrawContext,
     X: XConn,
 {
     fn client_name_updated(
@@ -417,15 +387,12 @@ where
     }
 }
 
-impl<C> Widget<C> for RootWindowName<C>
-where
-    C: DrawContext,
-{
-    fn draw(&mut self, ctx: &mut C, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+impl Widget for RootWindowName {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
         self.txt.draw(ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut C, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
         self.txt.current_extent(ctx, h)
     }
 
@@ -440,18 +407,12 @@ where
 
 /// A text widget that is set via updating the root window name a la dwm
 #[derive(Clone, Debug)]
-pub struct ActiveWindowName<C>
-where
-    C: DrawContext,
-{
-    txt: Text<C>,
+pub struct ActiveWindowName {
+    txt: Text,
     max_chars: usize,
 }
 
-impl<C> ActiveWindowName<C>
-where
-    C: DrawContext,
-{
+impl ActiveWindowName {
     /// Create a new ActiveWindowName widget
     pub fn new(
         style: &TextStyle,
@@ -475,9 +436,8 @@ where
     }
 }
 
-impl<C, X> Hook<X> for ActiveWindowName<C>
+impl<X> Hook<X> for ActiveWindowName
 where
-    C: DrawContext,
     X: XConn,
 {
     fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) {
@@ -509,13 +469,10 @@ where
     }
 }
 
-impl<C> Widget<C> for ActiveWindowName<C>
-where
-    C: DrawContext,
-{
+impl Widget for ActiveWindowName {
     fn draw(
         &mut self,
-        ctx: &mut C,
+        ctx: &mut dyn DrawContext,
         screen: usize,
         screen_has_focus: bool,
         w: f64,
@@ -528,7 +485,7 @@ where
         }
     }
 
-    fn current_extent(&mut self, ctx: &mut C, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
         self.txt.current_extent(ctx, h)
     }
 
@@ -543,17 +500,11 @@ where
 
 /// A simple widget that displays the active layout symbol
 #[derive(Clone, Debug)]
-pub struct CurrentLayout<C>
-where
-    C: DrawContext,
-{
-    txt: Text<C>,
+pub struct CurrentLayout {
+    txt: Text,
 }
 
-impl<C> CurrentLayout<C>
-where
-    C: DrawContext,
-{
+impl CurrentLayout {
     /// Create a new CurrentLayout widget
     pub fn new(style: &TextStyle) -> Self {
         Self {
@@ -562,9 +513,8 @@ where
     }
 }
 
-impl<C, X> Hook<X> for CurrentLayout<C>
+impl<X> Hook<X> for CurrentLayout
 where
-    C: DrawContext,
     X: XConn,
 {
     fn startup(&mut self, wm: &mut WindowManager<X>) {
@@ -584,15 +534,12 @@ where
     }
 }
 
-impl<C> Widget<C> for CurrentLayout<C>
-where
-    C: DrawContext,
-{
-    fn draw(&mut self, ctx: &mut C, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+impl Widget for CurrentLayout {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
         self.txt.draw(ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut C, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
         self.txt.current_extent(ctx, h)
     }
 
