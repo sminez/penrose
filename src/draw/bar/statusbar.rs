@@ -7,7 +7,7 @@ use crate::{
         manager::WindowManager,
         xconnection::{Atom, XConn},
     },
-    draw::{Color, Draw, DrawContext, Result, Widget},
+    draw::{Color, Draw, DrawContext, HookableWidget, Result},
 };
 
 use std::fmt;
@@ -22,10 +22,15 @@ pub enum Position {
 }
 
 /// A simple status bar that works via hooks
-pub struct StatusBar<Ctx, X> {
-    drw: Box<dyn Draw<Ctx = Ctx>>,
+pub struct StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
+    drw: D,
     position: Position,
-    widgets: Vec<Box<dyn Widget<X>>>,
+    widgets: Vec<Box<dyn HookableWidget<C, X>>>,
     screens: Vec<(WinId, f64)>, // window and width
     hpx: usize,
     h: f64,
@@ -33,7 +38,12 @@ pub struct StatusBar<Ctx, X> {
     active_screen: usize,
 }
 
-impl<Ctx, X> fmt::Debug for StatusBar<Ctx, X> {
+impl<C, D, X> fmt::Debug for StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("StatusBar")
             .field("drw", &stringify!(self.drw))
@@ -47,15 +57,20 @@ impl<Ctx, X> fmt::Debug for StatusBar<Ctx, X> {
     }
 }
 
-impl<Ctx: DrawContext, X: XConn> StatusBar<Ctx, X> {
+impl<C, D, X> StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
     /// Try to initialise a new empty status bar. Can fail if we are unable to create our window
     pub fn try_new(
-        drw: Box<dyn Draw<Ctx = Ctx>>,
+        drw: D,
         position: Position,
         h: usize,
         bg: impl Into<Color>,
         fonts: &[&str],
-        widgets: Vec<Box<dyn Widget<X>>>,
+        widgets: Vec<Box<dyn HookableWidget<C, X>>>,
     ) -> Result<Self> {
         let mut bar = Self {
             drw,
@@ -128,7 +143,7 @@ impl<Ctx: DrawContext, X: XConn> StatusBar<Ctx, X> {
         Ok(())
     }
 
-    fn layout(&mut self, ctx: &mut dyn DrawContext, w: f64) -> Result<Vec<(f64, f64)>> {
+    fn layout(&mut self, ctx: &mut C, w: f64) -> Result<Vec<(f64, f64)>> {
         let mut extents = Vec::with_capacity(self.widgets.len());
         let mut greedy_indices = vec![];
 
@@ -165,7 +180,12 @@ impl<Ctx: DrawContext, X: XConn> StatusBar<Ctx, X> {
     }
 }
 
-impl<Ctx: DrawContext, X: XConn> Hook<X> for StatusBar<Ctx, X> {
+impl<C, D, X> Hook<X> for StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
     fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
         self.widgets.iter_mut().for_each(|w| w.new_client(wm, c));
     }

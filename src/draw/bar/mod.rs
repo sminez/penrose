@@ -15,19 +15,40 @@ use crate::{
 const MAX_ACTIVE_WINDOW_CHARS: usize = 80;
 
 /**
- * A status bar widget
+ * A status bar [Widget] that can be automatically rendered using a [DrawContext] when
+ * triggered via [WindowManager][crate::core::manager::WindowManager] [Hook] calls.
  *
- * Widgets need to implement Hook but should not be registered with the WindowManager to receive
- * triggers: the status bar itself will handle passing through triggers and check for required
- * updates to the UI.
+ * HookableWidgets should _not_ be manually registered as hooks: they will be automatically
+ * registered by the [StatusBar] containing them on startup.
  */
-pub trait Widget<X: XConn>: Hook<X> {
+pub trait HookableWidget<C, X>: Hook<X> + Widget<C>
+where
+    C: DrawContext,
+    X: XConn,
+{
+}
+
+impl<C, X, T> HookableWidget<C, X> for T
+where
+    C: DrawContext,
+    X: XConn,
+    T: Hook<X> + Widget<C>,
+{
+}
+
+/**
+ * A status bar widget that can be rendered using a [DrawContext]
+ */
+pub trait Widget<C>
+where
+    C: DrawContext,
+{
     /**
      * Render the current state of the widget to the status bar window.
      */
     fn draw(
         &mut self,
-        ctx: &mut dyn DrawContext,
+        ctx: &mut C,
         screen: usize,
         screen_has_focus: bool,
         w: f64,
@@ -35,7 +56,7 @@ pub trait Widget<X: XConn>: Hook<X> {
     ) -> Result<()>;
 
     /// Current required width and height for this widget due to its content
-    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)>;
+    fn current_extent(&mut self, ctx: &mut C, h: f64) -> Result<(f64, f64)>;
 
     /// Does this widget currently require re-rendering? (should be updated when 'draw' is called)
     fn require_draw(&self) -> bool;
@@ -50,14 +71,19 @@ pub trait Widget<X: XConn>: Hook<X> {
 
 /// Create a default dwm style status bar that displays content pulled from the
 /// WM_NAME property of the root window.
-pub fn dwm_bar<Ctx: DrawContext, X: XConn + 'static>(
-    drw: Box<dyn Draw<Ctx = Ctx>>,
+pub fn dwm_bar<C, D, X>(
+    drw: D,
     height: usize,
     style: &TextStyle,
     highlight: impl Into<Color>,
     empty_ws: impl Into<Color>,
     workspaces: Vec<impl Into<String>>,
-) -> Result<StatusBar<Ctx, X>> {
+) -> Result<StatusBar<C, D, X>>
+where
+    C: DrawContext + 'static,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
     let highlight = highlight.into();
     let workspaces: Vec<String> = workspaces.into_iter().map(|w| w.into()).collect();
 
