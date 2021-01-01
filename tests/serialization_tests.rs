@@ -2,6 +2,7 @@
 #[macro_use]
 extern crate penrose;
 
+#[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
 
