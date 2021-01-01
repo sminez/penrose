@@ -296,6 +296,10 @@ pub enum XEvent {
  * windowing system but X idioms and high level event types / client interations are assumed.
  **/
 pub trait XConn {
+    /// Hydrate this XConn to restore internal state following serde deserialization
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()>;
+
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
 
@@ -415,6 +419,12 @@ pub trait XConn {
  * make writing real impls more error prone if and when new methods are added to the trait.
  */
 pub trait StubXConn {
+    /// Mocked version of hydrate
+    #[cfg(feature = "serde")]
+    fn mock_hydrate(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Mocked version of flush
     fn mock_flush(&self) -> bool {
         true
@@ -524,6 +534,11 @@ impl<T> XConn for T
 where
     T: StubXConn,
 {
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()> {
+        self.mock_hydrate()
+    }
+
     fn flush(&self) -> bool {
         self.mock_flush()
     }

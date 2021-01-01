@@ -75,6 +75,11 @@ impl<X: XcbApi> XcbConnection<X> {
 }
 
 impl<X: XcbApi> XConn for XcbConnection<X> {
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()> {
+        Ok(self.api.hydrate()?)
+    }
+
     fn flush(&self) -> bool {
         self.api.flush()
     }

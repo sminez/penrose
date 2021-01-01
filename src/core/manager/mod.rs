@@ -6,7 +6,6 @@ use crate::{
         config::Config,
         data_types::{Change, Point, Region, WinId},
         hooks::Hooks,
-        layout::LayoutFunc,
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
@@ -14,6 +13,9 @@ use crate::{
     },
     Result,
 };
+
+#[cfg(feature = "serde")]
+use crate::core::layout::LayoutFunc;
 
 use nix::sys::signal::{signal, SigHandler, Signal};
 
@@ -115,11 +117,13 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Restore missing state following serde deserialization
+    #[cfg(feature = "serde")]
     pub fn hydrate_and_init(
         &mut self,
         hooks: Hooks<X>,
         layout_funcs: HashMap<&str, LayoutFunc>,
     ) -> Result<()> {
+        self.conn.hydrate()?;
         self.hooks.set(hooks);
         self.workspaces
             .iter_mut()

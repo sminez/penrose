@@ -143,6 +143,7 @@ impl Layout {
 
     // NOTE: Used when rehydrating from serde based deserialization. The layout will panic if
     //       used before setting the LayoutFunc. See [WindowManager::hydrate_and_init]
+    #[cfg(feature = "serde")]
     pub(crate) fn set_layout_function(&mut self, f: LayoutFunc) {
         self.f = Some(f);
     }

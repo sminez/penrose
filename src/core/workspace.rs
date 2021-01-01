@@ -1,13 +1,13 @@
 //! A Workspace is a set of displayed clients and a set of Layouts for arranging them
-use crate::{
-    core::{
-        client::Client,
-        data_types::{Change, Region, ResizeAction, WinId},
-        layout::{Layout, LayoutConf, LayoutFunc},
-        ring::{Direction, InsertPoint, Ring, Selector},
-    },
-    PenroseError, Result,
+use crate::core::{
+    client::Client,
+    data_types::{Change, Region, ResizeAction, WinId},
+    layout::{Layout, LayoutConf},
+    ring::{Direction, InsertPoint, Ring, Selector},
 };
+
+#[cfg(feature = "serde")]
+use crate::{core::layout::LayoutFunc, PenroseError, Result};
 
 use std::collections::HashMap;
 
@@ -63,6 +63,7 @@ impl Workspace {
         self.name = name.into();
     }
 
+    #[cfg(feature = "serde")]
     pub(crate) fn restore_layout_functions(
         &mut self,
         layout_funcs: &HashMap<&str, LayoutFunc>,

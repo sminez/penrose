@@ -106,6 +106,10 @@ pub fn new_xcb_backed_window_manager(
  * the API nicer to work with in Penrose code.
  */
 pub trait XcbApi {
+    /// Hydrate this XcbApi to restore internal state following serde deserialization
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()>;
+
     /**
      * Intern an atom by name, returning the corresponding id.
      *

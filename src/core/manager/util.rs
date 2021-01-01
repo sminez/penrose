@@ -3,13 +3,15 @@ use crate::{
         client::Client,
         data_types::{Region, WinId},
         layout::LayoutConf,
-        manager::WindowManager,
         screen::Screen,
         workspace::{ArrangeActions, Workspace},
         xconnection::{Atom, XConn},
     },
-    PenroseError, Result,
+    Result,
 };
+
+#[cfg(feature = "serde")]
+use crate::{core::manager::WindowManager, PenroseError};
 
 use std::collections::HashMap;
 
@@ -177,6 +179,7 @@ pub(super) fn apply_arrange_actions<X: XConn>(
     }
 }
 
+#[cfg(feature = "serde")]
 pub(super) fn validate_hydrated_wm_state<X: XConn>(wm: &mut WindowManager<X>) -> Result<()> {
     // If the current clients known to the X server aren't what we have in the client_map
     // then we can't proceed any further
