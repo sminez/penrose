@@ -83,8 +83,10 @@ pub(super) fn position_floating_client<X: XConn>(
 }
 
 pub(super) fn window_name<X: XConn>(conn: &X, id: WinId) -> Result<String> {
-    conn.str_prop(id, Atom::NetWmName.as_ref())
-        .or_else(|_| conn.str_prop(id, Atom::WmName.as_ref()))
+    match conn.str_prop(id, Atom::NetWmName.as_ref()) {
+        Ok(s) if !s.is_empty() => Ok(s),
+        _ => conn.str_prop(id, Atom::WmName.as_ref()),
+    }
 }
 
 pub(super) fn get_screens<X: XConn>(
@@ -247,24 +249,29 @@ mod tests {
     struct WmNameXConn {
         wm_name: bool,
         net_wm_name: bool,
+        empty_net_wm_name: bool,
     }
     impl StubXConn for WmNameXConn {
         fn mock_str_prop(&self, _: WinId, name: &str) -> Result<String> {
             match Atom::from_str(name)? {
                 Atom::WmName if self.wm_name => Ok("wm_name".into()),
+                Atom::WmName if self.net_wm_name && self.empty_net_wm_name => Ok("".into()),
                 Atom::NetWmName if self.net_wm_name => Ok("net_wm_name".into()),
+                Atom::NetWmName if self.empty_net_wm_name => Ok("".into()),
                 _ => Err(PenroseError::Raw("".into())),
             }
         }
     }
 
-    #[test_case(true, false, "wm_name"; "wm_name only")]
-    #[test_case(false, true, "net_wm_name"; "net_wm_name only")]
-    #[test_case(true, true, "net_wm_name"; "both prefers net_wm_name")]
-    fn window_name_test(wm_name: bool, net_wm_name: bool, expected: &str) {
+    #[test_case(true, false, false, "wm_name"; "wm_name only")]
+    #[test_case(false, true, false, "net_wm_name"; "net_wm_name only")]
+    #[test_case(true, true, false, "net_wm_name"; "both prefers net_wm_name")]
+    #[test_case(true, false, true, "wm_name"; "net_wm_name empty")]
+    fn window_name_test(wm_name: bool, net_wm_name: bool, empty_net_wm_name: bool, expected: &str) {
         let conn = WmNameXConn {
             wm_name,
             net_wm_name,
+            empty_net_wm_name,
         };
         assert_eq!(&window_name(&conn, 42).unwrap(), expected);
     }

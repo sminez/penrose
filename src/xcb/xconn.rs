@@ -201,7 +201,7 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
                 PropVal::Window(&[self.check_win]),
             );
             let val = PropVal::Str(WM_NAME);
-            self.api.replace_prop(win, Atom::NetWmName, val);
+            self.api.replace_prop(win, Atom::WmName, val);
         }
 
         // EWMH support
@@ -253,7 +253,7 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
 
     fn set_root_window_name(&self, root_name: &str) {
         self.api
-            .replace_prop(self.api.root(), Atom::NetWmName, PropVal::Str(root_name));
+            .replace_prop(self.api.root(), Atom::WmName, PropVal::Str(root_name));
     }
 
     fn set_client_workspace(&self, id: WinId, workspace: usize) {

@@ -24,7 +24,7 @@ pub enum EventAction {
     /// An X window lost focus
     ClientFocusGained(WinId),
     /// An X window had its WM_NAME or _NET_WM_NAME property changed
-    ClientNameChanged(WinId),
+    ClientNameChanged(WinId, bool),
     /// An X window was destroyed
     DestroyClient(WinId),
     /// Screens should be redetected
@@ -117,8 +117,8 @@ fn process_map_request(state: WmState<'_>, id: WinId, ignore: bool) -> Vec<Event
 
 fn process_property_notify(id: WinId, atom: String, is_root: bool) -> Vec<EventAction> {
     match Atom::from_str(&atom) {
-        Ok(a) if !is_root && [Atom::WmName, Atom::NetWmName].contains(&a) => {
-            vec![EventAction::ClientNameChanged(id)]
+        Ok(a) if [Atom::WmName, Atom::NetWmName].contains(&a) => {
+            vec![EventAction::ClientNameChanged(id, is_root)]
         }
         _ => vec![EventAction::UnknownPropertyChange(id, atom, is_root)],
     }

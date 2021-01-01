@@ -181,7 +181,7 @@ impl<X: XConn> WindowManager<X> {
         match action {
             EventAction::ClientFocusGained(id) => self.client_gained_focus(id),
             EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
-            EventAction::ClientNameChanged(id) => self.client_name_changed(id)?,
+            EventAction::ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
             EventAction::DestroyClient(id) => self.remove_client(id),
             EventAction::DetectScreens => self.detect_screens(),
             EventAction::MapWindow(id) => self.handle_map_request(id)?,
@@ -333,12 +333,14 @@ impl<X: XConn> WindowManager<X> {
     }
 
     // The given window ID has had its EWMH name updated by something
-    fn client_name_changed(&mut self, id: WinId) -> Result<()> {
+    fn client_name_changed(&mut self, id: WinId, is_root: bool) -> Result<()> {
         let name = util::window_name(&self.conn, id)?;
-        if let Some(c) = self.client_map.get_mut(&id) {
-            c.set_name(&name)
+        if !is_root {
+            if let Some(c) = self.client_map.get_mut(&id) {
+                c.set_name(&name)
+            }
         }
-        run_hooks!(client_name_updated, self, id, &name, false);
+        run_hooks!(client_name_updated, self, id, &name, is_root);
         Ok(())
     }
 
