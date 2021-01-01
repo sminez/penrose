@@ -26,7 +26,7 @@ pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px:
     Region::new(x + gpx, y + gpx, w - padding, h - padding)
 }
 
-pub(super) fn map_window_if_needed(conn: &Box<dyn XConn>, win: Option<&mut Client>) {
+pub(super) fn map_window_if_needed<X: XConn>(conn: &X, win: Option<&mut Client>) {
     if let Some(c) = win {
         if !c.mapped {
             c.mapped = true;
@@ -35,7 +35,7 @@ pub(super) fn map_window_if_needed(conn: &Box<dyn XConn>, win: Option<&mut Clien
     }
 }
 
-pub(super) fn unmap_window_if_needed(conn: &Box<dyn XConn>, win: Option<&mut Client>) {
+pub(super) fn unmap_window_if_needed<X: XConn>(conn: &X, win: Option<&mut Client>) {
     if let Some(c) = win {
         if c.mapped {
             c.mapped = false;
@@ -44,7 +44,7 @@ pub(super) fn unmap_window_if_needed(conn: &Box<dyn XConn>, win: Option<&mut Cli
     }
 }
 
-pub(super) fn client_str_props(conn: &Box<dyn XConn>, id: WinId) -> ClientProps {
+pub(super) fn client_str_props<X: XConn>(conn: &X, id: WinId) -> ClientProps {
     ClientProps {
         name: match conn.str_prop(id, Atom::WmName.as_ref()) {
             Ok(s) => s,
@@ -61,8 +61,8 @@ pub(super) fn client_str_props(conn: &Box<dyn XConn>, id: WinId) -> ClientProps 
     }
 }
 
-pub(super) fn position_floating_client(
-    conn: &Box<dyn XConn>,
+pub(super) fn position_floating_client<X: XConn>(
+    conn: &X,
     id: WinId,
     screen_region: Region,
     gap_px: u32,
@@ -80,13 +80,13 @@ pub(super) fn position_floating_client(
     Ok(())
 }
 
-pub(super) fn window_name(conn: &Box<dyn XConn>, id: WinId) -> Result<String> {
+pub(super) fn window_name<X: XConn>(conn: &X, id: WinId) -> Result<String> {
     conn.str_prop(id, Atom::NetWmName.as_ref())
         .or_else(|_| conn.str_prop(id, Atom::WmName.as_ref()))
 }
 
-pub(super) fn get_screens(
-    conn: &Box<dyn XConn>,
+pub(super) fn get_screens<X: XConn>(
+    conn: &X,
     mut visible_workspaces: Vec<usize>,
     n_workspaces: usize,
     bar_height: u32,
@@ -113,8 +113,8 @@ pub(super) fn get_screens(
         .collect()
 }
 
-pub(super) fn toggle_fullscreen(
-    conn: &Box<dyn XConn>,
+pub(super) fn toggle_fullscreen<X: XConn>(
+    conn: &X,
     id: WinId,
     client_map: &mut HashMap<WinId, Client>,
     workspace: &mut Workspace,
@@ -132,7 +132,7 @@ pub(super) fn toggle_fullscreen(
             if i == id {
                 client_map.entry(id).and_modify(|c| c.fullscreen = false);
             } else {
-                map_window_if_needed(&conn, client_map.get_mut(&i));
+                map_window_if_needed(conn, client_map.get_mut(&i));
             }
         // client was not fullscreen
         } else if i == id {
@@ -142,7 +142,7 @@ pub(super) fn toggle_fullscreen(
                 c.fullscreen = true;
             });
         } else {
-            unmap_window_if_needed(&conn, client_map.get_mut(&i));
+            unmap_window_if_needed(conn, client_map.get_mut(&i));
         }
     });
 
@@ -151,8 +151,8 @@ pub(super) fn toggle_fullscreen(
     client_currently_fullscreen
 }
 
-pub(super) fn apply_arrange_actions(
-    conn: &Box<dyn XConn>,
+pub(super) fn apply_arrange_actions<X: XConn>(
+    conn: &X,
     actions: ArrangeActions,
     lc: &LayoutConf,
     client_map: &mut HashMap<WinId, Client>,
@@ -177,7 +177,7 @@ pub(super) fn apply_arrange_actions(
     }
 }
 
-pub(super) fn validate_hydrated_wm_state(wm: &mut WindowManager) -> Result<()> {
+pub(super) fn validate_hydrated_wm_state<X: XConn>(wm: &mut WindowManager<X>) -> Result<()> {
     // If the current clients known to the X server aren't what we have in the client_map
     // then we can't proceed any further
     let active_windows = wm.conn.query_for_active_windows();
@@ -259,10 +259,10 @@ mod tests {
     #[test_case(false, true, "net_wm_name"; "net_wm_name only")]
     #[test_case(true, true, "net_wm_name"; "both prefers net_wm_name")]
     fn window_name_test(wm_name: bool, net_wm_name: bool, expected: &str) {
-        let conn = Box::new(WmNameXConn {
+        let conn = WmNameXConn {
             wm_name,
             net_wm_name,
-        }) as Box<dyn XConn>;
+        };
         assert_eq!(&window_name(&conn, 42).unwrap(), expected);
     }
 
@@ -298,7 +298,7 @@ mod tests {
     fn get_screens_test(current: Vec<usize>, n_workspaces: usize, expected: Vec<usize>) {
         let (bar_height, top_bar) = (10, true);
         let screens = test_screens(bar_height, top_bar);
-        let conn = Box::new(OutputsXConn(screens)) as Box<dyn XConn>;
+        let conn = OutputsXConn(screens);
         let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar);
         let focused: Vec<usize> = new.iter().map(|s| s.wix).collect();
 
@@ -314,15 +314,15 @@ mod tests {
     }
     impl RecordingXConn {
         #[allow(clippy::type_complexity)]
-        fn init() -> (RRV<(WinId, Region)>, RRV<WinId>, RRV<WinId>, Box<dyn XConn>) {
+        fn init() -> (RRV<(WinId, Region)>, RRV<WinId>, RRV<WinId>, impl XConn) {
             let positions = Rc::new(RefCell::new(vec![]));
             let maps = Rc::new(RefCell::new(vec![]));
             let unmaps = Rc::new(RefCell::new(vec![]));
-            let conn = Box::new(Self {
+            let conn = Self {
                 positions: Rc::clone(&positions),
                 maps: Rc::clone(&maps),
                 unmaps: Rc::clone(&unmaps),
-            });
+            };
 
             (positions, maps, unmaps, conn)
         }

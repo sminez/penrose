@@ -19,12 +19,13 @@ use penrose::{
         client::Client,
         config::Config,
         helpers::index_selectors,
-        hooks::{Hook, Hooks},
+        hooks::Hook,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
         manager::WindowManager,
         ring::Selector,
+        xconnection::XConn,
     },
-    xcb::new_xcb_connection,
+    xcb::{new_xcb_connection, XcbHooks},
     Backward, Forward, Less, More, Result,
 };
 
@@ -34,8 +35,8 @@ use std::collections::HashMap;
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
 // be run each time a new client program is spawned.
 struct MyClientHook {}
-impl Hook for MyClientHook {
-    fn new_client(&mut self, wm: &mut WindowManager, c: &mut Client) {
+impl<X: XConn> Hook<X> for MyClientHook {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
         wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
     }
 }
@@ -100,7 +101,7 @@ fn main() -> Result<()> {
      * that they are defined. Hooks may maintain their own internal state which they can use to
      * modify their behaviour if desired.
      */
-    let mut hooks: Hooks = vec![];
+    let mut hooks: XcbHooks = vec![];
     hooks.push(Box::new(MyClientHook {}));
 
     // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
@@ -184,7 +185,7 @@ fn main() -> Result<()> {
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
     // such as configuring initial WindowManager state, running custom code / hooks or spawning
     // external processes such as a start-up script.
-    let mut wm = WindowManager::new(config, Box::new(conn), hooks);
+    let mut wm = WindowManager::new(config, conn, hooks);
     wm.init();
 
     // NOTE: If you are using the default XCB backend provided in the penrose xcb module, then the

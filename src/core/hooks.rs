@@ -3,10 +3,11 @@ use crate::core::{
     client::Client,
     data_types::{Region, WinId},
     manager::WindowManager,
+    xconnection::XConn,
 };
 
 /// Utility type for defining hooks in your penrose configuration.
-pub type Hooks = Vec<Box<dyn Hook>>;
+pub type Hooks<X> = Vec<Box<dyn Hook<X>>>;
 
 /**
  * impls of Hook can be registered to receive events during WindowManager operation. Each hook
@@ -18,7 +19,7 @@ pub type Hooks = Vec<Box<dyn Hook>>;
  * triggers and that, where possible, support for other Hooks running from the same triggers is
  * possible.
  */
-pub trait Hook {
+pub trait Hook<X: XConn> {
     /**
      * Called when a new Client has been created and penrose state has been initialised
      * but before the client has been added to the active Workspace and before any Layouts
@@ -27,13 +28,13 @@ pub trait Hook {
      * not passed back to penrose. If the hook takes ownership of the client, it is responsible
      * ensuring that it is unmapped.
      */
-    fn new_client(&mut self, _wm: &mut WindowManager, _c: &mut Client) {}
+    fn new_client(&mut self, _wm: &mut WindowManager<X>, _c: &mut Client) {}
 
     /**
      * Called when a Client is removed from the WindowManager, either through a user initiated
      * kill_client action or the Client exiting itself.
      */
-    fn remove_client(&mut self, _wm: &mut WindowManager, _id: WinId) {}
+    fn remove_client(&mut self, _wm: &mut WindowManager<X>, _id: WinId) {}
 
     /**
      * Called whenever something updates the WM_NAME or _NET_WM_NAME property on a window.
@@ -41,7 +42,7 @@ pub trait Hook {
      */
     fn client_name_updated(
         &mut self,
-        _wm: &mut WindowManager,
+        _wm: &mut WindowManager<X>,
         _id: WinId,
         _name: &str,
         _is_root: bool,
@@ -51,7 +52,7 @@ pub trait Hook {
     /**
      * Called whenever an existing [Client] is added to a [Workspace][crate::core::workspace::Workspace]
      */
-    fn client_added_to_workspace(&mut self, _wm: &mut WindowManager, _id: WinId, _wix: usize) {}
+    fn client_added_to_workspace(&mut self, _wm: &mut WindowManager<X>, _id: WinId, _wix: usize) {}
 
     /**
      * Called after a Layout is applied to the active Workspace.
@@ -61,7 +62,7 @@ pub trait Hook {
      */
     fn layout_applied(
         &mut self,
-        _wm: &mut WindowManager,
+        _wm: &mut WindowManager<X>,
         _workspace_index: usize,
         _screen_index: usize,
     ) {
@@ -75,7 +76,7 @@ pub trait Hook {
      */
     fn layout_change(
         &mut self,
-        _wm: &mut WindowManager,
+        _wm: &mut WindowManager<X>,
         _workspace_index: usize,
         _screen_index: usize,
     ) {
@@ -88,7 +89,7 @@ pub trait Hook {
      */
     fn workspace_change(
         &mut self,
-        _wm: &mut WindowManager,
+        _wm: &mut WindowManager<X>,
         _previous_workspace: usize,
         _new_workspace: usize,
     ) {
@@ -97,26 +98,26 @@ pub trait Hook {
     /**
      * Called when there has been a change to the WindowManager workspace list.
      */
-    fn workspaces_updated(&mut self, _wm: &mut WindowManager, _names: &[&str], _active: usize) {}
+    fn workspaces_updated(&mut self, _wm: &mut WindowManager<X>, _names: &[&str], _active: usize) {}
 
     /**
      * Called after focus moves to a new Screen.
      * Argument is a index into the WindowManager screen array (internal data structure that supports
      * indexing) for the new Screen.
      */
-    fn screen_change(&mut self, _wm: &mut WindowManager, _screen_index: usize) {}
+    fn screen_change(&mut self, _wm: &mut WindowManager<X>, _screen_index: usize) {}
 
     /**
      * Called when there has been a change to the WindowManager workspace list.
      */
-    fn screens_updated(&mut self, _wm: &mut WindowManager, _dimensions: &[Region]) {}
+    fn screens_updated(&mut self, _wm: &mut WindowManager<X>, _dimensions: &[Region]) {}
 
     /**
      * Called after a new Client gains focus.
      * Argument is the focused Client ID which can be used to fetch the internal Client state if
      * needed.
      */
-    fn focus_change(&mut self, _wm: &mut WindowManager, _id: WinId) {}
+    fn focus_change(&mut self, _wm: &mut WindowManager<X>, _id: WinId) {}
 
     /**
      * Called at the end of the main WindowManager event loop once each XEvent has been handled.
@@ -124,10 +125,10 @@ pub trait Hook {
      * Usefull if you want to ensure that all other event processing has taken place before you
      * take action in response to another hook.
      */
-    fn event_handled(&mut self, _wm: &mut WindowManager) {}
+    fn event_handled(&mut self, _wm: &mut WindowManager<X>) {}
 
     /**
      * Called once at window manager startup
      */
-    fn startup(&mut self, _wm: &mut WindowManager) {}
+    fn startup(&mut self, _wm: &mut WindowManager<X>) {}
 }

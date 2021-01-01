@@ -7,6 +7,7 @@ use penrose::{
         ring::Selector,
         screen::Screen,
         workspace::Workspace,
+        xconnection::XConn,
     },
     Forward,
 };
@@ -40,41 +41,42 @@ fn layouts() -> Vec<Layout> {
     vec![Layout::new("t", LayoutConf::default(), side_stack, 1, 0.6)]
 }
 
-pub fn test_bindings() -> KeyBindings {
+pub fn test_bindings<X: XConn>() -> KeyBindings<X> {
     let mut bindings = HashMap::new();
     bindings.insert(
         EXIT_CODE,
-        Box::new(|wm: &mut WindowManager| wm.exit()) as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.exit()) as FireAndForget<X>,
     );
     bindings.insert(
         LAYOUT_CHANGE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.cycle_layout(Forward)) as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.cycle_layout(Forward)) as FireAndForget<X>,
     );
     bindings.insert(
         WORKSPACE_CHANGE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.focus_workspace(&Selector::Index(1))) as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.focus_workspace(&Selector::Index(1)))
+            as FireAndForget<X>,
     );
     bindings.insert(
         ADD_WORKSPACE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.push_workspace(Workspace::new("new", layouts())))
-            as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.push_workspace(Workspace::new("new", layouts())))
+            as FireAndForget<X>,
     );
     bindings.insert(
         SCREEN_CHANGE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.cycle_screen(Forward)) as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.cycle_screen(Forward)) as FireAndForget<X>,
     );
     bindings.insert(
         FOCUS_CHANGE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.cycle_client(Forward)) as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.cycle_client(Forward)) as FireAndForget<X>,
     );
     bindings.insert(
         KILL_CLIENT_CODE,
-        Box::new(|wm: &mut WindowManager| wm.kill_client()) as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.kill_client()) as FireAndForget<X>,
     );
     bindings.insert(
         CLIENT_TO_WORKSPACE_CODE,
-        Box::new(|wm: &mut WindowManager| wm.client_to_workspace(&Selector::Index(1)))
-            as FireAndForget,
+        Box::new(|wm: &mut WindowManager<X>| wm.client_to_workspace(&Selector::Index(1)))
+            as FireAndForget<X>,
     );
 
     bindings

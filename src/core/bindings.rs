@@ -12,16 +12,16 @@ use std::{collections::HashMap, convert::TryFrom};
 use strum::{EnumIter, IntoEnumIterator};
 
 /// Some action to be run by a user key binding
-pub type FireAndForget = Box<dyn FnMut(&mut WindowManager)>;
+pub type FireAndForget<X> = Box<dyn FnMut(&mut WindowManager<X>)>;
 
 /// An action to be run in response to a mouse event
-pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent)>;
+pub type MouseEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>, &MouseEvent)>;
 
 /// User defined key bindings
-pub type KeyBindings = HashMap<KeyCode, FireAndForget>;
+pub type KeyBindings<X> = HashMap<KeyCode, FireAndForget<X>>;
 
 /// User defined mouse bindings
-pub type MouseBindings = HashMap<(MouseEventKind, MouseState), MouseEventHandler>;
+pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;
 
 pub(crate) type CodeMap = HashMap<String, u8>;
 

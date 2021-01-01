@@ -6,9 +6,12 @@ use crate::{
         hooks::Hook,
         manager::WindowManager,
         ring::Selector,
+        xconnection::XConn,
     },
     draw::{Color, DrawContext, Result, TextStyle, Widget},
 };
+
+use std::marker::PhantomData;
 
 const PADDING: f64 = 3.0;
 
@@ -17,7 +20,8 @@ const PADDING: f64 = 3.0;
 /// Can be used as a simple static element in a status bar or as an inner element for rendering
 /// more complex text based widgets.
 #[derive(Clone, Debug)]
-pub struct Text {
+pub struct Text<X: XConn> {
+    phantom: PhantomData<X>,
     txt: String,
     font: String,
     point_size: i32,
@@ -30,7 +34,7 @@ pub struct Text {
     require_draw: bool,
 }
 
-impl Text {
+impl<X: XConn> Text<X> {
     /// Construct a new Text
     pub fn new(
         txt: impl Into<String>,
@@ -39,6 +43,7 @@ impl Text {
         right_justified: bool,
     ) -> Self {
         Self {
+            phantom: PhantomData,
             txt: txt.into(),
             font: style.font.clone(),
             point_size: style.point_size,
@@ -74,9 +79,9 @@ impl Text {
     }
 }
 
-impl Hook for Text {}
+impl<X: XConn> Hook<X> for Text<X> {}
 
-impl Widget for Text {
+impl<X: XConn> Widget<X> for Text<X> {
     fn draw(&mut self, ctx: &mut dyn DrawContext, _: usize, _: bool, w: f64, h: f64) -> Result<()> {
         if let Some(color) = self.bg {
             ctx.color(&color);
@@ -183,7 +188,7 @@ impl Workspaces {
         self.workspaces.iter().map(|w| w.name.as_ref()).collect()
     }
 
-    fn update_workspace_occupied(&mut self, wm: &mut WindowManager) {
+    fn update_workspace_occupied<X: XConn>(&mut self, wm: &mut WindowManager<X>) {
         for ws in self.workspaces.iter_mut() {
             let now_occupied =
                 if let Some(ws) = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name)) {
@@ -230,23 +235,23 @@ impl Workspaces {
     }
 }
 
-impl Hook for Workspaces {
-    fn new_client(&mut self, _: &mut WindowManager, c: &mut Client) {
+impl<X: XConn> Hook<X> for Workspaces {
+    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) {
         if let Some(ws) = self.workspaces.get_mut(c.workspace()) {
             self.require_draw = !ws.occupied;
             ws.occupied = true;
         }
     }
 
-    fn remove_client(&mut self, wm: &mut WindowManager, _: WinId) {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) {
         self.update_workspace_occupied(wm);
     }
 
-    fn client_added_to_workspace(&mut self, wm: &mut WindowManager, _: WinId, _: usize) {
+    fn client_added_to_workspace(&mut self, wm: &mut WindowManager<X>, _: WinId, _: usize) {
         self.update_workspace_occupied(wm);
     }
 
-    fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, new: usize) {
+    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, new: usize) {
         let screen = wm.active_screen_index();
         if self.focused_ws[screen] != new {
             self.focused_ws[screen] = new;
@@ -263,7 +268,7 @@ impl Hook for Workspaces {
         }
     }
 
-    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &[&str], _: usize) {
+    fn workspaces_updated(&mut self, wm: &mut WindowManager<X>, names: &[&str], _: usize) {
         if names != self.names().as_slice() {
             let names: Vec<String> = names.iter().map(|s| s.to_string()).collect();
             self.focused_ws = wm.focused_workspaces();
@@ -274,23 +279,23 @@ impl Hook for Workspaces {
         }
     }
 
-    fn screen_change(&mut self, _: &mut WindowManager, _: usize) {
+    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) {
         self.require_draw = true;
     }
 
-    fn screens_updated(&mut self, wm: &mut WindowManager, _: &[Region]) {
+    fn screens_updated(&mut self, wm: &mut WindowManager<X>, _: &[Region]) {
         self.focused_ws = wm.focused_workspaces();
         self.update_workspace_occupied(wm);
         self.require_draw = true;
     }
 
-    fn startup(&mut self, wm: &mut WindowManager) {
-        // NOTE: Following initial workspace placement from WindowManager
+    fn startup(&mut self, wm: &mut WindowManager<X>) {
+        // NOTE: Following initial workspace placement from WindowManager<X>
         self.focused_ws = (0..wm.n_screens()).collect()
     }
 }
 
-impl Widget for Workspaces {
+impl<X: XConn> Widget<X> for Workspaces {
     fn draw(
         &mut self,
         ctx: &mut dyn DrawContext,
@@ -353,11 +358,11 @@ impl Widget for Workspaces {
 
 /// A text widget that is set via updating the root window name a la dwm
 #[derive(Clone, Debug)]
-pub struct RootWindowName {
-    txt: Text,
+pub struct RootWindowName<X: XConn> {
+    txt: Text<X>,
 }
 
-impl RootWindowName {
+impl<X: XConn> RootWindowName<X> {
     /// Create a new RootWindowName widget
     pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
@@ -366,15 +371,21 @@ impl RootWindowName {
     }
 }
 
-impl Hook for RootWindowName {
-    fn client_name_updated(&mut self, _: &mut WindowManager, _: WinId, name: &str, is_root: bool) {
+impl<X: XConn> Hook<X> for RootWindowName<X> {
+    fn client_name_updated(
+        &mut self,
+        _: &mut WindowManager<X>,
+        _: WinId,
+        name: &str,
+        is_root: bool,
+    ) {
         if is_root {
             self.txt.set_text(name);
         }
     }
 }
 
-impl Widget for RootWindowName {
+impl<X: XConn> Widget<X> for RootWindowName<X> {
     fn draw(&mut self, ctx: &mut dyn DrawContext, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
         self.txt.draw(ctx, s, f, w, h)
     }
@@ -394,12 +405,12 @@ impl Widget for RootWindowName {
 
 /// A text widget that is set via updating the root window name a la dwm
 #[derive(Clone, Debug)]
-pub struct ActiveWindowName {
-    txt: Text,
+pub struct ActiveWindowName<X: XConn> {
+    txt: Text<X>,
     max_chars: usize,
 }
 
-impl ActiveWindowName {
+impl<X: XConn> ActiveWindowName<X> {
     /// Create a new ActiveWindowName widget
     pub fn new(
         style: &TextStyle,
@@ -423,31 +434,37 @@ impl ActiveWindowName {
     }
 }
 
-impl Hook for ActiveWindowName {
-    fn remove_client(&mut self, wm: &mut WindowManager, _: WinId) {
+impl<X: XConn> Hook<X> for ActiveWindowName<X> {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) {
         if wm.client(&Selector::Focused) == None {
             self.txt.set_text("");
         }
     }
 
-    fn focus_change(&mut self, wm: &mut WindowManager, id: WinId) {
+    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) {
         if let Some(client) = wm.client(&Selector::WinId(id)) {
             self.set_text(client.wm_name());
         }
     }
 
-    fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, name: &str, root: bool) {
+    fn client_name_updated(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        id: WinId,
+        name: &str,
+        root: bool,
+    ) {
         if !root && Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
             self.set_text(name);
         }
     }
 
-    fn screen_change(&mut self, _: &mut WindowManager, _: usize) {
+    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) {
         self.txt.force_draw();
     }
 }
 
-impl Widget for ActiveWindowName {
+impl<X: XConn> Widget<X> for ActiveWindowName<X> {
     fn draw(
         &mut self,
         ctx: &mut dyn DrawContext,
@@ -478,11 +495,11 @@ impl Widget for ActiveWindowName {
 
 /// A simple widget that displays the active layout symbol
 #[derive(Clone, Debug)]
-pub struct CurrentLayout {
-    txt: Text,
+pub struct CurrentLayout<X: XConn> {
+    txt: Text<X>,
 }
 
-impl CurrentLayout {
+impl<X: XConn> CurrentLayout<X> {
     /// Create a new CurrentLayout widget
     pub fn new(style: &TextStyle) -> Self {
         Self {
@@ -491,25 +508,25 @@ impl CurrentLayout {
     }
 }
 
-impl Hook for CurrentLayout {
-    fn startup(&mut self, wm: &mut WindowManager) {
+impl<X: XConn> Hook<X> for CurrentLayout<X> {
+    fn startup(&mut self, wm: &mut WindowManager<X>) {
         self.txt.set_text(wm.current_layout_symbol());
     }
 
-    fn layout_change(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
+    fn layout_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) {
         self.txt.set_text(wm.current_layout_symbol());
     }
 
-    fn workspace_change(&mut self, wm: &mut WindowManager, _: usize, _: usize) {
+    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) {
         self.txt.set_text(wm.current_layout_symbol());
     }
 
-    fn screen_change(&mut self, wm: &mut WindowManager, _: usize) {
+    fn screen_change(&mut self, wm: &mut WindowManager<X>, _: usize) {
         self.txt.set_text(wm.current_layout_symbol());
     }
 }
 
-impl Widget for CurrentLayout {
+impl<X: XConn> Widget<X> for CurrentLayout<X> {
     fn draw(&mut self, ctx: &mut dyn DrawContext, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
         self.txt.draw(ctx, s, f, w, h)
     }

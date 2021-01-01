@@ -147,7 +147,7 @@ impl<X: XcbApi> XConn for XcbConnection<X> {
             .replace_prop(id, Atom::NetWmState, PropVal::Atom(&[data]));
     }
 
-    fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings) {
+    fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>) {
         self.api.grab_keys(&key_bindings.keys().collect::<Vec<_>>());
         self.api.grab_mouse_buttons(
             &mouse_bindings

@@ -6,6 +6,10 @@ build:
 build-release:
 	cargo lint && cargo build --release
 
+.PHONY: check
+check:
+	cargo clippy --workspace --all-targets --all-features --examples --tests
+
 .PHONY: check-all
 check-all:
 	cargo fmt --all -- --check

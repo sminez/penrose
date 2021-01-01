@@ -11,7 +11,7 @@ use penrose::{
     core::{
         config::Config,
         helpers::{index_selectors, spawn_for_output},
-        hooks::Hook,
+        hooks::Hooks,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
     },
     xcb::new_xcb_backed_window_manager,
@@ -47,7 +47,7 @@ fn main() -> Result<()> {
     config.layouts(my_layouts());
     let sp = Scratchpad::new("st", 0.8, 0.8);
 
-    let hooks: Vec<Box<dyn Hook>> = vec![
+    let hooks: Hooks<_> = vec![
         LayoutSymbolAsRootName::new(),
         RemoveEmptyWorkspaces::new(config.workspaces.clone()),
         DefaultWorkspace::new("1term", "[side]", vec!["st"]),

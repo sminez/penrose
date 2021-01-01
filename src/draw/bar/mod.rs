@@ -8,7 +8,7 @@ pub use statusbar::{Position, StatusBar};
 pub use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Text, Workspaces};
 
 use crate::{
-    core::hooks::Hook,
+    core::{hooks::Hook, xconnection::XConn},
     draw::{Color, Draw, DrawContext, Result, TextStyle},
 };
 
@@ -21,7 +21,7 @@ const MAX_ACTIVE_WINDOW_CHARS: usize = 80;
  * triggers: the status bar itself will handle passing through triggers and check for required
  * updates to the UI.
  */
-pub trait Widget: Hook {
+pub trait Widget<X: XConn>: Hook<X> {
     /**
      * Render the current state of the widget to the status bar window.
      */
@@ -50,14 +50,14 @@ pub trait Widget: Hook {
 
 /// Create a default dwm style status bar that displays content pulled from the
 /// WM_NAME property of the root window.
-pub fn dwm_bar<Ctx: DrawContext>(
+pub fn dwm_bar<Ctx: DrawContext, X: XConn + 'static>(
     drw: Box<dyn Draw<Ctx = Ctx>>,
     height: usize,
     style: &TextStyle,
     highlight: impl Into<Color>,
     empty_ws: impl Into<Color>,
     workspaces: Vec<impl Into<String>>,
-) -> Result<StatusBar<Ctx>> {
+) -> Result<StatusBar<Ctx, X>> {
     let highlight = highlight.into();
     let workspaces: Vec<String> = workspaces.into_iter().map(|w| w.into()).collect();
 
