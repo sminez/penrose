@@ -565,6 +565,16 @@ impl<X: XConn> WindowManager<X> {
      * user's main.rs
      */
 
+    /// Get an immutable reference to the underlying [XConn] impl that backs this [WindowManager]
+    pub fn conn(&self) -> &X {
+        &self.conn
+    }
+
+    /// Get an mutable reference to the underlying [XConn] impl that backs this [WindowManager]
+    pub fn conn_mut(&mut self) -> &mut X {
+        &mut self.conn
+    }
+
     /// Log information out at INFO level for picking up by external programs
     pub fn log(&self, msg: &str) {
         info!("{}", msg);
@@ -1366,19 +1376,25 @@ mod tests {
     struct ScreenChangingXConn {
         num_screens: Cell<usize>,
     }
+
+    impl ScreenChangingXConn {
+        fn set_num_screens(&mut self, n: usize) {
+            self.num_screens.set(n);
+        }
+    }
+
     impl StubXConn for ScreenChangingXConn {
         fn mock_current_outputs(&self) -> Vec<Screen> {
             let num_screens = self.num_screens.get();
-            let screens = (0..(num_screens))
+            (0..(num_screens))
                 .map(|n| Screen::new(Region::new(800 * n as u32, 600 * n as u32, 800, 600), n))
-                .collect();
-            self.num_screens.set(num_screens + 1);
-            screens
+                .collect()
         }
+    }
 
-        // Hack to reset the screen count without needing RefCell
-        fn mock_set_root_window_name(&self, _: &str) {
-            self.num_screens.set(1);
+    impl WindowManager<ScreenChangingXConn> {
+        fn set_num_screens(&mut self, n: usize) {
+            self.conn_mut().set_num_screens(n);
         }
     }
 
@@ -1398,13 +1414,15 @@ mod tests {
         // Focus workspace 1 the redetect screens: should have 1 and 0
         wm.focus_workspace(&Selector::Index(1));
         assert_eq!(wm.screens.focused().unwrap().wix, 1);
-        wm.detect_screens(); // adds a screen due to ScreenChangingXConn impl
+        wm.set_num_screens(2);
+        wm.detect_screens();
         assert_eq!(wm.screens.len(), 2);
         assert_eq!(wm.screens.get(0).unwrap().wix, 1);
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
 
         // Adding another screen should now have WS 2 as 1 is taken
-        wm.detect_screens(); // adds a screen due to ScreenChangingXConn impl
+        wm.set_num_screens(3);
+        wm.detect_screens();
         assert_eq!(wm.screens.len(), 3);
         assert_eq!(wm.screens.get(0).unwrap().wix, 1);
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
@@ -1412,8 +1430,8 @@ mod tests {
 
         // Focus WS 3 on screen 1, drop down to 1 screen: it should still have WS 3
         wm.focus_workspace(&Selector::Index(3));
-        wm.conn.set_root_window_name("reset the screen count to 1");
-        wm.detect_screens(); // Should now have one screen
+        wm.set_num_screens(1);
+        wm.detect_screens();
         assert_eq!(wm.screens.len(), 1);
         assert_eq!(wm.screens.get(0).unwrap().wix, 3);
     }

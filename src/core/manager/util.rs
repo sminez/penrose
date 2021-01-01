@@ -233,7 +233,7 @@ mod tests {
 
     use test_case::test_case;
 
-    use std::{cell::RefCell, collections::HashMap, rc::Rc, str::FromStr};
+    use std::{cell::Cell, collections::HashMap, str::FromStr};
 
     #[test]
     fn pad_region_centered() {
@@ -308,55 +308,40 @@ mod tests {
         assert_eq!(focused, expected);
     }
 
-    type RRV<T> = Rc<RefCell<Vec<T>>>;
-
     struct RecordingXConn {
-        positions: RRV<(WinId, Region)>,
-        maps: RRV<WinId>,
-        unmaps: RRV<WinId>,
+        positions: Cell<Vec<(WinId, Region)>>,
+        maps: Cell<Vec<WinId>>,
+        unmaps: Cell<Vec<WinId>>,
     }
+
     impl RecordingXConn {
         #[allow(clippy::type_complexity)]
-        fn init() -> (RRV<(WinId, Region)>, RRV<WinId>, RRV<WinId>, impl XConn) {
-            let positions = Rc::new(RefCell::new(vec![]));
-            let maps = Rc::new(RefCell::new(vec![]));
-            let unmaps = Rc::new(RefCell::new(vec![]));
-            let conn = Self {
-                positions: Rc::clone(&positions),
-                maps: Rc::clone(&maps),
-                unmaps: Rc::clone(&unmaps),
-            };
-
-            (positions, maps, unmaps, conn)
+        fn init() -> Self {
+            Self {
+                positions: Cell::new(Vec::new()),
+                maps: Cell::new(Vec::new()),
+                unmaps: Cell::new(Vec::new()),
+            }
         }
     }
+
     impl StubXConn for RecordingXConn {
         fn mock_position_window(&self, id: WinId, r: Region, _: u32, _: bool) {
-            self.positions.replace_with(|v| {
-                v.push((id, r));
-                v.to_vec()
-            });
+            let mut v = self.positions.take();
+            v.push((id, r));
+            self.positions.set(v);
         }
 
         fn mock_map_window(&self, id: WinId) {
-            self.maps.replace_with(|v| {
-                v.push(id);
-                v.to_vec()
-            });
+            let mut v = self.maps.take();
+            v.push(id);
+            self.maps.set(v);
         }
 
         fn mock_unmap_window(&self, id: WinId) {
-            self.unmaps.replace_with(|v| {
-                v.push(id);
-                v.to_vec()
-            });
-        }
-    }
-
-    fn strip<T>(r: RRV<T>) -> Vec<T> {
-        match Rc::try_unwrap(r) {
-            Ok(inner) => inner.into_inner(),
-            Err(_) => panic!("shouldn't have outstanding refs at this point"),
+            let mut v = self.unmaps.take();
+            v.push(id);
+            self.unmaps.set(v);
         }
     }
 
@@ -374,7 +359,7 @@ mod tests {
         expected_maps: Vec<WinId>,
         expected_unmaps: Vec<WinId>,
     ) {
-        let (positions, maps, unmaps, conn) = RecordingXConn::init();
+        let conn = RecordingXConn::init();
         let mut ws = Workspace::new(
             "test",
             vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)],
@@ -401,11 +386,10 @@ mod tests {
         }
 
         let need_layout = toggle_fullscreen(&conn, target, &mut client_map, &mut ws, r);
-        drop(conn);
 
         assert_eq!(need_layout, expected_need_layout);
-        assert_eq!(strip(positions), expected_positions);
-        assert_eq!(strip(maps), expected_maps);
-        assert_eq!(strip(unmaps), expected_unmaps);
+        assert_eq!(conn.positions.take(), expected_positions);
+        assert_eq!(conn.maps.take(), expected_maps);
+        assert_eq!(conn.unmaps.take(), expected_unmaps);
     }
 }
