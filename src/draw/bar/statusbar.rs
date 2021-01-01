@@ -5,9 +5,9 @@ use crate::{
         data_types::{PropVal, Region, WinId, WinType},
         hooks::Hook,
         manager::WindowManager,
-        xconnection::Atom,
+        xconnection::{Atom, XConn},
     },
-    draw::{Color, Draw, DrawContext, Result, Widget},
+    draw::{Color, Draw, DrawContext, HookableWidget, Result},
 };
 
 use std::fmt;
@@ -22,10 +22,15 @@ pub enum Position {
 }
 
 /// A simple status bar that works via hooks
-pub struct StatusBar<Ctx> {
-    drw: Box<dyn Draw<Ctx = Ctx>>,
+pub struct StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
+    drw: D,
     position: Position,
-    widgets: Vec<Box<dyn Widget>>,
+    widgets: Vec<Box<dyn HookableWidget<X>>>,
     screens: Vec<(WinId, f64)>, // window and width
     hpx: usize,
     h: f64,
@@ -33,7 +38,12 @@ pub struct StatusBar<Ctx> {
     active_screen: usize,
 }
 
-impl<Ctx> fmt::Debug for StatusBar<Ctx> {
+impl<C, D, X> fmt::Debug for StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("StatusBar")
             .field("drw", &stringify!(self.drw))
@@ -47,15 +57,20 @@ impl<Ctx> fmt::Debug for StatusBar<Ctx> {
     }
 }
 
-impl<Ctx: DrawContext> StatusBar<Ctx> {
+impl<C, D, X> StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
     /// Try to initialise a new empty status bar. Can fail if we are unable to create our window
     pub fn try_new(
-        drw: Box<dyn Draw<Ctx = Ctx>>,
+        drw: D,
         position: Position,
         h: usize,
         bg: impl Into<Color>,
         fonts: &[&str],
-        widgets: Vec<Box<dyn Widget>>,
+        widgets: Vec<Box<dyn HookableWidget<X>>>,
     ) -> Result<Self> {
         let mut bar = Self {
             drw,
@@ -128,7 +143,7 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
         Ok(())
     }
 
-    fn layout(&mut self, ctx: &mut dyn DrawContext, w: f64) -> Result<Vec<(f64, f64)>> {
+    fn layout(&mut self, ctx: &mut C, w: f64) -> Result<Vec<(f64, f64)>> {
         let mut extents = Vec::with_capacity(self.widgets.len());
         let mut greedy_indices = vec![];
 
@@ -165,54 +180,65 @@ impl<Ctx: DrawContext> StatusBar<Ctx> {
     }
 }
 
-impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
-    fn new_client(&mut self, wm: &mut WindowManager, c: &mut Client) {
+impl<C, D, X> Hook<X> for StatusBar<C, D, X>
+where
+    C: DrawContext,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
+    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
         self.widgets.iter_mut().for_each(|w| w.new_client(wm, c));
     }
 
-    fn remove_client(&mut self, wm: &mut WindowManager, id: WinId) {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, id: WinId) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.remove_client(wm, id));
     }
 
-    fn client_name_updated(&mut self, wm: &mut WindowManager, id: WinId, s: &str, is_root: bool) {
+    fn client_name_updated(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        id: WinId,
+        s: &str,
+        is_root: bool,
+    ) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.client_name_updated(wm, id, s, is_root));
     }
 
-    fn client_added_to_workspace(&mut self, wm: &mut WindowManager, id: WinId, wix: usize) {
+    fn client_added_to_workspace(&mut self, wm: &mut WindowManager<X>, id: WinId, wix: usize) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.client_added_to_workspace(wm, id, wix));
     }
 
-    fn layout_applied(&mut self, wm: &mut WindowManager, ws_ix: usize, s_ix: usize) {
+    fn layout_applied(&mut self, wm: &mut WindowManager<X>, ws_ix: usize, s_ix: usize) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.layout_applied(wm, ws_ix, s_ix));
     }
 
-    fn layout_change(&mut self, wm: &mut WindowManager, ws_ix: usize, s_ix: usize) {
+    fn layout_change(&mut self, wm: &mut WindowManager<X>, ws_ix: usize, s_ix: usize) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.layout_change(wm, ws_ix, s_ix));
     }
 
-    fn workspace_change(&mut self, wm: &mut WindowManager, prev: usize, new: usize) {
+    fn workspace_change(&mut self, wm: &mut WindowManager<X>, prev: usize, new: usize) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.workspace_change(wm, prev, new));
     }
 
-    fn workspaces_updated(&mut self, wm: &mut WindowManager, names: &[&str], active: usize) {
+    fn workspaces_updated(&mut self, wm: &mut WindowManager<X>, names: &[&str], active: usize) {
         self.widgets
             .iter_mut()
             .for_each(|w| w.workspaces_updated(wm, names, active));
     }
 
-    fn screens_updated(&mut self, wm: &mut WindowManager, dimensions: &[Region]) {
+    fn screens_updated(&mut self, wm: &mut WindowManager<X>, dimensions: &[Region]) {
         self.screens
             .iter()
             .for_each(|(id, _)| self.drw.destroy_window(*id));
@@ -231,23 +257,23 @@ impl<Ctx: DrawContext> Hook for StatusBar<Ctx> {
         }
     }
 
-    fn screen_change(&mut self, wm: &mut WindowManager, ix: usize) {
+    fn screen_change(&mut self, wm: &mut WindowManager<X>, ix: usize) {
         self.active_screen = ix;
         self.widgets
             .iter_mut()
             .for_each(|w| w.screen_change(wm, ix));
     }
 
-    fn focus_change(&mut self, wm: &mut WindowManager, id: WinId) {
+    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) {
         self.widgets.iter_mut().for_each(|w| w.focus_change(wm, id));
     }
 
-    fn event_handled(&mut self, wm: &mut WindowManager) {
+    fn event_handled(&mut self, wm: &mut WindowManager<X>) {
         self.widgets.iter_mut().for_each(|w| w.event_handled(wm));
         self.redraw_if_needed();
     }
 
-    fn startup(&mut self, wm: &mut WindowManager) {
+    fn startup(&mut self, wm: &mut WindowManager<X>) {
         self.widgets.iter_mut().for_each(|w| w.startup(wm));
         match self.redraw() {
             Ok(_) => (),

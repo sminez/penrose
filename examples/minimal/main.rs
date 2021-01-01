@@ -49,8 +49,8 @@ fn main() -> Result<()> {
     };
 
     let mouse_bindings = gen_mousebindings! {
-        Press Right + [Meta] => |wm: &mut WindowManager, _: &MouseEvent| wm.cycle_workspace(Forward),
-        Press Left + [Meta] => |wm: &mut WindowManager, _: &MouseEvent| wm.cycle_workspace(Backward)
+        Press Right + [Meta] => |wm: &mut WindowManager<_>, _: &MouseEvent| wm.cycle_workspace(Forward),
+        Press Left + [Meta] => |wm: &mut WindowManager<_>, _: &MouseEvent| wm.cycle_workspace(Backward)
     };
 
     let mut wm = new_xcb_backed_window_manager(config, hooks)?;

@@ -5,8 +5,7 @@ use crate::{
         client::Client,
         config::Config,
         data_types::{Change, Point, Region, WinId},
-        hooks::Hook,
-        layout::LayoutFunc,
+        hooks::Hooks,
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
@@ -14,6 +13,9 @@ use crate::{
     },
     Result,
 };
+
+#[cfg(feature = "serde")]
+use crate::core::layout::LayoutFunc;
 
 use nix::sys::signal::{signal, SigHandler, Signal};
 
@@ -37,33 +39,8 @@ macro_rules! run_hooks {
     };
 }
 
-// NOTE: Helpers for stubbing out non-serializable state from the WindowManager
-//       when deserializing with serde. WindowManager::hydrate_and_init MUST
-//       be called following serialization otherwise the WindowManager will
-//       panic on init.
-
 #[cfg(feature = "serde")]
-struct StubConn {}
-#[cfg(feature = "serde")]
-impl crate::core::xconnection::StubXConn for StubConn {
-    // NOTE: panicking here as it is the first XConn method to be called in __init
-    fn mock_current_outputs(&self) -> Vec<Screen> {
-        panic!("StubConn is not usable as a real XConn impl: call hydrate_and_init instead");
-    }
-
-    // NOTE: panicking here as it is the first XConn method to be called in grab_keys_and_run
-    fn mock_wait_for_event(&self) -> Option<crate::core::xconnection::XEvent> {
-        panic!("StubConn is not usable as a real XConn impl: call hydrate_and_init instead");
-    }
-}
-
-#[cfg(feature = "serde")]
-fn default_conn() -> Box<dyn XConn> {
-    Box::new(StubConn {})
-}
-
-#[cfg(feature = "serde")]
-fn default_hooks() -> Cell<Vec<Box<dyn Hook>>> {
+fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
     Cell::new(Vec::new())
 }
 
@@ -75,22 +52,24 @@ fn default_hooks() -> Cell<Vec<Box<dyn Hook>>> {
  * along with everything else.
  */
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct WindowManager {
-    #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
-    conn: Box<dyn XConn>,
+pub struct WindowManager<X: XConn> {
+    // #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
+    conn: X,
     config: Config,
     screens: Ring<Screen>,
     workspaces: Ring<Workspace>,
     client_map: HashMap<WinId, Client>,
     #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
-    hooks: Cell<Vec<Box<dyn Hook>>>,
+    hooks: Cell<Hooks<X>>,
     previous_workspace: usize,
     client_insert_point: InsertPoint,
     focused_client: Option<WinId>,
     running: bool,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    hydrated: bool,
 }
 
-impl fmt::Debug for WindowManager {
+impl<X: XConn> fmt::Debug for WindowManager<X> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WindowManager")
             .field("conn", &stringify!(self.conn))
@@ -107,12 +86,12 @@ impl fmt::Debug for WindowManager {
     }
 }
 
-impl WindowManager {
+impl<X: XConn> WindowManager<X> {
     /**
      * Construct a new window manager instance using a chosen [XConn] backed to communicate
      * with the X server.
      */
-    pub fn new(config: Config, conn: Box<dyn XConn>, hooks: Vec<Box<dyn Hook>>) -> WindowManager {
+    pub fn new(config: Config, conn: X, hooks: Hooks<X>) -> Self {
         let layouts = config.layouts.clone();
 
         debug!("Building initial workspaces");
@@ -133,23 +112,25 @@ impl WindowManager {
             client_insert_point: InsertPoint::First,
             focused_client: None,
             running: false,
+            hydrated: true,
         }
     }
 
     /// Restore missing state following serde deserialization
+    #[cfg(feature = "serde")]
     pub fn hydrate_and_init(
         &mut self,
-        conn: Box<dyn XConn>,
-        hooks: Vec<Box<dyn Hook>>,
+        hooks: Hooks<X>,
         layout_funcs: HashMap<&str, LayoutFunc>,
     ) -> Result<()> {
-        self.conn = conn;
+        self.conn.hydrate()?;
         self.hooks.set(hooks);
         self.workspaces
             .iter_mut()
             .try_for_each(|w| w.restore_layout_functions(&layout_funcs))?;
 
         util::validate_hydrated_wm_state(self)?;
+        self.hydrated = true;
         self.init();
         Ok(())
     }
@@ -161,6 +142,10 @@ impl WindowManager {
      * [WindowManager::grab_keys_and_run].
      */
     pub fn init(&mut self) {
+        if !self.hydrated {
+            panic!("Need to call 'hydrate_and_init' when restoring from serialised state")
+        }
+
         debug!("Attempting initial screen detection");
         self.detect_screens();
 
@@ -189,8 +174,8 @@ impl WindowManager {
     fn handle_event_action(
         &mut self,
         action: EventAction,
-        key_bindings: &mut KeyBindings,
-        mouse_bindings: &mut MouseBindings,
+        key_bindings: &mut KeyBindings<X>,
+        mouse_bindings: &mut MouseBindings<X>,
     ) -> Result<()> {
         debug!("Handling event action: {:?}", action);
         match action {
@@ -224,11 +209,14 @@ impl WindowManager {
      */
     pub fn grab_keys_and_run(
         &mut self,
-        mut key_bindings: KeyBindings,
-        mut mouse_bindings: MouseBindings,
+        mut key_bindings: KeyBindings<X>,
+        mut mouse_bindings: MouseBindings<X>,
     ) {
         if self.running {
             panic!("Attempt to call grab_keys_and_run while already running");
+        }
+        if !self.hydrated {
+            panic!("'hydrate_and_init' must be called before 'grab_keys_and_run' when restoring from serialised state")
         }
 
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
@@ -463,7 +451,7 @@ impl WindowManager {
     // NOTE: This defers control of the [WindowManager] to the user's key-binding action
     //       which can lead to arbitrary calls to public methods on the [WindowManager]
     //       including mutable methods.
-    fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings) {
+    fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings<X>) {
         debug!("handling key code: {:?}", k);
         if let Some(action) = bindings.get_mut(&k) {
             action(self); // ignoring Child handlers and SIGCHILD
@@ -473,7 +461,7 @@ impl WindowManager {
     // NOTE: This defers control of the [WindowManager] to the user's mouse-binding action
     //       which can lead to arbitrary calls to public methods on the [WindowManager]
     //       including mutable methods.
-    fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings) {
+    fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings<X>) {
         debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
         if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
             action(self, &e); // ignoring Child handlers and SIGCHILD
@@ -576,6 +564,16 @@ impl WindowManager {
      * Public methods that can be triggered by user bindings or directly in the
      * user's main.rs
      */
+
+    /// Get an immutable reference to the underlying [XConn] impl that backs this [WindowManager]
+    pub fn conn(&self) -> &X {
+        &self.conn
+    }
+
+    /// Get an mutable reference to the underlying [XConn] impl that backs this [WindowManager]
+    pub fn conn_mut(&mut self) -> &mut X {
+        &mut self.conn
+    }
 
     /// Log information out at INFO level for picking up by external programs
     pub fn log(&self, msg: &str) {
@@ -1103,13 +1101,16 @@ mod tests {
 
     use std::cell::Cell;
 
-    fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> WindowManager {
+    fn wm_with_mock_conn(
+        events: Vec<XEvent>,
+        unmanaged_ids: Vec<WinId>,
+    ) -> WindowManager<MockXConn> {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
         let conf = Config {
             layouts: test_layouts(),
             ..Default::default()
         };
-        let mut wm = WindowManager::new(conf, Box::new(conn), vec![]);
+        let mut wm = WindowManager::new(conf, conn, vec![]);
         wm.init();
 
         wm
@@ -1126,7 +1127,7 @@ mod tests {
         ]
     }
 
-    fn add_n_clients(wm: &mut WindowManager, n: usize, offset: usize) {
+    fn add_n_clients<X: XConn>(wm: &mut WindowManager<X>, n: usize, offset: usize) {
         for i in 0..n {
             wm.handle_map_request(10 * (i + offset + 1) as u32).unwrap();
         }
@@ -1267,7 +1268,7 @@ mod tests {
         let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 5, 0); // focus on last client (50) ix == 0
 
-        let clients = |w: &mut WindowManager| {
+        let clients = |w: &mut WindowManager<_>| {
             w.workspaces[w.screens[0].wix]
                 .iter()
                 .cloned()
@@ -1375,19 +1376,25 @@ mod tests {
     struct ScreenChangingXConn {
         num_screens: Cell<usize>,
     }
+
+    impl ScreenChangingXConn {
+        fn set_num_screens(&mut self, n: usize) {
+            self.num_screens.set(n);
+        }
+    }
+
     impl StubXConn for ScreenChangingXConn {
         fn mock_current_outputs(&self) -> Vec<Screen> {
             let num_screens = self.num_screens.get();
-            let screens = (0..(num_screens))
+            (0..(num_screens))
                 .map(|n| Screen::new(Region::new(800 * n as u32, 600 * n as u32, 800, 600), n))
-                .collect();
-            self.num_screens.set(num_screens + 1);
-            screens
+                .collect()
         }
+    }
 
-        // Hack to reset the screen count without needing RefCell
-        fn mock_set_root_window_name(&self, _: &str) {
-            self.num_screens.set(1);
+    impl WindowManager<ScreenChangingXConn> {
+        fn set_num_screens(&mut self, n: usize) {
+            self.conn_mut().set_num_screens(n);
         }
     }
 
@@ -1397,7 +1404,7 @@ mod tests {
             num_screens: Cell::new(1),
         };
         let conf = Config::default();
-        let mut wm = WindowManager::new(conf, Box::new(conn), vec![]);
+        let mut wm = WindowManager::new(conf, conn, vec![]);
         wm.init();
 
         // detect_screens is called on init so should have one screen
@@ -1407,13 +1414,15 @@ mod tests {
         // Focus workspace 1 the redetect screens: should have 1 and 0
         wm.focus_workspace(&Selector::Index(1));
         assert_eq!(wm.screens.focused().unwrap().wix, 1);
-        wm.detect_screens(); // adds a screen due to ScreenChangingXConn impl
+        wm.set_num_screens(2);
+        wm.detect_screens();
         assert_eq!(wm.screens.len(), 2);
         assert_eq!(wm.screens.get(0).unwrap().wix, 1);
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
 
         // Adding another screen should now have WS 2 as 1 is taken
-        wm.detect_screens(); // adds a screen due to ScreenChangingXConn impl
+        wm.set_num_screens(3);
+        wm.detect_screens();
         assert_eq!(wm.screens.len(), 3);
         assert_eq!(wm.screens.get(0).unwrap().wix, 1);
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
@@ -1421,8 +1430,8 @@ mod tests {
 
         // Focus WS 3 on screen 1, drop down to 1 screen: it should still have WS 3
         wm.focus_workspace(&Selector::Index(3));
-        wm.conn.set_root_window_name("reset the screen count to 1");
-        wm.detect_screens(); // Should now have one screen
+        wm.set_num_screens(1);
+        wm.detect_screens();
         assert_eq!(wm.screens.len(), 1);
         assert_eq!(wm.screens.get(0).unwrap().wix, 3);
     }

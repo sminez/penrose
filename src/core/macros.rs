@@ -6,9 +6,9 @@
 #[macro_export]
 macro_rules! run_external {
     ($cmd:tt) => {{
-        Box::new(move |_: &mut $crate::core::manager::WindowManager| {
+        Box::new(move |_: &mut $crate::core::manager::WindowManager<_>| {
             $crate::core::helpers::spawn($cmd);
-        }) as $crate::core::bindings::FireAndForget
+        }) as $crate::core::bindings::FireAndForget<_>
     }};
 }
 
@@ -16,15 +16,15 @@ macro_rules! run_external {
 #[macro_export]
 macro_rules! run_internal {
     ($func:ident) => {
-        Box::new(|wm: &mut $crate::core::manager::WindowManager| {
+        Box::new(|wm: &mut $crate::core::manager::WindowManager<_>| {
             wm.$func();
-        }) as $crate::core::bindings::FireAndForget
+        }) as $crate::core::bindings::FireAndForget<_>
     };
 
     ($func:ident, $($arg:expr),+) => {
-        Box::new(move |wm: &mut $crate::core::manager::WindowManager| {
+        Box::new(move |wm: &mut $crate::core::manager::WindowManager<_>| {
             wm.$func($($arg),+);
-        }) as $crate::core::bindings::FireAndForget
+        }) as $crate::core::bindings::FireAndForget<_>
     };
 }
 
@@ -138,7 +138,7 @@ macro_rules! gen_mousebindings {
                 let kind = $crate::core::bindings::MouseEventKind::$kind;
                 _map.insert(
                     (kind, state),
-                    Box::new($action) as $crate::core::bindings::MouseEventHandler
+                    Box::new($action) as $crate::core::bindings::MouseEventHandler<_>
                 );
             )+
 

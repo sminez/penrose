@@ -296,6 +296,10 @@ pub enum XEvent {
  * windowing system but X idioms and high level event types / client interations are assumed.
  **/
 pub trait XConn {
+    /// Hydrate this XConn to restore internal state following serde deserialization
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()>;
+
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
 
@@ -341,7 +345,9 @@ pub trait XConn {
      * is what determines which key press events end up being sent through in the
      * main event loop for the WindowManager.
      */
-    fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings);
+    fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>)
+    where
+        Self: Sized;
 
     /// Set required EWMH properties to ensure compatability with external programs
     fn set_wm_properties(&self, workspaces: &[&str]);
@@ -413,6 +419,12 @@ pub trait XConn {
  * make writing real impls more error prone if and when new methods are added to the trait.
  */
 pub trait StubXConn {
+    /// Mocked version of hydrate
+    #[cfg(feature = "serde")]
+    fn mock_hydrate(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Mocked version of flush
     fn mock_flush(&self) -> bool {
         true
@@ -495,7 +507,11 @@ pub trait StubXConn {
     /// Mocked version of set_client_border_color
     fn mock_set_client_border_color(&self, _: WinId, _: u32) {}
     /// Mocked version of grab_keys
-    fn mock_grab_keys(&self, _: &KeyBindings, _: &MouseBindings) {}
+    fn mock_grab_keys(&self, _: &KeyBindings<Self>, _: &MouseBindings<Self>)
+    where
+        Self: Sized,
+    {
+    }
     /// Mocked version of set_wm_properties
     fn mock_set_wm_properties(&self, _: &[&str]) {}
     /// Mocked version of update_desktops
@@ -518,6 +534,11 @@ impl<T> XConn for T
 where
     T: StubXConn,
 {
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()> {
+        self.mock_hydrate()
+    }
+
     fn flush(&self) -> bool {
         self.mock_flush()
     }
@@ -570,7 +591,7 @@ where
         self.mock_set_client_border_color(id, color)
     }
 
-    fn grab_keys(&self, key_bindings: &KeyBindings, mouse_bindings: &MouseBindings) {
+    fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>) {
         self.mock_grab_keys(key_bindings, mouse_bindings)
     }
 
@@ -640,8 +661,10 @@ where
 }
 
 /// A dummy [XConn] implementation for testing
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MockXConn {
     screens: Vec<Screen>,
+    #[cfg_attr(feature = "serde", serde(skip))]
     events: Cell<Vec<XEvent>>,
     focused: Cell<WinId>,
     unmanaged_ids: Vec<WinId>,

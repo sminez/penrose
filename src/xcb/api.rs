@@ -12,8 +12,16 @@ use strum::*;
 
 use std::{collections::HashMap, fmt, str::FromStr};
 
+#[cfg(feature = "serde")]
+fn default_conn() -> xcb::Connection {
+    let (conn, _) = xcb::Connection::connect(None).unwrap();
+    conn
+}
+
 /// A connection to the X server using the XCB C API
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Api {
+    #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
     conn: xcb::Connection,
     root: WinId,
     check_win: WinId,
@@ -55,35 +63,58 @@ impl Api {
     /// Connect to the X server using the XCB API
     pub fn new() -> Result<Self> {
         let (conn, _) = xcb::Connection::connect(None)?;
-        let root = match conn.get_setup().roots().next() {
+        let mut api = Self {
+            conn,
+            root: 0,
+            check_win: 0,
+            randr_base: 0,
+            atoms: HashMap::new(),
+        };
+        api.init()?;
+
+        Ok(api)
+    }
+
+    fn init(&mut self) -> Result<()> {
+        self.root = match self.conn.get_setup().roots().next() {
             Some(r) => r.root(),
             None => return Err(XcbError::NoScreens),
         };
-        let randr_base = conn
+        self.randr_base = self
+            .conn
             .get_extension_data(&mut xcb::randr::id())
             .ok_or_else(|| XcbError::Randr("unable to fetch extension data".into()))?
             .first_event();
 
-        let check_win = conn.generate_id();
-        xcb::create_window(&conn, 0, check_win, root, 0, 0, 1, 1, 0, 0, 0, &[]);
-        conn.flush();
+        self.check_win = self.conn.generate_id();
+        xcb::create_window(
+            &self.conn,
+            0,
+            self.check_win,
+            self.root,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            &[],
+        );
+        self.conn.flush();
 
-        let mut api = Self {
-            conn,
-            root,
-            check_win,
-            randr_base,
-            atoms: HashMap::new(),
-        };
-
-        api.atoms = Atom::iter()
+        self.atoms = Atom::iter()
             .map(|atom| {
-                let val = api.atom(atom.as_ref())?;
+                let val = self.atom(atom.as_ref())?;
                 Ok((atom, val))
             })
             .collect::<Result<HashMap<_, _>>>()?;
 
-        Ok(api)
+        Ok(())
+    }
+
+    pub(crate) fn known_atoms(&self) -> &HashMap<Atom, u32> {
+        &self.atoms
     }
 
     pub(crate) fn conn(&self) -> &xcb::Connection {
@@ -116,6 +147,11 @@ impl Api {
 }
 
 impl XcbApi for Api {
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()> {
+        self.init()
+    }
+
     // xcb docs: https://www.mankier.com/3/xcb_intern_atom
     fn atom(&self, name: &str) -> Result<u32> {
         if let Ok(known) = Atom::from_str(name) {

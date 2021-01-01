@@ -5,7 +5,7 @@ use penrose::core::{
     data_types::WinId,
     hooks::{Hook, Hooks},
     manager::WindowManager,
-    xconnection::{MockXConn, XEvent},
+    xconnection::{MockXConn, XConn, XEvent},
 };
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
@@ -28,52 +28,52 @@ impl TestHook {
     }
 }
 
-impl Hook for TestHook {
-    fn new_client(&mut self, _: &mut WindowManager, _: &mut Client) {
+impl<X: XConn> Hook<X> for TestHook {
+    fn new_client(&mut self, _: &mut WindowManager<X>, _: &mut Client) {
         self.mark_called("new_client");
     }
 
-    fn remove_client(&mut self, _: &mut WindowManager, _: WinId) {
+    fn remove_client(&mut self, _: &mut WindowManager<X>, _: WinId) {
         self.mark_called("remove_client");
     }
 
-    fn client_name_updated(&mut self, _: &mut WindowManager, _: WinId, _: &str, _: bool) {
+    fn client_name_updated(&mut self, _: &mut WindowManager<X>, _: WinId, _: &str, _: bool) {
         self.mark_called("client_name_updated");
     }
 
-    fn client_added_to_workspace(&mut self, _: &mut WindowManager, _: WinId, _: usize) {
+    fn client_added_to_workspace(&mut self, _: &mut WindowManager<X>, _: WinId, _: usize) {
         self.mark_called("client_added_to_workspace");
     }
 
-    fn layout_applied(&mut self, _: &mut WindowManager, _: usize, _: usize) {
+    fn layout_applied(&mut self, _: &mut WindowManager<X>, _: usize, _: usize) {
         self.mark_called("layout_applied");
     }
 
-    fn layout_change(&mut self, _: &mut WindowManager, _: usize, _: usize) {
+    fn layout_change(&mut self, _: &mut WindowManager<X>, _: usize, _: usize) {
         self.mark_called("layout_change");
     }
 
-    fn workspace_change(&mut self, _: &mut WindowManager, _: usize, _: usize) {
+    fn workspace_change(&mut self, _: &mut WindowManager<X>, _: usize, _: usize) {
         self.mark_called("workspace_change");
     }
 
-    fn workspaces_updated(&mut self, _: &mut WindowManager, _: &[&str], _: usize) {
+    fn workspaces_updated(&mut self, _: &mut WindowManager<X>, _: &[&str], _: usize) {
         self.mark_called("workspaces_updated");
     }
 
-    fn screen_change(&mut self, _: &mut WindowManager, _: usize) {
+    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) {
         self.mark_called("screen_change");
     }
 
-    fn focus_change(&mut self, _: &mut WindowManager, _: WinId) {
+    fn focus_change(&mut self, _: &mut WindowManager<X>, _: WinId) {
         self.mark_called("focus_change");
     }
 
-    fn startup(&mut self, _: &mut WindowManager) {
+    fn startup(&mut self, _: &mut WindowManager<X>) {
         self.mark_called("startup");
     }
 
-    fn event_handled(&mut self, _: &mut WindowManager) {
+    fn event_handled(&mut self, _: &mut WindowManager<X>) {
         self.mark_called("event_handled");
     }
 }
@@ -97,7 +97,7 @@ macro_rules! hook_test {
             };
 
             let config = Config::default();
-            let hooks: Hooks = vec![Box::new(hook_1), Box::new(hook_2)];
+            let hooks: Hooks<MockXConn> = vec![Box::new(hook_1), Box::new(hook_2)];
 
             let mut events = $evts.clone();
             events.push(XEvent::KeyPress(common::EXIT_CODE));
@@ -107,7 +107,7 @@ macro_rules! hook_test {
                 events,
                 vec![],
             );
-            let mut wm = WindowManager::new(config, Box::new(conn), hooks);
+            let mut wm = WindowManager::new(config, conn, hooks);
             wm.init();
             wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
             drop(wm);

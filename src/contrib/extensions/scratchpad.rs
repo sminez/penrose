@@ -6,6 +6,7 @@ use crate::core::{
     helpers::spawn,
     hooks::Hook,
     manager::WindowManager,
+    xconnection::XConn,
 };
 
 use std::{cell::RefCell, fmt, rc::Rc};
@@ -83,12 +84,12 @@ impl Scratchpad {
     }
 
     /// Show / hide the bound client. If there is no client currently, then spawn one.
-    pub fn toggle(&self) -> FireAndForget {
+    pub fn toggle<X: XConn>(&self) -> FireAndForget<X> {
         let mut clone = self.boxed_clone();
-        Box::new(move |wm: &mut WindowManager| clone.toggle_client(wm))
+        Box::new(move |wm: &mut WindowManager<X>| clone.toggle_client(wm))
     }
 
-    fn toggle_client(&mut self, wm: &mut WindowManager) {
+    fn toggle_client<X: XConn>(&mut self, wm: &mut WindowManager<X>) {
         let id = match *self.client.borrow() {
             Some(id) => id,
             None => {
@@ -109,8 +110,8 @@ impl Scratchpad {
     }
 }
 
-impl Hook for Scratchpad {
-    fn new_client(&mut self, wm: &mut WindowManager, c: &mut Client) {
+impl<X: XConn> Hook<X> for Scratchpad {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
         if *self.pending.borrow() && self.client.borrow().is_none() {
             self.pending.replace(false);
             self.client.replace(Some(c.id()));
@@ -119,7 +120,7 @@ impl Hook for Scratchpad {
         }
     }
 
-    fn remove_client(&mut self, _: &mut WindowManager, id: WinId) {
+    fn remove_client(&mut self, _: &mut WindowManager<X>, id: WinId) {
         let client = match *self.client.borrow() {
             Some(id) => id,
             None => return,
@@ -131,7 +132,7 @@ impl Hook for Scratchpad {
         }
     }
 
-    fn layout_applied(&mut self, wm: &mut WindowManager, _: usize, screen_index: usize) {
+    fn layout_applied(&mut self, wm: &mut WindowManager<X>, _: usize, screen_index: usize) {
         if let Some(id) = *self.client.borrow() {
             if *self.visible.borrow() {
                 if let Some(region) = wm.screen_size(screen_index) {

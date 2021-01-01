@@ -43,7 +43,7 @@ fn bar_draw() -> Result<()> {
     let highlight = BLUE;
     let empty_ws = GREY;
     let mut bar = dwm_bar(
-        Box::new(XcbDraw::new()?),
+        XcbDraw::new()?,
         HEIGHT,
         &style,
         highlight,

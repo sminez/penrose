@@ -21,6 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         rust: [stable, beta, nightly]
+        features: ["xcb,xcb_draw", "xcb,xcb_draw,serde"]
 
     steps:
     - uses: actions/checkout@v2
@@ -32,7 +33,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
 
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --features ${{ matrix.features }} --verbose
 
   rustfmt:
     name: Ensure rustfmt is happy

@@ -3,7 +3,7 @@ use crate::core::{
     bindings::{KeyCode, MouseState},
     config::Config,
     data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
-    hooks::Hook,
+    hooks::{Hook, Hooks},
     manager::WindowManager,
     screen::Screen,
     xconnection::{Atom, XEvent},
@@ -76,6 +76,10 @@ pub enum XcbError {
 /// Result type for fallible methods using XCB
 pub type Result<T> = std::result::Result<T, XcbError>;
 
+/// Helper type for when you are defining your [Hook] vector in your main.rs when using
+/// the default XCB impls
+pub type XcbHooks = Hooks<XcbConnection<Api>>;
+
 /// Construct a default [XcbConnection] using the penrose provided [Api]
 /// implementation of [XcbApi].
 pub fn new_xcb_connection() -> crate::Result<XcbConnection<Api>> {
@@ -85,10 +89,10 @@ pub fn new_xcb_connection() -> crate::Result<XcbConnection<Api>> {
 /// Construct a penrose [WindowManager] backed by the default [xcb][crate::xcb] backend.
 pub fn new_xcb_backed_window_manager(
     config: Config,
-    hooks: Vec<Box<dyn Hook>>,
-) -> crate::Result<WindowManager> {
+    hooks: Vec<Box<dyn Hook<XcbConnection<Api>>>>,
+) -> crate::Result<WindowManager<XcbConnection<Api>>> {
     let conn = XcbConnection::new(Api::new()?)?;
-    let mut wm = WindowManager::new(config, Box::new(conn), hooks);
+    let mut wm = WindowManager::new(config, conn, hooks);
     wm.init();
 
     Ok(wm)
@@ -102,6 +106,10 @@ pub fn new_xcb_backed_window_manager(
  * the API nicer to work with in Penrose code.
  */
 pub trait XcbApi {
+    /// Hydrate this XcbApi to restore internal state following serde deserialization
+    #[cfg(feature = "serde")]
+    fn hydrate(&mut self) -> Result<()>;
+
     /**
      * Intern an atom by name, returning the corresponding id.
      *
