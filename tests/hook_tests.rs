@@ -2,7 +2,7 @@
 use penrose::core::{
     client::Client,
     config::Config,
-    data_types::WinId,
+    data_types::{Region, WinId},
     hooks::{Hook, Hooks},
     manager::WindowManager,
     xconnection::{MockXConn, XConn, XEvent},
@@ -63,6 +63,14 @@ impl<X: XConn> Hook<X> for TestHook {
 
     fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) {
         self.mark_called("screen_change");
+    }
+
+    fn screens_updated(&mut self, _wm: &mut WindowManager<X>, _dimensions: &[Region]) {
+        self.mark_called("screens_updated");
+    }
+
+    fn randr_notify(&mut self, _wm: &mut WindowManager<X>) {
+        self.mark_called("randr_notify");
     }
 
     fn focus_change(&mut self, _: &mut WindowManager<X>, _: WinId) {
@@ -208,6 +216,20 @@ hook_test!(
     "screen_change",
     test_screen_change_hooks,
     vec![XEvent::KeyPress(common::SCREEN_CHANGE_CODE)]
+);
+
+hook_test!(
+    expected_calls => 1,
+    "screens_updated",
+    test_screens_updated_hooks,
+    vec![XEvent::RandrNotify] // Should not call as screens haven't changed
+);
+
+hook_test!(
+    expected_calls => 1,
+    "randr_notify",
+    test_randr_notify_hooks,
+    vec![XEvent::RandrNotify]
 );
 
 hook_test!(

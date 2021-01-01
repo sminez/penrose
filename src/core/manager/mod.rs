@@ -183,7 +183,10 @@ impl<X: XConn> WindowManager<X> {
             EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
             EventAction::ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
             EventAction::DestroyClient(id) => self.remove_client(id),
-            EventAction::DetectScreens => self.detect_screens(),
+            EventAction::DetectScreens => {
+                run_hooks!(randr_notify, self,);
+                self.detect_screens()
+            }
             EventAction::MapWindow(id) => self.handle_map_request(id)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
             EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),

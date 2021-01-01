@@ -238,6 +238,10 @@ where
             .for_each(|w| w.workspaces_updated(wm, names, active));
     }
 
+    fn randr_notify(&mut self, wm: &mut WindowManager<X>) {
+        self.widgets.iter_mut().for_each(|w| w.randr_notify(wm));
+    }
+
     fn screens_updated(&mut self, wm: &mut WindowManager<X>, dimensions: &[Region]) {
         self.screens
             .iter()

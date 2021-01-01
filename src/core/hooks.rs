@@ -110,6 +110,15 @@ pub trait Hook<X: XConn> {
     fn screen_change(&mut self, _wm: &mut WindowManager<X>, _screen_index: usize) {}
 
     /**
+     * Called when the underlying [XConn] emitted a [RandrNotify][crate::core::xconnection::XEvent::RandrNotiy]
+     * event.
+     *
+     * This hook will run _before_ polling state for newly connected screens and running the
+     * [screens_updated][Hook::screens_updated] hook.
+     */
+    fn randr_notify(&mut self, _wm: &mut WindowManager<X>) {}
+
+    /**
      * Called when there has been a change to the WindowManager workspace list.
      */
     fn screens_updated(&mut self, _wm: &mut WindowManager<X>, _dimensions: &[Region]) {}
