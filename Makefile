@@ -19,7 +19,7 @@ check-all:
 
 .PHONY: doc
 doc:
-	cargo doc --open &
+	cargo doc --all-features --open &
 
 .PHONY: examples
 examples:

@@ -10,13 +10,15 @@ use crate::core::{
 pub type Hooks<X> = Vec<Box<dyn Hook<X>>>;
 
 /**
- * impls of Hook can be registered to receive events during WindowManager operation. Each hook
- * point is documented as individual methods detailing when and how they will be called. All Hook
- * impls will be called for each trigger so the required methods all provide a no-op default
- * implementation that must be overriden to provide functionality. Hooks may 'subscribe' to
+ * User defined functionality triggered by [WindowManager] actions.
+ *
+ * impls of [Hook] can be registered to receive events during [WindowManager] operation. Each hook
+ * point is documented as individual methods detailing when and how they will be called. All
+ * registered hooks will be called for each trigger so the required methods all provide a no-op
+ * default implementation that must be overriden to provide functionality. Hooks may 'subscribe' to
  * multiple triggers to implement more complex behaviours and may store additional state. Care
- * should be taken when writing Hook impls to ensure that infinite loops are not created by nested
- * triggers and that, where possible, support for other Hooks running from the same triggers is
+ * should be taken when writing [Hook] impls to ensure that infinite loops are not created by nested
+ * triggers and that, where possible, support for other hooks running from the same triggers is
  * possible.
  */
 pub trait Hook<X: XConn> {
