@@ -76,7 +76,7 @@ impl<X: XcbApi> XcbConnection<X> {
 }
 
 impl XcbConnection<Api> {
-    /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [API]
+    /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
     /// to communicate with the X server.
     pub fn xcb_connectction(&self) -> &xcb::Connection {
         &self.api.conn()
@@ -89,7 +89,7 @@ impl XcbConnection<Api> {
 }
 
 impl WindowManager<XcbConnection<Api>> {
-    /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [API]
+    /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
     /// to communicate with the X server.
     pub fn xcb_connectction(&self) -> &xcb::Connection {
         &self.conn().xcb_connectction()
