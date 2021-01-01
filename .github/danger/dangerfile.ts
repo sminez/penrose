@@ -9,7 +9,7 @@ type LabelRule = {
 // ----------------------------------------------------------------------------
 // CONFIG
 const TRUSTED_USERS = ["sminez"];
-const BIG_PR = 400;
+const BIG_PR = 1000;
 const WIN_GIFS = [
   "https://www.omega-level.net/wp-content/uploads/2015/11/nice.gif",
   "https://img.buzzfeed.com/buzzfeed-static/static/2018-05/9/22/asset/buzzfeed-prod-web-03/anigif_sub-buzz-2321-1525918809-1.gif",
