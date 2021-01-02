@@ -11,7 +11,7 @@ use crate::{
         xconnection::Atom,
     },
     draw::{Color, Draw, DrawContext, DrawError, Result},
-    xcb::{XcbApi, XcbError},
+    xcb::{Api, XcbApi, XcbError},
 };
 
 use pangocairo::functions::{create_layout, show_layout};
@@ -25,7 +25,7 @@ fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
 /// An XCB based [Draw] implementation backed by pango and cairo
 #[derive(Clone, Debug)]
 pub struct XcbDraw {
-    api: crate::xcb::Api,
+    api: Api,
     fonts: HashMap<String, pango::FontDescription>,
     surfaces: HashMap<WinId, cairo::XCBSurface>,
 }
@@ -34,7 +34,7 @@ impl XcbDraw {
     /// Create a new empty [XcbDraw]. Fails if unable to connect to the X server
     pub fn new() -> Result<Self> {
         Ok(Self {
-            api: crate::xcb::Api::new()?,
+            api: Api::new()?,
             fonts: HashMap::new(),
             surfaces: HashMap::new(),
         })

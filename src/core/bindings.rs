@@ -9,7 +9,7 @@ use crate::{
 
 use std::{collections::HashMap, convert::TryFrom};
 
-use strum::{EnumIter, IntoEnumIterator};
+use strum::EnumIter;
 
 /// Some action to be run by a user key binding
 pub type FireAndForget<X> = Box<dyn FnMut(&mut WindowManager<X>)>;
@@ -36,14 +36,8 @@ pub struct KeyCode {
 }
 
 impl KeyCode {
-    pub(crate) fn from_key_press(k: &xcb::KeyPressEvent) -> KeyCode {
-        KeyCode {
-            mask: k.state(),
-            code: k.detail(),
-        }
-    }
-
-    pub(crate) fn ignoring_modifier(&self, mask: u16) -> KeyCode {
+    /// Create a new [KeyCode] from this one that removes the given mask
+    pub fn ignoring_modifier(&self, mask: u16) -> KeyCode {
         KeyCode {
             mask: self.mask & !mask,
             code: self.code,
@@ -79,21 +73,6 @@ impl From<MouseButton> for u8 {
     }
 }
 
-impl TryFrom<u8> for MouseButton {
-    type Error = PenroseError;
-
-    fn try_from(n: u8) -> Result<Self> {
-        match n {
-            1 => Ok(Self::Left),
-            2 => Ok(Self::Middle),
-            3 => Ok(Self::Right),
-            4 => Ok(Self::ScrollUp),
-            5 => Ok(Self::ScrollDown),
-            _ => Err(PenroseError::UnknownMouseButton(n)),
-        }
-    }
-}
-
 /// Known modifier keys for bindings
 #[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -106,23 +85,6 @@ pub enum ModifierKey {
     Shift,
     /// Meta / super / windows
     Meta,
-}
-
-impl ModifierKey {
-    pub(crate) fn was_held(&self, mask: u16) -> bool {
-        mask & u16::from(*self) > 0
-    }
-}
-
-impl From<ModifierKey> for u16 {
-    fn from(m: ModifierKey) -> u16 {
-        (match m {
-            ModifierKey::Ctrl => xcb::MOD_MASK_CONTROL,
-            ModifierKey::Alt => xcb::MOD_MASK_1,
-            ModifierKey::Shift => xcb::MOD_MASK_SHIFT,
-            ModifierKey::Meta => xcb::MOD_MASK_4,
-        }) as u16
-    }
 }
 
 impl TryFrom<&str> for ModifierKey {
@@ -143,8 +105,10 @@ impl TryFrom<&str> for ModifierKey {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MouseState {
-    button: MouseButton,
-    modifiers: Vec<ModifierKey>,
+    /// The [MouseButton] being held
+    pub button: MouseButton,
+    /// All [ModifierKey]s being held
+    pub modifiers: Vec<ModifierKey>,
 }
 
 impl MouseState {
@@ -152,23 +116,6 @@ impl MouseState {
     pub fn new(button: MouseButton, mut modifiers: Vec<ModifierKey>) -> Self {
         modifiers.sort();
         Self { button, modifiers }
-    }
-
-    pub(crate) fn from_event(detail: u8, state: u16) -> Result<Self> {
-        Ok(Self {
-            button: MouseButton::try_from(detail)?,
-            modifiers: ModifierKey::iter().filter(|m| m.was_held(state)).collect(),
-        })
-    }
-
-    pub(crate) fn mask(&self) -> u16 {
-        self.modifiers
-            .iter()
-            .fold(0, |acc, &val| acc | u16::from(val))
-    }
-
-    pub(crate) fn button(&self) -> u8 {
-        self.button.into()
     }
 }
 
@@ -201,7 +148,8 @@ pub struct MouseEvent {
 }
 
 impl MouseEvent {
-    fn new(
+    /// Construct a new [MouseEvent] from raw data
+    pub fn new(
         id: WinId,
         rx: i16,
         ry: i16,
@@ -217,44 +165,5 @@ impl MouseEvent {
             state,
             kind,
         }
-    }
-
-    pub(crate) fn from_press(e: &xcb::ButtonPressEvent) -> Result<Self> {
-        let state = MouseState::from_event(e.detail(), e.state())?;
-        Ok(Self::new(
-            e.event(),
-            e.root_x(),
-            e.root_y(),
-            e.event_x(),
-            e.event_y(),
-            state,
-            MouseEventKind::Press,
-        ))
-    }
-
-    pub(crate) fn from_release(e: &xcb::ButtonReleaseEvent) -> Result<Self> {
-        let state = MouseState::from_event(e.detail(), e.state())?;
-        Ok(Self::new(
-            e.event(),
-            e.root_x(),
-            e.root_y(),
-            e.event_x(),
-            e.event_y(),
-            state,
-            MouseEventKind::Release,
-        ))
-    }
-
-    pub(crate) fn from_motion(e: &xcb::MotionNotifyEvent) -> Result<Self> {
-        let state = MouseState::from_event(e.detail(), e.state())?;
-        Ok(Self::new(
-            e.event(),
-            e.root_x(),
-            e.root_y(),
-            e.event_x(),
-            e.event_y(),
-            state,
-            MouseEventKind::Motion,
-        ))
     }
 }

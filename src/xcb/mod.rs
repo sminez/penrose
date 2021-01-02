@@ -10,8 +10,10 @@ use crate::core::{
 };
 
 pub mod api;
+pub mod conversions;
 #[cfg(feature = "xcb_draw")]
 pub mod draw;
+pub mod helpers;
 pub mod xconn;
 
 #[doc(inline)]
@@ -76,6 +78,10 @@ pub enum XcbError {
     #[cfg(feature = "xcb_draw")]
     #[error("no cairo surface for {0}")]
     UnintialisedSurface(WinId),
+
+    /// A user specified mouse binding contained an invalid button
+    #[error("Unknown mouse button: {0}")]
+    UnknownMouseButton(u8),
 }
 
 /// Result type for fallible methods using XCB

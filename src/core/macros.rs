@@ -50,7 +50,7 @@ macro_rules! gen_keybindings {
         $binding:expr => $action:expr;
         $($tail:tt)*
     } => {
-        match $crate::core::helpers::parse_key_binding($binding, &$codes) {
+        match $crate::xcb::helpers::parse_key_binding($binding, &$codes) {
             None => panic!("invalid key binding: {}", $binding),
             Some(key_code) => $map.insert(key_code, $action),
         };
@@ -72,7 +72,7 @@ macro_rules! gen_keybindings {
                     };
                 }
             )+
-            gen__keybindings!(@parse $map, $codes, $($tail)*);
+            gen_keybindings!(@parse $map, $codes, $($tail)*);
         }
     };
 
@@ -85,7 +85,7 @@ macro_rules! gen_keybindings {
             $(
                 for (k, arg) in $from.into_iter().zip($to.clone()) {
                     let binding = format!($patt, k);
-                    match $crate::core::helpers::parse_key_binding(binding.clone(), &$codes) {
+                    match $crate::xcb::helpers::parse_key_binding(binding.clone(), &$codes) {
                         None => panic!("invalid key binding: {}", binding),
                         Some(key_code) => $map.insert(key_code, run_internal!($method, &arg)),
                     };

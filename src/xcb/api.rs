@@ -10,7 +10,7 @@ use crate::{
 };
 use strum::*;
 
-use std::{collections::HashMap, fmt, str::FromStr};
+use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
 
 #[cfg(feature = "serde")]
 fn default_conn() -> xcb::Connection {
@@ -508,27 +508,13 @@ impl XcbApi for Api {
             }
 
             match etype {
-                xcb::BUTTON_PRESS => {
-                    let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::MouseEvent(MouseEvent::from_press(e).ok()?))
+                xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
+                    Some(XEvent::MouseEvent(MouseEvent::try_from(event).unwrap()))
                 }
 
-                xcb::BUTTON_RELEASE => {
-                    let e: &xcb::ButtonReleaseEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::MouseEvent(MouseEvent::from_release(e).ok()?))
-                }
-
-                xcb::MOTION_NOTIFY => {
-                    let e: &xcb::MotionNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::MouseEvent(MouseEvent::from_motion(e).ok()?))
-                }
-
-                xcb::KEY_PRESS => {
-                    let e: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::KeyPress(
-                        KeyCode::from_key_press(e).ignoring_modifier(numlock),
-                    ))
-                }
+                xcb::KEY_PRESS => Some(XEvent::KeyPress(
+                    KeyCode::try_from(event).unwrap().ignoring_modifier(numlock),
+                )),
 
                 xcb::MAP_REQUEST => {
                     let e: &xcb::MapRequestEvent = unsafe { xcb::cast_event(&event) };

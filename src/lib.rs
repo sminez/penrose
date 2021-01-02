@@ -87,10 +87,6 @@ pub enum PenroseError {
     #[error("Unknown modifier key: {0}")]
     UnknownModifier(String),
 
-    /// A user specified mouse binding contained an invalid button
-    #[error("Unknown mouse button: {0}")]
-    UnknownMouseButton(u8),
-
     /// Something went wrong using the [xcb] module.
     ///
     /// See [XcbError][crate::xcb::XcbError] for variants.
