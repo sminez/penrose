@@ -54,6 +54,11 @@ pub enum XcbError {
     #[error("randr query failed: {0}")]
     Randr(String),
 
+    /// A generic error type for use in user code when needing to construct
+    /// a simple [XcbError].
+    #[error("Unhandled error: {0}")]
+    Raw(String),
+
     /// Screen data for an unknown screen was requested
     #[error("The requested screen index was out of bounds: {0} > {1}")]
     UnknownScreen(usize, usize),

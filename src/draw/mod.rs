@@ -25,6 +25,11 @@ pub enum DrawError {
     #[error("Invalid Hex color code")]
     ParseInt(#[from] std::num::ParseIntError),
 
+    /// A generic error type for use in user code when needing to construct
+    /// a simple [DrawError].
+    #[error("Unhandled error: {0}")]
+    Raw(String),
+
     /// An attempt was made to use a font that had not beed registered
     #[error("'{0}' is has not been registered as a font")]
     UnknownFont(String),
