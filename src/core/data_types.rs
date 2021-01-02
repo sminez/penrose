@@ -157,21 +157,130 @@ impl Region {
     }
 
     /// Destructure this Region into its component values (x, y, w, h).
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// // In practice, this will be a region your code is receiving: not one you create
+    /// let r = Region::new(10, 20, 30, 40);
+    ///
+    /// assert_eq!(r.values(), (10, 20, 30, 40));
+    /// ```
     pub fn values(&self) -> (u32, u32, u32, u32) {
         (self.x, self.y, self.w, self.h)
     }
 
+    /// Create a new [Region] with width equal to `factor` x `self.w`
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r = Region::new(10, 20, 30, 40);
+    ///
+    /// assert_eq!(r.scale_w(1.5), Region::new(10, 20, 45, 40));
+    /// assert_eq!(r.scale_w(0.5), Region::new(10, 20, 15, 40));
+    /// ```
+    pub fn scale_w(&self, factor: f64) -> Self {
+        Self {
+            w: (self.w as f64 * factor).floor() as u32,
+            ..*self
+        }
+    }
+
+    /// Create a new [Region] with height equal to `factor` x `self.h`
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r = Region::new(10, 20, 30, 40);
+    ///
+    /// assert_eq!(r.scale_h(1.5), Region::new(10, 20, 30, 60));
+    /// assert_eq!(r.scale_h(0.5), Region::new(10, 20, 30, 20));
+    /// ```
+    pub fn scale_h(&self, factor: f64) -> Self {
+        Self {
+            h: (self.h as f64 * factor).floor() as u32,
+            ..*self
+        }
+    }
+
+    /// Check whether this Region contains `other` as a sub-Region
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r1 = Region::new(10, 10, 50, 50);
+    /// let r2 = Region::new(0, 0, 100, 100);
+    ///
+    /// assert!(r2.contains(&r1));
+    /// assert!(!r1.contains(&r2));
+    /// ```
+    pub fn contains(&self, other: &Region) -> bool {
+        match other {
+            Region { x, .. } if *x < self.x => false,
+            Region { x, w, .. } if (*x + *w) > (self.x + self.w) => false,
+            Region { y, .. } if *y < self.y => false,
+            Region { y, h, .. } if (*y + *h) > (self.y + self.h) => false,
+            _ => true,
+        }
+    }
+
+    /// Center this region inside of `enclosing`.
+    ///
+    /// # Errors
+    /// Fails if this Region can not fit inside of `enclosing`
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r1 = Region::new(10, 10, 50, 60);
+    /// let r2 = Region::new(0, 0, 100, 100);
+    ///
+    /// let centered = r1.centered_in(&r2);
+    /// assert!(centered.is_ok());
+    /// assert_eq!(centered.unwrap(), Region::new(25, 30, 50, 60));
+    ///
+    /// let too_big = r2.centered_in(&r1);
+    /// assert!(too_big.is_err());
+    /// ```
+    pub fn centered_in(&self, enclosing: &Region) -> Result<Self> {
+        if !enclosing.contains(self) {
+            return Err(PenroseError::Raw(format!(
+                "enclosing does not conatain self: {:?} {:?}",
+                enclosing, self
+            )));
+        }
+
+        Ok(Self {
+            x: enclosing.x + (self.w / 2),
+            y: enclosing.y + (self.h / 2),
+            ..*self
+        })
+    }
+
     /// Divides this region into two columns where the first has the given width.
-    pub fn split_at_width(&self, new_width: u32) -> Result<(Region, Region)> {
+    ///
+    /// # Errors
+    /// Fails if the requested split point is not contained within `self`
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r = Region::new(10, 10, 50, 60);
+    /// let (r1, r2) = r.split_at_width(30).unwrap();
+    ///
+    /// assert_eq!(r1, Region::new(10,10,30,60));
+    /// assert_eq!(r2, Region::new(40,10,20,60));
+    ///
+    /// assert!(r.split_at_width(100).is_err());
+    /// ```
+    pub fn split_at_width(&self, new_width: u32) -> Result<(Self, Self)> {
         if new_width > self.w {
-            Err(PenroseError::SplitError(new_width, self.w))
+            Err(PenroseError::Raw(format!(
+                "Region split is out of range: {} >= {}",
+                new_width, self.w
+            )))
         } else {
             Ok((
-                Region {
+                Self {
                     w: new_width,
                     ..*self
                 },
-                Region {
+                Self {
                     x: self.x + new_width,
                     w: self.w - new_width,
                     ..*self
@@ -181,16 +290,33 @@ impl Region {
     }
 
     /// Divides this region into two rows where the first has the given height.
-    pub fn split_at_height(&self, new_height: u32) -> Result<(Region, Region)> {
+    ///
+    /// # Errors
+    /// Fails if the requested split point is not contained within `self`
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r = Region::new(10, 10, 50, 60);
+    /// let (r1, r2) = r.split_at_height(40).unwrap();
+    ///
+    /// assert_eq!(r1, Region::new(10,10,50,40));
+    /// assert_eq!(r2, Region::new(10,50,50,20));
+    ///
+    /// assert!(r.split_at_height(100).is_err());
+    /// ```
+    pub fn split_at_height(&self, new_height: u32) -> Result<(Self, Self)> {
         if new_height > self.h {
-            Err(PenroseError::SplitError(new_height, self.h))
+            Err(PenroseError::Raw(format!(
+                "Region split is out of range: {} >= {}",
+                new_height, self.h
+            )))
         } else {
             Ok((
-                Region {
+                Self {
                     h: new_height,
                     ..*self
                 },
-                Region {
+                Self {
                     y: self.y + new_height,
                     h: self.h - new_height,
                     ..*self

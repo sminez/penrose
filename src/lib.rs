@@ -77,11 +77,6 @@ pub enum PenroseError {
     #[error("unable to get stdout handle for child process: {0}")]
     SpawnProc(String),
 
-    /// The requested split point for partitioning a [Region][core::data_types::Region]
-    /// was out of bounds
-    #[error("Region split is out of range: {0} >= {1}")]
-    SplitError(u32, u32),
-
     /// Parsing an [Atom][core::xconnection::Atom] from a str failed.
     ///
     /// This happens when the atom name being requested is not a known atom.
