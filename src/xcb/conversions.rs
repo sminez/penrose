@@ -105,6 +105,7 @@ impl TryFrom<XcbGeneric> for MouseEvent {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn data_from_event(raw: XcbGeneric) -> Result<(u8, u16, u32, i16, i16, i16, i16, MouseEventKind)> {
     Ok(match raw.response_type() {
         xcb::BUTTON_PRESS => {

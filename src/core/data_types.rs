@@ -233,7 +233,7 @@ impl Region {
     ///
     /// let centered = r1.centered_in(&r2);
     /// assert!(centered.is_ok());
-    /// assert_eq!(centered.unwrap(), Region::new(25, 30, 50, 60));
+    /// assert_eq!(centered.unwrap(), Region::new(25, 20, 50, 60));
     ///
     /// let too_big = r2.centered_in(&r1);
     /// assert!(too_big.is_err());
@@ -247,8 +247,8 @@ impl Region {
         }
 
         Ok(Self {
-            x: enclosing.x + (self.w / 2),
-            y: enclosing.y + (self.h / 2),
+            x: enclosing.x + ((enclosing.w - self.w) / 2),
+            y: enclosing.y + ((enclosing.h - self.h) / 2),
             ..*self
         })
     }
