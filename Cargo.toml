@@ -19,6 +19,7 @@ categories = [ "window manager" ]
 [features]
 default = ["xcb", "xcb_draw"]
 xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
+xcb_keysyms = []
 
 [dependencies]
 log = "0.4.8"

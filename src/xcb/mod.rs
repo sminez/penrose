@@ -14,6 +14,8 @@ pub mod conversions;
 #[cfg(feature = "xcb_draw")]
 pub mod draw;
 pub mod helpers;
+#[cfg(feature = "xcb_keysyms")]
+pub mod keysyms;
 pub mod xconn;
 
 #[doc(inline)]
@@ -21,6 +23,9 @@ pub use api::Api;
 #[doc(inline)]
 #[cfg(feature = "xcb_draw")]
 pub use draw::{XcbDraw, XcbDrawContext};
+#[doc(inline)]
+#[cfg(feature = "xcb_keysyms")]
+pub use keysyms::XKeySym;
 #[doc(inline)]
 pub use xconn::XcbConnection;
 
@@ -35,6 +40,10 @@ pub enum XcbError {
     /// A xcb query failed to return a value
     #[error("Xcb query returned None: {0}")]
     EmptyResponse(String),
+
+    /// An [IO Error][std::io::Error] was encountered
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 
     /// A requested client property was empty
     #[error("'{}' prop is not set for client {1}", .0.as_ref())]
