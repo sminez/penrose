@@ -6,11 +6,14 @@ use crate::{
         screen::Screen,
         xconnection::{Atom, XEvent},
     },
-    xcb::{Result, XKeySym, XcbApi, XcbError},
+    xcb::{Result, XcbApi, XcbError, XcbGenericEvent},
 };
 use strum::*;
 
 use std::{collections::HashMap, convert::TryFrom, fmt, process::Command, str::FromStr};
+
+#[cfg(feature = "xcb_keysyms")]
+use crate::{core::bindings::KeyPress, draw::KeyPressResult, xcb::keysyms::XKeySym};
 
 /// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
 pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
@@ -32,7 +35,7 @@ pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
             let key_code: u8 = words.nth(1).unwrap().parse().unwrap();
             vec![
                 words.nth(1).map(move |name| ((0, key_code), name.into())),
-                words.nth(1).map(move |name| ((1, key_code), name.into())),
+                words.next().map(move |name| ((1, key_code), name.into())),
             ]
             .into_iter()
             .flatten()
@@ -49,6 +52,8 @@ pub struct Api {
     check_win: WinId,
     randr_base: u8,
     atoms: HashMap<Atom, u32>,
+    #[cfg(feature = "xcb_keysyms")]
+    code_map: ReverseCodeMap,
 }
 
 impl fmt::Debug for Api {
@@ -77,6 +82,8 @@ impl Api {
             check_win: 0,
             randr_base: 0,
             atoms: HashMap::new(),
+            #[cfg(feature = "xcb_keysyms")]
+            code_map: code_map_from_xmodmap()?,
         };
         api.init()?;
 
@@ -154,18 +161,138 @@ impl Api {
     }
 
     /// Block and wait for the next user keypress on the underlying [XCB Connection][::xcb::Connection],
-    /// returning it as an [XKeySym]. The `code_map` parameter should be optained using
-    /// [code_map_from_xmodmap].
-    pub fn next_keypress(&self, code_map: &ReverseCodeMap) -> Option<XKeySym> {
-        while let Some(event) = self.conn.wait_for_event() {
-            if let Ok(k) = KeyCode::try_from(event) {
-                match code_map.get(&(k.mask, k.code)) {
-                    Some(s) => return Some(XKeySym::from_str(s).unwrap()),
-                    None => continue,
-                };
+    /// returning it as an [XKeySym] if possible, or an [XEvent] if not.
+    #[cfg(feature = "xcb_keysyms")]
+    pub fn next_keypress(&self) -> KeyPressResult {
+        if let Some(event) = self.conn.wait_for_event() {
+            if let Ok(k) = KeyCode::try_from(&event) {
+                if let Some(s) = self.code_map.get(&(k.mask, k.code)) {
+                    if let Ok(k) = KeyPress::try_from(XKeySym::from_str(s).unwrap()) {
+                        return KeyPressResult::KeyPress(k);
+                    }
+                }
+            }
+
+            if let Some(e) = self.generic_xcb_to_xevent(event) {
+                return KeyPressResult::XEvent(e);
             }
         }
-        return None;
+
+        KeyPressResult::Closed
+    }
+
+    fn generic_xcb_to_xevent(&self, event: XcbGenericEvent) -> Option<XEvent> {
+        let xcb_response_type_mask: u8 = 0x7F;
+        let numlock = xcb::MOD_MASK_2 as u16;
+
+        let etype = event.response_type() & xcb_response_type_mask;
+        // Need to apply the randr_base mask as well which doesn't seem to work in 'match'
+        if etype == self.randr_base + xcb::randr::NOTIFY {
+            return Some(XEvent::RandrNotify);
+        }
+
+        match etype {
+            xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
+                Some(XEvent::MouseEvent(MouseEvent::try_from(event).unwrap()))
+            }
+
+            xcb::KEY_PRESS => Some(XEvent::KeyPress(
+                KeyCode::try_from(event).unwrap().ignoring_modifier(numlock),
+            )),
+
+            xcb::MAP_REQUEST => {
+                let e: &xcb::MapRequestEvent = unsafe { xcb::cast_event(&event) };
+                let id = e.window();
+                xcb::xproto::get_window_attributes(&self.conn, id)
+                    .get_reply()
+                    .ok()
+                    .map(|r| XEvent::MapRequest {
+                        id,
+                        ignore: r.override_redirect(),
+                    })
+            }
+
+            xcb::ENTER_NOTIFY => {
+                let e: &xcb::EnterNotifyEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::Enter {
+                    id: e.event(),
+                    rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                    wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                })
+            }
+
+            xcb::LEAVE_NOTIFY => {
+                let e: &xcb::LeaveNotifyEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::Leave {
+                    id: e.event(),
+                    rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
+                    wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
+                })
+            }
+
+            xcb::DESTROY_NOTIFY => {
+                let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::Destroy { id: e.window() })
+            }
+
+            xcb::randr::SCREEN_CHANGE_NOTIFY => Some(XEvent::ScreenChange),
+
+            xcb::CONFIGURE_NOTIFY => {
+                let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::ConfigureNotify {
+                    id: e.window(),
+                    r: Region::new(
+                        e.x() as u32,
+                        e.y() as u32,
+                        e.width() as u32,
+                        e.height() as u32,
+                    ),
+                    is_root: e.window() == self.root,
+                })
+            }
+
+            xcb::CLIENT_MESSAGE => {
+                let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
+                xcb::xproto::get_atom_name(&self.conn, e.type_())
+                    .get_reply()
+                    .ok()
+                    .map(|a| XEvent::ClientMessage {
+                        id: e.window(),
+                        dtype: a.name().to_string(),
+                        data: match e.format() {
+                            8 => e.data().data8().iter().map(|&d| d as usize).collect(),
+                            16 => e.data().data16().iter().map(|&d| d as usize).collect(),
+                            32 => e.data().data32().iter().map(|&d| d as usize).collect(),
+                            _ => unreachable!(
+                                "ClientMessageEvent.format should really be an enum..."
+                            ),
+                        },
+                    })
+            }
+
+            xcb::PROPERTY_NOTIFY => {
+                let e: &xcb::PropertyNotifyEvent = unsafe { xcb::cast_event(&event) };
+                xcb::xproto::get_atom_name(&self.conn, e.atom())
+                    .get_reply()
+                    .ok()
+                    .and_then(|a| {
+                        let atom = a.name().to_string();
+                        let is_root = e.window() == self.root;
+                        if is_root && !(atom == "WM_NAME" || atom == "_NET_WM_NAME") {
+                            None
+                        } else {
+                            Some(XEvent::PropertyNotify {
+                                id: e.window(),
+                                atom,
+                                is_root,
+                            })
+                        }
+                    })
+            }
+
+            // NOTE: ignoring other event types
+            _ => None,
+        }
     }
 }
 
@@ -523,119 +650,9 @@ impl XcbApi for Api {
     }
 
     fn wait_for_event(&self) -> Option<XEvent> {
-        let xcb_response_type_mask: u8 = 0x7F;
-        let numlock = xcb::MOD_MASK_2 as u16;
-
-        self.conn.wait_for_event().and_then(|event| {
-            let etype = event.response_type() & xcb_response_type_mask;
-            // Need to apply the randr_base mask as well which doesn't seem to work in 'match'
-            if etype == self.randr_base + xcb::randr::NOTIFY {
-                return Some(XEvent::RandrNotify);
-            }
-
-            match etype {
-                xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
-                    Some(XEvent::MouseEvent(MouseEvent::try_from(event).unwrap()))
-                }
-
-                xcb::KEY_PRESS => Some(XEvent::KeyPress(
-                    KeyCode::try_from(event).unwrap().ignoring_modifier(numlock),
-                )),
-
-                xcb::MAP_REQUEST => {
-                    let e: &xcb::MapRequestEvent = unsafe { xcb::cast_event(&event) };
-                    let id = e.window();
-                    xcb::xproto::get_window_attributes(&self.conn, id)
-                        .get_reply()
-                        .ok()
-                        .map(|r| XEvent::MapRequest {
-                            id,
-                            ignore: r.override_redirect(),
-                        })
-                }
-
-                xcb::ENTER_NOTIFY => {
-                    let e: &xcb::EnterNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Enter {
-                        id: e.event(),
-                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                    })
-                }
-
-                xcb::LEAVE_NOTIFY => {
-                    let e: &xcb::LeaveNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Leave {
-                        id: e.event(),
-                        rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                        wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                    })
-                }
-
-                xcb::DESTROY_NOTIFY => {
-                    let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::Destroy { id: e.window() })
-                }
-
-                xcb::randr::SCREEN_CHANGE_NOTIFY => Some(XEvent::ScreenChange),
-
-                xcb::CONFIGURE_NOTIFY => {
-                    let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    Some(XEvent::ConfigureNotify {
-                        id: e.window(),
-                        r: Region::new(
-                            e.x() as u32,
-                            e.y() as u32,
-                            e.width() as u32,
-                            e.height() as u32,
-                        ),
-                        is_root: e.window() == self.root,
-                    })
-                }
-
-                xcb::CLIENT_MESSAGE => {
-                    let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
-                    xcb::xproto::get_atom_name(&self.conn, e.type_())
-                        .get_reply()
-                        .ok()
-                        .map(|a| XEvent::ClientMessage {
-                            id: e.window(),
-                            dtype: a.name().to_string(),
-                            data: match e.format() {
-                                8 => e.data().data8().iter().map(|&d| d as usize).collect(),
-                                16 => e.data().data16().iter().map(|&d| d as usize).collect(),
-                                32 => e.data().data32().iter().map(|&d| d as usize).collect(),
-                                _ => unreachable!(
-                                    "ClientMessageEvent.format should really be an enum..."
-                                ),
-                            },
-                        })
-                }
-
-                xcb::PROPERTY_NOTIFY => {
-                    let e: &xcb::PropertyNotifyEvent = unsafe { xcb::cast_event(&event) };
-                    xcb::xproto::get_atom_name(&self.conn, e.atom())
-                        .get_reply()
-                        .ok()
-                        .and_then(|a| {
-                            let atom = a.name().to_string();
-                            let is_root = e.window() == self.root;
-                            if is_root && !(atom == "WM_NAME" || atom == "_NET_WM_NAME") {
-                                None
-                            } else {
-                                Some(XEvent::PropertyNotify {
-                                    id: e.window(),
-                                    atom,
-                                    is_root,
-                                })
-                            }
-                        })
-                }
-
-                // NOTE: ignoring other event types
-                _ => None,
-            }
-        })
+        self.conn
+            .wait_for_event()
+            .and_then(|e| self.generic_xcb_to_xevent(e))
     }
 
     fn warp_cursor(&self, id: WinId, x: usize, y: usize) {

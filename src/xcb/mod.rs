@@ -29,6 +29,9 @@ pub use keysyms::XKeySym;
 #[doc(inline)]
 pub use xconn::XcbConnection;
 
+/// A generic event type returned by the xcb library
+pub type XcbGenericEvent = xcb::Event<xcb::ffi::base::xcb_generic_event_t>;
+
 /// Enum to store the various ways that operations can fail inside of the
 /// XCB implementations of penrose traits.
 #[derive(thiserror::Error, Debug)]

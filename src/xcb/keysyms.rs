@@ -1,6 +1,9 @@
 //! Auto generated Keysym enum for use with xcb keycodes
+use crate::{core::bindings::KeyPress, xcb::XcbError};
 
 use strum::*;
+
+use std::convert::TryFrom;
 
 /// X keysym mappings: auto generated from X11/keysymdef.h
 #[allow(non_camel_case_types)]
@@ -2664,5 +2667,26 @@ impl XKeySym {
                 .filter(|&b| b > 0)
                 .collect(),
         )?)
+    }
+}
+
+impl TryFrom<XKeySym> for KeyPress {
+    type Error = XcbError;
+
+    fn try_from(s: XKeySym) -> Result<KeyPress, XcbError> {
+        Ok(match s {
+            XKeySym::XK_Return | XKeySym::XK_KP_Enter | XKeySym::XK_ISO_Enter => KeyPress::Return,
+            XKeySym::XK_Escape => KeyPress::Escape,
+            XKeySym::XK_Tab | XKeySym::XK_ISO_Left_Tab | XKeySym::XK_KP_Tab => KeyPress::Tab,
+            XKeySym::XK_BackSpace => KeyPress::Backspace,
+            XKeySym::XK_Delete | XKeySym::XK_KP_Delete => KeyPress::Delete,
+            XKeySym::XK_Page_Up | XKeySym::XK_KP_Page_Up => KeyPress::PageUp,
+            XKeySym::XK_Page_Down | XKeySym::XK_KP_Page_Down => KeyPress::PageDown,
+            XKeySym::XK_Up | XKeySym::XK_KP_Up => KeyPress::Up,
+            XKeySym::XK_Down | XKeySym::XK_KP_Down => KeyPress::Down,
+            XKeySym::XK_Left | XKeySym::XK_KP_Left => KeyPress::Left,
+            XKeySym::XK_Right | XKeySym::XK_KP_Right => KeyPress::Right,
+            s => KeyPress::Utf8(s.as_utf8_string()?),
+        })
     }
 }

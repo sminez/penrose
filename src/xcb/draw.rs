@@ -18,6 +18,9 @@ use pangocairo::functions::{create_layout, show_layout};
 
 use std::collections::HashMap;
 
+#[cfg(feature = "xcb_keysyms")]
+use crate::draw::{KeyPressDraw, KeyPressResult};
+
 fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
     Ok(create_layout(ctx).ok_or_else(|| XcbError::Pango("unable to create layout".into()))?)
 }
@@ -135,6 +138,13 @@ impl Draw for XcbDraw {
 
     fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
         self.api.replace_prop(id, prop, val);
+    }
+}
+
+#[cfg(feature = "xcb_keysyms")]
+impl KeyPressDraw for XcbDraw {
+    fn next_keypress(&self) -> KeyPressResult {
+        self.api.next_keypress()
     }
 }
 

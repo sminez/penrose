@@ -5,8 +5,9 @@ pub mod bar;
 pub use bar::*;
 
 use crate::core::{
+    bindings::KeyPress,
     data_types::{PropVal, Region, WinId, WinType},
-    xconnection::Atom,
+    xconnection::{Atom, XEvent},
 };
 
 #[cfg(feature = "xcb")]
@@ -172,6 +173,27 @@ pub trait Draw {
      * type for each prop.
      */
     fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>);
+}
+
+/// The result of calling [KeyPressDraw::next_keypress]
+#[derive(Debug, Clone)]
+pub enum KeyPressResult {
+    /// The next event was parasble as a [KeyPress]
+    KeyPress(KeyPress),
+    /// An event was received but it was not a [KeyPress]
+    XEvent(XEvent),
+    /// The event stream is now closed
+    Closed,
+}
+
+/// A [Draw] that can return the [KeyPress] events from the user for its windows
+pub trait KeyPressDraw: Draw {
+    /// Attempt to parse the next [XEvent] from an underlying connection.
+    ///
+    /// If it is parsable as a [KeyPress] then the return should be `Ok(Some(KeyPress))` otherwise
+    /// the original [XEvent] should be returned as `Err(XEvent)` so that the caller can process
+    /// it. Returning `Ok(None)` indicates to the caller that there are no more events.
+    fn next_keypress(&self) -> KeyPressResult;
 }
 
 /// Used for simple drawing to the screen

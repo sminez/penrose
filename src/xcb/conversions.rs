@@ -1,14 +1,12 @@
 //! Conversions to Penrose types from XCB types
 use crate::{
     core::bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
-    xcb::{Result, XcbError},
+    xcb::{Result, XcbError, XcbGenericEvent},
 };
 
 use strum::IntoEnumIterator;
 
 use std::convert::TryFrom;
-
-type XcbGeneric = xcb::Event<xcb::ffi::base::xcb_generic_event_t>;
 
 impl ModifierKey {
     fn was_held(&self, mask: u16) -> bool {
@@ -45,13 +43,27 @@ impl From<&xcb::KeyPressEvent> for KeyCode {
     }
 }
 
-impl TryFrom<XcbGeneric> for KeyCode {
+impl TryFrom<XcbGenericEvent> for KeyCode {
     type Error = XcbError;
 
-    fn try_from(e: XcbGeneric) -> Result<Self> {
+    fn try_from(e: XcbGenericEvent) -> Result<Self> {
         let r = e.response_type();
         if r == xcb::KEY_PRESS as u8 {
             let key_press: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&e) };
+            Ok(key_press.into())
+        } else {
+            Err(XcbError::Raw("not an xcb key press".into()))
+        }
+    }
+}
+
+impl TryFrom<&XcbGenericEvent> for KeyCode {
+    type Error = XcbError;
+
+    fn try_from(e: &XcbGenericEvent) -> Result<Self> {
+        let r = e.response_type();
+        if r == xcb::KEY_PRESS as u8 {
+            let key_press: &xcb::KeyPressEvent = unsafe { xcb::cast_event(e) };
             Ok(key_press.into())
         } else {
             Err(XcbError::Raw("not an xcb key press".into()))
@@ -95,10 +107,10 @@ impl MouseState {
     }
 }
 
-impl TryFrom<XcbGeneric> for MouseEvent {
+impl TryFrom<XcbGenericEvent> for MouseEvent {
     type Error = XcbError;
 
-    fn try_from(raw: XcbGeneric) -> Result<Self> {
+    fn try_from(raw: XcbGenericEvent) -> Result<Self> {
         let (detail, state, id, rx, ry, x, y, kind) = data_from_event(raw)?;
         let state = MouseState::from_detail_and_state(detail, state)?;
         Ok(MouseEvent::new(id, rx, ry, x, y, state, kind))
@@ -106,7 +118,9 @@ impl TryFrom<XcbGeneric> for MouseEvent {
 }
 
 #[allow(clippy::type_complexity)]
-fn data_from_event(raw: XcbGeneric) -> Result<(u8, u16, u32, i16, i16, i16, i16, MouseEventKind)> {
+fn data_from_event(
+    raw: XcbGenericEvent,
+) -> Result<(u8, u16, u32, i16, i16, i16, i16, MouseEventKind)> {
     Ok(match raw.response_type() {
         xcb::BUTTON_PRESS => {
             let e: &xcb::ButtonPressEvent = unsafe { xcb::cast_event(&raw) };
