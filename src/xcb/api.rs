@@ -24,8 +24,8 @@ fn default_conn() -> xcb::Connection {
     conn
 }
 
-/// Use `xmodmap -pke` to determine the user's current keymap to allow for mapping [XKeySym]
-/// enum values to their string representation on the user's system.
+/// Use `xmodmap -pke` to determine the user's current keymap to allow for mapping X KeySym values
+/// to their string representation on the user's system.
 pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
     let res = Command::new("xmodmap").arg("-pke").output()?;
     Ok(String::from_utf8(res.stdout)?
