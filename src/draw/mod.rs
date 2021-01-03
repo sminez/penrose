@@ -190,9 +190,8 @@ pub enum KeyPressResult {
 pub trait KeyPressDraw: Draw {
     /// Attempt to parse the next [XEvent] from an underlying connection.
     ///
-    /// If it is parsable as a [KeyPress] then the return should be `Ok(Some(KeyPress))` otherwise
-    /// the original [XEvent] should be returned as `Err(XEvent)` so that the caller can process
-    /// it. Returning `Ok(None)` indicates to the caller that there are no more events.
+    /// Returns the [KeyPress] if one occured, some other [XEvent] if that is what was received or
+    /// `Closed` if there are no more events.
     fn next_keypress(&self) -> KeyPressResult;
 }
 
