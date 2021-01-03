@@ -23,7 +23,7 @@ fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
 }
 
 /// An XCB based [Draw] implementation backed by pango and cairo
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct XcbDraw {
     api: Api,
     fonts: HashMap<String, pango::FontDescription>,
@@ -45,11 +45,15 @@ impl XcbDraw {
     pub fn xcb_connectction(&self) -> &xcb::Connection {
         &self.api.conn()
     }
-}
 
-impl Drop for XcbDraw {
-    fn drop(&mut self) {
-        self.surfaces.keys().for_each(|&id| self.destroy_window(id));
+    /// Get an immutable handle on the underlying [Api] to communicate with the X server.
+    pub fn api(&self) -> &Api {
+        &self.api
+    }
+
+    /// Get a mutable handle on the underlying [Api] to communicate with the X server.
+    pub fn api_mut(&mut self) -> &mut Api {
+        &mut self.api
     }
 }
 

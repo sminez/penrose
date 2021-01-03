@@ -36,7 +36,7 @@ const WM_NAME: &str = "penrose";
  * XcbConnection is a minimal implementation that does not make use of the full asyc capabilities
  * of the underlying C XCB library.
  **/
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct XcbConnection<X: XcbApi> {
     api: X,
     check_win: WinId,
@@ -80,6 +80,16 @@ impl XcbConnection<Api> {
     /// to communicate with the X server.
     pub fn xcb_connectction(&self) -> &xcb::Connection {
         &self.api.conn()
+    }
+
+    /// Get a handle on the underlying [Api] to communicate with the X server.
+    pub fn api(&self) -> &Api {
+        &self.api
+    }
+
+    /// Get a mutable handle on the underlying [Api] to communicate with the X server.
+    pub fn api_mut(&mut self) -> &mut Api {
+        &mut self.api
     }
 
     /// The current interned [Atom] values known to the underlying [Api] connection

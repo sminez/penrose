@@ -1,21 +1,43 @@
 //! A wrapper around the underlying xcb api layer that only exposes Penrose types
 use crate::{
     core::{
-        bindings::{KeyCode, MouseEvent, MouseState},
+        bindings::{KeyCode, KeyCodeMask, KeyCodeValue, MouseEvent, MouseState},
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         screen::Screen,
         xconnection::{Atom, XEvent},
     },
-    xcb::{Result, XcbApi, XcbError},
+    xcb::{Result, XKeySym, XcbApi, XcbError},
 };
 use strum::*;
 
-use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
+use std::{collections::HashMap, convert::TryFrom, fmt, process::Command, str::FromStr};
+
+/// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
+pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
 
 #[cfg(feature = "serde")]
 fn default_conn() -> xcb::Connection {
     let (conn, _) = xcb::Connection::connect(None).unwrap();
     conn
+}
+
+/// Use `xmodmap -pke` to determine the user's current keymap to allow for mapping [XKeySym]
+/// enum values to their string representation on the user's system.
+pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
+    let res = Command::new("xmodmap").arg("-pke").output()?;
+    Ok(String::from_utf8(res.stdout)?
+        .lines()
+        .flat_map(|l| {
+            let mut words = l.split_whitespace(); // keycode <code> = <names ...>
+            let key_code: u8 = words.nth(1).unwrap().parse().unwrap();
+            vec![
+                words.nth(1).map(move |name| ((0, key_code), name.into())),
+                words.nth(1).map(move |name| ((1, key_code), name.into())),
+            ]
+            .into_iter()
+            .flatten()
+        })
+        .collect::<HashMap<(u16, u8), String>>())
 }
 
 /// A connection to the X server using the XCB C API
@@ -36,20 +58,6 @@ impl fmt::Debug for Api {
             .field("randr_base", &self.randr_base)
             .field("atoms", &self.atoms)
             .finish()
-    }
-}
-
-impl Clone for Api {
-    fn clone(&self) -> Self {
-        // Safety: If we were able to connect initially then we are ok to reuse the pointer.
-        let conn = unsafe { xcb::Connection::from_raw_conn(self.conn.get_raw_conn()) };
-        Self {
-            conn,
-            root: self.root,
-            check_win: self.check_win,
-            randr_base: self.randr_base,
-            atoms: self.atoms.clone(),
-        }
     }
 }
 
@@ -143,6 +151,21 @@ impl Api {
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
             .ok_or(XcbError::QueryFailed("visual type"))
+    }
+
+    /// Block and wait for the next user keypress on the underlying [XCB Connection][::xcb::Connection],
+    /// returning it as an [XKeySym]. The `code_map` parameter should be optained using
+    /// [code_map_from_xmodmap].
+    pub fn next_keypress(&self, code_map: &ReverseCodeMap) -> Option<XKeySym> {
+        while let Some(event) = self.conn.wait_for_event() {
+            if let Ok(k) = KeyCode::try_from(event) {
+                match code_map.get(&(k.mask, k.code)) {
+                    Some(s) => return Some(XKeySym::from_str(s).unwrap()),
+                    None => continue,
+                };
+            }
+        }
+        return None;
     }
 }
 
@@ -251,7 +274,10 @@ impl XcbApi for Api {
                     vec![
                         (xcb::CW_BORDER_PIXEL, screen.black_pixel()),
                         (xcb::CW_COLORMAP, colormap),
-                        (xcb::CW_EVENT_MASK, xcb::EVENT_MASK_EXPOSURE),
+                        (
+                            xcb::CW_EVENT_MASK,
+                            xcb::EVENT_MASK_EXPOSURE | xcb::EVENT_MASK_KEY_PRESS,
+                        ),
                     ],
                     xcb::WINDOW_CLASS_INPUT_OUTPUT as u16,
                     screen.root(),

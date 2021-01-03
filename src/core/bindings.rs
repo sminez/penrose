@@ -25,19 +25,54 @@ pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHand
 
 pub(crate) type CodeMap = HashMap<String, u8>;
 
+/// Abstraction layer for working with key presses
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KeyPress {
+    /// A raw character key
+    Utf8(String),
+    /// Return / enter key
+    Return,
+    /// Escape
+    Escape,
+    /// Tab
+    Tab,
+    /// Backspace
+    Backspace,
+    /// Delete
+    Delete,
+    /// PageUp
+    PageUp,
+    /// PageDown
+    PageDown,
+    /// Up
+    Up,
+    /// Down
+    Down,
+    /// Left
+    Left,
+    /// Right
+    Right,
+}
+
+/// A u16 X key-code bitmask
+pub type KeyCodeMask = u16;
+
+/// A u8 X key-code enum value
+pub type KeyCodeValue = u8;
+
 /// A key press and held modifiers
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct KeyCode {
     /// The held modifier mask
-    pub mask: u16,
+    pub mask: KeyCodeMask,
     /// The key code that was held
-    pub code: u8,
+    pub code: KeyCodeValue,
 }
 
 impl KeyCode {
     /// Create a new [KeyCode] from this one that removes the given mask
-    pub fn ignoring_modifier(&self, mask: u16) -> KeyCode {
+    pub fn ignoring_modifier(&self, mask: KeyCodeMask) -> KeyCode {
         KeyCode {
             mask: self.mask & !mask,
             code: self.code,
