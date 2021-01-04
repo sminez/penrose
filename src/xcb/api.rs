@@ -193,7 +193,13 @@ impl Api {
 
         match etype {
             xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
-                Some(XEvent::MouseEvent(MouseEvent::try_from(event).unwrap()))
+                match MouseEvent::try_from(event) {
+                    Ok(m) => Some(XEvent::MouseEvent(m)),
+                    Err(_) => {
+                        warn!("dropping unknown mouse button event");
+                        None // Drop unknown buttons
+                    }
+                }
             }
 
             xcb::KEY_PRESS => Some(XEvent::KeyPress(
