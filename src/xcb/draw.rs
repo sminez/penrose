@@ -116,6 +116,37 @@ impl Draw for XcbDraw {
         })
     }
 
+    fn temp_context(&self, w: u32, h: u32) -> Result<Self::Ctx> {
+        let id = self.api.conn().generate_id();
+        let xcb_screen = self.api.screen(0)?;
+        let depth = self.api.get_depth(&xcb_screen)?;
+        let mut visualtype = self.api.get_visual_type(&depth)?;
+
+        let surface = unsafe {
+            let conn_ptr = self.api.conn().get_raw_conn() as *mut cairo_sys::xcb_connection_t;
+
+            cairo::XCBSurface::create(
+                &cairo::XCBConnection::from_raw_none(conn_ptr),
+                &cairo::XCBDrawable(id),
+                &cairo::XCBVisualType::from_raw_none(
+                    &mut visualtype.base as *mut xcb::ffi::xcb_visualtype_t
+                        as *mut cairo_sys::xcb_visualtype_t,
+                ),
+                w as i32,
+                h as i32,
+            )?
+        };
+
+        surface.set_size(w as i32, h as i32).unwrap();
+        let ctx = cairo::Context::new(&surface);
+
+        Ok(Self::Ctx {
+            ctx,
+            font: None,
+            fonts: self.fonts.clone(),
+        })
+    }
+
     fn flush(&self, id: WinId) {
         if let Some(s) = self.surfaces.get(&id) {
             s.flush()

@@ -1,8 +1,12 @@
 //! Utilities for rendering custom windows
 pub mod bar;
+pub mod widget;
 
 #[doc(inline)]
 pub use bar::*;
+
+#[doc(inline)]
+pub use widget::*;
 
 use crate::core::{
     bindings::KeyPress,
@@ -156,8 +160,10 @@ pub trait Draw {
     fn screen_sizes(&self) -> Result<Vec<Region>>;
     /// Register a font by name for later use
     fn register_font(&mut self, font_name: &str);
-    /// Get a new DrawContext for the target window
+    /// Get a new [DrawContext] for the target window
     fn context_for(&self, id: WinId) -> Result<Self::Ctx>;
+    /// Get a new temporary [DrawContext] that will be destroyed when dropped
+    fn temp_context(&self, w: u32, h: u32) -> Result<Self::Ctx>;
     /// Flush pending actions
     fn flush(&self, id: WinId);
     /// Map the target window to the screen
