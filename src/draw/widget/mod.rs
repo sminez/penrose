@@ -43,7 +43,7 @@ pub trait Widget {
  * triggered via [WindowManager][crate::core::manager::WindowManager] [Hook] calls.
  *
  * HookableWidgets should _not_ be manually registered as hooks: they will be automatically
- * registered by the [StatusBar] containing them on startup.
+ * registered by the [StatusBar][crate::draw::StatusBar] containing them on startup.
  */
 pub trait HookableWidget<X>: Hook<X> + Widget
 where
