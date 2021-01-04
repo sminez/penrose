@@ -1,4 +1,4 @@
-//! A simple status bar
+//! Status bars
 use crate::{
     core::{
         client::Client,
@@ -7,10 +7,63 @@ use crate::{
         manager::WindowManager,
         xconnection::{Atom, XConn},
     },
-    draw::{Color, Draw, DrawContext, HookableWidget, Result},
+    draw::{Color, Draw, DrawContext, HookableWidget, Result, TextStyle},
 };
 
 use std::fmt;
+
+use crate::draw::widget::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces};
+
+const MAX_ACTIVE_WINDOW_CHARS: usize = 80;
+
+/// Create a default dwm style status bar that displays content pulled from the
+/// WM_NAME property of the root window.
+pub fn dwm_bar<C, D, X>(
+    drw: D,
+    height: usize,
+    style: &TextStyle,
+    highlight: impl Into<Color>,
+    empty_ws: impl Into<Color>,
+    workspaces: Vec<impl Into<String>>,
+) -> Result<StatusBar<C, D, X>>
+where
+    C: DrawContext + 'static,
+    D: Draw<Ctx = C>,
+    X: XConn,
+{
+    let highlight = highlight.into();
+    let workspaces: Vec<String> = workspaces.into_iter().map(|w| w.into()).collect();
+
+    Ok(StatusBar::try_new(
+        drw,
+        Position::Top,
+        height,
+        style.bg.unwrap_or_else(|| 0x000000.into()),
+        &[&style.font],
+        vec![
+            Box::new(Workspaces::new(&workspaces, style, highlight, empty_ws)),
+            Box::new(CurrentLayout::new(style)),
+            Box::new(ActiveWindowName::new(
+                &TextStyle {
+                    bg: Some(highlight),
+                    padding: (6.0, 4.0),
+                    ..style.clone()
+                },
+                MAX_ACTIVE_WINDOW_CHARS,
+                true,
+                false,
+            )),
+            Box::new(RootWindowName::new(
+                &TextStyle {
+                    padding: (4.0, 2.0),
+                    ..style.clone()
+                },
+                false,
+                true,
+            )),
+        ],
+    )?)
+}
 
 /// The position of a status bar
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
