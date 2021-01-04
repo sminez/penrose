@@ -1,7 +1,7 @@
 //! Base widgets for building more complex structures
 use crate::{
-    core::{hooks::Hook, xconnection::XConn},
-    draw::{Color, DrawContext, DrawError, Result, TextStyle, Widget},
+    core::{bindings::KeyPress, hooks::Hook, xconnection::XConn},
+    draw::{Color, DrawContext, DrawError, KeyboardControlled, Result, TextStyle, Widget},
 };
 
 /// A simple piece of static text with an optional background color.
@@ -44,9 +44,14 @@ impl Text {
         }
     }
 
-    /// Borrows the current contents of the widget.
+    /// Borrow the current contents of the widget.
     pub fn get_text(&self) -> &String {
         &self.txt
+    }
+
+    /// Mutably borrow the current contents of the widget.
+    pub fn get_text_mut(&mut self) -> &mut String {
+        &mut self.txt
     }
 
     /// Set the rendered text and trigger a redraw
@@ -120,8 +125,7 @@ impl Widget for Text {
 #[derive(Clone, Debug)]
 pub struct LinesWithSelection {
     lines: Vec<String>,
-    /// The current selected index
-    pub selected: usize,
+    selected: usize,
     max_lines: usize,
     font: String,
     point_size: i32,
@@ -165,19 +169,29 @@ impl LinesWithSelection {
     }
 
     /// Set the displayed lines and selected index.
-    pub fn set_input(&mut self, lines: Vec<String>, selected: usize) -> Result<()> {
-        if selected >= lines.len() {
+    pub fn set_input(&mut self, lines: Vec<String>) -> Result<()> {
+        self.lines = lines;
+        self.selected = 0;
+        self.require_draw = true;
+        self.extent = None;
+        Ok(())
+    }
+
+    /// Set the currently selected index
+    ///
+    /// # Errors
+    /// Fails if the provided index is out of bounds
+    pub fn set_selected(&mut self, selected: usize) -> Result<()> {
+        if selected >= self.lines.len() {
             return Err(DrawError::Raw(format!(
                 "index out of bounds: {} >= {}",
                 selected,
-                lines.len()
+                self.lines.len()
             )));
         }
 
-        self.lines = lines;
         self.selected = selected;
         self.require_draw = true;
-        self.extent = None;
         Ok(())
     }
 
@@ -191,8 +205,13 @@ impl LinesWithSelection {
     }
 
     /// The currently selected line (if there is one)
-    pub fn get_selected(&self) -> Option<&str> {
+    pub fn selected(&self) -> Option<&str> {
         self.lines.get(self.selected).map(|s| s.as_ref())
+    }
+
+    /// The currently selected index
+    pub fn selected_index(&self) -> usize {
+        self.selected
     }
 }
 
@@ -256,5 +275,94 @@ impl Widget for LinesWithSelection {
 
     fn is_greedy(&self) -> bool {
         self.greedy
+    }
+}
+
+impl KeyboardControlled for LinesWithSelection {
+    fn handle_keypress(&mut self, k: KeyPress) -> Result<Option<KeyPress>> {
+        match k {
+            KeyPress::Up => {
+                if self.selected > 0 {
+                    self.selected -= 1
+                }
+            }
+
+            KeyPress::Down => {
+                if !self.lines.is_empty() && self.selected < self.lines.len() - 1 {
+                    self.selected += 1
+                }
+            }
+
+            _ => return Ok(Some(k)),
+        }
+
+        Ok(None)
+    }
+}
+
+/// A simple text box that can be driven by user keyboard input
+#[derive(Clone, Debug)]
+pub struct InputBox {
+    txt: Text,
+}
+
+impl InputBox {
+    /// Create a new TextBox widget
+    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
+        Self {
+            txt: Text::new("", style, is_greedy, right_justified),
+        }
+    }
+
+    /// Borrow the current contents of the widget.
+    pub fn get_text(&self) -> &String {
+        self.txt.get_text()
+    }
+
+    /// Mutably borrow the current contents of the widget.
+    pub fn get_text_mut(&mut self) -> &mut String {
+        self.txt.get_text_mut()
+    }
+
+    /// Set the rendered text and trigger a redraw
+    pub fn set_text(&mut self, txt: impl Into<String>) {
+        self.txt.set_text(txt);
+    }
+}
+
+impl<X> Hook<X> for InputBox where X: XConn {}
+
+impl Widget for InputBox {
+    fn draw(&mut self, ctx: &mut dyn DrawContext, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+        self.txt.draw(ctx, s, f, w, h)
+    }
+
+    fn current_extent(&mut self, ctx: &mut dyn DrawContext, h: f64) -> Result<(f64, f64)> {
+        self.txt.current_extent(ctx, h)
+    }
+
+    fn require_draw(&self) -> bool {
+        self.txt.require_draw()
+    }
+
+    fn is_greedy(&self) -> bool {
+        self.txt.is_greedy()
+    }
+}
+
+impl KeyboardControlled for InputBox {
+    fn handle_keypress(&mut self, k: KeyPress) -> Result<Option<KeyPress>> {
+        match k {
+            KeyPress::Backspace => {
+                let s = self.get_text_mut();
+                if s.len() > 0 {
+                    s.pop();
+                }
+            }
+            KeyPress::Utf8(c) => self.get_text_mut().push_str(&c),
+            _ => return Ok(Some(k)),
+        }
+
+        Ok(None)
     }
 }

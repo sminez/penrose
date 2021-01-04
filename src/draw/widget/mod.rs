@@ -1,6 +1,6 @@
 //! Drawable widgets
 use crate::{
-    core::{hooks::Hook, xconnection::XConn},
+    core::{bindings::KeyPress, hooks::Hook, xconnection::XConn},
     draw::{DrawContext, Result},
 };
 
@@ -57,4 +57,13 @@ where
     X: XConn,
     T: Hook<X> + Widget,
 {
+}
+
+/// Something that can respond to user [KeyPress] events
+pub trait KeyboardControlled {
+    /// Process the given [KeyPress]
+    ///
+    /// Should return `Ok(None)` if the [KeyPress] has been handled and no longer
+    /// propagated, or `Ok(Some(k))` if further processing is possible.
+    fn handle_keypress(&mut self, k: KeyPress) -> Result<Option<KeyPress>>;
 }
