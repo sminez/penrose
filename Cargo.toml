@@ -16,6 +16,9 @@ include = [
 keywords = [ "windowmanager", "window", "manager", "x11" ]
 categories = [ "window manager" ]
 
+[workspace]
+members = [ "crates/*" ]
+
 [features]
 default = ["xcb", "xcb_draw"]
 xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]

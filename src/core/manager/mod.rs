@@ -46,6 +46,7 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
 
 /**
  * WindowManager is the primary struct / owner of the event loop for penrose.
+ *
  * It handles most (if not all) of the communication with XCB and responds to
  * X events served over the embedded connection. User input bindings are parsed
  * and bound on init and then triggered via grabbed X events in the main loop
@@ -117,6 +118,37 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Restore missing state following serde deserialization
+    ///
+    /// # Example
+    /// ```
+    /// # use penrose::{Result, core::WindowManager, xconnection::XConn};
+    /// # use penrose::core::{layout::{floating, side_stack, LayoutFunc}};
+    /// use penrose::{
+    ///     core::{layout::{floating, side_stack, LayoutFunc}},
+    ///     contrib::hooks::{SpawnRule, ClientSpawnRules}
+    /// };
+    ///
+    /// # fn example<X: XConn>(mut manager: WindowManager<X>) -> Result<()> {
+    /// // Hooks that we want to set up on restart
+    /// let hooks = vec![
+    ///     ClientSpawnRules::new(vec![
+    ///         SpawnRule::ClassName("xterm-256color" , 3),
+    ///         SpawnRule::WMName("Firefox Developer Edition" , 7),
+    ///     ])
+    /// ];
+    ///
+    /// // The layout functions we were using previously
+    /// let layout_funcs = map! {
+    ///     "[side]" => side_stack as LayoutFunc,
+    ///     "[----]" => floating as LayoutFunc,
+    /// };
+    ///
+    /// let json_str = "...";  // Load in the serialized state from somewhere
+    /// let manager: WindowManager<XcbConnection> = serde_json::from_str(&json_str).unwrap();
+    /// assert!(manager.hydrate_and_init(hooks, layout_funcs).is_ok());
+    /// # Ok(())
+    /// # }
+    /// ```
     #[cfg(feature = "serde")]
     pub fn hydrate_and_init(
         &mut self,
