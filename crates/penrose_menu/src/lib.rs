@@ -111,7 +111,18 @@ impl<D> PMenu<D>
 where
     D: KeyPressDraw,
 {
-    /// Construct a new [PMenu] with the given config
+    /// Construct a new [PMenu] with the given config.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use penrose::xcb::XcbDraw;
+    /// use penrose_menu::{PMenu, PMenuConfig};
+    ///
+    /// let mut pmenu = match XcbDraw::new() {
+    ///     Ok(drw) => PMenu::new(drw, PMenuConfig::default()),
+    ///     Err(e) => panic!("unable to initialise Draw: {}", e),
+    /// };
+    /// ```
     pub fn new(mut drw: D, config: PMenuConfig) -> Result<Self> {
         drw.register_font(&config.font);
 
@@ -152,12 +163,11 @@ where
             )));
         }
 
-        let screen_region = self
+        let screen_region = *self
             .drw
             .screen_sizes()?
             .get(screen_index)
-            .ok_or_else(|| DrawError::Raw("screen_index out of range".into()))?
-            .clone();
+            .ok_or_else(|| DrawError::Raw("screen_index out of range".into()))?;
 
         let (_, _, sw, sh) = screen_region.values();
         let mut ctx = self.drw.temp_context(sw, sh)?;
