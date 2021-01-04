@@ -2,9 +2,9 @@
  * An abstraciton layer for talking to an underlying X server.
  *
  * An implementation of the [XConn] trait is required for running a
- * [crate::core::manager::WindowManager]. The choice of back end (e.g. xlib, xcb...) is an
- * implementation detail that does not surface in the WindowManager itself. All low level details
- * of working with the X server should be captured in this trait.
+ * [WindowManager][crate::core::manager::WindowManager]. The choice of back end (e.g. xlib, xcb...)
+ * is an implementation detail that does not surface in the WindowManager itself. All low level
+ * details of working with the X server should be captured in this trait.
  */
 use crate::{
     core::{

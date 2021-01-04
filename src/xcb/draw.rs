@@ -45,7 +45,7 @@ impl XcbDraw {
 
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
     /// to communicate with the X server.
-    pub fn xcb_connectction(&self) -> &xcb::Connection {
+    pub fn xcb_connection(&self) -> &xcb::Connection {
         &self.api.conn()
     }
 

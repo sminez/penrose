@@ -41,7 +41,7 @@ pub use crate::core::{
 
 #[cfg(feature = "xcb")]
 #[doc(inline)]
-pub use crate::xcb::{new_xcb_backed_window_manager, new_xcb_connection, XcbConnection};
+pub use crate::xcb::{new_xcb_backed_window_manager, XcbConnection};
 
 /// Enum to store the various ways that operations can fail in Penrose
 #[derive(thiserror::Error, Debug)]

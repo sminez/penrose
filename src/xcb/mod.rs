@@ -101,20 +101,14 @@ pub type Result<T> = std::result::Result<T, XcbError>;
 
 /// Helper type for when you are defining your [Hook] vector in your main.rs when using
 /// the default XCB impls
-pub type XcbHooks = Hooks<XcbConnection<Api>>;
-
-/// Construct a default [XcbConnection] using the penrose provided [Api]
-/// implementation of [XcbApi].
-pub fn new_xcb_connection() -> crate::Result<XcbConnection<Api>> {
-    Ok(XcbConnection::new(Api::new()?)?)
-}
+pub type XcbHooks = Hooks<XcbConnection>;
 
 /// Construct a penrose [WindowManager] backed by the default [xcb][crate::xcb] backend.
 pub fn new_xcb_backed_window_manager(
     config: Config,
-    hooks: Vec<Box<dyn Hook<XcbConnection<Api>>>>,
-) -> crate::Result<WindowManager<XcbConnection<Api>>> {
-    let conn = XcbConnection::new(Api::new()?)?;
+    hooks: Vec<Box<dyn Hook<XcbConnection>>>,
+) -> crate::Result<WindowManager<XcbConnection>> {
+    let conn = XcbConnection::new()?;
     let mut wm = WindowManager::new(config, conn, hooks);
     wm.init();
 

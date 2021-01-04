@@ -7,20 +7,22 @@ use std::collections::HashMap;
 
 /**
  * Automatically set the X root window WM_NAME property to be the WM_NAME of the
- * active window. If WM_NAME is not set for the active window, then a default
- * value of 'n/a' is set instead.
- * This is intended for use with external programs such as Polybar as a way of
- * exposing state.
+ * active window.
+ *
+ * If WM_NAME is not set for the active window, then a default value of 'n/a' is set instead. This
+ * is intended for use with external programs such as Polybar as a way of exposing state.
  * NOTE: currently, WM_NAME is read when the window is first mapped only.
  */
 #[derive(Clone, Copy, Debug)]
 pub struct ActiveClientAsRootName {}
+
 impl ActiveClientAsRootName {
     /// Construct a pre-boxed instance of the ActiveClientAsRootName hook
     pub fn new() -> Box<Self> {
         Box::new(Self {})
     }
 }
+
 impl<X: XConn> Hook<X> for ActiveClientAsRootName {
     fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
         wm.set_root_window_name(c.wm_name());
@@ -28,19 +30,21 @@ impl<X: XConn> Hook<X> for ActiveClientAsRootName {
 }
 
 /**
- * Automatically set the X root window WM_NAME property to be the current layout
- * symbol for the active workspace.
- * This is intended for use with external programs such as Polybar as a way of
- * exposing state.
+ * Automatically set the X root window WM_NAME property to be the current layout symbol for the
+ * active workspace.
+ *
+ * This is intended for use with external programs such as Polybar as a way of exposing state.
  */
 #[derive(Clone, Copy, Debug)]
 pub struct LayoutSymbolAsRootName {}
+
 impl LayoutSymbolAsRootName {
     /// Construct a pre-boxed instance of the LayoutSymbolAsRootName hook
     pub fn new() -> Box<Self> {
         Box::new(Self {})
     }
 }
+
 impl<X: XConn> Hook<X> for LayoutSymbolAsRootName {
     fn layout_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) {
         wm.set_root_window_name(wm.current_layout_symbol());
@@ -49,11 +53,11 @@ impl<X: XConn> Hook<X> for LayoutSymbolAsRootName {
 
 /**
  * Whenever a focus moves to the workspace 'name' and the workspace is empty,
- * set a specific layout and spawn a set of default clients. The layout is set
- * first and then clients are spawned in the order they are defined using the
- * penrose::core::helpers::spawn function. This means that the final client will
- * have focus and the the clients will be arranged based on the order they are
- * spawned.
+ * set a specific layout and spawn a set of default clients.
+ *
+ * The layout is set first and then clients are spawned in the order they are defined using the
+ * penrose::core::helpers::spawn function. This means that the final client will have focus and the
+ * the clients will be arranged based on the order they are spawned.
  */
 #[derive(Clone, Debug)]
 pub struct DefaultWorkspace {
@@ -61,6 +65,7 @@ pub struct DefaultWorkspace {
     layout: String,
     name: String,
 }
+
 impl DefaultWorkspace {
     /// Create a new DefaultWorkspace that is pre-boxed for adding to your workspace hooks
     pub fn new(
@@ -75,6 +80,7 @@ impl DefaultWorkspace {
         })
     }
 }
+
 impl<X: XConn> Hook<X> for DefaultWorkspace {
     fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, new: usize) {
         if let Some(ws) = wm.workspace_mut(&Selector::Index(new)) {
@@ -88,15 +94,18 @@ impl<X: XConn> Hook<X> for DefaultWorkspace {
 }
 
 /**
- * Automatically remove empty workspaces when they lose focus. Workspaces with names in 'protected'
- * will not be auto-removed when empty so that you can maintain a set of default workspaces that
- * are always available. This hook is most useful when combined with `DefaultWorkspace` to provide
- * a set of ephemeral workspace configurations that can be created on demand.
+ * Automatically remove empty workspaces when they lose focus.
+ *
+ * Workspaces with names in 'protected' will not be auto-removed when empty so that you can
+ * maintain a set of default workspaces that are always available. This hook is most useful when
+ * combined with `DefaultWorkspace` to provide a set of ephemeral workspace configurations that can
+ * be created on demand.
  */
 #[derive(Clone, Debug)]
 pub struct RemoveEmptyWorkspaces {
     protected: Vec<String>,
 }
+
 impl RemoveEmptyWorkspaces {
     /// Create a new RemoveEmptyWorkspaces that is pre-boxed for adding to your workspace hooks.
     pub fn new(protected: Vec<impl Into<String>>) -> Box<Self> {
@@ -105,6 +114,7 @@ impl RemoveEmptyWorkspaces {
         })
     }
 }
+
 impl<X: XConn> Hook<X> for RemoveEmptyWorkspaces {
     fn workspace_change(&mut self, wm: &mut WindowManager<X>, old: usize, _: usize) {
         let sel = Selector::Index(old);
@@ -127,6 +137,7 @@ pub enum SpawnRule<'a> {
 
 /**
  * Move clients with a matching WM_NAME to a target workspace when they are spawned.
+ *
  * The Strings used to identify the clients that should be moved are their WM_NAME
  * and WM_CLASS X11 properties.
  * ```
@@ -144,6 +155,7 @@ pub struct ClientSpawnRules {
     class_rules: HashMap<String, usize>,
     name_rules: HashMap<String, usize>,
 }
+
 impl ClientSpawnRules {
     /// Create a new ClientSpawnRules that is pre-boxed for adding to your workspace hooks.
     pub fn new(rules: Vec<SpawnRule<'_>>) -> Box<Self> {
@@ -163,6 +175,7 @@ impl ClientSpawnRules {
         })
     }
 }
+
 impl<X: XConn> Hook<X> for ClientSpawnRules {
     /// This sets the client workspace to the desired value which is then picked up and
     /// trigers the spawn on that workspace in WindowManager.handle_map_request

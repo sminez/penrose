@@ -47,14 +47,18 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
 /**
  * WindowManager is the primary struct / owner of the event loop for penrose.
  *
- * It handles most (if not all) of the communication with XCB and responds to
- * X events served over the embedded connection. User input bindings are parsed
- * and bound on init and then triggered via grabbed X events in the main loop
- * along with everything else.
+ * It handles most (if not all) of the communication with the underlying [XConn], responding to
+ * [XEvent][crate::core::xconnection::XEvent]s emitted by it. User key / mouse bindings are parsed
+ * and bound on the call to `grab_keys_and_run` and then triggered when corresponding `XEvent`
+ * instances come through in the main event loop.
+ *
+ * # A note on examples
+ * The following examples are for intended for reference purposes only and are not all run as
+ * doc-tests due to the requirement for a connection to the X server.  For further details and
+ * example use, please see the `examples` directory in the penrose git repo.
  */
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager<X: XConn> {
-    // #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
     conn: X,
     config: Config,
     screens: Ring<Screen>,
@@ -91,6 +95,22 @@ impl<X: XConn> WindowManager<X> {
     /**
      * Construct a new window manager instance using a chosen [XConn] backed to communicate
      * with the X server.
+     *
+     * # Example
+     * ```no_run
+     * use penrose::{core::{Config, WindowManager}, xcb::XcbConnection};
+     *
+     * let mut wm = WindowManager::new(
+     *     Config::default(),
+     *     XcbConnection::new().unwrap(),
+     *     vec![]
+     * );
+     *
+     * // additional set-up logic here
+     *
+     * wm.init();
+     * wm.log("ready to call grab_keys_and_run!");
+     * ```
      */
     pub fn new(config: Config, conn: X, hooks: Hooks<X>) -> Self {
         let layouts = config.layouts.clone();
@@ -117,20 +137,33 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
-    /// Restore missing state following serde deserialization
+    /// Restore missing state following serde deserialization.
+    ///
+    /// # Errors
+    /// The deserialized state will be checked and validated for internal consistency
+    /// and consistency with the current X server state using the deserialized [XConn].
+    /// If the state is not a valid snapshot then an error will be returned. Examples of invalid
+    /// state include:
+    ///   - Not providing a required layout function in `layout_funcs`
+    ///   - [Workspace] [Client] IDs not appearing in the [WindowManager] client_map
+    ///   - Being unable to connect to the X Server
     ///
     /// # Example
     /// ```
-    /// # use penrose::{Result, core::WindowManager, xconnection::XConn};
-    /// # use penrose::core::{layout::{floating, side_stack, LayoutFunc}};
+    /// # use penrose::{Result, map};
     /// use penrose::{
-    ///     core::{layout::{floating, side_stack, LayoutFunc}},
-    ///     contrib::hooks::{SpawnRule, ClientSpawnRules}
+    ///     contrib::hooks::{SpawnRule, ClientSpawnRules},
+    ///     core::{
+    ///         hooks::Hooks,
+    ///         layout::{floating, side_stack, LayoutFunc},
+    ///         manager::WindowManager,
+    ///     },
+    ///     xcb::XcbConnection,
     /// };
     ///
-    /// # fn example<X: XConn>(mut manager: WindowManager<X>) -> Result<()> {
+    /// # fn example() -> Result<()> {
     /// // Hooks that we want to set up on restart
-    /// let hooks = vec![
+    /// let hooks: Hooks<_> = vec![
     ///     ClientSpawnRules::new(vec![
     ///         SpawnRule::ClassName("xterm-256color" , 3),
     ///         SpawnRule::WMName("Firefox Developer Edition" , 7),
@@ -144,7 +177,7 @@ impl<X: XConn> WindowManager<X> {
     /// };
     ///
     /// let json_str = "...";  // Load in the serialized state from somewhere
-    /// let manager: WindowManager<XcbConnection> = serde_json::from_str(&json_str).unwrap();
+    /// let mut manager: WindowManager<XcbConnection> = serde_json::from_str(&json_str).unwrap();
     /// assert!(manager.hydrate_and_init(hooks, layout_funcs).is_ok());
     /// # Ok(())
     /// # }
@@ -172,6 +205,22 @@ impl<X: XConn> WindowManager<X> {
      * events from the X server. If you need to perform any custom setup logic with the
      * [WindowManager] itself, it should be run after calling this method and before
      * [WindowManager::grab_keys_and_run].
+     *
+     * # Example
+     * ```no_run
+     * use penrose::{core::{Config, WindowManager}, xcb::XcbConnection};
+     *
+     * let mut wm = WindowManager::new(
+     *     Config::default(),
+     *     XcbConnection::new().unwrap(),
+     *     vec![]
+     * );
+     *
+     * // additional set-up logic here
+     *
+     * wm.init();
+     * wm.log("ready to call grab_keys_and_run!");
+     * ```
      */
     pub fn init(&mut self) {
         if !self.hydrated {
@@ -612,12 +661,46 @@ impl<X: XConn> WindowManager<X> {
         &mut self.conn
     }
 
-    /// Log information out at INFO level for picking up by external programs
+    /**
+     * Log information out at INFO level for picking up by external programs
+     *
+     * # Example
+     * ```no_run
+     * use penrose::{core::{Config, WindowManager}, xcb::XcbConnection};
+     *
+     * let mut wm = WindowManager::new(
+     *     Config::default(),
+     *     XcbConnection::new().unwrap(),
+     *     vec![]
+     * );
+     *
+     * wm.log("hello from penrose");
+     * ```
+     */
     pub fn log(&self, msg: &str) {
         info!("{}", msg);
     }
 
-    /// Cycle between known [screens][Screen]. Does not wrap from first to last
+    /**
+     * Cycle between known [screens][Screen]. Does not wrap from first to last
+     *
+     * # Example
+     * ```no_run
+     * use penrose::{core::{Config, WindowManager}, xcb::XcbConnection, Forward};
+     *
+     * let mut wm = WindowManager::new(
+     *     Config::default(),
+     *     XcbConnection::new().unwrap(),
+     *     vec![]
+     * );
+     *
+     * wm.init();
+     *
+     * assert_eq!(wm.active_screen_index(), 0);
+     * wm.cycle_screen(Forward);
+     * assert_eq!(wm.active_screen_index(), 1);
+     * ```
+     */
     pub fn cycle_screen(&mut self, direction: Direction) {
         if !self.screens.would_wrap(direction) {
             self.screens.cycle_focus(direction);

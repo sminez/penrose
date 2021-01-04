@@ -5,6 +5,8 @@ use crate::core::{
 };
 
 /**
+ * Jump to, or create, a [Workspace]
+ *
  * Call 'get_name' to obtain a Workspace name and check to see if there is currently a Workspace
  * with that name being managed by the WindowManager. If there is no existing workspace with the
  * given name, create it with the supplied available layouts. If a matching Workspace _does_
@@ -27,10 +29,11 @@ pub fn create_or_switch_to_workspace<X: XConn>(
 }
 
 /**
- * Focus a Client with the given class as WM_CLASS or spawn the program with
- * the given command if no such Client exists. This is useful for key bindings
- * that are based on the program you want to work with rather than having to
- * remember where things are running.
+ * Focus a [Client] with the given class as `WM_CLASS` or spawn the program with the given command
+ * if no such Client exists.
+ *
+ * This is useful for key bindings that are based on the program you want to work with rather than
+ * having to remember where things are running.
  */
 pub fn focus_or_spawn<X: XConn>(class: String, command: String) -> FireAndForget<X> {
     Box::new(move |wm: &mut WindowManager<X>| {

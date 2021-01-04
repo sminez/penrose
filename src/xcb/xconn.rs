@@ -37,16 +37,18 @@ const WM_NAME: &str = "penrose";
  * of the underlying C XCB library.
  **/
 #[derive(Debug)]
-pub struct XcbConnection<X: XcbApi> {
-    api: X,
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct XcbConnection {
+    api: Api,
     check_win: WinId,
     auto_float_types: Vec<u32>,
     dont_manage_types: Vec<u32>,
 }
 
-impl<X: XcbApi> XcbConnection<X> {
+impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new(api: X) -> Result<Self> {
+    pub fn new() -> Result<Self> {
+        let api = Api::new()?;
         let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
             .map(|a| api.known_atom(*a))
@@ -73,9 +75,7 @@ impl<X: XcbApi> XcbConnection<X> {
         }
         false
     }
-}
 
-impl XcbConnection<Api> {
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
     /// to communicate with the X server.
     pub fn xcb_connectction(&self) -> &xcb::Connection {
@@ -98,7 +98,7 @@ impl XcbConnection<Api> {
     }
 }
 
-impl WindowManager<XcbConnection<Api>> {
+impl WindowManager<XcbConnection> {
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
     /// to communicate with the X server.
     pub fn xcb_connectction(&self) -> &xcb::Connection {
@@ -111,7 +111,7 @@ impl WindowManager<XcbConnection<Api>> {
     }
 }
 
-impl<X: XcbApi> XConn for XcbConnection<X> {
+impl XConn for XcbConnection {
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()> {
         Ok(self.api.hydrate()?)
