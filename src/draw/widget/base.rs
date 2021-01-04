@@ -355,7 +355,7 @@ impl KeyboardControlled for InputBox {
         match k {
             KeyPress::Backspace => {
                 let s = self.get_text_mut();
-                if s.len() > 0 {
+                if !s.is_empty() {
                     s.pop();
                 }
             }
