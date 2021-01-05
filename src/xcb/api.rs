@@ -20,19 +20,31 @@ pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
 
 #[cfg(feature = "serde")]
 fn default_conn() -> xcb::Connection {
-    let (conn, _) = xcb::Connection::connect(None).unwrap();
+    let (conn, _) = xcb::Connection::connect(None).expect("unable to connect using XCB");
     conn
 }
 
-/// Use `xmodmap -pke` to determine the user's current keymap to allow for mapping X KeySym values
-/// to their string representation on the user's system.
+/**
+ * Use `xmodmap -pke` to determine the user's current keymap to allow for mapping X KeySym values
+ * to their string representation on the user's system.
+ *
+ * # Panics
+ * This function will panic if it is unable to fetch keycodes using the xmodmap
+ * binary on your system or if the output of `xmodmap -pke` is not valid
+ */
 pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
     let res = Command::new("xmodmap").arg("-pke").output()?;
     Ok(String::from_utf8(res.stdout)?
         .lines()
         .flat_map(|l| {
             let mut words = l.split_whitespace(); // keycode <code> = <names ...>
-            let key_code: u8 = words.nth(1).unwrap().parse().unwrap();
+            let key_code: u8 = match words.nth(1) {
+                Some(word) => match word.parse() {
+                    Ok(val) => val,
+                    Err(e) => panic!("{}", e),
+                },
+                None => panic!("unexpected output format from xmodmap -pke"),
+            };
             vec![
                 words.nth(1).map(move |name| ((0, key_code), name.into())),
                 words.next().map(move |name| ((1, key_code), name.into())),

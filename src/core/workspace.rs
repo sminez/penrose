@@ -149,7 +149,7 @@ impl Workspace {
         client_map: &HashMap<WinId, Client>,
     ) -> ArrangeActions {
         if self.clients.len() > 0 {
-            let layout = self.layouts.focused().unwrap();
+            let layout = self.layouts.focused_unchecked();
             let (floating, tiled): (Vec<&Client>, Vec<&Client>) = self
                 .clients
                 .iter()
@@ -191,7 +191,7 @@ impl Workspace {
 
     /// The symbol of the currently used layout (passed on creation)
     pub fn layout_symbol(&self) -> &str {
-        &self.layouts.focused().unwrap().symbol
+        &self.layouts.focused_unchecked().symbol
     }
 
     /**
@@ -199,7 +199,7 @@ impl Workspace {
      * determine when and how the layout function should be applied.
      */
     pub fn layout_conf(&self) -> LayoutConf {
-        self.layouts.focused().unwrap().conf
+        self.layouts.focused_unchecked().conf
     }
 
     /// Cycle focus through the clients on this workspace

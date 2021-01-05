@@ -73,6 +73,10 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
  * codes. This lets the user define key bindings in the way that they
  * would expect while also ensuring that it is east to debug any odd
  * issues with bindings by referring the user to the xmodmap output.
+ *
+ * # Panics
+ * This function will panic if it is unable to fetch keycodes using the xmodmap
+ * binary on your system or if the output of `xmodmap -pke` is not valid
  */
 pub fn keycodes_from_xmodmap() -> CodeMap {
     match Command::new("xmodmap").arg("-pke").output() {
@@ -83,7 +87,13 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
                 .lines()
                 .flat_map(|l| {
                     let mut words = l.split_whitespace(); // keycode <code> = <names ...>
-                    let key_code: u8 = words.nth(1).unwrap().parse().unwrap();
+                    let key_code: u8 = match words.nth(1) {
+                        Some(word) => match word.parse() {
+                            Ok(val) => val,
+                            Err(e) => panic!("{}", e),
+                        },
+                        None => panic!("unexpected output format from xmodmap -pke"),
+                    };
                     words.skip(1).map(move |name| (name.into(), key_code))
                 })
                 .collect::<CodeMap>(),

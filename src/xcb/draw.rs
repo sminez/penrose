@@ -85,7 +85,7 @@ impl Draw for XcbDraw {
             )?
         };
 
-        surface.set_size(w as i32, h as i32).unwrap();
+        surface.set_size(w as i32, h as i32)?;
         self.surfaces.insert(id, surface);
 
         Ok(id)
@@ -137,7 +137,7 @@ impl Draw for XcbDraw {
             )?
         };
 
-        surface.set_size(w as i32, h as i32).unwrap();
+        surface.set_size(w as i32, h as i32)?;
         let ctx = cairo::Context::new(&surface);
 
         Ok(Self::Ctx {

@@ -294,7 +294,13 @@ impl XConn for XcbConnection {
     fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen) {
         let (x, y, id) = match win_id {
             Some(id) => {
-                let (_, _, w, h) = self.window_geometry(id).unwrap().values();
+                let (_, _, w, h) = match self.window_geometry(id) {
+                    Ok(region) => region.values(),
+                    Err(e) => {
+                        error!("error fetching window details while warping cursor: {}", e);
+                        return;
+                    }
+                };
                 ((w / 2), (h / 2), id)
             }
             None => {
