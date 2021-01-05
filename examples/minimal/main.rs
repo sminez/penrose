@@ -22,8 +22,6 @@ fn main() -> Result<()> {
     let key_bindings = gen_keybindings! {
         "M-j" => run_internal!(cycle_client, Forward);
         "M-k" => run_internal!(cycle_client, Backward);
-        "M-j" => run_internal!(cycle_client, Forward);
-        "M-k" => run_internal!(cycle_client, Backward);
         "M-S-j" => run_internal!(drag_client, Forward);
         "M-S-k" => run_internal!(drag_client, Backward);
         "M-S-q" => run_internal!(kill_client);
