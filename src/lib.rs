@@ -40,7 +40,7 @@
 //!     };
 //!
 //!     let mut wm = new_xcb_backed_window_manager(config, hooks)?;
-//!     wm.grab_keys_and_run(key_bindings, mouse_bindings);
+//!     wm.grab_keys_and_run(key_bindings, map!{});
 //!     Ok(())
 //! }
 //!```
