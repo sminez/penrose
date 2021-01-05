@@ -756,6 +756,26 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
+    /// Focus the [Client] matching the given [Selector]
+    ///
+    /// # Errors
+    /// If the selector matches a known client then that client is focused and `Ok(id)`
+    /// is returned. If the selector doesn't match (either it was invalid or there is
+    /// no focused client) then `Err(self.focused_client_id())` is returned.
+    pub fn focus_client(
+        &mut self,
+        selector: &Selector<'_, Client>,
+    ) -> std::result::Result<WinId, Option<WinId>> {
+        let id = match self.client(selector) {
+            Some(c) => c.id(),
+            None => return Err(self.focused_client_id()),
+        };
+        self.client_gained_focus(id);
+        let screen = self.screens.focused_unchecked();
+        self.conn.warp_cursor(Some(id), screen);
+        Ok(id)
+    }
+
     /// Rotate the [client][Client] stack on the active [workspace][Workspace]
     pub fn rotate_clients(&mut self, direction: Direction) {
         let wix = self.active_ws_index();
