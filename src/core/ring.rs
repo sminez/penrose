@@ -111,8 +111,16 @@ impl<T> Ring<T> {
         self.elements.get(self.focused)
     }
 
+    pub fn focused_unchecked(&self) -> &T {
+        &self.elements[self.focused]
+    }
+
     pub fn focused_mut(&mut self) -> Option<&mut T> {
         self.elements.get_mut(self.focused)
+    }
+
+    pub fn focused_mut_unchecked(&mut self) -> &mut T {
+        &mut self.elements[self.focused]
     }
 
     pub fn rotate(&mut self, direction: Direction) {

@@ -6,6 +6,7 @@ use crate::core::{
     helpers::spawn,
     hooks::Hook,
     manager::WindowManager,
+    ring::Selector,
     xconnection::XConn,
 };
 
@@ -106,6 +107,9 @@ impl Scratchpad {
         } else {
             self.visible.replace(true);
             wm.layout_screen(wm.active_screen_index()); // caught by layout_change
+            if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
+                error!("Scratchpad was unable to focus its client: {:?}", not_us);
+            }
         }
     }
 }
