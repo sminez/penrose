@@ -1,7 +1,7 @@
 //! A tiling window manager library in the style of Xmonad
 //!
 //!
-//!```
+//!```no_run
 //! #[macro_use]
 //! extern crate penrose;
 //!
