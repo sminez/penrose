@@ -48,12 +48,9 @@ fn main() -> Result<()> {
     SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())
         .expect("failed to init logging");
 
-    // Config structs can be intiialised directly as all fields are public.
-    // A default config is provided which sets sensible (but minimal) values for each field.
-    let mut config = Config::default();
-
     // Created at startup. See keybindings below for how to access them
-    config
+    let mut config_builder = Config::default().builder();
+    config_builder
         .workspaces(vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"])
         // Windows with a matching WM_CLASS will always float
         .floating_classes(vec!["dmenu", "dunst", "polybar"])
@@ -80,12 +77,15 @@ fn main() -> Result<()> {
 
     // Layouts to be used on each workspace. Currently all workspaces have the same set of Layouts
     // available to them, though they track modifications to n_main and ratio independently.
-    config.layouts(vec![
+    config_builder.layouts(vec![
         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
         Layout::floating("[----]"),
     ]);
+
+    // Now build and validate the config
+    let config = config_builder.build().unwrap();
 
     // NOTE: change these to programs that you have installed!
     let my_program_launcher = "dmenu_run";
@@ -169,8 +169,8 @@ fn main() -> Result<()> {
         // Each keybinding here will be templated in with the workspace index of each workspace,
         // allowing for common workspace actions to be bound at once.
         refmap [ config.ws_range() ] in {
-            "M-{}" => focus_workspace [ index_selectors(config.workspaces.len()) ];
-            "M-S-{}" => client_to_workspace [ index_selectors(config.workspaces.len()) ];
+            "M-{}" => focus_workspace [ index_selectors(config.workspaces().len()) ];
+            "M-S-{}" => client_to_workspace [ index_selectors(config.workspaces().len()) ];
         };
     };
 

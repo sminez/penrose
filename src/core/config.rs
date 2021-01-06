@@ -1,76 +1,97 @@
 //! User facing configuration of the penrose [WindowManager][crate::core::manager::WindowManager].
 use crate::core::layout::{side_stack, Layout, LayoutConf};
 
-use std::fmt;
+__with_builder_and_getters! {
+    /// The main user facing configuration details.
+    ///
+    /// See [ConfigBuilder] for details of what can be overwritten.
+    ///
+    /// # Example
+    /// ```
+    /// use penrose::Config;
+    ///
+    /// let config = Config::default();
+    ///
+    /// assert_eq!(config.border_px(), &2);
+    /// assert_eq!(config.focused_border(), &0xcc241d);
+    /// ```
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    #[derive(Clone, Debug, PartialEq)]
+    Config;
 
-/// The main user facing configuration details
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone, PartialEq)]
-pub struct Config {
-    /// Default workspace names to use when initialising the WindowManager. Must have at least one element.
-    pub workspaces: Vec<String>,
-    /// WM_CLASS values that should always be treated as floating.
-    pub floating_classes: Vec<String>,
-    /// Default Layouts to be given to every workspace.
-    pub layouts: Vec<Layout>,
-    /// Focused boder color
-    pub focused_border: u32,
-    /// Unfocused boder color
-    pub unfocused_border: u32,
-    /// The width of window borders in pixels
-    pub border_px: u32,
-    /// The size of gaps between windows in pixels.
-    pub gap_px: u32,
-    /// The percentage change in main_ratio to be applied when increasing / decreasing.
-    pub main_ratio_step: f32,
-    /// Whether or not space should be reserved for a status bar
-    pub show_bar: bool,
-    /// True if the status bar should be at the top of the screen, false if it should be at the bottom
-    pub top_bar: bool,
-    /// Height of space reserved for status bars in pixels
-    pub bar_height: u32,
-}
+    /// Builder struct for generating user [Config]
+    ///
+    /// # Example
+    /// ```
+    /// use penrose::core::{config::Config, layout::{LayoutConf, Layout, side_stack, monocle}};
+    ///
+    /// fn my_layouts() -> Vec<Layout> {
+    ///     let mono_conf = LayoutConf {
+    ///         follow_focus: true,
+    ///         gapless: true,
+    ///         ..Default::default()
+    ///     };
+    ///     let n_main = 1;
+    ///     let ratio = 0.6;
+    ///
+    ///     vec![
+    ///         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
+    ///         Layout::new("[mono]", mono_conf, monocle, n_main, ratio),
+    ///     ]
+    /// }
+    ///
+    /// let mut config_builder = Config::default().builder();
+    /// let config = config_builder
+    ///     .floating_classes(vec!["rofi", "dmenu", "dunst", "pinentry-gtk-2"])
+    ///     .layouts(my_layouts())
+    ///     .border_px(4)
+    ///     .focused_border(0xebdbb2)
+    ///     .build()
+    ///     .expect("failed to build config");
+    /// ```
+    #[derive(Debug)]
+    ConfigBuilder;
 
-impl fmt::Debug for Config {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Config")
-            .field("workspaces", &self.workspaces)
-            .field("floating_classes", &self.floating_classes)
-            .field("layouts", &self.layouts)
-            .field("focused_border", &self.focused_border)
-            .field("unfocused_border", &self.unfocused_border)
-            .field("border_px", &self.border_px)
-            .field("gap_px", &self.gap_px)
-            .field("main_ratio_step", &self.main_ratio_step)
-            .field("show_bar", &self.show_bar)
-            .field("top_bar", &self.top_bar)
-            .field("bar_height", &self.bar_height)
-            .finish()
-    }
-}
+    /// the initial available workspaces.
+    ///
+    /// # Constraints
+    /// You must provide at least one workspace per screen
+    VecImplInto workspaces: String; =>
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            workspaces: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
-            floating_classes: ["dmenu", "dunst"].iter().map(|s| s.to_string()).collect(),
-            layouts: vec![
-                Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
-                Layout::floating("[----]"),
-            ],
-            focused_border: 0xcc241d,   // #cc241d
-            unfocused_border: 0x3c3836, // #3c3836
-            border_px: 2,
-            gap_px: 5,
-            main_ratio_step: 0.05,
-            show_bar: true,
-            top_bar: true,
-            bar_height: 18,
-        }
-    }
+    /// the window classes that will always be considered floating
+    VecImplInto floating_classes: String; =>
+        ["dmenu", "dunst"].iter().map(|s| s.to_string()).collect();
+
+    /// the [Layout] functions to be used by each [Workspace][crate::core::workspace::Workspace]
+    ///
+    /// # Constraints
+    /// You must provide at least one layout function
+    Concrete layouts: Vec<Layout>; =>
+        vec![
+            Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
+            Layout::floating("[----]"),
+        ];
+
+    /// the focused border color as a hex literal
+    Concrete focused_border: u32; => 0xcc241d;   // #cc241d
+    /// the unfocused border color as a hex literal
+    Concrete unfocused_border: u32; => 0x3c3836; // #3c3836
+    /// the border width of each window in pixels
+    Concrete border_px: u32; => 2;
+    /// the gap between tiled windows in pixels
+    Concrete gap_px: u32; => 5;
+    /// the percentage of the screen to grow the main region by when incrementing
+    Concrete main_ratio_step: f32; => 0.05;
+    /// whether or not space should be reserved for a status bar
+    Concrete show_bar: bool; => true;
+    /// whether or not the reserved space for a status bar is at the top of the sceen
+    Concrete top_bar: bool; => true;
+    /// the height of the space to be reserved for a status bar in pixels
+    Concrete bar_height: u32; => 18;
 }
 
 impl Config {
@@ -78,70 +99,22 @@ impl Config {
     pub fn ws_range(&self) -> std::ops::Range<usize> {
         1..(self.workspaces.len() + 1)
     }
+}
 
-    /// Set the workspaces field on this Config
-    pub fn workspaces(&mut self, val: Vec<impl Into<String>>) -> &mut Self {
-        self.workspaces = val.into_iter().map(|s| s.into()).collect();
-        self
-    }
+impl ConfigBuilder {
+    fn validate(&self) -> std::result::Result<(), String> {
+        if self.inner.workspaces.is_empty() {
+            return Err("Must supply at least one workspace name".into());
+        }
 
-    /// Set the floating_classes field on this Config
-    pub fn floating_classes(&mut self, val: Vec<impl Into<String>>) -> &mut Self {
-        self.floating_classes = val.into_iter().map(|s| s.into()).collect();
-        self
-    }
+        if self.inner.layouts.is_empty() {
+            return Err("Must supply at least one layout function".into());
+        }
 
-    /// Set the layouts field on this Config
-    pub fn layouts(&mut self, val: Vec<Layout>) -> &mut Self {
-        self.layouts = val;
-        self
-    }
+        if !(0.0..=1.0).contains(&self.inner.main_ratio_step) {
+            return Err("main_ratio_step must be in the range 0.0 -> 1.0".into());
+        }
 
-    /// Set the focused_border field on this Config
-    pub fn focused_border(&mut self, val: u32) -> &mut Self {
-        self.focused_border = val;
-        self
-    }
-
-    /// Set the unfocused_border field on this Config
-    pub fn unfocused_border(&mut self, val: u32) -> &mut Self {
-        self.unfocused_border = val;
-        self
-    }
-
-    /// Set the border_px field on this Config
-    pub fn border_px(&mut self, val: u32) -> &mut Self {
-        self.border_px = val;
-        self
-    }
-
-    /// Set the gap_px field on this Config
-    pub fn gap_px(&mut self, val: u32) -> &mut Self {
-        self.gap_px = val;
-        self
-    }
-
-    /// Set the main_ratio_step field on this Config
-    pub fn main_ratio_step(&mut self, val: f32) -> &mut Self {
-        self.main_ratio_step = val;
-        self
-    }
-
-    /// Set the show_bar field on this Config
-    pub fn show_bar(&mut self, val: bool) -> &mut Self {
-        self.show_bar = val;
-        self
-    }
-
-    /// Set the top_bar field on this Config
-    pub fn top_bar(&mut self, val: bool) -> &mut Self {
-        self.top_bar = val;
-        self
-    }
-
-    /// Set the bar_height field on this Config
-    pub fn bar_height(&mut self, val: u32) -> &mut Self {
-        self.bar_height = val;
-        self
+        Ok(())
     }
 }

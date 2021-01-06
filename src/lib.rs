@@ -34,8 +34,8 @@
 //!         "M-Return" => run_external!("st");
 //!
 //!         refmap [ config.ws_range() ] in {
-//!             "M-{}" => focus_workspace [ index_selectors(config.workspaces.len()) ];
-//!             "M-S-{}" => client_to_workspace [ index_selectors(config.workspaces.len()) ];
+//!             "M-{}" => focus_workspace [ index_selectors(config.workspaces().len()) ];
+//!             "M-S-{}" => client_to_workspace [ index_selectors(config.workspaces().len()) ];
 //!         };
 //!     };
 //!

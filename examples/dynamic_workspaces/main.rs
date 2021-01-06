@@ -42,14 +42,18 @@ fn main() -> Result<()> {
     SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())
         .expect("failed to init logging");
 
-    let mut config = Config::default();
-    config.workspaces(vec!["main"]);
-    config.layouts(my_layouts());
+    let mut config_builder = Config::default().builder();
+    let config = config_builder
+        .workspaces(vec!["main"])
+        .layouts(my_layouts())
+        .build()
+        .unwrap();
+
     let sp = Scratchpad::new("st", 0.8, 0.8);
 
     let hooks: Hooks<_> = vec![
         LayoutSymbolAsRootName::new(),
-        RemoveEmptyWorkspaces::new(config.workspaces.clone()),
+        RemoveEmptyWorkspaces::new(config.workspaces().clone()),
         DefaultWorkspace::new("1term", "[side]", vec!["st"]),
         DefaultWorkspace::new("2term", "[botm]", vec!["st", "st"]),
         DefaultWorkspace::new("3term", "[side]", vec!["st", "st", "st"]),

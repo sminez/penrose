@@ -153,3 +153,91 @@ macro_rules! str_slice {
         &$string_vec.iter().map(AsRef::as_ref).collect::<Vec<&str>>();
     };
 }
+
+// Auto generate a struct and associated builder struct with getter methods
+// on the generated (private) struct fields but no setters.
+//
+// NOTE: requires that you provide a `validate` method on the builder and
+//       some way of getting an initial value of the real struct (i.e. impl
+//       Default)
+macro_rules! __with_builder_and_getters {
+    {
+        $(#[$struct_outer:meta])*
+        $name:ident;
+        $(#[$builder_outer:meta])*
+        $builder_name:ident;
+
+        $(
+            $(#[$field_outer:meta])*
+            $(VecImplInto $intofield:ident : $intoty:ty;)?
+            $(Concrete $field:ident : $ty:ty;)?
+            => $default:expr;
+        )+
+    } => {
+        $(#[$struct_outer])*
+        pub struct $name {
+            $(
+                pub(crate)
+                $($intofield : Vec<$intoty>,)?
+                $($field: $ty,)?
+            )+
+        }
+
+        impl $name {
+            /// Make a new associated builder struct containing the field values of this struct
+            pub fn builder(&self) -> $builder_name {
+                $builder_name {
+                    inner: self.clone(),
+                }
+            }
+
+            $(
+                /// Obtain a reference to
+                $(#[$field_outer])*
+                $(pub fn $intofield(&self) -> &Vec<$intoty> {
+                        &self.$intofield
+                })?
+                $(pub fn $field(&self) -> &$ty {
+                        &self.$field
+                })?
+            )+
+        }
+
+        impl Default for $name {
+            fn default() -> Self {
+                Self {
+                    $(
+                        $($intofield: $default,)?
+                        $($field: $default,)?
+                    )+
+                }
+            }
+        }
+
+        $(#[$builder_outer])*
+        pub struct $builder_name {
+            inner: $name,
+        }
+
+        impl $builder_name {
+            /// Validate and build the underlying struct
+            pub fn build(&self) -> std::result::Result<$name, String> {
+                self.validate()?;
+                Ok(self.inner.clone())
+            }
+
+            $(
+                /// Set the value of
+                $(#[$field_outer])*
+                $(pub fn $intofield(&mut self, val: impl IntoIterator<Item = impl Into<$intoty>>) -> &mut $builder_name {
+                    self.inner.$intofield = val.into_iter().map(|elem| elem.into()).collect();
+                    self
+                })?
+                $(pub fn $field(&mut self, val: $ty) -> &mut $builder_name {
+                    self.inner.$field = val;
+                    self
+                })?
+            )+
+        }
+    }
+}
