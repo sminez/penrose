@@ -242,11 +242,10 @@ macro_rules! __with_builder_and_getters {
     }
 }
 
+#[doc(hidden)]
 #[macro_export]
 /// Helper for writing paramaterised test cases
 macro_rules! test_cases {
-    {} => {};
-
     {
         $test_name:ident;
         args: ( $($arg:ident: $t:ty),* $(,)? );
