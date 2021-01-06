@@ -233,8 +233,6 @@ mod tests {
         PenroseError,
     };
 
-    use test_case::test_case;
-
     use std::{cell::Cell, collections::HashMap, str::FromStr};
 
     #[test]
@@ -263,17 +261,23 @@ mod tests {
         }
     }
 
-    #[test_case(true, false, false, "wm_name"; "wm_name only")]
-    #[test_case(false, true, false, "net_wm_name"; "net_wm_name only")]
-    #[test_case(true, true, false, "net_wm_name"; "both prefers net_wm_name")]
-    #[test_case(true, false, true, "wm_name"; "net_wm_name empty")]
-    fn window_name_test(wm_name: bool, net_wm_name: bool, empty_net_wm_name: bool, expected: &str) {
-        let conn = WmNameXConn {
-            wm_name,
-            net_wm_name,
-            empty_net_wm_name,
-        };
-        assert_eq!(&window_name(&conn, 42).unwrap(), expected);
+    test_cases! {
+        window_name;
+        args: (wm_name: bool, net_wm_name: bool, empty_net_wm_name: bool, expected: &str);
+
+        case: wm_name_only => (true, false, false, "wm_name");
+        case: net_wm_name_only => (false, true, false, "net_wm_name");
+        case: both_prefers_net => (true, true, false, "net_wm_name");
+        case: net_wm_name_empty => (true, false, true, "wm_name");
+
+        body: {
+            let conn = WmNameXConn {
+                wm_name,
+                net_wm_name,
+                empty_net_wm_name,
+            };
+            assert_eq!(&window_name(&conn, 42).unwrap(), expected);
+        }
     }
 
     struct OutputsXConn(Vec<Screen>);
@@ -299,20 +303,26 @@ mod tests {
             .collect()
     }
 
-    #[test_case(vec![0, 1], 10, vec![0, 1]; "unchanged")]
-    #[test_case(vec![5, 7], 10, vec![5, 7]; "non default workspaces")]
-    #[test_case(vec![0], 10, vec![0, 1]; "new screens take first available 0")]
-    #[test_case(vec![2], 10, vec![2, 0]; "new screens take first available 2")]
-    #[test_case(vec![3, 5, 9], 10, vec![3, 5]; "fewer screens reatin from the left")]
-    #[test_case(vec![0], 1, vec![0]; "more screens that workspaces truncates")]
-    fn get_screens_test(current: Vec<usize>, n_workspaces: usize, expected: Vec<usize>) {
-        let (bar_height, top_bar) = (10, true);
-        let screens = test_screens(bar_height, top_bar);
-        let conn = OutputsXConn(screens);
-        let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar);
-        let focused: Vec<usize> = new.iter().map(|s| s.wix).collect();
+    test_cases! {
+        get_screens;
+        args: (current: Vec<usize>, n_workspaces: usize, expected: Vec<usize>);
 
-        assert_eq!(focused, expected);
+        case: unchanged => (vec![0, 1], 10, vec![0, 1]);
+        case: non_default_workspaces => (vec![5, 7], 10, vec![5, 7]);
+        case: new_take_first_available_0 => (vec![0], 10, vec![0, 1]);
+        case: new_take_first_available_2 => (vec![2], 10, vec![2, 0]);
+        case: fewer_retains_from_left => (vec![3, 5, 9], 10, vec![3, 5]);
+        case: more_truncates => (vec![0], 1, vec![0]);
+
+        body: {
+            let (bar_height, top_bar) = (10, true);
+            let screens = test_screens(bar_height, top_bar);
+            let conn = OutputsXConn(screens);
+            let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar);
+            let focused: Vec<usize> = new.iter().map(|s| s.wix).collect();
+
+            assert_eq!(focused, expected);
+        }
     }
 
     struct RecordingXConn {
@@ -322,7 +332,6 @@ mod tests {
     }
 
     impl RecordingXConn {
-        #[allow(clippy::type_complexity)]
         fn init() -> Self {
             Self {
                 positions: Cell::new(Vec::new()),
@@ -352,51 +361,57 @@ mod tests {
         }
     }
 
-    #[test_case(1, None, 0, &[], false, vec![0], vec![], vec![]; "single client on")]
-    #[test_case(1, Some(0), 0, &[], true, vec![], vec![], vec![]; "single client off")]
-    #[test_case(4, None, 1, &[], false, vec![1], vec![], vec![0, 2, 3]; "multiple clients on")]
-    #[test_case(4, Some(1), 1, &[0, 2, 3], true, vec![], vec![0, 2, 3], vec![]; "multiple clients off")]
-    fn toggle_fullscreen_test(
-        n_clients: usize,
-        fullscreen: Option<WinId>,
-        target: WinId,
-        unmapped: &[WinId],
-        expected_need_layout: bool,
-        expected_positions: Vec<WinId>,
-        expected_maps: Vec<WinId>,
-        expected_unmaps: Vec<WinId>,
-    ) {
-        let conn = RecordingXConn::init();
-        let mut ws = Workspace::new(
-            "test",
-            vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)],
+    test_cases! {
+        toggle_fullscreen;
+        args: (
+            n_clients: usize,
+            fullscreen: Option<WinId>,
+            target: WinId,
+            unmapped: &[WinId],
+            expected_need_layout: bool,
+            expected_positions: Vec<WinId>,
+            expected_maps: Vec<WinId>,
+            expected_unmaps: Vec<WinId>,
         );
-        let mut client_map: HashMap<_, _> = (0..n_clients)
-            .map(|id| {
-                let id = id as u32;
-                let mut client = Client::new(id, "name".into(), "class".into(), 0, false);
-                client.mapped = true;
-                ws.add_client(id, &InsertPoint::Last);
-                (id, client)
-            })
-            .collect();
 
-        let r = Region::new(0, 0, 1000, 800);
-        let expected_positions: Vec<_> = expected_positions.iter().map(|id| (*id, r)).collect();
+        case: single_client_on => (1, None, 0, &[], false, vec![0], vec![], vec![]);
+        case: single_client_off => (1, Some(0), 0, &[], true, vec![], vec![], vec![]);
+        case: multiple_clients_on => (4, None, 1, &[], false, vec![1], vec![], vec![0, 2, 3]);
+        case: multiple_clients_off => (4, Some(1), 1, &[0, 2, 3], true, vec![], vec![0, 2, 3], vec![]);
 
-        for id in unmapped {
-            client_map.entry(*id).and_modify(|c| c.mapped = false);
+        body: {
+            let conn = RecordingXConn::init();
+            let mut ws = Workspace::new(
+                "test",
+                vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)],
+            );
+            let mut client_map: HashMap<_, _> = (0..n_clients)
+                .map(|id| {
+                    let id = id as u32;
+                    let mut client = Client::new(id, "name".into(), "class".into(), 0, false);
+                    client.mapped = true;
+                    ws.add_client(id, &InsertPoint::Last);
+                    (id, client)
+                })
+                .collect();
+
+            let r = Region::new(0, 0, 1000, 800);
+            let expected_positions: Vec<_> = expected_positions.iter().map(|id| (*id, r)).collect();
+
+            for id in unmapped {
+                client_map.entry(*id).and_modify(|c| c.mapped = false);
+            }
+
+            if let Some(id) = fullscreen {
+                client_map.entry(id).and_modify(|c| c.fullscreen = true);
+            }
+
+            let need_layout = toggle_fullscreen(&conn, target, &mut client_map, &mut ws, r);
+
+            assert_eq!(need_layout, expected_need_layout);
+            assert_eq!(conn.positions.take(), expected_positions);
+            assert_eq!(conn.maps.take(), expected_maps);
+            assert_eq!(conn.unmaps.take(), expected_unmaps);
         }
-
-        if let Some(id) = fullscreen {
-            client_map.entry(id).and_modify(|c| c.fullscreen = true);
-        }
-
-        let need_layout = toggle_fullscreen(&conn, target, &mut client_map, &mut ws, r);
-
-        assert_eq!(need_layout, expected_need_layout);
-        assert_eq!(conn.positions.take(), expected_positions);
-        assert_eq!(conn.maps.take(), expected_maps);
-        assert_eq!(conn.unmaps.take(), expected_unmaps);
     }
 }

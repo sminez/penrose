@@ -241,3 +241,34 @@ macro_rules! __with_builder_and_getters {
         }
     }
 }
+
+#[macro_export]
+/// Helper for writing paramaterised test cases
+macro_rules! test_cases {
+    {} => {};
+
+    {
+        $test_name:ident;
+        args: ( $($arg:ident: $t:ty),* $(,)? );
+
+        $(
+            case: $case_name:ident => ( $($param:expr),* );
+        )+
+        body: $body:expr
+    } => {
+        paste::paste! {
+            fn [<$test_name _helper>]($($arg: $t),*) {
+                $body
+            }
+        }
+
+        $(
+            paste::paste! {
+                #[test]
+                fn [<$test_name _ $case_name>]() {
+                    [<$test_name _helper>]($($param),*)
+                }
+            }
+        )+
+    };
+}
