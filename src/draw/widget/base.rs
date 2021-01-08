@@ -240,7 +240,7 @@ impl Widget for LinesWithSelection {
             .enumerate()
             .skip(block * self.n_lines)
             .take(self.n_lines)
-            .map(|(ix, line)| {
+            .try_for_each(|(ix, line)| -> Result<()> {
                 let (lw, lh) = ctx.text_extent(line)?;
                 let fg = if ix == self.selected {
                     ctx.color(&self.bg_sel);
@@ -254,8 +254,7 @@ impl Widget for LinesWithSelection {
                 ctx.text(line, 0.0, (self.padding, self.padding))?;
                 ctx.translate(0.0, lh);
                 Ok(())
-            })
-            .collect::<Result<()>>()?;
+            })?;
 
         Ok(())
     }

@@ -289,7 +289,7 @@ where
         let matcher = SkimMatcherV2::default();
 
         self.txt.set_input(fmt_lines(
-            &input.iter().enumerate().collect(),
+            &input.iter().enumerate().collect::<Vec<_>>(),
             self.show_line_numbers,
         ))?;
         self.redraw()?;
@@ -361,7 +361,7 @@ where
 }
 
 // Hleper for formatting lines with optional line numbers
-fn fmt_lines(lines: &Vec<(usize, &String)>, show_line_numbers: bool) -> Vec<String> {
+fn fmt_lines(lines: &[(usize, &String)], show_line_numbers: bool) -> Vec<String> {
     lines
         .iter()
         .map(|(i, line)| {

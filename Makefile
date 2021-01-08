@@ -6,8 +6,8 @@ build:
 build-release:
 	cargo lint && cargo build --release
 
-.PHONY: check
-check:
+.PHONY: clippy
+clippy:
 	cargo clippy --workspace --all-targets --all-features --examples --tests
 
 .PHONY: check-all

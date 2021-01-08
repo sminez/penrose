@@ -46,13 +46,13 @@
 //!```
 #![warn(
     broken_intra_doc_links,
+    clippy::all,
     missing_debug_implementations,
     future_incompatible,
     missing_docs,
     // missing_doc_code_examples,
     rust_2018_idioms,
 )]
-#![warn(clippy::all)]
 #![allow(clippy::too_many_arguments, clippy::clippy::borrowed_box)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",

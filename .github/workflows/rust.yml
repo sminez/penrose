@@ -48,8 +48,8 @@ jobs:
   clippy:
     name: Lint the codebase with clippy
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: -Dwarnings
+    # env:
+    #   RUSTFLAGS: -Dwarnings
     steps:
     - uses: actions/checkout@v2
     - uses: hecrj/setup-rust-action@v1
