@@ -8,6 +8,9 @@
     rust_2018_idioms
 )]
 
+#[macro_use]
+extern crate log;
+
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use penrose::{
     core::{
@@ -21,6 +24,8 @@ use penrose::{
         TextStyle, Widget,
     },
 };
+
+const PAD_PX: f64 = 3.0;
 
 /// The result of attempting to match against user input in a call to
 /// [PMenu::get_selection_from_input]
@@ -65,14 +70,14 @@ pub struct PMenuConfig {
     ///
     /// Default: 12
     pub point_size: i32,
-    /// Maximum width of the spawned window as a percentage of the screen size
+    /// Number of lines to display at a time
     ///
-    /// Default: 0.8
-    pub max_width_perc: f64,
-    /// Maximum height of the spawned window as a percentage of the screen size
+    /// Default: 10
+    pub n_lines: usize,
+    /// Minimum width of the spawned window as a percentage of the screen size
     ///
-    /// Default: 0.8
-    pub max_height_perc: f64,
+    /// Default: 0.5
+    pub min_width_perc: f64,
 }
 
 impl Default for PMenuConfig {
@@ -85,8 +90,8 @@ impl Default for PMenuConfig {
             selected_color: 0x458588ff.into(),
             font: "monospace".into(),
             point_size: 12,
-            max_width_perc: 0.8,
-            max_height_perc: 0.8,
+            n_lines: 10,
+            min_width_perc: 0.5,
         }
     }
 }
@@ -105,6 +110,9 @@ where
     txt: LinesWithSelection,
     w: f64,
     h: f64,
+    show_line_numbers: bool,
+    sort_by_relevance: bool,
+    min_width_perc: f64,
 }
 
 impl<D> PMenu<D>
@@ -124,6 +132,13 @@ where
     /// };
     /// ```
     pub fn new(mut drw: D, config: PMenuConfig) -> Result<Self> {
+        if !(0.0..=1.0).contains(&config.min_width_perc) {
+            return Err(DrawError::Raw(format!(
+                "min_width_perc must be in the range 0.0..1.0: {}",
+                config.min_width_perc
+            )));
+        }
+
         drw.register_font(&config.font);
 
         let default_style = TextStyle {
@@ -131,7 +146,13 @@ where
             point_size: config.point_size,
             fg: config.fg_color,
             bg: Some(config.bg_color),
-            padding: (1.0, 1.0),
+            padding: (PAD_PX, PAD_PX),
+        };
+
+        let inverted_style = TextStyle {
+            fg: config.fg_color,
+            bg: Some(config.selected_color),
+            ..default_style.clone()
         };
 
         Ok(Self {
@@ -140,29 +161,27 @@ where
             txt: LinesWithSelection::new(
                 config.font,
                 config.point_size,
-                3.0,
+                PAD_PX,
                 config.bg_color,
                 config.fg_color,
                 config.selected_color,
                 config.fg_color,
+                config.n_lines,
                 false,
             ),
             patt: InputBox::new(&default_style, false, true),
-            prompt: Text::new("", &default_style, false, true),
+            prompt: Text::new("", &inverted_style, false, true),
             w: 0.0,
             h: 0.0,
             id: None,
+            show_line_numbers: config.show_line_numbers,
+            sort_by_relevance: config.sort_by_relevance,
+            min_width_perc: config.min_width_perc,
         })
     }
 
-    fn init_window(&mut self, screen_index: usize, w_max: f64, h_max: f64) -> Result<()> {
-        if !(0.0..=1.0).contains(&w_max) || !(0.0..=1.0).contains(&h_max) {
-            return Err(DrawError::Raw(format!(
-                "w_max and h_max must be in the range 0.0..1.0: w_max={}, h_max={}",
-                w_max, h_max
-            )));
-        }
-
+    fn init_window(&mut self, screen_index: usize) -> Result<()> {
+        debug!("getting screen size");
         let screen_region = *self
             .drw
             .screen_sizes()?
@@ -170,27 +189,20 @@ where
             .ok_or_else(|| DrawError::Raw("screen_index out of range".into()))?;
 
         let (_, _, sw, sh) = screen_region.values();
+
         let mut ctx = self.drw.temp_context(sw, sh)?;
         let (prompt_w, prompt_h) = self.prompt.current_extent(&mut ctx, 1.0)?;
         let (input_w, input_h) = self.txt.current_extent(&mut ctx, 1.0)?;
 
         // TODO: work out why extent still isn't right
-        self.w = (prompt_w + input_w) * 1.1;
-        self.h = (prompt_h + input_h) * 1.1;
+        self.w = (prompt_w + input_w + PAD_PX + PAD_PX) * 1.1;
+        self.h = (prompt_h + input_h + PAD_PX + PAD_PX) * 1.1;
 
-        let (_, _, w, h) = screen_region
-            .scale_w(w_max)
-            .scale_h(h_max)
-            .centered_in(&screen_region)
-            .unwrap() // We know we are bounded by screen_region
-            .values();
+        let (_, _, w, _) = screen_region.scale_w(self.min_width_perc).values();
+        let w_min = w as f64;
 
-        let w_max = w as f64;
-        let h_max = h as f64;
-
-        if self.w > w_max || self.h > h_max {
-            self.w = w_max;
-            self.h = h_max;
+        if self.w < w_min {
+            self.w = w_min;
         }
 
         let id = self.drw.new_window(
@@ -215,6 +227,7 @@ where
         ctx.color(&self.bg);
         ctx.rectangle(0.0, 0.0, self.w, self.h);
 
+        ctx.translate(PAD_PX, PAD_PX);
         let (w, h) = self.prompt.current_extent(&mut ctx, self.h)?;
         self.prompt.draw(&mut ctx, 0, false, w, h)?;
         ctx.translate(w, 0.0);
@@ -227,6 +240,13 @@ where
         ctx.flush();
         self.drw.flush(id);
         Ok(())
+    }
+
+    /// Set the maximum number of lines from the input that will be displayed.
+    ///
+    /// Defaults to 10
+    pub fn set_n_lines(&mut self, n_lines: usize) {
+        self.txt.set_n_lines(n_lines);
     }
 
     /// Spawn a temporary window using the embedded [KeyPressDraw] impl and fethc input from the user.
@@ -250,21 +270,13 @@ where
         &mut self,
         prompt: impl Into<String>,
         input: Vec<impl Into<String>>,
-        max_lines: usize,
         screen_index: usize,
-        w_max: f64,
-        h_max: f64,
     ) -> Result<PMenuMatch> {
         let input: Vec<String> = input.into_iter().map(|s| s.into()).collect();
         self.prompt.set_text(prompt);
         self.txt.set_input(input.clone())?;
-        self.txt.set_max_lines(if max_lines < input.len() {
-            max_lines
-        } else {
-            input.len()
-        });
 
-        self.init_window(screen_index, w_max, h_max)?;
+        self.init_window(screen_index)?;
         let selection = self.get_selection_inner(input);
         self.drw.destroy_window(self.id.unwrap());
         self.id = None;
@@ -276,15 +288,25 @@ where
         let mut matches: Vec<(usize, &String)> = input.iter().enumerate().collect();
         let matcher = SkimMatcherV2::default();
 
+        self.txt.set_input(fmt_lines(
+            &input.iter().enumerate().collect(),
+            self.show_line_numbers,
+        ))?;
+        self.redraw()?;
+
         loop {
+            debug!("waiting for keypress");
             if let KeyPressResult::KeyPress(k) = self.drw.next_keypress() {
+                debug!("got a keypress");
                 match k {
                     KeyPress::Return if self.txt.selected_index() < matches.len() => {
+                        debug!("exiting with selection");
                         let m = matches[self.txt.selected_index()];
                         return Ok(PMenuMatch::Line(m.0, m.1.clone()));
                     }
 
-                    KeyPress::Escape | KeyPress::Return => {
+                    KeyPress::Return => {
+                        debug!("exiting with potential user input");
                         let patt = self.patt.get_text();
                         return if patt.is_empty() {
                             Ok(PMenuMatch::NoMatch)
@@ -293,9 +315,16 @@ where
                         };
                     }
 
+                    KeyPress::Escape => {
+                        debug!("exiting with NoMatch");
+                        return Ok(PMenuMatch::NoMatch);
+                    }
+
                     KeyPress::Backspace | KeyPress::Utf8(_) => {
+                        debug!("updating pattern");
                         self.patt.handle_keypress(k)?;
 
+                        debug!("computing matches");
                         let mut scored = input
                             .iter()
                             .enumerate()
@@ -306,21 +335,41 @@ where
                             })
                             .collect::<Vec<_>>();
 
-                        scored.sort_by_key(|(score, _)| -*score);
+                        if self.sort_by_relevance {
+                            scored.sort_by_key(|(score, _)| -*score);
+                        }
+
                         matches = scored.into_iter().map(|(_, data)| data).collect();
-                        let lines = matches.iter().map(|(_, line)| line.to_string()).collect();
+                        let lines = fmt_lines(&matches, self.show_line_numbers);
                         self.txt.set_input(lines)?;
                     }
 
                     KeyPress::Up | KeyPress::Down => {
+                        debug!("adjusting selection");
                         self.txt.handle_keypress(k)?;
                     }
 
                     _ => continue,
                 };
-            }
 
-            self.redraw()?;
+                // Only redraw if we got a keypress
+                debug!("triggering re-render");
+                self.redraw()?;
+            }
         }
     }
+}
+
+// Hleper for formatting lines with optional line numbers
+fn fmt_lines(lines: &Vec<(usize, &String)>, show_line_numbers: bool) -> Vec<String> {
+    lines
+        .iter()
+        .map(|(i, line)| {
+            if show_line_numbers {
+                format!("{:<3} {}", i, line)
+            } else {
+                line.to_string()
+            }
+        })
+        .collect()
 }

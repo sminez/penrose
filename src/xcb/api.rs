@@ -3,6 +3,7 @@ use crate::{
     core::{
         bindings::{KeyCode, KeyCodeMask, KeyCodeValue, MouseEvent, MouseState},
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        helpers::spawn_for_output,
         screen::Screen,
         xconnection::{Atom, XEvent},
     },
@@ -10,7 +11,7 @@ use crate::{
 };
 use strum::*;
 
-use std::{collections::HashMap, convert::TryFrom, fmt, process::Command, str::FromStr};
+use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
 
 #[cfg(feature = "xcb_keysyms")]
 use crate::{core::bindings::KeyPress, draw::KeyPressResult, xcb::keysyms::XKeySym};
@@ -33,8 +34,11 @@ fn default_conn() -> xcb::Connection {
  * binary on your system or if the output of `xmodmap -pke` is not valid
  */
 pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
-    let res = Command::new("xmodmap").arg("-pke").output()?;
-    Ok(String::from_utf8(res.stdout)?
+    let output = match spawn_for_output("xmodmap -pke") {
+        Ok(s) => s,
+        Err(e) => return Err(XcbError::Raw(e.to_string())), // failed to spawn
+    };
+    Ok(output
         .lines()
         .flat_map(|l| {
             let mut words = l.split_whitespace(); // keycode <code> = <names ...>

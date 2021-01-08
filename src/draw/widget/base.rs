@@ -126,7 +126,7 @@ impl Widget for Text {
 pub struct LinesWithSelection {
     lines: Vec<String>,
     selected: usize,
-    max_lines: usize,
+    n_lines: usize,
     font: String,
     point_size: i32,
     padding: f64,
@@ -149,12 +149,13 @@ impl LinesWithSelection {
         fg: Color,
         bg_sel: Color,
         fg_sel: Color,
+        n_lines: usize,
         greedy: bool,
     ) -> Self {
         Self {
             lines: vec![],
             selected: 0,
-            max_lines: 10,
+            n_lines,
             font,
             point_size,
             padding,
@@ -198,8 +199,8 @@ impl LinesWithSelection {
     /// Set the maximum number of lines from the input that will be displayed.
     ///
     /// Defaults to 10
-    pub fn set_max_lines(&mut self, max_lines: usize) {
-        self.max_lines = max_lines;
+    pub fn set_n_lines(&mut self, n_lines: usize) {
+        self.n_lines = n_lines;
         self.require_draw = true;
         self.extent = None;
     }
@@ -231,20 +232,30 @@ impl Widget for LinesWithSelection {
         ctx.font(&self.font, self.point_size)?;
         ctx.translate(self.padding, self.padding);
 
-        for (ix, line) in self.lines.iter().enumerate() {
-            let (lw, lh) = ctx.text_extent(line)?;
-            let fg = if ix == self.selected {
-                ctx.color(&self.bg_sel);
-                ctx.rectangle(0.0, 0.0, lw + self.padding * 2.0, lh);
-                self.fg_sel
-            } else {
-                self.fg
-            };
+        // Find the block that the current selection is in
+        let block = self.selected / self.n_lines;
 
-            ctx.color(&fg);
-            ctx.text(line, 0.0, (self.padding, self.padding))?;
-            ctx.translate(0.0, lh);
-        }
+        self.lines
+            .iter()
+            .enumerate()
+            .skip(block * self.n_lines)
+            .take(self.n_lines)
+            .map(|(ix, line)| {
+                let (lw, lh) = ctx.text_extent(line)?;
+                let fg = if ix == self.selected {
+                    ctx.color(&self.bg_sel);
+                    ctx.rectangle(0.0, 0.0, lw + self.padding * 2.0, lh);
+                    self.fg_sel
+                } else {
+                    self.fg
+                };
+
+                ctx.color(&fg);
+                ctx.text(line, 0.0, (self.padding, self.padding))?;
+                ctx.translate(0.0, lh);
+                Ok(())
+            })
+            .collect::<Result<()>>()?;
 
         Ok(())
     }
@@ -255,11 +266,14 @@ impl Widget for LinesWithSelection {
             None => {
                 let mut height = 0.0;
                 let mut w_max = 0.0;
-                for line in self.lines.iter() {
+                for (i, line) in self.lines.iter().enumerate() {
                     ctx.font(&self.font, self.point_size)?;
                     let (w, h) = ctx.text_extent(line)?;
-                    height += h;
                     w_max = if w > w_max { w } else { w_max };
+
+                    if i < self.n_lines {
+                        height += h;
+                    }
                 }
 
                 let ext = (w_max + self.padding * 2.0, height + self.padding * 2.0);

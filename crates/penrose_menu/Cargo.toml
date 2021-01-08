@@ -6,4 +6,5 @@ edition = "2018"
 
 [dependencies]
 fuzzy-matcher = "0.3.7"
+log = "0.4.8"
 penrose = { path = "../../" }
