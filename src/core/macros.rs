@@ -7,8 +7,8 @@
 macro_rules! run_external {
     ($cmd:tt) => {{
         Box::new(move |_: &mut $crate::core::manager::WindowManager<_>| {
-            $crate::core::helpers::spawn($cmd);
-        }) as $crate::core::bindings::FireAndForget<_>
+            $crate::core::helpers::spawn($cmd)
+        }) as $crate::core::bindings::KeyEventHandler<_>
     }};
 }
 
@@ -17,14 +17,14 @@ macro_rules! run_external {
 macro_rules! run_internal {
     ($func:ident) => {
         Box::new(|wm: &mut $crate::core::manager::WindowManager<_>| {
-            wm.$func();
-        }) as $crate::core::bindings::FireAndForget<_>
+            wm.$func()
+        }) as $crate::core::bindings::KeyEventHandler<_>
     };
 
     ($func:ident, $($arg:expr),+) => {
         Box::new(move |wm: &mut $crate::core::manager::WindowManager<_>| {
-            wm.$func($($arg),+);
-        }) as $crate::core::bindings::FireAndForget<_>
+            wm.$func($($arg),+)
+        }) as $crate::core::bindings::KeyEventHandler<_>
     };
 }
 
@@ -160,6 +160,8 @@ macro_rules! str_slice {
 // NOTE: requires that you provide a `validate` method on the builder and
 //       some way of getting an initial value of the real struct (i.e. impl
 //       Default)
+#[doc(hidden)]
+#[macro_export]
 macro_rules! __with_builder_and_getters {
     {
         $(#[$struct_outer:meta])*
@@ -242,9 +244,9 @@ macro_rules! __with_builder_and_getters {
     }
 }
 
+/// Helper for writing paramaterised test cases
 #[doc(hidden)]
 #[macro_export]
-/// Helper for writing paramaterised test cases
 macro_rules! test_cases {
     {
         $test_name:ident;

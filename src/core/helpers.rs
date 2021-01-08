@@ -1,7 +1,7 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
     core::{bindings::CodeMap, ring::Selector},
-    PenroseError, Result,
+    ErrorHandler, PenroseError, Result,
 };
 
 use std::{
@@ -15,7 +15,7 @@ use std::{
  * This redirects the process stdout and stderr to /dev/null.
  * Logs a warning if there were any errors in kicking off the process.
  */
-pub fn spawn<S: Into<String>>(cmd: S) {
+pub fn spawn<S: Into<String>>(cmd: S) -> Result<()> {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
     let result = if parts.len() > 1 {
@@ -31,8 +31,9 @@ pub fn spawn<S: Into<String>>(cmd: S) {
             .spawn()
     };
 
-    if let Err(e) = result {
-        warn!("error spawning external program: {}", e);
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.into()),
     }
 }
 
@@ -104,4 +105,19 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
 /// Create a Vec of index selectors for the given input slice
 pub fn index_selectors<'a, T>(len: usize) -> Vec<Selector<'a, T>> {
     (0..len).map(Selector::Index).collect()
+}
+
+/// A simple error handler that just logs the error to the penrose log stream
+pub fn logging_error_handler() -> ErrorHandler {
+    Box::new(|e: PenroseError| error!("{}", e))
+}
+
+/// A simple error handler that uses 'notify-send' to display a dialog window with the error
+/// message.
+pub fn notify_send_error_handler() -> ErrorHandler {
+    Box::new(|e: PenroseError| {
+        if let Err(_) = spawn(format!("notify-send '{}'", e)) {
+            error!("Unable to display error via notify-send. Error was: {}", e);
+        }
+    })
 }

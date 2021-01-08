@@ -1,13 +1,16 @@
 //! A scratchpad that holds a single client
-use crate::core::{
-    bindings::FireAndForget,
-    client::Client,
-    data_types::{Region, WinId},
-    helpers::spawn,
-    hooks::Hook,
-    manager::WindowManager,
-    ring::Selector,
-    xconnection::XConn,
+use crate::{
+    core::{
+        bindings::KeyEventHandler,
+        client::Client,
+        data_types::{Region, WinId},
+        helpers::spawn,
+        hooks::Hook,
+        manager::WindowManager,
+        ring::Selector,
+        xconnection::XConn,
+    },
+    Result,
 };
 
 use std::{cell::RefCell, fmt, rc::Rc};
@@ -85,58 +88,68 @@ impl Scratchpad {
     }
 
     /// Show / hide the bound client. If there is no client currently, then spawn one.
-    pub fn toggle<X: XConn>(&self) -> FireAndForget<X> {
+    pub fn toggle<X: XConn>(&self) -> KeyEventHandler<X> {
         let mut clone = self.boxed_clone();
         Box::new(move |wm: &mut WindowManager<X>| clone.toggle_client(wm))
     }
 
-    fn toggle_client<X: XConn>(&mut self, wm: &mut WindowManager<X>) {
+    fn toggle_client<X: XConn>(&mut self, wm: &mut WindowManager<X>) -> Result<()> {
         let id = match *self.client.borrow() {
             Some(id) => id,
             None => {
                 self.pending.replace(true);
                 self.visible.replace(false);
-                spawn(&self.prog); // caught by new_client
-                return;
+                return spawn(&self.prog); // caught by new_client
             }
         };
 
         if *self.visible.borrow() {
             self.visible.replace(false);
-            wm.hide_client(id);
+            wm.hide_client(id)?;
         } else {
             self.visible.replace(true);
-            wm.layout_screen(wm.active_screen_index()); // caught by layout_change
+            wm.layout_screen(wm.active_screen_index())?; // caught by layout_change
             if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
                 error!("Scratchpad was unable to focus its client: {:?}", not_us);
             }
         }
+
+        Ok(())
     }
 }
 
 impl<X: XConn> Hook<X> for Scratchpad {
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
         if *self.pending.borrow() && self.client.borrow().is_none() {
             self.pending.replace(false);
             self.client.replace(Some(c.id()));
             c.externally_managed();
-            self.toggle_client(wm);
+            self.toggle_client(wm).unwrap();
         }
+
+        Ok(())
     }
 
-    fn remove_client(&mut self, _: &mut WindowManager<X>, id: WinId) {
+    fn remove_client(&mut self, _: &mut WindowManager<X>, id: WinId) -> Result<()> {
         let client = match *self.client.borrow() {
             Some(id) => id,
-            None => return,
+            None => return Ok(()),
         };
 
         if id == client {
             self.client.replace(None);
             self.visible.replace(false);
         }
+
+        Ok(())
     }
 
-    fn layout_applied(&mut self, wm: &mut WindowManager<X>, _: usize, screen_index: usize) {
+    fn layout_applied(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        _: usize,
+        screen_index: usize,
+    ) -> Result<()> {
         if let Some(id) = *self.client.borrow() {
             if *self.visible.borrow() {
                 if let Some(region) = wm.screen_size(screen_index) {
@@ -145,10 +158,12 @@ impl<X: XConn> Hook<X> for Scratchpad {
                     let h = (sh as f32 * self.h) as u32;
                     let x = sx + (sw - w) / 2;
                     let y = sy + (sh - h) / 2;
-                    wm.position_client(id, Region::new(x, y, w, h), true); // stack above
+                    wm.position_client(id, Region::new(x, y, w, h), true)?; // stack above
                 }
-                wm.show_client(id);
+                wm.show_client(id)?;
             }
         }
+
+        Ok(())
     }
 }

@@ -11,6 +11,7 @@ use penrose::{
     core::{
         bindings::MouseEvent, config::Config, helpers::index_selectors, manager::WindowManager,
     },
+    logging_error_handler,
     xcb::new_xcb_backed_window_manager,
     Backward, Forward, Less, More, Result,
 };
@@ -51,8 +52,8 @@ fn main() -> Result<()> {
         Press Left + [Meta] => |wm: &mut WindowManager<_>, _: &MouseEvent| wm.cycle_workspace(Backward)
     };
 
-    let mut wm = new_xcb_backed_window_manager(config, hooks)?;
-    wm.grab_keys_and_run(key_bindings, mouse_bindings);
+    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
+    wm.grab_keys_and_run(key_bindings, mouse_bindings)?;
 
     Ok(())
 }

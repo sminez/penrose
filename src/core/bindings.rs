@@ -12,13 +12,13 @@ use std::{collections::HashMap, convert::TryFrom};
 use strum::EnumIter;
 
 /// Some action to be run by a user key binding
-pub type FireAndForget<X> = Box<dyn FnMut(&mut WindowManager<X>)>;
+pub type KeyEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>) -> Result<()>>;
 
 /// An action to be run in response to a mouse event
-pub type MouseEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>, &MouseEvent)>;
+pub type MouseEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>, &MouseEvent) -> Result<()>>;
 
 /// User defined key bindings
-pub type KeyBindings<X> = HashMap<KeyCode, FireAndForget<X>>;
+pub type KeyBindings<X> = HashMap<KeyCode, KeyEventHandler<X>>;
 
 /// User defined mouse bindings
 pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;

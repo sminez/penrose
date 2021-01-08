@@ -258,7 +258,7 @@ where
     /// # fn example<T: KeyPressDraw>(mut pmenu: PMenu<T>) -> Result<()> {
     /// let lines = vec!["foo", "bar", "baz"];
     ///
-    /// match pmenu.get_selection_from_input(">>> ", lines, 10, 0, 0.8, 0.8)? {
+    /// match pmenu.get_selection_from_input(">>> ", lines, 0)? {
     ///     PMenuMatch::Line(i, s) => println!("matched {} on line {}", s, i),
     ///     PMenuMatch::UserInput(s) => println!("user input: {}", s),
     ///     PMenuMatch::NoMatch => println!("no match"),

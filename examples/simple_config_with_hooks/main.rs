@@ -25,6 +25,7 @@ use penrose::{
         ring::Selector,
         xconnection::XConn,
     },
+    logging_error_handler,
     xcb::{XcbConnection, XcbHooks},
     Backward, Forward, Less, More, Result,
 };
@@ -36,8 +37,8 @@ use std::collections::HashMap;
 // be run each time a new client program is spawned.
 struct MyClientHook {}
 impl<X: XConn> Hook<X> for MyClientHook {
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
-        wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()));
+    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+        wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()))
     }
 }
 
@@ -185,8 +186,8 @@ fn main() -> Result<()> {
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions
     // such as configuring initial WindowManager state, running custom code / hooks or spawning
     // external processes such as a start-up script.
-    let mut wm = WindowManager::new(config, conn, hooks);
-    wm.init();
+    let mut wm = WindowManager::new(config, conn, hooks, logging_error_handler());
+    wm.init()?;
 
     // NOTE: If you are using the default XCB backend provided in the penrose xcb module, then the
     //       construction of the XcbConnection and resulting WindowManager can be done using the
@@ -197,7 +198,7 @@ fn main() -> Result<()> {
     // grab_keys_and_run will start listening to events from the X server and drop into the main
     // event loop. From this point on, program control passes to the WindowManager so make sure
     // that any logic you wish to run is done before here!
-    wm.grab_keys_and_run(key_bindings, HashMap::new());
+    wm.grab_keys_and_run(key_bindings, HashMap::new())?;
 
     Ok(())
 }

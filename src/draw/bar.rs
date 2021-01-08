@@ -222,119 +222,77 @@ where
         Ok(extents)
     }
 
-    fn redraw_if_needed(&mut self) {
+    fn redraw_if_needed(&mut self) -> Result<()> {
         if self.widgets.iter().any(|w| w.require_draw()) {
-            match self.redraw() {
-                Ok(_) => (),
-                Err(e) => error!("unable to redraw bar: {}", e),
-            }
+            self.redraw()?;
             self.screens.iter().for_each(|(id, _)| self.drw.flush(*id));
+        }
+
+        Ok(())
+    }
+}
+
+macro_rules! __impl_status_bar_as_hook {
+    {
+        $($name:ident => $($a:ident: $t:ty),*;)+
+    } => {
+        impl<C, D, X> Hook<X> for StatusBar<C, D, X>
+        where
+            C: DrawContext,
+            D: Draw<Ctx = C>,
+            X: XConn,
+        {
+            $(fn $name(&mut self, wm: &mut WindowManager<X>, $($a: $t),*) -> crate::Result<()> {
+                self.widgets
+                    .iter_mut()
+                    .try_for_each(|w| w.$name(wm, $($a),*))
+            })+
+
+            fn screen_change(&mut self, wm: &mut WindowManager<X>, ix: usize) -> crate::Result<()> {
+                self.active_screen = ix;
+                self.widgets
+                    .iter_mut()
+                    .try_for_each(|w| w.screen_change(wm, ix))
+            }
+
+
+            fn screens_updated(&mut self, wm: &mut WindowManager<X>, dimensions: &[Region]) -> crate::Result<()> {
+                self.screens
+                    .iter()
+                    .for_each(|(id, _)| self.drw.destroy_window(*id));
+                if let Err(e) = self.init_for_screens() {
+                    error!("error removing old status bar windows: {}", e)
+                }
+
+                self.widgets
+                    .iter_mut()
+                    .try_for_each(|w| w.screens_updated(wm, dimensions))?;
+
+                Ok(self.redraw()?)
+            }
+
+            fn event_handled(&mut self, wm: &mut WindowManager<X>) -> crate::Result<()> {
+                self.widgets.iter_mut().try_for_each(|w| w.event_handled(wm))?;
+                Ok(self.redraw_if_needed()?)
+            }
+
+            fn startup(&mut self, wm: &mut WindowManager<X>) -> crate::Result<()>  {
+                self.widgets.iter_mut().try_for_each(|w| w.startup(wm))?;
+                Ok(self.redraw()?)
+            }
         }
     }
 }
 
-impl<C, D, X> Hook<X> for StatusBar<C, D, X>
-where
-    C: DrawContext,
-    D: Draw<Ctx = C>,
-    X: XConn,
-{
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
-        self.widgets.iter_mut().for_each(|w| w.new_client(wm, c));
-    }
-
-    fn remove_client(&mut self, wm: &mut WindowManager<X>, id: WinId) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.remove_client(wm, id));
-    }
-
-    fn client_name_updated(
-        &mut self,
-        wm: &mut WindowManager<X>,
-        id: WinId,
-        s: &str,
-        is_root: bool,
-    ) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.client_name_updated(wm, id, s, is_root));
-    }
-
-    fn client_added_to_workspace(&mut self, wm: &mut WindowManager<X>, id: WinId, wix: usize) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.client_added_to_workspace(wm, id, wix));
-    }
-
-    fn layout_applied(&mut self, wm: &mut WindowManager<X>, ws_ix: usize, s_ix: usize) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.layout_applied(wm, ws_ix, s_ix));
-    }
-
-    fn layout_change(&mut self, wm: &mut WindowManager<X>, ws_ix: usize, s_ix: usize) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.layout_change(wm, ws_ix, s_ix));
-    }
-
-    fn workspace_change(&mut self, wm: &mut WindowManager<X>, prev: usize, new: usize) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.workspace_change(wm, prev, new));
-    }
-
-    fn workspaces_updated(&mut self, wm: &mut WindowManager<X>, names: &[&str], active: usize) {
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.workspaces_updated(wm, names, active));
-    }
-
-    fn randr_notify(&mut self, wm: &mut WindowManager<X>) {
-        self.widgets.iter_mut().for_each(|w| w.randr_notify(wm));
-    }
-
-    fn screens_updated(&mut self, wm: &mut WindowManager<X>, dimensions: &[Region]) {
-        self.screens
-            .iter()
-            .for_each(|(id, _)| self.drw.destroy_window(*id));
-        if let Err(e) = self.init_for_screens() {
-            error!("error removing old status bar windows: {}", e)
-        }
-
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.screens_updated(wm, dimensions));
-
-        // always need to redraw when screen sizes change
-        match self.redraw() {
-            Ok(_) => (),
-            Err(e) => error!("unable to redraw bar: {}", e),
-        }
-    }
-
-    fn screen_change(&mut self, wm: &mut WindowManager<X>, ix: usize) {
-        self.active_screen = ix;
-        self.widgets
-            .iter_mut()
-            .for_each(|w| w.screen_change(wm, ix));
-    }
-
-    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) {
-        self.widgets.iter_mut().for_each(|w| w.focus_change(wm, id));
-    }
-
-    fn event_handled(&mut self, wm: &mut WindowManager<X>) {
-        self.widgets.iter_mut().for_each(|w| w.event_handled(wm));
-        self.redraw_if_needed();
-    }
-
-    fn startup(&mut self, wm: &mut WindowManager<X>) {
-        self.widgets.iter_mut().for_each(|w| w.startup(wm));
-        match self.redraw() {
-            Ok(_) => (),
-            Err(e) => error!("unable to redraw bar: {}", e),
-        }
-    }
+__impl_status_bar_as_hook! {
+    client_name_updated => id: WinId, name: &str, is_root: bool;
+    client_added_to_workspace => id: WinId, wix: usize;
+    focus_change => id: WinId;
+    layout_applied => workspace_index: usize, screen_index: usize;
+    layout_change => workspace_index: usize, screen_index: usize;
+    new_client => id: &mut Client;
+    randr_notify => ;
+    remove_client => id: WinId;
+    workspace_change => prev: usize, new: usize;
+    workspaces_updated => names: &[&str], active: usize;
 }
