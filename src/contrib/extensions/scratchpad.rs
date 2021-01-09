@@ -24,6 +24,7 @@ use std::{cell::RefCell, fmt, rc::Rc};
  * existing client, after that 'toggle' will show/hide the client on the active screen. If the
  * client is removed, calling 'toggle' again will spawn a new client in the same way.
  */
+#[derive(Clone, PartialEq)]
 pub struct Scratchpad {
     client: Rc<RefCell<Option<WinId>>>,
     pending: Rc<RefCell<bool>>,

@@ -8,7 +8,7 @@ use crate::core::data_types::WinId;
  * to show for a given monitor and how they are tiled.
  */
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Client {
     id: WinId,
     wm_name: String,

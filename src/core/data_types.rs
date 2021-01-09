@@ -11,7 +11,7 @@ pub type WinId = u32;
 /// mode (if applicable).
 ///
 /// [1]: crate::core::xconnection::XConn
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum EventSource {
     /// The blocking `wait_for_event` method should be used
     Blocking,
@@ -22,7 +22,7 @@ pub enum EventSource {
 /// A client propert value that can be set.
 ///
 /// Variants correspond to the X property types being set.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PropVal<'a> {
     /// A slice of interned [Atom] values
     Atom(&'a [u32]),
@@ -35,7 +35,7 @@ pub enum PropVal<'a> {
 }
 
 /// A window type to be specified when creating a new window in the X server
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WinType {
     /// A simple hidden stub window for facilitating other API calls
@@ -48,7 +48,7 @@ pub enum WinType {
 }
 
 /// Config options for X windows (not all are currently implemented)
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WinConfig {
     /// The border width in pixels
@@ -61,7 +61,7 @@ pub enum WinConfig {
 
 /// Window attributes for an X11 client window (not all are curently implemented)
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum WinAttr {
     /// Border color as an argb hex value
     BorderColor(u32),
@@ -73,7 +73,7 @@ pub enum WinAttr {
 
 /// An x,y coordinate pair
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Point {
     /// An absolute x coordinate relative to the root window
     pub x: u32,
@@ -92,7 +92,7 @@ impl Point {
 
 /// Increment / decrement a value
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Change {
     /// increase the value
     More,
@@ -102,7 +102,7 @@ pub enum Change {
 
 /// X window border kind
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Border {
     /// window is urgent
     Urgent,
@@ -114,7 +114,7 @@ pub enum Border {
 
 /// An X window / screen position: top left corner + extent
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Region {
     x: u32,
     y: u32,

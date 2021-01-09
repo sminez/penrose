@@ -16,7 +16,7 @@ use std::collections::HashMap;
  * is intended for use with external programs such as Polybar as a way of exposing state.
  * NOTE: currently, WM_NAME is read when the window is first mapped only.
  */
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ActiveClientAsRootName {}
 
 impl ActiveClientAsRootName {
@@ -38,7 +38,7 @@ impl<X: XConn> Hook<X> for ActiveClientAsRootName {
  *
  * This is intended for use with external programs such as Polybar as a way of exposing state.
  */
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct LayoutSymbolAsRootName {}
 
 impl LayoutSymbolAsRootName {
@@ -62,7 +62,7 @@ impl<X: XConn> Hook<X> for LayoutSymbolAsRootName {
  * penrose::core::helpers::spawn function. This means that the final client will have focus and the
  * the clients will be arranged based on the order they are spawned.
  */
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct DefaultWorkspace {
     defaults: Vec<String>,
     layout: String,
@@ -106,7 +106,7 @@ impl<X: XConn> Hook<X> for DefaultWorkspace {
  * combined with `DefaultWorkspace` to provide a set of ephemeral workspace configurations that can
  * be created on demand.
  */
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct RemoveEmptyWorkspaces {
     protected: Vec<String>,
 }
@@ -134,7 +134,7 @@ impl<X: XConn> Hook<X> for RemoveEmptyWorkspaces {
 }
 
 /// An individual workspace mapping for ClientSpawnRules
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SpawnRule<'a> {
     /// Target a client by WM_CLASS
     ClassName(&'a str, usize),
@@ -157,7 +157,7 @@ pub enum SpawnRule<'a> {
  * ]);
  * # }
  */
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClientSpawnRules {
     class_rules: HashMap<String, usize>,
     name_rules: HashMap<String, usize>,

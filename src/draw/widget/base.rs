@@ -8,7 +8,7 @@ use crate::{
 ///
 /// Can be used as a simple static element in a status bar or as an inner element for rendering
 /// more complex text based widgets.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Text {
     txt: String,
     font: String,
@@ -122,7 +122,7 @@ impl Widget for Text {
 }
 
 /// A set of lines that highlights the currently selected line.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LinesWithSelection {
     lines: Vec<String>,
     selected: usize,
@@ -314,7 +314,7 @@ impl KeyboardControlled for LinesWithSelection {
 }
 
 /// A simple text box that can be driven by user keyboard input
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InputBox {
     txt: Text,
 }

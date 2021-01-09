@@ -13,7 +13,7 @@ use crate::{
 
 const PADDING: f64 = 3.0;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct WSMeta {
     name: String,
     occupied: bool,
@@ -32,7 +32,7 @@ fn meta_from_names(names: &[String]) -> Vec<WSMeta> {
 }
 
 /// A simple workspace indicator for a status bar
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Workspaces {
     workspaces: Vec<WSMeta>,
     font: String,
@@ -275,7 +275,7 @@ impl Widget for Workspaces {
 }
 
 /// A text widget that is set via updating the root window name a la dwm
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RootWindowName {
     txt: Text,
 }
@@ -327,7 +327,7 @@ impl Widget for RootWindowName {
 }
 
 /// A text widget that is set via updating the root window name a la dwm
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ActiveWindowName {
     txt: Text,
     max_chars: usize,
@@ -427,7 +427,7 @@ impl Widget for ActiveWindowName {
 }
 
 /// A simple widget that displays the active layout symbol
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CurrentLayout {
     txt: Text,
 }

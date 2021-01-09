@@ -66,7 +66,7 @@ where
 }
 
 /// The position of a status bar
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum Position {
     /// Top of the screen
     Top,

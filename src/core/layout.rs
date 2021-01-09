@@ -23,7 +23,7 @@ use std::{cmp, fmt};
  * defined config options.
  */
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct LayoutConf {
     /// If true, this layout function will not be called to produce resize actions
     pub floating: bool,

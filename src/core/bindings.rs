@@ -167,7 +167,7 @@ pub enum MouseEventKind {
 }
 
 /// A mouse movement or button event
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MouseEvent {
     /// The ID of the window that was contained the click
