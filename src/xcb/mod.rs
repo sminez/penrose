@@ -3,7 +3,7 @@ use crate::{
     core::{
         bindings::{KeyCode, MouseState},
         config::Config,
-        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        data_types::{EventSource, Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         hooks::{Hook, Hooks},
         manager::WindowManager,
         screen::Screen,
@@ -115,9 +115,9 @@ pub fn new_xcb_backed_window_manager(
     config: Config,
     hooks: Vec<Box<dyn Hook<XcbConnection>>>,
     error_handler: ErrorHandler,
-    use_non_blocking: bool,
+    event_source: EventSource,
 ) -> crate::Result<WindowManager<XcbConnection>> {
-    let conn = XcbConnection::new(use_non_blocking)?;
+    let conn = XcbConnection::new(event_source)?;
     let mut wm = WindowManager::new(config, conn, hooks, error_handler);
     wm.init()?;
 

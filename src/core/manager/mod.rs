@@ -106,12 +106,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     logging_error_handler
+     *     logging_error_handler, EventSource
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(true).unwrap(),
+     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );
@@ -227,12 +227,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     logging_error_handler
+     *     logging_error_handler, EventSource
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(true).unwrap(),
+     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );
@@ -718,12 +718,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     logging_error_handler
+     *     logging_error_handler, EventSource
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(true).unwrap(),
+     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );
@@ -745,12 +745,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     Forward, logging_error_handler
+     *     Forward, logging_error_handler, EventSource
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(true).unwrap(),
+     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );

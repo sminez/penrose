@@ -13,7 +13,7 @@ use penrose::{
     },
     logging_error_handler,
     xcb::new_xcb_backed_window_manager,
-    Backward, Forward, Less, More, Result,
+    Backward, EventSource, Forward, Less, More, Result,
 };
 
 fn main() -> Result<()> {
@@ -52,7 +52,12 @@ fn main() -> Result<()> {
         Press Left + [Meta] => |wm: &mut WindowManager<_>, _: &MouseEvent| wm.cycle_workspace(Backward)
     };
 
-    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler(), true)?;
+    let mut wm = new_xcb_backed_window_manager(
+        config,
+        hooks,
+        logging_error_handler(),
+        EventSource::NonBlocking,
+    )?;
     wm.grab_keys_and_run(key_bindings, mouse_bindings)?;
 
     Ok(())
