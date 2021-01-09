@@ -15,7 +15,7 @@ use penrose::{
         screen::Screen,
         xconnection::{StubXConn, XEvent},
     },
-    PenroseError,
+    logging_error_handler, PenroseError,
 };
 
 use std::{cell::Cell, collections::HashMap};
@@ -43,14 +43,14 @@ impl StubXConn for EarlyExitConn {
         vec![common::simple_screen(0), common::simple_screen(1)]
     }
 
-    fn mock_wait_for_event(&self) -> Option<XEvent> {
+    fn mock_wait_for_event(&self) -> penrose::Result<XEvent> {
         let mut remaining = self.events.replace(vec![]);
         if remaining.is_empty() {
-            return Some(XEvent::KeyPress(common::EXIT_CODE));
+            return Ok(XEvent::KeyPress(common::EXIT_CODE));
         }
         let next = remaining.remove(0);
         self.events.set(remaining);
-        Some(next)
+        Ok(next)
     }
 
     fn mock_query_for_active_windows(&self) -> Vec<WinId> {
@@ -96,8 +96,8 @@ fn get_seeded_wm(valid_clients: bool) -> WindowManager<EarlyExitConn> {
         ],
     );
 
-    let mut wm = WindowManager::new(Config::default(), conn, vec![]);
-    wm.init();
+    let mut wm = WindowManager::new(Config::default(), conn, vec![], logging_error_handler());
+    wm.init().unwrap();
 
     wm
 }
@@ -131,17 +131,20 @@ fn serde_running_without_hydrating_panics() {
     let mut unchecked_wm: WindowManager<EarlyExitConn> = serde_json::from_str(&as_json).unwrap();
 
     // Should panic due to self.hydrated being false
-    unchecked_wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
+    unchecked_wm
+        .grab_keys_and_run(common::test_bindings(), HashMap::new())
+        .unwrap();
 }
 
 #[cfg(feature = "serde")]
 #[test]
 fn serde_hydrating_when_x_state_is_wrong_errors() {
     let mut wm = get_seeded_wm(false);
-    wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
+    wm.grab_keys_and_run(common::test_bindings(), HashMap::new())
+        .unwrap();
     let as_json = serde_json::to_string(&wm).unwrap();
     let mut unchecked_wm: WindowManager<EarlyExitConn> = serde_json::from_str(&as_json).unwrap();
-    let res = unchecked_wm.hydrate_and_init(vec![], layout_funcs());
+    let res = unchecked_wm.hydrate_and_init(vec![], logging_error_handler(), layout_funcs());
 
     match res {
         Ok(_) => panic!("this should have returned an error"),
@@ -161,18 +164,19 @@ fn serde_running_init_directly_panics() {
     let mut unchecked_wm: WindowManager<EarlyExitConn> = serde_json::from_str(&as_json).unwrap();
 
     // Should panic due to self.hydrated being false
-    unchecked_wm.init();
+    unchecked_wm.init().unwrap();
 }
 
 #[cfg(feature = "serde")]
 #[test]
 fn serde_hydrate_and_init_works_with_serialized_state() {
     let mut wm = get_seeded_wm(true);
-    wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
+    wm.grab_keys_and_run(common::test_bindings(), HashMap::new())
+        .unwrap();
     let as_json = serde_json::to_string(&wm).unwrap();
     let mut unchecked_wm: WindowManager<EarlyExitConn> = serde_json::from_str(&as_json).unwrap();
 
-    let res = unchecked_wm.hydrate_and_init(vec![], layout_funcs());
+    let res = unchecked_wm.hydrate_and_init(vec![], logging_error_handler(), layout_funcs());
     assert!(res.is_ok());
 }
 
@@ -180,13 +184,16 @@ fn serde_hydrate_and_init_works_with_serialized_state() {
 #[test]
 fn serde_running_after_hydration_works() {
     let mut wm = get_seeded_wm(true);
-    wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
+    wm.grab_keys_and_run(common::test_bindings(), HashMap::new())
+        .unwrap();
     let as_json = serde_json::to_string(&wm).unwrap();
     let mut unchecked_wm: WindowManager<EarlyExitConn> = serde_json::from_str(&as_json).unwrap();
 
     unchecked_wm
-        .hydrate_and_init(vec![], layout_funcs())
+        .hydrate_and_init(vec![], logging_error_handler(), layout_funcs())
         .unwrap();
 
-    unchecked_wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
+    unchecked_wm
+        .grab_keys_and_run(common::test_bindings(), HashMap::new())
+        .unwrap();
 }

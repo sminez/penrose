@@ -10,7 +10,7 @@
 //!         config::Config, helpers::index_selectors, manager::WindowManager,
 //!     },
 //!     xcb::new_xcb_backed_window_manager,
-//!     Backward, Forward, Less, More, Result,
+//!     Backward, Forward, Less, More, Result, logging_error_handler
 //! };
 //!
 //! fn main() -> Result<()> {
@@ -39,9 +39,8 @@
 //!         };
 //!     };
 //!
-//!     let mut wm = new_xcb_backed_window_manager(config, hooks)?;
-//!     wm.grab_keys_and_run(key_bindings, map!{});
-//!     Ok(())
+//!     let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler(), true)?;
+//!     wm.grab_keys_and_run(key_bindings, map!{})
 //! }
 //!```
 #![warn(
@@ -80,6 +79,7 @@ pub mod xcb;
 pub use crate::core::{
     config::Config,
     data_types::{Change::*, WinId},
+    helpers::logging_error_handler,
     manager::WindowManager,
     ring::{Direction::*, InsertPoint, Selector},
 };
@@ -142,3 +142,6 @@ pub enum PenroseError {
 
 /// Top level penrose Result type
 pub type Result<T> = std::result::Result<T, PenroseError>;
+
+/// A function that can be registered to handle errors that occur during [WindowManager] operation
+pub type ErrorHandler = Box<dyn FnMut(PenroseError)>;

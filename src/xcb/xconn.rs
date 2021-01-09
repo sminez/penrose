@@ -43,11 +43,12 @@ pub struct XcbConnection {
     check_win: WinId,
     auto_float_types: Vec<u32>,
     dont_manage_types: Vec<u32>,
+    use_non_blocking: bool,
 }
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new() -> Result<Self> {
+    pub fn new(use_non_blocking: bool) -> Result<Self> {
         let api = Api::new()?;
         let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
@@ -66,6 +67,7 @@ impl XcbConnection {
             check_win,
             auto_float_types,
             dont_manage_types,
+            use_non_blocking,
         })
     }
 
@@ -112,6 +114,10 @@ impl WindowManager<XcbConnection> {
 }
 
 impl XConn for XcbConnection {
+    fn is_non_blocking(&self) -> bool {
+        self.use_non_blocking
+    }
+
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()> {
         Ok(self.api.hydrate()?)
@@ -121,8 +127,12 @@ impl XConn for XcbConnection {
         self.api.flush()
     }
 
-    fn wait_for_event(&self) -> Option<XEvent> {
-        self.api.wait_for_event()
+    fn wait_for_event(&self) -> Result<XEvent> {
+        Ok(self.api.wait_for_event()?)
+    }
+
+    fn poll_for_event(&self) -> Result<Option<XEvent>> {
+        Ok(self.api.poll_for_event()?)
     }
 
     fn current_outputs(&self) -> Vec<Screen> {

@@ -1,7 +1,10 @@
 //! Additional common hooks that can be used out of the box with minimal config.
-use crate::core::{
-    client::Client, helpers::spawn, hooks::Hook, manager::WindowManager, ring::Selector,
-    xconnection::XConn,
+use crate::{
+    core::{
+        client::Client, helpers::spawn, hooks::Hook, manager::WindowManager, ring::Selector,
+        xconnection::XConn,
+    },
+    Result,
 };
 use std::collections::HashMap;
 
@@ -24,8 +27,8 @@ impl ActiveClientAsRootName {
 }
 
 impl<X: XConn> Hook<X> for ActiveClientAsRootName {
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) {
-        wm.set_root_window_name(c.wm_name());
+    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+        wm.set_root_window_name(c.wm_name())
     }
 }
 
@@ -46,8 +49,8 @@ impl LayoutSymbolAsRootName {
 }
 
 impl<X: XConn> Hook<X> for LayoutSymbolAsRootName {
-    fn layout_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) {
-        wm.set_root_window_name(wm.current_layout_symbol());
+    fn layout_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) -> Result<()> {
+        wm.set_root_window_name(wm.current_layout_symbol())
     }
 }
 
@@ -82,14 +85,16 @@ impl DefaultWorkspace {
 }
 
 impl<X: XConn> Hook<X> for DefaultWorkspace {
-    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, new: usize) {
+    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, new: usize) -> Result<()> {
         if let Some(ws) = wm.workspace_mut(&Selector::Index(new)) {
             if ws.name() == self.name && ws.is_empty() {
                 // can fail if the layout symbol is wrong
                 ws.try_set_layout(&self.layout);
-                self.defaults.iter().for_each(spawn);
+                return self.defaults.iter().try_for_each(spawn);
             }
         }
+
+        Ok(())
     }
 }
 
@@ -116,13 +121,15 @@ impl RemoveEmptyWorkspaces {
 }
 
 impl<X: XConn> Hook<X> for RemoveEmptyWorkspaces {
-    fn workspace_change(&mut self, wm: &mut WindowManager<X>, old: usize, _: usize) {
+    fn workspace_change(&mut self, wm: &mut WindowManager<X>, old: usize, _: usize) -> Result<()> {
         let sel = Selector::Index(old);
         if let Some(ws) = wm.workspace(&sel) {
             if !self.protected.iter().any(|p| p == ws.name()) && ws.is_empty() {
-                wm.remove_workspace(&sel);
+                wm.remove_workspace(&sel)?;
             }
         };
+
+        Ok(())
     }
 }
 
@@ -179,11 +186,13 @@ impl ClientSpawnRules {
 impl<X: XConn> Hook<X> for ClientSpawnRules {
     /// This sets the client workspace to the desired value which is then picked up and
     /// trigers the spawn on that workspace in WindowManager.handle_map_request
-    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) {
+    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
         if let Some(wix) = self.class_rules.get(c.wm_class()) {
             c.set_workspace(*wix);
         } else if let Some(wix) = self.name_rules.get(c.wm_name()) {
             c.set_workspace(*wix);
         }
+
+        Ok(())
     }
 }

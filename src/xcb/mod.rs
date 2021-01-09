@@ -1,12 +1,15 @@
 //! Helpers and utilities for using XCB as a back end for penrose
-use crate::core::{
-    bindings::{KeyCode, MouseState},
-    config::Config,
-    data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
-    hooks::{Hook, Hooks},
-    manager::WindowManager,
-    screen::Screen,
-    xconnection::{Atom, XEvent},
+use crate::{
+    core::{
+        bindings::{KeyCode, MouseState},
+        config::Config,
+        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        hooks::{Hook, Hooks},
+        manager::WindowManager,
+        screen::Screen,
+        xconnection::{Atom, XEvent},
+    },
+    ErrorHandler,
 };
 
 pub mod api;
@@ -73,6 +76,10 @@ pub enum XcbError {
     #[error("Unhandled error: {0}")]
     Raw(String),
 
+    /// Parsing a strum generated enum from a str failed.
+    #[error(transparent)]
+    Strum(#[from] strum::ParseError),
+
     /// Screen data for an unknown screen was requested
     #[error("The requested screen index was out of bounds: {0} > {1}")]
     UnknownScreen(usize, usize),
@@ -107,10 +114,12 @@ pub type XcbHooks = Hooks<XcbConnection>;
 pub fn new_xcb_backed_window_manager(
     config: Config,
     hooks: Vec<Box<dyn Hook<XcbConnection>>>,
+    error_handler: ErrorHandler,
+    use_non_blocking: bool,
 ) -> crate::Result<WindowManager<XcbConnection>> {
-    let conn = XcbConnection::new()?;
-    let mut wm = WindowManager::new(config, conn, hooks);
-    wm.init();
+    let conn = XcbConnection::new(use_non_blocking)?;
+    let mut wm = WindowManager::new(config, conn, hooks, error_handler);
+    wm.init()?;
 
     Ok(wm)
 }
@@ -210,10 +219,18 @@ pub trait XcbApi {
      * Block until the next event from the X event loop is ready then return it.
      *
      * This method should handle all of the mapping of xcb events to penrose
-     * [XEvent] instances, returning None when the event channel from the
+     * [XEvent] instances, returning an Error when the event channel from the
      * X server is closed.
      */
-    fn wait_for_event(&self) -> Option<XEvent>;
+    fn wait_for_event(&self) -> Result<XEvent>;
+    /**
+     * Return the next event from the X event loop if there is one.
+     *
+     * This method should handle all of the mapping of xcb events to penrose
+     * [XEvent] instances, returning None if there is no pending event and an error
+     * if the connection to the X server is closed.
+     */
+    fn poll_for_event(&self) -> Result<Option<XEvent>>;
     /// Move the cursor to the given (x, y) position inside the specified window.
     fn warp_cursor(&self, id: WinId, x: usize, y: usize);
 }

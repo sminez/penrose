@@ -16,7 +16,7 @@ pub mod workspace;
 pub mod xconnection;
 
 #[doc(inline)]
-pub use bindings::{FireAndForget, MouseEventHandler};
+pub use bindings::{KeyEventHandler, MouseEventHandler};
 #[doc(inline)]
 pub use client::Client;
 #[doc(inline)]

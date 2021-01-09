@@ -123,22 +123,38 @@ impl<X> Hook<X> for Workspaces
 where
     X: XConn,
 {
-    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) {
+    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) -> crate::Result<()> {
         if let Some(ws) = self.workspaces.get_mut(c.workspace()) {
             self.require_draw = !ws.occupied;
             ws.occupied = true;
         }
+
+        Ok(())
     }
 
-    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) -> crate::Result<()> {
         self.update_workspace_occupied(wm);
+
+        Ok(())
     }
 
-    fn client_added_to_workspace(&mut self, wm: &mut WindowManager<X>, _: WinId, _: usize) {
+    fn client_added_to_workspace(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        _: WinId,
+        _: usize,
+    ) -> crate::Result<()> {
         self.update_workspace_occupied(wm);
+
+        Ok(())
     }
 
-    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, new: usize) {
+    fn workspace_change(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        _: usize,
+        new: usize,
+    ) -> crate::Result<()> {
         let screen = wm.active_screen_index();
         if self.focused_ws[screen] != new {
             self.focused_ws[screen] = new;
@@ -153,9 +169,16 @@ where
 
             self.require_draw = true;
         }
+
+        Ok(())
     }
 
-    fn workspaces_updated(&mut self, wm: &mut WindowManager<X>, names: &[&str], _: usize) {
+    fn workspaces_updated(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        names: &[&str],
+        _: usize,
+    ) -> crate::Result<()> {
         if names != self.names().as_slice() {
             let names: Vec<String> = names.iter().map(|s| s.to_string()).collect();
             self.focused_ws = wm.focused_workspaces();
@@ -164,21 +187,29 @@ where
             self.extent = None;
             self.require_draw = true;
         }
+
+        Ok(())
     }
 
-    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) {
+    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) -> crate::Result<()> {
         self.require_draw = true;
+
+        Ok(())
     }
 
-    fn screens_updated(&mut self, wm: &mut WindowManager<X>, _: &[Region]) {
+    fn screens_updated(&mut self, wm: &mut WindowManager<X>, _: &[Region]) -> crate::Result<()> {
         self.focused_ws = wm.focused_workspaces();
         self.update_workspace_occupied(wm);
         self.require_draw = true;
+
+        Ok(())
     }
 
-    fn startup(&mut self, wm: &mut WindowManager<X>) {
+    fn startup(&mut self, wm: &mut WindowManager<X>) -> crate::Result<()> {
         // NOTE: Following initial workspace placement from WindowManager<X>
-        self.focused_ws = (0..wm.n_screens()).collect()
+        self.focused_ws = (0..wm.n_screens()).collect();
+
+        Ok(())
     }
 }
 
@@ -268,10 +299,12 @@ where
         _: WinId,
         name: &str,
         is_root: bool,
-    ) {
+    ) -> crate::Result<()> {
         if is_root {
             self.txt.set_text(name);
         }
+
+        Ok(())
     }
 }
 
@@ -328,16 +361,20 @@ impl<X> Hook<X> for ActiveWindowName
 where
     X: XConn,
 {
-    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) -> crate::Result<()> {
         if wm.client(&Selector::Focused) == None {
             self.txt.set_text("");
         }
+
+        Ok(())
     }
 
-    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) {
+    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) -> crate::Result<()> {
         if let Some(client) = wm.client(&Selector::WinId(id)) {
             self.set_text(client.wm_name());
         }
+
+        Ok(())
     }
 
     fn client_name_updated(
@@ -346,14 +383,17 @@ where
         id: WinId,
         name: &str,
         root: bool,
-    ) {
+    ) -> crate::Result<()> {
         if !root && Some(id) == wm.client(&Selector::Focused).map(|c| c.id()) {
             self.set_text(name);
         }
+
+        Ok(())
     }
 
-    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) {
+    fn screen_change(&mut self, _: &mut WindowManager<X>, _: usize) -> crate::Result<()> {
         self.txt.force_draw();
+        Ok(())
     }
 }
 
@@ -405,20 +445,34 @@ impl<X> Hook<X> for CurrentLayout
 where
     X: XConn,
 {
-    fn startup(&mut self, wm: &mut WindowManager<X>) {
+    fn startup(&mut self, wm: &mut WindowManager<X>) -> crate::Result<()> {
         self.txt.set_text(wm.current_layout_symbol());
+        Ok(())
     }
 
-    fn layout_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) {
+    fn layout_change(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        _: usize,
+        _: usize,
+    ) -> crate::Result<()> {
         self.txt.set_text(wm.current_layout_symbol());
+        Ok(())
     }
 
-    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) {
+    fn workspace_change(
+        &mut self,
+        wm: &mut WindowManager<X>,
+        _: usize,
+        _: usize,
+    ) -> crate::Result<()> {
         self.txt.set_text(wm.current_layout_symbol());
+        Ok(())
     }
 
-    fn screen_change(&mut self, wm: &mut WindowManager<X>, _: usize) {
+    fn screen_change(&mut self, wm: &mut WindowManager<X>, _: usize) -> crate::Result<()> {
         self.txt.set_text(wm.current_layout_symbol());
+        Ok(())
     }
 }
 

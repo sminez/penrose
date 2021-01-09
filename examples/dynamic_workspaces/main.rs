@@ -14,6 +14,7 @@ use penrose::{
         hooks::Hooks,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
     },
+    logging_error_handler,
     xcb::new_xcb_backed_window_manager,
     Backward, Forward, Less, More, Result,
 };
@@ -109,8 +110,8 @@ fn main() -> Result<()> {
         };
     };
 
-    let mut wm = new_xcb_backed_window_manager(config, hooks)?;
-    wm.grab_keys_and_run(key_bindings, HashMap::new());
+    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler(), true)?;
+    wm.grab_keys_and_run(key_bindings, HashMap::new())?;
 
     Ok(())
 }

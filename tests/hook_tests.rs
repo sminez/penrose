@@ -1,11 +1,14 @@
 // Check that each Hook variant is called at the expected points
-use penrose::core::{
-    client::Client,
-    config::Config,
-    data_types::{Region, WinId},
-    hooks::{Hook, Hooks},
-    manager::WindowManager,
-    xconnection::{MockXConn, XConn, XEvent},
+use penrose::{
+    core::{
+        client::Client,
+        config::Config,
+        data_types::{Region, WinId},
+        hooks::{Hook, Hooks},
+        manager::WindowManager,
+        xconnection::{MockXConn, XConn, XEvent},
+    },
+    logging_error_handler, Result,
 };
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
@@ -32,15 +35,16 @@ impl TestHook {
 macro_rules! __impl_test_hook {
     { $($name:ident => $($t:ty),*;)+ } => {
         impl<X: XConn> Hook<X> for TestHook {
-            $(fn $name(&mut self, _: &mut WindowManager<X>, $(_: $t),*) {
+            $(fn $name(&mut self, _: &mut WindowManager<X>, $(_: $t),*) -> Result<()> {
                 self.mark_called(stringify!($name));
+                Ok(())
             })+
         }
     }
 }
 
 __impl_test_hook! {
-    client_name_updated => WinId,&str, bool;
+    client_name_updated => WinId, &str, bool;
     client_added_to_workspace => WinId, usize;
     event_handled => ;
     focus_change => WinId;
@@ -100,10 +104,10 @@ penrose::test_cases! {
 
         let screens = vec![common::simple_screen(0), common::simple_screen(1)];
         let conn = MockXConn::new(screens, events, vec![]);
-        let mut wm = WindowManager::new(Config::default(), conn, hooks);
+        let mut wm = WindowManager::new(Config::default(), conn, hooks, logging_error_handler());
 
-        wm.init();
-        wm.grab_keys_and_run(common::test_bindings(), HashMap::new());
+        wm.init().unwrap();
+        wm.grab_keys_and_run(common::test_bindings(), HashMap::new()).unwrap();
         drop(wm);
 
         let actual_calls = Rc::try_unwrap(calls).unwrap().into_inner();

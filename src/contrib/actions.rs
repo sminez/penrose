@@ -1,6 +1,6 @@
 //! Additional helper functions and actions for use with penrose.
 use crate::core::{
-    bindings::FireAndForget, client::Client, helpers::spawn, layout::Layout,
+    bindings::KeyEventHandler, client::Client, helpers::spawn, layout::Layout,
     manager::WindowManager, ring::Selector, workspace::Workspace, xconnection::XConn,
 };
 
@@ -16,15 +16,15 @@ use crate::core::{
 pub fn create_or_switch_to_workspace<X: XConn>(
     get_name: fn() -> String,
     layouts: Vec<Layout>,
-) -> FireAndForget<X> {
+) -> KeyEventHandler<X> {
     Box::new(move |wm: &mut WindowManager<X>| {
         let name = &get_name();
         let cond = |ws: &Workspace| ws.name() == name;
         let sel = Selector::Condition(&cond);
         if wm.workspace(&sel).is_none() {
-            wm.push_workspace(Workspace::new(name, layouts.clone()))
+            wm.push_workspace(Workspace::new(name, layouts.clone()))?;
         }
-        wm.focus_workspace(&sel);
+        wm.focus_workspace(&sel)
     })
 }
 
@@ -35,14 +35,14 @@ pub fn create_or_switch_to_workspace<X: XConn>(
  * This is useful for key bindings that are based on the program you want to work with rather than
  * having to remember where things are running.
  */
-pub fn focus_or_spawn<X: XConn>(class: String, command: String) -> FireAndForget<X> {
+pub fn focus_or_spawn<X: XConn>(class: String, command: String) -> KeyEventHandler<X> {
     Box::new(move |wm: &mut WindowManager<X>| {
         let cond = |c: &Client| c.class() == class;
         if let Some(client) = wm.client(&Selector::Condition(&cond)) {
             let workspace = client.workspace();
-            wm.focus_workspace(&Selector::Index(workspace));
+            wm.focus_workspace(&Selector::Index(workspace))
         } else {
-            spawn(&command);
+            spawn(&command)
         }
     })
 }

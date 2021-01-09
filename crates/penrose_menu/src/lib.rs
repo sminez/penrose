@@ -20,8 +20,8 @@ use penrose::{
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
-        Color, DrawContext, DrawError, KeyPressDraw, KeyPressResult, KeyboardControlled, Result,
-        TextStyle, Widget,
+        Color, DrawContext, DrawError, KeyPressDraw, KeyPressParseAttempt, KeyboardControlled,
+        Result, TextStyle, Widget,
     },
 };
 
@@ -258,7 +258,7 @@ where
     /// # fn example<T: KeyPressDraw>(mut pmenu: PMenu<T>) -> Result<()> {
     /// let lines = vec!["foo", "bar", "baz"];
     ///
-    /// match pmenu.get_selection_from_input(">>> ", lines, 10, 0, 0.8, 0.8)? {
+    /// match pmenu.get_selection_from_input(">>> ", lines, 0)? {
     ///     PMenuMatch::Line(i, s) => println!("matched {} on line {}", s, i),
     ///     PMenuMatch::UserInput(s) => println!("user input: {}", s),
     ///     PMenuMatch::NoMatch => println!("no match"),
@@ -296,7 +296,7 @@ where
 
         loop {
             debug!("waiting for keypress");
-            if let KeyPressResult::KeyPress(k) = self.drw.next_keypress() {
+            if let Some(KeyPressParseAttempt::KeyPress(k)) = self.drw.next_keypress()? {
                 debug!("got a keypress");
                 match k {
                     KeyPress::Return if self.txt.selected_index() < matches.len() => {
