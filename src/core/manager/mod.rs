@@ -1343,7 +1343,10 @@ impl<X: XConn> WindowManager<X> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{data_types::*, layout::*, ring::Direction::*, screen::*, xconnection::*};
+    use crate::core::{
+        data_types::*, helpers::logging_error_handler, layout::*, ring::Direction::*, screen::*,
+        xconnection::*,
+    };
 
     use std::cell::Cell;
 
