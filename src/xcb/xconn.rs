@@ -114,10 +114,6 @@ impl WindowManager<XcbConnection> {
 }
 
 impl XConn for XcbConnection {
-    fn is_non_blocking(&self) -> bool {
-        self.use_non_blocking
-    }
-
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()> {
         Ok(self.api.hydrate()?)
@@ -129,10 +125,6 @@ impl XConn for XcbConnection {
 
     fn wait_for_event(&self) -> Result<XEvent> {
         Ok(self.api.wait_for_event()?)
-    }
-
-    fn poll_for_event(&self) -> Result<Option<XEvent>> {
-        Ok(self.api.poll_for_event()?)
     }
 
     fn current_outputs(&self) -> Vec<Screen> {

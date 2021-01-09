@@ -79,6 +79,7 @@ pub struct Color {
     b: f64,
     a: f64,
 }
+
 impl Color {
     /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
     pub fn new_from_hex(hex: u32) -> Self {
@@ -102,6 +103,16 @@ impl Color {
     /// proportions of 255 for each of R, G, B, A
     pub fn rgba(&self) -> (f64, f64, f64, f64) {
         (self.r, self.g, self.b, self.a)
+    }
+
+    /// Render this color as a #RRGGBB hew color string
+    pub fn as_rgb_hex_string(&self) -> String {
+        format!(
+            "#{:x}{:x}{:x}",
+            (self.r * 255.0) as u64,
+            (self.g * 255.0) as u64,
+            (self.b * 255.0) as u64
+        )
     }
 }
 

@@ -296,17 +296,6 @@ pub enum XEvent {
  * windowing system but X idioms and high level event types / client interations are assumed.
  **/
 pub trait XConn {
-    /// Whether or not this [XConn] impl can provide non-blocking implementations of methods
-    ///
-    /// # Notes
-    /// This will default to returning `false` if not explicitly set in the impl, which disables
-    /// the used of `poll_for_event` inside of the [WindowManager][1]
-    ///
-    /// [1]: crate::core::manager::WindowManager
-    fn is_non_blocking(&self) -> bool {
-        false
-    }
-
     /// Hydrate this XConn to restore internal state following serde deserialization
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()>;
@@ -316,11 +305,6 @@ pub trait XConn {
 
     /// Wait for the next event from the X server and return it as an [XEvent]
     fn wait_for_event(&self) -> Result<XEvent>;
-
-    /// Poll for the next event from the X server and return it as an [XEvent] if there is one.
-    ///
-    /// Should return Ok(None) if no event is currently available.
-    fn poll_for_event(&self) -> Result<Option<XEvent>>;
 
     /// Determine the currently connected CRTCs and return their details
     fn current_outputs(&self) -> Vec<Screen>;
@@ -435,11 +419,6 @@ pub trait XConn {
  * make writing real impls more error prone if and when new methods are added to the trait.
  */
 pub trait StubXConn {
-    /// Whether or not this [XConn] impl can provide non-blocking implementations of methods
-    fn mock_is_non_blocking(&self) -> bool {
-        false
-    }
-
     /// Mocked version of hydrate
     #[cfg(feature = "serde")]
     fn mock_hydrate(&mut self) -> Result<()> {
@@ -454,11 +433,6 @@ pub trait StubXConn {
     /// Mocked version of wait_for_event
     fn mock_wait_for_event(&self) -> Result<XEvent> {
         Err(PenroseError::Raw("mock impl".into()))
-    }
-
-    /// Mocked version of wait_for_event
-    fn mock_poll_for_event(&self) -> Result<Option<XEvent>> {
-        Ok(None)
     }
 
     /// Mocked version of current_outputs
@@ -560,10 +534,6 @@ impl<T> XConn for T
 where
     T: StubXConn,
 {
-    fn is_non_blocking(&self) -> bool {
-        self.mock_is_non_blocking()
-    }
-
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()> {
         self.mock_hydrate()
@@ -575,10 +545,6 @@ where
 
     fn wait_for_event(&self) -> Result<XEvent> {
         self.mock_wait_for_event()
-    }
-
-    fn poll_for_event(&self) -> Result<Option<XEvent>> {
-        self.mock_poll_for_event()
     }
 
     fn current_outputs(&self) -> Vec<Screen> {

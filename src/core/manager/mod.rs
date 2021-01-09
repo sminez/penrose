@@ -343,24 +343,25 @@ impl<X: XConn> WindowManager<X> {
 
         debug!("Entering main event loop");
         while self.running {
-            let opt = if self.conn.is_non_blocking() {
-                self.conn.poll_for_event()?
-            } else {
-                Some(self.conn.wait_for_event()?)
-            };
-
-            if let Some(event) = opt {
-                debug!("Got XEvent: {:?}", event);
-                for action in process_next_event(event, self.current_state()) {
-                    if let Err(e) =
-                        self.handle_event_action(action, &mut key_bindings, &mut mouse_bindings)
-                    {
-                        (self.error_handler)(e);
+            match self.conn.wait_for_event() {
+                Ok(event) => {
+                    debug!("Got XEvent: {:?}", event);
+                    for action in process_next_event(event, self.current_state()) {
+                        if let Err(e) =
+                            self.handle_event_action(action, &mut key_bindings, &mut mouse_bindings)
+                        {
+                            (self.error_handler)(e);
+                        }
                     }
+                    run_hooks!(event_handled, self,);
+                    self.conn.flush();
                 }
-                run_hooks!(event_handled, self,);
+
+                Err(e) => {
+                    self.exit()?;
+                    return Err(e);
+                }
             }
-            self.conn.flush();
         }
 
         Ok(())
