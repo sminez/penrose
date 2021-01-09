@@ -181,24 +181,26 @@ pub trait Draw {
     fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>);
 }
 
-/// The result of calling [KeyPressDraw::next_keypress]
+/// An [XEvent] parsed into a [KeyPress] if possible, otherwise the original `XEvent`
 #[derive(Debug, Clone)]
-pub enum KeyPressResult {
-    /// The next event was parasble as a [KeyPress]
+pub enum KeyPressParseAttempt {
+    /// The event was parasble as a [KeyPress]
     KeyPress(KeyPress),
-    /// An event was received but it was not a [KeyPress]
+    /// The event was not a [KeyPress]
     XEvent(XEvent),
-    /// The event stream is now closed
-    Closed,
 }
 
 /// A [Draw] that can return the [KeyPress] events from the user for its windows
 pub trait KeyPressDraw: Draw {
-    /// Attempt to parse the next [XEvent] from an underlying connection.
+    /// Attempt to parse the next [XEvent] from an underlying connection as a [KeyPress] if there
+    /// is one.
     ///
-    /// Returns the [KeyPress] if one occured, some other [XEvent] if that is what was received or
-    /// `Closed` if there are no more events.
-    fn next_keypress(&self) -> KeyPressResult;
+    /// Should return Ok(None) if no events are currently available.
+    fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>>;
+
+    /// Wait for the next [XEvent] from an underlying connection as a [KeyPress] and attempt to
+    /// parse it as a [KeyPress].
+    fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt>;
 }
 
 /// Used for simple drawing to the screen

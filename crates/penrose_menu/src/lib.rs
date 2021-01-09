@@ -20,8 +20,8 @@ use penrose::{
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
-        Color, DrawContext, DrawError, KeyPressDraw, KeyPressResult, KeyboardControlled, Result,
-        TextStyle, Widget,
+        Color, DrawContext, DrawError, KeyPressDraw, KeyPressParseAttempt, KeyboardControlled,
+        Result, TextStyle, Widget,
     },
 };
 
@@ -296,7 +296,7 @@ where
 
         loop {
             debug!("waiting for keypress");
-            if let KeyPressResult::KeyPress(k) = self.drw.next_keypress() {
+            if let Some(KeyPressParseAttempt::KeyPress(k)) = self.drw.next_keypress()? {
                 debug!("got a keypress");
                 match k {
                     KeyPress::Return if self.txt.selected_index() < matches.len() => {

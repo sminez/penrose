@@ -14,7 +14,7 @@ use strum::*;
 use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
 
 #[cfg(feature = "xcb_keysyms")]
-use crate::{core::bindings::KeyPress, draw::KeyPressResult, xcb::keysyms::XKeySym};
+use crate::{core::bindings::KeyPress, draw::KeyPressParseAttempt, xcb::keysyms::XKeySym};
 
 /// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
 pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
@@ -89,7 +89,18 @@ impl Drop for Api {
 }
 
 impl Api {
-    /// Connect to the X server using the XCB API
+    /// Connect to the X server using the [XCB API][1]
+    ///
+    /// Each [Api] contains and embedded [xcb Connection][2] which is used for making
+    /// all api calls through to the X server. Some state is cached in the Api itself
+    /// in order to prevent redundant calls through to the X server.
+    ///
+    /// Creating a new [Api] instance will establish the underlying connection and if
+    /// the `xcb_keysyms` feature is enabled, pull [KeyCode] mappings from the user
+    /// system using `xmodmap`.
+    ///
+    /// [1]: http://rtbo.github.io/rust-xcb
+    /// [2]: http://rtbo.github.io/rust-xcb/xcb/base/struct.Connection.html
     pub fn new() -> Result<Self> {
         let (conn, _) = xcb::Connection::connect(None)?;
         let mut api = Self {
@@ -176,25 +187,59 @@ impl Api {
             .ok_or(XcbError::QueryFailed("visual type"))
     }
 
-    /// Block and wait for the next user keypress on the underlying [XCB Connection][::xcb::Connection],
-    /// returning it as an [XKeySym] if possible, or an [XEvent] if not.
+    /// Poll for the next event from the underlying [XCB Connection][::xcb::Connection],
+    /// returning it as an [XKeySym] if it was a user keypress, or an [XEvent] if not.
+    ///
+    /// If no event is currently available, None is returned.
     #[cfg(feature = "xcb_keysyms")]
-    pub fn next_keypress(&self) -> KeyPressResult {
-        if let Some(event) = self.conn.wait_for_event() {
-            if let Ok(k) = KeyCode::try_from(&event) {
-                if let Some(s) = self.code_map.get(&(k.mask, k.code)) {
-                    if let Ok(k) = KeyPress::try_from(XKeySym::from_str(s).unwrap()) {
-                        return KeyPressResult::KeyPress(k);
-                    }
-                }
-            }
-
-            if let Some(e) = self.generic_xcb_to_xevent(event) {
-                return KeyPressResult::XEvent(e);
+    pub fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>> {
+        if let Some(event) = self.conn.poll_for_event() {
+            let attempt = self.attempt_to_parse_as_keypress(event);
+            if let Ok(Some(_)) = attempt {
+                return attempt;
             }
         }
 
-        KeyPressResult::Closed
+        Ok(self.conn.has_error().map(|_| None)?)
+    }
+
+    /// Poll for the next event from the underlying [XCB Connection][::xcb::Connection],
+    /// returning it as an [XKeySym] if it was a user keypress, or an [XEvent] if not.
+    #[cfg(feature = "xcb_keysyms")]
+    pub fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt> {
+        if let Some(event) = self.conn.wait_for_event() {
+            let attempt = self.attempt_to_parse_as_keypress(event);
+            if let Ok(Some(k)) = attempt {
+                return Ok(k);
+            }
+        }
+
+        match self.conn.has_error() {
+            Err(e) => Err(e.into()),
+            Ok(_) => Err(XcbError::Raw(
+                "xcb failed to return an event but connection is stil open".into(),
+            )),
+        }
+    }
+
+    #[cfg(feature = "xcb_keysyms")]
+    fn attempt_to_parse_as_keypress(
+        &self,
+        event: XcbGenericEvent,
+    ) -> Result<Option<KeyPressParseAttempt>> {
+        if let Ok(k) = KeyCode::try_from(&event) {
+            if let Some(s) = self.code_map.get(&(k.mask, k.code)) {
+                if let Ok(k) = KeyPress::try_from(XKeySym::from_str(s)?) {
+                    return Ok(Some(KeyPressParseAttempt::KeyPress(k)));
+                }
+            }
+        }
+
+        if let Some(e) = self.generic_xcb_to_xevent(event) {
+            return Ok(Some(KeyPressParseAttempt::XEvent(e)));
+        }
+
+        Ok(None)
     }
 
     fn generic_xcb_to_xevent(&self, event: XcbGenericEvent) -> Option<XEvent> {

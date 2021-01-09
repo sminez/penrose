@@ -76,6 +76,10 @@ pub enum XcbError {
     #[error("Unhandled error: {0}")]
     Raw(String),
 
+    /// Parsing a strum generated enum from a str failed.
+    #[error(transparent)]
+    Strum(#[from] strum::ParseError),
+
     /// Screen data for an unknown screen was requested
     #[error("The requested screen index was out of bounds: {0} > {1}")]
     UnknownScreen(usize, usize),
