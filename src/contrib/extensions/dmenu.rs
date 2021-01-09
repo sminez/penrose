@@ -78,11 +78,11 @@ impl DMenuConfig {
         );
 
         if self.password_input {
-            s.push_str(&format!("{} -P", s));
+            s.push_str(&format!(" -P"));
         }
 
         if !prompt.is_empty() {
-            s.push_str(&format!("{} -p", prompt));
+            s.push_str(&format!(" -p {}", prompt));
         }
 
         s.split_whitespace().map(|s| s.into()).collect()

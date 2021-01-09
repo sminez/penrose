@@ -13,7 +13,6 @@ use std::{
  * Run an external command
  *
  * This redirects the process stdout and stderr to /dev/null.
- * Logs a warning if there were any errors in kicking off the process.
  */
 pub fn spawn<S: Into<String>>(cmd: S) -> Result<()> {
     let s = cmd.into();
@@ -30,6 +29,24 @@ pub fn spawn<S: Into<String>>(cmd: S) -> Result<()> {
             .stderr(Stdio::null())
             .spawn()
     };
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.into()),
+    }
+}
+
+/**
+ * Run an external command with the specified command line arguments
+ *
+ * This redirects the process stdout and stderr to /dev/null.
+ */
+pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
+    let result = Command::new(cmd.into())
+        .args(args)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn();
 
     match result {
         Ok(_) => Ok(()),
@@ -110,14 +127,4 @@ pub fn index_selectors<'a, T>(len: usize) -> Vec<Selector<'a, T>> {
 /// A simple error handler that just logs the error to the penrose log stream
 pub fn logging_error_handler() -> ErrorHandler {
     Box::new(|e: PenroseError| error!("{}", e))
-}
-
-/// A simple error handler that uses 'notify-send' to display a dialog window with the error
-/// message.
-pub fn notify_send_error_handler() -> ErrorHandler {
-    Box::new(|e: PenroseError| {
-        if spawn(format!("notify-send '{}'", e)).is_err() {
-            error!("Unable to display error via notify-send. Error was: {}", e);
-        }
-    })
 }
