@@ -207,18 +207,17 @@ impl Api {
     /// returning it as an [XKeySym] if it was a user keypress, or an [XEvent] if not.
     #[cfg(feature = "xcb_keysyms")]
     pub fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt> {
-        if let Some(event) = self.conn.wait_for_event() {
-            let attempt = self.attempt_to_parse_as_keypress(event);
-            if let Ok(Some(k)) = attempt {
-                return Ok(k);
+        loop {
+            if let Some(event) = self.conn.wait_for_event() {
+                let attempt = self.attempt_to_parse_as_keypress(event);
+                if let Ok(Some(k)) = attempt {
+                    return Ok(k);
+                }
             }
-        }
 
-        match self.conn.has_error() {
-            Err(e) => Err(e.into()),
-            Ok(_) => Err(XcbError::Raw(
-                "xcb failed to return an event but connection is stil open".into(),
-            )),
+            if let Err(e) = self.conn.has_error() {
+                return Err(e.into());
+            }
         }
     }
 
@@ -235,24 +234,24 @@ impl Api {
             }
         }
 
-        if let Some(e) = self.generic_xcb_to_xevent(event) {
+        if let Some(e) = self.generic_xcb_to_xevent(event)? {
             return Ok(Some(KeyPressParseAttempt::XEvent(e)));
         }
 
         Ok(None)
     }
 
-    fn generic_xcb_to_xevent(&self, event: XcbGenericEvent) -> Option<XEvent> {
+    fn generic_xcb_to_xevent(&self, event: XcbGenericEvent) -> Result<Option<XEvent>> {
         let xcb_response_type_mask: u8 = 0x7F;
         let numlock = xcb::MOD_MASK_2 as u16;
 
         let etype = event.response_type() & xcb_response_type_mask;
         // Need to apply the randr_base mask as well which doesn't seem to work in 'match'
         if etype == self.randr_base + xcb::randr::NOTIFY {
-            return Some(XEvent::RandrNotify);
+            return Ok(Some(XEvent::RandrNotify));
         }
 
-        match etype {
+        Ok(match etype {
             xcb::BUTTON_PRESS | xcb::BUTTON_RELEASE | xcb::MOTION_NOTIFY => {
                 match MouseEvent::try_from(event) {
                     Ok(m) => Some(XEvent::MouseEvent(m)),
@@ -264,7 +263,7 @@ impl Api {
             }
 
             xcb::KEY_PRESS => Some(XEvent::KeyPress(
-                KeyCode::try_from(event).unwrap().ignoring_modifier(numlock),
+                KeyCode::try_from(event)?.ignoring_modifier(numlock),
             )),
 
             xcb::MAP_REQUEST => {
@@ -359,7 +358,7 @@ impl Api {
 
             // NOTE: ignoring other event types
             _ => None,
-        }
+        })
     }
 }
 
@@ -716,10 +715,29 @@ impl XcbApi for Api {
         );
     }
 
-    fn wait_for_event(&self) -> Option<XEvent> {
-        self.conn
-            .wait_for_event()
-            .and_then(|e| self.generic_xcb_to_xevent(e))
+    // Loop until we get an event we care about or an error
+    fn wait_for_event(&self) -> Result<XEvent> {
+        loop {
+            if let Some(event) = self.conn.wait_for_event() {
+                // Got an event but it might not be one we care about / know how to handle
+                if let Some(e) = self.generic_xcb_to_xevent(event)? {
+                    return Ok(e);
+                }
+            } else {
+                // Conn returned None which _should_ mean an error
+                if let Err(e) = self.conn.has_error() {
+                    return Err(e.into());
+                }
+            }
+        }
+    }
+
+    fn poll_for_event(&self) -> Result<Option<XEvent>> {
+        if let Some(event) = self.conn.poll_for_event() {
+            self.generic_xcb_to_xevent(event)
+        } else {
+            Ok(self.conn.has_error().map(|_| None)?)
+        }
     }
 
     fn warp_cursor(&self, id: WinId, x: usize, y: usize) {

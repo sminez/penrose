@@ -116,7 +116,7 @@ pub fn logging_error_handler() -> ErrorHandler {
 /// message.
 pub fn notify_send_error_handler() -> ErrorHandler {
     Box::new(|e: PenroseError| {
-        if let Err(_) = spawn(format!("notify-send '{}'", e)) {
+        if spawn(format!("notify-send '{}'", e)).is_err() {
             error!("Unable to display error via notify-send. Error was: {}", e);
         }
     })

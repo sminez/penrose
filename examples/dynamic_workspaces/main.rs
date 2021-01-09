@@ -110,7 +110,7 @@ fn main() -> Result<()> {
         };
     };
 
-    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
+    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler(), true)?;
     wm.grab_keys_and_run(key_bindings, HashMap::new())?;
 
     Ok(())

@@ -180,7 +180,7 @@ fn main() -> Result<()> {
     // server. You are free to provide your own implementation if you wish, see xconnection.rs for
     // details of the required methods and expected behaviour and xcb/xconn.rs for the
     // implementation of XcbConnection.
-    let conn = XcbConnection::new()?;
+    let conn = XcbConnection::new(true)?;
 
     // Create the WindowManager instance with the config we have built and a connection to the X
     // server. Before calling grab_keys_and_run, it is possible to run additional start-up actions

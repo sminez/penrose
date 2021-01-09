@@ -111,9 +111,9 @@ impl<X: XConn> WindowManager<X> {
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new().unwrap(),
+     *     XcbConnection::new(true).unwrap(),
      *     vec![],
-     *     logging_error_handler()
+     *     logging_error_handler(),
      * );
      *
      * // additional set-up logic here
@@ -232,9 +232,9 @@ impl<X: XConn> WindowManager<X> {
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new().unwrap(),
+     *     XcbConnection::new(true).unwrap(),
      *     vec![],
-     *     logging_error_handler()
+     *     logging_error_handler(),
      * );
      *
      * // additional set-up logic here
@@ -343,7 +343,13 @@ impl<X: XConn> WindowManager<X> {
 
         debug!("Entering main event loop");
         while self.running {
-            if let Some(event) = self.conn.wait_for_event() {
+            let opt = if self.conn.is_non_blocking() {
+                self.conn.poll_for_event()?
+            } else {
+                Some(self.conn.wait_for_event()?)
+            };
+
+            if let Some(event) = opt {
                 debug!("Got XEvent: {:?}", event);
                 for action in process_next_event(event, self.current_state()) {
                     if let Err(e) =
@@ -717,9 +723,9 @@ impl<X: XConn> WindowManager<X> {
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new().unwrap(),
+     *     XcbConnection::new(true).unwrap(),
      *     vec![],
-     *     logging_error_handler()
+     *     logging_error_handler(),
      * );
      *
      * wm.log("hello from penrose").unwrap();
@@ -744,9 +750,9 @@ impl<X: XConn> WindowManager<X> {
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new().unwrap(),
+     *     XcbConnection::new(true).unwrap(),
      *     vec![],
-     *     logging_error_handler()
+     *     logging_error_handler(),
      * );
      *
      * if let Err(e) = wm.init() {

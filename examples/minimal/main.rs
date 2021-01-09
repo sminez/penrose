@@ -52,7 +52,7 @@ fn main() -> Result<()> {
         Press Left + [Meta] => |wm: &mut WindowManager<_>, _: &MouseEvent| wm.cycle_workspace(Backward)
     };
 
-    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
+    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler(), true)?;
     wm.grab_keys_and_run(key_bindings, mouse_bindings)?;
 
     Ok(())

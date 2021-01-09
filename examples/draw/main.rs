@@ -52,7 +52,8 @@ fn bar_draw() -> Result<()> {
         workspaces,
     )?;
 
-    let mut wm = new_xcb_backed_window_manager(Config::default(), vec![], logging_error_handler())?;
+    let mut wm =
+        new_xcb_backed_window_manager(Config::default(), vec![], logging_error_handler(), true)?;
     bar.startup(&mut wm)?; // ensure widgets are initialised correctly
 
     thread::sleep(time::Duration::from_millis(1000));
