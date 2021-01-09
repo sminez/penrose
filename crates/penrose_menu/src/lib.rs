@@ -237,7 +237,7 @@ where
 
         self.txt.draw(&mut ctx, 0, true, w, h)?;
 
-        ctx.flush();
+        // ctx.flush();
         self.drw.flush(id);
         Ok(())
     }
@@ -293,10 +293,11 @@ where
             self.show_line_numbers,
         ))?;
         self.redraw()?;
+        self.drw.map_window(self.id.unwrap());
 
         loop {
             debug!("waiting for keypress");
-            if let Some(KeyPressParseAttempt::KeyPress(k)) = self.drw.next_keypress()? {
+            if let KeyPressParseAttempt::KeyPress(k) = self.drw.next_keypress_blocking()? {
                 debug!("got a keypress");
                 match k {
                     KeyPress::Return if self.txt.selected_index() < matches.len() => {

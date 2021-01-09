@@ -257,9 +257,10 @@ macro_rules! __impl_status_bar_as_hook {
 
 
             fn screens_updated(&mut self, wm: &mut WindowManager<X>, dimensions: &[Region]) -> crate::Result<()> {
-                self.screens
-                    .iter()
-                    .for_each(|(id, _)| self.drw.destroy_window(*id));
+                for (id, _) in self.screens.iter() {
+                    self.drw.destroy_window(*id);
+                }
+
                 if let Err(e) = self.init_for_screens() {
                     error!("error removing old status bar windows: {}", e)
                 }

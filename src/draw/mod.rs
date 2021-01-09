@@ -171,7 +171,7 @@ pub trait Draw {
     /// Unmap the target window from the screen
     fn unmap_window(&self, id: WinId);
     /// Destroy the target window
-    fn destroy_window(&self, id: WinId);
+    fn destroy_window(&mut self, id: WinId);
     /**
      * Replace a property value on a window.
      *

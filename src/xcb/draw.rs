@@ -163,8 +163,9 @@ impl Draw for XcbDraw {
         self.api.unmap_window(id);
     }
 
-    fn destroy_window(&self, id: WinId) {
+    fn destroy_window(&mut self, id: WinId) {
         self.api.destroy_window(id);
+        self.surfaces.remove(&id);
     }
 
     fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {

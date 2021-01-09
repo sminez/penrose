@@ -1,4 +1,4 @@
-//! A tiling window manager library in the style of Xmonad
+//! Penrose is a tiling window manager library inspired by Xmonad.
 //!
 //!
 //!```no_run
