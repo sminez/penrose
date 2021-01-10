@@ -78,7 +78,7 @@ impl DMenuConfig {
         );
 
         if self.password_input {
-            s.push_str(&format!(" -P"));
+            s.push_str(" -P");
         }
 
         if !prompt.is_empty() {
@@ -164,7 +164,7 @@ impl DMenu {
 
         let mut raw = String::new();
         proc.stdout
-            .ok_or(PenroseError::SpawnProc("failed to spawn dmenu".into()))?
+            .ok_or_else(|| PenroseError::SpawnProc("failed to spawn dmenu".into()))?
             .read_to_string(&mut raw)?;
         let choice = raw.trim();
 
@@ -180,7 +180,7 @@ impl DMenu {
                 if self.config.show_line_numbers {
                     format!("{:<3} {}", i, s) == choice
                 } else {
-                    *s == &choice
+                    *s == choice
                 }
             })
             .map_or_else(
