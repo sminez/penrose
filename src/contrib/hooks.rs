@@ -1,8 +1,9 @@
 //! Additional common hooks that can be used out of the box with minimal config.
 use crate::{
+    contrib::actions::update_monitors_via_xrandr,
     core::{
-        client::Client, helpers::spawn, hooks::Hook, manager::WindowManager, ring::Selector,
-        xconnection::XConn,
+        client::Client, data_types::RelativePosition, helpers::spawn, hooks::Hook,
+        manager::WindowManager, ring::Selector, xconnection::XConn,
     },
     Result,
 };
@@ -194,5 +195,37 @@ impl<X: XConn> Hook<X> for ClientSpawnRules {
         }
 
         Ok(())
+    }
+}
+
+/// Automatically set the current monitors and their positions whenever there is an xrandr change
+#[derive(Clone, Debug)]
+pub struct AutoSetMonitorsViaXrandr {
+    primary: String,
+    secondary: String,
+    position: RelativePosition,
+}
+
+impl AutoSetMonitorsViaXrandr {
+    /// Create a new AutoSetMonitorsViaXrandr that is pre-boxed for adding to your workspace hooks.
+    pub fn new(
+        primary: impl Into<String>,
+        secondary: impl Into<String>,
+        position: RelativePosition,
+    ) -> Box<Self> {
+        Box::new(Self {
+            primary: primary.into(),
+            secondary: secondary.into(),
+            position,
+        })
+    }
+}
+
+impl<X> Hook<X> for AutoSetMonitorsViaXrandr
+where
+    X: XConn,
+{
+    fn randr_notify(&mut self, _: &mut WindowManager<X>) -> Result<()> {
+        update_monitors_via_xrandr(&self.primary, &self.secondary, self.position)
     }
 }

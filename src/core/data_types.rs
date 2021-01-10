@@ -59,6 +59,20 @@ pub enum WinAttr {
     RootEventMask,
 }
 
+/// A relative position along the horizontal and vertical axes
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum RelativePosition {
+    /// Left of the current position
+    Left,
+    /// Right of the current position
+    Right,
+    /// Above the current position
+    Above,
+    /// Below the current position
+    Below,
+}
+
 /// An x,y coordinate pair
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
