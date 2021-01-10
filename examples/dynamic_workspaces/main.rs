@@ -4,15 +4,17 @@ extern crate penrose;
 use penrose::{
     contrib::{
         actions::create_or_switch_to_workspace,
-        extensions::Scratchpad,
+        extensions::{dmenu::*, Scratchpad},
         hooks::{DefaultWorkspace, LayoutSymbolAsRootName, RemoveEmptyWorkspaces},
         layouts::paper,
     },
     core::{
+        bindings::KeyEventHandler,
         config::Config,
-        helpers::{index_selectors, spawn_for_output},
+        helpers::index_selectors,
         hooks::Hooks,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
+        xconnection::XConn,
     },
     logging_error_handler,
     xcb::new_xcb_backed_window_manager,
@@ -20,7 +22,7 @@ use penrose::{
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
-use std::{collections::HashMap, env};
+use std::collections::HashMap;
 
 fn my_layouts() -> Vec<Layout> {
     let n_main = 1;
@@ -37,6 +39,21 @@ fn my_layouts() -> Vec<Layout> {
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
     ]
+}
+
+fn dynamic_workspaces<X: XConn>() -> KeyEventHandler<X> {
+    create_or_switch_to_workspace(
+        || {
+            let options = vec!["1term", "2term", "3term", "web", "files"];
+            let menu = DMenu::new("WS-SELECT: ", options, DMenuConfig::default());
+            if let Ok(MenuMatch::Line(_, choice)) = menu.run(0) {
+                Some(choice)
+            } else {
+                None
+            }
+        },
+        my_layouts(),
+    )
 }
 
 fn main() -> Result<()> {
@@ -77,15 +94,7 @@ fn main() -> Result<()> {
         "M-slash" => sp.toggle();
 
         // workspace management
-        "M-w" => create_or_switch_to_workspace(
-            || {
-                let output = spawn_for_output(
-                    format!("{}/bin/ws_spawn.sh", env::var("HOME").unwrap())
-                ).unwrap();
-                output.trim_end().to_string()
-            },
-            my_layouts()
-        );
+        "M-w" => dynamic_workspaces();
         "M-Tab" => run_internal!(toggle_workspace);
         "M-bracketright" => run_internal!(cycle_screen, Forward);
         "M-bracketleft" => run_internal!(cycle_screen, Backward);

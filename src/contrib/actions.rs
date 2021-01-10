@@ -24,17 +24,21 @@ use crate::{
  * DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.
  */
 pub fn create_or_switch_to_workspace<X: XConn>(
-    get_name: fn() -> String,
+    get_name: fn() -> Option<String>,
     layouts: Vec<Layout>,
 ) -> KeyEventHandler<X> {
     Box::new(move |wm: &mut WindowManager<X>| {
-        let name = &get_name();
-        let cond = |ws: &Workspace| ws.name() == name;
-        let sel = Selector::Condition(&cond);
-        if wm.workspace(&sel).is_none() {
-            wm.push_workspace(Workspace::new(name, layouts.clone()))?;
+        if let Some(s) = get_name() {
+            let name = &s;
+            let cond = |ws: &Workspace| ws.name() == name;
+            let sel = Selector::Condition(&cond);
+            if wm.workspace(&sel).is_none() {
+                wm.push_workspace(Workspace::new(name, layouts.clone()))?;
+            }
+            wm.focus_workspace(&sel)
+        } else {
+            Ok(())
         }
-        wm.focus_workspace(&sel)
     })
 }
 
