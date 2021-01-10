@@ -13,6 +13,7 @@ use crate::{
 };
 
 pub mod api;
+#[doc(hidden)]
 pub mod conversions;
 #[cfg(feature = "xcb_draw")]
 pub mod draw;
