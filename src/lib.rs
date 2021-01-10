@@ -10,7 +10,7 @@
 //!         config::Config, helpers::index_selectors, manager::WindowManager,
 //!     },
 //!     xcb::new_xcb_backed_window_manager,
-//!     Backward, Forward, Less, More, Result, logging_error_handler, EventSource
+//!     Backward, Forward, Less, More, Result, logging_error_handler
 //! };
 //!
 //! fn main() -> Result<()> {
@@ -39,12 +39,7 @@
 //!         };
 //!     };
 //!
-//!     let mut wm = new_xcb_backed_window_manager(
-//!         config,
-//!         hooks,
-//!         logging_error_handler(),
-//!         EventSource::NonBlocking
-//!     )?;
+//!     let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
 //!     wm.grab_keys_and_run(key_bindings, map!{})
 //! }
 //!```
@@ -83,7 +78,7 @@ pub mod xcb;
 #[doc(inline)]
 pub use crate::core::{
     config::Config,
-    data_types::{Change::*, EventSource, WinId},
+    data_types::{Change::*, WinId},
     helpers::logging_error_handler,
     manager::WindowManager,
     ring::{Direction::*, InsertPoint, Selector},

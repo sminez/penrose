@@ -14,7 +14,7 @@
 use crate::{
     core::{
         bindings::{KeyBindings, MouseBindings},
-        data_types::{EventSource, Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         manager::WindowManager,
         screen::Screen,
         xconnection::{
@@ -43,12 +43,11 @@ pub struct XcbConnection {
     check_win: WinId,
     auto_float_types: Vec<u32>,
     dont_manage_types: Vec<u32>,
-    use_non_blocking: bool,
 }
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
-    pub fn new(event_source: EventSource) -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let api = Api::new()?;
         let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
             .iter()
@@ -67,7 +66,6 @@ impl XcbConnection {
             check_win,
             auto_float_types,
             dont_manage_types,
-            use_non_blocking: event_source == EventSource::NonBlocking,
         })
     }
 

@@ -16,7 +16,7 @@ use penrose::{
     },
     logging_error_handler,
     xcb::new_xcb_backed_window_manager,
-    Backward, EventSource, Forward, Less, More, Result,
+    Backward, Forward, Less, More, Result,
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -110,12 +110,7 @@ fn main() -> Result<()> {
         };
     };
 
-    let mut wm = new_xcb_backed_window_manager(
-        config,
-        hooks,
-        logging_error_handler(),
-        EventSource::NonBlocking,
-    )?;
+    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
     wm.grab_keys_and_run(key_bindings, HashMap::new())?;
 
     Ok(())

@@ -106,12 +106,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     logging_error_handler, EventSource
+     *     logging_error_handler
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
+     *     XcbConnection::new().unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );
@@ -227,12 +227,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     logging_error_handler, EventSource
+     *     logging_error_handler
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
+     *     XcbConnection::new().unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );
@@ -719,12 +719,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     logging_error_handler, EventSource
+     *     logging_error_handler
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
+     *     XcbConnection::new().unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );
@@ -746,12 +746,12 @@ impl<X: XConn> WindowManager<X> {
      * use penrose::{
      *     core::{Config, WindowManager},
      *     xcb::XcbConnection,
-     *     Forward, logging_error_handler, EventSource
+     *     Forward, logging_error_handler
      * };
      *
      * let mut wm = WindowManager::new(
      *     Config::default(),
-     *     XcbConnection::new(EventSource::NonBlocking).unwrap(),
+     *     XcbConnection::new().unwrap(),
      *     vec![],
      *     logging_error_handler(),
      * );

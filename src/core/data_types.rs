@@ -7,18 +7,6 @@ pub type ResizeAction = (WinId, Option<Region>);
 /// An X window ID
 pub type WinId = u32;
 
-/// Whether or not a given [XConn][1] should run in blocking or non-blocking
-/// mode (if applicable).
-///
-/// [1]: crate::core::xconnection::XConn
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum EventSource {
-    /// The blocking `wait_for_event` method should be used
-    Blocking,
-    /// The non-blocking `poll_for_event` method should be used.
-    NonBlocking,
-}
-
 /// A client propert value that can be set.
 ///
 /// Variants correspond to the X property types being set.

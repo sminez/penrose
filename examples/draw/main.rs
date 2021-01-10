@@ -10,7 +10,7 @@ use penrose::{
     draw::{bar::dwm_bar, Draw, DrawContext, TextStyle},
     logging_error_handler,
     xcb::{new_xcb_backed_window_manager, XcbDraw},
-    EventSource, Result,
+    Result,
 };
 
 const HEIGHT: usize = 18;
@@ -52,12 +52,7 @@ fn bar_draw() -> Result<()> {
         workspaces,
     )?;
 
-    let mut wm = new_xcb_backed_window_manager(
-        Config::default(),
-        vec![],
-        logging_error_handler(),
-        EventSource::NonBlocking,
-    )?;
+    let mut wm = new_xcb_backed_window_manager(Config::default(), vec![], logging_error_handler())?;
     bar.startup(&mut wm)?; // ensure widgets are initialised correctly
 
     thread::sleep(time::Duration::from_millis(1000));
