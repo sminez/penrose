@@ -6,7 +6,7 @@ pub mod widget;
 pub use bar::*;
 
 #[doc(inline)]
-pub use widget::*;
+pub use widget::{HookableWidget, KeyboardControlled, Widget};
 
 use crate::core::{
     bindings::KeyPress,

@@ -14,7 +14,7 @@
 //! Lets start with a very basic layout that ignores the two paramaters (`max_main` and `ratio`)
 //! and instead, simply arranges the Clients it is given as evenly spaced rows:
 //! ```
-//! use crate::core::{
+//! use penrose::core::{
 //!     client::Client,
 //!     data_types::{Change, Region, ResizeAction, WinId},
 //! };
