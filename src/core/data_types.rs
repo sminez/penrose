@@ -195,6 +195,19 @@ impl Region {
         }
     }
 
+    /// Check whether this Region contains `other` as a sub-Region
+    /// ```
+    /// use penrose::core::data_types::{Point, Region};
+    ///
+    /// let r1 = Region::new(10, 10, 50, 50);
+    ///
+    /// assert!(r1.contains_point(&Point::new(30, 20)));
+    /// assert!(!r1.contains_point(&Point::new(0, 0)));
+    /// ```
+    pub fn contains_point(&self, p: &Point) -> bool {
+        (self.x..(self.x + self.w)).contains(&p.x) && (self.y..(self.y + self.h)).contains(&p.y)
+    }
+
     /// Center this region inside of `enclosing`.
     ///
     /// # Errors
