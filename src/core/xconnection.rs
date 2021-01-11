@@ -1,11 +1,12 @@
-/*!
- * An abstraciton layer for talking to an underlying X server.
- *
- * An implementation of the [XConn] trait is required for running a
- * [WindowManager][crate::core::manager::WindowManager]. The choice of back end (e.g. xlib, xcb...)
- * is an implementation detail that does not surface in the WindowManager itself. All low level
- * details of working with the X server should be captured in this trait.
- */
+//! An abstraciton layer for talking to an underlying X server.
+//!
+//! An implementation of the [XConn] trait is required for running a [WindowManager][1]. The choice
+//! of back end (e.g. xlib, xcb...) is an implementation detail that does not surface in the
+//! `WindowManager` itself. All low level details of working with the X server should be captured in
+//! this trait, though accessing backend specific functionality is possible by writing an impl
+//! block for `WindowManager<YourXConn>` if desired.
+//!
+//! [1]: crate::core::manager::WindowManager
 use crate::{
     core::{
         bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
@@ -19,13 +20,11 @@ use std::{cell::Cell, fmt};
 
 use strum::*;
 
-/**
- * A Penrose internal representation of X atoms.
- *
- * Atom names are shared between all X11 API libraries so this enum allows us to get a little bit
- * of type safety around their use. Implementors of [XConn] should accept any variant of [Atom]
- * that they are passed by client code.
- */
+/// A Penrose internal representation of X atoms.
+///
+/// Atom names are shared between all X11 API libraries so this enum allows us to get a little bit
+/// of type safety around their use. Implementors of [XConn] should accept any variant of [Atom]
+/// that they are passed by client code.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Atom {
@@ -197,26 +196,21 @@ pub(crate) const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
     Atom::NetWmWindowType,
 ];
 
-/**
- * Wrapper around the low level XCB event types that require casting to work with.
- * Not all event fields are extracted so check the XCB documentation and update
- * accordingly if you need access to something that isn't currently passed through
- * to the WindowManager event loop.
- *
- * <https://tronche.com/gui/x/xlib/events/types.html>
- * <https://github.com/rtbo/rust-xcb/xml/xproto.xml>
- */
+/// Wrapper around the low level X event types that correspond to request / response data when
+/// communicating with the X server itself.
+///
+/// The variant names and data have developed with the reference xcb implementation in mind but
+/// should be applicable for all back ends.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub enum XEvent {
-    /// xcb docs: <https://www.mankier.com/3/xcb_button_press_event_t>
-    /// xcb docs: <https://www.mankier.com/3/xcb_motion_notify_event_t>
+    /// The mouse has moved or a mouse button has been pressed
     MouseEvent(MouseEvent),
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_input_device_key_press_event_t>
+    /// A grabbed key combination has been entered by the user
     KeyPress(KeyCode),
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_map_request_event_t>
+    /// A client window is requesting to be positioned and rendered on the screen
     MapRequest {
         /// The ID of the window that wants to be mapped
         id: WinId,
@@ -224,7 +218,7 @@ pub enum XEvent {
         ignore: bool,
     },
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_enter_notify_event_t>
+    /// The mouse pointer has entered a new client window
     Enter {
         /// The ID of the window that was entered
         id: WinId,
@@ -234,7 +228,7 @@ pub enum XEvent {
         wpt: Point,
     },
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_enter_notify_event_t>
+    /// The mouse pointer has left the current client window
     Leave {
         /// The ID of the window that was left
         id: WinId,
@@ -244,19 +238,19 @@ pub enum XEvent {
         wpt: Point,
     },
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_destroy_notify_event_t>
+    /// A client window has been closed
     Destroy {
         /// The ID of the window being destroyed
         id: WinId,
     },
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_randr_screen_change_notify_event_t>
+    /// Focus has moved to a different screen
     ScreenChange,
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_randr_notify_event_t>
+    /// A randr action has occured (new outputs, resolution change etc)
     RandrNotify,
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_configure_notify_event_t>
+    /// Client config has changed in some way
     ConfigureNotify {
         /// The ID of the window that had a property changed
         id: WinId,
@@ -266,7 +260,7 @@ pub enum XEvent {
         is_root: bool,
     },
 
-    /// xcb docs: <https://www.mankier.com/3/xcb_property_notify_event_t>
+    /// A client property has changed in some way
     PropertyNotify {
         /// The ID of the window that had a property changed
         id: WinId,
@@ -276,7 +270,7 @@ pub enum XEvent {
         is_root: bool,
     },
 
-    /// <https://www.mankier.com/3/xcb_client_message_event_t>
+    /// A message has been sent to a particular client
     ClientMessage {
         /// The ID of the window that sent the message
         id: WinId,
@@ -287,14 +281,13 @@ pub enum XEvent {
     },
 }
 
-/**
- * A handle on a running X11 connection that we can use for issuing X requests.
- *
- * XConn is intended as an abstraction layer to allow for communication with the underlying display
- * system (assumed to be X) using whatever mechanism the implementer wishes. In theory, it should
- * be possible to write an implementation that allows penrose to run on systems not using X as the
- * windowing system but X idioms and high level event types / client interations are assumed.
- **/
+/// A handle on a running X11 connection that we can use for issuing X requests.
+///
+/// XConn is intended as an abstraction layer to allow for communication with the underlying
+/// display system (assumed to be X) using whatever mechanism the implementer wishes. In theory, it
+/// should be possible to write an implementation that allows penrose to run on systems not using X
+/// as the windowing system but X idioms and high level event types / client interations are
+/// assumed.
 pub trait XConn {
     /// Hydrate this XConn to restore internal state following serde deserialization
     #[cfg(feature = "serde")]
@@ -339,12 +332,10 @@ pub trait XConn {
     /// Change the border color for the given client
     fn set_client_border_color(&self, id: WinId, color: u32);
 
-    /**
-     * Notify the X server that we are intercepting the user specified key bindings
-     * and prevent them being passed through to the underlying applications. This
-     * is what determines which key press events end up being sent through in the
-     * main event loop for the WindowManager.
-     */
+    /// Notify the X server that we are intercepting the user specified key bindings
+    /// and prevent them being passed through to the underlying applications. This
+    /// is what determines which key press events end up being sent through in the
+    /// main event loop for the WindowManager.
     fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>)
     where
         Self: Sized;
@@ -379,25 +370,19 @@ pub trait XConn {
     /// Return the current (x, y, w, h) dimensions of the requested window
     fn window_geometry(&self, id: WinId) -> Result<Region>;
 
-    /**
-     * Warp the cursor to be within the specified window. If id == None then behaviour is
-     * definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
-     */
+    /// Warp the cursor to be within the specified window. If id == None then behaviour is
+    /// definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
     fn warp_cursor(&self, id: Option<WinId>, screen: &Screen);
 
     /// Run on startup/restart to determine already running windows that we need to track
     fn query_for_active_windows(&self) -> Vec<WinId>;
 
-    /**
-     * Query a string property for a window by window ID and poperty name.
-     * Can fail if the property name is invalid or we get a malformed response from xcb.
-     */
+    /// Query a string property for a window by window ID and poperty name.
+    /// Can fail if the property name is invalid or we get a malformed response from xcb.
     fn str_prop(&self, id: u32, name: &str) -> Result<String>;
 
-    /**
-     * Fetch an atom prop by name for a particular window ID
-     * Can fail if the property name is invalid or we get a malformed response from xcb.
-     */
+    /// Fetch an atom prop by name for a particular window ID
+    /// Can fail if the property name is invalid or we get a malformed response from xcb.
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32>;
 
     /// Intern an X atom by name and return the corresponding ID
@@ -407,17 +392,15 @@ pub trait XConn {
     fn cleanup(&self);
 }
 
-/**
- * A really simple stub implementation of [XConn] to simplify setting up test cases.
- *
- * Intended use is to override the mock_* methods that you need for running your test case in order
- * to inject behaviour into a WindowManager instance which is driven by X server state.
- * [StubXConn] will then implement [XConn] and call through to your overwritten methods or the
- * provided default.
- *
- * This is being done to avoid providing broken default methods on the real XConn trait that would
- * make writing real impls more error prone if and when new methods are added to the trait.
- */
+/// A really simple stub implementation of [XConn] to simplify setting up test cases.
+///
+/// Intended use is to override the mock_* methods that you need for running your test case in order
+/// to inject behaviour into a WindowManager instance which is driven by X server state.
+/// [StubXConn] will then implement [XConn] and call through to your overwritten methods or the
+/// provided default.
+///
+/// This is being done to avoid providing broken default methods on the real XConn trait that would
+/// make writing real impls more error prone if and when new methods are added to the trait.
 pub trait StubXConn {
     /// Mocked version of hydrate
     #[cfg(feature = "serde")]

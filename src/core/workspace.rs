@@ -1,4 +1,12 @@
-//! A Workspace is a set of displayed clients and a set of Layouts for arranging them
+//! A set of clients and accompanying layout logic for display on a single screen
+//!
+//! The [Workspace] struct is Penrose' control structure for what should be displayed on a single
+//! screen at any one point. Each individual [Client] is owned centrally by the [WindowManager][2]
+//! but can be obtained via its ID which is traked in the `Workspace`. [Layouts][2] are managed per
+//! workspace, allowing you to specialise layout behaviour for individual workspaces if desired.
+//!
+//! [1]: crate::core::manager::WindowManager
+//! [2]: crate::core::layout::Layout
 use crate::core::{
     client::Client,
     data_types::{Change, Region, ResizeAction, WinId},
@@ -36,15 +44,12 @@ pub struct Workspace {
 
 impl Workspace {
     /// Construct a new Workspace with the given name and choice of Layouts
-    pub fn new<S>(name: S, layouts: Vec<Layout>) -> Workspace
-    where
-        S: Into<String>,
-    {
+    pub fn new(name: impl Into<String>, layouts: Vec<Layout>) -> Self {
         if layouts.is_empty() {
             panic!("{}: require at least one layout function", name.into());
         }
 
-        Workspace {
+        Self {
             name: name.into(),
             clients: Ring::new(Vec::new()),
             layouts: Ring::new(layouts),
@@ -56,10 +61,7 @@ impl Workspace {
         &self.name
     }
 
-    pub(crate) fn set_name<S>(&mut self, name: S)
-    where
-        S: Into<String>,
-    {
+    pub(crate) fn set_name(&mut self, name: impl Into<String>) {
         self.name = name.into();
     }
 

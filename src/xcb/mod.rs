@@ -12,6 +12,10 @@
 //!   contents of `X11/keysymdef.h` and allows for parsing X keycode events as their corresponding
 //!   utf-8 representation or action.
 //!
+//! # C level documentation
+//!
+//! Docs for the underlying `xcb` C library can be found [here][8].
+//!
 //! [1]: crate::core::manager::WindowManager
 //! [2]: https://xcb.freedesktop.org/
 //! [3]: https://www.pango.org/
@@ -19,6 +23,7 @@
 //! [5]: crate::xcb::keysyms::XKeySym
 //! [6]: crate::draw::Draw
 //! [7]: crate::draw::DrawContext
+//! [8]: https://www.mankier.com/package/libxcb-devel
 use crate::{
     core::{
         bindings::{KeyCode, MouseState},
