@@ -239,8 +239,18 @@ pub fn side_stack(
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
-    let split = ((monitor_region.w as f32) * ratio) as u32;
     let n = clients.len() as u32;
+
+    if n <= max_main || max_main == 0 {
+        return monitor_region
+            .as_rows(n)
+            .iter()
+            .zip(clients)
+            .map(|(r, c)| (c.id(), Some(*r)))
+            .collect();
+    }
+
+    let split = ((monitor_region.w as f32) * ratio) as u32;
     let (main, stack) = monitor_region.split_at_width(split).unwrap();
 
     main.as_rows(max_main)
@@ -251,10 +261,8 @@ pub fn side_stack(
         .collect()
 }
 
-/**
- * A simple layout that places the main region at the top of the screen and tiles
- * remaining windows in a single row underneath.
- */
+/// A simple layout that places the main region at the top of the screen and tiles
+/// remaining windows in a single row underneath.
 pub fn bottom_stack(
     clients: &[&Client],
     _: Option<WinId>,
@@ -262,8 +270,18 @@ pub fn bottom_stack(
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
-    let split = ((monitor_region.h as f32) * ratio) as u32;
     let n = clients.len() as u32;
+
+    if n <= max_main || max_main == 0 {
+        return monitor_region
+            .as_columns(n)
+            .iter()
+            .zip(clients)
+            .map(|(r, c)| (c.id(), Some(*r)))
+            .collect();
+    }
+
+    let split = ((monitor_region.h as f32) * ratio) as u32;
     let (main, stack) = monitor_region.split_at_height(split).unwrap();
 
     main.as_columns(max_main)
@@ -274,10 +292,8 @@ pub fn bottom_stack(
         .collect()
 }
 
-/**
- * A simple monolve layout that places uses the maximum available space for the focused client and
- * unmaps all other windows.
- */
+/// A simple monolve layout that places uses the maximum available space for the focused client and
+/// unmaps all other windows.
 pub fn monocle(
     clients: &[&Client],
     focused: Option<WinId>,

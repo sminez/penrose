@@ -278,6 +278,9 @@ impl Region {
     /// assert_eq!(regions[1], Region::new(0, 50, 100, 50));
     /// ```
     pub fn as_rows(&self, n_rows: u32) -> Vec<Region> {
+        if n_rows <= 1 {
+            return vec![*self];
+        }
         let h = self.h / n_rows as u32;
         (0..n_rows)
             .map(|n| Region::new(self.x, (self.y + n as u32 * h) as u32, self.w, h))
@@ -300,6 +303,9 @@ impl Region {
     /// assert_eq!(regions[1], Region::new(50, 0, 50, 100));
     /// ```
     pub fn as_columns(&self, n_columns: u32) -> Vec<Region> {
+        if n_columns <= 1 {
+            return vec![*self];
+        }
         let w = self.w / n_columns as u32;
         (0..n_columns)
             .map(|n| Region::new((self.x + n as u32 * w) as u32, self.y, w, self.h))
