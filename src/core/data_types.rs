@@ -131,6 +131,9 @@ impl Region {
     }
 
     /// Destructure this Region into its component values (x, y, w, h).
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
@@ -144,6 +147,9 @@ impl Region {
     }
 
     /// Create a new [Region] with width equal to `factor` x `self.w`
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
@@ -160,6 +166,9 @@ impl Region {
     }
 
     /// Create a new [Region] with height equal to `factor` x `self.h`
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
@@ -176,6 +185,9 @@ impl Region {
     }
 
     /// Check whether this Region contains `other` as a sub-Region
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
@@ -196,6 +208,9 @@ impl Region {
     }
 
     /// Check whether this Region contains `other` as a sub-Region
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::{Point, Region};
     ///
@@ -212,6 +227,9 @@ impl Region {
     ///
     /// # Errors
     /// Fails if this Region can not fit inside of `enclosing`
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
@@ -240,18 +258,65 @@ impl Region {
         })
     }
 
+    /// Split this `Region` into evenly sized rows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r = Region::new(0, 0, 100, 100);
+    ///
+    /// let regions = r.as_rows(2);
+    ///
+    /// assert_eq!(regions.len(), 2);
+    /// assert_eq!(regions[0], Region::new(0, 0, 100, 50));
+    /// assert_eq!(regions[1], Region::new(0, 50, 100, 50));
+    /// ```
+    pub fn as_rows(&self, n_rows: usize) -> Vec<Region> {
+        let h = self.h / n_rows as u32;
+        (0..n_rows)
+            .map(|n| Region::new(self.x, (self.y + n as u32 * h) as u32, self.w, h))
+            .collect()
+    }
+
+    /// Split this `Region` into evenly sized columns.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use penrose::core::data_types::Region;
+    ///
+    /// let r = Region::new(0, 0, 100, 100);
+    ///
+    /// let regions = r.as_columns(2);
+    ///
+    /// assert_eq!(regions.len(), 2);
+    /// assert_eq!(regions[0], Region::new(0, 0, 50, 100));
+    /// assert_eq!(regions[1], Region::new(50, 0, 50, 100));
+    /// ```
+    pub fn as_columns(&self, n_columns: usize) -> Vec<Region> {
+        let w = self.w / n_columns as u32;
+        (0..n_columns)
+            .map(|n| Region::new((self.x + n as u32 * w) as u32, self.y, w, self.h))
+            .collect()
+    }
+
     /// Divides this region into two columns where the first has the given width.
     ///
     /// # Errors
     /// Fails if the requested split point is not contained within `self`
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
     /// let r = Region::new(10, 10, 50, 60);
     /// let (r1, r2) = r.split_at_width(30).unwrap();
     ///
-    /// assert_eq!(r1, Region::new(10,10,30,60));
-    /// assert_eq!(r2, Region::new(40,10,20,60));
+    /// assert_eq!(r1, Region::new(10, 10, 30, 60));
+    /// assert_eq!(r2, Region::new(40, 10, 20, 60));
     ///
     /// assert!(r.split_at_width(100).is_err());
     /// ```
@@ -280,14 +345,17 @@ impl Region {
     ///
     /// # Errors
     /// Fails if the requested split point is not contained within `self`
+    ///
+    /// # Examples
+    ///
     /// ```
     /// use penrose::core::data_types::Region;
     ///
     /// let r = Region::new(10, 10, 50, 60);
     /// let (r1, r2) = r.split_at_height(40).unwrap();
     ///
-    /// assert_eq!(r1, Region::new(10,10,50,40));
-    /// assert_eq!(r2, Region::new(10,50,50,20));
+    /// assert_eq!(r1, Region::new(10, 10, 50, 40));
+    /// assert_eq!(r2, Region::new(10, 50, 50, 20));
     ///
     /// assert!(r.split_at_height(100).is_err());
     /// ```
