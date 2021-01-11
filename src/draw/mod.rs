@@ -1,4 +1,9 @@
-//! Utilities for rendering custom windows
+//! Traits and utilities for rendering custom windows
+//!
+//! The traits and related structs in this module provide a way for rendering and managing simple
+//! graphical applications within Penrose itself. While definitely not what you would want to use
+//! for writing a full GUI application, the [Draw] and [DrawContext] traits are enough for setting
+//! up simple text based UI elements such as status bars and menus.
 pub mod bar;
 pub mod widget;
 
@@ -58,7 +63,7 @@ pub type Result<T> = std::result::Result<T, DrawError>;
 #[derive(Clone, Debug, PartialEq)]
 /// A set of styling options for a text string
 pub struct TextStyle {
-    /// Pango font name to use for rendering
+    /// Font name to use for rendering
     pub font: String,
     /// Point size to render the font at
     pub point_size: i32,
@@ -66,7 +71,7 @@ pub struct TextStyle {
     pub fg: Color,
     /// Optional background color in 0xRRGGBB format (default to current background if None)
     pub bg: Option<Color>,
-    /// Pixel padding around this string
+    /// Pixel padding around this piece of text
     pub padding: (f64, f64),
 }
 
@@ -161,6 +166,12 @@ impl TryFrom<&str> for Color {
 }
 
 /// A simple drawing abstraction
+///
+/// `Draw` is not intended for use in writing full GUI interfaces, rather it is a simple
+/// abstraction layer to allow for the creation of minimal UI elements such as status bars, menus
+/// and dialogs. Each `Draw` should also provide an acompanying `DrawContext` that impl that is
+/// used by consumers (such as the status bar) for actually drawing to the screen, which the parent
+/// `Draw` is responsible for resource management and mapping / unmapping the created windows.
 pub trait Draw {
     /// The type of drawing context used for drawing
     type Ctx: DrawContext;

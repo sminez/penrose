@@ -1,4 +1,9 @@
-//! Drawable widgets
+//! Self rendering building blocks
+//!
+//! The widgets defined in this module are backed by the [Draw][1] trait and are composable to
+//! build up more complex layouts and UI elements.
+//!
+//! [1]: crate::draw::Draw
 use crate::{
     core::{bindings::KeyPress, hooks::Hook, xconnection::XConn},
     draw::{DrawContext, Result},

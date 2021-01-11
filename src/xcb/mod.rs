@@ -1,4 +1,24 @@
 //! Helpers and utilities for using XCB as a back end for penrose
+//!
+//! This is the reference implementation of the core Penrose traits that are required to back the
+//! [WindowManager][1] when talking to the X server. The code in this module is build on top of the
+//! [xcb][2], [pango][3] and [cairo][4] C libraries and strives to be as simple as possible (as
+//! opposed to optimising for performance).
+//!
+//! # Available features
+//! - `xcb_draw`: adds `pango` and `cairo` as build dependencies and provides implementations of
+//!   the [Draw][6] and [DrawContext][7] traits.
+//! - `xcb_keysyms`: if enabled, this will include the [XKeySym][5] enum which is based on the
+//!   contents of `X11/keysymdef.h` and allows for parsing X keycode events as their corresponding
+//!   utf-8 representation or action.
+//!
+//! [1]: crate::core::manager::WindowManager
+//! [2]: https://xcb.freedesktop.org/
+//! [3]: https://www.pango.org/
+//! [4]: https://www.cairographics.org/
+//! [5]: crate::xcb::keysyms::XKeySym
+//! [6]: crate::draw::Draw
+//! [7]: crate::draw::DrawContext
 use crate::{
     core::{
         bindings::{KeyCode, MouseState},

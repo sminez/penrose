@@ -1,4 +1,12 @@
-//! Status bars
+//! Simple text based status bars
+//!
+//! This module provides a framework for writing simple, text based status bars such as those seen
+//! in `dwm` and `xmonad`. A [StatusBar] itself acts as a multiplexer for the contained widgets and
+//! each of their [Hook] triggers, deferring to each individual [HookableWidget] for how it should
+//! be rendered to the screen.
+//!
+//! A minimal example bar configuration is provided in the form of [dwm_bar] which aims to emulate
+//! the behaviour and appearance of the built in status bar from `dwm`.
 use crate::{
     core::{
         client::Client,
