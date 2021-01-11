@@ -118,10 +118,14 @@ pub enum Border {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Region {
-    x: u32,
-    y: u32,
-    w: u32,
-    h: u32,
+    /// The x-coordinate of the top left corner of this region
+    pub x: u32,
+    /// The y-coordinate of the top left corner of this region
+    pub y: u32,
+    /// The width of this region
+    pub w: u32,
+    /// The height of this region
+    pub h: u32,
 }
 
 impl Region {
@@ -273,7 +277,7 @@ impl Region {
     /// assert_eq!(regions[0], Region::new(0, 0, 100, 50));
     /// assert_eq!(regions[1], Region::new(0, 50, 100, 50));
     /// ```
-    pub fn as_rows(&self, n_rows: usize) -> Vec<Region> {
+    pub fn as_rows(&self, n_rows: u32) -> Vec<Region> {
         let h = self.h / n_rows as u32;
         (0..n_rows)
             .map(|n| Region::new(self.x, (self.y + n as u32 * h) as u32, self.w, h))
@@ -295,7 +299,7 @@ impl Region {
     /// assert_eq!(regions[0], Region::new(0, 0, 50, 100));
     /// assert_eq!(regions[1], Region::new(50, 0, 50, 100));
     /// ```
-    pub fn as_columns(&self, n_columns: usize) -> Vec<Region> {
+    pub fn as_columns(&self, n_columns: u32) -> Vec<Region> {
         let w = self.w / n_columns as u32;
         (0..n_columns)
             .map(|n| Region::new((self.x + n as u32 * w) as u32, self.y, w, self.h))

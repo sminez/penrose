@@ -230,10 +230,8 @@ pub(crate) fn mock_layout(
         .collect()
 }
 
-/**
- * A simple layout that places the main region on the left and tiles remaining
- * windows in a single column to the right.
- */
+/// A simple layout that places the main region on the left and tiles remaining
+/// windows in a single column to the right.
 pub fn side_stack(
     clients: &[&Client],
     _: Option<WinId>,
@@ -241,30 +239,15 @@ pub fn side_stack(
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
-    let (mx, my, mw, mh) = monitor_region.values();
-    let (n_main, n_stack) = client_breakdown(&clients, max_main);
-    let h_stack = if n_stack > 0 { mh / n_stack } else { 0 };
-    let h_main = if n_main > 0 { mh / n_main } else { 0 };
-    let split = if max_main > 0 {
-        (mw as f32 * ratio) as u32
-    } else {
-        0
-    };
+    let split = ((monitor_region.w as f32) * ratio) as u32;
+    let n = clients.len() as u32;
+    let (main, stack) = monitor_region.split_at_width(split).unwrap();
 
-    clients
-        .iter()
-        .enumerate()
-        .map(|(n, c)| {
-            let n = n as u32;
-            if n < max_main {
-                let w = if n_stack == 0 { mw } else { split };
-                (c.id(), Some(Region::new(mx, my + n * h_main, w, h_main)))
-            } else {
-                let sn = n - max_main; // nth stacked client
-                let region = Region::new(mx + split, my + sn * h_stack, mw - split, h_stack);
-                (c.id(), Some(region))
-            }
-        })
+    main.as_rows(max_main)
+        .into_iter()
+        .chain(stack.as_rows(n.saturating_sub(max_main)))
+        .zip(clients)
+        .map(|(r, c)| (c.id(), Some(r)))
         .collect()
 }
 
@@ -279,31 +262,15 @@ pub fn bottom_stack(
     max_main: u32,
     ratio: f32,
 ) -> Vec<ResizeAction> {
-    let (mx, my, mw, mh) = monitor_region.values();
-    let (n_main, n_stack) = client_breakdown(&clients, max_main);
-    let split = if max_main > 0 {
-        (mh as f32 * ratio) as u32
-    } else {
-        0
-    };
-    let h_main_full = if n_stack > 0 { split } else { mh };
-    let h_main = if n_main > 0 { h_main_full / n_main } else { 0 };
-    let w_stack = if n_stack > 0 { mw / n_stack } else { 0 };
+    let split = ((monitor_region.h as f32) * ratio) as u32;
+    let n = clients.len() as u32;
+    let (main, stack) = monitor_region.split_at_height(split).unwrap();
 
-    clients
-        .iter()
-        .enumerate()
-        .map(|(n, c)| {
-            let n = n as u32;
-            if n < max_main {
-                let region = Region::new(mx, my + n * h_main / n_main, mw, h_main);
-                (c.id(), Some(region))
-            } else {
-                let sn = n - max_main; // nth stacked client
-                let region = Region::new(mx + sn * w_stack, my + split, w_stack, mh - split);
-                (c.id(), Some(region))
-            }
-        })
+    main.as_columns(max_main)
+        .into_iter()
+        .chain(stack.as_columns(n.saturating_sub(max_main)))
+        .zip(clients)
+        .map(|(r, c)| (c.id(), Some(r)))
         .collect()
 }
 
