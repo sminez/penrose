@@ -15,15 +15,13 @@ use crate::{
 
 use std::{cell::RefCell, fmt, rc::Rc};
 
-/**
- * Spawn and manage a single [Client] which can then be shown above the current layout.
- *
- * The [get_hook][Scratchpad::get_hook] method must be called to pass the associated [Hook] to your
- * [WindowManager] before calling init in order to register the necessary hooks to spawn, capture
- * and manage the embedded client. The client is spawned when 'toggle' is called and there is no
- * existing client, after that 'toggle' will show/hide the client on the active screen. If the
- * client is removed, calling 'toggle' again will spawn a new client in the same way.
- */
+/// Spawn and manage a single [Client] which can then be shown above the current layout.
+///
+/// The [get_hook][Scratchpad::get_hook] method must be called to pass the associated [Hook] to your
+/// [WindowManager] before calling init in order to register the necessary hooks to spawn, capture
+/// and manage the embedded client. The client is spawned when 'toggle' is called and there is no
+/// existing client, after that 'toggle' will show/hide the client on the active screen. If the
+/// client is removed, calling 'toggle' again will spawn a new client in the same way.
 #[derive(Clone, PartialEq)]
 pub struct Scratchpad {
     client: Rc<RefCell<Option<WinId>>>,
@@ -109,13 +107,30 @@ impl Scratchpad {
             wm.hide_client(id)?;
         } else {
             self.visible.replace(true);
-            wm.layout_screen(wm.active_screen_index())?; // caught by layout_change
-            if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
-                error!("Scratchpad was unable to focus its client: {:?}", not_us);
+            let screen_index = wm.active_screen_index();
+            wm.layout_screen(screen_index)?; // caught by layout_change
+
+            // Warp the cursor to us if its currently not in bounds
+            let r = wm.screen_size(screen_index).expect("no screen");
+            let client_region = self.region_for_screen(r);
+            if !client_region.contains_point(&wm.conn().cursor_position()) {
+                if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
+                    error!("Scratchpad was unable to focus its client: {:?}", not_us);
+                }
             }
         }
 
         Ok(())
+    }
+
+    fn region_for_screen(&self, r: Region) -> Region {
+        let (sx, sy, sw, sh) = r.values();
+        let w = (sw as f32 * self.w) as u32;
+        let h = (sh as f32 * self.h) as u32;
+        let x = sx + (sw - w) / 2;
+        let y = sy + (sh - h) / 2;
+
+        Region::new(x, y, w, h)
     }
 }
 
@@ -154,12 +169,8 @@ impl<X: XConn> Hook<X> for Scratchpad {
         if let Some(id) = *self.client.borrow() {
             if *self.visible.borrow() {
                 if let Some(region) = wm.screen_size(screen_index) {
-                    let (sx, sy, sw, sh) = region.values();
-                    let w = (sw as f32 * self.w) as u32;
-                    let h = (sh as f32 * self.h) as u32;
-                    let x = sx + (sw - w) / 2;
-                    let y = sy + (sh - h) / 2;
-                    wm.position_client(id, Region::new(x, y, w, h), true)?; // stack above
+                    // stack above other clients
+                    wm.position_client(id, self.region_for_screen(region), true)?;
                 }
                 wm.show_client(id)?;
             }
