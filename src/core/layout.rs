@@ -60,12 +60,10 @@ use crate::core::{
 
 use std::{cmp, fmt};
 
-/**
- * When and how a Layout should be applied.
- *
- * The default layout config that only triggers when clients are added / removed and follows user
- * defined config options.
- */
+/// When and how a Layout should be applied.
+///
+/// The default layout config that only triggers when clients are added / removed and follows user
+/// defined config options.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct LayoutConf {
@@ -90,29 +88,29 @@ impl Default for LayoutConf {
     }
 }
 
-/**
- * A function that can be used to position Clients on a Workspace. Will be called with the current
- * client list, the active client ID (if there is one), the size of the screen that the workspace
- * is shown on and the current values of n_main and ratio for this layout.
- */
+/// A function that can be used to position Clients on a Workspace.
+///
+/// Will be called with the current client list, the active client ID (if there is one), the size
+/// of the screen that the workspace is shown on and the current values of n_main and ratio for
+/// this layout.
 pub type LayoutFunc = fn(&[&Client], Option<WinId>, &Region, u32, f32) -> Vec<ResizeAction>;
 
-/**
- * Responsible for arranging Clients within a Workspace.
- *
- * A Layout is primarily a function that will be passed an array of Clients to apply resize actions
- * to. Only clients that should be tiled for the current monitor will be passed so no checks are
- * required to see if each client should be handled. The region passed to the layout function
- * represents the current screen dimensions that can be utilised and gaps/borders will be added to
- * each client by the WindowManager itself so there is no need to handle that in the layouts
- * themselves.
- * Layouts are expected to have a 'main area' that holds the clients with primary focus and any
- * number of secondary areas for the remaining clients to be tiled.
- * The user can increase/decrease the size of the main area by setting 'ratio' via key bindings
- * which should determine the relative size of the main area compared to other cliens.  Layouts
- * maintain their own state for number of clients in the main area and ratio which will be passed
- * through to the layout function when it is called.
- */
+/// Responsible for arranging Clients within a Workspace.
+///
+/// A Layout is primarily a function that will be passed an array of Clients to apply resize actions
+/// to. Only clients that should be tiled for the current monitor will be passed so no checks are
+/// required to see if each client should be handled. The region passed to the layout function
+/// represents the current screen dimensions that can be utilised and gaps/borders will be added to
+/// each client by the WindowManager itself so there is no need to handle that in the layouts
+/// themselves.
+///
+/// Layouts are expected to have a "main area" that holds the clients with primary focus and any
+/// number of secondary areas for the remaining clients to be tiled.
+///
+/// The user can increase/decrease the size of the main area by setting `ratio` via key bindings
+/// which should determine the relative size of the main area compared to other cliens.  Layouts
+/// maintain their own state for number of clients in the main area and ratio which will be passed
+/// through to the layout function when it is called.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone)]
 pub struct Layout {
@@ -153,11 +151,14 @@ pub fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> 
 
 impl Layout {
     /// Create a new Layout for a specific monitor
-    pub fn new<S>(symbol: S, conf: LayoutConf, f: LayoutFunc, max_main: u32, ratio: f32) -> Layout
-    where
-        S: Into<String>,
-    {
-        Layout {
+    pub fn new(
+        symbol: impl Into<String>,
+        conf: LayoutConf,
+        f: LayoutFunc,
+        max_main: u32,
+        ratio: f32,
+    ) -> Self {
+        Self {
             symbol: symbol.into(),
             conf,
             max_main,
@@ -167,11 +168,8 @@ impl Layout {
     }
 
     /// A default floating layout that will not attempt to manage windows
-    pub fn floating<S>(symbol: S) -> Layout
-    where
-        S: Into<String>,
-    {
-        Layout {
+    pub fn floating(symbol: impl Into<String>) -> Self {
+        Self {
             symbol: symbol.into(),
             conf: LayoutConf {
                 floating: true,
@@ -192,7 +190,7 @@ impl Layout {
         self.f = Some(f);
     }
 
-    /// Apply the embedded layout function using the current n_main and ratio
+    /// Apply the layout function held by this `Layout` using the current max_main and ratio
     pub fn arrange(
         &self,
         clients: &[&Client],
