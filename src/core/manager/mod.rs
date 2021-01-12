@@ -1029,7 +1029,27 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /// Cycle between [layouts][crate::core::layout::Layout] for the active [workspace][Workspace]
+    /// Cycle between [layouts][1] for the active [Workspace]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().layout_symbol(), "first");
+    ///
+    /// manager.cycle_layout(Forward)?;
+    /// assert_eq!(manager.active_workspace().layout_symbol(), "second");
+    ///
+    /// // Wrap at the end of the layout list
+    /// manager.cycle_layout(Forward)?;
+    /// assert_eq!(manager.active_workspace().layout_symbol(), "first");
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    ///
+    /// [1]: crate::core::layout::Layout
     pub fn cycle_layout(&mut self, direction: Direction) -> Result<()> {
         let wix = self.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
@@ -1041,7 +1061,12 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /// Increase or decrease the number of clients in the main area by 1
+    /// Increase or decrease the number of clients in the main area by 1.
+    ///
+    /// The change is applied to the active [layout][1] on the [Workspace] that currently holds
+    /// focus.
+    ///
+    /// [1]: crate::core::layout::Layout
     pub fn update_max_main(&mut self, change: Change) -> Result<()> {
         let wix = self.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
@@ -1053,7 +1078,12 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Increase or decrease the current [layout][crate::core::layout::Layout] main_ratio by
-    /// main_ratio_step
+    /// `main_ratio_step`
+    ///
+    /// The change is applied to the active [layout][1] on the [Workspace] that currently holds
+    /// focus.
+    ///
+    /// [1]: crate::core::layout::Layout
     pub fn update_main_ratio(&mut self, change: Change) -> Result<()> {
         let step = self.config.main_ratio_step;
         let wix = self.active_ws_index();
@@ -1074,8 +1104,10 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /// The layout symbol for the [layout][crate::core::layout::Layout] currently being used on the
+    /// The layout symbol for the [layout][1] currently being used on the
     /// active workspace
+    ///
+    /// [1]: crate::core::layout::Layout
     pub fn current_layout_symbol(&self) -> &str {
         match self.workspaces.get(self.active_ws_index()) {
             Some(ws) => ws.layout_symbol(),
@@ -1098,10 +1130,7 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Set the displayed workspace for the focused screen to be `index` in the list of
-    /// workspaces passed at `init`. This will panic if the index passed is out of
-    /// bounds which is only possible if you manually bind an action to this with an
-    /// invalid index. You should almost always be using the `gen_keybindings!` macro
-    /// to set up your keybindings so this is not normally an issue.
+    /// workspaces passed at `init`.
     pub fn focus_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<()> {
         let active_ws = Selector::Index(self.screens.focused_unchecked().wix);
         if self.workspaces.equivalent_selectors(selector, &active_ws) {
@@ -1296,9 +1325,9 @@ impl<X: XConn> WindowManager<X> {
         &mut self,
         selector: &Selector<'_, Workspace>,
     ) -> Result<Option<Workspace>> {
-        if self.workspaces.len() == 1 {
+        if self.workspaces.len() == self.screens.len() {
             return Err(PenroseError::Raw(
-                "not allowed to remove the last workspace".into(),
+                "must have at least one workspace per screen".into(),
             ));
         }
 
