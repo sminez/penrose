@@ -390,7 +390,7 @@ mod tests {
                     let id = id as u32;
                     let mut client = Client::new(id, "name".into(), "class".into(), 0, false);
                     client.mapped = true;
-                    ws.add_client(id, &InsertPoint::Last);
+                    ws.add_client(id, &InsertPoint::Last).unwrap();
                     (id, client)
                 })
                 .collect();

@@ -7,15 +7,18 @@
 //!
 //! [1]: crate::core::manager::WindowManager
 //! [2]: crate::core::layout::Layout
-use crate::core::{
-    client::Client,
-    data_types::{Change, Region, ResizeAction, WinId},
-    layout::{Layout, LayoutConf},
-    ring::{Direction, InsertPoint, Ring, Selector},
+use crate::{
+    core::{
+        client::Client,
+        data_types::{Change, Region, ResizeAction, WinId},
+        layout::{Layout, LayoutConf},
+        ring::{Direction, InsertPoint, Ring, Selector},
+    },
+    PenroseError, Result,
 };
 
 #[cfg(feature = "serde")]
-use crate::{core::layout::LayoutFunc, PenroseError, Result};
+use crate::core::layout::LayoutFunc;
 
 use std::collections::HashMap;
 
@@ -24,16 +27,14 @@ pub(crate) struct ArrangeActions {
     pub(crate) floating: Vec<WinId>,
 }
 
-/**
- * A Workspace represents a named set of clients that are tiled according
- * to a specific layout. Layout properties are tracked per workspace and
- * clients are referenced by ID. Workspaces are independant of monitors and
- * can be moved between monitors freely, bringing their clients with them.
- *
- * The parent WindowManager struct tracks which client is focused from the
- * point of view of the X server by checking focus at the Workspace level
- * whenever a new Workspace becomes active.
- */
+/// A Workspace represents a named set of clients that are tiled according
+/// to a specific layout. Layout properties are tracked per workspace and
+/// clients are referenced by ID. Workspaces are independant of monitors and
+/// can be moved between monitors freely, bringing their clients with them.
+///
+/// The parent WindowManager struct tracks which client is focused from the
+/// point of view of the X server by checking focus at the Workspace level
+/// whenever a new Workspace becomes active.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Workspace {
@@ -43,7 +44,9 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    /// Construct a new Workspace with the given name and choice of Layouts
+    /// Construct a new Workspace with the given name and choice of [layouts][1]
+    ///
+    /// [1]: crate::core::layout::Layout
     pub fn new(name: impl Into<String>, layouts: Vec<Layout>) -> Self {
         if layouts.is_empty() {
             panic!("{}: require at least one layout function", name.into());
@@ -97,55 +100,163 @@ impl Workspace {
     }
 
     /// Iterate over the clients on this workspace in position order
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// let ids: Vec<WinId> = workspace.iter().map(|id| *id).collect();
+    ///
+    /// assert_eq!(ids, vec![0, 1, 2, 3, 4]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 5)).unwrap();
+    /// ```
     pub fn iter(&self) -> std::collections::vec_deque::Iter<'_, WinId> {
         self.clients.iter()
     }
 
-    /// Iterate over the clients on this workspace in position order
-    pub fn iter_mut(&mut self) -> std::collections::vec_deque::IterMut<'_, WinId> {
-        self.clients.iter_mut()
-    }
-
     /// The ordered list of [Client] IDs currently contained in this workspace
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 2, 3, 4]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 5)).unwrap();
+    /// ```
     pub fn client_ids(&self) -> Vec<WinId> {
         self.clients.as_vec()
     }
 
     /// A reference to the currently focused client if there is one
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    ///
+    /// workspace.focus_client(2);
+    /// assert_eq!(workspace.focused_client(), Some(2));
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 5)).unwrap();
+    /// ```
     pub fn focused_client(&self) -> Option<WinId> {
         self.clients.focused().copied()
     }
 
     /// Add a new client to this workspace at the top of the stack and focus it
-    pub fn add_client(&mut self, id: WinId, ip: &InsertPoint) {
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0]);
+    ///
+    /// workspace.add_client(1, &InsertPoint::Last)?;
+    /// assert_eq!(workspace.client_ids(), vec![0, 1]);
+    ///
+    /// workspace.add_client(2, &InsertPoint::First)?;
+    /// assert_eq!(workspace.client_ids(), vec![2, 0, 1]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 1)).unwrap();
+    /// ```
+    pub fn add_client(&mut self, id: WinId, ip: &InsertPoint) -> Result<()> {
+        let existing = self.clients.element(&Selector::Condition(&|c| *c == id));
+        if existing.is_some() {
+            return Err(PenroseError::Raw(format!(
+                "{} is already in this workspace",
+                id
+            )));
+        }
         self.clients.insert_at(ip, id);
+
+        Ok(())
     }
 
     /// Focus the client with the given id, returns an option of the previously focused
     /// client if there was one
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    ///
+    /// assert_eq!(workspace.focus_client(3), Some(0));
+    /// assert_eq!(workspace.focused_client(), Some(3));
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 5)).unwrap();
+    /// ```
     pub fn focus_client(&mut self, id: WinId) -> Option<WinId> {
         let prev = match self.clients.focused() {
-            Some(c) => *c,
-            None => return None,
+            Some(c) => Some(*c),
+            None => None,
         };
         self.clients.focus(&Selector::Condition(&|c| *c == id));
-        Some(prev)
+
+        prev
     }
 
     /// Remove a target client, retaining focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 2, 3, 4]);
+    ///
+    /// assert_eq!(workspace.remove_client(2), Some(2));
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 3, 4]);
+    ///
+    /// assert_eq!(workspace.remove_client(42), None);
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 3, 4]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 5)).unwrap();
+    /// ```
     pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
         self.clients.remove(&Selector::Condition(&|c| *c == id))
     }
 
     /// Remove the currently focused client, keeping focus at the same position in the stack.
     /// Returns the removed client if there was one to remove.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0, 1]);
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    ///
+    /// assert_eq!(workspace.remove_focused_client(), Some(0));
+    /// assert_eq!(workspace.remove_focused_client(), Some(1));
+    /// assert_eq!(workspace.remove_focused_client(), None);
+    /// assert_eq!(workspace.client_ids(), vec![]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 2)).unwrap();
+    /// ```
     pub fn remove_focused_client(&mut self) -> Option<WinId> {
         self.clients.remove(&Selector::Focused)
     }
 
-    /// Run the current layout function, generating a list of resize actions to be
-    /// applied byt the window manager.
+    // Run the current layout function, generating a list of resize actions to be
+    // applied byt the window manager.
     pub(crate) fn arrange(
         &self,
         screen_region: Region,
@@ -180,6 +291,23 @@ impl Workspace {
 
     /// Set the active layout by symbol name if it is available. Returns a reference to active
     /// layout if it was able to be set.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.layout_symbol(), "first");
+    ///
+    /// assert!(workspace.try_set_layout("second").is_some());
+    /// assert_eq!(workspace.layout_symbol(), "second");
+    ///
+    /// assert!(workspace.try_set_layout("invalid").is_none());
+    /// assert_eq!(workspace.layout_symbol(), "second");
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 2)).unwrap();
+    /// ```
     pub fn try_set_layout(&mut self, symbol: &str) -> Option<&Layout> {
         self.layouts
             .focus(&Selector::Condition(&|l| l.symbol == symbol))
@@ -187,25 +315,74 @@ impl Workspace {
     }
 
     /// Cycle through the available layouts on this workspace
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.layout_symbol(), "first");
+    /// assert_eq!(workspace.cycle_layout(Forward), "second");
+    /// assert_eq!(workspace.cycle_layout(Forward), "first");
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 2)).unwrap();
+    /// ```
     pub fn cycle_layout(&mut self, direction: Direction) -> &str {
         self.layouts.cycle_focus(direction);
         self.layout_symbol()
     }
 
     /// The symbol of the currently used layout (passed on creation)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.layout_symbol(), "first");
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 2)).unwrap();
+    /// ```
     pub fn layout_symbol(&self) -> &str {
         &self.layouts.focused_unchecked().symbol
     }
 
-    /**
-     * The LayoutConf of the currently active Layout. Used by the WindowManager to
-     * determine when and how the layout function should be applied.
-     */
+    /// The LayoutConf of the currently active Layout. Used by the WindowManager to
+    /// determine when and how the layout function should be applied.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.layout_conf(), LayoutConf::default());
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 2)).unwrap();
+    /// ```
     pub fn layout_conf(&self) -> LayoutConf {
         self.layouts.focused_unchecked().conf
     }
 
-    /// Cycle focus through the clients on this workspace
+    /// Cycle focus through the clients on this workspace, returning the previous and new focused
+    /// client ids.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 2]);
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    /// assert_eq!(workspace.cycle_client(Forward), Some((0, 1)));
+    /// assert_eq!(workspace.cycle_client(Forward), Some((1, 2)));
+    /// assert_eq!(workspace.cycle_client(Forward), Some((2, 0)));
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 3)).unwrap();
+    /// ```
     pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
         if self.clients.len() < 2 {
             return None; // need at least two clients to cycle
@@ -224,9 +401,23 @@ impl Workspace {
         }
     }
 
-    /**
-     * Drag the focused client through the stack, retaining focus
-     */
+    /// Drag the focused client through the stack, retaining focus
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 2]);
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    ///
+    /// assert_eq!(workspace.drag_client(Forward), Some(0));
+    /// assert_eq!(workspace.client_ids(), vec![1, 0, 2]);
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 3)).unwrap();
+    /// ```
     pub fn drag_client(&mut self, direction: Direction) -> Option<WinId> {
         if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
             return None;
@@ -235,6 +426,26 @@ impl Workspace {
     }
 
     /// Rotate the client stack in the given direction
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// assert_eq!(workspace.client_ids(), vec![0, 1, 2, 3]);
+    /// assert_eq!(workspace.focused_client(), Some(0));
+    ///
+    /// workspace.rotate_clients(Forward);
+    /// assert_eq!(workspace.client_ids(), vec![3, 0, 1, 2]);
+    /// assert_eq!(workspace.focused_client(), Some(3));
+    ///
+    /// workspace.rotate_clients(Forward);
+    /// assert_eq!(workspace.client_ids(), vec![2, 3, 0, 1]);
+    /// assert_eq!(workspace.focused_client(), Some(2));
+    /// # Ok(())
+    /// # }
+    /// # example(example_workspace("example", 4)).unwrap();
+    /// ```
     pub fn rotate_clients(&mut self, direction: Direction) {
         self.clients.rotate(direction)
     }
@@ -266,7 +477,7 @@ mod tests {
     fn add_n_clients(ws: &mut Workspace, n: usize) {
         for i in 0..n {
             let k = ((i + 1) * 10) as u32; // ensure win_id != index
-            ws.add_client(k, &InsertPoint::First);
+            ws.add_client(k, &InsertPoint::First).unwrap();
         }
     }
 

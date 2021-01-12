@@ -12,7 +12,7 @@ pub use crate::{
         config::Config,
         data_types::{Region, ResizeAction},
         layout::{Layout, LayoutConf},
-        ring::Selector,
+        ring::{InsertPoint, Selector},
         screen::Screen,
         workspace::Workspace,
         xconnection::{StubXConn, XConn, XEvent},
@@ -51,6 +51,18 @@ pub use std::{cell::Cell, collections::HashMap, fmt};
 /// # example(manager).unwrap();
 /// ```
 
+/// NOTE: Boiler plate example set up for Workspace doc-tests
+/// # Example
+///
+/// ```
+/// # use penrose::__example_helpers::*;
+/// # fn example(mut workspace: Workspace) -> Result<()> {
+/// // EXAMPLE HERE
+/// # Ok(())
+/// # }
+/// # example(example_workspace("example", 5)).unwrap();
+/// ```
+
 pub type ExampleWM = WindowManager<ExampleXConn>;
 pub type ExampleKeyBindings = KeyBindings<ExampleXConn>;
 pub type ExampleKeyHandler = KeyEventHandler<ExampleXConn>;
@@ -75,6 +87,13 @@ pub fn example_windowmanager(n_screens: u32, events: Vec<XEvent>) -> ExampleWM {
     wm.init().unwrap();
 
     wm
+}
+
+pub fn example_workspace(name: impl Into<String>, n_clients: u32) -> Workspace {
+    let mut ws = Workspace::new(name, example_layouts());
+    (0..n_clients).for_each(|n| ws.add_client(n, &InsertPoint::Last).unwrap());
+
+    ws
 }
 
 pub fn example_screens(n: u32) -> Vec<Screen> {

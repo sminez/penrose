@@ -544,7 +544,7 @@ impl<X: XConn> WindowManager<X> {
         let wix = client.workspace();
 
         if client.wm_managed {
-            self.add_client_to_workspace(wix, id);
+            self.add_client_to_workspace(wix, id)?;
         }
 
         if client.floating {
@@ -689,13 +689,15 @@ impl<X: XConn> WindowManager<X> {
         self.screens.focused()
     }
 
-    fn add_client_to_workspace(&mut self, wix: usize, id: WinId) {
+    fn add_client_to_workspace(&mut self, wix: usize, id: WinId) -> Result<()> {
         let cip = self.client_insert_point;
         if let Some(ws) = self.workspaces.get_mut(wix) {
-            ws.add_client(id, &cip);
+            ws.add_client(id, &cip)?;
             self.conn.set_client_workspace(id, wix);
             run_hooks!(client_added_to_workspace, self, id, wix);
         };
+
+        Ok(())
     }
 
     /*
@@ -1213,7 +1215,7 @@ impl<X: XConn> WindowManager<X> {
                 .and_then(|ws| ws.remove_focused_client());
 
             if let Some(id) = res {
-                self.add_client_to_workspace(index, id);
+                self.add_client_to_workspace(index, id)?;
                 if let Some(c) = self.client_map.get_mut(&id) {
                     c.set_workspace(index)
                 };
