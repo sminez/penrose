@@ -149,6 +149,9 @@ pub mod draw;
 #[cfg(feature = "xcb")]
 pub mod xcb;
 
+#[doc(hidden)]
+pub mod __example_helpers;
+
 // top level re-exports
 #[doc(inline)]
 pub use crate::core::{

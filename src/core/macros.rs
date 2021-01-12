@@ -31,7 +31,7 @@ macro_rules! run_internal {
 /// make creating a hash-map a little less verbose
 #[macro_export]
 macro_rules! map {
-    {} => { ::std::collections::HashMap::new(); };
+    {} => { ::std::collections::HashMap::new() };
 
     { $($key:expr => $value:expr),+, } => {
         {

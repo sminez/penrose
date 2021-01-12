@@ -131,7 +131,7 @@ pub(super) fn toggle_fullscreen<X: XConn>(
     let client_currently_fullscreen = client_map.get(&id).map(|c| c.fullscreen).unwrap();
     conn.toggle_client_fullscreen(id, client_currently_fullscreen);
 
-    workspace.clients().iter_mut().for_each(|&mut i| {
+    workspace.client_ids().iter_mut().for_each(|&mut i| {
         if client_currently_fullscreen {
             if i == id {
                 client_map.entry(id).and_modify(|c| c.fullscreen = false);

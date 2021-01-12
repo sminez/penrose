@@ -47,19 +47,24 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
     Cell::new(Vec::new())
 }
 
-/**
- * WindowManager is the primary struct / owner of the event loop for penrose.
- *
- * It handles most (if not all) of the communication with the underlying [XConn], responding to
- * [XEvent][crate::core::xconnection::XEvent]s emitted by it. User key / mouse bindings are parsed
- * and bound on the call to `grab_keys_and_run` and then triggered when corresponding `XEvent`
- * instances come through in the main event loop.
- *
- * # A note on examples
- * The following examples are for intended for reference purposes only and are not all run as
- * doc-tests due to the requirement for a connection to the X server.  For further details and
- * example use, please see the `examples` directory in the penrose git repo.
- */
+/// WindowManager is the primary struct / owner of the event loop for penrose.
+///
+/// It handles most (if not all) of the communication with the underlying [XConn], responding to
+/// [XEvent][crate::core::xconnection::XEvent]s emitted by it. User key / mouse bindings are parsed
+/// and bound on the call to `grab_keys_and_run` and then triggered when corresponding `XEvent`
+/// instances come through in the main event loop.
+///
+/// # A note on examples
+///
+/// The examples provided for each of the `WindowManager` methods are written using an example
+/// implementation of [XConn] that mocks out calls to the X server. In each case, it is assumed
+/// that you have an initialised `WindowManager` struct as demonstrated in the full examples for
+/// `new` and `init`.
+///
+/// For full examples of how to configure the `WindowManager`, please see the [examples][1]
+/// directory in the Penrose repo.
+///
+/// [1]: https://github.com/sminez/penrose/tree/develop/examples
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager<X: XConn> {
     conn: X,
@@ -97,33 +102,31 @@ impl<X: XConn> fmt::Debug for WindowManager<X> {
 }
 
 impl<X: XConn> WindowManager<X> {
-    /**
-     * Construct a new window manager instance using a chosen [XConn] backed to communicate
-     * with the X server.
-     *
-     * # Example
-     * ```no_run
-     * use penrose::{
-     *     core::{Config, WindowManager},
-     *     xcb::XcbConnection,
-     *     logging_error_handler
-     * };
-     *
-     * let mut wm = WindowManager::new(
-     *     Config::default(),
-     *     XcbConnection::new().unwrap(),
-     *     vec![],
-     *     logging_error_handler(),
-     * );
-     *
-     * // additional set-up logic here
-     *
-     * if let Err(e) = wm.init() {
-     *     panic!("failed to initialise WindowManager: {}", e);
-     * }
-     * wm.log("ready to call grab_keys_and_run!").unwrap();
-     * ```
-     */
+    /// Construct a new window manager instance using a chosen [XConn] backed to communicate
+    /// with the X server.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use penrose::{
+    ///     core::{Config, WindowManager},
+    ///     xcb::XcbConnection,
+    ///     logging_error_handler
+    /// };
+    ///
+    /// let mut wm = WindowManager::new(
+    ///     Config::default(),
+    ///     XcbConnection::new().unwrap(),
+    ///     vec![],
+    ///     logging_error_handler(),
+    /// );
+    ///
+    /// if let Err(e) = wm.init() {
+    ///     panic!("failed to initialise WindowManager: {}", e);
+    /// }
+    ///
+    /// wm.log("ready to call grab_keys_and_run!").unwrap();
+    /// ```
     pub fn new(config: Config, conn: X, hooks: Hooks<X>, error_handler: ErrorHandler) -> Self {
         let layouts = config.layouts.clone();
 
@@ -162,6 +165,7 @@ impl<X: XConn> WindowManager<X> {
     ///   - Being unable to connect to the X Server
     ///
     /// # Example
+    ///
     /// ```
     /// # use penrose::{Result, map};
     /// use penrose::{
@@ -216,35 +220,14 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /**
-     * This initialises the [WindowManager] internal state but does not start processing any
-     * events from the X server. If you need to perform any custom setup logic with the
-     * [WindowManager] itself, it should be run after calling this method and before
-     * [WindowManager::grab_keys_and_run].
-     *
-     * # Example
-     * ```no_run
-     * use penrose::{
-     *     core::{Config, WindowManager},
-     *     xcb::XcbConnection,
-     *     logging_error_handler
-     * };
-     *
-     * let mut wm = WindowManager::new(
-     *     Config::default(),
-     *     XcbConnection::new().unwrap(),
-     *     vec![],
-     *     logging_error_handler(),
-     * );
-     *
-     * // additional set-up logic here
-     *
-     * if let Err(e) = wm.init() {
-     *     panic!("failed to initialise WindowManager: {}", e);
-     * }
-     * wm.log("ready to call grab_keys_and_run!").unwrap();
-     * ```
-     */
+    /// This initialises the [WindowManager] internal state but does not start processing any
+    /// events from the X server. If you need to perform any custom setup logic with the
+    /// [WindowManager] itself, it should be run after calling this method and before
+    /// [WindowManager::grab_keys_and_run].
+    ///
+    /// # Example
+    ///
+    /// See [new][WindowManager::new]
     pub fn init(&mut self) -> Result<()> {
         if !self.hydrated {
             panic!("Need to call 'hydrate_and_init' when restoring from serialised state")
@@ -305,17 +288,19 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /**
-     * This is the main event loop for the [WindowManager].
-     *
-     * The [XConn::wait_for_event] method is called to fetch the next event from the X server,
-     * after which it is processed into a set of internal EventActions which are then processed
-     * by the [WindowManager] to update state and perform actions. This method is an infinite
-     * loop until the [WindowManager::exit] method is called, which triggers [XConn::cleanup]
-     * before exiting the loop. You can provide any additional teardown logic you need your
-     * main.rs after the call to [WindowManager::grab_keys_and_run] and all internal state
-     * will still be accessible (though methods requiring the use of the [XConn] will fail.
-     */
+    /// This is the main event loop for the [WindowManager].
+    ///
+    /// The `XConn` [wait_for_event][1] method is called to fetch the next event from the X server,
+    /// after which it is processed into a set of internal EventActions which are then processed by
+    /// the [WindowManager] to update state and perform actions. This method is an infinite loop
+    /// until the [exit][2] method is called, which triggers the `XConn` [cleanup][3] before
+    /// exiting the loop. You can provide any additional teardown logic you need your main.rs after
+    /// the call to `grab_keys_and_run` and all internal state will still be accessible, though
+    /// methods requiring the use of the [XConn] will fail.
+    ///
+    /// [1]: crate::core::xconnection::XConn::wait_for_event
+    /// [2]: WindowManager::exit
+    /// [3]: crate::core::xconnection::XConn::cleanup
     pub fn grab_keys_and_run(
         &mut self,
         mut key_bindings: KeyBindings<X>,
@@ -395,7 +380,10 @@ impl<X: XConn> WindowManager<X> {
         self.client_map.get(&id).map(|c| c.workspace())
     }
 
-    fn focused_client_id(&self) -> Option<WinId> {
+    /// The [WinId] of the client that currently has focus.
+    ///
+    /// Returns `None` if there are no clients to focus.
+    pub fn focused_client_id(&self) -> Option<WinId> {
         self.focused_client.or(self
             .workspaces
             .map_selected(&Selector::Index(self.active_ws_index()), |ws| {
@@ -431,7 +419,7 @@ impl<X: XConn> WindowManager<X> {
         if let Some(wix) = self.workspace_index_for_client(id) {
             if let Some(ws) = self.workspaces.get_mut(wix) {
                 ws.focus_client(id);
-                let prev_was_in_ws = prev_focused.map_or(false, |id| ws.clients().contains(&id));
+                let prev_was_in_ws = prev_focused.map_or(false, |id| ws.client_ids().contains(&id));
                 if ws.layout_conf().follow_focus && prev_was_in_ws {
                     self.apply_layout(wix);
                 }
@@ -489,6 +477,20 @@ impl<X: XConn> WindowManager<X> {
 
     /// Query the [XConn] for the current connected [Screen] list and reposition displayed
     /// [Workspace] instances if needed.
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.n_screens(), 1);
+    ///
+    /// // Simulate a monitor being attached
+    /// manager.conn_mut().set_screen_count(2);
+    ///
+    /// manager.detect_screens()?;
+    /// assert_eq!(manager.n_screens(), 2);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn detect_screens(&mut self) -> Result<()> {
         let screens = util::get_screens(
             &self.conn,
@@ -702,69 +704,95 @@ impl<X: XConn> WindowManager<X> {
      */
 
     /// Get an immutable reference to the underlying [XConn] impl that backs this [WindowManager]
+    ///
+    /// # A word of warning
+    ///
+    /// This method is provided as a utility for allowing you to make use of implementation
+    /// specific methods on the `XConn` impl that your `WindowManager` is using. You will need to
+    /// take care not to manipulate X state via this as you may end up with inconsistant state in
+    /// the `WindowManager`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// // a helper method on the ExampleXConn used for these examples
+    /// assert_eq!(manager.conn().current_screen_count(), 1);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn conn(&self) -> &X {
         &self.conn
     }
 
     /// Get an mutable reference to the underlying [XConn] impl that backs this [WindowManager]
+    ///
+    /// # A word of warning
+    ///
+    /// This method is provided as a utility for allowing you to make use of implementation
+    /// specific methods on the `XConn` impl that your `WindowManager` is using. You will need to
+    /// take care not to manipulate X state via this as you may end up with inconsistant state in
+    /// the `WindowManager`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// // a helper method on the ExampleXConn used for these examples
+    /// assert_eq!(manager.conn().current_screen_count(), 1);
+    ///
+    /// manager.conn_mut().set_screen_count(2);
+    /// assert_eq!(manager.conn().current_screen_count(), 2);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn conn_mut(&mut self) -> &mut X {
         &mut self.conn
     }
 
-    /**
-     * Log information out at INFO level for picking up by external programs
-     *
-     * # Example
-     * ```no_run
-     * use penrose::{
-     *     core::{Config, WindowManager},
-     *     xcb::XcbConnection,
-     *     logging_error_handler
-     * };
-     *
-     * let mut wm = WindowManager::new(
-     *     Config::default(),
-     *     XcbConnection::new().unwrap(),
-     *     vec![],
-     *     logging_error_handler(),
-     * );
-     *
-     * wm.log("hello from penrose").unwrap();
-     * ```
-     */
-    pub fn log(&self, msg: &str) -> Result<()> {
-        info!("{}", msg);
+    /// Log information out at INFO level for picking up by external programs
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// manager.log("hello from penrose!")?;
+    /// manager.log(format!("This manager has {} screens", manager.n_screens()))?;
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    pub fn log(&self, msg: impl Into<String>) -> Result<()> {
+        info!("{}", msg.into());
 
         Ok(())
     }
 
-    /**
-     * Cycle between known [screens][Screen]. Does not wrap from first to last
-     *
-     * # Example
-     * ```no_run
-     * use penrose::{
-     *     core::{Config, WindowManager},
-     *     xcb::XcbConnection,
-     *     Forward, logging_error_handler
-     * };
-     *
-     * let mut wm = WindowManager::new(
-     *     Config::default(),
-     *     XcbConnection::new().unwrap(),
-     *     vec![],
-     *     logging_error_handler(),
-     * );
-     *
-     * if let Err(e) = wm.init() {
-     *     panic!("failed to initialise WindowManager: {}", e);
-     * }
-     *
-     * assert_eq!(wm.active_screen_index(), 0);
-     * wm.cycle_screen(Forward).unwrap();
-     * assert_eq!(wm.active_screen_index(), 1);
-     * ```
-     */
+    /// Cycle between known [screens][Screen]. Does not wrap from first to last
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// // manager here is an example window manager with two screens
+    /// assert_eq!(manager.active_screen_index(), 0);
+    ///
+    /// manager.cycle_screen(Forward)?;
+    /// assert_eq!(manager.active_screen_index(), 1);
+    ///
+    /// // no wrapping
+    /// manager.cycle_screen(Forward)?;
+    /// assert_eq!(manager.active_screen_index(), 1);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(2, vec![])).unwrap();
+    /// ```
     pub fn cycle_screen(&mut self, direction: Direction) -> Result<()> {
         if !self.screens.would_wrap(direction) {
             self.screens.cycle_focus(direction);
@@ -782,24 +810,88 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /**
-     * Cycle between [workspaces][Workspace] on the current [screen][Screen]. This will pull
-     * workspaces to the screen if they are currently displayed on another screen.
-     */
+    /// Cycle between [workspaces][1] on the current [screen][2].
+    ///
+    /// This method will pull workspaces to the active screen if they are currently displayed on
+    /// another screen.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// // manager here is using the default Config with 9 workspaces
+    ///
+    /// assert_eq!(manager.focused_workspaces(), vec![0]);
+    ///
+    /// manager.cycle_workspace(Forward)?;
+    /// assert_eq!(manager.focused_workspaces(), vec![1]);
+    ///
+    /// manager.cycle_workspace(Backward)?;
+    /// manager.cycle_workspace(Backward)?;
+    /// assert_eq!(manager.focused_workspaces(), vec![8]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    ///
+    /// [1]: Workspace
+    /// [2]: Screen
     pub fn cycle_workspace(&mut self, direction: Direction) -> Result<()> {
         self.workspaces.cycle_focus(direction);
         let i = self.workspaces.focused_index();
         self.focus_workspace(&Selector::Index(i))
     }
 
-    /// Move the currently focused [workspace][Workspace] to the next [screen][Screen] in 'direction'
+    /// Move the currently focused [Workspace] to the next [Screen] in 'direction'
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
+    ///
+    /// manager.drag_workspace(Forward)?;
+    /// assert_eq!(manager.focused_workspaces(), vec![1, 0]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(2, vec![])).unwrap();
+    /// ```
     pub fn drag_workspace(&mut self, direction: Direction) -> Result<()> {
         let wix = self.active_ws_index();
         self.cycle_screen(direction)?;
         self.focus_workspace(&Selector::Index(wix)) // focus_workspace will pull it to the new screen
     }
 
-    /// Cycle between [clients][Client] for the active [workspace][Workspace]
+    /// Cycle focus between [clients][1] for the active [Workspace]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.focused_client_id(), Some(0));
+    ///
+    /// manager.cycle_client(Backward)?;
+    /// assert_eq!(manager.focused_client_id(), Some(1));
+    ///
+    /// manager.cycle_client(Backward)?;
+    /// assert_eq!(manager.focused_client_id(), Some(2));
+    ///
+    /// manager.cycle_client(Backward)?;
+    /// assert_eq!(manager.focused_client_id(), Some(0));
+    /// # Ok(())
+    /// # }
+    /// #
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), HashMap::new()).unwrap();
+    /// # manager.focus_client(&Selector::WinId(0)).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
+    ///
+    /// [1]: Client
     pub fn cycle_client(&mut self, direction: Direction) -> Result<()> {
         let wix = self.active_ws_index();
         let res = self
@@ -819,9 +911,44 @@ impl<X: XConn> WindowManager<X> {
     /// Focus the [Client] matching the given [Selector]
     ///
     /// # Errors
+    ///
     /// If the selector matches a known client then that client is focused and `Ok(id)`
     /// is returned. If the selector doesn't match (either it was invalid or there is
     /// no focused client) then `Err(self.focused_client_id())` is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let focused = manager.focus_client(&Selector::WinId(0));
+    /// assert_eq!(focused, Ok(0));
+    ///
+    /// let focused = manager.focus_client(&Selector::WinId(42));
+    /// assert_eq!(focused, Err(Some(0))); // the current focused client
+    ///
+    /// let focused = manager.focus_client(&Selector::WinId(1));
+    /// assert_eq!(focused, Ok(1));
+    ///
+    /// let focused = manager.focus_client(&Selector::WinId(42));
+    /// assert_eq!(focused, Err(Some(1))); // the current focused client
+    /// # Ok(())
+    /// # }
+    /// #
+    /// # fn example2(mut manager: ExampleWM) -> Result<()> {
+    ///
+    /// // Or, if there are no clients to focus
+    /// let focused = manager.focus_client(&Selector::WinId(0));
+    /// assert_eq!(focused, Err(None));
+    /// # Ok(())
+    /// # }
+    /// #
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), HashMap::new()).unwrap();
+    /// # example(manager).unwrap();
+    /// # example2(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn focus_client(
         &mut self,
         selector: &Selector<'_, Client>,
@@ -836,7 +963,27 @@ impl<X: XConn> WindowManager<X> {
         Ok(id)
     }
 
-    /// Rotate the [client][Client] stack on the active [workspace][Workspace]
+    /// Rotate the [Client] stack on the active [Workspace].
+    ///
+    /// This maintains the current window layout but permutes the positions of each window within
+    /// that layout.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    ///
+    /// manager.rotate_clients(Forward)?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 2, 1]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn rotate_clients(&mut self, direction: Direction) -> Result<()> {
         let wix = self.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
@@ -846,8 +993,27 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /// Move the focused [client][Client] through the stack of clients on the active
-    /// [workspace][Workspace]
+    /// Move the focused [Client] through the stack of clients on the active [Workspace].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![3, 2, 1, 0]);
+    ///
+    /// manager.drag_client(Forward)?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 3, 1, 0]);
+    ///
+    /// manager.drag_client(Forward)?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 3, 0]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(4));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn drag_client(&mut self, direction: Direction) -> Result<()> {
         if let Some(id) = self.focused_client().map(|c| c.id()) {
             let wix = self.active_ws_index();
@@ -931,13 +1097,11 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    /**
-     * Set the displayed workspace for the focused screen to be `index` in the list of
-     * workspaces passed at `init`. This will panic if the index passed is out of
-     * bounds which is only possible if you manually bind an action to this with an
-     * invalid index. You should almost always be using the `gen_keybindings!` macro
-     * to set up your keybindings so this is not normally an issue.
-     */
+    /// Set the displayed workspace for the focused screen to be `index` in the list of
+    /// workspaces passed at `init`. This will panic if the index passed is out of
+    /// bounds which is only possible if you manually bind an action to this with an
+    /// invalid index. You should almost always be using the `gen_keybindings!` macro
+    /// to set up your keybindings so this is not normally an issue.
     pub fn focus_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<()> {
         let active_ws = Selector::Index(self.screens.focused_unchecked().wix);
         if self.workspaces.equivalent_selectors(selector, &active_ws) {
@@ -974,13 +1138,13 @@ impl<X: XConn> WindowManager<X> {
             // target not currently displayed so unmap what we currently have
             // displayed and replace it with the target workspace
             if let Some(ws) = self.workspaces.get(active) {
-                ws.clients().iter().for_each(|id| {
+                ws.client_ids().iter().for_each(|id| {
                     util::unmap_window_if_needed(&self.conn, self.client_map.get_mut(id))
                 });
             }
 
             if let Some(ws) = self.workspaces.get(index) {
-                ws.clients().iter().for_each(|id| {
+                ws.client_ids().iter().for_each(|id| {
                     util::map_window_if_needed(&self.conn, self.client_map.get_mut(id))
                 });
             }
@@ -1089,6 +1253,20 @@ impl<X: XConn> WindowManager<X> {
         } else {
             self.screens.element(&selector)
         }
+    }
+
+    /// An immutable reference to the current active [Workspace]
+    pub fn active_workspace(&self) -> &Workspace {
+        self.workspaces
+            .element(&Selector::Index(self.active_ws_index()))
+            .unwrap()
+    }
+
+    /// A mutable reference to the current active [Workspace]
+    pub fn active_workspace_mut(&mut self) -> &Workspace {
+        self.workspaces
+            .element_mut(&Selector::Index(self.active_ws_index()))
+            .unwrap()
     }
 
     /// The currently focused workspace indices being shown on each screen

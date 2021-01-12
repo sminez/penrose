@@ -106,7 +106,8 @@ impl Workspace {
         self.clients.iter_mut()
     }
 
-    pub(crate) fn clients(&self) -> Vec<WinId> {
+    /// The ordered list of [Client] IDs currently contained in this workspace
+    pub fn client_ids(&self) -> Vec<WinId> {
         self.clients.as_vec()
     }
 
