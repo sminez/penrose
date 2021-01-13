@@ -1038,14 +1038,14 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     /// # use penrose::__example_helpers::*;
     /// # fn example(mut manager: ExampleWM) -> Result<()> {
-    /// assert_eq!(manager.active_workspace().layout_symbol(), "first");
+    /// assert_eq!(manager.current_layout_symbol(), "first");
     ///
     /// manager.cycle_layout(Forward)?;
-    /// assert_eq!(manager.active_workspace().layout_symbol(), "second");
+    /// assert_eq!(manager.current_layout_symbol(), "second");
     ///
     /// // Wrap at the end of the layout list
     /// manager.cycle_layout(Forward)?;
-    /// assert_eq!(manager.active_workspace().layout_symbol(), "first");
+    /// assert_eq!(manager.current_layout_symbol(), "first");
     /// # Ok(())
     /// # }
     /// # example(example_windowmanager(1, vec![])).unwrap();
@@ -1068,6 +1068,17 @@ impl<X: XConn> WindowManager<X> {
     /// The change is applied to the active [layout][1] on the [Workspace] that currently holds
     /// focus.
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// manager.update_max_main(More);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    ///
     /// [1]: crate::core::layout::Layout
     pub fn update_max_main(&mut self, change: Change) -> Result<()> {
         let wix = self.active_ws_index();
@@ -1085,6 +1096,17 @@ impl<X: XConn> WindowManager<X> {
     /// The change is applied to the active [layout][1] on the [Workspace] that currently holds
     /// focus.
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// manager.update_main_ratio(More);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    ///
     /// [1]: crate::core::layout::Layout
     pub fn update_main_ratio(&mut self, change: Change) -> Result<()> {
         let step = self.config.main_ratio_step;
@@ -1098,6 +1120,20 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Shut down the WindowManager, running any required cleanup and exiting penrose
+    ///
+    /// **NOTE**: any registered hooks on the `WindowManager` will still run following calling this
+    /// method, with the actual exit condition being checked and handled at the end.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// manager.exit();
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn exit(&mut self) -> Result<()> {
         self.conn.cleanup();
         self.conn.flush();
@@ -1109,6 +1145,20 @@ impl<X: XConn> WindowManager<X> {
     /// The layout symbol for the [layout][1] currently being used on the
     /// active workspace
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.current_layout_symbol(), "first");
+    ///
+    /// manager.cycle_layout(Forward)?;
+    /// assert_eq!(manager.current_layout_symbol(), "second");
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    ///
     /// [1]: crate::core::layout::Layout
     pub fn current_layout_symbol(&self) -> &str {
         match self.workspaces.get(self.active_ws_index()) {
@@ -1118,13 +1168,48 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Set the root X window name. Useful for exposing information to external programs
-    pub fn set_root_window_name(&self, s: &str) -> Result<()> {
-        self.conn.set_root_window_name(s);
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// manager.set_root_window_name("hello world")?;
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    pub fn set_root_window_name(&self, s: impl Into<String>) -> Result<()> {
+        self.conn.set_root_window_name(&s.into());
 
         Ok(())
     }
 
     /// Set the insert point for new clients. Default is to insert at index 0.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    ///
+    /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(1)));
+    /// manager.focus_workspace(&Selector::Index(1))?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
+    ///
+    /// manager.set_client_insert_point(InsertPoint::Last)?;
+    ///
+    /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(0)));
+    /// manager.focus_workspace(&Selector::Index(0))?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn set_client_insert_point(&mut self, cip: InsertPoint) -> Result<()> {
         self.client_insert_point = cip;
 
