@@ -57,6 +57,11 @@ impl Client {
         &self.wm_name
     }
 
+    /// Whether or not this client is currently fullscreen
+    pub fn is_fullscreen(&self) -> bool {
+        self.fullscreen
+    }
+
     /// The current workspace index that this client is showing on
     pub fn workspace(&self) -> usize {
         self.workspace

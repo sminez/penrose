@@ -1192,12 +1192,15 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     /// # use penrose::__example_helpers::*;
     /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// // Starting with three clients that have been inserted via InsertPoint::First
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
+    /// // Move them all over to another workspace, still using InsertPoint::First
     /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(1)));
     /// manager.focus_workspace(&Selector::Index(1))?;
     /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
     ///
+    /// // Change to InsertPoint::Last and move them back
     /// manager.set_client_insert_point(InsertPoint::Last)?;
     ///
     /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(0)));
@@ -1218,6 +1221,29 @@ impl<X: XConn> WindowManager<X> {
 
     /// Set the displayed workspace for the focused screen to be `index` in the list of
     /// workspaces passed at `init`.
+    ///
+    /// A common way to use this method is in a `refMap` section when generating your keybindings
+    /// and using the [index_selectors][1] helper method to make the required [selectors][2].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().name(), "1");
+    ///
+    /// manager.focus_workspace(&Selector::Index(3))?;
+    /// assert_eq!(manager.active_workspace().name(), "4");
+    ///
+    /// manager.focus_workspace(&Selector::Condition(&|ws| ws.name() == "9"))?;
+    /// assert_eq!(manager.active_workspace().name(), "9");
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
+    ///
+    /// [1]: crate::core::helpers::index_selectors
+    /// [2]: crate::core::ring::Selector
     pub fn focus_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<()> {
         let active_ws = Selector::Index(self.screens.focused_unchecked().wix);
         if self.workspaces.equivalent_selectors(selector, &active_ws) {
@@ -1282,11 +1308,47 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Switch focus back to the last workspace that had focus.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// manager.focus_workspace(&Selector::Index(1))?;
+    /// assert_eq!(manager.active_workspace().name(), "2");
+    ///
+    /// manager.focus_workspace(&Selector::Index(0))?;
+    /// assert_eq!(manager.active_workspace().name(), "1");
+    ///
+    /// manager.toggle_workspace()?;
+    /// assert_eq!(manager.active_workspace().name(), "2");
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn toggle_workspace(&mut self) -> Result<()> {
         self.focus_workspace(&Selector::Index(self.previous_workspace))
     }
 
     /// Move the focused client to the workspace matching 'selector'.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    ///
+    /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(1)));
+    /// manager.focus_workspace(&Selector::Index(1))?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn client_to_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<()> {
         let active_ws = Selector::Index(self.screens.focused_unchecked().wix);
         if self.workspaces.equivalent_selectors(&selector, &active_ws) {
@@ -1323,6 +1385,30 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Move the focused client to the active workspace on the screen matching 'selector'.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
+    ///
+    /// assert_eq!(manager.active_screen_index(), 0);
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    ///
+    /// manager.client_to_screen(&Selector::Index(1))?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![1, 0]);
+    ///
+    /// manager.cycle_screen(Forward)?;
+    /// assert_eq!(manager.active_screen_index(), 1);
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(2, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn client_to_screen(&mut self, selector: &Selector<'_, Screen>) -> Result<()> {
         let i = match self.screen(selector) {
             Some(s) => s.wix,
@@ -1331,7 +1417,27 @@ impl<X: XConn> WindowManager<X> {
         self.client_to_workspace(&Selector::Index(i))
     }
 
-    /// Toggle the fullscreen state of the given client ID
+    /// Toggle the fullscreen state of the [Client] matching the given [Selector]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.client(&Selector::Focused).unwrap().is_fullscreen(), false);
+    ///
+    /// manager.toggle_client_fullscreen(&Selector::Focused)?;
+    /// assert_eq!(manager.client(&Selector::Focused).unwrap().is_fullscreen(), true);
+    ///
+    /// manager.toggle_client_fullscreen(&Selector::Focused)?;
+    /// assert_eq!(manager.client(&Selector::Focused).unwrap().is_fullscreen(), false);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(1));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn toggle_client_fullscreen(&mut self, selector: &Selector<'_, Client>) -> Result<()> {
         let (id, client_is_fullscreen) = match self.client(selector) {
             None => return Ok(()), // unknown client
@@ -1343,6 +1449,23 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Kill the focused client window.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![0]);
+    ///
+    /// manager.kill_client()?;
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(1));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn kill_client(&mut self) -> Result<()> {
         let id = self.conn.focused_client();
         let del = Atom::WmDeleteWindow.as_ref();
