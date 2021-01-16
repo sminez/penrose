@@ -1,4 +1,4 @@
-<image width="100px" src="icon.svg" align="left"></image>
+<image width="100px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image>
 penrose - a tiling window manager library
 =========================================
 
@@ -21,7 +21,7 @@ date when new major features are completed but you can follow the `develop`
 branch in github for the latest changes. (Please note that `develop` is as it
 sounds and that stability is not guaranteed in any way.)
 
-![screenshot](screenshot.png)
+![screenshot](https://raw.githubusercontent.com/sminez/penrose/develop/screenshot.png)
 
 ### Current project status
 

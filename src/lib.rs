@@ -39,7 +39,7 @@
 //!     Things like workspace names, layout functions and settings for gaps and borders.
 //!
 //! With that, you will be able to create a [WindowManager][10] and start running Penrose after
-//! building and installing your binary. (It is also suggested that you set up a loging handler so
+//! building and installing your binary. (It is also suggested that you set up a logging handler so
 //! that debugging any issues with your config is easier. [simplelog][13] is a good choice if you
 //! are unsure where to start with this.)
 //!
