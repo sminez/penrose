@@ -50,6 +50,11 @@ pub enum InsertPoint {
 /// known workspaces or clients.
 #[derive(Clone, Copy)]
 pub enum Selector<'a, T> {
+    /// Any element in the target collection.
+    ///
+    /// For functions returning a single elemt this is equivalent to `Focused`, for functions
+    /// returning multiple elements this will return the entire collection.
+    Any,
     /// The focused element of the target collection.
     Focused,
     /// The element at this index.
@@ -63,6 +68,7 @@ pub enum Selector<'a, T> {
 impl<'a, T> fmt::Debug for Selector<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Any => f.debug_struct("Selector::Any").finish(),
             Self::Focused => f.debug_struct("Selector::Focused").finish(),
             Self::Index(i) => f.debug_struct("Selector::Index").field("index", i).finish(),
             Self::WinId(i) => f.debug_struct("Selector::WinId").field("id", i).finish(),
@@ -244,7 +250,7 @@ impl<T> Ring<T> {
     pub fn index(&self, s: &Selector<'_, T>) -> Option<usize> {
         match s {
             Selector::WinId(_) => None, // ignored
-            Selector::Focused => Some(self.focused_index()),
+            Selector::Focused | Selector::Any => Some(self.focused_index()),
             Selector::Index(i) => {
                 if *i < self.len() {
                     Some(*i)
@@ -262,16 +268,16 @@ impl<T> Ring<T> {
 
     pub fn element(&self, s: &Selector<'_, T>) -> Option<&T> {
         match s {
-            Selector::WinId(_) => None, // ignored
-            Selector::Focused => self.focused(),
+            Selector::Focused | Selector::Any => self.focused(),
             Selector::Index(i) => self.elements.get(*i),
+            Selector::WinId(_) => None, // ignored
             Selector::Condition(f) => self.element_by(f).map(|(_, e)| e),
         }
     }
 
     pub fn element_mut(&mut self, s: &Selector<'_, T>) -> Option<&mut T> {
         match s {
-            Selector::Focused => self.focused_mut(),
+            Selector::Focused | Selector::Any => self.focused_mut(),
             Selector::Index(i) => self.elements.get_mut(*i),
             Selector::WinId(_) => None, // ignored
             Selector::Condition(f) => self.element_by_mut(f).map(|(_, e)| e),
@@ -280,18 +286,20 @@ impl<T> Ring<T> {
 
     pub fn all_elements(&self, s: &Selector<'_, T>) -> Vec<&T> {
         match s {
-            Selector::WinId(_) => vec![], // ignored
+            Selector::Any => self.iter().collect(),
             Selector::Focused => self.focused().into_iter().collect(),
             Selector::Index(i) => self.elements.get(*i).into_iter().collect(),
+            Selector::WinId(_) => vec![], // ignored
             Selector::Condition(f) => self.elements.iter().filter(|e| f(*e)).collect(),
         }
     }
 
     pub fn all_elements_mut(&mut self, s: &Selector<'_, T>) -> Vec<&mut T> {
         match s {
-            Selector::WinId(_) => vec![], // ignored
+            Selector::Any => self.iter_mut().collect(),
             Selector::Focused => self.focused_mut().into_iter().collect(),
             Selector::Index(i) => self.elements.get_mut(*i).into_iter().collect(),
+            Selector::WinId(_) => vec![], // ignored
             Selector::Condition(f) => self.elements.iter_mut().filter(|e| f(*e)).collect(),
         }
     }
@@ -302,12 +310,12 @@ impl<T> Ring<T> {
         }
 
         match s {
-            Selector::WinId(_) => None, // ignored
-            Selector::Focused => self.focused().map(|t| (true, t)),
+            Selector::Focused | Selector::Any => self.focused().map(|t| (true, t)),
             Selector::Index(i) => {
                 self.focused = *i;
                 self.focused().map(|t| (true, t))
             }
+            Selector::WinId(_) => None, // ignored
             Selector::Condition(f) => {
                 if let Some((i, _)) = self.element_by(f) {
                     self.focused = i;
@@ -321,8 +329,7 @@ impl<T> Ring<T> {
 
     pub fn remove(&mut self, s: &Selector<'_, T>) -> Option<T> {
         match s {
-            Selector::WinId(_) => None, // ignored
-            Selector::Focused => {
+            Selector::Focused | Selector::Any => {
                 let c = self.elements.remove(self.focused);
                 self.clamp_focus();
                 c
@@ -332,6 +339,7 @@ impl<T> Ring<T> {
                 self.clamp_focus();
                 c
             }
+            Selector::WinId(_) => None, // ignored
             Selector::Condition(f) => {
                 if let Some((i, _)) = self.element_by(f) {
                     let c = self.elements.remove(i);

@@ -1483,6 +1483,39 @@ impl<X: XConn> WindowManager<X> {
     /// Get a reference to the first Screen satisfying 'selector'. WinId selectors will return
     /// the screen containing that Client if the client is known.
     /// NOTE: It is not possible to get a mutable reference to a Screen.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
+    ///
+    /// assert_eq!(
+    ///     manager.screen(&Selector::Focused),
+    ///     manager.screen(&Selector::Index(manager.active_screen_index()))
+    /// );
+    ///
+    /// assert_eq!(
+    ///     manager.screen(&Selector::Index(0)),
+    ///     manager.screen(&Selector::WinId(0)),
+    /// );
+    ///
+    /// manager.client_to_screen(&Selector::Index(1))?;
+    ///
+    /// assert_eq!(
+    ///     manager.screen(&Selector::WinId(2)),
+    ///     manager.screen(&Selector::Index(1)),
+    /// );
+    ///
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(2, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn screen(&self, selector: &Selector<'_, Screen>) -> Option<&Screen> {
         if let Selector::WinId(id) = selector {
             self.client_map.get(&id).and_then(|c| {
@@ -1495,6 +1528,17 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// An immutable reference to the current active [Workspace]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().name(), "1");
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn active_workspace(&self) -> &Workspace {
         self.workspaces
             .element(&Selector::Index(self.active_ws_index()))
@@ -1502,13 +1546,44 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// A mutable reference to the current active [Workspace]
-    pub fn active_workspace_mut(&mut self) -> &Workspace {
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    ///
+    /// manager.active_workspace_mut().rotate_clients(Forward);
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 2, 1]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
+    pub fn active_workspace_mut(&mut self) -> &mut Workspace {
         self.workspaces
             .element_mut(&Selector::Index(self.active_ws_index()))
             .unwrap()
     }
 
     /// The currently focused workspace indices being shown on each screen
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(2, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn focused_workspaces(&self) -> Vec<usize> {
         self.screens.iter().map(|s| s.wix).collect()
     }
@@ -1616,10 +1691,24 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Set the name of the selected Workspace
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().name(), "1");
+    ///
+    /// manager.set_workspace_name("foo", &Selector::Focused)?;
+    /// assert_eq!(manager.active_workspace().name(), "foo");
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn set_workspace_name(
         &mut self,
         name: impl Into<String>,
-        selector: Selector<'_, Workspace>,
+        selector: &Selector<'_, Workspace>,
     ) -> Result<()> {
         if let Some(ws) = self.workspaces.element_mut(&selector) {
             ws.set_name(name)
@@ -1632,7 +1721,7 @@ impl<X: XConn> WindowManager<X> {
     /// Take a reference to the first Client found matching 'selector'
     pub fn client(&self, selector: &Selector<'_, Client>) -> Option<&Client> {
         match selector {
-            Selector::Focused => self.focused_client(),
+            Selector::Focused | Selector::Any => self.focused_client(),
             Selector::WinId(id) => self.client_map.get(&id),
             Selector::Condition(f) => self.client_map.iter().find(|(_, v)| f(v)).map(|(_, v)| v),
             Selector::Index(i) => self
@@ -1646,7 +1735,7 @@ impl<X: XConn> WindowManager<X> {
     /// Take a mutable reference to the first Client found matching 'selector'
     pub fn client_mut(&mut self, selector: &Selector<'_, Client>) -> Option<&mut Client> {
         match selector {
-            Selector::Focused => self.focused_client_mut(),
+            Selector::Focused | Selector::Any => self.focused_client_mut(),
             Selector::WinId(id) => self.client_map.get_mut(&id),
             Selector::Condition(f) => self
                 .client_map
@@ -1668,6 +1757,7 @@ impl<X: XConn> WindowManager<X> {
     /// The resulting vector is sorted by Client id.
     pub fn all_clients(&self, selector: &Selector<'_, Client>) -> Vec<&Client> {
         match selector {
+            Selector::Any => self.client_map.values().collect(),
             Selector::Focused => self.focused_client().into_iter().collect(),
             Selector::WinId(id) => self.client_map.get(&id).into_iter().collect(),
             Selector::Condition(f) => {
@@ -1693,6 +1783,7 @@ impl<X: XConn> WindowManager<X> {
     /// The resulting vector is sorted by Client id.
     pub fn all_clients_mut(&mut self, selector: &Selector<'_, Client>) -> Vec<&mut Client> {
         match selector {
+            Selector::Any => self.client_map.values_mut().collect(),
             Selector::Focused => self.focused_client_mut().into_iter().collect(),
             Selector::WinId(id) => self.client_map.get_mut(&id).into_iter().collect(),
             Selector::Condition(f) => {
@@ -1716,12 +1807,35 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// The number of detected screens currently being tracked by the WindowManager.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.n_screens(), 2);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(2, vec![])).unwrap();
+    /// ```
     pub fn n_screens(&self) -> usize {
         self.screens.len()
     }
 
     /// The current effective screen size of the target screen. Effective screen size is the
     /// physical screen size minus any space reserved for a status bar.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.screen_size(0), Some(Region::new(0, 18, 800, 582)));
+    /// assert_eq!(manager.screen_size(42), None);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(2, vec![])).unwrap();
+    /// ```
     pub fn screen_size(&self, screen_index: usize) -> Option<Region> {
         self.screens
             .get(screen_index)
@@ -1759,6 +1873,23 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// An index into the WindowManager known screens for the screen that is currently focused
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_screen_index(), 0);
+    ///
+    /// manager.cycle_screen(Forward)?;
+    /// assert_eq!(manager.active_screen_index(), 1);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(2, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn active_screen_index(&self) -> usize {
         self.screens.focused_index()
     }
