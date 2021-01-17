@@ -23,46 +23,6 @@ pub use crate::{
 
 pub use std::{cell::Cell, collections::HashMap, fmt};
 
-/// NOTE: Boiler plate example set up for WindowManager doc-tests
-/// # Example
-///
-/// ```
-/// # use penrose::__example_helpers::*;
-/// # fn example(mut manager: ExampleWM) -> Result<()> {
-/// // EXAMPLE HERE
-/// # Ok(())
-/// # }
-/// # example(example_windowmanager(1, vec![])).unwrap();
-/// ```
-
-/// NOTE: Boiler plate example set up for WindowManager doc-tests which
-///       require some set up of state.
-/// # Example
-///
-/// ```
-/// # use penrose::__example_helpers::*;
-/// # fn example(mut manager: ExampleWM) -> Result<()> {
-/// // EXAMPLE HERE
-/// # Ok(())
-/// # }
-/// # let mut manager = example_windowmanager(1, n_clients(3));
-/// # manager.init().unwrap();
-/// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
-/// # example(manager).unwrap();
-/// ```
-
-/// NOTE: Boiler plate example set up for Workspace doc-tests
-/// # Example
-///
-/// ```
-/// # use penrose::__example_helpers::*;
-/// # fn example(mut workspace: Workspace) -> Result<()> {
-/// // EXAMPLE HERE
-/// # Ok(())
-/// # }
-/// # example(example_workspace("example", 5)).unwrap();
-/// ```
-
 pub type ExampleWM = WindowManager<ExampleXConn>;
 pub type ExampleKeyBindings = KeyBindings<ExampleXConn>;
 pub type ExampleKeyHandler = KeyEventHandler<ExampleXConn>;

@@ -1734,10 +1734,10 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// manager.client_to_workspace(&Selector::Index(2))?;
     /// assert_eq!(manager.workspace(&Selector::Index(2)).unwrap().name(), "3");
-    /// assert_eq!(manager.workspace(&Selector::WinId(0)).unwrap().name(), "3");
+    /// assert_eq!(manager.workspace(&Selector::WinId(0)).unwrap().name(), "1");
     /// # Ok(())
     /// # }
-    /// # let mut manager = example_windowmanager(1, n_clients(1));
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
     /// # manager.init().unwrap();
     /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
     /// # example(manager).unwrap();
