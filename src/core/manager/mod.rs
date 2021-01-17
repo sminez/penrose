@@ -1589,6 +1589,34 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Add a new workspace at `index`, shifting all workspaces with indices greater to the right.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let names: Vec<_> = manager
+    ///     .all_workspaces(&Selector::Any)
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(names, vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    ///
+    /// let ws = Workspace::new("new", example_layouts());
+    /// manager.add_workspace(1, ws)?;
+    ///
+    /// let new_names: Vec<_> = manager
+    ///     .all_workspaces(&Selector::Any)
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(new_names, vec!["1", "new", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn add_workspace(&mut self, index: usize, ws: Workspace) -> Result<()> {
         self.workspaces.insert(index, ws);
         self.update_x_workspace_details();
@@ -1597,6 +1625,34 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Add a new workspace at the end of the current workspace list
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let names: Vec<_> = manager
+    ///     .all_workspaces(&Selector::Any)
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(names, vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    ///
+    /// let ws = Workspace::new("new", example_layouts());
+    /// manager.push_workspace(ws)?;
+    ///
+    /// let new_names: Vec<_> = manager
+    ///     .all_workspaces(&Selector::Any)
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(new_names, vec!["1", "2", "3", "4", "5", "6", "7", "8", "9", "new"]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn push_workspace(&mut self, ws: Workspace) -> Result<()> {
         self.workspaces.push(ws);
         self.update_x_workspace_details();
@@ -1606,6 +1662,35 @@ impl<X: XConn> WindowManager<X> {
 
     /// Remove a Workspace from the WindowManager. All clients that were present on the removed
     /// workspace will be destroyed. WinId selectors will be ignored.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let names: Vec<_> = manager
+    ///     .all_workspaces(&Selector::Any)
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(names, vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    ///
+    /// let removed = manager.remove_workspace(&Selector::Index(2))?;
+    /// assert!(removed.is_some());
+    /// assert_eq!(removed.unwrap().name(), "3");
+    ///
+    /// let new_names: Vec<_> = manager
+    ///     .all_workspaces(&Selector::Any)
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(new_names, vec!["1", "2", "4", "5", "6", "7", "8", "9"]);
+    /// # Ok(())
+    /// # }
+    /// # example(example_windowmanager(1, vec![])).unwrap();
+    /// ```
     pub fn remove_workspace(
         &mut self,
         selector: &Selector<'_, Workspace>,
@@ -1624,15 +1709,39 @@ impl<X: XConn> WindowManager<X> {
 
         // Focus the workspace before the one we just removed. There is always at least one
         // workspace before this one due to the guard above.
-        let ix = self.screens.focused_unchecked().wix - 1;
+        let ix = self.screens.focused_unchecked().wix.saturating_sub(1);
         self.focus_workspace(&Selector::Index(ix))?;
-
         self.update_x_workspace_details();
+
         Ok(Some(ws))
     }
 
     /// Get a reference to the first Workspace satisfying 'selector'. WinId selectors will return
     /// the workspace containing that Client if the client is known.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.workspace(&Selector::Focused).unwrap().name(), "1");
+    /// assert_eq!(manager.workspace(&Selector::Index(3)).unwrap().name(), "4");
+    ///
+    /// assert_eq!(
+    ///     manager.workspace(&Selector::Focused).unwrap().client_ids(),
+    ///     vec![2, 1, 0]
+    /// );
+    ///
+    /// manager.client_to_workspace(&Selector::Index(2))?;
+    /// assert_eq!(manager.workspace(&Selector::Index(2)).unwrap().name(), "3");
+    /// assert_eq!(manager.workspace(&Selector::WinId(0)).unwrap().name(), "3");
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(1));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn workspace(&self, selector: &Selector<'_, Workspace>) -> Option<&Workspace> {
         if let Selector::WinId(id) = selector {
             self.client_map
@@ -1645,6 +1754,31 @@ impl<X: XConn> WindowManager<X> {
 
     /// Get a mutable reference to the first Workspace satisfying 'selector'. WinId selectors will
     /// return the workspace containing that Client if the client is known.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
+    ///
+    /// let ws2 = Selector::Index(2);
+    ///
+    /// manager.client_to_workspace(&ws2)?;
+    /// manager.client_to_workspace(&ws2)?;
+    /// manager.client_to_workspace(&ws2)?;
+    ///
+    /// assert_eq!(manager.workspace(&ws2).map(|w| w.client_ids()), Some(vec![0, 1, 2]));
+    ///
+    /// manager.workspace_mut(&ws2).map(|w| w.rotate_clients(Forward));
+    /// assert_eq!(manager.workspace(&ws2).map(|w| w.client_ids()), Some(vec![2, 0, 1]));
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn workspace_mut(&mut self, selector: &Selector<'_, Workspace>) -> Option<&mut Workspace> {
         if let Selector::WinId(id) = selector {
             if let Some(wix) = self.client_map.get(&id).map(|c| c.workspace()) {
