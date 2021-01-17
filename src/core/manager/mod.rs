@@ -1922,6 +1922,21 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Take a reference to the first Client found matching 'selector'
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.client(&Selector::Focused).unwrap().id(), 2);
+    /// assert_eq!(manager.client(&Selector::Index(2)).unwrap().id(), 0);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn client(&self, selector: &Selector<'_, Client>) -> Option<&Client> {
         match selector {
             Selector::Focused | Selector::Any => self.focused_client(),
@@ -1936,6 +1951,23 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Take a mutable reference to the first Client found matching 'selector'
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// assert_eq!(manager.client(&Selector::Focused).map(|c| c.workspace()), Some(0));
+    ///
+    /// manager.client_mut(&Selector::Focused).map(|c| c.set_workspace(5));
+    /// assert_eq!(manager.client(&Selector::Focused).map(|c| c.workspace()), Some(5));
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
     pub fn client_mut(&mut self, selector: &Selector<'_, Client>) -> Option<&mut Client> {
         match selector {
             Selector::Focused | Selector::Any => self.focused_client_mut(),
@@ -1958,20 +1990,39 @@ impl<X: XConn> WindowManager<X> {
 
     /// Get a vector of references to the Clients found matching 'selector'.
     /// The resulting vector is sorted by Client id.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let all_ids: Vec<WinId> = manager
+    ///     .all_clients(&Selector::Any)
+    ///     .iter()
+    ///     .map(|c| c.id())
+    ///     .collect();
+    ///
+    /// assert_eq!(all_ids, vec![0, 1, 2, 3, 4, 5]);
+    ///
+    /// let ids: Vec<WinId> = manager
+    ///     .all_clients(&Selector::Condition(&|c| c.id() > 3))
+    ///     .iter()
+    ///     .map(|c| c.id())
+    ///     .collect();
+    ///
+    /// assert_eq!(ids, vec![4, 5]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(6));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
     pub fn all_clients(&self, selector: &Selector<'_, Client>) -> Vec<&Client> {
-        match selector {
+        let mut clients: Vec<&Client> = match selector {
             Selector::Any => self.client_map.values().collect(),
             Selector::Focused => self.focused_client().into_iter().collect(),
             Selector::WinId(id) => self.client_map.get(&id).into_iter().collect(),
-            Selector::Condition(f) => {
-                let mut clients = self
-                    .client_map
-                    .iter()
-                    .flat_map(|(_, v)| if f(v) { Some(v) } else { None })
-                    .collect::<Vec<_>>();
-                clients.sort_by_key(|&a| a.id());
-                clients
-            }
+            Selector::Condition(f) => self.client_map.values().filter(|v| f(v)).collect(),
             Selector::Index(i) => self
                 .workspaces
                 .get(self.active_ws_index())
@@ -1979,34 +2030,67 @@ impl<X: XConn> WindowManager<X> {
                 .and_then(|id| self.client_map.get(id))
                 .into_iter()
                 .collect(),
-        }
+        };
+
+        clients.sort_unstable_by_key(|c| c.id());
+        clients
     }
 
     /// Get a vector of mutable references to the Clients found matching 'selector'.
+    ///
     /// The resulting vector is sorted by Client id.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let workspace_ids: Vec<usize> = manager
+    ///     .all_clients(&Selector::Any)
+    ///     .iter()
+    ///     .map(|c| c.workspace())
+    ///     .collect();
+    ///
+    /// assert_eq!(workspace_ids, vec![0, 0, 0, 0, 0, 0]);
+    ///
+    /// manager
+    ///     .all_clients_mut(&Selector::Condition(&|c| c.id() > 3))
+    ///     .iter_mut()
+    ///     .for_each(|c| c.set_workspace(5));
+    ///
+    /// let workspace_ids: Vec<usize> = manager
+    ///     .all_clients(&Selector::Any)
+    ///     .iter()
+    ///     .map(|c| c.workspace())
+    ///     .collect();
+    ///
+    /// assert_eq!(workspace_ids, vec![0, 0, 0, 0, 5, 5]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(6));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
     pub fn all_clients_mut(&mut self, selector: &Selector<'_, Client>) -> Vec<&mut Client> {
-        match selector {
+        let mut clients: Vec<&mut Client> = match selector {
             Selector::Any => self.client_map.values_mut().collect(),
             Selector::Focused => self.focused_client_mut().into_iter().collect(),
             Selector::WinId(id) => self.client_map.get_mut(&id).into_iter().collect(),
-            Selector::Condition(f) => {
-                let mut clients = self
-                    .client_map
-                    .iter_mut()
-                    .flat_map(|(_, v)| if f(v) { Some(v) } else { None })
-                    .collect::<Vec<_>>();
-                clients.sort_by_key(|a| a.id());
-                clients
+            Selector::Condition(f) => self.client_map.values_mut().filter(|v| f(v)).collect(),
+            Selector::Index(i) => {
+                match self
+                    .workspaces
+                    .get(self.active_ws_index())
+                    .and_then(|ws| ws.iter().nth(*i))
+                {
+                    Some(id) => self.client_map.get_mut(id).into_iter().collect(),
+                    None => vec![],
+                }
             }
-            Selector::Index(i) => match self
-                .workspaces
-                .get(self.active_ws_index())
-                .and_then(|ws| ws.iter().nth(*i))
-            {
-                Some(id) => self.client_map.get_mut(id).into_iter().collect(),
-                None => vec![],
-            },
-        }
+        };
+
+        clients.sort_unstable_by_key(|c| c.id());
+        clients
     }
 
     /// The number of detected screens currently being tracked by the WindowManager.
