@@ -37,6 +37,9 @@ use crate::{
     ErrorHandler,
 };
 
+#[cfg(feature = "xcb_draw")]
+use crate::draw::{dwm_bar, Color, StatusBar, TextStyle};
+
 pub mod api;
 #[doc(hidden)]
 pub mod conversions;
@@ -60,6 +63,44 @@ pub use xconn::XcbConnection;
 
 /// A generic event type returned by the xcb library
 pub type XcbGenericEvent = xcb::Event<xcb::ffi::base::xcb_generic_event_t>;
+
+/// Result type for fallible methods using XCB
+pub type Result<T> = std::result::Result<T, XcbError>;
+
+/// Helper type for when you are defining your [Hook] vector in your main.rs when using
+/// the default XCB impls
+pub type XcbHooks = Hooks<XcbConnection>;
+
+/// Construct a penrose [WindowManager] backed by the default [xcb][crate::xcb] backend.
+pub fn new_xcb_backed_window_manager(
+    config: Config,
+    hooks: Vec<Box<dyn Hook<XcbConnection>>>,
+    error_handler: ErrorHandler,
+) -> crate::Result<WindowManager<XcbConnection>> {
+    let conn = XcbConnection::new()?;
+    let mut wm = WindowManager::new(config, conn, hooks, error_handler);
+    wm.init()?;
+
+    Ok(wm)
+}
+
+/// Construct a new [StatusBar] using the default [dwm_bar] configuration, backed by [XcbDraw]
+pub fn new_xcb_backed_status_bar(
+    height: usize,
+    style: &TextStyle,
+    highlight: impl Into<Color>,
+    empty_ws: impl Into<Color>,
+    workspaces: Vec<impl Into<String>>,
+) -> crate::draw::Result<StatusBar<XcbDrawContext, XcbDraw, XcbConnection>> {
+    dwm_bar(
+        XcbDraw::new()?,
+        height,
+        style,
+        highlight,
+        empty_ws,
+        workspaces,
+    )
+}
 
 /// Enum to store the various ways that operations can fail inside of the
 /// XCB implementations of penrose traits.
@@ -127,26 +168,6 @@ pub enum XcbError {
     /// A user specified mouse binding contained an invalid button
     #[error("Unknown mouse button: {0}")]
     UnknownMouseButton(u8),
-}
-
-/// Result type for fallible methods using XCB
-pub type Result<T> = std::result::Result<T, XcbError>;
-
-/// Helper type for when you are defining your [Hook] vector in your main.rs when using
-/// the default XCB impls
-pub type XcbHooks = Hooks<XcbConnection>;
-
-/// Construct a penrose [WindowManager] backed by the default [xcb][crate::xcb] backend.
-pub fn new_xcb_backed_window_manager(
-    config: Config,
-    hooks: Vec<Box<dyn Hook<XcbConnection>>>,
-    error_handler: ErrorHandler,
-) -> crate::Result<WindowManager<XcbConnection>> {
-    let conn = XcbConnection::new()?;
-    let mut wm = WindowManager::new(config, conn, hooks, error_handler);
-    wm.init()?;
-
-    Ok(wm)
 }
 
 /**
