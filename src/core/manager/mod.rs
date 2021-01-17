@@ -1791,9 +1791,34 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
-    /// Get a vector of references to Workspaces satisfying 'selector'. WinId selectors will return
-    /// a vector with the workspace containing that Client if the client is known. Otherwise an
-    /// empty vector will be returned.
+    /// Get a vector of immutable references to _all_ workspaces that match the provided [Selector].
+    ///
+    /// To return only a single workspace in the case that a selector matches multiple workspaces,
+    /// use the [workspace][1] method instead.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let names: Vec<&str> = manager
+    ///     .all_workspaces(&Selector::Condition(&|ws|
+    ///         ws.name().parse::<usize>().unwrap() < 5
+    ///     ))
+    ///     .iter()
+    ///     .map(|w| w.name())
+    ///     .collect();
+    ///
+    /// assert_eq!(names, vec!["1", "2", "3", "4"]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(1));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
+    ///
+    /// [1]: crate::core::manager::WindowManager::workspace
     pub fn all_workspaces(&self, selector: &Selector<'_, Workspace>) -> Vec<&Workspace> {
         if let Selector::WinId(id) = selector {
             self.client_map
@@ -1806,9 +1831,53 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
-    /// Get a vector of mutable references to Workspaces satisfying 'selector'. WinId selectors will
-    /// return a vector with the workspace containing that Client if the client is known. Otherwise
-    /// an empty vector will be returned.
+    /// Get a vector of mutable references to _all_ workspaces that match the provided [Selector].
+    ///
+    /// To return only a single workspace in the case that a selector matches multiple workspaces,
+    /// use the [workspace_mut][1] method instead.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use penrose::__example_helpers::*;
+    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// let layouts: Vec<&str> = manager
+    ///     .all_workspaces(&Selector::Condition(&|ws|
+    ///         ws.name().parse::<usize>().unwrap() < 3
+    ///     ))
+    ///     .iter()
+    ///     .map(|w| w.layout_symbol())
+    ///     .collect();
+    ///
+    /// assert_eq!(layouts, vec!["first", "first"]);
+    ///
+    /// manager
+    ///     .all_workspaces_mut(&Selector::Condition(&|ws|
+    ///         ws.name().parse::<usize>().unwrap() < 3
+    ///     ))
+    ///     .iter_mut()
+    ///     .for_each(|ws| {
+    ///         ws.try_set_layout("second");
+    ///     });
+    ///
+    /// let layouts: Vec<&str> = manager
+    ///     .all_workspaces(&Selector::Condition(&|ws|
+    ///         ws.name().parse::<usize>().unwrap() < 5
+    ///     ))
+    ///     .iter()
+    ///     .map(|w| w.layout_symbol())
+    ///     .collect();
+    ///
+    /// assert_eq!(layouts, vec!["second", "second", "first", "first"]);
+    /// # Ok(())
+    /// # }
+    /// # let mut manager = example_windowmanager(1, n_clients(1));
+    /// # manager.init().unwrap();
+    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # example(manager).unwrap();
+    /// ```
+    ///
+    /// [1]: crate::core::manager::WindowManager::workspace_mut
     pub fn all_workspaces_mut(
         &mut self,
         selector: &Selector<'_, Workspace>,
