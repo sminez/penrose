@@ -1,12 +1,3 @@
-// New idea:
-// gen_keybindings takes a param of `check_at_compile: true|false` when called in verbose mode
-// this only works for known keybindings funcs as we need to be able to call them here.
-//
-// The flag then builds up a &[&str] that gets passed like so:
-//   validate_user_bindings!(keycode_func_ident, parse_func_ident, bindings);
-//
-// This expands to nothing if valid or returns a compile error if invalid.
-
 use proc_macro::TokenStream;
 use syn::{
     parse::{Parse, ParseStream, Result},
