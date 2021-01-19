@@ -1,0 +1,22 @@
+[package]
+name = "penrose_proc"
+version = "0.1.0"
+authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/sminez/penrose"
+documentation = "https://docs.rs/penrose_proc"
+readme = "README.md"
+description = "proc-macros for the Penrose tiling window manager library"
+keywords = [ "windowmanager", "window", "manager", "x11", "procmacro" ]
+
+[lib]
+proc-macro = true
+
+# [dev-dependencies]
+# trybuild = { version = "1.0", features = ["diff"] }
+
+[dependencies]
+syn = "1.0"
+quote = "1.0"
+proc-macro2 = "1.0"
