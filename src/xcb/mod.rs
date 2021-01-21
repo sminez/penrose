@@ -21,8 +21,8 @@
 //! [5]: penrose_keysyms::XKeySym
 //! [6]: crate::draw::Draw
 //! [7]: crate::draw::DrawContext
-//! [7]: crate::draw::KeyPressDraw
-//! [7]: crate::xcb::XcbDraw
+//! [8]: crate::draw::KeyPressDraw
+//! [9]: crate::xcb::XcbDraw
 //! [10]: https://www.mankier.com/package/libxcb-devel
 use crate::{
     core::{
