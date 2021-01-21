@@ -1,6 +1,6 @@
 [package]
 name = "penrose_proc"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -20,3 +20,6 @@ proc-macro = true
 syn = "1.0"
 quote = "1.0"
 proc-macro2 = "1.0"
+
+penrose_keysyms = { version = "0.1.0", path = "../penrose_keysyms" }
+strum = "0.19.2"
