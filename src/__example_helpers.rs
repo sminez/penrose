@@ -11,6 +11,7 @@ pub use crate::{
         client::Client,
         config::Config,
         data_types::{Region, ResizeAction},
+        helpers::index_selectors,
         layout::{Layout, LayoutConf},
         ring::{InsertPoint, Selector},
         screen::Screen,

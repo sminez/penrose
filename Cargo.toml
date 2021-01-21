@@ -25,6 +25,8 @@ xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 xcb_keysyms = []
 
 [dependencies]
+penrose_proc = { version = "0.1.1", path = "crates/penrose_proc" }
+
 log = "0.4.8"
 nix = "0.17.0"
 strum = { version = "0.19.2", features = ["derive"] }

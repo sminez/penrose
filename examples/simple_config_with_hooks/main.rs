@@ -135,6 +135,8 @@ fn main() -> Result<()> {
      * and instead spawns a new child process.
      */
     let key_bindings = gen_keybindings! {
+        validate: true;
+
         // Program launch
         "M-semicolon" => run_external!(my_program_launcher);
         "M-Return" => run_external!(my_terminal);
@@ -169,9 +171,9 @@ fn main() -> Result<()> {
 
         // Each keybinding here will be templated in with the workspace index of each workspace,
         // allowing for common workspace actions to be bound at once.
-        refmap [ config.ws_range() ] in {
-            "M-{}" => focus_workspace [ index_selectors(config.workspaces().len()) ];
-            "M-S-{}" => client_to_workspace [ index_selectors(config.workspaces().len()) ];
+        map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
+            "M-{}" => focus_workspace (REF);
+            "M-S-{}" => client_to_workspace (REF);
         };
     };
 

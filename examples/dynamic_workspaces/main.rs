@@ -81,6 +81,8 @@ fn main() -> Result<()> {
     ];
 
     let key_bindings = gen_keybindings! {
+        validate: true;
+
         // Program launch
         "M-semicolon" => run_external!("dmenu_run");
         "M-Return" => run_external!("st");
@@ -113,9 +115,9 @@ fn main() -> Result<()> {
         "M-A-Escape" => run_internal!(exit);
 
         // setting up bindings for 6 possible workspaces
-        refmap [ 1..7 ] in {
-            "M-{}" => focus_workspace [ index_selectors(6) ];
-            "M-S-{}" => client_to_workspace [ index_selectors(6) ];
+        map: { "1", "2", "3", "4", "5", "6" } to index_selectors(6) => {
+            "M-{}" => focus_workspace (REF);
+            "M-S-{}" => client_to_workspace (REF);
         };
     };
 
