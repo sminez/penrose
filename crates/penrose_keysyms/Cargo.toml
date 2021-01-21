@@ -3,6 +3,12 @@ name = "penrose_keysyms"
 version = "0.1.0"
 authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/sminez/penrose"
+documentation = "https://docs.rs/penrose_keysyms"
+readme = "README.md"
+description = "X11 keysyms for use with penrose"
+keywords = [ "windowmanager", "window", "manager", "x11", "keysym" ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
