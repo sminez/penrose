@@ -75,9 +75,9 @@
 //!         "M-Return" => run_external!("alacritty");
 //!         "M-A-Escape" => run_internal!(exit);
 //!
-//!         refmap [ 1..10 ] in {
-//!             "M-{}" => focus_workspace [ index_selectors(9) ];
-//!             "M-S-{}" => client_to_workspace [ index_selectors(9) ];
+//!         map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
+//!             "M-{}" => focus_workspace (REF);
+//!             "M-S-{}" => client_to_workspace (REF);
 //!         };
 //!     };
 //!
@@ -151,6 +151,9 @@ pub mod xcb;
 
 #[doc(hidden)]
 pub mod __example_helpers;
+
+#[doc(hidden)]
+pub use penrose_proc::validate_user_bindings;
 
 // top level re-exports
 #[doc(inline)]

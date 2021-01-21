@@ -1,8 +1,17 @@
 //! Utility macros for use in the rest of penrose.
-//! Not intended for general use
 
 /// kick off an external program as part of a key/mouse binding.
-/// explicitly redirects stderr to /dev/null
+///
+/// NOTE: this explicitly redirects stderr to /dev/null
+///
+/// ```no_run
+/// # #[macro_use] extern crate penrose;
+/// # use penrose::__example_helpers::*;
+/// # fn example() -> ExampleKeyHandler {
+/// # Box::new(
+/// run_external!("dmenu_run")
+/// # )}
+/// ```
 #[macro_export]
 macro_rules! run_external {
     ($cmd:tt) => {{
@@ -12,7 +21,16 @@ macro_rules! run_external {
     }};
 }
 
-/// kick off an internal method on the window manager as part of a key binding
+/// Kick off an internal method on the window manager as part of a key binding
+///
+/// ```no_run
+/// # #[macro_use] extern crate penrose;
+/// # use penrose::__example_helpers::*;
+/// # fn example() -> ExampleKeyHandler {
+/// # Box::new(
+/// run_internal!(cycle_client, Forward)
+/// # )}
+/// ```
 #[macro_export]
 macro_rules! run_internal {
     ($func:ident) => {
@@ -28,7 +46,16 @@ macro_rules! run_internal {
     };
 }
 
-/// make creating a hash-map a little less verbose
+/// Make creating a HashMap a little less verbose
+///
+/// ```
+/// # #[macro_use] extern crate penrose;
+/// map! {
+///     1 => "one",
+///     2 => "two",
+///     3 => "three",
+/// };
+/// ```
 #[macro_export]
 macro_rules! map {
     {} => { ::std::collections::HashMap::new() };
@@ -42,81 +69,146 @@ macro_rules! map {
     };
 }
 
-/// make creating all of the key bindings less verbose
+/// Generate user keybindings with optional compile time validation.
+///
+/// # Example
+///
+/// ```no_run
+/// # #[macro_use] extern crate penrose;
+/// # use penrose::__example_helpers::*;
+/// # fn example() -> ExampleKeyBindings {
+/// let key_bindings = gen_keybindings! {
+///     validate: true;
+///
+///     "M-semicolon" => run_external!("dmenu_run");
+///     "M-Return" => run_external!("alacritty");
+///     "M-A-Escape" => run_internal!(exit);
+///
+///     "M-j" => run_internal!(cycle_client, Forward);
+///     "M-k" => run_internal!(cycle_client, Backward);
+///     "M-S-j" => run_internal!(drag_client, Forward);
+///     "M-S-k" => run_internal!(drag_client, Backward);
+///     "M-S-q" => run_internal!(kill_client);
+///
+///     "M-Tab" => run_internal!(toggle_workspace);
+///
+///     "M-grave" => run_internal!(cycle_layout, Forward);
+///     "M-S-grave" => run_internal!(cycle_layout, Backward);
+///     "M-A-Up" => run_internal!(update_max_main, More);
+///     "M-A-Down" => run_internal!(update_max_main, Less);
+///     "M-A-Right" => run_internal!(update_main_ratio, More);
+///     "M-A-Left" => run_internal!(update_main_ratio, Less);
+///
+///     map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
+///         "M-{}" => focus_workspace (REF);
+///         "M-S-{}" => client_to_workspace (REF);
+///     };
+/// };
+/// # key_bindings }
+/// ```
+///
+/// # Sections
+///
+/// ### Validate (required)
+///
+/// ```no_run
+/// # #[macro_use] extern crate penrose;
+/// # use penrose::__example_helpers::*;
+/// # fn example() -> ExampleKeyBindings {
+/// # gen_keybindings! {
+/// validate: true;
+/// # }};
+/// ```
+///
+/// If validation is `true`, then `xmodmap -pke` will be called at compile time as a subprocess in
+/// order to load your system keymap to validate that all bindings specified are valid and that
+/// there are no repeated bindings that would conflict with one another.
+///
+/// ### Direct binding (optional)
+///
+/// ```no_run
+/// # #[macro_use] extern crate penrose;
+/// # use penrose::__example_helpers::*;
+/// # fn example() -> ExampleKeyBindings {
+/// # gen_keybindings! {
+/// "M-j" => run_internal!(cycle_client, Forward);
+/// "M-S-j" => run_internal!(drag_client, Forward);
+/// "M-Return" => run_external!("alacritty");
+/// # }};
+/// ```
+///
+/// This is what the majority of your keybindings will look like.
+///
+/// Should be a string literal and an expression that satisfies the [KeyEventHandler][1] type. The
+/// [run_internal] and [run_external] helper macros can be used for simplifying bindings that
+/// perform common actions like spawning external programs or triggering methods on the
+/// [WindowManager][2].
+///
+/// ### Map block (optional)
+///
+/// Bind a common pattern via a template.
+///
+/// ```no_run
+/// # #[macro_use] extern crate penrose;
+/// # use penrose::__example_helpers::*;
+/// # fn example() -> ExampleKeyBindings {
+/// # gen_keybindings! {
+/// // VAL: values are passed to the method directly
+/// map: { "Up", "Down" } to vec![More, Less] => {
+///     "M-{}" => update_max_main (VAL);
+/// };
+///
+/// // REF: values are passed to the method as references
+/// map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
+///     "M-{}" => focus_workspace (REF);
+///     "M-S-{}" => client_to_workspace (REF);
+/// };
+/// # }};
+/// ```
+///
+/// When you have a common pattern for multiple key bindings (such as focusing a given workspace)
+/// you can use a `map` block to avoid having to write them all out explicitly. The required format
+/// is as follows:
+/// ```markdown
+/// map: { "str", "literal", "key", "names" } to `impl Iterator` => {
+///     "<modifiers>-{}" => `WindowManager method` ( arg, ... );
+/// }
+/// ```
+///
+/// Note that the key names _must_ be string literals, not just `&str` references. The arguments to
+/// the [WindowManager][2] method can be passed by reference using `REF` or by value using `VAL`.
+/// Any additional arguments can be passed explicitly if they are required by the method.
+///
+/// [1]: crate::core::bindings::KeyEventHandler
+/// [2]: crate::core::manager::WindowManager
 #[macro_export]
 macro_rules! gen_keybindings {
-    // parse a single simple key binding
-    {   @parse $map:expr, $codes:expr,
-        $binding:expr => $action:expr;
-        $($tail:tt)*
+    { validate: true;
+      $($tokens:tt)*
     } => {
-        match $crate::xcb::helpers::parse_key_binding($binding, &$codes) {
-            None => panic!("invalid key binding: {}", $binding),
-            Some(key_code) => $map.insert(key_code, $action),
-        };
-        gen_keybindings!(@parse $map, $codes, $($tail)*);
-    };
-
-    // parse a map block for WindowManager methods with a single arg
-    {   @parse $map:expr, $codes:expr,
-        map [ $from:expr ] in { $($patt:expr => $method:ident [ $to:expr ];)+ };
-        $($tail:tt)*
-    } => {
-        {
-            $(
-                for (k, arg) in $from.into_iter().zip($to.clone()) {
-                    let binding = format!($patt, k);
-                    match $crate::core::helpers::parse_key_binding(binding.clone(), &$codes) {
-                        None => panic!("invalid key binding: {}", binding),
-                        Some(key_code) => $map.insert(key_code, run_internal!($method, arg)),
-                    };
-                }
-            )+
-            gen_keybindings!(@parse $map, $codes, $($tail)*);
-        }
-    };
-
-    // parse a map by reference block for WindowManager methods with a single ref arg
-    {   @parse $map:expr, $codes:expr,
-        refmap [ $from:expr ] in { $($patt:expr => $method:ident [ $to:expr ];)+ };
-        $($tail:tt)*
-    } => {
-        {
-            $(
-                for (k, arg) in $from.into_iter().zip($to.clone()) {
-                    let binding = format!($patt, k);
-                    match $crate::xcb::helpers::parse_key_binding(binding.clone(), &$codes) {
-                        None => panic!("invalid key binding: {}", binding),
-                        Some(key_code) => $map.insert(key_code, run_internal!($method, &arg)),
-                    };
-                }
-            )+
-            gen_keybindings!(@parse $map, $codes, $($tail)*);
-        }
-    };
-
-    // base case (out of tokens)
-    {   @parse $map:expr, $codes:expr,
-        $($tail:tt)*
-    } => {
-        // shouldn't have any tokens here!
-        $(compile_error!(
-            stringify!(unexpected tokens in keybinging macro: $tail)
-        );)*
-    };
-
-    // NOTE: this is the public entry point to the macro
-    { $($tokens:tt)+ } => {
         {
             let mut map = ::std::collections::HashMap::new();
             let codes = $crate::core::helpers::keycodes_from_xmodmap();
-            gen_keybindings!(@parse map, codes, $($tokens)+);
+            let parse = $crate::xcb::helpers::parse_key_binding;
+            __private!(validate; @parsekey map, codes, parse, [], [], $($tokens)*);
+            map
+        }
+    };
+
+    { $(validate: false;)?
+      $($tokens:tt)*
+    } => {
+        {
+            let mut map = ::std::collections::HashMap::new();
+            let codes = $crate::core::helpers::keycodes_from_xmodmap();
+            let parse = $crate::xcb::helpers::parse_key_binding;
+            __private!(@parsekey map, codes, parse, [], [], $($tokens)*);
             map
         }
     };
 }
 
-/// make creating all of the mouse bindings less verbose
+/// Make creating all of the mouse bindings less verbose
 #[macro_export]
 macro_rules! gen_mousebindings {
     {
@@ -244,7 +336,6 @@ macro_rules! __with_builder_and_getters {
     }
 }
 
-/// Helper for writing paramaterised test cases
 #[doc(hidden)]
 #[macro_export]
 macro_rules! test_cases {
@@ -272,4 +363,129 @@ macro_rules! test_cases {
             }
         )+
     };
+}
+
+// Helper to avoid polluting the documented patterns in other public macros
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __private {
+
+    /*
+     *  @parsekey :: handle each of the valid cases in an invocation of gen_keybindings
+     */
+
+    {   $($v:ident;)? @parsekey $map:expr, $codes:expr, $parse:expr,
+        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
+        map: { $($str:expr),+ } to $to:expr => {
+            $( $binding:expr => $method:ident ( $($params:tt)* ); )+
+        };
+        $($tail:tt)*
+    } => {
+        {
+            let keynames = &[$($str),+];
+            $(
+                for (name, arg) in keynames.iter().zip($to.into_iter()) {
+                    let binding = format!($binding, name);
+                    match $parse(binding.clone(), &$codes) {
+                        None => panic!("invalid key binding: {}", binding),
+                        Some(key_code) => $map.insert(
+                            key_code,
+                            run_internal!(
+                                $method,
+                                __private!(@parsemapparams arg; []; $($params,)*)
+                            )
+                        ),
+                    };
+                }
+            )+
+
+            __private!($($v;)? @parsekey $map, $codes, $parse,
+                [ $($patt,)* ], [ $(($($template),+; $($name),+),)* ($($binding),+; $($str),+) ],
+                $($tail)*
+            );
+        }
+    };
+
+    // parse a single simple key binding (validated if $validate is true)
+    {   $($v:ident;)? @parsekey $map:expr, $codes:expr, $parse:expr,
+        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
+        $binding:expr => $action:expr;
+        $($tail:tt)*
+    } => {
+        match $parse($binding.to_string(), &$codes) {
+            None => panic!("invalid key binding: {}", $binding),
+            Some(key_code) => $map.insert(key_code, $action),
+        };
+        __private!($($v;)? @parsekey $map, $codes, $parse,
+            [ $binding, $($patt,)* ], [ $(($($template),+; $($name),+)),* ],
+            $($tail)*
+        );
+    };
+
+    // TODO: remove this target in 0.2.2
+    {   $($v:ident;)? @parsekey $map:expr, $codes:expr, $parse:expr,
+        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
+        map [ $from:expr ] in { $($binding:expr => $method:ident [ $to:expr ];)+ };
+        $($tail:tt)*
+    } => {
+        compile_error!(
+            "the 'map [ <impl Iterator> ] in { ... }' pattern is deprecated: please use \
+            'map: { ... } to <impl Iterator> => { ... }' instead. See the docs for more information."
+        )
+    };
+
+    // TODO: remove this target in 0.2.2
+    {   $($v:ident;)? @parsekey $map:expr, $codes:expr, $parse:expr,
+        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
+        refmap [ $from:expr ] in { $($binding:expr => $method:ident [ $to:expr ];)+ };
+        $($tail:tt)*
+    } => {
+        compile_error!(
+            "the 'refmap [ <impl Iterator> ] in { ... }' pattern is deprecated: please use \
+            'map: { ... } to <impl Iterator> => { ... }' instead. See the docs for more information."
+        )
+    };
+
+    // base case (should be out of tokens)
+    {   @parsekey $map:expr, $codes:expr, $parse:expr,
+        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
+        $($tail:tt)*
+    } => {
+        $(compile_error!(stringify!("unexpected tokens in keybinging macro: " $tail));)*
+    };
+
+    {   validate; @parsekey $map:expr, $codes:expr, $parse:expr,
+        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
+        $($tail:tt)*
+    } => {
+        $(compile_error!(stringify!("unexpected tokens in keybinging macro: " $tail));)*
+        validate_user_bindings!(
+            ( $($patt),* )
+            ( $((($($template),+) ($($name),+)))* )
+        )
+    };
+
+    /*
+     *  @parsemapparams :: run variable replacement for a `map` block in `gen_keybindings`
+     */
+
+    { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ];
+      REF, $($params:tt)*
+    } => {
+        __private!(@parsemapparams $replacement; [$($arg),* , &$replacement]; $($params)*)
+    };
+
+    { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ];
+      VAL, $($params:tt)*
+    } => {
+        __private!(@parsemapparams $replacement; [$($arg),* , $replacement]; $($params)*)
+    };
+
+    { @parsemapparams $replacement:expr; [ $(,$arg:expr),* ];
+      $expr:expr, $($params:tt)*
+    } => {
+        __private!(@parsemapparams $replacement; [$($arg),* , $expr]; $($params)*)
+    };
+
+    { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ]; } => { $($arg),* };
 }
