@@ -18,7 +18,7 @@ use pangocairo::functions::{create_layout, show_layout};
 
 use std::collections::HashMap;
 
-#[cfg(feature = "xcb_keysyms")]
+#[cfg(feature = "keysyms")]
 use crate::draw::{KeyPressDraw, KeyPressParseAttempt};
 
 fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
@@ -173,7 +173,7 @@ impl Draw for XcbDraw {
     }
 }
 
-#[cfg(feature = "xcb_keysyms")]
+#[cfg(feature = "keysyms")]
 impl KeyPressDraw for XcbDraw {
     fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>> {
         Ok(self.api.next_keypress()?)

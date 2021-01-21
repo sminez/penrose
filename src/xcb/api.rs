@@ -13,8 +13,8 @@ use strum::*;
 
 use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
 
-#[cfg(feature = "xcb_keysyms")]
-use crate::{core::bindings::KeyPress, draw::KeyPressParseAttempt, xcb::keysyms::XKeySym};
+#[cfg(feature = "keysyms")]
+use crate::{core::bindings::KeyPress, draw::KeyPressParseAttempt, penrose_keysyms::XKeySym};
 
 /// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
 pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
@@ -68,7 +68,7 @@ pub struct Api {
     check_win: WinId,
     randr_base: u8,
     atoms: HashMap<Atom, u32>,
-    #[cfg(feature = "xcb_keysyms")]
+    #[cfg(feature = "keysyms")]
     code_map: ReverseCodeMap,
 }
 
@@ -96,7 +96,7 @@ impl Api {
     /// in order to prevent redundant calls through to the X server.
     ///
     /// Creating a new [Api] instance will establish the underlying connection and if
-    /// the `xcb_keysyms` feature is enabled, pull [KeyCode] mappings from the user
+    /// the `keysyms` feature is enabled, pull [KeyCode] mappings from the user
     /// system using `xmodmap`.
     ///
     /// [1]: http://rtbo.github.io/rust-xcb
@@ -109,7 +109,7 @@ impl Api {
             check_win: 0,
             randr_base: 0,
             atoms: HashMap::new(),
-            #[cfg(feature = "xcb_keysyms")]
+            #[cfg(feature = "keysyms")]
             code_map: code_map_from_xmodmap()?,
         };
         api.init()?;
@@ -191,7 +191,7 @@ impl Api {
     /// returning it as an [XKeySym] if it was a user keypress, or an [XEvent] if not.
     ///
     /// If no event is currently available, None is returned.
-    #[cfg(feature = "xcb_keysyms")]
+    #[cfg(feature = "keysyms")]
     pub fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>> {
         if let Some(event) = self.conn.poll_for_event() {
             let attempt = self.attempt_to_parse_as_keypress(event);
@@ -205,7 +205,7 @@ impl Api {
 
     /// Poll for the next event from the underlying [XCB Connection][::xcb::Connection],
     /// returning it as an [XKeySym] if it was a user keypress, or an [XEvent] if not.
-    #[cfg(feature = "xcb_keysyms")]
+    #[cfg(feature = "keysyms")]
     pub fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt> {
         loop {
             if let Some(event) = self.conn.wait_for_event() {
@@ -221,7 +221,7 @@ impl Api {
         }
     }
 
-    #[cfg(feature = "xcb_keysyms")]
+    #[cfg(feature = "keysyms")]
     fn attempt_to_parse_as_keypress(
         &self,
         event: XcbGenericEvent,
