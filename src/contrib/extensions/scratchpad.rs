@@ -123,8 +123,8 @@ impl Scratchpad {
         Ok(())
     }
 
-    fn region_for_screen(&self, r: Region) -> Region {
-        let (sx, sy, sw, sh) = r.values();
+    fn region_for_screen(&self, region: Region) -> Region {
+        let (sx, sy, sw, sh) = region.values();
         let w = (sw as f32 * self.w) as u32;
         let h = (sh as f32 * self.h) as u32;
         let x = sx + (sw - w) / 2;
