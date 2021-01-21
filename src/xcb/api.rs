@@ -14,7 +14,9 @@ use strum::*;
 use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
 
 #[cfg(feature = "keysyms")]
-use crate::{core::bindings::KeyPress, draw::KeyPressParseAttempt, penrose_keysyms::XKeySym};
+use crate::{core::bindings::KeyPress, draw::KeyPressParseAttempt};
+#[cfg(feature = "keysyms")]
+use penrose_keysyms::XKeySym;
 
 /// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
 pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;

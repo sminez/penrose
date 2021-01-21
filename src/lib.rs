@@ -186,6 +186,10 @@ pub enum PenroseError {
     #[error("the following serialized client IDs were not known to the X server: {0:?}")]
     MissingClientIds(Vec<WinId>),
 
+    /// A conversion to utf-8 failed
+    #[error("UTF-8 error")]
+    NonUtf8Prop(#[from] std::string::FromUtf8Error),
+
     /// An [IO Error][std::io::Error] was encountered
     #[error(transparent)]
     Io(#[from] std::io::Error),

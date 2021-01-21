@@ -1,8 +1,6 @@
 //! Auto generated Keysym enum for use with xcb keycodes
 use strum::*;
 
-use std::convert::TryFrom;
-
 /// X keysym mappings: auto generated from X11/keysymdef.h
 #[allow(non_camel_case_types)]
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
