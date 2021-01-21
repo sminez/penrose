@@ -22,10 +22,11 @@ members = [ "crates/*" ]
 [features]
 default = ["xcb", "xcb_draw"]
 xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
-xcb_keysyms = []
+keysyms = ["penrose_keysyms"]
 
 [dependencies]
-penrose_proc = { version = "0.1.1", path = "crates/penrose_proc" }
+penrose_keysyms = { version = "0.1.0", path = "crates/penrose_keysyms", optional = true }
+penrose_proc = { version = "0.1.2", path = "crates/penrose_proc" }
 
 log = "0.4.8"
 nix = "0.17.0"
