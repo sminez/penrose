@@ -1,5 +1,7 @@
 //! Proc macros for use in the main Penrose crate
+use penrose_keysyms::XKeySym;
 use proc_macro::TokenStream;
+use strum::IntoEnumIterator;
 use syn::{
     parenthesized,
     parse::{Parse, ParseStream, Result},
@@ -8,7 +10,7 @@ use syn::{
     LitStr, Token,
 };
 
-use std::{collections::HashSet, process::Command};
+use std::collections::HashSet;
 
 const VALID_MODIFIERS: [&str; 4] = ["A", "M", "S", "C"];
 
@@ -94,20 +96,6 @@ fn expand_templates(templates: Vec<String>, keynames: Vec<String>) -> Vec<Bindin
         .collect()
 }
 
-fn keynames_from_xmodmap() -> Vec<String> {
-    let res = Command::new("xmodmap")
-        .arg("-pke")
-        .output()
-        .expect("unable to fetch keycodes via xmodmap: please ensure that it is installed");
-
-    // each line should match 'keycode <code> = <names ...>'
-    String::from_utf8(res.stdout)
-        .expect("received invalid utf8 from xmodmap")
-        .lines()
-        .flat_map(|s| s.split_whitespace().skip(3).map(|name| name.into()))
-        .collect()
-}
-
 fn has_valid_modifiers(binding: &Binding) -> bool {
     !binding.mods.is_empty()
         && binding
@@ -151,7 +139,7 @@ fn report_error(msg: impl AsRef<str>, b: &Binding) {
 #[proc_macro]
 pub fn validate_user_bindings(input: TokenStream) -> TokenStream {
     let BindingsInput(mut bindings) = parse_macro_input!(input as BindingsInput);
-    let names = keynames_from_xmodmap();
+    let names: Vec<String> = XKeySym::iter().map(|x| x.as_ref().to_string()).collect();
     let mut seen = HashSet::new();
 
     for b in bindings.iter_mut() {
