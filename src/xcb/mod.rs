@@ -8,22 +8,22 @@
 //! # Available features
 //! - `xcb_draw`: adds `pango` and `cairo` as build dependencies and provides implementations of
 //!   the [Draw][6] and [DrawContext][7] traits.
-//! - `xcb_keysyms`: if enabled, this will include the [XKeySym][5] enum which is based on the
-//!   contents of `X11/keysymdef.h` and allows for parsing X keycode events as their corresponding
-//!   utf-8 representation or action.
+//! - `keysyms`: enable [KeyPressDraw][8] functionality for [XcbDraw][9]
 //!
 //! # C level documentation
 //!
-//! Docs for the underlying `xcb` C library can be found [here][8].
+//! Docs for the underlying `xcb` C library can be found [here][10].
 //!
 //! [1]: crate::core::manager::WindowManager
 //! [2]: https://xcb.freedesktop.org/
 //! [3]: https://www.pango.org/
 //! [4]: https://www.cairographics.org/
-//! [5]: crate::xcb::keysyms::XKeySym
+//! [5]: penrose_keysyms::XKeySym
 //! [6]: crate::draw::Draw
 //! [7]: crate::draw::DrawContext
-//! [8]: https://www.mankier.com/package/libxcb-devel
+//! [7]: crate::draw::KeyPressDraw
+//! [7]: crate::xcb::XcbDraw
+//! [10]: https://www.mankier.com/package/libxcb-devel
 use crate::{
     core::{
         bindings::{KeyCode, MouseState},
@@ -46,8 +46,6 @@ pub mod conversions;
 #[cfg(feature = "xcb_draw")]
 pub mod draw;
 pub mod helpers;
-#[cfg(feature = "xcb_keysyms")]
-pub mod keysyms;
 pub mod xconn;
 
 #[doc(inline)]
@@ -55,9 +53,6 @@ pub use api::Api;
 #[doc(inline)]
 #[cfg(feature = "xcb_draw")]
 pub use draw::{XcbDraw, XcbDrawContext};
-#[doc(inline)]
-#[cfg(feature = "xcb_keysyms")]
-pub use keysyms::XKeySym;
 #[doc(inline)]
 pub use xconn::XcbConnection;
 
