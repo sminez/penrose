@@ -135,8 +135,6 @@ fn main() -> Result<()> {
      * and instead spawns a new child process.
      */
     let key_bindings = gen_keybindings! {
-        validate: true;
-
         // Program launch
         "M-semicolon" => run_external!(my_program_launcher);
         "M-Return" => run_external!(my_terminal);

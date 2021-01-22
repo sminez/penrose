@@ -21,8 +21,6 @@ fn main() -> Result<()> {
     let hooks = vec![];
 
     let key_bindings = gen_keybindings! {
-        validate: true;
-
         "M-j" => run_internal!(cycle_client, Forward);
         "M-k" => run_internal!(cycle_client, Backward);
         "M-S-j" => run_internal!(drag_client, Forward);

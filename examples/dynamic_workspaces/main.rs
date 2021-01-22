@@ -81,8 +81,6 @@ fn main() -> Result<()> {
     ];
 
     let key_bindings = gen_keybindings! {
-        validate: true;
-
         // Program launch
         "M-semicolon" => run_external!("dmenu_run");
         "M-Return" => run_external!("st");
