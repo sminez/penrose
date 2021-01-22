@@ -17,11 +17,20 @@ customise things to your liking.
 
 <br>
 
+### FAQs
+
+The [faqs][0] should always be up to date with current develop and actual
+frequently asked questions. Please read through them and check the issues on
+GitHub before opening a new issue to see if your question has already been
+answered previously.
+
+<br>
+
 ### Getting Started
 
 If you are new to Rust it is worthwhile reading the penrose [getting started][1]
 guide for details on how to get Rust set up on your system and how to get a
-minimal config in place.  Once you've managed that, you might want to take a
+minimal config in place. Once you've managed that, you might want to take a
 look at some of the configurations in the [examples][2] directory or my
 [personal config][3] which has several custom extensions.
 
@@ -116,7 +125,8 @@ that is not going to be included at the expense of statically defined control in
 your binary as a default.
 
 
-  [1]: https://sminez.github.io/projects/penrose/getting-started/
+  [0]: https://github.com/sminez/penrose/tree/develop/docs/faq.md
+  [1]: https://github.com/sminez/penrose/tree/develop/docs/getting_started.md
   [2]: https://github.com/sminez/penrose/tree/develop/examples
   [3]: https://github.com/sminez/my-penrose-config
   [4]: https://docs.rs/penrose
