@@ -1,3 +1,7 @@
+.PHONY: audit-dependencies
+audit-dependencies:
+	cargo audit
+
 .PHONY: build
 build:
 	cargo build
@@ -36,6 +40,10 @@ test:
 .PHONY: test-and-publish
 test-and-publish:
 	cargo test --all-features && cargo publish
+
+.PHONY: upgrade-check
+upgrade-check:
+	cargo upgrade --workspace --dry-run
 
 
 # GitHub helpers using the official gh GitHub CLI
