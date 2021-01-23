@@ -55,7 +55,7 @@ impl<C> X11rbConnection<C>
 where
     C: Connection,
 {
-    fn new_for_connection(conn: C) -> Result<Self> {
+    pub(crate) fn new_for_connection(conn: C) -> Result<Self> {
         let root = conn.setup().roots[0].root;
         conn.prefetch_extension_information(randr::X11_EXTENSION_NAME)
             .map_err(|err| X11rbError::from(err))?;
