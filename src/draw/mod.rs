@@ -85,6 +85,9 @@ pub struct Color {
     a: f64,
 }
 
+// helper for methods in Color
+macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
+
 impl Color {
     /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
     pub fn new_from_hex(hex: u32) -> Self {
@@ -112,12 +115,17 @@ impl Color {
 
     /// Render this color as a #RRGGBB hew color string
     pub fn as_rgb_hex_string(&self) -> String {
-        format!(
-            "#{:x}{:x}{:x}",
-            (self.r * 255.0) as u64,
-            (self.g * 255.0) as u64,
-            (self.b * 255.0) as u64
-        )
+        format!("#{:x}", self.rgb_u32())
+    }
+
+    /// 0xRRGGBB representation of this Color (no alpha information)
+    pub fn rgb_u32(&self) -> u32 {
+        _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 1)
+    }
+
+    /// 0xRRGGBBAA representation of this Color
+    pub fn rgba_u32(&self) -> u32 {
+        _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 1)
     }
 }
 
@@ -144,7 +152,7 @@ impl From<(f64, f64, f64, f64)> for Color {
 impl TryFrom<String> for Color {
     type Error = DrawError;
 
-    fn try_from(s: String) -> Result<Color> {
+    fn try_from(s: String) -> Result<Self> {
         (&s[..]).try_into()
     }
 }
@@ -152,7 +160,7 @@ impl TryFrom<String> for Color {
 impl TryFrom<&str> for Color {
     type Error = DrawError;
 
-    fn try_from(s: &str) -> Result<Color> {
+    fn try_from(s: &str) -> Result<Self> {
         let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(&s), 16)?;
 
         if s.len() == 7 {

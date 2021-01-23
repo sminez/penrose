@@ -13,6 +13,7 @@ use crate::{
         data_types::{Point, Region, WinId},
         screen::Screen,
     },
+    draw::Color,
     PenroseError, Result,
 };
 
@@ -340,7 +341,7 @@ pub trait XConn {
     fn focus_client(&self, id: WinId);
 
     /// Change the border color for the given client
-    fn set_client_border_color(&self, id: WinId, color: u32);
+    fn set_client_border_color(&self, id: WinId, color: Color);
 
     /// Notify the X server that we are intercepting the user specified key bindings and prevent
     /// them being passed through to the underlying applications.
@@ -504,7 +505,7 @@ pub trait StubXConn {
     /// Mocked version of unmap_window
     fn mock_unmap_window(&self, _: WinId) {}
     /// Mocked version of set_client_border_color
-    fn mock_set_client_border_color(&self, _: WinId, _: u32) {}
+    fn mock_set_client_border_color(&self, _: WinId, _: Color) {}
     /// Mocked version of grab_keys
     fn mock_grab_keys(&self, _: &KeyBindings<Self>, _: &MouseBindings<Self>)
     where
@@ -590,7 +591,7 @@ where
         self.mock_focus_client(id)
     }
 
-    fn set_client_border_color(&self, id: WinId, color: u32) {
+    fn set_client_border_color(&self, id: WinId, color: Color) {
         self.mock_set_client_border_color(id, color)
     }
 
