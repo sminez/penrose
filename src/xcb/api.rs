@@ -299,7 +299,7 @@ impl Api {
             }
 
             xcb::DESTROY_NOTIFY => {
-                let e: &xcb::MapNotifyEvent = unsafe { xcb::cast_event(&event) };
+                let e: &xcb::DestroyNotifyEvent = unsafe { xcb::cast_event(&event) };
                 Some(XEvent::Destroy { id: e.window() })
             }
 
