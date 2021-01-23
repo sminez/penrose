@@ -22,7 +22,7 @@ use crate::{
             UNMANAGED_WINDOW_TYPES,
         },
     },
-    xcb::{Api, XcbApi},
+    xcb::{Api, XcbApi, XcbError},
     Result,
 };
 
@@ -120,7 +120,8 @@ impl XConn for XcbConnection {
     fn init(&self) -> Result<()> {
         Ok(self
             .api
-            .set_window_attributes(self.api.root(), &[WinAttr::RootEventMask])?)
+            .set_window_attributes(self.api.root(), &[WinAttr::RootEventMask])
+            .map_err(|e| XcbError::Raw(format!("Unable to set root window event mask: {}", e)))?)
     }
 
     fn flush(&self) -> bool {
