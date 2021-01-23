@@ -140,7 +140,7 @@ impl Api {
         let (maj, min) = (reply.major_version(), reply.minor_version());
         if (maj, min) != (RANDR_MAJ, RANDR_MIN) {
             panic!(format!(
-                "penrose requires RandR version > {}.{}: detected {}.{}\nplease update RandR to a newer version",
+                "penrose requires RandR version >= {}.{}: detected {}.{}\nplease update RandR to a newer version",
                 RANDR_MAJ, RANDR_MIN, maj, min
             ))
         }
