@@ -21,6 +21,9 @@ use penrose_keysyms::XKeySym;
 /// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
 pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
 
+const RANDR_MAJ: u32 = 1;
+const RANDR_MIN: u32 = 2;
+
 #[cfg(feature = "serde")]
 fn default_conn() -> xcb::Connection {
     let (conn, _) = xcb::Connection::connect(None).expect("unable to connect using XCB");
@@ -129,6 +132,18 @@ impl Api {
             .get_extension_data(&mut xcb::randr::id())
             .ok_or_else(|| XcbError::Randr("unable to fetch extension data".into()))?
             .first_event();
+
+        // Make sure we have new enough RandR so we can use 'get_screen_resources'
+        // See https://github.com/sminez/penrose/issues/115 for more details
+        let cookie = xcb::randr::query_version(&self.conn, RANDR_MAJ, RANDR_MIN);
+        let reply = cookie.get_reply()?;
+        let (maj, min) = (reply.major_version(), reply.minor_version());
+        if (maj, min) != (RANDR_MAJ, RANDR_MIN) {
+            panic!(format!(
+                "penrose requires RandR version > {}.{}: detected {}.{}\nplease update RandR to a newer version",
+                RANDR_MAJ, RANDR_MIN, maj, min
+            ))
+        }
 
         self.check_win = self.conn.generate_id();
         xcb::create_window(
