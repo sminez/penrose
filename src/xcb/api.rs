@@ -567,9 +567,10 @@ impl XcbApi for Api {
         Ok(())
     }
 
-    fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) {
+    fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) -> Result<()> {
         let data: Vec<(u32, u32)> = attrs.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
-        xcb::change_window_attributes(&self.conn, id, &data);
+        let reply = xcb::change_window_attributes_checked(&self.conn, id, &data);
+        Ok(reply.request_check()?)
     }
 
     fn unmap_window(&self, id: WinId) {

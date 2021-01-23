@@ -117,6 +117,12 @@ impl XConn for XcbConnection {
         Ok(self.api.hydrate()?)
     }
 
+    fn init(&self) -> Result<()> {
+        Ok(self
+            .api
+            .set_window_attributes(self.api.root(), &[WinAttr::RootEventMask])?)
+    }
+
     fn flush(&self) -> bool {
         self.api.flush()
     }
@@ -150,7 +156,8 @@ impl XConn for XcbConnection {
 
     fn mark_new_window(&self, id: WinId) {
         let data = &[WinAttr::ClientEventMask];
-        self.api.set_window_attributes(id, data)
+        // TODO: this should return the error once XConn is updated
+        self.api.set_window_attributes(id, data).unwrap();
     }
 
     fn map_window(&self, id: WinId) {
@@ -175,7 +182,8 @@ impl XConn for XcbConnection {
 
     fn set_client_border_color(&self, id: WinId, color: u32) {
         let data = &[WinAttr::BorderColor(color)];
-        self.api.set_window_attributes(id, data);
+        // TODO: this should return the error once XConn is updated
+        self.api.set_window_attributes(id, data).unwrap();
     }
 
     fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
@@ -197,8 +205,6 @@ impl XConn for XcbConnection {
                 .map(|(_, state)| state)
                 .collect::<Vec<_>>(),
         );
-        let data = &[WinAttr::RootEventMask];
-        self.api.set_window_attributes(self.api.root(), data);
         self.flush();
     }
 
