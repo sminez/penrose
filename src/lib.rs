@@ -190,6 +190,10 @@ pub enum PenroseError {
     #[error("UTF-8 error")]
     NonUtf8Prop(#[from] std::string::FromUtf8Error),
 
+    #[doc(hidden)]
+    #[error(transparent)]
+    Infallible(#[from] std::convert::Infallible),
+
     /// An [IO Error][std::io::Error] was encountered
     #[error(transparent)]
     Io(#[from] std::io::Error),

@@ -22,6 +22,7 @@ use crate::{
             UNMANAGED_WINDOW_TYPES,
         },
     },
+    draw::Color,
     xcb::{Api, XcbApi, XcbError},
     Result,
 };
@@ -181,8 +182,8 @@ impl XConn for XcbConnection {
         self.api.mark_focused_window(id);
     }
 
-    fn set_client_border_color(&self, id: WinId, color: u32) {
-        let data = &[WinAttr::BorderColor(color)];
+    fn set_client_border_color(&self, id: WinId, color: Color) {
+        let data = &[WinAttr::BorderColor(color.rgb_u32())];
         // TODO: this should return the error once XConn is updated
         self.api.set_window_attributes(id, data).unwrap();
     }

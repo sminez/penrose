@@ -232,7 +232,9 @@ macro_rules! __with_builder_and_getters {
 
         $(
             $(#[$field_outer:meta])*
-            $(VecImplInto $intofield:ident : $intoty:ty;)?
+            $(VecImplInto $vecintofield:ident : $vecintoty:ty;)?
+            $(ImplInto $intofield:ident : $intoty:ty;)?
+            $(ImplTry $errty:ty; $tryfield:ident : $tryty:ty;)?
             $(Concrete $field:ident : $ty:ty;)?
             => $default:expr;
         )+
@@ -241,7 +243,9 @@ macro_rules! __with_builder_and_getters {
         pub struct $name {
             $(
                 pub(crate)
-                $($intofield : Vec<$intoty>,)?
+                $($vecintofield : Vec<$vecintoty>,)?
+                $($intofield : $intoty,)?
+                $($tryfield : $tryty,)?
                 $($field: $ty,)?
             )+
         }
@@ -257,8 +261,14 @@ macro_rules! __with_builder_and_getters {
             $(
                 /// Obtain a reference to
                 $(#[$field_outer])*
-                $(pub fn $intofield(&self) -> &Vec<$intoty> {
+                $(pub fn $vecintofield(&self) -> &Vec<$vecintoty> {
+                        &self.$vecintofield
+                })?
+                $(pub fn $intofield(&self) -> &$intoty {
                         &self.$intofield
+                })?
+                $(pub fn $tryfield(&self) -> &$tryty {
+                        &self.$tryfield
                 })?
                 $(pub fn $field(&self) -> &$ty {
                         &self.$field
@@ -270,7 +280,9 @@ macro_rules! __with_builder_and_getters {
             fn default() -> Self {
                 Self {
                     $(
-                        $($intofield: $default,)?
+                        $($vecintofield: $default.into_iter().map(|e| e.into()).collect(),)?
+                        $($intofield: $default.into(),)?
+                        $($tryfield: $default.try_into().unwrap(),)?
                         $($field: $default,)?
                     )+
                 }
@@ -292,9 +304,27 @@ macro_rules! __with_builder_and_getters {
             $(
                 /// Set the value of
                 $(#[$field_outer])*
-                $(pub fn $intofield(&mut self, val: impl IntoIterator<Item = impl Into<$intoty>>) -> &mut $builder_name {
-                    self.inner.$intofield = val.into_iter().map(|elem| elem.into()).collect();
+                $(pub fn $vecintofield<T, U>(&mut self, val: T) -> &mut $builder_name
+                where
+                    T: IntoIterator<Item = U>,
+                    U: Into<$vecintoty>,
+                {
+                    self.inner.$vecintofield = val.into_iter().map(|elem| elem.into()).collect();
                     self
+                })?
+                $(pub fn $intofield<T>(&mut self, val: T) -> &mut $builder_name
+                where
+                    T: Into<$intoty>
+                {
+                    self.inner.$intofield = val.into();
+                    self
+                })?
+                $(pub fn $tryfield<T>(&mut self, val: T) -> crate::Result<&mut $builder_name>
+                where
+                    T: TryInto<$tryty, Error=$errty>,
+                {
+                    self.inner.$tryfield = val.try_into()?;
+                    Ok(self)
                 })?
                 $(pub fn $field(&mut self, val: $ty) -> &mut $builder_name {
                     self.inner.$field = val;

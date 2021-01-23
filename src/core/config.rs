@@ -1,5 +1,10 @@
 //! User facing configuration of the penrose [WindowManager][crate::core::manager::WindowManager].
-use crate::core::layout::{side_stack, Layout, LayoutConf};
+use crate::{
+    core::layout::{side_stack, Layout, LayoutConf},
+    draw::{Color, DrawError},
+};
+
+use std::convert::TryInto;
 
 __with_builder_and_getters! {
     /// The main user facing configuration details.
@@ -8,12 +13,13 @@ __with_builder_and_getters! {
     ///
     /// # Example
     /// ```
-    /// use penrose::Config;
+    /// use penrose::{Config, draw::Color};
+    /// use std::convert::TryFrom;
     ///
     /// let config = Config::default();
     ///
     /// assert_eq!(config.border_px(), &2);
-    /// assert_eq!(config.focused_border(), &0xcc241d);
+    /// assert_eq!(config.focused_border(), &Color::try_from("#cc241d").unwrap());
     /// ```
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     #[derive(Clone, Debug, PartialEq)]
@@ -45,7 +51,8 @@ __with_builder_and_getters! {
     ///     .floating_classes(vec!["rofi", "dmenu", "dunst", "pinentry-gtk-2"])
     ///     .layouts(my_layouts())
     ///     .border_px(4)
-    ///     .focused_border(0xebdbb2)
+    ///     .focused_border("#ebdbb2")
+    ///     .unwrap()
     ///     .build()
     ///     .expect("failed to build config");
     /// ```
@@ -56,15 +63,10 @@ __with_builder_and_getters! {
     ///
     /// # Constraints
     /// You must provide at least one workspace per screen
-    VecImplInto workspaces: String; =>
-        ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
+    VecImplInto workspaces: String; => vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
     /// the window classes that will always be considered floating
-    VecImplInto floating_classes: String; =>
-        ["dmenu", "dunst"].iter().map(|s| s.to_string()).collect();
+    VecImplInto floating_classes: String; => vec!["dmenu", "dunst"];
 
     /// the [Layout] functions to be used by each [Workspace][crate::core::workspace::Workspace]
     ///
@@ -77,9 +79,9 @@ __with_builder_and_getters! {
         ];
 
     /// the focused border color as a hex literal
-    Concrete focused_border: u32; => 0xcc241d;   // #cc241d
+    ImplTry DrawError; focused_border: Color; => "#cc241d";
     /// the unfocused border color as a hex literal
-    Concrete unfocused_border: u32; => 0x3c3836; // #3c3836
+    ImplTry DrawError; unfocused_border: Color; => "#3c3836";
     /// the border width of each window in pixels
     Concrete border_px: u32; => 2;
     /// the gap between tiled windows in pixels

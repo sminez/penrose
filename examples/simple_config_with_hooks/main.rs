@@ -56,8 +56,8 @@ fn main() -> Result<()> {
         // Windows with a matching WM_CLASS will always float
         .floating_classes(vec!["dmenu", "dunst", "polybar"])
         // Client border colors are set based on X focus
-        .focused_border(0xcc241d) // #cc241d
-        .unfocused_border(0x3c3836); // #3c3836
+        .focused_border("#cc241d")?
+        .unfocused_border("#3c3836")?;
 
     // When specifying a layout, most of the time you will want LayoutConf::default() as shown
     // below, which will honour gap settings and will not be run on focus changes (only when
