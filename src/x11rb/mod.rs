@@ -23,7 +23,15 @@ pub enum X11rbError {
     #[error(transparent)]
     ReplyError(#[from] ::x11rb::errors::ReplyError),
 
+    /// Could not get X11 request reply or could not generate_id()
+    #[error(transparent)]
+    ReplyOrIdError(#[from] ::x11rb::errors::ReplyOrIdError),
+
     /// A requested client property was empty
     #[error("'{}' prop is not set for client {1}", .0.as_ref())]
     MissingProp(Atom, WinId),
+
+    /// The X11 server does not support the RandR extension
+    #[error("the X11 server does not support the RandR extension")]
+    MissingRandRSupport,
 }
