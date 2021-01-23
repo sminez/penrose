@@ -233,6 +233,9 @@ impl<X: XConn> WindowManager<X> {
             panic!("Need to call 'hydrate_and_init' when restoring from serialised state")
         }
 
+        debug!("Initialising XConn");
+        self.conn().init()?;
+
         debug!("Attempting initial screen detection");
         self.detect_screens()?;
 

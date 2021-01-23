@@ -227,7 +227,7 @@ pub trait XcbApi {
     /// Send an event to a client
     fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()>;
     /// Set attributes on the target window
-    fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]);
+    fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) -> Result<()>;
     /// Unmap the target window
     fn unmap_window(&self, id: WinId);
     /// Find the current size and position of the target window

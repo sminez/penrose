@@ -293,6 +293,16 @@ pub trait XConn {
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()>;
 
+    /// Initialise any state required before this connection can be used by the WindowManager.
+    ///
+    /// This must include checking to see if another window manager is running and return an error
+    /// if there is, but other than that there are no other requirements.
+    ///
+    /// This method is called once during [WindowManager::init][1]
+    ///
+    /// [1]: crate::core::manager::WindowManager::init
+    fn init(&self) -> Result<()>;
+
     /// Flush pending actions to the X event loop
     fn flush(&self) -> bool;
 
@@ -332,10 +342,11 @@ pub trait XConn {
     /// Change the border color for the given client
     fn set_client_border_color(&self, id: WinId, color: u32);
 
-    /// Notify the X server that we are intercepting the user specified key bindings
-    /// and prevent them being passed through to the underlying applications. This
-    /// is what determines which key press events end up being sent through in the
-    /// main event loop for the WindowManager.
+    /// Notify the X server that we are intercepting the user specified key bindings and prevent
+    /// them being passed through to the underlying applications.
+    ///
+    /// This is what determines which key press events end up being sent through in the main event
+    /// loop for the WindowManager.
     fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>)
     where
         Self: Sized;
@@ -405,6 +416,11 @@ pub trait StubXConn {
     /// Mocked version of hydrate
     #[cfg(feature = "serde")]
     fn mock_hydrate(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Mocked version of init
+    fn mock_init(&self) -> Result<()> {
         Ok(())
     }
 
@@ -520,6 +536,10 @@ where
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()> {
         self.mock_hydrate()
+    }
+
+    fn init(&self) -> Result<()> {
+        self.mock_init()
     }
 
     fn flush(&self) -> bool {
