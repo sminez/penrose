@@ -393,12 +393,12 @@ impl XcbApi for Api {
     }
 
     // xcb docs: https://www.mankier.com/3/xcb_get_property
-    fn get_atom_prop(&self, id: WinId, atom: Atom) -> Result<u32> {
-        let a = self.known_atom(atom);
+    fn get_atom_prop(&self, id: WinId, name: &str) -> Result<u32> {
+        let a = self.atom(name)?;
         let cookie = xcb::get_property(&self.conn, false, id, a, xcb::ATOM_ANY, 0, 1024);
         let reply = cookie.get_reply()?;
         if reply.value_len() == 0 {
-            Err(XcbError::MissingProp(atom, id))
+            Err(XcbError::MissingProp(name.to_string(), id))
         } else {
             Ok(reply.value()[0])
         }

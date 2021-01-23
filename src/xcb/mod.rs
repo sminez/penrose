@@ -114,8 +114,8 @@ pub enum XcbError {
     Io(#[from] std::io::Error),
 
     /// A requested client property was empty
-    #[error("'{}' prop is not set for client {1}", .0.as_ref())]
-    MissingProp(Atom, WinId),
+    #[error("'{0}' prop is not set for client {1}")]
+    MissingProp(String, WinId),
 
     /// No screens were found
     #[error("Unable to fetch setup roots from XCB")]
@@ -198,8 +198,8 @@ pub trait XcbApi {
 
     /// Delete a known property from a window
     fn delete_prop(&self, id: WinId, prop: Atom);
-    /// Fetch an [Atom] property for a given window
-    fn get_atom_prop(&self, id: WinId, atom: Atom) -> Result<u32>;
+    /// Fetch an Atom property for a given window
+    fn get_atom_prop(&self, id: WinId, name: &str) -> Result<u32>;
     /// Fetch an String property for a given window
     fn get_str_prop(&self, id: WinId, name: &str) -> Result<String>;
     /**
