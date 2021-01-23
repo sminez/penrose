@@ -107,7 +107,7 @@ if (DELETED.length > 0) {
 
 // Add labels based on modified files in the diff
 update_labels(
-  danger.github.issue.labels.map(({ name }) => name),
+  danger.github.issue.labels.map((label: { name: string }) => label.name),
   [
     { path: "src/core", label: "core" },
     { path: "src/draw", label: "core" },
