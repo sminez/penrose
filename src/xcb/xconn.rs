@@ -26,7 +26,7 @@ use crate::{
     Result,
 };
 
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
 
 const WM_NAME: &str = "penrose";
 
@@ -70,7 +70,7 @@ impl XcbConnection {
     }
 
     fn window_has_type_in(&self, id: WinId, win_types: &[u32]) -> bool {
-        if let Ok(atom) = self.api.get_atom_prop(id, Atom::NetWmWindowType) {
+        if let Ok(atom) = self.api.get_atom_prop(id, Atom::NetWmWindowType.as_ref()) {
             return win_types.contains(&atom);
         }
         false
@@ -328,7 +328,7 @@ impl XConn for XcbConnection {
     }
 
     fn atom_prop(&self, id: u32, name: &str) -> Result<u32> {
-        Ok(self.api.get_atom_prop(id, Atom::from_str(name)?)?)
+        Ok(self.api.get_atom_prop(id, name)?)
     }
 
     fn intern_atom(&self, atom: &str) -> Result<u32> {
