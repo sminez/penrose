@@ -1,4 +1,4 @@
-//! TODO: Docs
+//! API wrapper for talking to the X server using x11rb
 
 use crate::{
     PenroseError,
@@ -40,6 +40,7 @@ use std::{
     str::FromStr,
 };
 
+/// Handles communication with an X server via the x11rb crate.
 #[derive(Debug)]
 pub struct X11rbConnection<C> {
     conn: C,
@@ -54,7 +55,7 @@ impl<C> X11rbConnection<C>
 where
     C: Connection,
 {
-    pub fn new_for_connection(conn: C) -> Result<Self> {
+    fn new_for_connection(conn: C) -> Result<Self> {
         let root = conn.setup().roots[0].root;
         conn.prefetch_extension_information(randr::X11_EXTENSION_NAME)
             .map_err(|err| X11rbError::from(err))?;

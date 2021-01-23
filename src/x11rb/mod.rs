@@ -1,4 +1,4 @@
-//! TODO: Docs
+//! Helpers and utilities for using x11rb as a back end for penrose
 
 use crate::core::{data_types::WinId, xconnection::Atom};
 
