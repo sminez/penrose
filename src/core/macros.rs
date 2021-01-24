@@ -46,6 +46,34 @@ macro_rules! run_internal {
     };
 }
 
+/// Helper for spawning external processes and ignoring the output
+#[macro_export]
+macro_rules! spawn {
+    { $cmd:expr } => {
+        $crate::core::helpers::spawn($cmd)
+    };
+
+    { $cmd:expr, $($arg:expr),+ } => {
+        $crate::core::helpers::spawn_with_args($cmd, &[$($arg),+])
+    };
+}
+
+/// Helper for spawning external processes and capturing the output
+#[macro_export]
+macro_rules! spawn_for_output {
+    { $cmd:expr } => {
+        $crate::core::helpers::spawn_for_output($cmd).map(|s|
+            s.trim().split('\n').map(String::from).collect::<Vec<String>>()
+        )
+    };
+
+    { $cmd:expr, $($arg:expr),+ } => {
+        $crate::core::helpers::spawn_for_output_with_args($cmd, &[$($arg),+]).map(|s|
+            s.trim().split('\n').map(String::from).collect::<Vec<String>>()
+        )
+    };
+}
+
 /// Make creating a HashMap a little less verbose
 ///
 /// ```

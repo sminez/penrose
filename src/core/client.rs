@@ -72,6 +72,11 @@ impl Client {
         self.workspace = workspace
     }
 
+    /// Set the floating state of this client
+    pub fn set_floating(&mut self, floating: bool) {
+        self.floating = floating
+    }
+
     pub(crate) fn set_name(&mut self, name: impl Into<String>) {
         self.wm_name = name.into()
     }

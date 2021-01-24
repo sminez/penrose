@@ -9,11 +9,9 @@ use std::{
     process::{Command, Stdio},
 };
 
-/**
- * Run an external command
- *
- * This redirects the process stdout and stderr to /dev/null.
- */
+/// Run an external command
+///
+/// This redirects the process stdout and stderr to /dev/null.
 pub fn spawn<S: Into<String>>(cmd: S) -> Result<()> {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
@@ -36,11 +34,9 @@ pub fn spawn<S: Into<String>>(cmd: S) -> Result<()> {
     }
 }
 
-/**
- * Run an external command with the specified command line arguments
- *
- * This redirects the process stdout and stderr to /dev/null.
- */
+/// Run an external command with the specified command line arguments
+///
+/// This redirects the process stdout and stderr to /dev/null.
 pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
     let result = Command::new(cmd.into())
         .args(args)
@@ -54,25 +50,21 @@ pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
     }
 }
 
-/**
- * Run an external command and return its output.
- *
- * NOTE: std::process::Command::output will not work within penrose due to the
- * way that signal handling is set up. Use this function if you need to access the
- * output of a process that you spawn.
- */
+/// Run an external command and return its output.
+///
+/// NOTE: std::process::Command::output will not work within penrose due to the
+/// way that signal handling is set up. Use this function if you need to access the
+/// output of a process that you spawn.
 pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
     let s = cmd.into();
     let parts: Vec<&str> = s.split_whitespace().collect();
     let result = if parts.len() > 1 {
         Command::new(parts[0])
-            .stdout(std::process::Stdio::piped())
+            .stdout(Stdio::piped())
             .args(&parts[1..])
             .spawn()
     } else {
-        Command::new(parts[0])
-            .stdout(std::process::Stdio::piped())
-            .spawn()
+        Command::new(parts[0]).stdout(Stdio::piped()).spawn()
     };
 
     let child = result?;
@@ -84,18 +76,39 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
         .map(|_| buff)?)
 }
 
-/**
- * Run the xmodmap command to dump the system keymap table.
- *
- * This is done in a form that we can load in and convert back to key
- * codes. This lets the user define key bindings in the way that they
- * would expect while also ensuring that it is east to debug any odd
- * issues with bindings by referring the user to the xmodmap output.
- *
- * # Panics
- * This function will panic if it is unable to fetch keycodes using the xmodmap
- * binary on your system or if the output of `xmodmap -pke` is not valid
- */
+/// Run an external command with arguments and return its output.
+///
+/// NOTE: std::process::Command::output will not work within penrose due to the
+/// way that signal handling is set up. Use this function if you need to access the
+/// output of a process that you spawn.
+pub fn spawn_for_output_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<String> {
+    let cmd = cmd.into();
+
+    info!("spawning {} with {:?}", cmd, args);
+    let child = Command::new(&cmd)
+        .stdout(Stdio::piped())
+        .args(args)
+        .spawn()?;
+
+    info!("reading output...");
+    let mut buff = String::new();
+    Ok(child
+        .stdout
+        .ok_or(PenroseError::SpawnProc(cmd))?
+        .read_to_string(&mut buff)
+        .map(|_| buff)?)
+}
+
+/// Run the xmodmap command to dump the system keymap table.
+///
+/// This is done in a form that we can load in and convert back to key
+/// codes. This lets the user define key bindings in the way that they
+/// would expect while also ensuring that it is east to debug any odd
+/// issues with bindings by referring the user to the xmodmap output.
+///
+/// # Panics
+/// This function will panic if it is unable to fetch keycodes using the xmodmap
+/// binary on your system or if the output of `xmodmap -pke` is not valid
 pub fn keycodes_from_xmodmap() -> CodeMap {
     match Command::new("xmodmap").arg("-pke").output() {
         Err(e) => panic!("unable to fetch keycodes via xmodmap: {}", e),
