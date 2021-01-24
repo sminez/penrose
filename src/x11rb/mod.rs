@@ -22,13 +22,24 @@ pub use xconn::X11rbConnection;
 pub type Result<T> = std::result::Result<T, X11rbError>;
 
 /// Construct a penrose [WindowManager] backed by the default [x11rb][crate::x11rb] backend.
-pub fn new_x11rb_backed_window_manager(
+pub fn new_x11rb_rust_conn_backed_window_manager(
     config: Config,
     hooks: Vec<Box<dyn Hook<X11rbConnection<RustConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<RustConnection>>> {
-    let (inner_conn, _) = RustConnection::connect(None).map_err(|err| X11rbError::from(err))?;
-    let conn = X11rbConnection::new_for_connection(inner_conn)?;
+    let (conn, _) = RustConnection::connect(None).map_err(|err| X11rbError::from(err))?;
+    new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
+}
+
+/// Construct a penrose [WindowManager] backed by the default [x11rb][crate::x11rb] backend with
+/// the given connection.
+pub fn new_x11rb_backed_window_manager<C: x11rb::connection::Connection>(
+    connection: C,
+    config: Config,
+    hooks: Vec<Box<dyn Hook<X11rbConnection<C>>>>,
+    error_handler: ErrorHandler,
+) -> crate::Result<WindowManager<X11rbConnection<C>>> {
+    let conn = X11rbConnection::new_for_connection(connection)?;
     let mut wm = WindowManager::new(config, conn, hooks, error_handler);
     wm.init()?;
 
