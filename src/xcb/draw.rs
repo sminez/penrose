@@ -117,7 +117,6 @@ impl Draw for XcbDraw {
     }
 
     fn temp_context(&self, w: u32, h: u32) -> Result<Self::Ctx> {
-        let id = self.api.conn().generate_id();
         let xcb_screen = self.api.screen(0)?;
         let depth = self.api.get_depth(&xcb_screen)?;
         let mut visualtype = self.api.get_visual_type(&depth)?;
@@ -127,7 +126,7 @@ impl Draw for XcbDraw {
 
             cairo::XCBSurface::create(
                 &cairo::XCBConnection::from_raw_none(conn_ptr),
-                &cairo::XCBDrawable(id),
+                &cairo::XCBDrawable(self.api.root()),
                 &cairo::XCBVisualType::from_raw_none(
                     &mut visualtype.base as *mut xcb::ffi::xcb_visualtype_t
                         as *mut cairo_sys::xcb_visualtype_t,
@@ -137,7 +136,7 @@ impl Draw for XcbDraw {
             )?
         };
 
-        surface.set_size(w as i32, h as i32)?;
+        let surface = surface.create_similar(cairo::Content::Color, w as i32, h as i32)?;
         let ctx = cairo::Context::new(&surface);
 
         Ok(Self::Ctx {
