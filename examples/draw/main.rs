@@ -9,15 +9,19 @@ use penrose::{
     },
     draw::{bar::dwm_bar, Draw, DrawContext, TextStyle},
     logging_error_handler,
-    xcb::{new_xcb_backed_window_manager, XcbDraw},
+    x11rb::{new_x11rb_rust_conn_backed_window_manager, X11rbDraw},
     Result,
 };
 
 const HEIGHT: usize = 18;
 
-const PROFONT: &str = "ProFont For Powerline";
-const FIRA: &str = "Fira Code";
-const SERIF: &str = "Serif";
+// see /usr/bin/xlsfonts for names of fonts
+//const PROFONT: &str = "ProFont For Powerline";
+//const FIRA: &str = "Fira Code";
+//const SERIF: &str = "Serif";
+const PROFONT: &str = "9x15";
+const FIRA: &str = "9x15";
+const SERIF: &str = "9x15";
 
 const BLACK: u32 = 0x282828ff;
 const GREY: u32 = 0x3c3836ff;
@@ -44,7 +48,7 @@ fn bar_draw() -> Result<()> {
     let highlight = BLUE;
     let empty_ws = GREY;
     let mut bar = dwm_bar(
-        XcbDraw::new()?,
+        X11rbDraw::new()?,
         HEIGHT,
         &style,
         highlight,
@@ -52,7 +56,7 @@ fn bar_draw() -> Result<()> {
         workspaces,
     )?;
 
-    let mut wm = new_xcb_backed_window_manager(Config::default(), vec![], logging_error_handler())?;
+    let mut wm = new_x11rb_rust_conn_backed_window_manager(Config::default(), vec![], logging_error_handler())?;
     bar.startup(&mut wm)?; // ensure widgets are initialised correctly
 
     thread::sleep(time::Duration::from_millis(1000));
@@ -67,7 +71,7 @@ fn bar_draw() -> Result<()> {
 }
 
 fn simple_draw() -> Result<()> {
-    let mut drw = XcbDraw::new()?;
+    let mut drw = X11rbDraw::new()?;
     let (_, _, w, _) = drw.screen_sizes()?[0].values();
     let id = drw.new_window(
         WinType::InputOutput(Atom::NetWindowTypeNormal),

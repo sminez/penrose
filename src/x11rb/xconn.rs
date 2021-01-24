@@ -14,7 +14,7 @@ use crate::{
             UNMANAGED_WINDOW_TYPES,
         },
     },
-    x11rb::{Result as X11Result, X11rbError},
+    x11rb::{common::{current_screens, Atoms}, Result as X11Result, X11rbError},
     Result,
 };
 
@@ -35,10 +35,9 @@ use x11rb::{
 
 use strum::IntoEnumIterator;
 
-use std::{
-    collections::HashMap,
-    str::FromStr,
-};
+use std::str::FromStr;
+
+// TODO: Switch to common::replace_prop for all the property modifications
 
 /// Handles communication with an X server via the x11rb crate.
 #[derive(Debug)]
@@ -46,7 +45,7 @@ pub struct X11rbConnection<C> {
     conn: C,
     root: Window,
     check_win: Window,
-    atoms: HashMap<Atom, u32>,
+    atoms: Atoms,
     auto_float_types: Vec<u32>,
     dont_manage_types: Vec<u32>,
 }
@@ -60,21 +59,16 @@ where
         conn.prefetch_extension_information(randr::X11_EXTENSION_NAME)
             .map_err(|err| X11rbError::from(err))?;
 
-        // Setup atoms: First send all InternAtom requests and then fetch the replies
-        let atoms = Atom::iter()
-            .map(|atom| Ok((atom, conn.intern_atom(false, atom.as_ref().as_bytes())?)))
-            .collect::<X11Result<Vec<_>>>()?;
-        let atoms = atoms.into_iter()
-            .map(|(atom, cookie)| Ok((atom, cookie.reply()?.atom)))
-            .collect::<X11Result<HashMap<_, _>>>()?;
+        let atoms = Atoms::new(&conn)
+            .map_err(|err| X11rbError::from(err))?;
 
         let auto_float_types = AUTO_FLOAT_WINDOW_TYPES
             .iter()
-            .map(|a| *atoms.get(&a).unwrap())
+            .map(|a| atoms.known_atom(*a))
             .collect();
         let dont_manage_types = UNMANAGED_WINDOW_TYPES
             .iter()
-            .map(|a| *atoms.get(&a).unwrap())
+            .map(|a| atoms.known_atom(*a))
             .collect();
 
         // Setup the RandR extension
@@ -107,7 +101,7 @@ where
     }
 
     fn known_atom(&self, atom: Atom) -> u32 {
-        *self.atoms.get(&atom).unwrap()
+        self.atoms.known_atom(atom)
     }
 
     fn window_has_type_in(&self, id: WinId, win_types: &[u32]) -> bool {
@@ -245,30 +239,7 @@ where
     }
 
     fn current_outputs(&self) -> Vec<Screen> {
-        fn current_outputs_impl(conn: &impl Connection, win: WinId) -> X11Result<Vec<Screen>> {
-            let resources = conn.randr_get_screen_resources(win)?.reply()?;
-            // Send queries for all CRTCs
-            let crtcs = resources.crtcs.iter()
-                .map(|c| conn.randr_get_crtc_info(*c, 0).map_err(|err| err.into()))
-                .collect::<X11Result<Vec<_>>>()?;
-            // Get the replies and construct screens
-            let screens = crtcs.into_iter()
-                .flat_map(|cookie| cookie.reply().ok())
-                .enumerate()
-                .filter(|(_, reply)| reply.width > 0)
-                .map(|(i, reply)| {
-                    let region = Region::new(
-                        reply.x as u32,
-                        reply.y as u32,
-                        reply.width as u32,
-                        reply.height as u32,
-                    );
-                    Screen::new(region, i)
-                })
-                .collect();
-            Ok(screens)
-        }
-        current_outputs_impl(&self.conn, self.root).unwrap()
+        current_screens(&self.conn, self.root).unwrap()
     }
 
     fn cursor_position(&self) -> Point {

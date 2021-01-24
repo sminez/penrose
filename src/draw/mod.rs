@@ -21,6 +21,8 @@ use crate::core::{
 
 #[cfg(feature = "xcb")]
 use crate::xcb::XcbError;
+#[cfg(feature = "x11rb")]
+use crate::x11rb::X11rbError;
 
 use std::{convert::TryFrom, convert::TryInto};
 
@@ -48,6 +50,11 @@ pub enum DrawError {
     #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] XcbError),
+
+    /// Wrapper around x11rb implementation errors for [draw][crate::draw] traits
+    #[cfg(feature = "x11rb")]
+    #[error(transparent)]
+    X11rb(#[from] X11rbError),
 
     /// An attempt to use the cairo C API failed when using an XCB implementation
     /// of [Draw] or [DrawContext]
@@ -234,10 +241,13 @@ pub trait DrawContext {
     /// Clears the context
     fn clear(&mut self);
     /// Translate this context by (dx, dy) from its current position
+    // TODO: Change to &mut self
     fn translate(&self, dx: f64, dy: f64);
     /// Set the x offset for this context absolutely
+    // TODO: Change to &mut self
     fn set_x_offset(&self, x: f64);
     /// Set the y offset for this context absolutely
+    // TODO: Change to &mut self
     fn set_y_offset(&self, y: f64);
     /// Draw a filled rectangle using the current color
     fn rectangle(&self, x: f64, y: f64, w: f64, h: f64);

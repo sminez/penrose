@@ -13,10 +13,15 @@ use crate::{
 
 use x11rb::rust_connection::RustConnection;
 
+pub(crate) mod common;
+// TODO: #[cfg(feature = "x11rb_draw")]
+pub mod draw;
 pub mod xconn;
 
 #[doc(inline)]
 pub use xconn::X11rbConnection;
+
+pub use draw::{X11rbDraw, X11rbDrawContext};
 
 /// Result type for fallible methods using x11rb
 pub type Result<T> = std::result::Result<T, X11rbError>;
