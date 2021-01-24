@@ -120,12 +120,12 @@ impl Color {
 
     /// 0xRRGGBB representation of this Color (no alpha information)
     pub fn rgb_u32(&self) -> u32 {
-        _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 1)
+        _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
     }
 
     /// 0xRRGGBBAA representation of this Color
     pub fn rgba_u32(&self) -> u32 {
-        _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 1)
+        _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 0)
     }
 }
 
@@ -263,38 +263,78 @@ mod tests {
     use super::*;
     use std::convert::TryFrom;
 
-    #[test]
-    fn test_color_from_hex_rgba() {
-        assert_eq!(Color::from(0x00000000), Color::from((0.0, 0.0, 0.0, 0.0)));
-        assert_eq!(Color::from(0xFF00FFFF), Color::from((1.0, 0.0, 1.0, 1.0)));
-        assert_eq!(Color::from(0xFFFFFFFF), Color::from((1.0, 1.0, 1.0, 1.0)));
-        assert_eq!(Color::from(0xFFFF00FF), Color::from((1.0, 1.0, 0.0, 1.0)));
-        assert_eq!(Color::from(0xFFFF0000), Color::from((1.0, 1.0, 0.0, 0.0)));
-        assert_eq!(Color::from(0xFF000000), Color::from((1.0, 0.0, 0.0, 0.0)));
-        assert_eq!(Color::from(0x000000FF), Color::from((0.0, 0.0, 0.0, 1.0)));
+    test_cases! {
+        color_from_hex_rgba;
+        args: (hex: u32, floats: (f64, f64, f64, f64));
+
+        case: black => (0x00000000, (0.0, 0.0, 0.0, 0.0));
+        case: black_alpha => (0x000000FF, (0.0, 0.0, 0.0, 1.0));
+        case: white => (0xFFFFFFFF, (1.0, 1.0, 1.0, 1.0));
+        case: red => (0xFF0000FF, (1.0, 0.0, 0.0, 1.0));
+        case: green => (0x00FF00FF, (0.0, 1.0, 0.0, 1.0));
+        case: blue => (0x0000FFFF, (0.0, 0.0, 1.0, 1.0));
+
+        body: {
+            assert_eq!(Color::new_from_hex(hex), Color::from(floats));
+        }
     }
 
-    #[test]
-    fn test_color_from_str_rgb() {
-        assert_eq!(
-            Color::try_from("#000000").unwrap(),
-            Color::from((0.0, 0.0, 0.0, 1.0))
-        );
-        assert_eq!(
-            Color::try_from("#FF00FF").unwrap(),
-            Color::from((1.0, 0.0, 1.0, 1.0))
-        );
+    test_cases! {
+        color_from_str_or_string;
+        args: (s: &str, floats: (f64, f64, f64, f64));
+
+        case: alpha1 => ("#FFFF00FF", (1.0, 1.0, 0.0, 1.0));
+        case: alpha0 => ("#FFFF0000", (1.0, 1.0, 0.0, 0.0));
+
+        body: {
+            assert_eq!(Color::try_from(s).unwrap(), Color::from(floats));
+            assert_eq!(Color::try_from(s.to_string()).unwrap(), Color::from(floats));
+        }
     }
 
-    #[test]
-    fn test_color_from_str_rgba() {
-        assert_eq!(
-            Color::try_from("#000000FF").unwrap(),
-            Color::from((0.0, 0.0, 0.0, 1.0))
-        );
-        assert_eq!(
-            Color::try_from("#FF00FF00").unwrap(),
-            Color::from((1.0, 0.0, 1.0, 0.0))
-        );
+    test_cases! {
+        color_from_str_or_string_no_alpha;
+        args: (s: &str, floats: (f64, f64, f64, f64));
+
+        case: black => ("#000000", (0.0, 0.0, 0.0, 1.0));
+        case: white => ("#FFFFFF", (1.0, 1.0, 1.0, 1.0));
+        case: red => ("#FF0000", (1.0, 0.0, 0.0, 1.0));
+        case: green => ("#00FF00", (0.0, 1.0, 0.0, 1.0));
+        case: blue => ("#0000FF", (0.0, 0.0, 1.0, 1.0));
+
+        body: {
+            assert_eq!(Color::try_from(s).unwrap(), Color::from(floats));
+            assert_eq!(Color::try_from(s.to_string()).unwrap(), Color::from(floats));
+        }
+    }
+
+    test_cases! {
+        color_rgb_u32;
+        args: (s: &str, expected: u32);
+
+        case: black => ("#000000", 0x000000);
+        case: white => ("#FFFFFF", 0xFFFFFF);
+        case: red => ("#FF0000", 0xFF0000);
+        case: green => ("#00FF00", 0x00FF00);
+        case: blue => ("#0000FF", 0x0000FF);
+
+        body: {
+            assert_eq!(Color::try_from(s).unwrap().rgb_u32(), expected);
+        }
+    }
+
+    test_cases! {
+        color_rgba_u32;
+        args: (s: &str, expected: u32);
+
+        case: black => ("#00000000", 0x00000000);
+        case: white => ("#FFFFFF00", 0xFFFFFF00);
+        case: red => ("#FF000000", 0xFF000000);
+        case: green => ("#00FF0000", 0x00FF0000);
+        case: blue => ("#0000FF00", 0x0000FF00);
+
+        body: {
+            assert_eq!(Color::try_from(s).unwrap().rgba_u32(), expected);
+        }
     }
 }
