@@ -439,8 +439,10 @@ impl<X: XConn> WindowManager<X> {
             self.focused_client = None;
         }
 
-        self.conn
-            .set_client_border_color(id, self.config.unfocused_border);
+        if self.client_map.contains_key(&id) {
+            self.conn
+                .set_client_border_color(id, self.config.unfocused_border);
+        }
     }
 
     // The given window ID has had its EWMH name updated by something
@@ -556,7 +558,6 @@ impl<X: XConn> WindowManager<X> {
                     &self.conn,
                     id,
                     s.region(self.config.show_bar),
-                    self.config.gap_px,
                     self.config.border_px,
                 )?
             }

@@ -185,7 +185,9 @@ impl XConn for XcbConnection {
     fn set_client_border_color(&self, id: WinId, color: Color) {
         let data = &[WinAttr::BorderColor(color.rgb_u32())];
         // TODO: this should return the error once XConn is updated
-        self.api.set_window_attributes(id, data).unwrap();
+        if let Err(e) = self.api.set_window_attributes(id, data) {
+            error!("error setting border color: {}", e);
+        }
     }
 
     fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {

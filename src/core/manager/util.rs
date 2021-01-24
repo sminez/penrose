@@ -67,7 +67,6 @@ pub(super) fn position_floating_client<X: XConn>(
     conn: &X,
     id: WinId,
     screen_region: Region,
-    gap_px: u32,
     border_px: u32,
 ) -> Result<()> {
     let default_position = conn.window_geometry(id)?;
@@ -75,8 +74,12 @@ pub(super) fn position_floating_client<X: XConn>(
     let (sx, sy, _, _) = screen_region.values();
     x = if x < sx { sx } else { x };
     y = if y < sy { sy } else { y };
-    let reg = Region::new(x, y, w, h);
-    let reg = pad_region(&reg, false, gap_px, border_px);
+    let reg = Region::new(
+        x + border_px,
+        y + border_px,
+        w + (2 * border_px),
+        h + (2 * border_px),
+    );
     conn.position_window(id, reg, border_px, false);
 
     Ok(())

@@ -49,7 +49,12 @@ pub fn create_or_switch_to_workspace<X: XConn>(
  * This is useful for key bindings that are based on the program you want to work with rather than
  * having to remember where things are running.
  */
-pub fn focus_or_spawn<X: XConn>(class: String, command: String) -> KeyEventHandler<X> {
+pub fn focus_or_spawn<X: XConn>(
+    class: impl Into<String>,
+    command: impl Into<String>,
+) -> KeyEventHandler<X> {
+    let (class, command) = (class.into(), command.into());
+
     Box::new(move |wm: &mut WindowManager<X>| {
         let cond = |c: &Client| c.class() == class;
         if let Some(client) = wm.client(&Selector::Condition(&cond)) {
