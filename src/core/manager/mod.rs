@@ -274,6 +274,7 @@ impl<X: XConn> WindowManager<X> {
             EventAction::ClientFocusGained(id) => self.client_gained_focus(id),
             EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
             EventAction::ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
+            EventAction::ClientToWorkspace(id, wix) => self.move_client_to_workspace(id, wix)?,
             EventAction::DestroyClient(id) => self.remove_client(id),
             EventAction::DetectScreens => {
                 run_hooks!(randr_notify, self,);
@@ -282,11 +283,18 @@ impl<X: XConn> WindowManager<X> {
             EventAction::MapWindow(id) => self.handle_map_request(id)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
             EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
+            EventAction::SetActiveClient(id) => {
+                self.focus_client(&Selector::WinId(id))
+                    .map_err(|_| PenroseError::UnknownClient(id))?;
+            }
+            EventAction::SetActiveWorkspace(wix) => self.focus_workspace(&Selector::Index(wix))?,
             EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p),
             EventAction::ToggleClientFullScreen(id, should_fullscreen) => {
                 self.set_fullscreen(id, should_fullscreen);
             }
-            EventAction::UnknownPropertyChange(..) => {}
+            EventAction::UnknownPropertyChange(id, atom, is_root) => {
+                self.handle_prop_change(id, atom, is_root)?;
+            }
         }
         Ok(())
     }
@@ -480,6 +488,41 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
+    fn move_client_to_workspace(&mut self, id: WinId, wix: usize) -> Result<()> {
+        if !self.client_map.contains_key(&id) {
+            return Err(PenroseError::UnknownClient(id));
+        }
+
+        // We know we have the client at this point so unwrap is fine
+        let current_wix = self.workspace_index_for_client(id).unwrap();
+        if current_wix != wix {
+            self.workspaces
+                .get_mut(current_wix)
+                .and_then(|ws| ws.remove_client(id));
+            self.add_client_to_workspace(wix, id)?;
+            self.client_map
+                .entry(id)
+                .and_modify(|c| c.set_workspace(wix));
+
+            if self.visible_workspaces().contains(&wix) {
+                let s = self.screens.focused_unchecked();
+                self.conn.warp_cursor(Some(id), s);
+            } else {
+                util::unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id))
+            }
+
+            self.layout_visible();
+        }
+
+        Ok(())
+    }
+
+    fn layout_visible(&mut self) {
+        for wix in self.visible_workspaces() {
+            self.apply_layout(wix);
+        }
+    }
+
     /// Query the [XConn] for the current connected [Screen] list and reposition displayed
     /// [Workspace] instances if needed.
     /// ```
@@ -575,6 +618,27 @@ impl<X: XConn> WindowManager<X> {
             self.conn.warp_cursor(Some(id), s);
         }
 
+        Ok(())
+    }
+
+    fn handle_prop_change(&mut self, id: WinId, atom: String, is_root: bool) -> Result<()> {
+        debug!(
+            "GOT PROP CHANGE: id={} root={} atom={:?}",
+            id, is_root, atom
+        );
+        // if let Ok(a) = Atom::from_str(&atom) {
+        //     match a {
+        //         // Atom::NetActiveWindow => {
+        //         //     if !is_root
+        //         //         && self.focused_client_id() != Some(id)
+        //         //         && self.client_map.contains_key(&id)
+        //         //     {
+        //         //         self.client_gained_focus(id);
+        //         //     }
+        //         // }
+        //         _ => (),
+        //     }
+        // }
         Ok(())
     }
 
@@ -694,6 +758,9 @@ impl<X: XConn> WindowManager<X> {
     }
 
     fn add_client_to_workspace(&mut self, wix: usize, id: WinId) -> Result<()> {
+        self.client_map
+            .entry(id)
+            .and_modify(|c| c.set_workspace(wix));
         let cip = self.client_insert_point;
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.add_client(id, &cip)?;
@@ -1354,35 +1421,11 @@ impl<X: XConn> WindowManager<X> {
     /// # example(manager).unwrap();
     /// ```
     pub fn client_to_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<()> {
-        let active_ws = Selector::Index(self.screens.focused_unchecked().wix);
-        if self.workspaces.equivalent_selectors(&selector, &active_ws) {
-            return Ok(());
-        }
-
-        if let Some(index) = self.workspaces.index(&selector) {
-            let res = self
-                .workspaces
-                .get_mut(self.active_ws_index())
-                .and_then(|ws| ws.remove_focused_client());
-
-            if let Some(id) = res {
-                self.add_client_to_workspace(index, id)?;
-                if let Some(c) = self.client_map.get_mut(&id) {
-                    c.set_workspace(index)
-                };
-                self.apply_layout(self.active_ws_index());
-
-                // layout & focus the screen we just landed on if the workspace is displayed
-                // otherwise unmap the window because we're no longer visible
-                if self.screens.iter().any(|s| s.wix == index) {
-                    self.apply_layout(index);
-                    let s = self.screens.focused_unchecked();
-                    self.conn.warp_cursor(Some(id), s);
-                    self.focus_screen(&Selector::Index(self.active_screen_index()));
-                } else {
-                    util::unmap_window_if_needed(&self.conn, self.client_map.get_mut(&id))
-                }
-            };
+        if let Some(id) = self.focused_client {
+            if let Some(wix) = self.workspaces.index(selector) {
+                self.move_client_to_workspace(id, wix)?;
+                self.focused_client = self.active_workspace().focused_client();
+            }
         }
 
         Ok(())

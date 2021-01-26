@@ -1,3 +1,5 @@
+/// This is where event parsing is handled and conversion of things like ICCCM and EWMH
+/// messages to penrose actions is done.
 use crate::core::{
     bindings::{KeyCode, MouseEvent},
     client::Client,
@@ -13,10 +15,13 @@ pub struct WmState<'a> {
     pub(super) full_screen_atom: usize,
 }
 
-/// Actions that will be carried out by the [WindowManager][crate::core::manager::WindowManager] in response to
-/// individual each [XEvent] received from the provided [XConn][crate::core::xconnection::XConn].
+/// Actions that will be carried out by the [WindowManager][1] in response to individual each
+/// [XEvent] received from the provided [XConn][2].
 ///
 /// Note that each action is processed independently.
+///
+/// [1]: crate::core::manager::WindowManager
+/// [2]: crate::core::xconnection::XConn
 #[derive(Debug, Clone)]
 pub enum EventAction {
     /// An X window gained focus
@@ -25,6 +30,8 @@ pub enum EventAction {
     ClientFocusGained(WinId),
     /// An X window had its WM_NAME or _NET_WM_NAME property changed
     ClientNameChanged(WinId, bool),
+    /// Move the given client to the workspace at the given index
+    ClientToWorkspace(WinId, usize),
     /// An X window was destroyed
     DestroyClient(WinId),
     /// Screens should be redetected
@@ -35,6 +42,10 @@ pub enum EventAction {
     RunKeyBinding(KeyCode),
     /// A grabbed mouse state was triggered
     RunMouseBinding(MouseEvent),
+    /// The active client should be set to this id
+    SetActiveClient(WinId),
+    /// The active workspace should be set to this index
+    SetActiveWorkspace(usize),
     /// The active screen should be set based on point location
     SetScreenFromPoint(Option<Point>),
     /// An X window should be set fullscreen
@@ -73,13 +84,21 @@ fn process_client_message(
     dtype: &str,
     data: &[usize],
 ) -> Vec<EventAction> {
-    let is_full_screen = [data.get(1), data.get(2)].contains(&Some(&state.full_screen_atom));
+    debug!(
+        "GOT CLIENT MESSAGE: id={} atom={} data={:?}",
+        id, dtype, data
+    );
+
     match Atom::from_str(&dtype) {
-        Ok(Atom::NetWmState) if is_full_screen => {
+        Ok(Atom::NetActiveWindow) => vec![EventAction::SetActiveClient(id)],
+        Ok(Atom::NetCurrentDesktop) => vec![EventAction::SetActiveWorkspace(data[0])],
+        Ok(Atom::NetWmDesktop) => vec![EventAction::ClientToWorkspace(id, data[0])],
+        Ok(Atom::NetWmState) if data[1..3].contains(&state.full_screen_atom) => {
             // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
             let should_fullscreen = [1, 2].contains(&data[0]);
             vec![EventAction::ToggleClientFullScreen(id, should_fullscreen)]
         }
+
         _ => vec![],
     }
 }

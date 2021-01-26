@@ -359,17 +359,11 @@ impl Api {
                     .get_reply()
                     .ok()
                     .and_then(|a| {
-                        let atom = a.name().to_string();
-                        let is_root = e.window() == self.root;
-                        if is_root && !(atom == "WM_NAME" || atom == "_NET_WM_NAME") {
-                            None
-                        } else {
-                            Some(XEvent::PropertyNotify {
-                                id: e.window(),
-                                atom,
-                                is_root,
-                            })
-                        }
+                        Some(XEvent::PropertyNotify {
+                            id: e.window(),
+                            atom: a.name().to_string(),
+                            is_root: e.window() == self.root,
+                        })
                     })
             }
 

@@ -217,6 +217,10 @@ pub enum PenroseError {
     #[error(transparent)]
     Strum(#[from] strum::ParseError),
 
+    /// An attempt was made to reference a client that is not known to penrose
+    #[error("{0} is not a known client")]
+    UnknownClient(WinId),
+
     /// A user specified key binding contained an invalid modifier key
     #[error("Unknown modifier key: {0}")]
     UnknownModifier(String),
