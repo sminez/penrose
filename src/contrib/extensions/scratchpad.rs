@@ -107,17 +107,8 @@ impl Scratchpad {
             wm.hide_client(id)?;
         } else {
             self.visible.replace(true);
-            let screen_index = wm.active_screen_index();
-            wm.layout_screen(screen_index)?; // caught by layout_change
-
-            // Warp the cursor to us if its currently not in bounds
-            let r = wm.screen_size(screen_index).expect("no screen");
-            let client_region = self.region_for_screen(r);
-            if !client_region.contains_point(&wm.conn().cursor_position()) {
-                if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
-                    error!("Scratchpad was unable to focus its client: {:?}", not_us);
-                }
-            }
+            wm.layout_screen(wm.active_screen_index())?; // caught by layout_change
+            self.grab_focus(wm);
         }
 
         Ok(())
@@ -131,6 +122,14 @@ impl Scratchpad {
         let y = sy + (sh - h) / 2;
 
         Region::new(x, y, w, h)
+    }
+
+    fn grab_focus<X: XConn>(&self, wm: &mut WindowManager<X>) {
+        if let Some(id) = *self.client.borrow() {
+            if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
+                error!("Scratchpad was unable to focus its client: {:?}", not_us);
+            }
+        }
     }
 }
 
@@ -176,6 +175,13 @@ impl<X: XConn> Hook<X> for Scratchpad {
             }
         }
 
+        Ok(())
+    }
+
+    fn workspace_change(&mut self, wm: &mut WindowManager<X>, _: usize, _: usize) -> Result<()> {
+        if *self.visible.borrow() {
+            self.grab_focus(wm);
+        }
         Ok(())
     }
 }
