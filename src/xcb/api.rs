@@ -5,7 +5,7 @@ use crate::{
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         helpers::spawn_for_output,
         screen::Screen,
-        xconnection::{Atom, XEvent},
+        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent},
     },
     xcb::{Result, XcbApi, XcbError, XcbGenericEvent},
 };
@@ -176,6 +176,24 @@ impl Api {
         &self.atoms
     }
 
+    /// Fetch the name of an X atom id
+    pub fn atom_name(&self, atom: u32) -> Result<String> {
+        Ok(xcb::get_atom_name(&self.conn, atom)
+            .get_reply()?
+            .name()
+            .to_string())
+    }
+
+    /// List the X window properties set on the requested client by name
+    pub fn list_props(&self, id: WinId) -> Result<Vec<String>> {
+        xcb::list_properties(&self.conn, id)
+            .get_reply()?
+            .atoms()
+            .iter()
+            .map(|a| self.atom_name(*a))
+            .collect::<Result<Vec<String>>>()
+    }
+
     pub(crate) fn conn(&self) -> &xcb::Connection {
         &self.conn
     }
@@ -202,6 +220,60 @@ impl Api {
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
             .ok_or(XcbError::QueryFailed("visual type"))
+    }
+
+    /// Fetch the requested property for the target window
+    pub fn get_prop(&self, id: WinId, name: &str) -> Result<Prop> {
+        let atom = self.atom(name)?;
+        let cookie = xcb::get_property(&self.conn, false, id, atom, xcb::ATOM_ANY, 0, 1024);
+        let r = cookie.get_reply()?;
+        let prop_type = self.atom_name(r.type_())?;
+
+        Ok(match prop_type.as_ref() {
+            "ATOM" => Prop::Atom(
+                r.value()
+                    .iter()
+                    .map(|a| self.atom_name(*a))
+                    .collect::<Result<Vec<String>>>()?,
+            ),
+
+            "CARDINAL" => Prop::Cardinal(r.value()[0]),
+
+            "STRING" | "UTF8_STRING" => Prop::UTF8String(
+                String::from_utf8(r.value().to_vec())?
+                    .trim_matches('\0')
+                    .split('\0')
+                    .map(|s| s.to_string())
+                    .collect(),
+            ),
+
+            "WINDOW" => Prop::Window(r.value()[0]),
+
+            "WM_HINTS" => Prop::WmHints(
+                WmHints::try_from_bytes(r.value())
+                    .map_err(|e| XcbError::InvalidPropertyData(e.to_string()))?,
+            ),
+
+            "WM_SIZE_HINTS" => Prop::WmNormalHints(
+                WmNormalHints::try_from_bytes(r.value())
+                    .map_err(|e| XcbError::InvalidPropertyData(e.to_string()))?,
+            ),
+
+            // Default to returning the raw bytes as u32s which the user can then
+            // convert as needed if the prop type is not one we recognise
+            // NOTE: I _really_ don't like this about the rust-xcb api...
+            _ => Prop::Bytes(match r.type_() {
+                8 => r.value::<u8>().iter().map(|b| *b as u32).collect(),
+                16 => r.value::<u16>().iter().map(|b| *b as u32).collect(),
+                32 => r.value::<u32>().to_vec(),
+                _ => Err(XcbError::InvalidPropertyData(format!(
+                    "prop type for {} was {} which claims to have a data format of {}",
+                    name,
+                    prop_type,
+                    r.type_()
+                )))?,
+            }),
+        })
     }
 
     /// Poll for the next event from the underlying [XCB Connection][::xcb::Connection],

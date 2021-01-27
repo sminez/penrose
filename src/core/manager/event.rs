@@ -3,7 +3,7 @@
 use crate::core::{
     bindings::{KeyCode, MouseEvent},
     client::Client,
-    data_types::{Point, WinId},
+    data_types::{Point, Region, WinId},
     xconnection::{Atom, XEvent},
 };
 
@@ -38,6 +38,8 @@ pub enum EventAction {
     DetectScreens,
     /// A new X window needs to be mapped
     MapWindow(WinId),
+    /// A window is requesting to be moved or resized
+    MoveWindow(WinId, Region),
     /// A grabbed keybinding was triggered
     RunKeyBinding(KeyCode),
     /// A grabbed mouse state was triggered
@@ -71,7 +73,7 @@ pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction>
         XEvent::ClientMessage { id, dtype, data } => {
             process_client_message(state, id, &dtype, &data)
         }
-        XEvent::ConfigureNotify { is_root, .. } => process_configure_notify(is_root),
+        XEvent::ConfigureNotify { id, r, is_root } => process_configure_notify(id, r, is_root),
         XEvent::Enter { id, rpt, .. } => process_enter_notify(state, id, rpt),
         XEvent::MapRequest { id, ignore } => process_map_request(state, id, ignore),
         XEvent::PropertyNotify { id, atom, is_root } => process_property_notify(id, atom, is_root),
@@ -103,11 +105,11 @@ fn process_client_message(
     }
 }
 
-fn process_configure_notify(is_root: bool) -> Vec<EventAction> {
+fn process_configure_notify(id: WinId, r: Region, is_root: bool) -> Vec<EventAction> {
     if is_root {
         vec![EventAction::DetectScreens]
     } else {
-        vec![]
+        vec![EventAction::MoveWindow(id, r)]
     }
 }
 
@@ -136,7 +138,7 @@ fn process_map_request(state: WmState<'_>, id: WinId, ignore: bool) -> Vec<Event
 
 fn process_property_notify(id: WinId, atom: String, is_root: bool) -> Vec<EventAction> {
     match Atom::from_str(&atom) {
-        Ok(a) if [Atom::WmName, Atom::NetWmName].contains(&a) => {
+        Ok(a) if a == Atom::WmName || a == Atom::NetWmName => {
             vec![EventAction::ClientNameChanged(id, is_root)]
         }
         _ => vec![EventAction::UnknownPropertyChange(id, atom, is_root)],
