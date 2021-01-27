@@ -94,11 +94,6 @@ pub(super) fn window_name<X: XConn>(conn: &X, id: WinId) -> Result<String> {
             _ => Ok(String::new()),
         },
     }
-
-    // match conn.str_prop(id, Atom::NetWmName.as_ref()) {
-    //     Ok(s) if !s.is_empty() => Ok(s),
-    //     _ => conn.str_prop(id, Atom::WmName.as_ref()),
-    // }
 }
 
 pub(super) fn get_screens<X: XConn>(

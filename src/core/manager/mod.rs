@@ -281,7 +281,6 @@ impl<X: XConn> WindowManager<X> {
                 self.detect_screens()?
             }
             EventAction::MapWindow(id) => self.handle_map_request(id)?,
-            EventAction::MoveWindow(id, r) => self.handle_move_window(id, r)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
             EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
             EventAction::SetActiveClient(id) => {
@@ -622,35 +621,11 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    fn handle_move_window(&mut self, id: WinId, r: Region) -> Result<()> {
-        info!("MOVE REQUEST: {} {:?}", id, r);
-        // if let Some(c) = self.client_map.get_mut(&id) {
-        //     if c.floating && self.conn().window_geometry(id)? != r {
-        //         self.position_client(id, r, true)?;
-        //     }
-        // }
-
-        Ok(())
-    }
-
     fn handle_prop_change(&mut self, id: WinId, atom: String, is_root: bool) -> Result<()> {
-        info!(
+        debug!(
             "GOT PROP CHANGE: id={} root={} atom={:?}",
             id, is_root, atom
         );
-        // if let Ok(a) = Atom::from_str(&atom) {
-        //     match a {
-        //         // Atom::NetActiveWindow => {
-        //         //     if !is_root
-        //         //         && self.focused_client_id() != Some(id)
-        //         //         && self.client_map.contains_key(&id)
-        //         //     {
-        //         //         self.client_gained_focus(id);
-        //         //     }
-        //         // }
-        //         _ => (),
-        //     }
-        // }
         Ok(())
     }
 
