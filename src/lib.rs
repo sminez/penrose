@@ -134,6 +134,9 @@
 )]
 
 #[macro_use]
+extern crate bitflags;
+
+#[macro_use]
 extern crate log;
 
 #[cfg(feature = "serde")]
@@ -197,6 +200,10 @@ pub enum PenroseError {
     /// An [IO Error][std::io::Error] was encountered
     #[error(transparent)]
     Io(#[from] std::io::Error),
+
+    /// WmNormalHints received from the X server were invalid
+    #[error("Invalid window hints property: {0}")]
+    InvalidHints(String),
 
     /// Attempting to construct a penrose data type from an int failed.
     #[error(transparent)]

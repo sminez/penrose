@@ -28,6 +28,7 @@ keysyms = ["penrose_keysyms"]
 penrose_keysyms = { version = "0.1.0", path = "crates/penrose_keysyms", optional = true }
 penrose_proc = { version = "0.1.2", path = "crates/penrose_proc" }
 
+bitflags = "1.2.1"
 log = "0.4.8"
 nix = "0.17.0"
 strum = { version = "0.19.2", features = ["derive"] }

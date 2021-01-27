@@ -18,7 +18,7 @@ use crate::{
         manager::WindowManager,
         screen::Screen,
         xconnection::{
-            Atom, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS,
+            Atom, Prop, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS,
             UNMANAGED_WINDOW_TYPES,
         },
     },
@@ -285,8 +285,8 @@ impl XConn for XcbConnection {
     }
 
     fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
-        if let Ok(s) = self.str_prop(id, Atom::WmClass.as_ref()) {
-            if s.split('\0').any(|c| floating_classes.contains(&c)) {
+        if let Ok(Prop::UTF8String(strs)) = self.get_prop(id, Atom::WmClass.as_ref()) {
+            if strs.iter().any(|c| floating_classes.contains(&c.as_ref())) {
                 return true;
             }
         }
@@ -333,12 +333,12 @@ impl XConn for XcbConnection {
         }
     }
 
-    fn str_prop(&self, id: u32, name: &str) -> Result<String> {
-        Ok(self.api.get_str_prop(id, name)?)
+    fn get_prop(&self, id: WinId, name: &str) -> Result<Prop> {
+        Ok(self.api.get_prop(id, name)?)
     }
 
-    fn atom_prop(&self, id: u32, name: &str) -> Result<u32> {
-        Ok(self.api.get_atom_prop(id, name)?)
+    fn list_props(&self, id: WinId) -> Result<Vec<String>> {
+        Ok(self.api.list_props(id)?)
     }
 
     fn intern_atom(&self, atom: &str) -> Result<u32> {

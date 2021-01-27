@@ -5,7 +5,7 @@ use crate::{
         layout::LayoutConf,
         screen::Screen,
         workspace::{ArrangeActions, Workspace},
-        xconnection::{Atom, XConn},
+        xconnection::{Atom, Prop, XConn},
     },
     Result,
 };
@@ -48,17 +48,17 @@ pub(super) fn unmap_window_if_needed<X: XConn>(conn: &X, win: Option<&mut Client
 
 pub(super) fn client_str_props<X: XConn>(conn: &X, id: WinId) -> ClientProps {
     ClientProps {
-        name: match conn.str_prop(id, Atom::WmName.as_ref()) {
+        name: match window_name(conn, id) {
             Ok(s) => s,
             Err(_) => String::from("n/a"),
         },
-        class: match conn.str_prop(id, Atom::WmClass.as_ref()) {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
+        class: match conn.get_prop(id, Atom::WmClass.as_ref()) {
+            Ok(Prop::UTF8String(strs)) => strs[0].clone(),
+            _ => String::new(),
         },
-        ty: match conn.str_prop(id, Atom::NetWmWindowType.as_ref()) {
-            Ok(s) => s.split('\0').collect::<Vec<&str>>()[0].into(),
-            Err(_) => String::new(),
+        ty: match conn.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            Ok(Prop::UTF8String(strs)) => strs[0].clone(),
+            _ => String::new(),
         },
     }
 }
@@ -86,10 +86,19 @@ pub(super) fn position_floating_client<X: XConn>(
 }
 
 pub(super) fn window_name<X: XConn>(conn: &X, id: WinId) -> Result<String> {
-    match conn.str_prop(id, Atom::NetWmName.as_ref()) {
-        Ok(s) if !s.is_empty() => Ok(s),
-        _ => conn.str_prop(id, Atom::WmName.as_ref()),
+    match conn.get_prop(id, Atom::NetWmName.as_ref()) {
+        Ok(Prop::UTF8String(strs)) if !strs.is_empty() && strs[0].len() > 0 => Ok(strs[0].clone()),
+        _ => match conn.get_prop(id, Atom::WmName.as_ref()) {
+            Ok(Prop::UTF8String(strs)) if !strs.is_empty() => Ok(strs[0].clone()),
+            Err(e) => Err(e),
+            _ => Ok(String::new()),
+        },
     }
+
+    // match conn.str_prop(id, Atom::NetWmName.as_ref()) {
+    //     Ok(s) if !s.is_empty() => Ok(s),
+    //     _ => conn.str_prop(id, Atom::WmName.as_ref()),
+    // }
 }
 
 pub(super) fn get_screens<X: XConn>(
@@ -253,12 +262,16 @@ mod tests {
         empty_net_wm_name: bool,
     }
     impl StubXConn for WmNameXConn {
-        fn mock_str_prop(&self, _: WinId, name: &str) -> Result<String> {
+        fn mock_get_prop(&self, _: WinId, name: &str) -> Result<Prop> {
             match Atom::from_str(name)? {
-                Atom::WmName if self.wm_name => Ok("wm_name".into()),
-                Atom::WmName if self.net_wm_name && self.empty_net_wm_name => Ok("".into()),
-                Atom::NetWmName if self.net_wm_name => Ok("net_wm_name".into()),
-                Atom::NetWmName if self.empty_net_wm_name => Ok("".into()),
+                Atom::WmName if self.wm_name => Ok(Prop::UTF8String(vec!["wm_name".into()])),
+                Atom::WmName if self.net_wm_name && self.empty_net_wm_name => {
+                    Ok(Prop::UTF8String(vec!["".into()]))
+                }
+                Atom::NetWmName if self.net_wm_name => {
+                    Ok(Prop::UTF8String(vec!["net_wm_name".into()]))
+                }
+                Atom::NetWmName if self.empty_net_wm_name => Ok(Prop::UTF8String(vec!["".into()])),
                 _ => Err(PenroseError::Raw("".into())),
             }
         }

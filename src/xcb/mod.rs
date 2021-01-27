@@ -117,6 +117,10 @@ pub enum XcbError {
     #[error("'{0}' prop is not set for client {1}")]
     MissingProp(String, WinId),
 
+    /// Property data returned for the target window was in an invalid format
+    #[error("invalid property data: {0}")]
+    InvalidPropertyData(String),
+
     /// No screens were found
     #[error("Unable to fetch setup roots from XCB")]
     NoScreens,
