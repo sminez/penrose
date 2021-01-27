@@ -38,8 +38,6 @@ pub enum EventAction {
     DetectScreens,
     /// A new X window needs to be mapped
     MapWindow(WinId),
-    /// A window is requesting to be moved or resized
-    MoveWindow(WinId, Region),
     /// A grabbed keybinding was triggered
     RunKeyBinding(KeyCode),
     /// A grabbed mouse state was triggered
@@ -109,7 +107,7 @@ fn process_configure_notify(id: WinId, r: Region, is_root: bool) -> Vec<EventAct
     if is_root {
         vec![EventAction::DetectScreens]
     } else {
-        vec![EventAction::MoveWindow(id, r)]
+        vec![]
     }
 }
 
