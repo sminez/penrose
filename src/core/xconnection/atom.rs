@@ -159,7 +159,12 @@ pub const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
 ];
 
 /// Windows with a type in this array will not be managed by penrose
-pub const UNMANAGED_WINDOW_TYPES: &[Atom] = &[Atom::NetWindowTypeDock, Atom::NetWindowTypeToolbar];
+pub const UNMANAGED_WINDOW_TYPES: &[Atom] = &[
+    Atom::NetWindowTypeDock,
+    Atom::NetWindowTypeNotification,
+    Atom::NetWindowTypeToolbar,
+    Atom::NetWindowTypeUtility,
+];
 
 /// Currently supported EWMH atoms
 pub const EWMH_SUPPORTED_ATOMS: &[Atom] = &[

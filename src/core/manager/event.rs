@@ -103,7 +103,7 @@ fn process_client_message(
     }
 }
 
-fn process_configure_notify(id: WinId, r: Region, is_root: bool) -> Vec<EventAction> {
+fn process_configure_notify(_id: WinId, _r: Region, is_root: bool) -> Vec<EventAction> {
     if is_root {
         vec![EventAction::DetectScreens]
     } else {
