@@ -23,7 +23,7 @@ use crate::{
         },
     },
     draw::Color,
-    xcb::{Api, XcbApi, XcbError},
+    xcb::{Api, XcbError},
     Result,
 };
 
@@ -71,10 +71,17 @@ impl XcbConnection {
     }
 
     fn window_has_type_in(&self, id: WinId, win_types: &[u32]) -> bool {
-        if let Ok(atom) = self.api.get_atom_prop(id, Atom::NetWmWindowType.as_ref()) {
-            return win_types.contains(&atom);
+        if let Ok(Prop::Atom(atoms)) = self.api.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            atoms.iter().any(|atom| {
+                if let Ok(a) = self.api.atom(atom) {
+                    win_types.contains(&a)
+                } else {
+                    false
+                }
+            })
+        } else {
+            false
         }
-        false
     }
 
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]

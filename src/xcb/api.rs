@@ -5,9 +5,9 @@ use crate::{
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         helpers::spawn_for_output,
         screen::Screen,
-        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent},
+        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent, UNMANAGED_WINDOW_TYPES},
     },
-    xcb::{Result, XcbApi, XcbError, XcbGenericEvent},
+    xcb::{Result, XcbError, XcbGenericEvent},
 };
 use strum::*;
 
@@ -192,6 +192,17 @@ impl Api {
             .iter()
             .map(|a| self.atom_name(*a))
             .collect::<Result<Vec<String>>>()
+    }
+
+    /// Check to see if a window should be managed or not
+    pub fn window_is_managed(&self, id: WinId) -> bool {
+        match self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            Ok(Prop::Atom(atoms)) => atoms.iter().any(|atom| match Atom::from_str(atom) {
+                Ok(a) => !UNMANAGED_WINDOW_TYPES.contains(&a),
+                _ => false,
+            }),
+            _ => false,
+        }
     }
 
     pub(crate) fn conn(&self) -> &xcb::Connection {
@@ -443,16 +454,20 @@ impl Api {
             _ => None,
         })
     }
-}
 
-impl XcbApi for Api {
+    /// Hydrate this XcbApi to restore internal state following serde deserialization
     #[cfg(feature = "serde")]
-    fn hydrate(&mut self) -> Result<()> {
+    pub fn hydrate(&mut self) -> Result<()> {
         self.init()
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_intern_atom
-    fn atom(&self, name: &str) -> Result<u32> {
+    /// Intern an atom by name, returning the corresponding id.
+    ///
+    /// Can fail if the atom name is not a known X atom or if there
+    /// is an issue with communicating with the X server. For known
+    /// atoms that are included in the [Atom] enum,
+    /// the [XcbApi::known_atom] method should be used instead.
+    pub fn atom(&self, name: &str) -> Result<u32> {
         if let Ok(known) = Atom::from_str(name) {
             // This could be us initialising in which case self.atoms is empty
             if let Some(atom) = self.atoms.get(&known) {
@@ -465,35 +480,25 @@ impl XcbApi for Api {
             .atom())
     }
 
-    fn known_atom(&self, atom: Atom) -> u32 {
+    /// Fetch the id value of a known [Atom] variant.
+    ///
+    /// This operation is expected to always succeed as known atoms should
+    /// either be interned on init of the implementing struct or statically
+    /// assigned a value in the implementation.
+    pub fn known_atom(&self, atom: Atom) -> u32 {
         *self.atoms.get(&atom).unwrap()
     }
 
-    fn delete_prop(&self, id: WinId, prop: Atom) {
+    /// Delete a known property from a window
+    pub fn delete_prop(&self, id: WinId, prop: Atom) {
         xcb::delete_property(&self.conn, id, self.known_atom(prop));
     }
 
-    // xcb docs: https://www.mankier.com/3/xcb_get_property
-    fn get_atom_prop(&self, id: WinId, name: &str) -> Result<u32> {
-        let a = self.atom(name)?;
-        let cookie = xcb::get_property(&self.conn, false, id, a, xcb::ATOM_ANY, 0, 1024);
-        let reply = cookie.get_reply()?;
-        if reply.value_len() == 0 {
-            Err(XcbError::MissingProp(name.to_string(), id))
-        } else {
-            Ok(reply.value()[0])
-        }
-    }
-
-    // xcb docs: https://www.mankier.com/3/xcb_get_property
-    fn get_str_prop(&self, id: WinId, name: &str) -> Result<String> {
-        let a = self.atom(name)?;
-        let cookie = xcb::get_property(&self.conn, false, id, a, xcb::ATOM_ANY, 0, 1024);
-        Ok(String::from_utf8(cookie.get_reply()?.value().to_vec())?)
-    }
-
-    // xcb docs: https://www.mankier.com/3/xcb_change_property
-    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
+    /// Replace a property value on a window.
+    ///
+    /// See the documentation for the C level XCB API for the correct property
+    /// type for each prop.
+    pub fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
         let mode = xcb::PROP_MODE_REPLACE as u8;
         let a = self.known_atom(prop);
 
@@ -511,7 +516,8 @@ impl XcbApi for Api {
         xcb::change_property(&self.conn, mode, id, a, ty, 32, data);
     }
 
-    fn create_window(&self, ty: WinType, reg: Region, managed: bool) -> Result<WinId> {
+    /// Create a new client window
+    pub fn create_window(&self, ty: WinType, reg: Region, managed: bool) -> Result<WinId> {
         let (ty, mut data, class, root, depth, visual_id) = match ty {
             WinType::CheckWin => (
                 None,
@@ -598,20 +604,24 @@ impl XcbApi for Api {
         Ok(id)
     }
 
-    fn configure_window(&self, id: WinId, conf: &[WinConfig]) {
+    /// Apply a set of config options to a window
+    pub fn configure_window(&self, id: WinId, conf: &[WinConfig]) {
         let data: Vec<(u16, u32)> = conf.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
         xcb::configure_window(&self.conn, id, &data);
     }
 
-    fn destroy_window(&self, id: WinId) {
+    /// Destroy the X server state for a given window
+    pub fn destroy_window(&self, id: WinId) {
         xcb::destroy_window(&self.conn, id);
     }
 
-    fn map_window(&self, id: WinId) {
+    /// Send a [XEvent::MapRequest] for the target window
+    pub fn map_window(&self, id: WinId) {
         xcb::map_window(&self.conn, id);
     }
 
-    fn mark_focused_window(&self, id: WinId) {
+    /// Mark the given window as currently having focus in the X server state
+    pub fn mark_focused_window(&self, id: WinId) {
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
         xcb::set_input_focus(
             &self.conn,                    // xcb connection to X11
@@ -623,7 +633,8 @@ impl XcbApi for Api {
         self.replace_prop(id, Atom::NetActiveWindow, PropVal::Window(&[id]));
     }
 
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
+    /// Send an event to a client
+    pub fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
         let atom = self.atom(atom_name)?;
         let wm_protocols = self.known_atom(Atom::WmProtocols);
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
@@ -633,17 +644,20 @@ impl XcbApi for Api {
         Ok(())
     }
 
-    fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) -> Result<()> {
+    /// Set attributes on the target window
+    pub fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) -> Result<()> {
         let data: Vec<(u32, u32)> = attrs.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
         let reply = xcb::change_window_attributes_checked(&self.conn, id, &data);
         Ok(reply.request_check()?)
     }
 
-    fn unmap_window(&self, id: WinId) {
+    /// Unmap the target window
+    pub fn unmap_window(&self, id: WinId) {
         xcb::unmap_window(&self.conn, id);
     }
 
-    fn window_geometry(&self, id: WinId) -> Result<Region> {
+    /// Find the current size and position of the target window
+    pub fn window_geometry(&self, id: WinId) -> Result<Region> {
         let res = xcb::get_geometry(&self.conn, id).get_reply()?;
         Ok(Region::new(
             res.x() as u32,
@@ -654,7 +668,9 @@ impl XcbApi for Api {
     }
 
     // logic taken from https://github.com/rtbo/rust-xcb/blob/master/examples/randr_crtc_info.rs
-    fn current_screens(&self) -> Result<Vec<Screen>> {
+    /// Query the randr API for current outputs and return the details as penrose
+    /// [Screen] structs.
+    pub fn current_screens(&self) -> Result<Vec<Screen>> {
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_screen_resources
         let resources = xcb::randr::get_screen_resources(&self.conn, self.check_win);
 
@@ -681,18 +697,21 @@ impl XcbApi for Api {
             .collect())
     }
 
-    fn screen_sizes(&self) -> Result<Vec<Region>> {
+    /// Query the randr API for current outputs and return the size of each screen
+    pub fn screen_sizes(&self) -> Result<Vec<Region>> {
         self.current_screens()
             .map(|screens| screens.iter().map(|s| s.region(false)).collect())
     }
 
-    fn current_clients(&self) -> Result<Vec<WinId>> {
+    /// The list of currently active clients known to the X server
+    pub fn current_clients(&self) -> Result<Vec<WinId>> {
         Ok(xcb::query_tree(&self.conn, self.root)
             .get_reply()
             .map(|reply| reply.children().into())?)
     }
 
-    fn cursor_position(&self) -> Point {
+    /// The current (x, y) position of the cursor relative to the root window
+    pub fn cursor_position(&self) -> Point {
         xcb::query_pointer(&self.conn, self.root)
             .get_reply()
             .map_or_else(
@@ -701,16 +720,19 @@ impl XcbApi for Api {
             )
     }
 
-    fn flush(&self) -> bool {
+    /// Flush pending actions to the X event loop
+    pub fn flush(&self) -> bool {
         self.conn.flush()
     }
 
-    fn focused_client(&self) -> Result<WinId> {
+    /// The client that the X server currently considers to be focused
+    pub fn focused_client(&self) -> Result<WinId> {
         // xcb docs: https://www.mankier.com/3/xcb_get_input_focus
         Ok(xcb::get_input_focus(&self.conn).get_reply()?.focus())
     }
 
-    fn grab_keys(&self, keys: &[&KeyCode]) {
+    /// Register intercepts for each given [KeyCode]
+    pub fn grab_keys(&self, keys: &[&KeyCode]) {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
@@ -734,7 +756,8 @@ impl XcbApi for Api {
         self.flush();
     }
 
-    fn grab_mouse_buttons(&self, states: &[&MouseState]) {
+    /// Register intercepts for each given [MouseState]
+    pub fn grab_mouse_buttons(&self, states: &[&MouseState]) {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
@@ -764,11 +787,13 @@ impl XcbApi for Api {
         self.flush();
     }
 
-    fn root(&self) -> WinId {
+    /// The current root window ID
+    pub fn root(&self) -> WinId {
         self.root
     }
 
-    fn set_randr_notify_mask(&self) -> Result<()> {
+    /// Set a pre-defined notify mask for randr events to subscribe to
+    pub fn set_randr_notify_mask(&self) -> Result<()> {
         let mask = (xcb::randr::NOTIFY_MASK_OUTPUT_CHANGE
             | xcb::randr::NOTIFY_MASK_CRTC_CHANGE
             | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
@@ -779,7 +804,8 @@ impl XcbApi for Api {
         Ok(())
     }
 
-    fn ungrab_keys(&self) {
+    /// Drop all active intercepts for key combinations
+    pub fn ungrab_keys(&self) {
         // xcb docs: https://www.mankier.com/3/xcb_ungrab_key
         xcb::ungrab_key(
             &self.conn, // xcb connection to X11
@@ -789,7 +815,8 @@ impl XcbApi for Api {
         );
     }
 
-    fn ungrab_mouse_buttons(&self) {
+    /// Drop all active intercepts for mouse states
+    pub fn ungrab_mouse_buttons(&self) {
         // xcb docs: https://www.mankier.com/3/xcb_ungrab_button
         xcb::ungrab_button(
             &self.conn, // xcb connection to X11
@@ -799,8 +826,11 @@ impl XcbApi for Api {
         );
     }
 
-    // Loop until we get an event we care about or an error
-    fn wait_for_event(&self) -> Result<XEvent> {
+    /// Block until the next event from the X event loop is ready then return it.
+    ///
+    /// This method handles all of the mapping of xcb events to penrose [XEvent] instances,
+    /// returning an Error when the event channel from the X server is closed.
+    pub fn wait_for_event(&self) -> Result<XEvent> {
         loop {
             if let Some(event) = self.conn.wait_for_event() {
                 // Got an event but it might not be one we care about / know how to handle
@@ -816,7 +846,12 @@ impl XcbApi for Api {
         }
     }
 
-    fn poll_for_event(&self) -> Result<Option<XEvent>> {
+    /// Return the next event from the X event loop if there is one.
+    ///
+    /// This method handles all of the mapping of xcb events to penrose [XEvent] instances,
+    /// returning None if there is no pending event and an error if the connection to the X server
+    /// is closed.
+    pub fn poll_for_event(&self) -> Result<Option<XEvent>> {
         if let Some(event) = self.conn.poll_for_event() {
             self.generic_xcb_to_xevent(event)
         } else {
@@ -824,7 +859,8 @@ impl XcbApi for Api {
         }
     }
 
-    fn warp_cursor(&self, id: WinId, x: usize, y: usize) {
+    /// Move the cursor to the given (x, y) position inside the specified window.
+    pub fn warp_cursor(&self, id: WinId, x: usize, y: usize) {
         // conn source target source(x y w h) dest(x y)
         xcb::warp_pointer(&self.conn, 0, id, 0, 0, 0, 0, x as i16, y as i16);
     }

@@ -11,7 +11,7 @@ use crate::{
         xconnection::Atom,
     },
     draw::{Color, Draw, DrawContext, DrawError, Result},
-    xcb::{Api, XcbApi, XcbError},
+    xcb::{Api, XcbError},
 };
 
 use pangocairo::functions::{create_layout, show_layout};
