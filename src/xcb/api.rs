@@ -278,7 +278,7 @@ impl Api {
             // Default to returning the raw bytes as u32s which the user can then
             // convert as needed if the prop type is not one we recognise
             // NOTE: I _really_ don't like this about the rust-xcb api...
-            _ => Prop::Bytes(match r.type_() {
+            _ => Prop::Bytes(match r.format() {
                 8 => r.value::<u8>().iter().map(|b| *b as u32).collect(),
                 16 => r.value::<u16>().iter().map(|b| *b as u32).collect(),
                 32 => r.value::<u32>().to_vec(),
