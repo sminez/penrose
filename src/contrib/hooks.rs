@@ -229,3 +229,28 @@ where
         update_monitors_via_xrandr(&self.primary, &self.secondary, self.position)
     }
 }
+
+/// Attempt to find and manage any existing normal clients that were running when penrose
+/// started.
+///
+/// This hook will run at startup and try to position clients on the workspace they are on when
+/// penrose was started / restarted. It is not currently able to preserve positions or workspace
+/// settings.
+#[derive(Debug)]
+pub struct ManageExistingClients {}
+
+impl ManageExistingClients {
+    /// Construct a pre-boxed instance of the ManageExistingClients hook
+    pub fn new() -> Box<Self> {
+        Box::new(Self {})
+    }
+}
+
+impl<X> Hook<X> for ManageExistingClients
+where
+    X: XConn,
+{
+    fn startup(&mut self, wm: &mut WindowManager<X>) -> Result<()> {
+        wm.try_manage_existing_windows()
+    }
+}

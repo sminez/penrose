@@ -227,6 +227,22 @@ pub(super) fn validate_hydrated_wm_state<X: XConn>(wm: &mut WindowManager<X>) ->
     Ok(())
 }
 
+pub(super) fn parse_existing_client<X: XConn>(conn: &X, id: WinId) -> Result<Client> {
+    let props = client_str_props(conn, id);
+    let wix = match conn.get_prop(id, Atom::NetWmDesktop.as_ref()) {
+        Ok(Prop::Cardinal(wix)) => wix,
+        _ => 0,
+    };
+
+    Ok(Client::new(
+        id,
+        props.name,
+        props.class,
+        wix as usize,
+        false,
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

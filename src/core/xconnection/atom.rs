@@ -41,6 +41,9 @@ pub enum Atom {
     /// WM_NAME
     #[strum(serialize = "WM_NAME")]
     WmName,
+    /// WM_TRANSIENT_FOR
+    #[strum(serialize = "WM_TRANSIENT_FOR")]
+    WmTransientFor,
     /// WM_TAKE_FOCUS
     #[strum(serialize = "WM_TAKE_FOCUS")]
     WmTakeFocus,
@@ -146,6 +149,7 @@ pub enum Atom {
 
 /// Clients with one of these window types will be auto floated
 pub const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
+    Atom::NetWindowTypeCombo,
     Atom::NetWindowTypeDesktop,
     Atom::NetWindowTypeDialog,
     Atom::NetWindowTypeDock,

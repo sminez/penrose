@@ -261,6 +261,24 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
+    pub(crate) fn try_manage_existing_windows(&mut self) -> Result<()> {
+        for id in self.conn.query_for_active_windows().into_iter() {
+            let mut c = util::parse_existing_client(&self.conn, id)?;
+            self.add_client_to_workspace(c.workspace(), id)?;
+            util::unmap_window_if_needed(&self.conn, Some(&mut c));
+            self.client_map.insert(id, c);
+            self.conn.mark_new_window(id);
+        }
+
+        if let Some(id) = self.workspaces[0].focused_client() {
+            self.client_gained_focus(id);
+        }
+
+        self.update_x_known_clients();
+        self.layout_visible();
+        Ok(())
+    }
+
     // Each XEvent from the XConn can result in multiple EventActions that need processing
     // depending on the current WindowManager state.
     fn handle_event_action(

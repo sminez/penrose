@@ -207,6 +207,7 @@ where
 
     fn startup(&mut self, wm: &mut WindowManager<X>) -> crate::Result<()> {
         // NOTE: Following initial workspace placement from WindowManager<X>
+        self.update_workspace_occupied(wm);
         self.focused_ws = (0..wm.n_screens()).collect();
 
         Ok(())

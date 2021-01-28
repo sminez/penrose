@@ -5,7 +5,7 @@ use crate::{
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         helpers::spawn_for_output,
         screen::Screen,
-        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent, UNMANAGED_WINDOW_TYPES},
+        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent},
     },
     xcb::{Result, XcbError, XcbGenericEvent},
 };
@@ -196,13 +196,18 @@ impl Api {
 
     /// Check to see if a window should be managed or not
     pub fn window_is_managed(&self, id: WinId) -> bool {
-        match self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
-            Ok(Prop::Atom(atoms)) => atoms.iter().any(|atom| match Atom::from_str(atom) {
-                Ok(a) => !UNMANAGED_WINDOW_TYPES.contains(&a),
-                _ => false,
-            }),
-            _ => false,
+        if let Ok(_) = self.get_prop(id, Atom::WmTransientFor.as_ref()) {
+            return false;
         }
+
+        if let Ok(Prop::Atom(atoms)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            return atoms.iter().any(|atom| match Atom::from_str(atom) {
+                Ok(a) => a == Atom::NetWindowTypeNormal,
+                _ => false,
+            });
+        }
+
+        false
     }
 
     pub(crate) fn conn(&self) -> &xcb::Connection {
@@ -466,7 +471,7 @@ impl Api {
     /// Can fail if the atom name is not a known X atom or if there
     /// is an issue with communicating with the X server. For known
     /// atoms that are included in the [Atom] enum,
-    /// the [XcbApi::known_atom] method should be used instead.
+    /// the [`Api::known_atom`] method should be used instead.
     pub fn atom(&self, name: &str) -> Result<u32> {
         if let Ok(known) = Atom::from_str(name) {
             // This could be us initialising in which case self.atoms is empty

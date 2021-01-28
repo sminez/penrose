@@ -301,7 +301,7 @@ impl XConn for XcbConnection {
     }
 
     fn is_managed_window(&self, id: WinId) -> bool {
-        !self.window_has_type_in(id, &self.dont_manage_types)
+        self.api.window_is_managed(id)
     }
 
     fn window_geometry(&self, id: WinId) -> Result<Region> {
@@ -333,9 +333,8 @@ impl XConn for XcbConnection {
         match self.api.current_clients() {
             Err(_) => Vec::new(),
             Ok(ids) => ids
-                .iter()
-                .filter(|&id| !self.window_has_type_in(*id, &self.dont_manage_types))
-                .cloned()
+                .into_iter()
+                .filter(|&id| self.api.window_is_managed(id))
                 .collect(),
         }
     }
