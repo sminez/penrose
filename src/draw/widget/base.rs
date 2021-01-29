@@ -214,6 +214,11 @@ impl LinesWithSelection {
     pub fn selected_index(&self) -> usize {
         self.selected
     }
+
+    /// The raw lines held by this widget
+    pub fn lines(&self) -> &Vec<String> {
+        &self.lines
+    }
 }
 
 impl<X> Hook<X> for LinesWithSelection where X: XConn {}
@@ -241,10 +246,10 @@ impl Widget for LinesWithSelection {
             .skip(block * self.n_lines)
             .take(self.n_lines)
             .try_for_each(|(ix, line)| -> Result<()> {
-                let (lw, lh) = ctx.text_extent(line)?;
+                let (_, lh) = ctx.text_extent(line)?;
                 let fg = if ix == self.selected {
                     ctx.color(&self.bg_sel);
-                    ctx.rectangle(0.0, 0.0, lw + self.padding * 2.0, lh);
+                    ctx.rectangle(0.0, 0.0, w + self.padding * 2.0, lh);
                     self.fg_sel
                 } else {
                     self.fg

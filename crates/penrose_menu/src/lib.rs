@@ -15,8 +15,8 @@ use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use penrose::{
     core::{
         bindings::KeyPress,
-        data_types::{Region, WinId, WinType},
-        xconnection::Atom,
+        data_types::{PropVal, Region, WinId, WinType},
+        xconnection::{Atom, XEvent},
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
@@ -25,7 +25,9 @@ use penrose::{
     },
 };
 
-const PAD_PX: f64 = 3.0;
+use std::convert::TryInto;
+
+const PAD_PX: f64 = 2.0;
 
 /// The result of attempting to match against user input in a call to
 /// [PMenu::get_selection_from_input]
@@ -52,7 +54,7 @@ pub struct PMenuConfig {
     pub sort_by_relevance: bool,
     /// Background color for the rendered window
     ///
-    /// Default: #282828
+    /// Default: #111111
     pub bg_color: Color,
     /// Foreground color for text
     ///
@@ -60,7 +62,7 @@ pub struct PMenuConfig {
     pub fg_color: Color,
     /// Selected line background color
     ///
-    /// Default #458588
+    /// Default #504945
     pub selected_color: Color,
     /// Default font to use for rendering text
     ///
@@ -85,9 +87,9 @@ impl Default for PMenuConfig {
         Self {
             show_line_numbers: false,
             sort_by_relevance: true,
-            bg_color: 0x282828ff.into(),
-            fg_color: 0xebdbb2ff.into(),
-            selected_color: 0x458588ff.into(),
+            bg_color: "#1d2021".try_into().unwrap(),
+            fg_color: "#ebdbb2".try_into().unwrap(),
+            selected_color: "#504945".try_into().unwrap(),
             font: "monospace".into(),
             point_size: 12,
             n_lines: 10,
@@ -105,6 +107,7 @@ where
     drw: D,
     id: Option<WinId>,
     bg: Color,
+    ac: Color,
     prompt: Text,
     patt: InputBox,
     txt: LinesWithSelection,
@@ -158,6 +161,7 @@ where
         Ok(Self {
             drw,
             bg: config.bg_color,
+            ac: config.selected_color,
             txt: LinesWithSelection::new(
                 config.font,
                 config.point_size,
@@ -194,16 +198,10 @@ where
         let (prompt_w, prompt_h) = self.prompt.current_extent(&mut ctx, 1.0)?;
         let (input_w, input_h) = self.txt.current_extent(&mut ctx, 1.0)?;
 
-        // TODO: work out why extent still isn't right
-        self.w = (prompt_w + input_w + PAD_PX + PAD_PX) * 1.1;
-        self.h = (prompt_h + input_h + PAD_PX + PAD_PX) * 1.1;
+        self.w = prompt_w + input_w + PAD_PX;
+        self.h = prompt_h + input_h + PAD_PX * 4.0;
 
-        let (_, _, w, _) = screen_region.scale_w(self.min_width_perc).values();
-        let w_min = w as f64;
-
-        if self.w < w_min {
-            self.w = w_min;
-        }
+        self.w = self.w.max((sw as f64) * self.min_width_perc);
 
         let id = self.drw.new_window(
             WinType::InputOutput(Atom::NetWindowTypeDialog),
@@ -212,6 +210,10 @@ where
                 .unwrap(),
             true,
         )?;
+
+        for a in &[Atom::NetWmName, Atom::WmName, Atom::WmClass] {
+            self.drw.replace_prop(id, *a, PropVal::Str("penrose-menu"));
+        }
 
         self.drw.flush(id);
         self.id = Some(id);
@@ -227,17 +229,20 @@ where
         ctx.color(&self.bg);
         ctx.rectangle(0.0, 0.0, self.w, self.h);
 
-        ctx.translate(PAD_PX, PAD_PX);
         let (w, h) = self.prompt.current_extent(&mut ctx, self.h)?;
+
+        ctx.color(&self.ac);
+        ctx.rectangle(0.0, 0.0, w + PAD_PX, h + PAD_PX);
+
+        ctx.translate(PAD_PX, PAD_PX);
         self.prompt.draw(&mut ctx, 0, false, w, h)?;
         ctx.translate(w, 0.0);
 
-        self.patt.draw(&mut ctx, 0, false, w, h)?;
+        self.patt.draw(&mut ctx, 0, false, self.w - w, h)?;
         ctx.translate(0.0, h);
 
-        self.txt.draw(&mut ctx, 0, true, w, h)?;
+        self.txt.draw(&mut ctx, 0, true, self.w - w, h)?;
 
-        // ctx.flush();
         self.drw.flush(id);
         Ok(())
     }
@@ -284,93 +289,89 @@ where
         selection
     }
 
-    fn get_selection_inner(&mut self, input: Vec<String>) -> Result<PMenuMatch> {
-        let mut matches: Vec<(usize, &String)> = input.iter().enumerate().collect();
-        let matcher = SkimMatcherV2::default();
+    fn get_selection_inner(&mut self, mut input: Vec<String>) -> Result<PMenuMatch> {
+        let display_lines = if self.show_line_numbers {
+            input
+                .iter()
+                .enumerate()
+                .map(|(i, line)| format!("{:<3} {}", i, line))
+                .collect()
+        } else {
+            input.clone()
+        };
 
-        self.txt.set_input(fmt_lines(
-            &input.iter().enumerate().collect::<Vec<_>>(),
-            self.show_line_numbers,
-        ))?;
-        self.redraw()?;
+        self.txt.set_input(display_lines.clone())?;
         self.drw.map_window(self.id.unwrap());
+        self.redraw()?;
+
+        let mut matches: Vec<(usize, &String)> = display_lines.iter().enumerate().collect();
+        let matcher = SkimMatcherV2::default();
 
         loop {
             debug!("waiting for keypress");
-            if let KeyPressParseAttempt::KeyPress(k) = self.drw.next_keypress_blocking()? {
-                debug!("got a keypress");
-                match k {
-                    KeyPress::Return if self.txt.selected_index() < matches.len() => {
-                        debug!("exiting with selection");
-                        let m = matches[self.txt.selected_index()];
-                        return Ok(PMenuMatch::Line(m.0, m.1.clone()));
+            match self.drw.next_keypress_blocking()? {
+                KeyPressParseAttempt::XEvent(XEvent::Expose { id, count, .. }) => {
+                    debug!("got expose event");
+                    if Some(id) == self.id && count == 0 {
+                        self.redraw()?;
                     }
+                }
 
-                    KeyPress::Return => {
-                        debug!("exiting with potential user input");
-                        let patt = self.patt.get_text();
-                        return if patt.is_empty() {
-                            Ok(PMenuMatch::NoMatch)
-                        } else {
-                            Ok(PMenuMatch::UserInput(patt.clone()))
-                        };
-                    }
-
-                    KeyPress::Escape => {
-                        debug!("exiting with NoMatch");
-                        return Ok(PMenuMatch::NoMatch);
-                    }
-
-                    KeyPress::Backspace | KeyPress::Utf8(_) => {
-                        debug!("updating pattern");
-                        self.patt.handle_keypress(k)?;
-
-                        debug!("computing matches");
-                        let mut scored = input
-                            .iter()
-                            .enumerate()
-                            .flat_map(|(i, line)| {
-                                matcher
-                                    .fuzzy_match(line, self.patt.get_text())
-                                    .map(|score| (score, (i, line)))
-                            })
-                            .collect::<Vec<_>>();
-
-                        if self.sort_by_relevance {
-                            scored.sort_by_key(|(score, _)| -*score);
+                KeyPressParseAttempt::KeyPress(k) => {
+                    debug!("got keypress event");
+                    match k {
+                        KeyPress::Return if self.txt.selected_index() < matches.len() => {
+                            let ix = self.txt.selected_index();
+                            return Ok(PMenuMatch::Line(ix, input.remove(ix)));
                         }
 
-                        matches = scored.into_iter().map(|(_, data)| data).collect();
-                        let lines = fmt_lines(&matches, self.show_line_numbers);
-                        self.txt.set_input(lines)?;
-                    }
+                        KeyPress::Return => {
+                            let patt = self.patt.get_text();
+                            return if patt.is_empty() {
+                                Ok(PMenuMatch::NoMatch)
+                            } else {
+                                Ok(PMenuMatch::UserInput(patt.clone()))
+                            };
+                        }
 
-                    KeyPress::Up | KeyPress::Down => {
-                        debug!("adjusting selection");
-                        self.txt.handle_keypress(k)?;
-                    }
+                        KeyPress::Escape => {
+                            return Ok(PMenuMatch::NoMatch);
+                        }
 
-                    _ => continue,
-                };
+                        KeyPress::Backspace | KeyPress::Utf8(_) => {
+                            self.patt.handle_keypress(k)?;
 
-                // Only redraw if we got a keypress
-                debug!("triggering re-render");
-                self.redraw()?;
+                            let mut scored = display_lines
+                                .iter()
+                                .enumerate()
+                                .flat_map(|(i, line)| {
+                                    matcher
+                                        .fuzzy_match(line, self.patt.get_text())
+                                        .map(|score| (score, (i, line)))
+                                })
+                                .collect::<Vec<_>>();
+
+                            if self.sort_by_relevance {
+                                scored.sort_by_key(|(score, _)| -*score);
+                            }
+
+                            matches = scored.into_iter().map(|(_, data)| data).collect();
+                            let lines = matches.iter().map(|(_, line)| line.to_string()).collect();
+                            self.txt.set_input(lines)?;
+                        }
+
+                        KeyPress::Up | KeyPress::Down => {
+                            self.txt.handle_keypress(k)?;
+                        }
+
+                        _ => continue,
+                    };
+
+                    self.redraw()?;
+                }
+
+                _ => (),
             }
         }
     }
-}
-
-// Hleper for formatting lines with optional line numbers
-fn fmt_lines(lines: &[(usize, &String)], show_line_numbers: bool) -> Vec<String> {
-    lines
-        .iter()
-        .map(|(i, line)| {
-            if show_line_numbers {
-                format!("{:<3} {}", i, line)
-            } else {
-                line.to_string()
-            }
-        })
-        .collect()
 }
