@@ -174,6 +174,14 @@ impl Draw for XcbDraw {
 
 #[cfg(feature = "keysyms")]
 impl KeyPressDraw for XcbDraw {
+    fn grab_keyboard(&self) -> Result<()> {
+        Ok(self.api.grab_keyboard()?)
+    }
+
+    fn ungrab_keyboard(&self) -> Result<()> {
+        Ok(self.api.ungrab_keyboard()?)
+    }
+
     fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>> {
         Ok(self.api.next_keypress()?)
     }

@@ -198,10 +198,8 @@ where
         let (prompt_w, prompt_h) = self.prompt.current_extent(&mut ctx, 1.0)?;
         let (input_w, input_h) = self.txt.current_extent(&mut ctx, 1.0)?;
 
-        self.w = prompt_w + input_w + PAD_PX;
+        self.w = (prompt_w + input_w + PAD_PX).max((sw as f64) * self.min_width_perc);
         self.h = prompt_h + input_h + PAD_PX * 4.0;
-
-        self.w = self.w.max((sw as f64) * self.min_width_perc);
 
         let id = self.drw.new_window(
             WinType::InputOutput(Atom::NetWindowTypeDialog),
@@ -254,7 +252,10 @@ where
         self.txt.set_n_lines(n_lines);
     }
 
-    /// Spawn a temporary window using the embedded [KeyPressDraw] impl and fethc input from the user.
+    /// Spawn a temporary window using the embedded [KeyPressDraw] impl and fetch input from the user.
+    ///
+    /// ## NOTE
+    /// This method will block the current thread while it runs.
     ///
     /// # Example
     /// ```
@@ -280,9 +281,12 @@ where
         let input: Vec<String> = input.into_iter().map(|s| s.into()).collect();
         self.prompt.set_text(prompt);
         self.txt.set_input(input.clone())?;
-
         self.init_window(screen_index)?;
+
+        self.drw.grab_keyboard()?;
         let selection = self.get_selection_inner(input);
+        self.drw.ungrab_keyboard()?;
+
         self.drw.destroy_window(self.id.unwrap());
         self.id = None;
 

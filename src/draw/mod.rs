@@ -222,6 +222,12 @@ pub enum KeyPressParseAttempt {
 
 /// A [Draw] that can return the [KeyPress] events from the user for its windows
 pub trait KeyPressDraw: Draw {
+    /// Attempt to grab control of all keyboard input
+    fn grab_keyboard(&self) -> Result<()>;
+
+    /// Attempt to release control of all keyboard inputs
+    fn ungrab_keyboard(&self) -> Result<()>;
+
     /// Attempt to parse the next [XEvent] from an underlying connection as a [KeyPress] if there
     /// is one.
     ///

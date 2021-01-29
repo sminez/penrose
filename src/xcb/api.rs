@@ -292,6 +292,28 @@ impl Api {
         })
     }
 
+    /// Grab control of all keyboard input
+    pub fn grab_keyboard(&self) -> Result<()> {
+        xcb::grab_keyboard(
+            &self.conn,
+            true,
+            self.root(),
+            xcb::CURRENT_TIME,
+            xcb::GRAB_MODE_ASYNC as u8,
+            xcb::GRAB_MODE_ASYNC as u8,
+        )
+        .get_reply()?;
+
+        Ok(())
+    }
+
+    /// Release keyboard input
+    pub fn ungrab_keyboard(&self) -> Result<()> {
+        xcb::ungrab_keyboard_checked(&self.conn, xcb::CURRENT_TIME).request_check()?;
+
+        Ok(())
+    }
+
     /// Poll for the next event from the underlying [XCB Connection][::xcb::Connection],
     /// returning it as an [XKeySym] if it was a user keypress, or an [XEvent] if not.
     ///
