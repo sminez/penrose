@@ -5,7 +5,7 @@ use crate::{
         data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
         helpers::spawn_for_output,
         screen::Screen,
-        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent},
+        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent, UNMANAGED_WINDOW_TYPES},
     },
     xcb::{Result, XcbError, XcbGenericEvent},
 };
@@ -202,7 +202,7 @@ impl Api {
 
         if let Ok(Prop::Atom(atoms)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
             return atoms.iter().any(|atom| match Atom::from_str(atom) {
-                Ok(a) => a == Atom::NetWindowTypeNormal,
+                Ok(a) => !UNMANAGED_WINDOW_TYPES.contains(&a),
                 _ => false,
             });
         }
@@ -419,6 +419,34 @@ impl Api {
                         e.height() as u32,
                     ),
                     is_root: e.window() == self.root,
+                })
+            }
+
+            xcb::CONFIGURE_REQUEST => {
+                let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::ConfigureRequest {
+                    id: e.window(),
+                    r: Region::new(
+                        e.x() as u32,
+                        e.y() as u32,
+                        e.width() as u32,
+                        e.height() as u32,
+                    ),
+                    is_root: e.window() == self.root,
+                })
+            }
+
+            xcb::EXPOSE => {
+                let e: &xcb::ExposeEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::Expose {
+                    id: e.window(),
+                    r: Region::new(
+                        e.x() as u32,
+                        e.y() as u32,
+                        e.width() as u32,
+                        e.height() as u32,
+                    ),
+                    count: e.count() as usize,
                 })
             }
 

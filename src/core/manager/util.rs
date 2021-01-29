@@ -77,8 +77,8 @@ pub(super) fn position_floating_client<X: XConn>(
     let reg = Region::new(
         x + border_px,
         y + border_px,
-        w + (2 * border_px),
-        h + (2 * border_px),
+        w - (2 * border_px),
+        h - (2 * border_px),
     );
     conn.position_window(id, reg, border_px, false);
 

@@ -68,6 +68,26 @@ pub enum XEvent {
         is_root: bool,
     },
 
+    /// A client is requesting to be repositioned
+    ConfigureRequest {
+        /// The ID of the window that had a property changed
+        id: WinId,
+        /// The new window size
+        r: Region,
+        /// Is this window the root window?
+        is_root: bool,
+    },
+
+    /// A part or all of a client has become visible
+    Expose {
+        /// The ID of the window that has become exposed
+        id: WinId,
+        /// The current size and position of the window
+        r: Region,
+        /// How many following expose events are pending
+        count: usize,
+    },
+
     /// A client property has changed in some way
     PropertyNotify {
         /// The ID of the window that had a property changed

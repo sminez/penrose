@@ -38,6 +38,8 @@ pub enum EventAction {
     DetectScreens,
     /// A new X window needs to be mapped
     MapWindow(WinId),
+    /// A client is requesting to be moved: honoured if the client is floating
+    MoveClientIfFloating(WinId, Region),
     /// A grabbed keybinding was triggered
     RunKeyBinding(KeyCode),
     /// A grabbed mouse state was triggered
@@ -58,6 +60,7 @@ pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction>
     match event {
         // Direct 1-n mappings of XEvents -> EventActions
         XEvent::Destroy { id } => vec![EventAction::DestroyClient(id)],
+        XEvent::Expose { .. } => vec![], // TODO: work out if this needs handling in the WindowManager
         XEvent::KeyPress(code) => vec![EventAction::RunKeyBinding(code)],
         XEvent::Leave { id, rpt, .. } => vec![
             EventAction::ClientFocusLost(id),
@@ -72,6 +75,7 @@ pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction>
             process_client_message(state, id, &dtype, &data)
         }
         XEvent::ConfigureNotify { id, r, is_root } => process_configure_notify(id, r, is_root),
+        XEvent::ConfigureRequest { id, r, is_root } => process_configure_request(id, r, is_root),
         XEvent::Enter { id, rpt, .. } => process_enter_notify(state, id, rpt),
         XEvent::MapRequest { id, ignore } => process_map_request(state, id, ignore),
         XEvent::PropertyNotify { id, atom, is_root } => process_property_notify(id, atom, is_root),
@@ -106,6 +110,14 @@ fn process_client_message(
 fn process_configure_notify(_id: WinId, _r: Region, is_root: bool) -> Vec<EventAction> {
     if is_root {
         vec![EventAction::DetectScreens]
+    } else {
+        vec![]
+    }
+}
+
+fn process_configure_request(id: WinId, r: Region, is_root: bool) -> Vec<EventAction> {
+    if !is_root {
+        vec![EventAction::MoveClientIfFloating(id, r)]
     } else {
         vec![]
     }

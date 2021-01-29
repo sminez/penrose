@@ -299,6 +299,7 @@ impl<X: XConn> WindowManager<X> {
                 self.detect_screens()?
             }
             EventAction::MapWindow(id) => self.handle_map_request(id)?,
+            EventAction::MoveClientIfFloating(id, r) => self.handle_move_if_floating(id, r)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
             EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
             EventAction::SetActiveClient(id) => {
@@ -502,7 +503,7 @@ impl<X: XConn> WindowManager<X> {
             self.update_x_known_clients();
             run_hooks!(remove_client, self, id);
         } else {
-            warn!("attempt to remove unknown client {}", id);
+            debug!("attempt to remove unknown client {}", id);
         }
     }
 
@@ -636,6 +637,17 @@ impl<X: XConn> WindowManager<X> {
             self.conn.warp_cursor(Some(id), s);
         }
 
+        Ok(())
+    }
+
+    fn handle_move_if_floating(&mut self, id: WinId, r: Region) -> Result<()> {
+        if let Some(client) = self.client_map.get(&id) {
+            if client.floating {
+                debug!("Repositioning floating window: id={} r={:?}", id, r);
+                let bpx = self.config.border_px;
+                self.conn.position_window(id, r, bpx, true);
+            }
+        }
         Ok(())
     }
 
