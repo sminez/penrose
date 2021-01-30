@@ -374,9 +374,12 @@ impl Api {
         let numlock = xcb::MOD_MASK_2 as u16;
 
         let etype = event.response_type() & xcb_response_type_mask;
+
         // Need to apply the randr_base mask as well which doesn't seem to work in 'match'
         if etype == self.randr_base + xcb::randr::NOTIFY {
             return Ok(Some(XEvent::RandrNotify));
+        } else if etype == self.randr_base + xcb::randr::SCREEN_CHANGE_NOTIFY {
+            return Ok(Some(XEvent::ScreenChange));
         }
 
         Ok(match etype {
@@ -428,8 +431,6 @@ impl Api {
                 let e: &xcb::DestroyNotifyEvent = unsafe { xcb::cast_event(&event) };
                 Some(XEvent::Destroy { id: e.window() })
             }
-
-            xcb::randr::SCREEN_CHANGE_NOTIFY => Some(XEvent::ScreenChange),
 
             xcb::CONFIGURE_NOTIFY => {
                 let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
@@ -504,6 +505,19 @@ impl Api {
                             is_root: e.window() == self.root,
                         })
                     })
+            }
+
+            0 => {
+                // ...why is this what you have to do to get at an error?
+                let e: &xcb::GenericError = unsafe { xcb::cast_event(&event) };
+                let error = unsafe { *e.ptr };
+                return Err(XcbError::X11Error(
+                    error.sequence,
+                    error.error_code,
+                    error.resource_id,
+                    error.major_code,
+                    error.minor_code,
+                ));
             }
 
             // NOTE: ignoring other event types

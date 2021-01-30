@@ -147,8 +147,12 @@ pub enum XcbError {
     #[error("The requested screen index was out of bounds: {0} > {1}")]
     UnknownScreen(usize, usize),
 
+    /// Wrapper around low level X11 errors
+    #[error("X11 error: error seq={0}, code={1}, xid={2}, request: {3}:{4}")]
+    X11Error(u16, u8, u32, u8, u16),
+
     /// Wrapper around low level XCB C API errors
-    #[error("Error making xcb query")]
+    #[error("Error making xcb query: {0}")]
     XcbGeneric(#[from] ::xcb::Error<::xcb::ffi::base::xcb_generic_error_t>),
 
     /// Error in using the pango API
