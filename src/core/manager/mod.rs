@@ -1010,13 +1010,13 @@ impl<X: XConn> WindowManager<X> {
     /// # use penrose::__example_helpers::*;
     /// # fn example(mut manager: ExampleWM) -> Result<()> {
     /// let focused = manager.focus_client(&Selector::WinId(0));
-    /// assert_eq!(focused, Ok(0));
+    /// assert_eq!(focused.unwrap(), 0);
     ///
     /// let focused = manager.focus_client(&Selector::WinId(42));
     /// assert!(focused.is_err());
     ///
     /// let focused = manager.focus_client(&Selector::WinId(1));
-    /// assert_eq!(focused, Ok(1));
+    /// assert_eq!(focused.unwrap(), 1);
     ///
     /// let focused = manager.focus_client(&Selector::WinId(42));
     /// assert!(focused.is_err());

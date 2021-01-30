@@ -196,6 +196,7 @@ where
 
         let mut ctx = self.drw.temp_context(sw, sh)?;
         let (prompt_w, prompt_h) = self.prompt.current_extent(&mut ctx, 1.0)?;
+
         let (input_w, input_h) = self.txt.current_extent(&mut ctx, 1.0)?;
 
         self.w = (prompt_w + input_w + PAD_PX).max((sw as f64) * self.min_width_perc);
@@ -219,7 +220,7 @@ where
         Ok(())
     }
 
-    fn redraw(&mut self) -> Result<()> {
+    fn redraw(&mut self, with_prompt: bool) -> Result<()> {
         let id = self.id.unwrap();
         let mut ctx = self.drw.context_for(id)?;
 
@@ -227,21 +228,28 @@ where
         ctx.color(&self.bg);
         ctx.rectangle(0.0, 0.0, self.w, self.h);
 
-        let (w, h) = self.prompt.current_extent(&mut ctx, self.h)?;
-
-        ctx.color(&self.ac);
-        ctx.rectangle(0.0, 0.0, w + PAD_PX, h + PAD_PX);
+        let (w, h) = if with_prompt {
+            let (w, h) = self.prompt.current_extent(&mut ctx, self.h)?;
+            ctx.color(&self.ac);
+            ctx.rectangle(0.0, 0.0, w + PAD_PX, h + PAD_PX);
+            (w, h)
+        } else {
+            let (_, h) = self.patt.current_extent(&mut ctx, self.h)?;
+            (0.0, h)
+        };
 
         ctx.translate(PAD_PX, PAD_PX);
-        self.prompt.draw(&mut ctx, 0, false, w, h)?;
-        ctx.translate(w, 0.0);
+
+        if with_prompt {
+            self.prompt.draw(&mut ctx, 0, false, w, h)?;
+            ctx.translate(w, 0.0);
+        }
 
         self.patt.draw(&mut ctx, 0, false, self.w - w, h)?;
         ctx.translate(0.0, h);
-
         self.txt.draw(&mut ctx, 0, true, self.w - w, h)?;
-
         self.drw.flush(id);
+
         Ok(())
     }
 
@@ -274,17 +282,24 @@ where
     /// ```
     pub fn get_selection_from_input(
         &mut self,
-        prompt: impl Into<String>,
+        prompt: Option<impl Into<String>>,
         input: Vec<impl Into<String>>,
         screen_index: usize,
     ) -> Result<PMenuMatch> {
         let input: Vec<String> = input.into_iter().map(|s| s.into()).collect();
-        self.prompt.set_text(prompt);
+
+        let with_prompt = if let Some(p) = prompt {
+            self.prompt.set_text(p);
+            true
+        } else {
+            false
+        };
+
         self.txt.set_input(input.clone())?;
         self.init_window(screen_index)?;
 
         self.drw.grab_keyboard()?;
-        let selection = self.get_selection_inner(input);
+        let selection = self.get_selection_inner(input, with_prompt);
         self.drw.ungrab_keyboard()?;
 
         self.drw.destroy_window(self.id.unwrap());
@@ -293,7 +308,7 @@ where
         selection
     }
 
-    fn get_selection_inner(&mut self, mut input: Vec<String>) -> Result<PMenuMatch> {
+    fn get_selection_inner(&mut self, input: Vec<String>, with_prompt: bool) -> Result<PMenuMatch> {
         let display_lines = if self.show_line_numbers {
             input
                 .iter()
@@ -306,7 +321,7 @@ where
 
         self.txt.set_input(display_lines.clone())?;
         self.drw.map_window(self.id.unwrap());
-        self.redraw()?;
+        self.redraw(with_prompt)?;
 
         let mut matches: Vec<(usize, &String)> = display_lines.iter().enumerate().collect();
         let matcher = SkimMatcherV2::default();
@@ -317,7 +332,7 @@ where
                 KeyPressParseAttempt::XEvent(XEvent::Expose { id, count, .. }) => {
                     debug!("got expose event");
                     if Some(id) == self.id && count == 0 {
-                        self.redraw()?;
+                        self.redraw(with_prompt)?;
                     }
                 }
 
@@ -326,7 +341,13 @@ where
                     match k {
                         KeyPress::Return if self.txt.selected_index() < matches.len() => {
                             let ix = self.txt.selected_index();
-                            return Ok(PMenuMatch::Line(ix, input.remove(ix)));
+                            let (_, raw) = matches[ix];
+                            let s = if self.show_line_numbers {
+                                raw.split_at(4).1.to_string()
+                            } else {
+                                raw.to_string()
+                            };
+                            return Ok(PMenuMatch::Line(ix, s));
                         }
 
                         KeyPress::Return => {
@@ -371,7 +392,7 @@ where
                         _ => continue,
                     };
 
-                    self.redraw()?;
+                    self.redraw(with_prompt)?;
                 }
 
                 _ => (),
