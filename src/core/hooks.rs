@@ -186,7 +186,7 @@ pub trait Hook<X: XConn> {
     ///
     /// Inspecting newly created clients is the first and most obvious use of this hook but more
     /// advanced actions can be performed if the hook takes ownership of the client. For an
-    /// example, see the [Scratchpad][2] extension which uses this hook to capture a spawned client.
+    /// example, see the [Scratchpad][4] extension which uses this hook to capture a spawned client.
     ///
     /// [1]: crate::core::workspace::Workspace
     /// [2]: crate::core::layout::Layout
