@@ -210,7 +210,8 @@ impl Api {
         false
     }
 
-    pub(crate) fn conn(&self) -> &xcb::Connection {
+    /// Get a handle on the underlying xcb connection
+    pub fn conn(&self) -> &xcb::Connection {
         &self.conn
     }
 
@@ -685,7 +686,7 @@ impl Api {
             0,                             // event time (0 == current time)
         );
 
-        self.replace_prop(id, Atom::NetActiveWindow, PropVal::Window(&[id]));
+        self.replace_prop(self.root(), Atom::NetActiveWindow, PropVal::Window(&[id]));
     }
 
     /// Send an event to a client

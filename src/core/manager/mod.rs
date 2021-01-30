@@ -302,10 +302,7 @@ impl<X: XConn> WindowManager<X> {
             EventAction::MoveClientIfFloating(id, r) => self.handle_move_if_floating(id, r)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
             EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
-            EventAction::SetActiveClient(id) => {
-                self.focus_client(&Selector::WinId(id))
-                    .map_err(|_| PenroseError::UnknownClient(id))?;
-            }
+            EventAction::SetActiveClient(id) => self.set_active_client(id)?,
             EventAction::SetActiveWorkspace(wix) => self.focus_workspace(&Selector::Index(wix))?,
             EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p),
             EventAction::ToggleClientFullScreen(id, should_fullscreen) => {
@@ -685,6 +682,13 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
+    fn set_active_client(&mut self, id: WinId) -> Result<()> {
+        self.focus_client(&Selector::WinId(id))
+            .map_err(|_| PenroseError::UnknownClient(id))?;
+
+        Ok(())
+    }
+
     // Set the active [Screen] based on an (x, y) [Point]. If point is None then we set
     // based on the current cursor position instead.
     fn set_screen_from_point(&mut self, point: Option<Point>) {
@@ -1000,12 +1004,6 @@ impl<X: XConn> WindowManager<X> {
 
     /// Focus the [Client] matching the given [Selector]
     ///
-    /// # Errors
-    ///
-    /// If the selector matches a known client then that client is focused and `Ok(id)`
-    /// is returned. If the selector doesn't match (either it was invalid or there is
-    /// no focused client) then `Err(self.focused_client_id())` is returned.
-    ///
     /// # Example
     ///
     /// ```
@@ -1015,13 +1013,13 @@ impl<X: XConn> WindowManager<X> {
     /// assert_eq!(focused, Ok(0));
     ///
     /// let focused = manager.focus_client(&Selector::WinId(42));
-    /// assert_eq!(focused, Err(Some(0))); // the current focused client
+    /// assert!(focused.is_err());
     ///
     /// let focused = manager.focus_client(&Selector::WinId(1));
     /// assert_eq!(focused, Ok(1));
     ///
     /// let focused = manager.focus_client(&Selector::WinId(42));
-    /// assert_eq!(focused, Err(Some(1))); // the current focused client
+    /// assert!(focused.is_err());
     /// # Ok(())
     /// # }
     /// #
@@ -1029,7 +1027,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// // Or, if there are no clients to focus
     /// let focused = manager.focus_client(&Selector::WinId(0));
-    /// assert_eq!(focused, Err(None));
+    /// assert!(focused.is_err());
     /// # Ok(())
     /// # }
     /// #
@@ -1039,13 +1037,10 @@ impl<X: XConn> WindowManager<X> {
     /// # example(manager).unwrap();
     /// # example2(example_windowmanager(1, vec![])).unwrap();
     /// ```
-    pub fn focus_client(
-        &mut self,
-        selector: &Selector<'_, Client>,
-    ) -> std::result::Result<WinId, Option<WinId>> {
+    pub fn focus_client(&mut self, selector: &Selector<'_, Client>) -> Result<WinId> {
         let id = match self.client(selector) {
             Some(c) => c.id(),
-            None => return Err(self.focused_client_id()),
+            None => return Err(PenroseError::NoMatchingElement),
         };
         self.client_gained_focus(id);
         let screen = self.screens.focused_unchecked();

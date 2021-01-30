@@ -126,8 +126,8 @@ impl Scratchpad {
 
     fn grab_focus<X: XConn>(&self, wm: &mut WindowManager<X>) {
         if let Some(id) = *self.client.borrow() {
-            if let Err(not_us) = wm.focus_client(&Selector::WinId(id)) {
-                error!("Scratchpad was unable to focus its client: {:?}", not_us);
+            if let Err(e) = wm.focus_client(&Selector::WinId(id)) {
+                error!("Scratchpad was unable to focus its client: {:?}", e);
             }
         }
     }

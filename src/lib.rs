@@ -201,9 +201,13 @@ pub enum PenroseError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
-    /// WmNormalHints received from the X server were invalid
+    /// Wm(Normal)Hints received from the X server were invalid
     #[error("Invalid window hints property: {0}")]
     InvalidHints(String),
+
+    /// No elements match the given selector
+    #[error("No elements match the given selector")]
+    NoMatchingElement,
 
     /// Attempting to construct a penrose data type from an int failed.
     #[error(transparent)]
