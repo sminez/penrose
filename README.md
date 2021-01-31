@@ -60,7 +60,7 @@ achive with it ([this one][8] is a personal favourite) but doing everything in
 Haskell was a deal breaker for me. I'm sure many people will say the same thing
 about Rust but then at least I'm giving you some more options!
 
-With `Penrose`, a simple config can be written in about 5 minutes and roghly 50
+With `Penrose`, a simple config can be written in about 5 minutes and roughly 50
 lines of code. It will be pretty minimal but each additional feature (such as a
 status bar, scratchpads, custom layouts, dynamic menus...) can be added in as
 little as a single line. If the functionality you want isn't available however
