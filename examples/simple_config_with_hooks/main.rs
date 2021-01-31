@@ -70,7 +70,7 @@ fn main() -> Result<()> {
         allow_wrapping: false,
     };
 
-    // Defauly number of clients in the main layout area
+    // Default number of clients in the main layout area
     let n_main = 1;
 
     // Default percentage of the screen to fill with the main area of the layout
