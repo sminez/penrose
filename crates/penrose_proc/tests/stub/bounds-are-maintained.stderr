@@ -1,0 +1,8 @@
+error[E0277]: the trait bound `MyStruct: Eq` is not satisfied
+  --> $DIR/bounds-are-maintained.rs:13:6
+   |
+5  | trait Foo: std::fmt::Debug + Eq {
+   |                              -- required by this bound in `StubFoo`
+...
+13 | impl StubFoo for MyStruct {}
+   |      ^^^^^^^ the trait `Eq` is not implemented for `MyStruct`
