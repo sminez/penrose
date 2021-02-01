@@ -1,5 +1,5 @@
-error: Expected #[stubbed_companion_trait] or #[stubbed_companion_trait(prefix = "Foo")]
-  --> $DIR/meta-args-reject-correctly.rs:13:27
+error: Expected `prefix = "Foo"` or `test_only = "true" | "false"`
+  --> $DIR/meta-args-reject-correctly.rs:12:27
    |
-13 | #[stubbed_companion_trait(bork = "CustomPrefix")]
+12 | #[stubbed_companion_trait(bork = "CustomPrefix")]
    |                           ^^^^^^^^^^^^^^^^^^^^^

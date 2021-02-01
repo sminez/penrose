@@ -2,12 +2,37 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    fold::Fold, parse_macro_input, punctuated::Punctuated, token::Comma, Block, Error, Expr,
-    ExprMethodCall, FnArg, Ident, ItemTrait, Lit, Meta, ReturnType, TraitItem, TraitItemMethod,
+    fold::Fold,
+    parse::{Parse, ParseStream},
+    parse_macro_input,
+    punctuated::Punctuated,
+    token::Comma,
+    Block, Error, Expr, ExprMethodCall, FnArg, Ident, ItemTrait, Lit, Meta, MetaNameValue,
+    ReturnType, Token, TraitItem, TraitItemMethod,
 };
 
 const STUB_METHOD_PREFIX: &str = "mock";
 const DEFAULT_PREFIX: &str = "Stub";
+
+// Custom parser for extracting attribute args
+struct Args(Vec<Meta>);
+
+impl Parse for Args {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+        Ok(Self(
+            Punctuated::<Meta, Token![,]>::parse_terminated(&input)?
+                .into_iter()
+                .collect(),
+        ))
+    }
+}
+
+// Valid attribute args are setting a custom prefix or marking the generated impls as being only
+// for use in tests.
+enum ValidArg {
+    Prefix(String),
+    TestOnly(bool),
+}
 
 // Data is the set of method names to replace
 struct DefaultImplRewriter(Vec<String>);
@@ -27,6 +52,7 @@ impl Fold for DefaultImplRewriter {
     }
 }
 
+// Details around an individual trait method
 struct MethodDetails {
     ident: Ident,
     stub_ident: Ident,
@@ -71,7 +97,7 @@ fn strip_stub_attr(m: &mut TraitItemMethod) -> proc_macro2::TokenStream {
 
     Error::new_spanned(
         m,
-        "require `stub(\"...\")` attribute when there is no default implementation",
+        "The `stub(\"...\")` attribute is requred when there is no default implementation",
     )
     .to_compile_error()
 }
@@ -96,19 +122,54 @@ fn extract_method_details(ast: &mut ItemTrait) -> Vec<MethodDetails> {
         .collect()
 }
 
-fn parse_args_meta(meta: Meta) -> Result<String, TokenStream> {
-    if let Meta::NameValue(ref nv) = meta {
-        if nv.path.is_ident("prefix") {
-            if let Lit::Str(ref s) = nv.lit {
-                return Ok(s.value());
+fn parse_single_arg(nv: &MetaNameValue) -> Result<ValidArg, TokenStream> {
+    if nv.path.is_ident("prefix") {
+        if let Lit::Str(ref s) = nv.lit {
+            return Ok(ValidArg::Prefix(s.value()));
+        }
+    }
+
+    if nv.path.is_ident("test_only") {
+        if let Lit::Str(ref s) = nv.lit {
+            let s = s.value();
+            match s.as_ref() {
+                "true" | "false" => return Ok(ValidArg::TestOnly(s == "true")),
+                _ => (),
             }
         }
     }
 
     Err(TokenStream::from(
         Error::new_spanned(
-            meta,
-            "Expected #[stubbed_companion_trait] or #[stubbed_companion_trait(prefix = \"Foo\")]",
+            nv,
+            "Expected `prefix = \"Foo\"` or `test_only = \"true\" | \"false\"`",
+        )
+        .to_compile_error(),
+    ))
+}
+
+fn parse_args_meta(meta: Vec<Meta>) -> Result<(String, bool), TokenStream> {
+    if meta.len() <= 2 {
+        let mut prefix = DEFAULT_PREFIX.to_string();
+        let mut test_only = false;
+
+        for m in meta.iter() {
+            if let Meta::NameValue(ref nv) = m {
+                match parse_single_arg(nv)? {
+                    ValidArg::Prefix(p) => prefix = p,
+                    ValidArg::TestOnly(b) => test_only = b,
+                }
+            } else {
+                break;
+            }
+        }
+        return Ok((prefix, test_only));
+    }
+
+    Err(TokenStream::from(
+        Error::new_spanned(
+            meta[0].clone(),
+            "Expected one of: #[stubbed_companion_trait] or #[stubbed_companion_trait(\"...\")]",
         )
         .to_compile_error(),
     ))
@@ -176,11 +237,11 @@ fn generate_trait_methods(method_details: &[MethodDetails]) -> Vec<proc_macro2::
 }
 
 pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStream) -> TokenStream {
-    let prefix = if args.is_empty() {
-        DEFAULT_PREFIX.to_string()
+    let (prefix, test_only) = if args.is_empty() {
+        (DEFAULT_PREFIX.to_string(), false)
     } else {
-        match parse_args_meta(parse_macro_input!(args as Meta)) {
-            Ok(s) => s,
+        match parse_args_meta(parse_macro_input!(args as Args).0) {
+            Ok(pt) => pt,
             Err(e) => return e,
         }
     };
@@ -204,14 +265,21 @@ pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStrea
     // Generate all of the output token streams that we need
     let stub_methods = generate_stub_methods(&method_details);
     let trait_methods = generate_trait_methods(&method_details);
+    let test_attr = if test_only {
+        quote! { #[cfg(test)] }
+    } else {
+        proc_macro2::TokenStream::new()
+    };
 
     TokenStream::from(quote! {
         #ast
 
+        #test_attr
         #visibility trait #stub_trait_name #colon #bounds {
             #(#stub_methods)*
         }
 
+        #test_attr
         impl<T> #trait_name for T where T: #stub_trait_name {
             #(#trait_methods)*
         }

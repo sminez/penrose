@@ -8,11 +8,10 @@ trait Foo {
     fn color(&self, x: u32) -> &str;
 }
 
-struct MyStruct {}
-
+struct MyStruct;
 impl StubFoo for MyStruct {}
 
 fn main() {
-    let s = MyStruct {};
+    let s = MyStruct;
     assert_eq!(s.color(42), "red");
 }

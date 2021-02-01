@@ -7,7 +7,7 @@ trait Foo {
     fn color(&self, x: u32) -> &str;
 }
 
-struct MyStruct {}
+struct MyStruct;
 
 impl Foo for MyStruct {
     fn color(&self, x: u32) -> &str {
@@ -19,7 +19,7 @@ impl Foo for MyStruct {
 }
 
 fn main() {
-    let s = MyStruct {};
+    let s = MyStruct;
     assert_eq!(s.color(42), "red");
     assert_eq!(s.color(19), "green");
 }

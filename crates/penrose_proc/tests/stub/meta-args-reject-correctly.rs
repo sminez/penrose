@@ -1,4 +1,4 @@
-// Custom prefixes are accepted and used in place of "Stub"
+// Invalid meta args should get rejected
 use penrose_proc::stubbed_companion_trait;
 
 #[allow(dead_code)]
@@ -9,7 +9,6 @@ enum Scale {
     Blues,
 }
 
-// Should generated CustomPrefixBar
 #[stubbed_companion_trait(bork = "CustomPrefix")]
 trait Bar {
     #[stub("F#")]

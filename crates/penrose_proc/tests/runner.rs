@@ -10,4 +10,5 @@ fn tests() {
     t.pass("tests/stub/stub-impls-satisfy-bounds.rs");
     t.pass("tests/stub/visibility-is-correct.rs");
     t.compile_fail("tests/stub/visibility-is-correct-failure.rs");
+    t.compile_fail("tests/stub/test-only-attr-works.rs");
 }

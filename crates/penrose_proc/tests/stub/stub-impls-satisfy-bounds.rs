@@ -29,12 +29,12 @@ trait Bar: Foo {
 }
 
 #[derive(Debug)]
-struct MyStruct {}
+struct MyStruct;
 
 impl StubFoo for MyStruct {}
 impl StubBar for MyStruct {}
 
 fn main() {
-    let s = MyStruct {};
+    let s = MyStruct;
     assert_eq!(&s.colored_animal("anything", 42), "A Cat that is red");
 }

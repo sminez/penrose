@@ -8,11 +8,11 @@ trait Foo: std::fmt::Debug + Eq {
 }
 
 #[derive(Debug)]
-struct MyStruct {}
+struct MyStruct;
 
 impl StubFoo for MyStruct {}
 
 fn main() {
-    let s = MyStruct {};
+    let s = MyStruct;
     assert_eq!(s.color(42), "red");
 }

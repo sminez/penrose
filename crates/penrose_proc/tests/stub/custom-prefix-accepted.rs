@@ -19,12 +19,12 @@ trait Bar {
     fn musical_scale(&self, f: f64) -> Scale;
 }
 
-struct MyStruct {}
+struct MyStruct;
 
 impl CustomPrefixBar for MyStruct {}
 
 fn main() {
-    let s = MyStruct {};
+    let s = MyStruct;
     assert_eq!(s.musical_note(17), "F#");
     assert_eq!(s.musical_scale(3.14), Scale::Blues);
 }

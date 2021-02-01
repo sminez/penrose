@@ -9,7 +9,7 @@ mod inner {
     }
 }
 
-struct MyStruct {}
+struct MyStruct;
 // Should fail due to being private
 impl inner::StubFoo for MyStruct {}
 

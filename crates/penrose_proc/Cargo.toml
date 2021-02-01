@@ -13,10 +13,6 @@ keywords = [ "windowmanager", "window", "manager", "x11", "procmacro" ]
 [lib]
 proc-macro = true
 
-[[test]]
-name = "tests"
-path = "tests/runner.rs"
-
 [dev-dependencies]
 trybuild = "1.0"
 

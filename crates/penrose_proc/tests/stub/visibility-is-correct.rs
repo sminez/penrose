@@ -11,10 +11,10 @@ mod inner {
 
 use inner::Foo;
 
-struct MyStruct {}
+struct MyStruct;
 impl inner::StubFoo for MyStruct {}
 
 fn main() {
-    let s = MyStruct {};
+    let s = MyStruct;
     assert_eq!(s.color(42), "red");
 }

@@ -1,20 +1,21 @@
-// The stub trait should have the same default impls as the original
-// NOTE: There is a limitation to the rewrite required for this to work which is that any calls
-//       to methods on self inside of macro invocations are _not_ rewritten due to the way that
-//       macros handle their input tokens.
 use penrose_proc::stubbed_companion_trait;
 
+#[allow(dead_code)]
 #[derive(Debug, Eq, PartialEq)]
 enum Animal {
     Cat,
     Dog,
 }
 
-#[stubbed_companion_trait]
+// Should be usable in the test case below
+#[stubbed_companion_trait(test_only = "true")]
 trait Foo {
     #[stub("red")]
     fn color(&self, x: u32) -> &str;
+}
 
+#[stubbed_companion_trait(test_only = "true", prefix = "Custom")]
+trait Bar: Foo {
     #[stub(Some(Animal::Cat))]
     fn animal(&self, name: &str) -> Option<Animal>;
 
@@ -28,13 +29,14 @@ trait Foo {
     }
 }
 
+#[derive(Debug)]
 struct MyStruct;
 
 impl StubFoo for MyStruct {}
+impl CustomBar for MyStruct {}
 
-fn main() {
+#[test]
+fn can_use_stubs_in_tests() {
     let s = MyStruct;
     assert_eq!(s.color(42), "red");
-    assert_eq!(s.animal("anything"), Some(Animal::Cat));
-    assert_eq!(&s.colored_animal("anything", 42), "A Cat that is red");
 }
