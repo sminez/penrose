@@ -182,7 +182,7 @@ impl Api {
     }
 
     /// Fetch the name of an X atom id
-    pub fn atom_name(&self, atom: u32) -> Result<String> {
+    pub fn atom_name(&self, atom: Xid) -> Result<String> {
         Ok(xcb::get_atom_name(&self.conn, atom)
             .get_reply()?
             .name()
@@ -609,7 +609,7 @@ impl Api {
 
             Prop::Window(ids) => (xcb::xproto::ATOM_WINDOW, ids),
 
-            // TODO: handle these correctly
+            // FIXME: handle changing WmHints and WmNormalHints correctly in change_prop
             Prop::WmHints(_) | Prop::WmNormalHints(_) => {
                 return Err(XcbError::InvalidPropertyData(
                     "unable to change WmHints or WmNormalHints".into(),
@@ -747,7 +747,7 @@ impl Api {
         )
     }
 
-    // FIXME: work out the correct way of doing this
+    // FIXME: work out the correct way of sending arbitrary client events
     /// Send an event to a client
     pub fn send_client_event(&self, id: Xid, atom_name: &str, _data: &[u32]) -> Result<()> {
         let atom = self.atom(atom_name)?;
@@ -904,6 +904,11 @@ impl Api {
     /// The current root window ID
     pub fn root(&self) -> Xid {
         self.root
+    }
+
+    /// The Xid being used as a check window
+    pub fn check_window(&self) -> Xid {
+        self.check_win
     }
 
     /// Set a pre-defined notify mask for randr events to subscribe to

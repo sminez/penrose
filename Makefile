@@ -45,6 +45,10 @@ test-and-publish:
 upgrade-check:
 	cargo upgrade --workspace --dry-run
 
+.PHONY: todo
+todo:
+	rg 'TODO|FIXME|todo!' crates examples src tests
+
 
 # GitHub helpers using the official gh GitHub CLI
 .PHONY: list-issues

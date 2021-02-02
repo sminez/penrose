@@ -101,6 +101,10 @@ pub trait XState {
     /// Return the client ID of the [crate::core::client::Client] that currently holds X focus
     #[stub(Ok(0))]
     fn focused_client(&self) -> Result<Xid>;
+
+    /// Convert an X atom id to its human friendly name
+    #[stub(Err(PenroseError::Raw("mocked".into())))]
+    fn atom_name(&self, atom: Xid) -> Result<String>;
 }
 
 /// Sending and receiving X events
@@ -130,7 +134,7 @@ pub trait XClientHandler {
     #[stub(Ok(()))]
     fn unmap_client(&self, id: Xid) -> Result<()>;
 
-    /// Destropy and existing client.
+    /// Destroy and existing client.
     #[stub(Ok(()))]
     fn destroy_client(&self, id: Xid) -> Result<()>;
 
@@ -310,6 +314,13 @@ pub trait XConn:
     #[stub(Ok(()))]
     fn init(&self) -> Result<()>;
 
+    /// An X id for a check window that will be used for holding EWMH window manager properties
+    ///
+    /// The creation of any resources required for this should be handled in `init` and the
+    /// destruction of those resources should be handled in `cleanup`.
+    #[stub(0)]
+    fn check_window(&self) -> Xid;
+
     /// Perform any state cleanup required prior to shutting down the window manager
     #[stub(Ok(()))]
     fn cleanup(&self) -> Result<()>;
@@ -339,8 +350,9 @@ pub trait XConn:
     }
 
     /// Set required EWMH properties to ensure compatability with external programs
-    fn set_wm_properties(&self, check_win: Xid, workspaces: &[String]) -> Result<()> {
+    fn set_wm_properties(&self, workspaces: &[String]) -> Result<()> {
         let root = self.root();
+        let check_win = self.check_window();
         for &win in &[check_win, root] {
             self.change_prop(
                 win,

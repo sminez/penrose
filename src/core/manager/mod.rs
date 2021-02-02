@@ -9,7 +9,7 @@ use crate::{
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{Atom, XConn, Xid},
+        xconnection::{XConn, Xid},
     },
     ErrorHandler, PenroseError, Result,
 };
@@ -240,24 +240,18 @@ impl<X: XConn> WindowManager<X> {
         self.detect_screens()?;
 
         debug!("Setting EWMH properties");
-        // FIXME: Need checkwin
-        self.conn.set_wm_properties(0, &self.config.workspaces)?;
+        self.conn.set_wm_properties(&self.config.workspaces)?;
 
         debug!("Forcing cursor to first screen");
         self.conn.warp_cursor(None, &self.screens[0])
     }
 
     // Subset of current immutable state that is needed for processing XEvents into EventActions
-    fn current_state(&self) -> WmState<'_> {
+    fn current_state(&self) -> WmState<'_, X> {
         WmState {
+            conn: &self.conn,
             client_map: &self.client_map,
             focused_client: self.focused_client,
-            full_screen_atom: 0,
-            // FIXME: need to do this without interned atom
-            // self
-            // .conn
-            // .intern_atom(Atom::NetWmStateFullscreen.as_ref())
-            // .unwrap() as usize,
         }
     }
 
@@ -1554,9 +1548,7 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     pub fn kill_client(&mut self) -> Result<()> {
         let id = self.conn.focused_client()?;
-        let del = Atom::WmDeleteWindow.as_ref();
-        // FIXME: need to work out the correct event to send here
-        if let Err(e) = self.conn.send_client_event(id, del, &[]) {
+        if let Err(e) = self.conn.destroy_client(id) {
             error!("Error killing client: {}", e);
         }
         self.conn.flush();
