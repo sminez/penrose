@@ -20,9 +20,8 @@
 //! ```no_run
 //! use penrose::{
 //!     core::{
-//!         data_types::WinId,
 //!         hooks::Hook,
-//!         xconnection::XConn
+//!         xconnection::{XConn, Xid},
 //!     },
 //!     xcb::XcbConnection,
 //!     Config, Result, WindowManager, logging_error_handler
@@ -32,7 +31,7 @@
 //!
 //! // Start with the struct itself which will contain any internal state we need to track
 //! pub struct LogAddedClients {
-//!     seen: HashMap<usize, HashSet<WinId>>,
+//!     seen: HashMap<usize, HashSet<Xid>>,
 //! }
 //!
 //! // It is idiomatic for Hooks to provide a `new` method that returns a pre-boxed struct
@@ -49,7 +48,7 @@
 //!     fn client_added_to_workspace(
 //!         &mut self,
 //!         wm: &mut WindowManager<X>,
-//!         id: WinId,
+//!         id: Xid,
 //!         wix: usize
 //!     ) -> Result<()> {
 //!         let clients = self.seen.entry(wix).or_insert(HashSet::new());
@@ -117,9 +116,9 @@
 use crate::{
     core::{
         client::Client,
-        data_types::{Region, WinId},
+        data_types::Region,
         manager::WindowManager,
-        xconnection::XConn,
+        xconnection::{XConn, Xid},
     },
     Result,
 };
@@ -211,7 +210,7 @@ pub trait Hook<X: XConn> {
     /// [1]: crate::core::manager::WindowManager::kill_client
     /// [2]: Hook::new_client
     #[allow(unused_variables)]
-    fn remove_client(&mut self, wm: &mut WindowManager<X>, id: WinId) -> Result<()> {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
         Ok(())
     }
 
@@ -234,7 +233,7 @@ pub trait Hook<X: XConn> {
     fn client_added_to_workspace(
         &mut self,
         wm: &mut WindowManager<X>,
-        id: WinId,
+        id: Xid,
         wix: usize,
     ) -> Result<()> {
         Ok(())
@@ -257,7 +256,7 @@ pub trait Hook<X: XConn> {
     fn client_name_updated(
         &mut self,
         wm: &mut WindowManager<X>,
-        id: WinId,
+        id: Xid,
         name: &str,
         is_root: bool,
     ) -> Result<()> {
@@ -438,7 +437,7 @@ pub trait Hook<X: XConn> {
     /// [1]: crate::core::client::Client
     /// [2]: crate::draw::widget::bar::ActiveWindowName
     #[allow(unused_variables)]
-    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) -> Result<()> {
+    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
         Ok(())
     }
 

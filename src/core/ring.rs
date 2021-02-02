@@ -1,7 +1,7 @@
 //! An internal data structure and associated helpers for simplifying actions around
 //! manipulating focusable ordered collections.
 
-use crate::core::data_types::WinId;
+use crate::core::xconnection::Xid;
 
 use std::{
     collections::VecDeque,
@@ -60,7 +60,7 @@ pub enum Selector<'a, T> {
     /// The element at this index.
     Index(usize),
     /// The element with/containing this client ID.
-    WinId(WinId),
+    WinId(Xid),
     /// The first element satisfying this condition.
     Condition(&'a dyn Fn(&T) -> bool),
 }

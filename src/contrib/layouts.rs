@@ -1,7 +1,8 @@
 //! Additional layout functions
 use crate::core::{
     client::Client,
-    data_types::{Region, ResizeAction, WinId},
+    data_types::{Region, ResizeAction},
+    xconnection::Xid,
 };
 
 /**
@@ -15,7 +16,7 @@ use crate::core::{
  */
 pub fn paper(
     clients: &[&Client],
-    focused: Option<WinId>,
+    focused: Option<Xid>,
     monitor_region: &Region,
     _: u32,
     ratio: f32,

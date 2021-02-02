@@ -3,15 +3,15 @@
 use crate::core::{
     bindings::{KeyCode, MouseEvent},
     client::Client,
-    data_types::{Point, Region, WinId},
-    xconnection::{Atom, XEvent},
+    data_types::{Point, Region},
+    xconnection::{Atom, XEvent, Xid},
 };
 
 use std::{collections::HashMap, str::FromStr};
 
 pub struct WmState<'a> {
-    pub(super) client_map: &'a HashMap<WinId, Client>,
-    pub(super) focused_client: Option<WinId>,
+    pub(super) client_map: &'a HashMap<Xid, Client>,
+    pub(super) focused_client: Option<Xid>,
     pub(super) full_screen_atom: usize,
 }
 
@@ -25,35 +25,35 @@ pub struct WmState<'a> {
 #[derive(Debug, Clone)]
 pub enum EventAction {
     /// An X window gained focus
-    ClientFocusLost(WinId),
+    ClientFocusLost(Xid),
     /// An X window lost focus
-    ClientFocusGained(WinId),
+    ClientFocusGained(Xid),
     /// An X window had its WM_NAME or _NET_WM_NAME property changed
-    ClientNameChanged(WinId, bool),
+    ClientNameChanged(Xid, bool),
     /// Move the given client to the workspace at the given index
-    ClientToWorkspace(WinId, usize),
+    ClientToWorkspace(Xid, usize),
     /// An X window was destroyed
-    DestroyClient(WinId),
+    DestroyClient(Xid),
     /// Screens should be redetected
     DetectScreens,
     /// A new X window needs to be mapped
-    MapWindow(WinId),
+    MapWindow(Xid),
     /// A client is requesting to be moved: honoured if the client is floating
-    MoveClientIfFloating(WinId, Region),
+    MoveClientIfFloating(Xid, Region),
     /// A grabbed keybinding was triggered
     RunKeyBinding(KeyCode),
     /// A grabbed mouse state was triggered
     RunMouseBinding(MouseEvent),
     /// The active client should be set to this id
-    SetActiveClient(WinId),
+    SetActiveClient(Xid),
     /// The active workspace should be set to this index
     SetActiveWorkspace(usize),
     /// The active screen should be set based on point location
     SetScreenFromPoint(Option<Point>),
     /// An X window should be set fullscreen
-    ToggleClientFullScreen(WinId, bool),
+    ToggleClientFullScreen(Xid, bool),
     /// An unknown property was changed on an X window
-    UnknownPropertyChange(WinId, String, bool),
+    UnknownPropertyChange(Xid, String, bool),
 }
 
 pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction> {
@@ -84,7 +84,7 @@ pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction>
 
 fn process_client_message(
     state: WmState<'_>,
-    id: WinId,
+    id: Xid,
     dtype: &str,
     data: &[usize],
 ) -> Vec<EventAction> {
@@ -107,7 +107,7 @@ fn process_client_message(
     }
 }
 
-fn process_configure_notify(_id: WinId, _r: Region, is_root: bool) -> Vec<EventAction> {
+fn process_configure_notify(_id: Xid, _r: Region, is_root: bool) -> Vec<EventAction> {
     if is_root {
         vec![EventAction::DetectScreens]
     } else {
@@ -115,7 +115,7 @@ fn process_configure_notify(_id: WinId, _r: Region, is_root: bool) -> Vec<EventA
     }
 }
 
-fn process_configure_request(id: WinId, r: Region, is_root: bool) -> Vec<EventAction> {
+fn process_configure_request(id: Xid, r: Region, is_root: bool) -> Vec<EventAction> {
     if !is_root {
         vec![EventAction::MoveClientIfFloating(id, r)]
     } else {
@@ -123,7 +123,7 @@ fn process_configure_request(id: WinId, r: Region, is_root: bool) -> Vec<EventAc
     }
 }
 
-fn process_enter_notify(state: WmState<'_>, id: WinId, rpt: Point) -> Vec<EventAction> {
+fn process_enter_notify(state: WmState<'_>, id: Xid, rpt: Point) -> Vec<EventAction> {
     let mut actions = vec![
         EventAction::ClientFocusGained(id),
         EventAction::SetScreenFromPoint(Some(rpt)),
@@ -138,7 +138,7 @@ fn process_enter_notify(state: WmState<'_>, id: WinId, rpt: Point) -> Vec<EventA
     actions
 }
 
-fn process_map_request(state: WmState<'_>, id: WinId, ignore: bool) -> Vec<EventAction> {
+fn process_map_request(state: WmState<'_>, id: Xid, ignore: bool) -> Vec<EventAction> {
     if ignore || state.client_map.contains_key(&id) {
         vec![]
     } else {
@@ -146,7 +146,7 @@ fn process_map_request(state: WmState<'_>, id: WinId, ignore: bool) -> Vec<Event
     }
 }
 
-fn process_property_notify(id: WinId, atom: String, is_root: bool) -> Vec<EventAction> {
+fn process_property_notify(id: Xid, atom: String, is_root: bool) -> Vec<EventAction> {
     match Atom::from_str(&atom) {
         Ok(a) if a == Atom::WmName || a == Atom::NetWmName => {
             vec![EventAction::ClientNameChanged(id, is_root)]

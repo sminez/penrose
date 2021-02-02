@@ -1,8 +1,11 @@
 //! Simple data types and enums
-use crate::{core::xconnection::Atom, PenroseError, Result};
+use crate::{
+    core::xconnection::{Atom, Xid},
+    PenroseError, Result,
+};
 
 /// Output of a Layout function: the new position a window should take
-pub type ResizeAction = (WinId, Option<Region>);
+pub type ResizeAction = (Xid, Option<Region>);
 
 /// An X window ID
 pub type WinId = u32;
@@ -18,8 +21,8 @@ pub enum PropVal<'a> {
     Cardinal(&'a [u32]),
     /// A string valued property
     Str(&'a str),
-    /// One or more [WinId] values
-    Window(&'a [WinId]),
+    /// One or more [Xid] values
+    Window(&'a [Xid]),
 }
 
 /// A window type to be specified when creating a new window in the X server

@@ -15,8 +15,8 @@ use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use penrose::{
     core::{
         bindings::KeyPress,
-        data_types::{Region, WinId, WinType},
-        xconnection::{Atom, Prop, XEvent},
+        data_types::{Region, WinType},
+        xconnection::{Atom, Prop, XEvent, Xid},
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
@@ -105,7 +105,7 @@ where
     D: KeyPressDraw,
 {
     drw: D,
-    id: Option<WinId>,
+    id: Option<Xid>,
     bg: Color,
     ac: Color,
     prompt: Text,

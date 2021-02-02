@@ -1,5 +1,5 @@
 //! Metadata around X clients and manipulating them
-use crate::core::data_types::WinId;
+use crate::core::xconnection::Xid;
 
 /**
  * Meta-data around a client window that we are handling.
@@ -10,7 +10,7 @@ use crate::core::data_types::WinId;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Client {
-    id: WinId,
+    id: Xid,
     wm_name: String,
     wm_class: String,
     workspace: usize,
@@ -24,7 +24,7 @@ pub struct Client {
 impl Client {
     /// Track a new client window on a specific workspace
     pub(crate) fn new(
-        id: WinId,
+        id: Xid,
         wm_name: String,
         wm_class: String,
         workspace: usize,
@@ -43,7 +43,7 @@ impl Client {
     }
 
     /// The X window ID of this client
-    pub fn id(&self) -> WinId {
+    pub fn id(&self) -> Xid {
         self.id
     }
 

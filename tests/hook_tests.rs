@@ -6,7 +6,7 @@ use penrose::{
     core::{
         client::Client,
         config::Config,
-        data_types::{Region, WinId},
+        data_types::Region,
         hooks::{Hook, Hooks},
         manager::WindowManager,
         screen::Screen,
@@ -107,7 +107,10 @@ impl TestHook {
 // Helper for stubbing out Hook trait methods so that we can trace calls
 macro_rules! __impl_test_hook {
     { $($name:ident => $($t:ty),*;)+ } => {
-        impl<X: XConn> Hook<X> for TestHook {
+        impl<X> Hook<X> for TestHook
+        where
+            X: XConn,
+        {
             $(fn $name(&mut self, _: &mut WindowManager<X>, $(_: $t),*) -> Result<()> {
                 self.mark_called(stringify!($name));
                 Ok(())
@@ -117,15 +120,15 @@ macro_rules! __impl_test_hook {
 }
 
 __impl_test_hook! {
-    client_name_updated => WinId, &str, bool;
-    client_added_to_workspace => WinId, usize;
+    client_name_updated => Xid, &str, bool;
+    client_added_to_workspace => Xid, usize;
     event_handled => ;
-    focus_change => WinId;
+    focus_change => Xid;
     layout_applied => usize, usize;
     layout_change => usize, usize;
     new_client => &mut Client;
     randr_notify => ;
-    remove_client => WinId;
+    remove_client => Xid;
     screen_change => usize;
     screens_updated => &[Region];
     startup => ;

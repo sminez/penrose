@@ -1,7 +1,8 @@
 //! Data types for working with X events
 use crate::core::{
     bindings::{KeyCode, MouseEvent},
-    data_types::{Point, Region, WinId},
+    data_types::{Point, Region},
+    xconnection::Xid,
 };
 
 /// Wrapper around the low level X event types that correspond to request / response data when
@@ -21,7 +22,7 @@ pub enum XEvent {
     /// A client window is requesting to be positioned and rendered on the screen
     MapRequest {
         /// The ID of the window that wants to be mapped
-        id: WinId,
+        id: Xid,
         /// Whether or not the WindowManager should handle this window.
         ignore: bool,
     },
@@ -29,7 +30,7 @@ pub enum XEvent {
     /// The mouse pointer has entered a new client window
     Enter {
         /// The ID of the window that was entered
-        id: WinId,
+        id: Xid,
         /// Absolute coordinate of the event
         rpt: Point,
         /// Coordinate of the event relative to top-left of the window itself
@@ -39,7 +40,7 @@ pub enum XEvent {
     /// The mouse pointer has left the current client window
     Leave {
         /// The ID of the window that was left
-        id: WinId,
+        id: Xid,
         /// Absolute coordinate of the event
         rpt: Point,
         /// Coordinate of the event relative to top-left of the window itself
@@ -49,7 +50,7 @@ pub enum XEvent {
     /// A client window has been closed
     Destroy {
         /// The ID of the window being destroyed
-        id: WinId,
+        id: Xid,
     },
 
     /// Focus has moved to a different screen
@@ -61,7 +62,7 @@ pub enum XEvent {
     /// Client config has changed in some way
     ConfigureNotify {
         /// The ID of the window that had a property changed
-        id: WinId,
+        id: Xid,
         /// The new window size
         r: Region,
         /// Is this window the root window?
@@ -71,7 +72,7 @@ pub enum XEvent {
     /// A client is requesting to be repositioned
     ConfigureRequest {
         /// The ID of the window that had a property changed
-        id: WinId,
+        id: Xid,
         /// The new window size
         r: Region,
         /// Is this window the root window?
@@ -81,7 +82,7 @@ pub enum XEvent {
     /// A part or all of a client has become visible
     Expose {
         /// The ID of the window that has become exposed
-        id: WinId,
+        id: Xid,
         /// The current size and position of the window
         r: Region,
         /// How many following expose events are pending
@@ -91,7 +92,7 @@ pub enum XEvent {
     /// A client property has changed in some way
     PropertyNotify {
         /// The ID of the window that had a property changed
-        id: WinId,
+        id: Xid,
         /// The property that changed
         atom: String,
         /// Is this window the root window?
@@ -101,7 +102,7 @@ pub enum XEvent {
     /// A message has been sent to a particular client
     ClientMessage {
         /// The ID of the window that sent the message
-        id: WinId,
+        id: Xid,
         /// The data type being set
         dtype: String,
         /// The data itself

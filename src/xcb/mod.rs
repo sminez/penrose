@@ -27,9 +27,9 @@
 use crate::{
     core::{
         config::Config,
-        data_types::WinId,
         hooks::{Hook, Hooks},
         manager::WindowManager,
+        xconnection::Xid,
     },
     ErrorHandler,
 };
@@ -112,7 +112,7 @@ pub enum XcbError {
 
     /// A requested client property was empty
     #[error("'{0}' prop is not set for client {1}")]
-    MissingProp(String, WinId),
+    MissingProp(String, Xid),
 
     /// Property data returned for the target window was in an invalid format
     #[error("invalid property data: {0}")]
@@ -163,7 +163,7 @@ pub enum XcbError {
     /// An attempt was made to fetch a surface for a client before creating it
     #[cfg(feature = "xcb_draw")]
     #[error("no cairo surface for {0}")]
-    UnintialisedSurface(WinId),
+    UnintialisedSurface(Xid),
 
     /// A user specified mouse binding contained an invalid button
     #[error("Unknown mouse button: {0}")]

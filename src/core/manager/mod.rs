@@ -716,7 +716,7 @@ impl<X: XConn> WindowManager<X> {
             .client_map
             .get_mut(&id)
             .map(|c| (c.fullscreen, c.workspace()))
-            .ok_or_else(|| PenroseError::UnknownClient(id))?;
+            .ok_or(PenroseError::UnknownClient(id))?;
 
         if currently_fullscreen == should_fullscreen {
             return Ok(()); // Client is already in the correct state, we shouldn't have been called
@@ -730,7 +730,7 @@ impl<X: XConn> WindowManager<X> {
         let workspace = self
             .workspaces
             .get_mut(wix)
-            .ok_or(PenroseError::Raw(format!("unknown workspace: {}", wix)))?;
+            .ok_or_else(|| PenroseError::Raw(format!("unknown workspace: {}", wix)))?;
 
         if util::toggle_fullscreen(&self.conn, id, &mut self.client_map, workspace, r)? {
             self.apply_layout(wix)?;
