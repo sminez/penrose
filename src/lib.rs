@@ -162,10 +162,11 @@ pub use penrose_proc::validate_user_bindings;
 #[doc(inline)]
 pub use crate::core::{
     config::Config,
-    data_types::{Change::*, WinId},
+    data_types::Change::*,
     helpers::logging_error_handler,
     manager::WindowManager,
     ring::{Direction::*, InsertPoint, Selector},
+    xconnection::Xid,
 };
 
 #[cfg(feature = "xcb")]
@@ -187,7 +188,7 @@ pub enum PenroseError {
 
     /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
     #[error("the following serialized client IDs were not known to the X server: {0:?}")]
-    MissingClientIds(Vec<WinId>),
+    MissingClientIds(Vec<Xid>),
 
     /// A conversion to utf-8 failed
     #[error("UTF-8 error")]
@@ -230,7 +231,7 @@ pub enum PenroseError {
 
     /// An attempt was made to reference a client that is not known to penrose
     #[error("{0} is not a known client")]
-    UnknownClient(WinId),
+    UnknownClient(Xid),
 
     /// A user specified key binding contained an invalid modifier key
     #[error("Unknown modifier key: {0}")]

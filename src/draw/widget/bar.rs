@@ -2,11 +2,11 @@
 use crate::{
     core::{
         client::Client,
-        data_types::{Region, WinId},
+        data_types::Region,
         hooks::Hook,
         manager::WindowManager,
         ring::Selector,
-        xconnection::XConn,
+        xconnection::{XConn, Xid},
     },
     draw::{widget::Text, Color, DrawContext, Result, TextStyle, Widget},
 };
@@ -132,7 +132,7 @@ where
         Ok(())
     }
 
-    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) -> crate::Result<()> {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: Xid) -> crate::Result<()> {
         self.update_workspace_occupied(wm);
 
         Ok(())
@@ -141,7 +141,7 @@ where
     fn client_added_to_workspace(
         &mut self,
         wm: &mut WindowManager<X>,
-        _: WinId,
+        _: Xid,
         _: usize,
     ) -> crate::Result<()> {
         self.update_workspace_occupied(wm);
@@ -297,7 +297,7 @@ where
     fn client_name_updated(
         &mut self,
         _: &mut WindowManager<X>,
-        _: WinId,
+        _: Xid,
         name: &str,
         is_root: bool,
     ) -> crate::Result<()> {
@@ -362,7 +362,7 @@ impl<X> Hook<X> for ActiveWindowName
 where
     X: XConn,
 {
-    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: WinId) -> crate::Result<()> {
+    fn remove_client(&mut self, wm: &mut WindowManager<X>, _: Xid) -> crate::Result<()> {
         if wm.client(&Selector::Focused) == None {
             self.txt.set_text("");
         }
@@ -370,7 +370,7 @@ where
         Ok(())
     }
 
-    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: WinId) -> crate::Result<()> {
+    fn focus_change(&mut self, wm: &mut WindowManager<X>, id: Xid) -> crate::Result<()> {
         if let Some(client) = wm.client(&Selector::WinId(id)) {
             self.set_text(client.wm_name());
         }
@@ -381,7 +381,7 @@ where
     fn client_name_updated(
         &mut self,
         wm: &mut WindowManager<X>,
-        id: WinId,
+        id: Xid,
         name: &str,
         root: bool,
     ) -> crate::Result<()> {

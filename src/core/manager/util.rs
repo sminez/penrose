@@ -1,11 +1,11 @@
 use crate::{
     core::{
         client::Client,
-        data_types::{Region, WinId},
+        data_types::Region,
         layout::LayoutConf,
         screen::Screen,
         workspace::{ArrangeActions, Workspace},
-        xconnection::{Atom, Prop, XClientConfig, XClientHandler, XClientProperties, XState},
+        xconnection::{Atom, Prop, XClientConfig, XClientHandler, XClientProperties, XState, Xid},
     },
     Result,
 };
@@ -31,7 +31,7 @@ pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px:
     Region::new(x + gpx, y + gpx, w - padding, h - padding)
 }
 
-pub(super) fn client_str_props<X>(conn: &X, id: WinId) -> ClientProps
+pub(super) fn client_str_props<X>(conn: &X, id: Xid) -> ClientProps
 where
     X: XClientProperties,
 {
@@ -53,7 +53,7 @@ where
 
 pub(super) fn position_floating_client<X>(
     conn: &X,
-    id: WinId,
+    id: Xid,
     screen_region: Region,
     border_px: u32,
 ) -> Result<()>
@@ -109,8 +109,8 @@ where
 
 pub(super) fn toggle_fullscreen<X>(
     conn: &X,
-    id: WinId,
-    client_map: &mut HashMap<WinId, Client>,
+    id: Xid,
+    client_map: &mut HashMap<Xid, Client>,
     workspace: &mut Workspace,
     screen_size: Region,
 ) -> Result<bool>
@@ -152,7 +152,7 @@ pub(super) fn apply_arrange_actions<X>(
     conn: &X,
     actions: ArrangeActions,
     lc: &LayoutConf,
-    client_map: &mut HashMap<WinId, Client>,
+    client_map: &mut HashMap<Xid, Client>,
     border_px: u32,
     gap_px: u32,
 ) -> Result<()>
@@ -187,7 +187,7 @@ where
     // If the current clients known to the X server aren't what we have in the client_map
     // then we can't proceed any further
     let active_clients = wm.conn.active_clients()?;
-    let mut missing_ids: Vec<WinId> = wm
+    let mut missing_ids: Vec<Xid> = wm
         .client_map
         .keys()
         .filter(|id| !active_clients.contains(id))
@@ -221,7 +221,7 @@ where
     Ok(())
 }
 
-pub(super) fn parse_existing_client<X>(conn: &X, id: WinId) -> Result<Client>
+pub(super) fn parse_existing_client<X>(conn: &X, id: Xid) -> Result<Client>
 where
     X: XClientProperties,
 {
@@ -308,9 +308,9 @@ mod tests {
     }
 
     struct RecordingXConn {
-        positions: Cell<Vec<(WinId, Region)>>,
-        maps: Cell<Vec<WinId>>,
-        unmaps: Cell<Vec<WinId>>,
+        positions: Cell<Vec<(Xid, Region)>>,
+        maps: Cell<Vec<Xid>>,
+        unmaps: Cell<Vec<Xid>>,
     }
 
     impl RecordingXConn {
@@ -326,14 +326,14 @@ mod tests {
     impl StubXClientProperties for RecordingXConn {}
 
     impl StubXClientHandler for RecordingXConn {
-        fn mock_map_client(&self, id: WinId) -> Result<()> {
+        fn mock_map_client(&self, id: Xid) -> Result<()> {
             let mut v = self.maps.take();
             v.push(id);
             self.maps.set(v);
             Ok(())
         }
 
-        fn mock_unmap_client(&self, id: WinId) -> Result<()> {
+        fn mock_unmap_client(&self, id: Xid) -> Result<()> {
             let mut v = self.unmaps.take();
             v.push(id);
             self.unmaps.set(v);
@@ -342,7 +342,7 @@ mod tests {
     }
 
     impl StubXClientConfig for RecordingXConn {
-        fn mock_position_client(&self, id: WinId, r: Region, _: u32, _: bool) -> Result<()> {
+        fn mock_position_client(&self, id: Xid, r: Region, _: u32, _: bool) -> Result<()> {
             let mut v = self.positions.take();
             v.push((id, r));
             self.positions.set(v);
@@ -354,13 +354,13 @@ mod tests {
         toggle_fullscreen;
         args: (
             n_clients: usize,
-            fullscreen: Option<WinId>,
-            target: WinId,
-            unmapped: &[WinId],
+            fullscreen: Option<Xid>,
+            target: Xid,
+            unmapped: &[Xid],
             expected_need_layout: bool,
-            expected_positions: Vec<WinId>,
-            expected_maps: Vec<WinId>,
-            expected_unmaps: Vec<WinId>,
+            expected_positions: Vec<Xid>,
+            expected_maps: Vec<Xid>,
+            expected_unmaps: Vec<Xid>,
         );
 
         case: single_client_on => (1, None, 0, &[], false, vec![0], vec![], vec![]);

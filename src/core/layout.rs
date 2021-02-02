@@ -16,12 +16,13 @@
 //! ```
 //! use penrose::core::{
 //!     client::Client,
-//!     data_types::{Change, Region, ResizeAction, WinId},
+//!     data_types::{Change, Region, ResizeAction},
+//!     xconnection::Xid,
 //! };
 //!
 //! pub fn rows(
 //!     clients: &[&Client],
-//!     _focused: Option<WinId>,
+//!     _focused: Option<Xid>,
 //!     monitor_region: &Region,
 //!     _max_main: u32,
 //!     _ratio: f32,
@@ -55,7 +56,8 @@
 //! [5]: crate::core::layout::side_stack
 use crate::core::{
     client::Client,
-    data_types::{Change, Region, ResizeAction, WinId},
+    data_types::{Change, Region, ResizeAction},
+    xconnection::Xid,
 };
 
 use std::{cmp, fmt};
@@ -93,7 +95,7 @@ impl Default for LayoutConf {
 /// Will be called with the current client list, the active client ID (if there is one), the size
 /// of the screen that the workspace is shown on and the current values of n_main and ratio for
 /// this layout.
-pub type LayoutFunc = fn(&[&Client], Option<WinId>, &Region, u32, f32) -> Vec<ResizeAction>;
+pub type LayoutFunc = fn(&[&Client], Option<Xid>, &Region, u32, f32) -> Vec<ResizeAction>;
 
 /// Responsible for arranging Clients within a Workspace.
 ///
@@ -145,7 +147,7 @@ impl fmt::Debug for Layout {
 }
 
 /// A no-op floating layout that simply satisfies the type required for Layout
-pub fn floating(_: &[&Client], _: Option<WinId>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
+pub fn floating(_: &[&Client], _: Option<Xid>, _: &Region, _: u32, _: f32) -> Vec<ResizeAction> {
     vec![]
 }
 
@@ -194,7 +196,7 @@ impl Layout {
     pub fn arrange(
         &self,
         clients: &[&Client],
-        focused: Option<WinId>,
+        focused: Option<Xid>,
         r: &Region,
     ) -> Vec<ResizeAction> {
         (self.f.expect("missing layout function"))(clients, focused, r, self.max_main, self.ratio)
@@ -256,7 +258,7 @@ pub fn client_breakdown<T>(clients: &[T], n_main: u32) -> (u32, u32) {
 #[cfg(test)]
 pub(crate) fn mock_layout(
     clients: &[&Client],
-    _: Option<WinId>,
+    _: Option<Xid>,
     region: &Region,
     _: u32,
     _: f32,
@@ -276,7 +278,7 @@ pub(crate) fn mock_layout(
 /// windows in a single column to the right.
 pub fn side_stack(
     clients: &[&Client],
-    _: Option<WinId>,
+    _: Option<Xid>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
@@ -307,7 +309,7 @@ pub fn side_stack(
 /// remaining windows in a single row underneath.
 pub fn bottom_stack(
     clients: &[&Client],
-    _: Option<WinId>,
+    _: Option<Xid>,
     monitor_region: &Region,
     max_main: u32,
     ratio: f32,
@@ -338,7 +340,7 @@ pub fn bottom_stack(
 /// unmaps all other windows.
 pub fn monocle(
     clients: &[&Client],
-    focused: Option<WinId>,
+    focused: Option<Xid>,
     monitor_region: &Region,
     _: u32,
     _: f32,

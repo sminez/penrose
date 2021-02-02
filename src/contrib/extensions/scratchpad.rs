@@ -3,12 +3,12 @@ use crate::{
     core::{
         bindings::KeyEventHandler,
         client::Client,
-        data_types::{Region, WinId},
+        data_types::Region,
         helpers::spawn,
         hooks::Hook,
         manager::WindowManager,
         ring::Selector,
-        xconnection::XConn,
+        xconnection::{XConn, Xid},
     },
     Result,
 };
@@ -24,7 +24,7 @@ use std::{cell::RefCell, fmt, rc::Rc};
 /// client is removed, calling 'toggle' again will spawn a new client in the same way.
 #[derive(Clone, PartialEq)]
 pub struct Scratchpad {
-    client: Rc<RefCell<Option<WinId>>>,
+    client: Rc<RefCell<Option<Xid>>>,
     pending: Rc<RefCell<bool>>,
     visible: Rc<RefCell<bool>>,
     prog: String,
@@ -146,7 +146,7 @@ impl<X: XConn> Hook<X> for Scratchpad {
         Ok(())
     }
 
-    fn remove_client(&mut self, _: &mut WindowManager<X>, id: WinId) -> Result<()> {
+    fn remove_client(&mut self, _: &mut WindowManager<X>, id: Xid) -> Result<()> {
         let client = match *self.client.borrow() {
             Some(id) => id,
             None => return Ok(()),

@@ -1,7 +1,7 @@
 //! Data types for working with X window properties
 use crate::{
     core::{
-        data_types::{Point, Region, WinId},
+        data_types::{Point, Region},
         xconnection::Xid,
     },
     PenroseError, Result,
@@ -105,7 +105,7 @@ pub struct WmHints {
     accepts_input: bool,
     initial_state: WindowState,
     icon_pixmap: u32,
-    icon_win: WinId,
+    icon_win: Xid,
     icon_position: Point,
     icon_mask: u32,
     window_group: u32,
@@ -118,7 +118,7 @@ impl WmHints {
         accepts_input: bool,
         initial_state: WindowState,
         icon_pixmap: u32,
-        icon_win: WinId,
+        icon_win: Xid,
         icon_position: Point,
         icon_mask: u32,
         window_group: u32,

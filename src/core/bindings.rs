@@ -1,9 +1,6 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{
-        data_types::{Point, WinId},
-        manager::WindowManager,
-    },
+    core::{data_types::Point, manager::WindowManager, xconnection::Xid},
     PenroseError, Result,
 };
 
@@ -196,7 +193,7 @@ pub enum MouseEventKind {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MouseEvent {
     /// The ID of the window that was contained the click
-    pub id: WinId,
+    pub id: Xid,
     /// Absolute coordinate of the event
     pub rpt: Point,
     /// Coordinate of the event relative to top-left of the window itself
@@ -210,7 +207,7 @@ pub struct MouseEvent {
 impl MouseEvent {
     /// Construct a new [MouseEvent] from raw data
     pub fn new(
-        id: WinId,
+        id: Xid,
         rx: i16,
         ry: i16,
         ex: i16,
