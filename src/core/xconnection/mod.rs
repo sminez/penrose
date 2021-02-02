@@ -465,6 +465,15 @@ pub trait XConn:
             false
         }
     }
+
+    /// The subset of active clients that are considered managed by penrose
+    fn active_managed_clients(&self) -> Result<Vec<Xid>> {
+        Ok(self
+            .active_clients()?
+            .into_iter()
+            .filter(|&id| self.is_managed_client(id))
+            .collect())
+    }
 }
 
 #[cfg(test)]

@@ -42,6 +42,11 @@ macro_rules! run_hooks {
     };
 }
 
+// Mark a result that returns () as being ignored in this case.
+macro_rules! ignore_error {
+    { $e:expr } => { $e.unwrap_or(()) }
+}
+
 #[cfg(feature = "serde")]
 fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
     Cell::new(Vec::new())
@@ -256,7 +261,7 @@ impl<X: XConn> WindowManager<X> {
     }
 
     pub(crate) fn try_manage_existing_windows(&mut self) -> Result<()> {
-        for id in self.conn.active_clients()?.into_iter() {
+        for id in self.conn.active_managed_clients()?.into_iter() {
             let mut c = util::parse_existing_client(&self.conn, id)?;
             self.add_client_to_workspace(c.workspace(), id)?;
             self.conn.unmap_client_if_needed(Some(&mut c))?;
@@ -284,7 +289,7 @@ impl<X: XConn> WindowManager<X> {
         debug!("Handling event action: {:?}", action);
         match action {
             EventAction::ClientFocusGained(id) => self.client_gained_focus(id)?,
-            EventAction::ClientFocusLost(id) => self.client_lost_focus(id)?,
+            EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
             EventAction::ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
             EventAction::ClientToWorkspace(id, wix) => self.move_client_to_workspace(id, wix)?,
             EventAction::DestroyClient(id) => self.remove_client(id)?,
@@ -430,19 +435,26 @@ impl<X: XConn> WindowManager<X> {
     fn client_gained_focus(&mut self, id: Xid) -> Result<()> {
         let prev_focused = self.focused_client().map(|c| c.id());
         if let Some(id) = prev_focused {
-            self.client_lost_focus(id)?;
+            self.client_lost_focus(id);
         }
 
-        self.conn
-            .set_client_border_color(id, self.config.focused_border)?;
-        self.conn.focus_client(id)?;
+        let fb = self.config.focused_border;
+        if let Err(e) = self.conn.set_client_border_color(id, fb) {
+            warn!("unable to set client border color for {}: {}", id, e);
+        }
+
+        if let Err(e) = self.conn.focus_client(id) {
+            warn!("unable to focus client {}: {}", id, e);
+        }
 
         if let Some(wix) = self.workspace_index_for_client(id) {
             if let Some(ws) = self.workspaces.get_mut(wix) {
                 ws.focus_client(id);
                 let prev_was_in_ws = prev_focused.map_or(false, |id| ws.client_ids().contains(&id));
                 if ws.layout_conf().follow_focus && prev_was_in_ws {
-                    self.apply_layout(wix)?;
+                    if let Err(e) = self.apply_layout(wix) {
+                        error!("unable to apply layout on ws {}: {}", wix, e);
+                    }
                 }
             }
         }
@@ -454,17 +466,17 @@ impl<X: XConn> WindowManager<X> {
     }
 
     // The given X window ID lost focus according to the X server
-    fn client_lost_focus(&mut self, id: Xid) -> Result<()> {
+    fn client_lost_focus(&mut self, id: Xid) {
         if self.focused_client == Some(id) {
             self.focused_client = None;
         }
 
         if self.client_map.contains_key(&id) {
-            self.conn
-                .set_client_border_color(id, self.config.unfocused_border)?;
+            let ub = self.config.unfocused_border;
+            // The target window may have lost focus because it has just been closed and
+            // we have not yet updated our state.
+            ignore_error!(self.conn.set_client_border_color(id, ub));
         }
-
-        Ok(())
     }
 
     // The given window ID has had its EWMH name updated by something
@@ -1016,7 +1028,7 @@ impl<X: XConn> WindowManager<X> {
             .get_mut(wix)
             .and_then(|ws| ws.cycle_client(direction));
         if let Some((prev, new)) = res {
-            self.client_lost_focus(prev)?;
+            self.client_lost_focus(prev);
             self.client_gained_focus(new)?;
             let screen = self.screens.focused_unchecked();
             self.conn.warp_cursor(Some(new), screen)?;
