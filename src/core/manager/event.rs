@@ -4,15 +4,18 @@ use crate::core::{
     bindings::{KeyCode, MouseEvent},
     client::Client,
     data_types::{Point, Region},
-    xconnection::{Atom, XEvent, Xid},
+    xconnection::{Atom, XConn, XEvent, Xid},
 };
 
 use std::{collections::HashMap, str::FromStr};
 
-pub struct WmState<'a> {
+pub(super) struct WmState<'a, X>
+where
+    X: XConn,
+{
+    pub(super) conn: &'a X,
     pub(super) client_map: &'a HashMap<Xid, Client>,
     pub(super) focused_client: Option<Xid>,
-    pub(super) full_screen_atom: usize,
 }
 
 /// Actions that will be carried out by the [WindowManager][1] in response to individual each
@@ -56,7 +59,10 @@ pub enum EventAction {
     UnknownPropertyChange(Xid, String, bool),
 }
 
-pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction> {
+pub(super) fn process_next_event<X>(event: XEvent, state: WmState<'_, X>) -> Vec<EventAction>
+where
+    X: XConn,
+{
     match event {
         // Direct 1-n mappings of XEvents -> EventActions
         XEvent::Destroy { id } => vec![EventAction::DestroyClient(id)],
@@ -82,22 +88,32 @@ pub fn process_next_event(event: XEvent, state: WmState<'_>) -> Vec<EventAction>
     }
 }
 
-fn process_client_message(
-    state: WmState<'_>,
+fn process_client_message<X>(
+    state: WmState<'_, X>,
     id: Xid,
     dtype: &str,
     data: &[usize],
-) -> Vec<EventAction> {
+) -> Vec<EventAction>
+where
+    X: XConn,
+{
     debug!(
         "GOT CLIENT MESSAGE: id={} atom={} data={:?}",
         id, dtype, data
     );
 
+    let is_fullscreen = |data: &[usize]| {
+        data.iter()
+            .map(|&a| state.conn.atom_name(a as u32))
+            .flatten()
+            .any(|s| &s == Atom::NetWmStateFullscreen.as_ref())
+    };
+
     match Atom::from_str(&dtype) {
         Ok(Atom::NetActiveWindow) => vec![EventAction::SetActiveClient(id)],
         Ok(Atom::NetCurrentDesktop) => vec![EventAction::SetActiveWorkspace(data[0])],
         Ok(Atom::NetWmDesktop) => vec![EventAction::ClientToWorkspace(id, data[0])],
-        Ok(Atom::NetWmState) if data[1..3].contains(&state.full_screen_atom) => {
+        Ok(Atom::NetWmState) if is_fullscreen(&data[1..3]) => {
             // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
             let should_fullscreen = [1, 2].contains(&data[0]);
             vec![EventAction::ToggleClientFullScreen(id, should_fullscreen)]
@@ -123,7 +139,10 @@ fn process_configure_request(id: Xid, r: Region, is_root: bool) -> Vec<EventActi
     }
 }
 
-fn process_enter_notify(state: WmState<'_>, id: Xid, rpt: Point) -> Vec<EventAction> {
+fn process_enter_notify<X>(state: WmState<'_, X>, id: Xid, rpt: Point) -> Vec<EventAction>
+where
+    X: XConn,
+{
     let mut actions = vec![
         EventAction::ClientFocusGained(id),
         EventAction::SetScreenFromPoint(Some(rpt)),
@@ -138,7 +157,10 @@ fn process_enter_notify(state: WmState<'_>, id: Xid, rpt: Point) -> Vec<EventAct
     actions
 }
 
-fn process_map_request(state: WmState<'_>, id: Xid, ignore: bool) -> Vec<EventAction> {
+fn process_map_request<X>(state: WmState<'_, X>, id: Xid, ignore: bool) -> Vec<EventAction>
+where
+    X: XConn,
+{
     if ignore || state.client_map.contains_key(&id) {
         vec![]
     } else {

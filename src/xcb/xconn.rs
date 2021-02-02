@@ -131,6 +131,10 @@ impl XState for XcbConnection {
     fn focused_client(&self) -> Result<Xid> {
         Ok(self.api.focused_client()?)
     }
+
+    fn atom_name(&self, atom: Xid) -> Result<String> {
+        Ok(self.api.atom_name(atom)?)
+    }
 }
 
 impl XEventHandler for XcbConnection {
@@ -142,7 +146,7 @@ impl XEventHandler for XcbConnection {
         Ok(self.api.wait_for_event()?)
     }
 
-    // FIXME:
+    // FIXME: sending client events needs implementing
     fn send_client_event(&self, _id: Xid, _atom_name: &str, _data: &[u32]) -> Result<()> {
         todo!("work this out correctly")
     }
@@ -205,6 +209,10 @@ impl XConn for XcbConnection {
             .api
             .set_client_attributes(self.api.root(), &[ClientAttr::RootEventMask])
             .map_err(|e| XcbError::Raw(format!("Unable to set root window event mask: {}", e)))?)
+    }
+
+    fn check_window(&self) -> Xid {
+        self.api.check_window()
     }
 
     fn cleanup(&self) -> Result<()> {
