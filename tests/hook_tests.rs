@@ -1,4 +1,7 @@
 // Check that each Hook variant is called at the expected points
+#[macro_use]
+extern crate penrose;
+
 use penrose::{
     core::{
         client::Client,
@@ -6,14 +9,84 @@ use penrose::{
         data_types::{Region, WinId},
         hooks::{Hook, Hooks},
         manager::WindowManager,
-        xconnection::{MockXConn, XConn, XEvent},
+        screen::Screen,
+        xconnection::{Atom, Prop, XConn, XEvent, Xid},
     },
-    logging_error_handler, Result,
+    logging_error_handler, PenroseError, Result,
 };
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    rc::Rc,
+};
 
 mod common;
+
+pub struct TestXConn {
+    screens: Vec<Screen>,
+    events: Cell<Vec<XEvent>>,
+    focused: Cell<Xid>,
+    unmanaged_ids: Vec<Xid>,
+}
+
+impl TestXConn {
+    /// Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
+    pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> Self {
+        Self {
+            screens,
+            events: Cell::new(events),
+            focused: Cell::new(0),
+            unmanaged_ids,
+        }
+    }
+}
+
+__impl_stub_xcon! {
+    for TestXConn;
+
+    client_properties: {
+        fn mock_get_prop(&self, _id: Xid, name: &str) -> Result<Prop> {
+            if name == Atom::NetWmName.as_ref() {
+                Ok(Prop::UTF8String(vec!["mock name".into()]))
+            } else {
+                Err(PenroseError::Raw("mocked".into()))
+            }
+        }
+    }
+    client_handler: {
+        fn mock_focus_client(&self, id: Xid) -> Result<()> {
+            self.focused.replace(id);
+            Ok(())
+        }
+    }
+    client_config: {}
+    event_handler: {
+        fn mock_wait_for_event(&self) -> Result<XEvent> {
+            let mut remaining = self.events.replace(vec![]);
+            if remaining.is_empty() {
+                return Err(PenroseError::Raw("mock conn closed".into()));
+            }
+            let next = remaining.remove(0);
+            self.events.set(remaining);
+            Ok(next)
+        }
+    }
+    state: {
+        fn mock_current_screens(&self) -> Result<Vec<Screen>> {
+            Ok(self.screens.clone())
+        }
+
+        fn mock_focused_client(&self) -> Result<Xid> {
+            Ok(self.focused.get())
+        }
+    }
+    conn: {
+        fn mock_is_managed_client(&self, id: Xid) -> bool {
+            !self.unmanaged_ids.contains(&id)
+        }
+    }
+}
 
 struct TestHook {
     method: &'static str,
@@ -60,7 +133,7 @@ __impl_test_hook! {
     workspaces_updated => &[&str], usize;
 }
 
-penrose::test_cases! {
+test_cases! {
     hook_triggers;
     args: (method: &'static str, n_calls: usize, events: Vec<XEvent>);
 
@@ -94,7 +167,7 @@ penrose::test_cases! {
 
     body: {
         let calls = Rc::new(RefCell::new(vec![]));
-        let hooks: Hooks<MockXConn> = vec![Box::new(TestHook {
+        let hooks: Hooks<TestXConn> = vec![Box::new(TestHook {
             method,
             calls: Rc::clone(&calls),
         })];
@@ -103,7 +176,7 @@ penrose::test_cases! {
         events.push(XEvent::KeyPress(common::EXIT_CODE));
 
         let screens = vec![common::simple_screen(0), common::simple_screen(1)];
-        let conn = MockXConn::new(screens, events, vec![]);
+        let conn = TestXConn::new(screens, events, vec![]);
         let mut wm = WindowManager::new(Config::default(), conn, hooks, logging_error_handler());
 
         wm.init().unwrap();

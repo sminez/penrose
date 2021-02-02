@@ -15,8 +15,8 @@ pub use widget::{HookableWidget, KeyboardControlled, Widget};
 
 use crate::core::{
     bindings::KeyPress,
-    data_types::{PropVal, Region, WinId, WinType},
-    xconnection::{Atom, XEvent},
+    data_types::{Region, WinType},
+    xconnection::{Prop, XEvent, Xid},
 };
 
 #[cfg(feature = "xcb")]
@@ -185,30 +185,25 @@ pub trait Draw {
     type Ctx: DrawContext;
 
     /// Create a new client window with a canvas for drawing
-    fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<WinId>;
+    fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<Xid>;
     /// Get the size of the target screen in pixels
     fn screen_sizes(&self) -> Result<Vec<Region>>;
     /// Register a font by name for later use
     fn register_font(&mut self, font_name: &str);
     /// Get a new [DrawContext] for the target window
-    fn context_for(&self, id: WinId) -> Result<Self::Ctx>;
+    fn context_for(&self, id: Xid) -> Result<Self::Ctx>;
     /// Get a new temporary [DrawContext] that will be destroyed when dropped
     fn temp_context(&self, w: u32, h: u32) -> Result<Self::Ctx>;
     /// Flush pending actions
-    fn flush(&self, id: WinId);
-    /// Map the target window to the screen
-    fn map_window(&self, id: WinId);
-    /// Unmap the target window from the screen
-    fn unmap_window(&self, id: WinId);
-    /// Destroy the target window
-    fn destroy_window(&mut self, id: WinId);
-    /**
-     * Replace a property value on a window.
-     *
-     * See the documentation for the C level XCB API for the correct property
-     * type for each prop.
-     */
-    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>);
+    fn flush(&self, id: Xid) -> Result<()>;
+    /// Map the target client to the screen
+    fn map_client(&self, id: Xid) -> Result<()>;
+    /// Unmap the target client from the screen
+    fn unmap_client(&self, id: Xid) -> Result<()>;
+    /// Destroy the target client
+    fn destroy_client(&mut self, id: Xid) -> Result<()>;
+    /// Change an existing property for a client
+    fn change_prop(&self, id: Xid, name: &str, val: Prop) -> Result<()>;
 }
 
 /// An [XEvent] parsed into a [KeyPress] if possible, otherwise the original `XEvent`

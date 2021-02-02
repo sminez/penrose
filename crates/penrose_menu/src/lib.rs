@@ -15,8 +15,8 @@ use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use penrose::{
     core::{
         bindings::KeyPress,
-        data_types::{PropVal, Region, WinId, WinType},
-        xconnection::{Atom, XEvent},
+        data_types::{Region, WinId, WinType},
+        xconnection::{Atom, Prop, XEvent},
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
@@ -210,11 +210,12 @@ where
             true,
         )?;
 
+        let prop = Prop::UTF8String(vec!["penrose-menu".into()]);
         for a in &[Atom::NetWmName, Atom::WmName, Atom::WmClass] {
-            self.drw.replace_prop(id, *a, PropVal::Str("penrose-menu"));
+            self.drw.change_prop(id, a.as_ref(), prop.clone())?;
         }
 
-        self.drw.flush(id);
+        self.drw.flush(id)?;
         self.id = Some(id);
 
         Ok(())
@@ -248,7 +249,7 @@ where
         self.patt.draw(&mut ctx, 0, false, self.w - w, h)?;
         ctx.translate(0.0, h);
         self.txt.draw(&mut ctx, 0, true, self.w - w, h)?;
-        self.drw.flush(id);
+        self.drw.flush(id)?;
 
         Ok(())
     }
@@ -302,7 +303,7 @@ where
         let selection = self.get_selection_inner(input, with_prompt);
         self.drw.ungrab_keyboard()?;
 
-        self.drw.destroy_window(self.id.unwrap());
+        self.drw.destroy_client(self.id.unwrap())?;
         self.id = None;
 
         selection
@@ -316,11 +317,11 @@ where
                 .map(|(i, line)| format!("{:<3} {}", i, line))
                 .collect()
         } else {
-            input.clone()
+            input
         };
 
         self.txt.set_input(display_lines.clone())?;
-        self.drw.map_window(self.id.unwrap());
+        self.drw.map_client(self.id.unwrap())?;
         self.redraw(with_prompt)?;
 
         let mut matches: Vec<(usize, &String)> = display_lines.iter().enumerate().collect();

@@ -7,8 +7,8 @@ use syn::{
     parse_macro_input,
     punctuated::Punctuated,
     token::Comma,
-    Block, Error, Expr, ExprMethodCall, FnArg, Ident, ItemTrait, Lit, Meta, MetaNameValue,
-    ReturnType, Token, TraitItem, TraitItemMethod,
+    Attribute, Block, Error, Expr, ExprMethodCall, FnArg, Ident, ItemTrait, Lit, Meta,
+    MetaNameValue, ReturnType, Token, TraitItem, TraitItemMethod,
 };
 
 const STUB_METHOD_PREFIX: &str = "mock";
@@ -58,6 +58,7 @@ struct MethodDetails {
     stub_ident: Ident,
     inputs: Punctuated<FnArg, Comma>,
     output: ReturnType,
+    attrs: Vec<Attribute>,
     default: Option<Block>,
     stub: proc_macro2::TokenStream,
 }
@@ -113,7 +114,9 @@ fn extract_method_details(ast: &mut ItemTrait) -> Vec<MethodDetails> {
                     inputs: m.sig.inputs.clone(),
                     output: m.sig.output.clone(),
                     default: m.default.clone(),
+                    // Need to strip out the stub attribute first
                     stub: strip_stub_attr(m),
+                    attrs: m.attrs.clone(),
                 }
             } else {
                 panic!("only supported for normal trait methods");
@@ -183,13 +186,15 @@ fn generate_stub_methods(method_details: &[MethodDetails]) -> Vec<proc_macro2::T
                 stub_ident,
                 inputs,
                 output,
-                stub,
+                attrs,
                 default,
+                stub,
                 ..
             } = m;
 
             if let Some(body) = default {
                 quote! {
+                    #(#attrs)*
                     fn #stub_ident(#inputs) #output {
                         #body
                     }
@@ -197,6 +202,7 @@ fn generate_stub_methods(method_details: &[MethodDetails]) -> Vec<proc_macro2::T
             } else {
                 quote! {
                     #[allow(unused_variables)]
+                    #(#attrs)*
                     fn #stub_ident(#inputs) #output {
                         #stub
                     }
@@ -215,6 +221,7 @@ fn generate_trait_methods(method_details: &[MethodDetails]) -> Vec<proc_macro2::
                 stub_ident,
                 inputs,
                 output,
+                attrs,
                 ..
             } = m;
 
@@ -228,6 +235,7 @@ fn generate_trait_methods(method_details: &[MethodDetails]) -> Vec<proc_macro2::
             });
 
             quote! {
+                #(#attrs)*
                 fn #ident(#inputs) #output {
                    self.#stub_ident(#(#params),*)
                 }
@@ -253,6 +261,7 @@ pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStrea
     let visibility = ast.vis.clone();
     let colon = ast.colon_token.clone();
     let bounds = ast.supertraits.clone();
+    let attrs = ast.attrs.clone();
 
     // Extract method details and then rewrite default impls to use our new stubbed methods
     // to avoid crazy trait bound errors
@@ -275,6 +284,7 @@ pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStrea
         #ast
 
         #test_attr
+        #(#attrs)*
         #visibility trait #stub_trait_name #colon #bounds {
             #(#stub_methods)*
         }

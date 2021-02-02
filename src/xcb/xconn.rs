@@ -14,22 +14,19 @@
 use crate::{
     core::{
         bindings::{KeyBindings, MouseBindings},
-        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        data_types::{Point, Region, WinType},
         manager::WindowManager,
         screen::Screen,
         xconnection::{
-            Atom, Prop, XConn, XEvent, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS,
-            UNMANAGED_WINDOW_TYPES,
+            Atom, ClientAttr, ClientConfig, Prop, XClientConfig, XClientHandler, XClientProperties,
+            XConn, XEvent, XEventHandler, XState, Xid,
         },
     },
-    draw::Color,
     xcb::{Api, XcbError},
     Result,
 };
 
 use std::collections::HashMap;
-
-const WM_NAME: &str = "penrose";
 
 /**
  * Handles communication with an X server via the XCB library.
@@ -41,47 +38,18 @@ const WM_NAME: &str = "penrose";
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct XcbConnection {
     api: Api,
-    check_win: WinId,
-    auto_float_types: Vec<u32>,
-    dont_manage_types: Vec<u32>,
+    check_win: Xid,
 }
 
 impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
     pub fn new() -> Result<Self> {
         let api = Api::new()?;
-        let auto_float_types: Vec<u32> = AUTO_FLOAT_WINDOW_TYPES
-            .iter()
-            .map(|a| api.known_atom(*a))
-            .collect();
-        let dont_manage_types: Vec<u32> = UNMANAGED_WINDOW_TYPES
-            .iter()
-            .map(|a| api.known_atom(*a))
-            .collect();
 
         api.set_randr_notify_mask()?;
         let check_win = api.create_window(WinType::CheckWin, Region::new(0, 0, 1, 1), false)?;
 
-        Ok(Self {
-            api,
-            check_win,
-            auto_float_types,
-            dont_manage_types,
-        })
-    }
-
-    fn window_has_type_in(&self, id: WinId, win_types: &[u32]) -> bool {
-        if let Ok(Prop::Atom(atoms)) = self.api.get_prop(id, Atom::NetWmWindowType.as_ref()) {
-            atoms.iter().any(|atom| {
-                if let Ok(a) = self.api.atom(atom) {
-                    win_types.contains(&a)
-                } else {
-                    false
-                }
-            })
-        } else {
-            false
-        }
+        Ok(Self { api, check_win })
     }
 
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
@@ -119,6 +87,113 @@ impl WindowManager<XcbConnection> {
     }
 }
 
+impl XState for XcbConnection {
+    fn root(&self) -> Xid {
+        self.api.root()
+    }
+
+    fn current_screens(&self) -> Result<Vec<Screen>> {
+        Ok(self.api.current_screens()?)
+    }
+
+    fn cursor_position(&self) -> Result<Point> {
+        Ok(self.api.cursor_position()?)
+    }
+
+    fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> Result<()> {
+        let (x, y, id) = match win_id {
+            Some(id) => {
+                let (_, _, w, h) = self.client_geometry(id)?.values();
+                ((w / 2), (h / 2), id)
+            }
+            None => {
+                let (x, y, w, h) = screen.region(true).values();
+                ((x + w / 2), (y + h / 2), self.api.root())
+            }
+        };
+
+        Ok(self.api.warp_cursor(id, x as usize, y as usize)?)
+    }
+
+    fn client_geometry(&self, id: Xid) -> Result<Region> {
+        Ok(self.api.client_geometry(id)?)
+    }
+
+    fn active_clients(&self) -> Result<Vec<Xid>> {
+        Ok(self
+            .api
+            .current_clients()?
+            .into_iter()
+            .filter(|&id| self.is_managed_client(id))
+            .collect())
+    }
+
+    fn focused_client(&self) -> Result<Xid> {
+        Ok(self.api.focused_client()?)
+    }
+}
+
+impl XEventHandler for XcbConnection {
+    fn flush(&self) -> bool {
+        self.api.flush()
+    }
+
+    fn wait_for_event(&self) -> Result<XEvent> {
+        Ok(self.api.wait_for_event()?)
+    }
+
+    // FIXME:
+    fn send_client_event(&self, _id: Xid, _atom_name: &str, _data: &[u32]) -> Result<()> {
+        todo!("work this out correctly")
+    }
+}
+
+impl XClientHandler for XcbConnection {
+    fn map_client(&self, id: Xid) -> Result<()> {
+        Ok(self.api.map_client(id)?)
+    }
+
+    fn unmap_client(&self, id: Xid) -> Result<()> {
+        Ok(self.api.unmap_client(id)?)
+    }
+
+    fn focus_client(&self, id: Xid) -> Result<()> {
+        Ok(self.api.focus_client(id)?)
+    }
+
+    fn destroy_client(&self, id: Xid) -> Result<()> {
+        Ok(self.api.destroy_client(id)?)
+    }
+}
+
+impl XClientProperties for XcbConnection {
+    fn get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
+        Ok(self.api.get_prop(id, name)?)
+    }
+
+    fn list_props(&self, id: Xid) -> Result<Vec<String>> {
+        Ok(self.api.list_props(id)?)
+    }
+
+    fn delete_prop(&self, id: Xid, name: &str) -> Result<()> {
+        Ok(self.api.delete_prop(id, name)?)
+    }
+
+    fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> Result<()> {
+        Ok(self.api.change_prop(id, prop, val)?)
+    }
+}
+
+impl XClientConfig for XcbConnection {
+    fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> Result<()> {
+        Ok(self.api.configure_client(id, data)?)
+    }
+
+    fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> Result<()> {
+        Ok(self.api.set_client_attributes(id, data)?)
+    }
+}
+
 impl XConn for XcbConnection {
     #[cfg(feature = "serde")]
     fn hydrate(&mut self) -> Result<()> {
@@ -128,236 +203,36 @@ impl XConn for XcbConnection {
     fn init(&self) -> Result<()> {
         Ok(self
             .api
-            .set_window_attributes(self.api.root(), &[WinAttr::RootEventMask])
+            .set_client_attributes(self.api.root(), &[ClientAttr::RootEventMask])
             .map_err(|e| XcbError::Raw(format!("Unable to set root window event mask: {}", e)))?)
     }
 
-    fn flush(&self) -> bool {
-        self.api.flush()
+    fn cleanup(&self) -> Result<()> {
+        self.api.ungrab_keys()?;
+        self.api.ungrab_mouse_buttons()?;
+        self.api.destroy_client(self.check_win)?;
+        let net_name = Atom::NetActiveWindow.as_ref();
+        self.api.delete_prop(self.api.root(), net_name)?;
+        self.api.flush();
+
+        Ok(())
     }
 
-    fn wait_for_event(&self) -> Result<XEvent> {
-        Ok(self.api.wait_for_event()?)
-    }
-
-    fn current_outputs(&self) -> Vec<Screen> {
-        match self.api.current_screens() {
-            Ok(screens) => screens,
-            Err(e) => panic!("{}", e),
-        }
-    }
-
-    fn cursor_position(&self) -> Point {
-        self.api.cursor_position()
-    }
-
-    fn position_window(&self, id: WinId, reg: Region, border: u32, stack_above: bool) {
-        let mut data = vec![WinConfig::Position(reg), WinConfig::BorderPx(border)];
-        if stack_above {
-            data.push(WinConfig::StackAbove);
-        }
-        self.api.configure_window(id, &data)
-    }
-
-    fn raise_window(&self, id: WinId) {
-        self.api.configure_window(id, &[WinConfig::StackAbove])
-    }
-
-    fn mark_new_window(&self, id: WinId) {
-        let data = &[WinAttr::ClientEventMask];
-        // TODO: this should return the error once XConn is updated
-        self.api.set_window_attributes(id, data).unwrap();
-    }
-
-    fn map_window(&self, id: WinId) {
-        self.api.map_window(id);
-    }
-
-    fn unmap_window(&self, id: WinId) {
-        self.api.unmap_window(id);
-    }
-
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
-        Ok(self.api.send_client_event(id, atom_name)?)
-    }
-
-    fn focused_client(&self) -> WinId {
-        self.api.focused_client().unwrap_or(0)
-    }
-
-    fn focus_client(&self, id: WinId) {
-        self.api.mark_focused_window(id);
-    }
-
-    fn set_client_border_color(&self, id: WinId, color: Color) {
-        let data = &[WinAttr::BorderColor(color.rgb_u32())];
-        // TODO: this should return the error once XConn is updated
-        if let Err(e) = self.api.set_window_attributes(id, data) {
-            error!("error setting border color: {}", e);
-        }
-    }
-
-    fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
-        let data = if client_is_fullscreen {
-            0
-        } else {
-            self.api.known_atom(Atom::NetWmStateFullscreen)
-        };
-
+    fn grab_keys(
+        &self,
+        key_bindings: &KeyBindings<Self>,
+        mouse_bindings: &MouseBindings<Self>,
+    ) -> Result<()> {
         self.api
-            .replace_prop(id, Atom::NetWmState, PropVal::Atom(&[data]));
-    }
-
-    fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>) {
-        self.api.grab_keys(&key_bindings.keys().collect::<Vec<_>>());
+            .grab_keys(&key_bindings.keys().collect::<Vec<_>>())?;
         self.api.grab_mouse_buttons(
             &mouse_bindings
                 .keys()
                 .map(|(_, state)| state)
                 .collect::<Vec<_>>(),
-        );
+        )?;
         self.flush();
-    }
 
-    fn set_wm_properties(&self, workspaces: &[&str]) {
-        let root = self.api.root();
-        for &win in &[self.check_win, root] {
-            self.api.replace_prop(
-                win,
-                Atom::NetSupportingWmCheck,
-                PropVal::Window(&[self.check_win]),
-            );
-            let val = PropVal::Str(WM_NAME);
-            self.api.replace_prop(win, Atom::WmName, val);
-        }
-
-        // EWMH support
-        let supported = EWMH_SUPPORTED_ATOMS
-            .iter()
-            .map(|a| self.api.known_atom(*a))
-            .collect::<Vec<u32>>();
-        let prop = PropVal::Atom(&supported);
-
-        self.api.replace_prop(root, Atom::NetSupported, prop);
-        self.update_desktops(workspaces);
-        self.api.delete_prop(root, Atom::NetClientList);
-    }
-
-    fn update_desktops(&self, workspaces: &[&str]) {
-        let root = self.api.root();
-        self.api.replace_prop(
-            root,
-            Atom::NetNumberOfDesktops,
-            PropVal::Cardinal(&[workspaces.len() as u32]),
-        );
-        self.api.replace_prop(
-            root,
-            Atom::NetDesktopNames,
-            PropVal::Str(&workspaces.join("\0")),
-        );
-    }
-
-    fn update_known_clients(&self, clients: &[WinId]) {
-        self.api.replace_prop(
-            self.api.root(),
-            Atom::NetClientList,
-            PropVal::Window(clients),
-        );
-        self.api.replace_prop(
-            self.api.root(),
-            Atom::NetClientListStacking,
-            PropVal::Window(clients),
-        );
-    }
-
-    fn set_current_workspace(&self, wix: usize) {
-        self.api.replace_prop(
-            self.api.root(),
-            Atom::NetCurrentDesktop,
-            PropVal::Cardinal(&[wix as u32]),
-        );
-    }
-
-    fn set_root_window_name(&self, root_name: &str) {
-        self.api
-            .replace_prop(self.api.root(), Atom::WmName, PropVal::Str(root_name));
-    }
-
-    fn set_client_workspace(&self, id: WinId, workspace: usize) {
-        self.api.replace_prop(
-            id,
-            Atom::NetWmDesktop,
-            PropVal::Cardinal(&[workspace as u32]),
-        );
-    }
-
-    fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
-        if let Ok(Prop::UTF8String(strs)) = self.get_prop(id, Atom::WmClass.as_ref()) {
-            if strs.iter().any(|c| floating_classes.contains(&c.as_ref())) {
-                return true;
-            }
-        }
-        self.window_has_type_in(id, &self.auto_float_types)
-    }
-
-    fn is_managed_window(&self, id: WinId) -> bool {
-        self.api.window_is_managed(id)
-    }
-
-    fn window_geometry(&self, id: WinId) -> Result<Region> {
-        Ok(self.api.window_geometry(id)?)
-    }
-
-    fn warp_cursor(&self, win_id: Option<WinId>, screen: &Screen) {
-        let (x, y, id) = match win_id {
-            Some(id) => {
-                let (_, _, w, h) = match self.window_geometry(id) {
-                    Ok(region) => region.values(),
-                    Err(e) => {
-                        error!("error fetching window details while warping cursor: {}", e);
-                        return;
-                    }
-                };
-                ((w / 2), (h / 2), id)
-            }
-            None => {
-                let (x, y, w, h) = screen.region(true).values();
-                ((x + w / 2), (y + h / 2), self.api.root())
-            }
-        };
-
-        self.api.warp_cursor(id, x as usize, y as usize);
-    }
-
-    fn query_for_active_windows(&self) -> Vec<WinId> {
-        match self.api.current_clients() {
-            Err(_) => Vec::new(),
-            Ok(ids) => ids
-                .into_iter()
-                .filter(|&id| self.api.window_is_managed(id))
-                .collect(),
-        }
-    }
-
-    fn get_prop(&self, id: WinId, name: &str) -> Result<Prop> {
-        Ok(self.api.get_prop(id, name)?)
-    }
-
-    fn list_props(&self, id: WinId) -> Result<Vec<String>> {
-        Ok(self.api.list_props(id)?)
-    }
-
-    fn intern_atom(&self, atom: &str) -> Result<u32> {
-        Ok(self.api.atom(atom)?)
-    }
-
-    // - Release all of the keybindings we are holding on to
-    // - destroy the check window
-    // - mark ourselves as no longer being the active root window
-    fn cleanup(&self) {
-        self.api.ungrab_keys();
-        self.api.ungrab_mouse_buttons();
-        self.api.destroy_window(self.check_win);
-        self.api.delete_prop(self.api.root(), Atom::NetActiveWindow);
+        Ok(())
     }
 }

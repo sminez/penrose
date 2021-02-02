@@ -2,10 +2,13 @@
 use crate::{
     core::{
         bindings::{KeyCode, KeyCodeMask, KeyCodeValue, MouseEvent, MouseState},
-        data_types::{Point, PropVal, Region, WinAttr, WinConfig, WinId, WinType},
+        data_types::{Point, Region, WinType},
         helpers::spawn_for_output,
         screen::Screen,
-        xconnection::{Atom, Prop, WmHints, WmNormalHints, XEvent, UNMANAGED_WINDOW_TYPES},
+        xconnection::{
+            Atom, ClientAttr, ClientConfig, Prop, WmHints, WmNormalHints, XEvent, Xid,
+            UNMANAGED_WINDOW_TYPES,
+        },
     },
     xcb::{Result, XcbError, XcbGenericEvent},
 };
@@ -69,8 +72,8 @@ pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
 pub struct Api {
     #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
     conn: xcb::Connection,
-    root: WinId,
-    check_win: WinId,
+    root: Xid,
+    check_win: Xid,
     randr_base: u8,
     atoms: HashMap<Atom, u32>,
     #[cfg(feature = "keysyms")]
@@ -89,7 +92,9 @@ impl fmt::Debug for Api {
 
 impl Drop for Api {
     fn drop(&mut self) {
-        self.destroy_window(self.check_win)
+        if let Err(e) = self.destroy_client(self.check_win) {
+            error!("error destroying check window: {}", e);
+        }
     }
 }
 
@@ -185,7 +190,7 @@ impl Api {
     }
 
     /// List the X window properties set on the requested client by name
-    pub fn list_props(&self, id: WinId) -> Result<Vec<String>> {
+    pub fn list_props(&self, id: Xid) -> Result<Vec<String>> {
         xcb::list_properties(&self.conn, id)
             .get_reply()?
             .atoms()
@@ -195,8 +200,8 @@ impl Api {
     }
 
     /// Check to see if a window should be managed or not
-    pub fn window_is_managed(&self, id: WinId) -> bool {
-        if let Ok(_) = self.get_prop(id, Atom::WmTransientFor.as_ref()) {
+    pub fn window_is_managed(&self, id: Xid) -> bool {
+        if self.get_prop(id, Atom::WmTransientFor.as_ref()).is_ok() {
             return false;
         }
 
@@ -240,7 +245,7 @@ impl Api {
     }
 
     /// Fetch the requested property for the target window
-    pub fn get_prop(&self, id: WinId, name: &str) -> Result<Prop> {
+    pub fn get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
         let atom = self.atom(name)?;
         let cookie = xcb::get_property(&self.conn, false, id, atom, xcb::ATOM_ANY, 0, 1024);
         let r = cookie.get_reply()?;
@@ -264,7 +269,7 @@ impl Api {
                     .collect(),
             ),
 
-            "WINDOW" => Prop::Window(r.value()[0]),
+            "WINDOW" => Prop::Window(r.value().to_vec()),
 
             "WM_HINTS" => Prop::WmHints(
                 WmHints::try_from_bytes(r.value())
@@ -283,12 +288,14 @@ impl Api {
                 8 => r.value::<u8>().iter().map(|b| *b as u32).collect(),
                 16 => r.value::<u16>().iter().map(|b| *b as u32).collect(),
                 32 => r.value::<u32>().to_vec(),
-                _ => Err(XcbError::InvalidPropertyData(format!(
-                    "prop type for {} was {} which claims to have a data format of {}",
-                    name,
-                    prop_type,
-                    r.type_()
-                )))?,
+                _ => {
+                    return Err(XcbError::InvalidPropertyData(format!(
+                        "prop type for {} was {} which claims to have a data format of {}",
+                        name,
+                        prop_type,
+                        r.type_()
+                    )))
+                }
             }),
         })
     }
@@ -498,12 +505,10 @@ impl Api {
                 xcb::xproto::get_atom_name(&self.conn, e.atom())
                     .get_reply()
                     .ok()
-                    .and_then(|a| {
-                        Some(XEvent::PropertyNotify {
-                            id: e.window(),
-                            atom: a.name().to_string(),
-                            is_root: e.window() == self.root,
-                        })
+                    .map(|a| XEvent::PropertyNotify {
+                        id: e.window(),
+                        atom: a.name().to_string(),
+                        is_root: e.window() == self.root,
                     })
             }
 
@@ -560,34 +565,63 @@ impl Api {
     }
 
     /// Delete a known property from a window
-    pub fn delete_prop(&self, id: WinId, prop: Atom) {
-        xcb::delete_property(&self.conn, id, self.known_atom(prop));
+    pub fn delete_prop(&self, id: Xid, prop: &str) -> Result<()> {
+        Ok(xcb::delete_property_checked(&self.conn, id, self.atom(prop)?).request_check()?)
     }
 
     /// Replace a property value on a window.
     ///
     /// See the documentation for the C level XCB API for the correct property
     /// type for each prop.
-    pub fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
+    pub fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> Result<()> {
         let mode = xcb::PROP_MODE_REPLACE as u8;
-        let a = self.known_atom(prop);
+        let a = self.atom(prop)?;
 
         let (ty, data) = match val {
-            PropVal::Atom(data) => (xcb::xproto::ATOM_ATOM, data),
-            PropVal::Cardinal(data) => (xcb::xproto::ATOM_CARDINAL, data),
-            PropVal::Window(data) => (xcb::xproto::ATOM_WINDOW, data),
-            PropVal::Str(s) => {
-                let (ty, data) = (xcb::xproto::ATOM_STRING, s.as_bytes());
-                xcb::change_property(&self.conn, mode, id, a, ty, 8, data);
-                return;
+            Prop::Atom(atoms) => (
+                xcb::xproto::ATOM_ATOM,
+                atoms
+                    .iter()
+                    .map(|a| self.atom(a))
+                    .collect::<Result<Vec<u32>>>()?,
+            ),
+
+            Prop::Bytes(_) => {
+                return Err(XcbError::InvalidPropertyData(
+                    "unable to change non standard props".into(),
+                ))
+            }
+
+            Prop::Cardinal(val) => (xcb::xproto::ATOM_CARDINAL, vec![val]),
+
+            Prop::UTF8String(strs) => {
+                return Ok(xcb::change_property_checked(
+                    &self.conn,
+                    mode,
+                    id,
+                    a,
+                    xcb::xproto::ATOM_STRING,
+                    8,
+                    strs.join("\0").as_bytes(),
+                )
+                .request_check()?);
+            }
+
+            Prop::Window(ids) => (xcb::xproto::ATOM_WINDOW, ids),
+
+            // TODO: handle these correctly
+            Prop::WmHints(_) | Prop::WmNormalHints(_) => {
+                return Err(XcbError::InvalidPropertyData(
+                    "unable to change WmHints or WmNormalHints".into(),
+                ))
             }
         };
 
-        xcb::change_property(&self.conn, mode, id, a, ty, 32, data);
+        Ok(xcb::change_property_checked(&self.conn, mode, id, a, ty, 32, &data).request_check()?)
     }
 
     /// Create a new client window
-    pub fn create_window(&self, ty: WinType, reg: Region, managed: bool) -> Result<WinId> {
+    pub fn create_window(&self, ty: WinType, reg: Region, managed: bool) -> Result<Xid> {
         let (ty, mut data, class, root, depth, visual_id) = match ty {
             WinType::CheckWin => (
                 None,
@@ -665,9 +699,9 @@ impl Api {
 
         // Input only windows don't need mapping
         if let Some(atom) = ty {
-            let net_name = Atom::NetWmWindowType;
-            self.replace_prop(id, net_name, PropVal::Atom(&[self.known_atom(atom)]));
-            self.map_window(id);
+            let net_name = Atom::NetWmWindowType.as_ref();
+            self.change_prop(id, net_name, Prop::Atom(vec![atom.as_ref().into()]))?;
+            self.map_client(id)?;
         }
 
         self.flush();
@@ -675,59 +709,66 @@ impl Api {
     }
 
     /// Apply a set of config options to a window
-    pub fn configure_window(&self, id: WinId, conf: &[WinConfig]) {
+    pub fn configure_client(&self, id: Xid, conf: &[ClientConfig]) -> Result<()> {
         let data: Vec<(u16, u32)> = conf.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
-        xcb::configure_window(&self.conn, id, &data);
+        Ok(xcb::configure_window_checked(&self.conn, id, &data).request_check()?)
     }
 
     /// Destroy the X server state for a given window
-    pub fn destroy_window(&self, id: WinId) {
-        xcb::destroy_window(&self.conn, id);
+    pub fn destroy_client(&self, id: Xid) -> Result<()> {
+        Ok(xcb::destroy_window_checked(&self.conn, id).request_check()?)
     }
 
     /// Send a [XEvent::MapRequest] for the target window
-    pub fn map_window(&self, id: WinId) {
-        xcb::map_window(&self.conn, id);
+    pub fn map_client(&self, id: Xid) -> Result<()> {
+        Ok(xcb::map_window_checked(&self.conn, id).request_check()?)
+    }
+
+    /// Unmap the target window
+    pub fn unmap_client(&self, id: Xid) -> Result<()> {
+        Ok(xcb::unmap_window_checked(&self.conn, id).request_check()?)
     }
 
     /// Mark the given window as currently having focus in the X server state
-    pub fn mark_focused_window(&self, id: WinId) {
+    pub fn focus_client(&self, id: Xid) -> Result<()> {
         // xcb docs: https://www.mankier.com/3/xcb_set_input_focus
-        xcb::set_input_focus(
+        xcb::set_input_focus_checked(
             &self.conn,                    // xcb connection to X11
             xcb::INPUT_FOCUS_PARENT as u8, // focus the parent when focus is lost
             id,                            // window to focus
             0,                             // event time (0 == current time)
-        );
+        )
+        .request_check()?;
 
-        self.replace_prop(self.root(), Atom::NetActiveWindow, PropVal::Window(&[id]));
+        self.change_prop(
+            self.root(),
+            Atom::NetActiveWindow.as_ref(),
+            Prop::Window(vec![id]),
+        )
     }
 
+    // FIXME: work out the correct way of doing this
     /// Send an event to a client
-    pub fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
+    pub fn send_client_event(&self, id: Xid, atom_name: &str, _data: &[u32]) -> Result<()> {
         let atom = self.atom(atom_name)?;
         let wm_protocols = self.known_atom(Atom::WmProtocols);
         let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
         let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
 
-        xcb::send_event(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event);
-        Ok(())
+        Ok(
+            xcb::send_event_checked(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event)
+                .request_check()?,
+        )
     }
 
-    /// Set attributes on the target window
-    pub fn set_window_attributes(&self, id: WinId, attrs: &[WinAttr]) -> Result<()> {
+    /// Set attributes on the target client
+    pub fn set_client_attributes(&self, id: Xid, attrs: &[ClientAttr]) -> Result<()> {
         let data: Vec<(u32, u32)> = attrs.iter().flat_map::<Vec<_>, _>(|c| c.into()).collect();
-        let reply = xcb::change_window_attributes_checked(&self.conn, id, &data);
-        Ok(reply.request_check()?)
-    }
-
-    /// Unmap the target window
-    pub fn unmap_window(&self, id: WinId) {
-        xcb::unmap_window(&self.conn, id);
+        Ok(xcb::change_window_attributes_checked(&self.conn, id, &data).request_check()?)
     }
 
     /// Find the current size and position of the target window
-    pub fn window_geometry(&self, id: WinId) -> Result<Region> {
+    pub fn client_geometry(&self, id: Xid) -> Result<Region> {
         let res = xcb::get_geometry(&self.conn, id).get_reply()?;
         Ok(Region::new(
             res.x() as u32,
@@ -774,20 +815,17 @@ impl Api {
     }
 
     /// The list of currently active clients known to the X server
-    pub fn current_clients(&self) -> Result<Vec<WinId>> {
+    pub fn current_clients(&self) -> Result<Vec<Xid>> {
         Ok(xcb::query_tree(&self.conn, self.root)
             .get_reply()
             .map(|reply| reply.children().into())?)
     }
 
     /// The current (x, y) position of the cursor relative to the root window
-    pub fn cursor_position(&self) -> Point {
-        xcb::query_pointer(&self.conn, self.root)
+    pub fn cursor_position(&self) -> Result<Point> {
+        Ok(xcb::query_pointer(&self.conn, self.root)
             .get_reply()
-            .map_or_else(
-                |_| Point::new(0, 0),
-                |reply| Point::new(reply.root_x() as u32, reply.root_y() as u32),
-            )
+            .map(|reply| Point::new(reply.root_x() as u32, reply.root_y() as u32))?)
     }
 
     /// Flush pending actions to the X event loop
@@ -796,13 +834,13 @@ impl Api {
     }
 
     /// The client that the X server currently considers to be focused
-    pub fn focused_client(&self) -> Result<WinId> {
+    pub fn focused_client(&self) -> Result<Xid> {
         // xcb docs: https://www.mankier.com/3/xcb_get_input_focus
         Ok(xcb::get_input_focus(&self.conn).get_reply()?.focus())
     }
 
     /// Register intercepts for each given [KeyCode]
-    pub fn grab_keys(&self, keys: &[&KeyCode]) {
+    pub fn grab_keys(&self, keys: &[&KeyCode]) -> Result<()> {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
@@ -812,7 +850,7 @@ impl Api {
         for m in modifiers.iter() {
             for k in keys.iter() {
                 // xcb docs: https://www.mankier.com/3/xcb_grab_key
-                xcb::grab_key(
+                xcb::grab_key_checked(
                     &self.conn, // xcb connection to X11
                     false,      // don't pass grabbed events through to the client
                     self.root,  // the window to grab: in this case the root window
@@ -820,14 +858,17 @@ impl Api {
                     k.code,     // keycode to grab
                     mode,       // don't lock pointer input while grabbing
                     mode,       // don't lock keyboard input while grabbing
-                );
+                )
+                .request_check()?;
             }
         }
+
         self.flush();
+        Ok(())
     }
 
     /// Register intercepts for each given [MouseState]
-    pub fn grab_mouse_buttons(&self, states: &[&MouseState]) {
+    pub fn grab_mouse_buttons(&self, states: &[&MouseState]) -> Result<()> {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
@@ -840,7 +881,7 @@ impl Api {
         for m in modifiers.iter() {
             for state in states.iter() {
                 // xcb docs: https://www.mankier.com/3/xcb_grab_button
-                xcb::grab_button(
+                xcb::grab_button_checked(
                     &self.conn,       // xcb connection to X11
                     false,            // don't pass grabbed events through to the client
                     self.root,        // the window to grab: in this case the root window
@@ -851,14 +892,17 @@ impl Api {
                     xcb::NONE,        // don't change the cursor type
                     state.button(),   // the button to grab
                     state.mask() | m, // modifiers to grab
-                );
+                )
+                .request_check()?;
             }
         }
+
         self.flush();
+        Ok(())
     }
 
     /// The current root window ID
-    pub fn root(&self) -> WinId {
+    pub fn root(&self) -> Xid {
         self.root
     }
 
@@ -868,32 +912,31 @@ impl Api {
             | xcb::randr::NOTIFY_MASK_CRTC_CHANGE
             | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
 
-        // xcb docs: https://www.mankier.com/3/xcb_randr_select_input
-        xcb::randr::select_input(&self.conn, self.root, mask).request_check()?;
+        xcb::randr::select_input_checked(&self.conn, self.root, mask).request_check()?;
         self.flush();
         Ok(())
     }
 
     /// Drop all active intercepts for key combinations
-    pub fn ungrab_keys(&self) {
-        // xcb docs: https://www.mankier.com/3/xcb_ungrab_key
-        xcb::ungrab_key(
+    pub fn ungrab_keys(&self) -> Result<()> {
+        Ok(xcb::ungrab_key_checked(
             &self.conn, // xcb connection to X11
             xcb::GRAB_ANY as u8,
             self.root, // the window to ungrab keys for
             xcb::MOD_MASK_ANY as u16,
-        );
+        )
+        .request_check()?)
     }
 
     /// Drop all active intercepts for mouse states
-    pub fn ungrab_mouse_buttons(&self) {
-        // xcb docs: https://www.mankier.com/3/xcb_ungrab_button
-        xcb::ungrab_button(
+    pub fn ungrab_mouse_buttons(&self) -> Result<()> {
+        Ok(xcb::ungrab_button_checked(
             &self.conn, // xcb connection to X11
             xcb::GRAB_ANY as u8,
             self.root, // the window to ungrab keys for
             xcb::MOD_MASK_ANY as u16,
-        );
+        )
+        .request_check()?)
     }
 
     /// Block until the next event from the X event loop is ready then return it.
@@ -930,8 +973,11 @@ impl Api {
     }
 
     /// Move the cursor to the given (x, y) position inside the specified window.
-    pub fn warp_cursor(&self, id: WinId, x: usize, y: usize) {
-        // conn source target source(x y w h) dest(x y)
-        xcb::warp_pointer(&self.conn, 0, id, 0, 0, 0, 0, x as i16, y as i16);
+    pub fn warp_cursor(&self, id: Xid, x: usize, y: usize) -> Result<()> {
+        Ok(
+            // conn source target source(x y w h) dest(x y)
+            xcb::warp_pointer_checked(&self.conn, 0, id, 0, 0, 0, 0, x as i16, y as i16)
+                .request_check()?,
+        )
     }
 }

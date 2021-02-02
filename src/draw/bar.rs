@@ -10,10 +10,10 @@
 use crate::{
     core::{
         client::Client,
-        data_types::{PropVal, Region, WinId, WinType},
+        data_types::{Region, WinType},
         hooks::Hook,
         manager::WindowManager,
-        xconnection::{Atom, XConn},
+        xconnection::{Atom, Prop, XConn, Xid},
     },
     draw::{Color, Draw, DrawContext, HookableWidget, Result, TextStyle},
 };
@@ -92,7 +92,7 @@ where
     drw: D,
     position: Position,
     widgets: Vec<Box<dyn HookableWidget<X>>>,
-    screens: Vec<(WinId, f64)>, // window and width
+    screens: Vec<(Xid, f64)>, // window and width
     hpx: usize,
     h: f64,
     bg: Color,
@@ -165,12 +165,12 @@ where
                     false,
                 )?;
 
-                let s = "penrose-statusbar";
-                self.drw.replace_prop(id, Atom::NetWmName, PropVal::Str(s));
-                self.drw.replace_prop(id, Atom::WmName, PropVal::Str(s));
-                self.drw.replace_prop(id, Atom::WmClass, PropVal::Str(s));
+                let p = Prop::UTF8String(vec!["penrose-statusbar".to_string()]);
+                for atom in &[Atom::NetWmName, Atom::WmName, Atom::WmClass] {
+                    self.drw.change_prop(id, atom.as_ref(), p.clone())?;
+                }
 
-                self.drw.flush(id);
+                self.drw.flush(id)?;
                 Ok((id, sw as f64))
             })
             .collect::<Result<Vec<(u32, f64)>>>()?;
@@ -198,7 +198,7 @@ where
                 ctx.set_x_offset(x);
             }
 
-            self.drw.flush(id);
+            self.drw.flush(id)?;
         }
 
         Ok(())
@@ -233,7 +233,9 @@ where
     fn redraw_if_needed(&mut self) -> Result<()> {
         if self.widgets.iter().any(|w| w.require_draw()) {
             self.redraw()?;
-            self.screens.iter().for_each(|(id, _)| self.drw.flush(*id));
+            for (id, _) in self.screens.iter() {
+                self.drw.flush(*id)?;
+            }
         }
 
         Ok(())
@@ -266,7 +268,7 @@ macro_rules! __impl_status_bar_as_hook {
 
             fn screens_updated(&mut self, wm: &mut WindowManager<X>, dimensions: &[Region]) -> crate::Result<()> {
                 for (id, _) in self.screens.iter() {
-                    self.drw.destroy_window(*id);
+                    self.drw.destroy_client(*id)?;
                 }
 
                 if let Err(e) = self.init_for_screens() {
@@ -294,14 +296,14 @@ macro_rules! __impl_status_bar_as_hook {
 }
 
 __impl_status_bar_as_hook! {
-    client_name_updated => id: WinId, name: &str, is_root: bool;
-    client_added_to_workspace => id: WinId, wix: usize;
-    focus_change => id: WinId;
+    client_name_updated => id: Xid, name: &str, is_root: bool;
+    client_added_to_workspace => id: Xid, wix: usize;
+    focus_change => id: Xid;
     layout_applied => workspace_index: usize, screen_index: usize;
     layout_change => workspace_index: usize, screen_index: usize;
     new_client => id: &mut Client;
     randr_notify => ;
-    remove_client => id: WinId;
+    remove_client => id: Xid;
     workspace_change => prev: usize, new: usize;
     workspaces_updated => names: &[&str], active: usize;
 }

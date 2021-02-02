@@ -85,8 +85,14 @@ pub struct Point {
 
 impl Point {
     /// Create a new Point.
-    pub fn new(x: u32, y: u32) -> Point {
-        Point { x, y }
+    pub fn new(x: u32, y: u32) -> Self {
+        Self { x, y }
+    }
+}
+
+impl Default for Point {
+    fn default() -> Self {
+        Self::new(0, 0)
     }
 }
 
@@ -126,6 +132,12 @@ pub struct Region {
     pub w: u32,
     /// The height of this region
     pub h: u32,
+}
+
+impl Default for Region {
+    fn default() -> Self {
+        Self::new(0, 0, 0, 0)
+    }
 }
 
 impl Region {

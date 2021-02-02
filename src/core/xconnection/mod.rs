@@ -9,15 +9,18 @@
 //! [1]: crate::core::manager::WindowManager
 use crate::{
     core::{
-        bindings::{KeyBindings, MouseBindings},
-        data_types::{Point, Region, WinId},
+        bindings::{KeyBindings, KeyPress, MouseBindings},
+        client::Client,
+        data_types::{Point, Region},
         screen::Screen,
     },
     draw::Color,
     PenroseError, Result,
 };
 
-use std::{cell::Cell, fmt};
+use penrose_proc::stubbed_companion_trait;
+
+use std::str::FromStr;
 
 pub mod atom;
 pub mod event;
@@ -29,6 +32,257 @@ pub use atom::{
 pub use event::XEvent;
 pub use property::{Prop, WmHints, WmNormalHints, WmNormalHintsFlags};
 
+/// An X resource ID
+pub type Xid = u32;
+
+const WM_NAME: &str = "penrose";
+
+/// On screen configuration options for X clients (not all are curently implemented)
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ClientConfig {
+    /// The border width in pixels
+    BorderPx(u32),
+    /// Absolute size and position on the screen as a [Region]
+    Position(Region),
+    /// Mark this window as stacking on top of its peers
+    StackAbove,
+}
+
+/// Attributes for an X11 client window (not all are curently implemented)
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ClientAttr {
+    /// Border color as an argb hex value
+    BorderColor(u32),
+    /// Set the pre-defined client event mask
+    ClientEventMask,
+    /// Set the pre-defined root event mask
+    RootEventMask,
+}
+
+/// An [XEvent] parsed into a [KeyPress] if possible, otherwise the original `XEvent`
+#[derive(Debug, Clone)]
+pub enum KeyPressParseAttempt {
+    /// The event was parasble as a [KeyPress]
+    KeyPress(KeyPress),
+    /// The event was not a [KeyPress]
+    XEvent(XEvent),
+}
+
+/// State queries against the running X server
+#[stubbed_companion_trait]
+pub trait XState {
+    /// The root window ID
+    #[stub(42)]
+    fn root(&self) -> Xid;
+
+    /// Determine the currently connected [screens][Screen] and return their details
+    #[stub(Ok(vec![]))]
+    fn current_screens(&self) -> Result<Vec<Screen>>;
+
+    /// Determine the current (x,y) position of the cursor relative to the root window.
+    #[stub(Ok(Point::default()))]
+    fn cursor_position(&self) -> Result<Point>;
+
+    /// Warp the cursor to be within the specified window. If id == None then behaviour is
+    /// definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
+    #[stub(Ok(()))]
+    fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> Result<()>;
+
+    /// Return the current (x, y, w, h) dimensions of the requested window
+    #[stub(Ok(Region::default()))]
+    fn client_geometry(&self, id: Xid) -> Result<Region>;
+
+    /// Run on startup/restart to determine already running windows that we need to track
+    #[stub(Ok(vec![]))]
+    fn active_clients(&self) -> Result<Vec<Xid>>;
+
+    /// Return the client ID of the [crate::core::client::Client] that currently holds X focus
+    #[stub(Ok(0))]
+    fn focused_client(&self) -> Result<Xid>;
+}
+
+/// Sending and receiving X events
+#[stubbed_companion_trait]
+pub trait XEventHandler {
+    /// Flush pending actions to the X event loop
+    #[stub(true)]
+    fn flush(&self) -> bool;
+
+    /// Wait for the next event from the X server and return it as an [XEvent]
+    #[stub(Err(PenroseError::Raw("mock impl".into())))]
+    fn wait_for_event(&self) -> Result<XEvent>;
+
+    /// Send an X event to the target window
+    #[stub(Ok(()))]
+    fn send_client_event(&self, id: Xid, atom_name: &str, data: &[u32]) -> Result<()>;
+}
+
+/// Management of the visibility and lifecycle of X clients
+#[stubbed_companion_trait]
+pub trait XClientHandler {
+    /// Map a client to the display.
+    #[stub(Ok(()))]
+    fn map_client(&self, id: Xid) -> Result<()>;
+
+    /// Unmap a client from the display.
+    #[stub(Ok(()))]
+    fn unmap_client(&self, id: Xid) -> Result<()>;
+
+    /// Destropy and existing client.
+    #[stub(Ok(()))]
+    fn destroy_client(&self, id: Xid) -> Result<()>;
+
+    /// Mark the given client as having focus
+    #[stub(Ok(()))]
+    fn focus_client(&self, id: Xid) -> Result<()>;
+
+    /// Map a known penrose [Client] if it is not currently visible
+    fn map_client_if_needed(&self, win: Option<&mut Client>) -> Result<()> {
+        if let Some(c) = win {
+            if !c.mapped {
+                c.mapped = true;
+                self.map_client(c.id())?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Unmap a known penrose [Client] if it is currently visible
+    fn unmap_client_if_needed(&self, win: Option<&mut Client>) -> Result<()> {
+        if let Some(c) = win {
+            if c.mapped {
+                c.mapped = false;
+                self.unmap_client(c.id())?;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Querying and updating properties on X clients
+#[stubbed_companion_trait]
+pub trait XClientProperties {
+    /// Return the list of all properties set on the given client window
+    ///
+    /// Properties should be returned as their string name as would be used to intern the
+    /// respective atom.
+    #[stub(Ok(vec![]))]
+    fn list_props(&self, id: Xid) -> Result<Vec<String>>;
+
+    /// Query a property for a client by ID and name.
+    ///
+    /// Can fail if the property name is invalid or we get a malformed response from xcb.
+    #[stub(Err(PenroseError::Raw("mocked".into())))]
+    fn get_prop(&self, id: Xid, name: &str) -> Result<Prop>;
+
+    /// Delete an existing property from a client
+    #[stub(Ok(()))]
+    fn delete_prop(&self, id: Xid, name: &str) -> Result<()>;
+
+    /// Change an existing property for a client
+    #[stub(Ok(()))]
+    fn change_prop(&self, id: Xid, name: &str, val: Prop) -> Result<()>;
+
+    /*
+     *  The following default implementations should used if possible.
+     *
+     *  Any custom implementations should take care to ensure that the state changes being made are
+     *  equivaled to those implemented here.
+     */
+
+    /// Toggle the fullscreen state of the given client ID with the X server
+    fn toggle_client_fullscreen(&self, id: Xid, client_is_fullscreen: bool) -> Result<()> {
+        let data = if client_is_fullscreen {
+            vec![]
+        } else {
+            vec![Atom::NetWmStateFullscreen.as_ref().to_string()]
+        };
+
+        self.change_prop(id, Atom::NetWmState.as_ref(), Prop::Atom(data))
+    }
+
+    /// Fetch a [client's][1] name proprty following ICCCM / EWMH standards
+    ///
+    /// [1]: crate::core::client::Client
+    fn client_name(&self, id: Xid) -> Result<String> {
+        match self.get_prop(id, Atom::NetWmName.as_ref()) {
+            Ok(Prop::UTF8String(strs)) if !strs.is_empty() && !strs[0].is_empty() => {
+                Ok(strs[0].clone())
+            }
+
+            _ => match self.get_prop(id, Atom::WmName.as_ref()) {
+                Ok(Prop::UTF8String(strs)) if !strs.is_empty() => Ok(strs[0].clone()),
+                Err(e) => Err(e),
+                _ => Ok(String::new()),
+            },
+        }
+    }
+}
+
+/// Modifying X client config and attributes
+#[stubbed_companion_trait]
+pub trait XClientConfig {
+    /// Configure the on screen appearance of a client window
+    #[stub(Ok(()))]
+    fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> Result<()>;
+
+    /// Set client attributes such as event masks, border color etc
+    #[stub(Ok(()))]
+    fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> Result<()>;
+
+    /*
+     *  The following default implementations should used if possible.
+     *
+     *  Any custom implementations should take care to ensure that the state changes being made are
+     *  equivaled to those implemented here.
+     */
+
+    /// Reposition the window identified by 'id' to the specifed region
+    fn position_client(&self, id: Xid, r: Region, border: u32, stack_above: bool) -> Result<()> {
+        let mut data = vec![ClientConfig::Position(r), ClientConfig::BorderPx(border)];
+        if stack_above {
+            data.push(ClientConfig::StackAbove);
+        }
+        self.configure_client(id, &data)
+    }
+
+    /// Raise the window to the top of the stack so it renders above peers
+    fn raise_client(&self, id: Xid) -> Result<()> {
+        self.configure_client(id, &[ClientConfig::StackAbove])
+    }
+
+    /// Change the border color for the given client
+    fn set_client_border_color(&self, id: Xid, color: Color) -> Result<()> {
+        self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgb_u32())])
+    }
+}
+
+/// Keyboard input for created clients
+#[stubbed_companion_trait]
+pub trait XKeyboardHandler {
+    /// Attempt to grab control of all keyboard input
+    #[stub(Ok(()))]
+    fn grab_keyboard(&self) -> Result<()>;
+
+    /// Attempt to release control of all keyboard inputs
+    #[stub(Ok(()))]
+    fn ungrab_keyboard(&self) -> Result<()>;
+
+    /// Attempt to parse the next [XEvent] from an underlying connection as a [KeyPress] if there
+    /// is one.
+    ///
+    /// Should return Ok(None) if no events are currently available.
+    #[stub(Ok(None))]
+    fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>>;
+
+    /// Wait for the next [XEvent] from an underlying connection as a [KeyPress] and attempt to
+    /// parse it as a [KeyPress].
+    #[stub(Err(PenroseError::Raw("mock impl".into())))]
+    fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt>;
+}
+
 /// A handle on a running X11 connection that we can use for issuing X requests.
 ///
 /// XConn is intended as an abstraction layer to allow for communication with the underlying
@@ -36,9 +290,13 @@ pub use property::{Prop, WmHints, WmNormalHints, WmNormalHintsFlags};
 /// should be possible to write an implementation that allows penrose to run on systems not using X
 /// as the windowing system but X idioms and high level event types / client interations are
 /// assumed.
-pub trait XConn {
+#[stubbed_companion_trait]
+pub trait XConn:
+    XState + XEventHandler + XClientHandler + XClientProperties + XClientConfig + Sized
+{
     /// Hydrate this XConn to restore internal state following serde deserialization
     #[cfg(feature = "serde")]
+    #[stub(Ok(()))]
     fn hydrate(&mut self) -> Result<()>;
 
     /// Initialise any state required before this connection can be used by the WindowManager.
@@ -49,437 +307,290 @@ pub trait XConn {
     /// This method is called once during [WindowManager::init][1]
     ///
     /// [1]: crate::core::manager::WindowManager::init
+    #[stub(Ok(()))]
     fn init(&self) -> Result<()>;
 
-    /// Flush pending actions to the X event loop
-    fn flush(&self) -> bool;
-
-    /// Wait for the next event from the X server and return it as an [XEvent]
-    fn wait_for_event(&self) -> Result<XEvent>;
-
-    /// Determine the currently connected CRTCs and return their details
-    fn current_outputs(&self) -> Vec<Screen>;
-
-    /// Determine the current (x,y) position of the cursor relative to the root window.
-    fn cursor_position(&self) -> Point;
-
-    /// Reposition the window identified by 'id' to the specifed region
-    fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool);
-
-    /// Raise the window to the top of the stack so it renders above peers
-    fn raise_window(&self, id: WinId);
-
-    /// Mark the given window as newly created
-    fn mark_new_window(&self, id: WinId);
-
-    /// Map a window to the display. Called each time a map_notify event is received
-    fn map_window(&self, id: WinId);
-
-    /// Unmap a window from the display. Called each time an unmap_notify event is received
-    fn unmap_window(&self, id: WinId);
-
-    /// Send an X event to the target window
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()>;
-
-    /// Return the client ID of the [crate::core::client::Client] that currently holds X focus
-    fn focused_client(&self) -> WinId;
-
-    /// Mark the given [crate::core::client::Client] as having focus
-    fn focus_client(&self, id: WinId);
-
-    /// Change the border color for the given client
-    fn set_client_border_color(&self, id: WinId, color: Color);
+    /// Perform any state cleanup required prior to shutting down the window manager
+    #[stub(Ok(()))]
+    fn cleanup(&self) -> Result<()>;
 
     /// Notify the X server that we are intercepting the user specified key bindings and prevent
     /// them being passed through to the underlying applications.
     ///
     /// This is what determines which key press events end up being sent through in the main event
     /// loop for the WindowManager.
-    fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>)
-    where
-        Self: Sized;
+    #[stub(Ok(()))]
+    fn grab_keys(
+        &self,
+        key_bindings: &KeyBindings<Self>,
+        mouse_bindings: &MouseBindings<Self>,
+    ) -> Result<()>;
+
+    /*
+     *  The following default implementations should used if possible.
+     *
+     *  Any custom implementations should take care to ensure that the state changes being made are
+     *  equivaled to those implemented here.
+     */
+
+    /// Mark the given client as newly created
+    fn mark_new_client(&self, id: Xid) -> Result<()> {
+        self.set_client_attributes(id, &[ClientAttr::ClientEventMask])
+    }
 
     /// Set required EWMH properties to ensure compatability with external programs
-    fn set_wm_properties(&self, workspaces: &[&str]);
+    fn set_wm_properties(&self, check_win: Xid, workspaces: &[String]) -> Result<()> {
+        let root = self.root();
+        for &win in &[check_win, root] {
+            self.change_prop(
+                win,
+                Atom::NetSupportingWmCheck.as_ref(),
+                Prop::Window(vec![check_win]),
+            )?;
+
+            self.change_prop(
+                win,
+                Atom::WmName.as_ref(),
+                Prop::UTF8String(vec![WM_NAME.into()]),
+            )?;
+        }
+
+        // EWMH support
+        self.change_prop(
+            root,
+            Atom::NetSupported.as_ref(),
+            Prop::Atom(
+                EWMH_SUPPORTED_ATOMS
+                    .iter()
+                    .map(|a| a.as_ref().to_string())
+                    .collect(),
+            ),
+        )?;
+        self.update_desktops(workspaces)?;
+        self.delete_prop(root, Atom::NetClientList.as_ref())?;
+        self.delete_prop(root, Atom::NetClientListStacking.as_ref())
+    }
 
     /// Update the root window properties with the current desktop details
-    fn update_desktops(&self, workspaces: &[&str]);
+    fn update_desktops(&self, workspaces: &[String]) -> Result<()> {
+        let root = self.root();
+        self.change_prop(
+            root,
+            Atom::NetNumberOfDesktops.as_ref(),
+            Prop::Cardinal(workspaces.len() as u32),
+        )?;
+        self.change_prop(
+            root,
+            Atom::NetDesktopNames.as_ref(),
+            Prop::UTF8String(workspaces.to_vec()),
+        )
+    }
 
     /// Update the root window properties with the current client details
-    fn update_known_clients(&self, clients: &[WinId]);
+    fn update_known_clients(&self, clients: &[Xid]) -> Result<()> {
+        let root = self.root();
+        self.change_prop(
+            root,
+            Atom::NetClientList.as_ref(),
+            Prop::Window(clients.to_vec()),
+        )?;
+        self.change_prop(
+            root,
+            Atom::NetClientListStacking.as_ref(),
+            Prop::Window(clients.to_vec()),
+        )
+    }
 
     /// Update which desktop is currently focused
-    fn set_current_workspace(&self, wix: usize);
+    fn set_current_workspace(&self, wix: usize) -> Result<()> {
+        self.change_prop(
+            self.root(),
+            Atom::NetCurrentDesktop.as_ref(),
+            Prop::Cardinal(wix as u32),
+        )
+    }
 
     /// Set the WM_NAME prop of the root window
-    fn set_root_window_name(&self, name: &str);
+    fn set_root_window_name(&self, name: &str) -> Result<()> {
+        self.change_prop(
+            self.root(),
+            Atom::WmName.as_ref(),
+            Prop::UTF8String(vec![name.to_string()]),
+        )
+    }
 
     /// Update which desktop a client is currently on
-    fn set_client_workspace(&self, id: WinId, wix: usize);
-
-    /// Toggle the fullscreen state of the given client ID with the X server
-    fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool);
-
-    /// Determine whether the target window should be tiled or allowed to float
-    fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool;
-
-    /// Check to see if this window is one that we should be handling or not
-    fn is_managed_window(&self, id: WinId) -> bool;
-
-    /// Return the current (x, y, w, h) dimensions of the requested window
-    fn window_geometry(&self, id: WinId) -> Result<Region>;
-
-    /// Warp the cursor to be within the specified window. If id == None then behaviour is
-    /// definined by the implementor (e.g. warp cursor to active window, warp to center of screen)
-    fn warp_cursor(&self, id: Option<WinId>, screen: &Screen);
-
-    /// Run on startup/restart to determine already running windows that we need to track
-    fn query_for_active_windows(&self) -> Vec<WinId>;
-
-    /// Query a property for a window by window ID and name.
-    ///
-    /// Can fail if the property name is invalid or we get a malformed response from xcb.
-    fn get_prop(&self, id: WinId, name: &str) -> Result<Prop>;
-
-    /// Return the list of all properties set on the given client window
-    ///
-    /// Properties should be returned as their string name as would be used to intern the
-    /// respective atom.
-    fn list_props(&self, id: WinId) -> Result<Vec<String>>;
-
-    /// Intern an X atom by name and return the corresponding ID
-    fn intern_atom(&self, atom: &str) -> Result<u32>;
-
-    /// Perform any state cleanup required prior to shutting down the window manager
-    fn cleanup(&self);
-}
-
-/// A really simple stub implementation of [XConn] to simplify setting up test cases.
-///
-/// Intended use is to override the mock_* methods that you need for running your test case in order
-/// to inject behaviour into a WindowManager instance which is driven by X server state.
-/// [StubXConn] will then implement [XConn] and call through to your overwritten methods or the
-/// provided default.
-///
-/// This is being done to avoid providing broken default methods on the real XConn trait that would
-/// make writing real impls more error prone if and when new methods are added to the trait.
-pub trait StubXConn {
-    /// Mocked version of hydrate
-    #[cfg(feature = "serde")]
-    fn mock_hydrate(&mut self) -> Result<()> {
-        Ok(())
+    fn set_client_workspace(&self, id: Xid, wix: usize) -> Result<()> {
+        self.change_prop(id, Atom::NetWmDesktop.as_ref(), Prop::Cardinal(wix as u32))
     }
 
-    /// Mocked version of init
-    fn mock_init(&self) -> Result<()> {
-        Ok(())
-    }
+    /// Determine whether the target client should be tiled or allowed to float
+    fn client_should_float(&self, id: Xid, floating_classes: &[&str]) -> bool {
+        if let Ok(Prop::UTF8String(strs)) = self.get_prop(id, Atom::WmClass.as_ref()) {
+            if strs.iter().any(|c| floating_classes.contains(&c.as_ref())) {
+                return true;
+            }
+        }
 
-    /// Mocked version of flush
-    fn mock_flush(&self) -> bool {
-        true
-    }
-
-    /// Mocked version of wait_for_event
-    fn mock_wait_for_event(&self) -> Result<XEvent> {
-        Err(PenroseError::Raw("mock impl".into()))
-    }
-
-    /// Mocked version of current_outputs
-    fn mock_current_outputs(&self) -> Vec<Screen> {
-        vec![]
-    }
-
-    /// Mocked version of cursor_position
-    fn mock_cursor_position(&self) -> Point {
-        Point::new(0, 0)
-    }
-
-    /// Mocked version of send_client_event
-    fn mock_send_client_event(&self, _: WinId, _: &str) -> Result<()> {
-        Ok(())
-    }
-
-    /// Mocked version of focused_client
-    fn mock_focused_client(&self) -> WinId {
-        0
-    }
-
-    /// Mocked version of window_should_float
-    fn mock_window_should_float(&self, _: WinId, _: &[&str]) -> bool {
-        false
-    }
-
-    /// Mocked version of is_managed_window
-    fn mock_is_managed_window(&self, _: WinId) -> bool {
-        true
-    }
-
-    /// Mocked version of window_geometry
-    fn mock_window_geometry(&self, _: WinId) -> Result<Region> {
-        Ok(Region::new(0, 0, 0, 0))
-    }
-
-    /// Mocked version of query_for_active_windows
-    fn mock_query_for_active_windows(&self) -> Vec<WinId> {
-        Vec::new()
-    }
-
-    /// Mocked version of get_prop
-    fn mock_get_prop(&self, _: WinId, prop: &str) -> Result<Prop> {
-        if prop == Atom::WmName.as_ref() || prop == Atom::NetWmName.as_ref() {
-            Ok(Prop::UTF8String(vec!["mock name".into()]))
+        let float_types: Vec<&str> = AUTO_FLOAT_WINDOW_TYPES.iter().map(|a| a.as_ref()).collect();
+        if let Ok(Prop::Atom(atoms)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            atoms.iter().any(|a| float_types.contains(&a.as_ref()))
         } else {
-            Err(PenroseError::Raw("mocked".into()))
+            false
         }
     }
 
-    /// Mocked version of list_props
-    fn mock_list_props(&self, _: WinId) -> Result<Vec<String>> {
-        Ok(vec![])
-    }
-
-    /// Mocked version of intern_atom
-    fn mock_intern_atom(&self, _: &str) -> Result<u32> {
-        Ok(0)
-    }
-
-    /// Mocked version of warp_cursor
-    fn mock_warp_cursor(&self, _: Option<WinId>, _: &Screen) {}
-    /// Mocked version of focus_client
-    fn mock_focus_client(&self, _: WinId) {}
-    /// Mocked version of position_window
-    fn mock_position_window(&self, _: WinId, _: Region, _: u32, _: bool) {}
-    /// Mocked version of raise_window
-    fn mock_raise_window(&self, _: WinId) {}
-    /// Mocked version of mark_new_window
-    fn mock_mark_new_window(&self, _: WinId) {}
-    /// Mocked version of map_window
-    fn mock_map_window(&self, _: WinId) {}
-    /// Mocked version of unmap_window
-    fn mock_unmap_window(&self, _: WinId) {}
-    /// Mocked version of set_client_border_color
-    fn mock_set_client_border_color(&self, _: WinId, _: Color) {}
-    /// Mocked version of grab_keys
-    fn mock_grab_keys(&self, _: &KeyBindings<Self>, _: &MouseBindings<Self>)
-    where
-        Self: Sized,
-    {
-    }
-    /// Mocked version of set_wm_properties
-    fn mock_set_wm_properties(&self, _: &[&str]) {}
-    /// Mocked version of update_desktops
-    fn mock_update_desktops(&self, _: &[&str]) {}
-    /// Mocked version of update_known_clients
-    fn mock_update_known_clients(&self, _: &[WinId]) {}
-    /// Mocked version of set_current_workspace
-    fn mock_set_current_workspace(&self, _: usize) {}
-    /// Mocked version of set_root_window_name
-    fn mock_set_root_window_name(&self, _: &str) {}
-    /// Mocked version of set_client_workspace
-    fn mock_set_client_workspace(&self, _: WinId, _: usize) {}
-    /// Mocked version of toggle_client_fullscreen
-    fn mock_toggle_client_fullscreen(&self, _: WinId, _: bool) {}
-    /// Mocked version of cleanup
-    fn mock_cleanup(&self) {}
-}
-
-impl<T> XConn for T
-where
-    T: StubXConn,
-{
-    #[cfg(feature = "serde")]
-    fn hydrate(&mut self) -> Result<()> {
-        self.mock_hydrate()
-    }
-
-    fn init(&self) -> Result<()> {
-        self.mock_init()
-    }
-
-    fn flush(&self) -> bool {
-        self.mock_flush()
-    }
-
-    fn wait_for_event(&self) -> Result<XEvent> {
-        self.mock_wait_for_event()
-    }
-
-    fn current_outputs(&self) -> Vec<Screen> {
-        self.mock_current_outputs()
-    }
-
-    fn cursor_position(&self) -> Point {
-        self.mock_cursor_position()
-    }
-
-    fn position_window(&self, id: WinId, r: Region, border: u32, stack_above: bool) {
-        self.mock_position_window(id, r, border, stack_above)
-    }
-
-    fn raise_window(&self, id: WinId) {
-        self.mock_raise_window(id)
-    }
-
-    fn mark_new_window(&self, id: WinId) {
-        self.mock_mark_new_window(id)
-    }
-
-    fn map_window(&self, id: WinId) {
-        self.mock_map_window(id)
-    }
-
-    fn unmap_window(&self, id: WinId) {
-        self.mock_unmap_window(id)
-    }
-
-    fn send_client_event(&self, id: WinId, atom_name: &str) -> Result<()> {
-        self.mock_send_client_event(id, atom_name)
-    }
-
-    fn focused_client(&self) -> WinId {
-        self.mock_focused_client()
-    }
-
-    fn focus_client(&self, id: WinId) {
-        self.mock_focus_client(id)
-    }
-
-    fn set_client_border_color(&self, id: WinId, color: Color) {
-        self.mock_set_client_border_color(id, color)
-    }
-
-    fn grab_keys(&self, key_bindings: &KeyBindings<Self>, mouse_bindings: &MouseBindings<Self>) {
-        self.mock_grab_keys(key_bindings, mouse_bindings)
-    }
-
-    fn set_wm_properties(&self, workspaces: &[&str]) {
-        self.mock_set_wm_properties(workspaces)
-    }
-
-    fn update_desktops(&self, workspaces: &[&str]) {
-        self.mock_update_desktops(workspaces)
-    }
-
-    fn update_known_clients(&self, clients: &[WinId]) {
-        self.mock_update_known_clients(clients)
-    }
-
-    fn set_current_workspace(&self, wix: usize) {
-        self.mock_set_current_workspace(wix)
-    }
-
-    fn set_root_window_name(&self, name: &str) {
-        self.mock_set_root_window_name(name)
-    }
-
-    fn set_client_workspace(&self, id: WinId, wix: usize) {
-        self.mock_set_client_workspace(id, wix)
-    }
-
-    fn toggle_client_fullscreen(&self, id: WinId, client_is_fullscreen: bool) {
-        self.mock_toggle_client_fullscreen(id, client_is_fullscreen)
-    }
-
-    fn window_should_float(&self, id: WinId, floating_classes: &[&str]) -> bool {
-        self.mock_window_should_float(id, floating_classes)
-    }
-
-    fn is_managed_window(&self, id: WinId) -> bool {
-        self.mock_is_managed_window(id)
-    }
-
-    fn window_geometry(&self, id: WinId) -> Result<Region> {
-        self.mock_window_geometry(id)
-    }
-
-    fn warp_cursor(&self, id: Option<WinId>, screen: &Screen) {
-        self.mock_warp_cursor(id, screen)
-    }
-
-    fn query_for_active_windows(&self) -> Vec<WinId> {
-        self.mock_query_for_active_windows()
-    }
-
-    fn get_prop(&self, id: WinId, name: &str) -> Result<Prop> {
-        self.mock_get_prop(id, name)
-    }
-
-    fn list_props(&self, id: WinId) -> Result<Vec<String>> {
-        self.mock_list_props(id)
-    }
-
-    fn intern_atom(&self, atom: &str) -> Result<u32> {
-        self.mock_intern_atom(atom)
-    }
-
-    fn cleanup(&self) {
-        self.mock_cleanup()
-    }
-}
-
-/// A dummy [XConn] implementation for testing
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MockXConn {
-    screens: Vec<Screen>,
-    #[cfg_attr(feature = "serde", serde(skip))]
-    events: Cell<Vec<XEvent>>,
-    focused: Cell<WinId>,
-    unmanaged_ids: Vec<WinId>,
-}
-
-impl fmt::Debug for MockXConn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MockXConn")
-            .field("screens", &self.screens)
-            .field("remaining_events", &self.remaining_events())
-            .field("focused", &self.focused.get())
-            .field("unmanaged_ids", &self.unmanaged_ids)
-            .finish()
-    }
-}
-
-impl MockXConn {
-    /// Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
-    pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> Self {
-        MockXConn {
-            screens,
-            events: Cell::new(events),
-            focused: Cell::new(0),
-            unmanaged_ids,
+    /// Check to see if this client is one that we should be handling or not
+    fn is_managed_client(&self, id: Xid) -> bool {
+        if self.get_prop(id, Atom::WmTransientFor.as_ref()).is_ok() {
+            false
+        } else if let Ok(Prop::Atom(atoms)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            atoms.iter().any(|atom| match Atom::from_str(atom) {
+                Ok(a) => !UNMANAGED_WINDOW_TYPES.contains(&a),
+                _ => false,
+            })
+        } else {
+            false
         }
     }
-    fn remaining_events(&self) -> Vec<XEvent> {
-        let remaining = self.events.replace(vec![]);
-        self.events.set(remaining.clone());
-        remaining
+}
+
+#[cfg(test)]
+pub use mock_conn::MockXConn;
+
+#[cfg(test)]
+mod mock_conn {
+    use super::*;
+    use crate::PenroseError;
+    use std::{cell::Cell, fmt};
+
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    pub struct MockXConn {
+        screens: Vec<Screen>,
+        #[cfg_attr(feature = "serde", serde(skip))]
+        events: Cell<Vec<XEvent>>,
+        focused: Cell<Xid>,
+        unmanaged_ids: Vec<Xid>,
+    }
+
+    impl fmt::Debug for MockXConn {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("MockXConn")
+                .field("screens", &self.screens)
+                .field("remaining_events", &self.remaining_events())
+                .field("focused", &self.focused.get())
+                .field("unmanaged_ids", &self.unmanaged_ids)
+                .finish()
+        }
+    }
+
+    impl MockXConn {
+        /// Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
+        pub fn new(screens: Vec<Screen>, events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> Self {
+            MockXConn {
+                screens,
+                events: Cell::new(events),
+                focused: Cell::new(0),
+                unmanaged_ids,
+            }
+        }
+
+        fn remaining_events(&self) -> Vec<XEvent> {
+            let remaining = self.events.replace(vec![]);
+            self.events.set(remaining.clone());
+            remaining
+        }
+    }
+
+    __impl_stub_xcon! {
+        for MockXConn;
+
+        client_properties: {
+            fn mock_get_prop(&self, _id: Xid, name: &str) -> Result<Prop> {
+                if name == Atom::WmName.as_ref() || name == Atom::NetWmName.as_ref() {
+                    Ok(Prop::UTF8String(vec!["mock name".into()]))
+                } else {
+                    Err(PenroseError::Raw("mocked".into()))
+                }
+            }
+        }
+        client_handler: {
+            fn mock_focus_client(&self, id: Xid) -> Result<()> {
+                self.focused.replace(id);
+                Ok(())
+            }
+        }
+        client_config: {}
+        event_handler: {
+            fn mock_wait_for_event(&self) -> Result<XEvent> {
+                let mut remaining = self.events.replace(vec![]);
+                if remaining.is_empty() {
+                    return Err(PenroseError::Raw("mock conn closed".into()));
+                }
+                let next = remaining.remove(0);
+                self.events.set(remaining);
+                Ok(next)
+            }
+        }
+        state: {
+            fn mock_current_screens(&self) -> Result<Vec<Screen>> {
+                Ok(self.screens.clone())
+            }
+
+            fn mock_focused_client(&self) -> Result<Xid> {
+                Ok(self.focused.get())
+            }
+        }
+        conn: {
+            fn mock_is_managed_client(&self, id: Xid) -> bool {
+                !self.unmanaged_ids.contains(&id)
+            }
+        }
     }
 }
 
-impl StubXConn for MockXConn {
-    fn mock_wait_for_event(&self) -> Result<XEvent> {
-        let mut remaining = self.events.replace(vec![]);
-        if remaining.is_empty() {
-            return Err(PenroseError::Raw("mock conn closed".into()));
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct WmNameXConn {
+        wm_name: bool,
+        net_wm_name: bool,
+        empty_net_wm_name: bool,
+    }
+
+    impl StubXClientProperties for WmNameXConn {
+        fn mock_get_prop(&self, _: Xid, name: &str) -> Result<Prop> {
+            match Atom::from_str(name)? {
+                Atom::WmName if self.wm_name => Ok(Prop::UTF8String(vec!["wm_name".into()])),
+                Atom::WmName if self.net_wm_name && self.empty_net_wm_name => {
+                    Ok(Prop::UTF8String(vec!["".into()]))
+                }
+                Atom::NetWmName if self.net_wm_name => {
+                    Ok(Prop::UTF8String(vec!["net_wm_name".into()]))
+                }
+                Atom::NetWmName if self.empty_net_wm_name => Ok(Prop::UTF8String(vec!["".into()])),
+                _ => Err(PenroseError::Raw("".into())),
+            }
         }
-        let next = remaining.remove(0);
-        self.events.set(remaining);
-        Ok(next)
     }
 
-    fn mock_current_outputs(&self) -> Vec<Screen> {
-        self.screens.clone()
-    }
+    test_cases! {
+        window_name;
+        args: (wm_name: bool, net_wm_name: bool, empty_net_wm_name: bool, expected: &str);
 
-    fn mock_focused_client(&self) -> WinId {
-        self.focused.get()
-    }
+        case: wm_name_only => (true, false, false, "wm_name");
+        case: net_wm_name_only => (false, true, false, "net_wm_name");
+        case: both_prefers_net => (true, true, false, "net_wm_name");
+        case: net_wm_name_empty => (true, false, true, "wm_name");
 
-    fn mock_focus_client(&self, id: WinId) {
-        self.focused.replace(id);
-    }
-
-    fn mock_is_managed_window(&self, id: WinId) -> bool {
-        !self.unmanaged_ids.contains(&id)
+        body: {
+            let conn = WmNameXConn {
+                wm_name,
+                net_wm_name,
+                empty_net_wm_name,
+            };
+            assert_eq!(&conn.client_name(42).unwrap(), expected);
+        }
     }
 }

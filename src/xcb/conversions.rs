@@ -1,7 +1,9 @@
 //! Conversions to Penrose types from XCB types
 use crate::{
-    core::bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
-    core::data_types::{WinAttr, WinConfig},
+    core::{
+        bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
+        xconnection::{ClientAttr, ClientConfig},
+    },
     xcb::{Result, XcbError, XcbGenericEvent},
 };
 
@@ -172,11 +174,11 @@ fn data_from_event(
     })
 }
 
-impl From<&WinConfig> for Vec<(u16, u32)> {
-    fn from(w: &WinConfig) -> Vec<(u16, u32)> {
+impl From<&ClientConfig> for Vec<(u16, u32)> {
+    fn from(w: &ClientConfig) -> Vec<(u16, u32)> {
         match w {
-            WinConfig::BorderPx(px) => vec![(xcb::CONFIG_WINDOW_BORDER_WIDTH as u16, *px)],
-            WinConfig::Position(region) => {
+            ClientConfig::BorderPx(px) => vec![(xcb::CONFIG_WINDOW_BORDER_WIDTH as u16, *px)],
+            ClientConfig::Position(region) => {
                 let (x, y, w, h) = region.values();
                 vec![
                     (xcb::CONFIG_WINDOW_X as u16, x),
@@ -185,15 +187,15 @@ impl From<&WinConfig> for Vec<(u16, u32)> {
                     (xcb::CONFIG_WINDOW_HEIGHT as u16, h),
                 ]
             }
-            WinConfig::StackAbove => {
+            ClientConfig::StackAbove => {
                 vec![(xcb::CONFIG_WINDOW_STACK_MODE as u16, xcb::STACK_MODE_ABOVE)]
             }
         }
     }
 }
 
-impl From<&WinAttr> for Vec<(u32, u32)> {
-    fn from(w: &WinAttr) -> Vec<(u32, u32)> {
+impl From<&ClientAttr> for Vec<(u32, u32)> {
+    fn from(w: &ClientAttr) -> Vec<(u32, u32)> {
         let client_event_mask = xcb::EVENT_MASK_ENTER_WINDOW
             | xcb::EVENT_MASK_LEAVE_WINDOW
             | xcb::EVENT_MASK_PROPERTY_CHANGE
@@ -205,9 +207,9 @@ impl From<&WinAttr> for Vec<(u32, u32)> {
             | xcb::EVENT_MASK_BUTTON_MOTION;
 
         match w {
-            WinAttr::BorderColor(c) => vec![(xcb::CW_BORDER_PIXEL, *c)],
-            WinAttr::ClientEventMask => vec![(xcb::CW_EVENT_MASK, client_event_mask)],
-            WinAttr::RootEventMask => vec![(xcb::CW_EVENT_MASK, root_event_mask)],
+            ClientAttr::BorderColor(c) => vec![(xcb::CW_BORDER_PIXEL, *c)],
+            ClientAttr::ClientEventMask => vec![(xcb::CW_EVENT_MASK, client_event_mask)],
+            ClientAttr::RootEventMask => vec![(xcb::CW_EVENT_MASK, root_event_mask)],
         }
     }
 }

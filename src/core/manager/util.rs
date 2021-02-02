@@ -5,13 +5,16 @@ use crate::{
         layout::LayoutConf,
         screen::Screen,
         workspace::{ArrangeActions, Workspace},
-        xconnection::{Atom, Prop, XConn},
+        xconnection::{Atom, Prop, XClientConfig, XClientHandler, XClientProperties, XState},
     },
     Result,
 };
 
 #[cfg(feature = "serde")]
-use crate::{core::manager::WindowManager, PenroseError};
+use crate::{
+    core::{manager::WindowManager, xconnection::XConn},
+    PenroseError,
+};
 
 use std::collections::HashMap;
 
@@ -28,27 +31,12 @@ pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px:
     Region::new(x + gpx, y + gpx, w - padding, h - padding)
 }
 
-pub(super) fn map_window_if_needed<X: XConn>(conn: &X, win: Option<&mut Client>) {
-    if let Some(c) = win {
-        if !c.mapped {
-            c.mapped = true;
-            conn.map_window(c.id());
-        }
-    }
-}
-
-pub(super) fn unmap_window_if_needed<X: XConn>(conn: &X, win: Option<&mut Client>) {
-    if let Some(c) = win {
-        if c.mapped {
-            c.mapped = false;
-            conn.unmap_window(c.id());
-        }
-    }
-}
-
-pub(super) fn client_str_props<X: XConn>(conn: &X, id: WinId) -> ClientProps {
+pub(super) fn client_str_props<X>(conn: &X, id: WinId) -> ClientProps
+where
+    X: XClientProperties,
+{
     ClientProps {
-        name: match window_name(conn, id) {
+        name: match conn.client_name(id) {
             Ok(s) => s,
             Err(_) => String::from("n/a"),
         },
@@ -63,13 +51,16 @@ pub(super) fn client_str_props<X: XConn>(conn: &X, id: WinId) -> ClientProps {
     }
 }
 
-pub(super) fn position_floating_client<X: XConn>(
+pub(super) fn position_floating_client<X>(
     conn: &X,
     id: WinId,
     screen_region: Region,
     border_px: u32,
-) -> Result<()> {
-    let default_position = conn.window_geometry(id)?;
+) -> Result<()>
+where
+    X: XClientConfig + XState,
+{
+    let default_position = conn.client_geometry(id)?;
     let (mut x, mut y, w, h) = default_position.values();
     let (sx, sy, _, _) = screen_region.values();
     x = if x < sx { sx } else { x };
@@ -80,29 +71,20 @@ pub(super) fn position_floating_client<X: XConn>(
         w - (2 * border_px),
         h - (2 * border_px),
     );
-    conn.position_window(id, reg, border_px, false);
 
-    Ok(())
+    conn.position_client(id, reg, border_px, false)
 }
 
-pub(super) fn window_name<X: XConn>(conn: &X, id: WinId) -> Result<String> {
-    match conn.get_prop(id, Atom::NetWmName.as_ref()) {
-        Ok(Prop::UTF8String(strs)) if !strs.is_empty() && strs[0].len() > 0 => Ok(strs[0].clone()),
-        _ => match conn.get_prop(id, Atom::WmName.as_ref()) {
-            Ok(Prop::UTF8String(strs)) if !strs.is_empty() => Ok(strs[0].clone()),
-            Err(e) => Err(e),
-            _ => Ok(String::new()),
-        },
-    }
-}
-
-pub(super) fn get_screens<X: XConn>(
+pub(super) fn get_screens<X>(
     conn: &X,
     mut visible_workspaces: Vec<usize>,
     n_workspaces: usize,
     bar_height: u32,
     top_bar: bool,
-) -> Vec<Screen> {
+) -> Result<Vec<Screen>>
+where
+    X: XState,
+{
     // Keeping the currently displayed workspaces on the active screens if possible and then
     // filling in with remaining workspaces in ascending order
     visible_workspaces.append(
@@ -111,7 +93,8 @@ pub(super) fn get_screens<X: XConn>(
             .collect(),
     );
     debug!("Current workspace ordering: {:?}", visible_workspaces);
-    conn.current_outputs()
+    Ok(conn
+        .current_screens()?
         .into_iter()
         .zip(visible_workspaces)
         .map(|(mut s, wix)| {
@@ -121,82 +104,93 @@ pub(super) fn get_screens<X: XConn>(
             info!("Detected Screen: {:?}", s);
             s
         })
-        .collect()
+        .collect())
 }
 
-pub(super) fn toggle_fullscreen<X: XConn>(
+pub(super) fn toggle_fullscreen<X>(
     conn: &X,
     id: WinId,
     client_map: &mut HashMap<WinId, Client>,
     workspace: &mut Workspace,
     screen_size: Region,
-) -> bool {
+) -> Result<bool>
+where
+    X: XClientHandler + XClientProperties + XClientConfig,
+{
     if !client_map.contains_key(&id) {
         warn!("unable to make unknown client fullscreen: {}", id);
-        return false;
+        return Ok(false);
     }
     let client_currently_fullscreen = client_map.get(&id).map(|c| c.fullscreen).unwrap();
-    conn.toggle_client_fullscreen(id, client_currently_fullscreen);
+    conn.toggle_client_fullscreen(id, client_currently_fullscreen)?;
 
-    workspace.client_ids().iter_mut().for_each(|&mut i| {
+    for i in workspace.client_ids().into_iter() {
         if client_currently_fullscreen {
             if i == id {
                 client_map.entry(id).and_modify(|c| c.fullscreen = false);
             } else {
-                map_window_if_needed(conn, client_map.get_mut(&i));
+                conn.map_client_if_needed(client_map.get_mut(&i))?;
             }
         // client was not fullscreen
         } else if i == id {
-            conn.position_window(id, screen_size, 0, false);
-            client_map.entry(id).and_modify(|c| {
-                map_window_if_needed(conn, Some(c));
+            conn.position_client(id, screen_size, 0, false)?;
+            if let Some(c) = client_map.get_mut(&id) {
+                conn.map_client_if_needed(Some(c))?;
                 c.fullscreen = true;
-            });
+            }
         } else {
-            unmap_window_if_needed(conn, client_map.get_mut(&i));
+            conn.unmap_client_if_needed(client_map.get_mut(&i))?;
         }
-    });
+    }
 
     // need to apply layout if true as we just came back from being fullscreen and
     // there are newly mapped windows that need to be laid out
-    client_currently_fullscreen
+    Ok(client_currently_fullscreen)
 }
 
-pub(super) fn apply_arrange_actions<X: XConn>(
+pub(super) fn apply_arrange_actions<X>(
     conn: &X,
     actions: ArrangeActions,
     lc: &LayoutConf,
     client_map: &mut HashMap<WinId, Client>,
     border_px: u32,
     gap_px: u32,
-) {
+) -> Result<()>
+where
+    X: XClientHandler + XClientConfig,
+{
     // Tile first then place floating clients on top
     for (id, region) in actions.actions {
         let possible_client = client_map.get_mut(&id);
         debug!("configuring {} with {:?}", id, region);
         if let Some(region) = region {
             let reg = pad_region(&region, lc.gapless, gap_px, border_px);
-            conn.position_window(id, reg, border_px, false);
-            map_window_if_needed(conn, possible_client);
+            conn.position_client(id, reg, border_px, false)?;
+            conn.map_client_if_needed(possible_client)?;
         } else {
-            unmap_window_if_needed(conn, possible_client);
+            conn.unmap_client_if_needed(possible_client)?;
         }
     }
 
     for id in actions.floating {
-        conn.raise_window(id);
+        conn.raise_client(id)?;
     }
+
+    Ok(())
 }
 
 #[cfg(feature = "serde")]
-pub(super) fn validate_hydrated_wm_state<X: XConn>(wm: &mut WindowManager<X>) -> Result<()> {
+pub(super) fn validate_hydrated_wm_state<X>(wm: &mut WindowManager<X>) -> Result<()>
+where
+    X: XConn,
+{
     // If the current clients known to the X server aren't what we have in the client_map
     // then we can't proceed any further
-    let active_windows = wm.conn.query_for_active_windows();
+    let active_clients = wm.conn.active_clients()?;
     let mut missing_ids: Vec<WinId> = wm
         .client_map
         .keys()
-        .filter(|id| !active_windows.contains(id))
+        .filter(|id| !active_clients.contains(id))
         .cloned()
         .collect();
 
@@ -227,7 +221,10 @@ pub(super) fn validate_hydrated_wm_state<X: XConn>(wm: &mut WindowManager<X>) ->
     Ok(())
 }
 
-pub(super) fn parse_existing_client<X: XConn>(conn: &X, id: WinId) -> Result<Client> {
+pub(super) fn parse_existing_client<X>(conn: &X, id: WinId) -> Result<Client>
+where
+    X: XClientProperties,
+{
     let props = client_str_props(conn, id);
     let wix = match conn.get_prop(id, Atom::NetWmDesktop.as_ref()) {
         Ok(Prop::Cardinal(wix)) => wix,
@@ -246,17 +243,14 @@ pub(super) fn parse_existing_client<X: XConn>(conn: &X, id: WinId) -> Result<Cli
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        core::{
-            layout::{mock_layout, Layout, LayoutConf},
-            ring::InsertPoint,
-            workspace::Workspace,
-            xconnection::StubXConn,
-        },
-        PenroseError,
+    use crate::core::{
+        layout::{mock_layout, Layout, LayoutConf},
+        ring::InsertPoint,
+        workspace::Workspace,
+        xconnection::{StubXClientConfig, StubXClientHandler, StubXClientProperties, StubXState},
     };
 
-    use std::{cell::Cell, collections::HashMap, str::FromStr};
+    use std::{cell::Cell, collections::HashMap};
 
     #[test]
     fn pad_region_centered() {
@@ -267,50 +261,11 @@ mod tests {
         assert_eq!(pad_region(&r, true, g, b), Region::new(0, 0, 194, 94));
     }
 
-    struct WmNameXConn {
-        wm_name: bool,
-        net_wm_name: bool,
-        empty_net_wm_name: bool,
-    }
-    impl StubXConn for WmNameXConn {
-        fn mock_get_prop(&self, _: WinId, name: &str) -> Result<Prop> {
-            match Atom::from_str(name)? {
-                Atom::WmName if self.wm_name => Ok(Prop::UTF8String(vec!["wm_name".into()])),
-                Atom::WmName if self.net_wm_name && self.empty_net_wm_name => {
-                    Ok(Prop::UTF8String(vec!["".into()]))
-                }
-                Atom::NetWmName if self.net_wm_name => {
-                    Ok(Prop::UTF8String(vec!["net_wm_name".into()]))
-                }
-                Atom::NetWmName if self.empty_net_wm_name => Ok(Prop::UTF8String(vec!["".into()])),
-                _ => Err(PenroseError::Raw("".into())),
-            }
-        }
-    }
-
-    test_cases! {
-        window_name;
-        args: (wm_name: bool, net_wm_name: bool, empty_net_wm_name: bool, expected: &str);
-
-        case: wm_name_only => (true, false, false, "wm_name");
-        case: net_wm_name_only => (false, true, false, "net_wm_name");
-        case: both_prefers_net => (true, true, false, "net_wm_name");
-        case: net_wm_name_empty => (true, false, true, "wm_name");
-
-        body: {
-            let conn = WmNameXConn {
-                wm_name,
-                net_wm_name,
-                empty_net_wm_name,
-            };
-            assert_eq!(&window_name(&conn, 42).unwrap(), expected);
-        }
-    }
-
     struct OutputsXConn(Vec<Screen>);
-    impl StubXConn for OutputsXConn {
-        fn mock_current_outputs(&self) -> Vec<Screen> {
-            self.0.clone()
+
+    impl StubXState for OutputsXConn {
+        fn mock_current_screens(&self) -> Result<Vec<Screen>> {
+            Ok(self.0.clone())
         }
     }
 
@@ -345,7 +300,7 @@ mod tests {
             let (bar_height, top_bar) = (10, true);
             let screens = test_screens(bar_height, top_bar);
             let conn = OutputsXConn(screens);
-            let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar);
+            let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar).unwrap();
             let focused: Vec<usize> = new.iter().map(|s| s.wix).collect();
 
             assert_eq!(focused, expected);
@@ -368,23 +323,30 @@ mod tests {
         }
     }
 
-    impl StubXConn for RecordingXConn {
-        fn mock_position_window(&self, id: WinId, r: Region, _: u32, _: bool) {
-            let mut v = self.positions.take();
-            v.push((id, r));
-            self.positions.set(v);
-        }
+    impl StubXClientProperties for RecordingXConn {}
 
-        fn mock_map_window(&self, id: WinId) {
+    impl StubXClientHandler for RecordingXConn {
+        fn mock_map_client(&self, id: WinId) -> Result<()> {
             let mut v = self.maps.take();
             v.push(id);
             self.maps.set(v);
+            Ok(())
         }
 
-        fn mock_unmap_window(&self, id: WinId) {
+        fn mock_unmap_client(&self, id: WinId) -> Result<()> {
             let mut v = self.unmaps.take();
             v.push(id);
             self.unmaps.set(v);
+            Ok(())
+        }
+    }
+
+    impl StubXClientConfig for RecordingXConn {
+        fn mock_position_client(&self, id: WinId, r: Region, _: u32, _: bool) -> Result<()> {
+            let mut v = self.positions.take();
+            v.push((id, r));
+            self.positions.set(v);
+            Ok(())
         }
     }
 
@@ -435,7 +397,7 @@ mod tests {
 
             let need_layout = toggle_fullscreen(&conn, target, &mut client_map, &mut ws, r);
 
-            assert_eq!(need_layout, expected_need_layout);
+            assert_eq!(need_layout.unwrap(), expected_need_layout);
             assert_eq!(conn.positions.take(), expected_positions);
             assert_eq!(conn.maps.take(), expected_maps);
             assert_eq!(conn.unmaps.take(), expected_unmaps);

@@ -9,13 +9,12 @@ extern crate serde;
 use penrose::{
     core::{
         config::Config,
-        data_types::WinId,
         layout::{floating, side_stack, LayoutFunc},
         manager::WindowManager,
         screen::Screen,
-        xconnection::{StubXConn, XEvent},
+        xconnection::{Atom, Prop, XEvent, Xid},
     },
-    logging_error_handler, PenroseError,
+    logging_error_handler, PenroseError, Result,
 };
 
 use std::{cell::Cell, collections::HashMap};
@@ -38,26 +37,47 @@ impl EarlyExitConn {
     }
 }
 
-impl StubXConn for EarlyExitConn {
-    fn mock_current_outputs(&self) -> Vec<Screen> {
-        vec![common::simple_screen(0), common::simple_screen(1)]
-    }
+__impl_stub_xcon! {
+    for EarlyExitConn;
 
-    fn mock_wait_for_event(&self) -> penrose::Result<XEvent> {
-        let mut remaining = self.events.replace(vec![]);
-        if remaining.is_empty() {
-            return Ok(XEvent::KeyPress(common::EXIT_CODE));
+    client_properties: {
+        fn mock_get_prop(&self, _id: Xid, name: &str) -> Result<Prop> {
+            if name == Atom::NetWmName.as_ref() {
+                Ok(Prop::UTF8String(vec!["mock name".into()]))
+            } else {
+                Err(PenroseError::Raw("mocked".into()))
+            }
         }
-        let next = remaining.remove(0);
-        self.events.set(remaining);
-        Ok(next)
     }
+    client_handler: {}
+    client_config: {}
+    event_handler: {
+        fn mock_wait_for_event(&self) -> penrose::Result<XEvent> {
+            let mut remaining = self.events.replace(vec![]);
+            if remaining.is_empty() {
+                return Ok(XEvent::KeyPress(common::EXIT_CODE));
+            }
+            let next = remaining.remove(0);
+            self.events.set(remaining);
+            Ok(next)
+        }
+    }
+    state: {
+        fn mock_current_screens(&self) -> Result<Vec<Screen>> {
+            Ok(vec![common::simple_screen(0), common::simple_screen(1)])
+        }
 
-    fn mock_query_for_active_windows(&self) -> Vec<WinId> {
-        if self.valid_clients {
-            vec![1, 2, 3]
-        } else {
-            vec![]
+        fn mock_active_clients(&self) -> Result<Vec<Xid>> {
+            Ok(if self.valid_clients {
+                vec![1, 2, 3]
+            } else {
+                vec![]
+            })
+        }
+    }
+    conn: {
+        fn mock_is_managed_client(&self, _id: Xid) -> bool {
+            true
         }
     }
 }
@@ -115,7 +135,7 @@ fn serde_windowmanager_can_be_serialized() {
 fn serde_windowmanager_can_be_deserialized() {
     let wm = get_seeded_wm(true);
     let as_json = serde_json::to_string(&wm).unwrap();
-    let unchecked_wm: Result<WindowManager<EarlyExitConn>, serde_json::Error> =
+    let unchecked_wm: std::result::Result<WindowManager<EarlyExitConn>, serde_json::Error> =
         serde_json::from_str(&as_json);
     assert!(unchecked_wm.is_ok());
 }
