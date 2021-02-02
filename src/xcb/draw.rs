@@ -7,8 +7,8 @@
  */
 use crate::{
     core::{
-        data_types::{PropVal, Region, WinId, WinType},
-        xconnection::Atom,
+        data_types::{Region, WinType},
+        xconnection::{Prop, Xid},
     },
     draw::{Color, Draw, DrawContext, DrawError, Result},
     xcb::{Api, XcbError},
@@ -30,7 +30,7 @@ fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
 pub struct XcbDraw {
     api: Api,
     fonts: HashMap<String, pango::FontDescription>,
-    surfaces: HashMap<WinId, cairo::XCBSurface>,
+    surfaces: HashMap<Xid, cairo::XCBSurface>,
 }
 
 impl XcbDraw {
@@ -63,7 +63,7 @@ impl XcbDraw {
 impl Draw for XcbDraw {
     type Ctx = XcbDrawContext;
 
-    fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<WinId> {
+    fn new_window(&mut self, ty: WinType, r: Region, managed: bool) -> Result<Xid> {
         let (_, _, w, h) = r.values();
         let id = self.api.create_window(ty, r, managed)?;
         let xcb_screen = self.api.screen(0)?;
@@ -102,7 +102,7 @@ impl Draw for XcbDraw {
         );
     }
 
-    fn context_for(&self, id: WinId) -> Result<Self::Ctx> {
+    fn context_for(&self, id: Xid) -> Result<Self::Ctx> {
         let ctx = cairo::Context::new(
             self.surfaces
                 .get(&id)
@@ -146,29 +146,31 @@ impl Draw for XcbDraw {
         })
     }
 
-    fn flush(&self, id: WinId) {
+    fn flush(&self, id: Xid) -> Result<()> {
         if let Some(s) = self.surfaces.get(&id) {
             s.flush()
         };
-        self.map_window(id);
+        self.map_client(id)?;
         self.api.flush();
+        Ok(())
     }
 
-    fn map_window(&self, id: WinId) {
-        self.api.map_window(id);
+    fn map_client(&self, id: Xid) -> Result<()> {
+        Ok(self.api.map_client(id)?)
     }
 
-    fn unmap_window(&self, id: WinId) {
-        self.api.unmap_window(id);
+    fn unmap_client(&self, id: Xid) -> Result<()> {
+        Ok(self.api.unmap_client(id)?)
     }
 
-    fn destroy_window(&mut self, id: WinId) {
-        self.api.destroy_window(id);
+    fn destroy_client(&mut self, id: Xid) -> Result<()> {
+        self.api.destroy_client(id)?;
         self.surfaces.remove(&id);
+        Ok(())
     }
 
-    fn replace_prop(&self, id: WinId, prop: Atom, val: PropVal<'_>) {
-        self.api.replace_prop(id, prop, val);
+    fn change_prop(&self, id: Xid, name: &str, val: Prop) -> Result<()> {
+        Ok(self.api.change_prop(id, name, val)?)
     }
 }
 

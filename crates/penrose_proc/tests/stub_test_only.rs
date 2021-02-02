@@ -16,6 +16,7 @@ trait Foo {
 
 #[stubbed_companion_trait(test_only = "true", prefix = "Custom")]
 trait Bar: Foo {
+    /// the animal method should have this comment
     #[stub(Some(Animal::Cat))]
     fn animal(&self, name: &str) -> Option<Animal>;
 

@@ -16,10 +16,9 @@ pub use crate::{
         ring::{InsertPoint, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{StubXConn, XConn, XEvent},
+        xconnection::{XConn, XEvent, Xid},
     },
-    logging_error_handler, Backward, Forward, Less, More, PenroseError, Result, WinId,
-    WindowManager,
+    logging_error_handler, Backward, Forward, Less, More, PenroseError, Result, WindowManager,
 };
 
 pub use std::{cell::Cell, collections::HashMap, fmt};
@@ -72,7 +71,7 @@ pub fn example_layouts() -> Vec<Layout> {
 
 pub fn row_layout(
     clients: &[&Client],
-    _focused: Option<WinId>,
+    _focused: Option<Xid>,
     monitor_region: &Region,
     _max_main: u32,
     _ratio: f32,
@@ -120,9 +119,9 @@ pub fn example_mouse_bindings() -> ExampleMouseBindings {
 pub struct ExampleXConn {
     #[cfg_attr(feature = "serde", serde(skip))]
     events: Cell<Vec<XEvent>>,
-    focused: Cell<WinId>,
+    focused: Cell<Xid>,
     n_screens: Cell<u32>,
-    unmanaged_ids: Vec<WinId>,
+    unmanaged_ids: Vec<Xid>,
 }
 
 impl fmt::Debug for ExampleXConn {
@@ -138,7 +137,7 @@ impl fmt::Debug for ExampleXConn {
 
 impl ExampleXConn {
     /// Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
-    pub fn new(n_screens: u32, events: Vec<XEvent>, unmanaged_ids: Vec<WinId>) -> Self {
+    pub fn new(n_screens: u32, events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> Self {
         Self {
             events: Cell::new(events),
             focused: Cell::new(0),
@@ -162,33 +161,43 @@ impl ExampleXConn {
     }
 }
 
-impl StubXConn for ExampleXConn {
-    fn mock_wait_for_event(&self) -> Result<XEvent> {
-        let mut remaining = self.events.replace(vec![]);
-        if remaining.is_empty() {
-            return Ok(XEvent::KeyPress(EXIT_CODE));
+__impl_stub_xcon! {
+    for ExampleXConn;
+
+    client_properties: {}
+    client_handler: {
+        fn mock_focus_client(&self, id: Xid) -> Result<()> {
+            self.focused.replace(id);
+            Ok(())
         }
-        let next = remaining.remove(0);
-        self.events.set(remaining);
-        Ok(next)
     }
-
-    fn mock_current_outputs(&self) -> Vec<Screen> {
-        let num_screens = self.n_screens.get();
-        (0..(num_screens))
-            .map(|n| Screen::new(Region::new(800 * n, 600 * n, 800, 600), n as usize))
-            .collect()
+    client_config: {}
+    event_handler: {
+        fn mock_wait_for_event(&self) -> Result<XEvent> {
+            let mut remaining = self.events.replace(vec![]);
+            if remaining.is_empty() {
+                return Ok(XEvent::KeyPress(EXIT_CODE));
+            }
+            let next = remaining.remove(0);
+            self.events.set(remaining);
+            Ok(next)
+        }
     }
+    state: {
+        fn mock_current_screens(&self) -> Result<Vec<Screen>> {
+            let num_screens = self.n_screens.get();
+            Ok((0..(num_screens))
+                .map(|n| Screen::new(Region::new(800 * n, 600 * n, 800, 600), n as usize))
+                .collect())
+        }
 
-    fn mock_focused_client(&self) -> WinId {
-        self.focused.get()
+        fn mock_focused_client(&self) -> Result<Xid> {
+            Ok(self.focused.get())
+        }
     }
-
-    fn mock_focus_client(&self, id: WinId) {
-        self.focused.replace(id);
-    }
-
-    fn mock_is_managed_window(&self, id: WinId) -> bool {
-        !self.unmanaged_ids.contains(&id)
+    conn: {
+        fn mock_is_managed_client(&self, id: Xid) -> bool {
+            !self.unmanaged_ids.contains(&id)
+        }
     }
 }

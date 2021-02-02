@@ -1,13 +1,16 @@
 //! Data types for working with X window properties
 use crate::{
-    core::data_types::{Point, Region, WinId},
+    core::{
+        data_types::{Point, Region, WinId},
+        xconnection::Xid,
+    },
     PenroseError, Result,
 };
 
 /// Know property types that should be returnable by XConn impls when they check
 /// window properties.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Prop {
     /// One or more X Atoms
     Atom(Vec<String>),
@@ -17,8 +20,8 @@ pub enum Prop {
     Cardinal(u32),
     /// UTF-8 encoded string data
     UTF8String(Vec<String>),
-    /// An X window ID
-    Window(WinId),
+    /// An X window IDs
+    Window(Vec<Xid>),
     /// The WmHints properties for this window
     WmHints(WmHints),
     /// The WmNormalHints properties for this window
@@ -80,7 +83,7 @@ bitflags! {
 
 /// The display states that a window can be in.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum WindowState {
     /// Window is not visible
     Withdrawn,
@@ -96,7 +99,7 @@ pub enum WindowState {
 ///
 /// [1]: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#wm_hints_property
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct WmHints {
     flags: WmHintsFlags,
     accepts_input: bool,
@@ -196,7 +199,7 @@ impl WmHints {
 /// [1]: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#wm_normal_hints_property
 /// [2]: https://tronche.com/gui/x/xlib/ICC/client-to-window-manager/wm-normal-hints.html
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct WmNormalHints {
     flags: WmNormalHintsFlags,
     base: Option<Region>,

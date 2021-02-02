@@ -98,7 +98,7 @@ fn simple_draw() -> Result<()> {
     ctx.translate((offset + 5.0) as f64, 0.0);
     ctx.text("Look at all the colors!", 0.0, (0.0, 0.0))?;
 
-    drw.flush(id);
+    drw.flush(id)?;
     thread::sleep(time::Duration::from_millis(5000));
     Ok(())
 }

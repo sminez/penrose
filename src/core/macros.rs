@@ -363,6 +363,38 @@ macro_rules! __with_builder_and_getters {
     }
 }
 
+// __impl_stub_xcon! {
+//     for Foo;
+
+//     client_properties: {}
+//     client_handler: {}
+//     client_config: {}
+//     event_handler: {}
+//     state: {}
+//     conn: {}
+// }
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __impl_stub_xcon {
+    {
+        for $struct:ident;
+
+        client_properties: { $($cprops:tt)* }
+        client_handler: { $($chandler:tt)* }
+        client_config: { $($cconfig:tt)* }
+        event_handler: { $($ehandler:tt)* }
+        state: { $($state:tt)* }
+        conn: { $($conn:tt)* }
+    } => {
+        impl $crate::core::xconnection::StubXClientProperties for $struct { $($cprops)* }
+        impl $crate::core::xconnection::StubXClientHandler for $struct { $($chandler)* }
+        impl $crate::core::xconnection::StubXClientConfig for $struct { $($cconfig)* }
+        impl $crate::core::xconnection::StubXEventHandler for $struct { $($ehandler)* }
+        impl $crate::core::xconnection::StubXState for $struct { $($state)* }
+        impl $crate::core::xconnection::StubXConn for $struct { $($conn)* }
+    }
+}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! test_cases {

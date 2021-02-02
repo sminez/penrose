@@ -10,9 +10,10 @@
 use crate::{
     core::{
         client::Client,
-        data_types::{Change, Region, ResizeAction, WinId},
+        data_types::{Change, Region, ResizeAction},
         layout::{Layout, LayoutConf},
         ring::{Direction, InsertPoint, Ring, Selector},
+        xconnection::Xid,
     },
     PenroseError, Result,
 };
@@ -24,7 +25,7 @@ use std::collections::HashMap;
 
 pub(crate) struct ArrangeActions {
     pub(crate) actions: Vec<ResizeAction>,
-    pub(crate) floating: Vec<WinId>,
+    pub(crate) floating: Vec<Xid>,
 }
 
 /// A Workspace represents a named set of clients that are tiled according
@@ -39,7 +40,7 @@ pub(crate) struct ArrangeActions {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Workspace {
     name: String,
-    clients: Ring<WinId>,
+    clients: Ring<Xid>,
     layouts: Ring<Layout>,
 }
 
@@ -106,14 +107,14 @@ impl Workspace {
     /// ```
     /// # use penrose::__example_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
-    /// let ids: Vec<WinId> = workspace.iter().map(|id| *id).collect();
+    /// let ids: Vec<Xid> = workspace.iter().map(|id| *id).collect();
     ///
     /// assert_eq!(ids, vec![0, 1, 2, 3, 4]);
     /// # Ok(())
     /// # }
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
-    pub fn iter(&self) -> std::collections::vec_deque::Iter<'_, WinId> {
+    pub fn iter(&self) -> std::collections::vec_deque::Iter<'_, Xid> {
         self.clients.iter()
     }
 
@@ -129,7 +130,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
-    pub fn client_ids(&self) -> Vec<WinId> {
+    pub fn client_ids(&self) -> Vec<Xid> {
         self.clients.as_vec()
     }
 
@@ -148,7 +149,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
-    pub fn focused_client(&self) -> Option<WinId> {
+    pub fn focused_client(&self) -> Option<Xid> {
         self.clients.focused().copied()
     }
 
@@ -170,7 +171,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 1)).unwrap();
     /// ```
-    pub fn add_client(&mut self, id: WinId, ip: &InsertPoint) -> Result<()> {
+    pub fn add_client(&mut self, id: Xid, ip: &InsertPoint) -> Result<()> {
         let existing = self.clients.element(&Selector::Condition(&|c| *c == id));
         if existing.is_some() {
             return Err(PenroseError::Raw(format!(
@@ -199,7 +200,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
-    pub fn focus_client(&mut self, id: WinId) -> Option<WinId> {
+    pub fn focus_client(&mut self, id: Xid) -> Option<Xid> {
         let prev = match self.clients.focused() {
             Some(c) => Some(*c),
             None => None,
@@ -228,7 +229,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
-    pub fn remove_client(&mut self, id: WinId) -> Option<WinId> {
+    pub fn remove_client(&mut self, id: Xid) -> Option<Xid> {
         self.clients.remove(&Selector::Condition(&|c| *c == id))
     }
 
@@ -251,7 +252,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 2)).unwrap();
     /// ```
-    pub fn remove_focused_client(&mut self) -> Option<WinId> {
+    pub fn remove_focused_client(&mut self) -> Option<Xid> {
         self.clients.remove(&Selector::Focused)
     }
 
@@ -260,7 +261,7 @@ impl Workspace {
     pub(crate) fn arrange(
         &self,
         screen_region: Region,
-        client_map: &HashMap<WinId, Client>,
+        client_map: &HashMap<Xid, Client>,
     ) -> ArrangeActions {
         if self.clients.len() > 0 {
             let layout = self.layouts.focused_unchecked();
@@ -383,7 +384,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 3)).unwrap();
     /// ```
-    pub fn cycle_client(&mut self, direction: Direction) -> Option<(WinId, WinId)> {
+    pub fn cycle_client(&mut self, direction: Direction) -> Option<(Xid, Xid)> {
         if self.clients.len() < 2 {
             return None; // need at least two clients to cycle
         }
@@ -418,7 +419,7 @@ impl Workspace {
     /// # }
     /// # example(example_workspace("example", 3)).unwrap();
     /// ```
-    pub fn drag_client(&mut self, direction: Direction) -> Option<WinId> {
+    pub fn drag_client(&mut self, direction: Direction) -> Option<Xid> {
         if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
             return None;
         }
@@ -524,7 +525,7 @@ mod tests {
     fn adding_a_client() {
         let mut ws = Workspace::new("test", test_layouts());
         add_n_clients(&mut ws, 3);
-        let ids: Vec<WinId> = ws.clients.iter().copied().collect();
+        let ids: Vec<Xid> = ws.clients.iter().copied().collect();
         assert_eq!(ids, vec![30, 20, 10], "not pushing at the top of the stack")
     }
 
