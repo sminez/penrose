@@ -120,12 +120,7 @@ impl XState for XcbConnection {
     }
 
     fn active_clients(&self) -> Result<Vec<Xid>> {
-        Ok(self
-            .api
-            .current_clients()?
-            .into_iter()
-            .filter(|&id| self.is_managed_client(id))
-            .collect())
+        Ok(self.api.current_clients()?)
     }
 
     fn focused_client(&self) -> Result<Xid> {
