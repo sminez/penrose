@@ -10,21 +10,6 @@ pub type ResizeAction = (Xid, Option<Region>);
 /// An X window ID
 pub type WinId = u32;
 
-/// A client propert value that can be set.
-///
-/// Variants correspond to the X property types being set.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum PropVal<'a> {
-    /// A slice of interned [Atom] values
-    Atom(&'a [u32]),
-    /// A slice of cardinal u32s
-    Cardinal(&'a [u32]),
-    /// A string valued property
-    Str(&'a str),
-    /// One or more [Xid] values
-    Window(&'a [Xid]),
-}
-
 /// A window type to be specified when creating a new window in the X server
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -36,30 +21,6 @@ pub enum WinType {
     /// A regular window. The [Atom] passed should be a
     /// valid _NET_WM_WINDOW_TYPE (this is not enforced)
     InputOutput(Atom),
-}
-
-/// Config options for X windows (not all are currently implemented)
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum WinConfig {
-    /// The border width in pixels
-    BorderPx(u32),
-    /// Absolute size and position on the screen as a [Region]
-    Position(Region),
-    /// Mark this window as stacking on top of its peers
-    StackAbove,
-}
-
-/// Window attributes for an X11 client window (not all are curently implemented)
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum WinAttr {
-    /// Border color as an argb hex value
-    BorderColor(u32),
-    /// Set the pre-defined client event mask
-    ClientEventMask,
-    /// Set the pre-defined root event mask
-    RootEventMask,
 }
 
 /// A relative position along the horizontal and vertical axes
