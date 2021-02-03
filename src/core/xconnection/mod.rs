@@ -71,7 +71,7 @@ pub enum KeyPressParseAttempt {
 }
 
 /// State queries against the running X server
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XState {
     /// The root window ID
     #[stub(42)]
@@ -108,7 +108,7 @@ pub trait XState {
 }
 
 /// Sending and receiving X events
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XEventHandler {
     /// Flush pending actions to the X event loop
     #[stub(true)]
@@ -124,7 +124,7 @@ pub trait XEventHandler {
 }
 
 /// Management of the visibility and lifecycle of X clients
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XClientHandler {
     /// Map a client to the display.
     #[stub(Ok(()))]
@@ -166,7 +166,7 @@ pub trait XClientHandler {
 }
 
 /// Querying and updating properties on X clients
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XClientProperties {
     /// Return the list of all properties set on the given client window
     ///
@@ -226,7 +226,7 @@ pub trait XClientProperties {
 }
 
 /// Modifying X client config and attributes
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XClientConfig {
     /// Configure the on screen appearance of a client window
     #[stub(Ok(()))]
@@ -264,7 +264,7 @@ pub trait XClientConfig {
 }
 
 /// Keyboard input for created clients
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XKeyboardHandler {
     /// Attempt to grab control of all keyboard input
     #[stub(Ok(()))]
@@ -294,7 +294,7 @@ pub trait XKeyboardHandler {
 /// should be possible to write an implementation that allows penrose to run on systems not using X
 /// as the windowing system but X idioms and high level event types / client interations are
 /// assumed.
-#[stubbed_companion_trait]
+#[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XConn:
     XState + XEventHandler + XClientHandler + XClientProperties + XClientConfig + Sized
 {

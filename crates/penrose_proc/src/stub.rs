@@ -32,6 +32,7 @@ impl Parse for Args {
 enum ValidArg {
     Prefix(String),
     TestOnly(bool),
+    DocHidden(bool),
 }
 
 // Data is the set of method names to replace
@@ -142,6 +143,16 @@ fn parse_single_arg(nv: &MetaNameValue) -> Result<ValidArg, TokenStream> {
         }
     }
 
+    if nv.path.is_ident("doc_hidden") {
+        if let Lit::Str(ref s) = nv.lit {
+            let s = s.value();
+            match s.as_ref() {
+                "true" | "false" => return Ok(ValidArg::DocHidden(s == "true")),
+                _ => (),
+            }
+        }
+    }
+
     Err(TokenStream::from(
         Error::new_spanned(
             nv,
@@ -151,22 +162,24 @@ fn parse_single_arg(nv: &MetaNameValue) -> Result<ValidArg, TokenStream> {
     ))
 }
 
-fn parse_args_meta(meta: Vec<Meta>) -> Result<(String, bool), TokenStream> {
+fn parse_args_meta(meta: Vec<Meta>) -> Result<(String, bool, bool), TokenStream> {
     if meta.len() <= 2 {
         let mut prefix = DEFAULT_PREFIX.to_string();
         let mut test_only = false;
+        let mut doc_hidden = false;
 
         for m in meta.iter() {
             if let Meta::NameValue(ref nv) = m {
                 match parse_single_arg(nv)? {
                     ValidArg::Prefix(p) => prefix = p,
                     ValidArg::TestOnly(b) => test_only = b,
+                    ValidArg::DocHidden(b) => doc_hidden = b,
                 }
             } else {
                 break;
             }
         }
-        return Ok((prefix, test_only));
+        return Ok((prefix, test_only, doc_hidden));
     }
 
     Err(TokenStream::from(
@@ -245,8 +258,8 @@ fn generate_trait_methods(method_details: &[MethodDetails]) -> Vec<proc_macro2::
 }
 
 pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStream) -> TokenStream {
-    let (prefix, test_only) = if args.is_empty() {
-        (DEFAULT_PREFIX.to_string(), false)
+    let (prefix, test_only, doc_hidden) = if args.is_empty() {
+        (DEFAULT_PREFIX.to_string(), false, false)
     } else {
         match parse_args_meta(parse_macro_input!(args as Args).0) {
             Ok(pt) => pt,
@@ -279,10 +292,16 @@ pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStrea
     } else {
         proc_macro2::TokenStream::new()
     };
+    let doc_hidden_attr = if doc_hidden {
+        quote! { #[doc(hidden)] }
+    } else {
+        proc_macro2::TokenStream::new()
+    };
 
     TokenStream::from(quote! {
         #ast
 
+        #doc_hidden_attr
         #test_attr
         #(#attrs)*
         #visibility trait #stub_trait_name #colon #bounds {
