@@ -106,7 +106,7 @@ where
         data.iter()
             .map(|&a| state.conn.atom_name(a as u32))
             .flatten()
-            .any(|s| &s == Atom::NetWmStateFullscreen.as_ref())
+            .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
     };
 
     match Atom::from_str(&dtype) {

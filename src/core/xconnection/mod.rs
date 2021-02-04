@@ -15,7 +15,6 @@ use crate::{
         screen::Screen,
     },
     draw::Color,
-    PenroseError, Result,
 };
 
 use penrose_proc::stubbed_companion_trait;
@@ -36,6 +35,55 @@ pub use property::{Prop, WmHints, WmNormalHints, WmNormalHintsFlags};
 pub type Xid = u32;
 
 const WM_NAME: &str = "penrose";
+
+/// Enum to store the various ways that operations can fail in X traits
+#[derive(thiserror::Error, Debug)]
+pub enum XError {
+    /// The underlying connection to the X server is closed
+    #[error("The underlying connection to the X server is closed")]
+    ConnectionClosed,
+
+    /// The requested property is not set for the given client
+    #[error("The {0} property is not set for client {1}")]
+    MissingProperty(String, Xid),
+
+    /// A mock trait value that needs to be overwritten to be usable
+    #[doc(Hidden)]
+    #[error("Mock impl")]
+    Mocked,
+
+    /// A generic error type for use in user code when needing to construct
+    /// a simple [XError].
+    #[error("Unhandled error: {0}")]
+    Raw(String),
+
+    /// Parsing an [Atom][crate::core::xconnection::Atom] from a str failed.
+    ///
+    /// This happens when the atom name being requested is not a known atom.
+    #[error(transparent)]
+    Strum(#[from] strum::ParseError),
+
+    /// An attempt was made to reference an atom that is not known to penrose
+    #[error("{0} is not a known atom")]
+    UnknownAtom(Xid),
+
+    /// An attempt was made to reference a client that is not known to penrose
+    #[error("{0} is not a known client")]
+    UnknownClient(Xid),
+
+    /*
+     * Conversions from other penrose error types
+     */
+    /// Something went wrong using the [xcb][crate::xcb] module.
+    ///
+    /// See [XcbError][crate::xcb::XcbError] for variants.
+    #[cfg(feature = "xcb")]
+    #[error(transparent)]
+    Xcb(#[from] crate::xcb::XcbError),
+}
+
+/// Result type for errors raised by X traits
+pub type Result<T> = std::result::Result<T, XError>;
 
 /// On screen configuration options for X clients (not all are curently implemented)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -103,7 +151,7 @@ pub trait XState {
     fn focused_client(&self) -> Result<Xid>;
 
     /// Convert an X atom id to its human friendly name
-    #[stub(Err(PenroseError::Raw("mocked".into())))]
+    #[stub(Err(XError::Mocked))]
     fn atom_name(&self, atom: Xid) -> Result<String>;
 }
 
@@ -115,7 +163,7 @@ pub trait XEventHandler {
     fn flush(&self) -> bool;
 
     /// Wait for the next event from the X server and return it as an [XEvent]
-    #[stub(Err(PenroseError::Raw("mock impl".into())))]
+    #[stub(Err(XError::Mocked))]
     fn wait_for_event(&self) -> Result<XEvent>;
 
     /// Send an X event to the target window
@@ -178,7 +226,7 @@ pub trait XClientProperties {
     /// Query a property for a client by ID and name.
     ///
     /// Can fail if the property name is invalid or we get a malformed response from xcb.
-    #[stub(Err(PenroseError::Raw("mocked".into())))]
+    #[stub(Err(XError::Mocked))]
     fn get_prop(&self, id: Xid, name: &str) -> Result<Prop>;
 
     /// Delete an existing property from a client
@@ -283,7 +331,7 @@ pub trait XKeyboardHandler {
 
     /// Wait for the next [XEvent] from an underlying connection as a [KeyPress] and attempt to
     /// parse it as a [KeyPress].
-    #[stub(Err(PenroseError::Raw("mock impl".into())))]
+    #[stub(Err(XError::Mocked))]
     fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt>;
 }
 
@@ -482,7 +530,6 @@ pub use mock_conn::MockXConn;
 #[cfg(test)]
 mod mock_conn {
     use super::*;
-    use crate::PenroseError;
     use std::{cell::Cell, fmt};
 
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -527,11 +574,11 @@ mod mock_conn {
         for MockXConn;
 
         client_properties: {
-            fn mock_get_prop(&self, _id: Xid, name: &str) -> Result<Prop> {
+            fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
                 if name == Atom::WmName.as_ref() || name == Atom::NetWmName.as_ref() {
                     Ok(Prop::UTF8String(vec!["mock name".into()]))
                 } else {
-                    Err(PenroseError::Raw("mocked".into()))
+                    Err(XError::MissingProperty(name.into(), id))
                 }
             }
         }
@@ -546,7 +593,7 @@ mod mock_conn {
             fn mock_wait_for_event(&self) -> Result<XEvent> {
                 let mut remaining = self.events.replace(vec![]);
                 if remaining.is_empty() {
-                    return Err(PenroseError::Raw("mock conn closed".into()));
+                    return Err(XError::ConnectionClosed)
                 }
                 let next = remaining.remove(0);
                 self.events.set(remaining);
@@ -581,7 +628,7 @@ mod tests {
     }
 
     impl StubXClientProperties for WmNameXConn {
-        fn mock_get_prop(&self, _: Xid, name: &str) -> Result<Prop> {
+        fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
             match Atom::from_str(name)? {
                 Atom::WmName if self.wm_name => Ok(Prop::UTF8String(vec!["wm_name".into()])),
                 Atom::WmName if self.net_wm_name && self.empty_net_wm_name => {
@@ -591,7 +638,7 @@ mod tests {
                     Ok(Prop::UTF8String(vec!["net_wm_name".into()]))
                 }
                 Atom::NetWmName if self.empty_net_wm_name => Ok(Prop::UTF8String(vec!["".into()])),
-                _ => Err(PenroseError::Raw("".into())),
+                _ => Err(XError::MissingProperty(name.into(), id)),
             }
         }
     }

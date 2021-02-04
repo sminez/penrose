@@ -14,9 +14,8 @@ pub use bar::*;
 pub use widget::{HookableWidget, KeyboardControlled, Widget};
 
 use crate::core::{
-    bindings::KeyPress,
     data_types::{Region, WinType},
-    xconnection::{Prop, XEvent, Xid},
+    xconnection::{XClientHandler, XClientProperties, XKeyboardHandler, Xid},
 };
 
 #[cfg(feature = "xcb")]
@@ -48,6 +47,10 @@ pub enum DrawError {
     #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] XcbError),
+
+    /// Something went wrong when communicating with the X server
+    #[error(transparent)]
+    X(#[from] crate::core::xconnection::XError),
 
     /// An attempt to use the cairo C API failed when using an XCB implementation
     /// of [Draw] or [DrawContext]
@@ -180,7 +183,7 @@ impl TryFrom<&str> for Color {
 /// and dialogs. Each `Draw` should also provide an acompanying `DrawContext` that impl that is
 /// used by consumers (such as the status bar) for actually drawing to the screen, which the parent
 /// `Draw` is responsible for resource management and mapping / unmapping the created windows.
-pub trait Draw {
+pub trait Draw: XClientHandler + XClientProperties {
     /// The type of drawing context used for drawing
     type Ctx: DrawContext;
 
@@ -196,43 +199,14 @@ pub trait Draw {
     fn temp_context(&self, w: u32, h: u32) -> Result<Self::Ctx>;
     /// Flush pending actions
     fn flush(&self, id: Xid) -> Result<()>;
-    /// Map the target client to the screen
-    fn map_client(&self, id: Xid) -> Result<()>;
-    /// Unmap the target client from the screen
-    fn unmap_client(&self, id: Xid) -> Result<()>;
-    /// Destroy the target client
-    fn destroy_client(&mut self, id: Xid) -> Result<()>;
-    /// Change an existing property for a client
-    fn change_prop(&self, id: Xid, name: &str, val: Prop) -> Result<()>;
 }
 
-/// An [XEvent] parsed into a [KeyPress] if possible, otherwise the original `XEvent`
-#[derive(Debug, Clone)]
-pub enum KeyPressParseAttempt {
-    /// The event was parasble as a [KeyPress]
-    KeyPress(KeyPress),
-    /// The event was not a [KeyPress]
-    XEvent(XEvent),
-}
+/// A [Draw] that can return the [KeyPress][1] events from the user for its windows
+///
+/// [1]: crate::core::bindings::KeyPress
+pub trait KeyPressDraw: Draw + XKeyboardHandler {}
 
-/// A [Draw] that can return the [KeyPress] events from the user for its windows
-pub trait KeyPressDraw: Draw {
-    /// Attempt to grab control of all keyboard input
-    fn grab_keyboard(&self) -> Result<()>;
-
-    /// Attempt to release control of all keyboard inputs
-    fn ungrab_keyboard(&self) -> Result<()>;
-
-    /// Attempt to parse the next [XEvent] from an underlying connection as a [KeyPress] if there
-    /// is one.
-    ///
-    /// Should return Ok(None) if no events are currently available.
-    fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>>;
-
-    /// Wait for the next [XEvent] from an underlying connection as a [KeyPress] and attempt to
-    /// parse it as a [KeyPress].
-    fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt>;
-}
+impl<T> KeyPressDraw for T where T: Draw + XKeyboardHandler {}
 
 /// Used for simple drawing to the screen
 pub trait DrawContext {
