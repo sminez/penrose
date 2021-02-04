@@ -47,11 +47,6 @@ pub enum XError {
     #[error("The {0} property is not set for client {1}")]
     MissingProperty(String, Xid),
 
-    /// A mock trait value that needs to be overwritten to be usable
-    #[doc(Hidden)]
-    #[error("Mock impl")]
-    Mocked,
-
     /// A generic error type for use in user code when needing to construct
     /// a simple [XError].
     #[error("Unhandled error: {0}")]
@@ -151,7 +146,7 @@ pub trait XState {
     fn focused_client(&self) -> Result<Xid>;
 
     /// Convert an X atom id to its human friendly name
-    #[stub(Err(XError::Mocked))]
+    #[stub(Err(XError::Raw("mocked".into())))]
     fn atom_name(&self, atom: Xid) -> Result<String>;
 }
 
@@ -163,7 +158,7 @@ pub trait XEventHandler {
     fn flush(&self) -> bool;
 
     /// Wait for the next event from the X server and return it as an [XEvent]
-    #[stub(Err(XError::Mocked))]
+    #[stub(Err(XError::Raw("mocked".into())))]
     fn wait_for_event(&self) -> Result<XEvent>;
 
     /// Send an X event to the target window
@@ -226,7 +221,7 @@ pub trait XClientProperties {
     /// Query a property for a client by ID and name.
     ///
     /// Can fail if the property name is invalid or we get a malformed response from xcb.
-    #[stub(Err(XError::Mocked))]
+    #[stub(Err(XError::Raw("mocked".into())))]
     fn get_prop(&self, id: Xid, name: &str) -> Result<Prop>;
 
     /// Delete an existing property from a client
@@ -331,7 +326,7 @@ pub trait XKeyboardHandler {
 
     /// Wait for the next [XEvent] from an underlying connection as a [KeyPress] and attempt to
     /// parse it as a [KeyPress].
-    #[stub(Err(XError::Mocked))]
+    #[stub(Err(XError::Raw("mocked".into())))]
     fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt>;
 }
 
