@@ -16,9 +16,9 @@ pub use crate::{
         ring::{InsertPoint, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{XConn, XEvent, Xid},
+        xconnection::{Result, XConn, XEvent, Xid},
     },
-    logging_error_handler, Backward, Forward, Less, More, PenroseError, Result, WindowManager,
+    logging_error_handler, Backward, Forward, Less, More, PenroseError, WindowManager,
 };
 
 pub use std::{cell::Cell, collections::HashMap, fmt};

@@ -8,7 +8,7 @@
 use crate::{
     core::{
         data_types::{Region, WinType},
-        xconnection::{Prop, Xid},
+        xconnection::{Prop, XClientHandler, Xid},
     },
     draw::{Color, Draw, DrawContext, DrawError, Result},
     xcb::{Api, XcbError},
@@ -19,7 +19,7 @@ use pangocairo::functions::{create_layout, show_layout};
 use std::collections::HashMap;
 
 #[cfg(feature = "keysyms")]
-use crate::draw::{KeyPressDraw, KeyPressParseAttempt};
+use crate::core::xconnection::{KeyPressParseAttempt, XKeyboardHandler};
 
 fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
     Ok(create_layout(ctx).ok_or_else(|| XcbError::Pango("unable to create layout".into()))?)
@@ -32,6 +32,11 @@ pub struct XcbDraw {
     fonts: HashMap<String, pango::FontDescription>,
     surfaces: HashMap<Xid, cairo::XCBSurface>,
 }
+
+crate::__xcb_impl_xclienthandler!(XcbDraw);
+crate::__xcb_impl_xclientproperties!(XcbDraw);
+#[cfg(feature = "keysyms")]
+crate::__xcb_impl_xkeyboardhandler!(XcbDraw);
 
 impl XcbDraw {
     /// Create a new empty [XcbDraw]. Fails if unable to connect to the X server
@@ -153,43 +158,6 @@ impl Draw for XcbDraw {
         self.map_client(id)?;
         self.api.flush();
         Ok(())
-    }
-
-    fn map_client(&self, id: Xid) -> Result<()> {
-        Ok(self.api.map_client(id)?)
-    }
-
-    fn unmap_client(&self, id: Xid) -> Result<()> {
-        Ok(self.api.unmap_client(id)?)
-    }
-
-    fn destroy_client(&mut self, id: Xid) -> Result<()> {
-        self.api.destroy_client(id)?;
-        self.surfaces.remove(&id);
-        Ok(())
-    }
-
-    fn change_prop(&self, id: Xid, name: &str, val: Prop) -> Result<()> {
-        Ok(self.api.change_prop(id, name, val)?)
-    }
-}
-
-#[cfg(feature = "keysyms")]
-impl KeyPressDraw for XcbDraw {
-    fn grab_keyboard(&self) -> Result<()> {
-        Ok(self.api.grab_keyboard()?)
-    }
-
-    fn ungrab_keyboard(&self) -> Result<()> {
-        Ok(self.api.ungrab_keyboard()?)
-    }
-
-    fn next_keypress(&self) -> Result<Option<KeyPressParseAttempt>> {
-        Ok(self.api.next_keypress()?)
-    }
-
-    fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt> {
-        Ok(self.api.next_keypress_blocking()?)
     }
 }
 

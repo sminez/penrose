@@ -16,12 +16,11 @@ use penrose::{
     core::{
         bindings::KeyPress,
         data_types::{Region, WinType},
-        xconnection::{Atom, Prop, XEvent, Xid},
+        xconnection::{Atom, KeyPressParseAttempt, Prop, XEvent, Xid},
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
-        Color, DrawContext, DrawError, KeyPressDraw, KeyPressParseAttempt, KeyboardControlled,
-        Result, TextStyle, Widget,
+        Color, DrawContext, DrawError, KeyPressDraw, KeyboardControlled, Result, TextStyle, Widget,
     },
 };
 

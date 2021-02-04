@@ -18,12 +18,10 @@ use crate::{
         manager::WindowManager,
         screen::Screen,
         xconnection::{
-            Atom, ClientAttr, ClientConfig, Prop, XClientConfig, XClientHandler, XClientProperties,
-            XConn, XEvent, XEventHandler, XState, Xid,
+            Atom, ClientAttr, ClientConfig, Prop, Result, XConn, XEvent, XEventHandler, Xid,
         },
     },
     xcb::{Api, XcbError},
-    Result,
 };
 
 use std::collections::HashMap;
@@ -87,111 +85,11 @@ impl WindowManager<XcbConnection> {
     }
 }
 
-impl XState for XcbConnection {
-    fn root(&self) -> Xid {
-        self.api.root()
-    }
-
-    fn current_screens(&self) -> Result<Vec<Screen>> {
-        Ok(self.api.current_screens()?)
-    }
-
-    fn cursor_position(&self) -> Result<Point> {
-        Ok(self.api.cursor_position()?)
-    }
-
-    fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> Result<()> {
-        let (x, y, id) = match win_id {
-            Some(id) => {
-                let (_, _, w, h) = self.client_geometry(id)?.values();
-                ((w / 2), (h / 2), id)
-            }
-            None => {
-                let (x, y, w, h) = screen.region(true).values();
-                ((x + w / 2), (y + h / 2), self.api.root())
-            }
-        };
-
-        Ok(self.api.warp_cursor(id, x as usize, y as usize)?)
-    }
-
-    fn client_geometry(&self, id: Xid) -> Result<Region> {
-        Ok(self.api.client_geometry(id)?)
-    }
-
-    fn active_clients(&self) -> Result<Vec<Xid>> {
-        Ok(self.api.current_clients()?)
-    }
-
-    fn focused_client(&self) -> Result<Xid> {
-        Ok(self.api.focused_client()?)
-    }
-
-    fn atom_name(&self, atom: Xid) -> Result<String> {
-        Ok(self.api.atom_name(atom)?)
-    }
-}
-
-impl XEventHandler for XcbConnection {
-    fn flush(&self) -> bool {
-        self.api.flush()
-    }
-
-    fn wait_for_event(&self) -> Result<XEvent> {
-        Ok(self.api.wait_for_event()?)
-    }
-
-    // FIXME: sending client events needs implementing
-    fn send_client_event(&self, _id: Xid, _atom_name: &str, _data: &[u32]) -> Result<()> {
-        todo!("work this out correctly")
-    }
-}
-
-impl XClientHandler for XcbConnection {
-    fn map_client(&self, id: Xid) -> Result<()> {
-        Ok(self.api.map_client(id)?)
-    }
-
-    fn unmap_client(&self, id: Xid) -> Result<()> {
-        Ok(self.api.unmap_client(id)?)
-    }
-
-    fn focus_client(&self, id: Xid) -> Result<()> {
-        Ok(self.api.focus_client(id)?)
-    }
-
-    fn destroy_client(&self, id: Xid) -> Result<()> {
-        Ok(self.api.destroy_client(id)?)
-    }
-}
-
-impl XClientProperties for XcbConnection {
-    fn get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
-        Ok(self.api.get_prop(id, name)?)
-    }
-
-    fn list_props(&self, id: Xid) -> Result<Vec<String>> {
-        Ok(self.api.list_props(id)?)
-    }
-
-    fn delete_prop(&self, id: Xid, name: &str) -> Result<()> {
-        Ok(self.api.delete_prop(id, name)?)
-    }
-
-    fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> Result<()> {
-        Ok(self.api.change_prop(id, prop, val)?)
-    }
-}
-
-impl XClientConfig for XcbConnection {
-    fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> Result<()> {
-        Ok(self.api.configure_client(id, data)?)
-    }
-
-    fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> Result<()> {
-        Ok(self.api.set_client_attributes(id, data)?)
-    }
-}
+crate::__xcb_impl_xclientconfig!(XcbConnection);
+crate::__xcb_impl_xclienthandler!(XcbConnection);
+crate::__xcb_impl_xclientproperties!(XcbConnection);
+crate::__xcb_impl_xeventhandler!(XcbConnection);
+crate::__xcb_impl_xstate!(XcbConnection);
 
 impl XConn for XcbConnection {
     #[cfg(feature = "serde")]

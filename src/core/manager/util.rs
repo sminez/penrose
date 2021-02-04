@@ -1,13 +1,10 @@
-use crate::{
-    core::{
-        client::Client,
-        data_types::Region,
-        layout::LayoutConf,
-        screen::Screen,
-        workspace::{ArrangeActions, Workspace},
-        xconnection::{Atom, Prop, XClientConfig, XClientHandler, XClientProperties, XState, Xid},
-    },
-    Result,
+use crate::core::{
+    client::Client,
+    data_types::Region,
+    layout::LayoutConf,
+    screen::Screen,
+    workspace::{ArrangeActions, Workspace},
+    xconnection::{Atom, Prop, XClientConfig, XClientHandler, XClientProperties, XState, Xid},
 };
 
 #[cfg(feature = "serde")]
@@ -56,7 +53,7 @@ pub(super) fn position_floating_client<X>(
     id: Xid,
     screen_region: Region,
     border_px: u32,
-) -> Result<()>
+) -> crate::Result<()>
 where
     X: XClientConfig + XState,
 {
@@ -72,7 +69,7 @@ where
         h - (2 * border_px),
     );
 
-    conn.position_client(id, reg, border_px, false)
+    Ok(conn.position_client(id, reg, border_px, false)?)
 }
 
 pub(super) fn get_screens<X>(
@@ -81,7 +78,7 @@ pub(super) fn get_screens<X>(
     n_workspaces: usize,
     bar_height: u32,
     top_bar: bool,
-) -> Result<Vec<Screen>>
+) -> crate::Result<Vec<Screen>>
 where
     X: XState,
 {
@@ -113,7 +110,7 @@ pub(super) fn toggle_fullscreen<X>(
     client_map: &mut HashMap<Xid, Client>,
     workspace: &mut Workspace,
     screen_size: Region,
-) -> Result<bool>
+) -> crate::Result<bool>
 where
     X: XClientHandler + XClientProperties + XClientConfig,
 {
@@ -155,7 +152,7 @@ pub(super) fn apply_arrange_actions<X>(
     client_map: &mut HashMap<Xid, Client>,
     border_px: u32,
     gap_px: u32,
-) -> Result<()>
+) -> crate::Result<()>
 where
     X: XClientHandler + XClientConfig,
 {
@@ -180,7 +177,7 @@ where
 }
 
 #[cfg(feature = "serde")]
-pub(super) fn validate_hydrated_wm_state<X>(wm: &mut WindowManager<X>) -> Result<()>
+pub(super) fn validate_hydrated_wm_state<X>(wm: &mut WindowManager<X>) -> crate::Result<()>
 where
     X: XConn,
 {
@@ -221,7 +218,7 @@ where
     Ok(())
 }
 
-pub(super) fn parse_existing_client<X>(conn: &X, id: Xid) -> Result<Client>
+pub(super) fn parse_existing_client<X>(conn: &X, id: Xid) -> crate::Result<Client>
 where
     X: XClientProperties,
 {
@@ -247,7 +244,7 @@ mod tests {
         layout::{mock_layout, Layout, LayoutConf},
         ring::InsertPoint,
         workspace::Workspace,
-        xconnection::{StubXClientConfig, StubXClientHandler, StubXClientProperties, StubXState},
+        xconnection::*,
     };
 
     use std::{cell::Cell, collections::HashMap};

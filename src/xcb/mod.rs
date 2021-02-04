@@ -169,3 +169,162 @@ pub enum XcbError {
     #[error("Unknown mouse button: {0}")]
     UnknownMouseButton(u8),
 }
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __xcb_impl_xstate {
+    { $struct:ident } => {
+        impl $crate::core::xconnection::XState for $struct {
+            fn root(&self) -> Xid {
+                self.api.root()
+            }
+
+            fn current_screens(&self) -> $crate::core::xconnection::Result<Vec<Screen>> {
+                Ok(self.api.current_screens()?)
+            }
+
+            fn cursor_position(&self) -> $crate::core::xconnection::Result<Point> {
+                Ok(self.api.cursor_position()?)
+            }
+
+            fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> $crate::core::xconnection::Result<()> {
+                let (x, y, id) = match win_id {
+                    Some(id) => {
+                        let (_, _, w, h) = self.client_geometry(id)?.values();
+                        ((w / 2), (h / 2), id)
+                    }
+                    None => {
+                        let (x, y, w, h) = screen.region(true).values();
+                        ((x + w / 2), (y + h / 2), self.api.root())
+                    }
+                };
+
+                Ok(self.api.warp_cursor(id, x as usize, y as usize)?)
+            }
+
+            fn client_geometry(&self, id: Xid) -> $crate::core::xconnection::Result<Region> {
+                Ok(self.api.client_geometry(id)?)
+            }
+
+            fn active_clients(&self) -> $crate::core::xconnection::Result<Vec<Xid>> {
+                Ok(self.api.current_clients()?)
+            }
+
+            fn focused_client(&self) -> $crate::core::xconnection::Result<Xid> {
+                Ok(self.api.focused_client()?)
+            }
+
+            fn atom_name(&self, atom: Xid) -> $crate::core::xconnection::Result<String> {
+                Ok(self.api.atom_name(atom)?)
+            }
+        }
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __xcb_impl_xeventhandler {
+    { $struct:ident } => {
+        impl $crate::core::xconnection::XEventHandler for $struct {
+            fn flush(&self) -> bool {
+                self.api.flush()
+            }
+
+            fn wait_for_event(&self) -> $crate::core::xconnection::Result<XEvent> {
+                Ok(self.api.wait_for_event()?)
+            }
+
+            fn send_client_event(&self, id: Xid, atom_name: &str, data: &[u32]) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.send_client_event(id, atom_name, data)?)
+            }
+        }
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __xcb_impl_xclienthandler {
+    { $struct:ident } => {
+        impl $crate::core::xconnection::XClientHandler for $struct {
+            fn map_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.map_client(id)?)
+            }
+
+            fn unmap_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.unmap_client(id)?)
+            }
+
+            fn focus_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.focus_client(id)?)
+            }
+
+            fn destroy_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.destroy_client(id)?)
+            }
+        }
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __xcb_impl_xclientproperties {
+    { $struct:ident } => {
+        impl $crate::core::xconnection::XClientProperties for $struct {
+            fn get_prop(&self, id: Xid, name: &str) -> $crate::core::xconnection::Result<Prop> {
+                Ok(self.api.get_prop(id, name)?)
+            }
+
+            fn list_props(&self, id: Xid) -> $crate::core::xconnection::Result<Vec<String>> {
+                Ok(self.api.list_props(id)?)
+            }
+
+            fn delete_prop(&self, id: Xid, name: &str) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.delete_prop(id, name)?)
+            }
+
+            fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.change_prop(id, prop, val)?)
+            }
+        }
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __xcb_impl_xclientconfig {
+    { $struct:ident } => {
+        impl $crate::core::xconnection::XClientConfig for $struct {
+            fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.configure_client(id, data)?)
+            }
+
+            fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.set_client_attributes(id, data)?)
+            }
+        }
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __xcb_impl_xkeyboardhandler {
+    { $struct:ident } => {
+        impl XKeyboardHandler for $struct {
+            fn grab_keyboard(&self) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.grab_keyboard()?)
+            }
+
+            fn ungrab_keyboard(&self) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.ungrab_keyboard()?)
+            }
+
+            fn next_keypress(&self) -> $crate::core::xconnection::Result<Option<KeyPressParseAttempt>> {
+                Ok(self.api.next_keypress()?)
+            }
+
+            fn next_keypress_blocking(&self) -> $crate::core::xconnection::Result<KeyPressParseAttempt> {
+                Ok(self.api.next_keypress_blocking()?)
+            }
+        }
+    }
+}

@@ -243,6 +243,10 @@ pub enum PenroseError {
     #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] crate::xcb::XcbError),
+
+    /// Something went wrong when communicating with the X server
+    #[error(transparent)]
+    X(#[from] crate::core::xconnection::XError),
 }
 
 /// Top level penrose Result type

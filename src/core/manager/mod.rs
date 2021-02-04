@@ -248,7 +248,7 @@ impl<X: XConn> WindowManager<X> {
         self.conn.set_wm_properties(&self.config.workspaces)?;
 
         debug!("Forcing cursor to first screen");
-        self.conn.warp_cursor(None, &self.screens[0])
+        Ok(self.conn.warp_cursor(None, &self.screens[0])?)
     }
 
     // Subset of current immutable state that is needed for processing XEvents into EventActions
@@ -370,7 +370,7 @@ impl<X: XConn> WindowManager<X> {
 
                 Err(e) => {
                     self.exit()?;
-                    return Err(e);
+                    return Err(PenroseError::X(e));
                 }
             }
         }
@@ -557,7 +557,7 @@ impl<X: XConn> WindowManager<X> {
     /// [Workspace] instances if needed.
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.n_screens(), 1);
     ///
     /// // Simulate a monitor being attached
@@ -603,7 +603,7 @@ impl<X: XConn> WindowManager<X> {
         );
 
         if !self.conn.is_managed_client(id) {
-            return self.conn.map_client(id);
+            return Ok(self.conn.map_client(id)?);
         }
 
         let classes = str_slice!(self.config.floating_classes);
@@ -799,7 +799,7 @@ impl<X: XConn> WindowManager<X> {
 
     fn update_x_known_clients(&self) -> Result<()> {
         let clients: Vec<Xid> = self.client_map.keys().copied().collect();
-        self.conn.update_known_clients(&clients)
+        Ok(self.conn.update_known_clients(&clients)?)
     }
 
     fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
@@ -845,7 +845,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// // a helper method on the ExampleXConn used for these examples
     /// assert_eq!(manager.conn().current_screen_count(), 1);
     /// # Ok(())
@@ -869,7 +869,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// // a helper method on the ExampleXConn used for these examples
     /// assert_eq!(manager.conn().current_screen_count(), 1);
     ///
@@ -889,7 +889,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// manager.log("hello from penrose!")?;
     /// manager.log(format!("This manager has {} screens", manager.n_screens()))?;
     /// # Ok(())
@@ -908,7 +908,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// // manager here is an example window manager with two screens
     /// assert_eq!(manager.active_screen_index(), 0);
     ///
@@ -948,7 +948,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// // manager here is using the default Config with 9 workspaces
     ///
     /// assert_eq!(manager.focused_workspaces(), vec![0]);
@@ -978,7 +978,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
     ///
     /// manager.drag_workspace(Forward)?;
@@ -999,7 +999,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.focused_client_id(), Some(0));
     ///
     /// manager.cycle_client(Backward)?;
@@ -1043,7 +1043,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let focused = manager.focus_client(&Selector::WinId(0));
     /// assert_eq!(focused.unwrap(), 0);
     ///
@@ -1092,7 +1092,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
     /// manager.rotate_clients(Forward)?;
@@ -1119,7 +1119,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![3, 2, 1, 0]);
     ///
     /// manager.drag_client(Forward)?;
@@ -1155,7 +1155,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.current_layout_symbol(), "first");
     ///
     /// manager.cycle_layout(Forward)?;
@@ -1190,7 +1190,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// manager.update_max_main(More);
     /// # Ok(())
     /// # }
@@ -1218,7 +1218,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// manager.update_main_ratio(More);
     /// # Ok(())
     /// # }
@@ -1246,7 +1246,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// manager.exit();
     /// # Ok(())
     /// # }
@@ -1267,7 +1267,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.current_layout_symbol(), "first");
     ///
     /// manager.cycle_layout(Forward)?;
@@ -1291,14 +1291,14 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// manager.set_root_window_name("hello world")?;
     /// # Ok(())
     /// # }
     /// # example(example_windowmanager(1, vec![])).unwrap();
     /// ```
     pub fn set_root_window_name(&self, s: impl AsRef<str>) -> Result<()> {
-        self.conn.set_root_window_name(s.as_ref())
+        Ok(self.conn.set_root_window_name(s.as_ref())?)
     }
 
     /// Set the insert point for new clients. Default is to insert at index 0.
@@ -1307,7 +1307,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// // Starting with three clients that have been inserted via InsertPoint::First
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
@@ -1345,7 +1345,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().name(), "1");
     ///
     /// manager.focus_workspace(&Selector::Index(3))?;
@@ -1431,7 +1431,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// manager.focus_workspace(&Selector::Index(1))?;
     /// assert_eq!(manager.active_workspace().name(), "2");
     ///
@@ -1454,7 +1454,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
     /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(1)));
@@ -1484,7 +1484,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
     ///
     /// assert_eq!(manager.active_screen_index(), 0);
@@ -1517,7 +1517,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.client(&Selector::Focused).unwrap().is_fullscreen(), false);
     ///
     /// manager.toggle_client_fullscreen(&Selector::Focused)?;
@@ -1546,7 +1546,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![0]);
     ///
     /// manager.kill_client()?;
@@ -1579,7 +1579,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
     ///
@@ -1624,7 +1624,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().name(), "1");
     /// # Ok(())
     /// # }
@@ -1642,7 +1642,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
     /// manager.active_workspace_mut().rotate_clients(Forward);
@@ -1666,7 +1666,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.focused_workspaces(), vec![0, 1]);
     /// # Ok(())
     /// # }
@@ -1685,7 +1685,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let names: Vec<_> = manager
     ///     .all_workspaces(&Selector::Any)
     ///     .iter()
@@ -1721,7 +1721,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let names: Vec<_> = manager
     ///     .all_workspaces(&Selector::Any)
     ///     .iter()
@@ -1758,7 +1758,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let names: Vec<_> = manager
     ///     .all_workspaces(&Selector::Any)
     ///     .iter()
@@ -1814,7 +1814,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.workspace(&Selector::Focused).unwrap().name(), "1");
     /// assert_eq!(manager.workspace(&Selector::Index(3)).unwrap().name(), "4");
     ///
@@ -1850,7 +1850,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
     /// let ws2 = Selector::Index(2);
@@ -1891,7 +1891,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let names: Vec<&str> = manager
     ///     .all_workspaces(&Selector::Condition(&|ws|
     ///         ws.name().parse::<usize>().unwrap() < 5
@@ -1931,7 +1931,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let layouts: Vec<&str> = manager
     ///     .all_workspaces(&Selector::Condition(&|ws|
     ///         ws.name().parse::<usize>().unwrap() < 3
@@ -1990,7 +1990,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_workspace().name(), "1");
     ///
     /// manager.set_workspace_name("foo", &Selector::Focused)?;
@@ -2018,7 +2018,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.client(&Selector::Focused).unwrap().id(), 2);
     /// assert_eq!(manager.client(&Selector::Index(2)).unwrap().id(), 0);
     /// # Ok(())
@@ -2047,7 +2047,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.client(&Selector::Focused).map(|c| c.workspace()), Some(0));
     ///
     /// manager.client_mut(&Selector::Focused).map(|c| c.set_workspace(5));
@@ -2086,7 +2086,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let all_ids: Vec<Xid> = manager
     ///     .all_clients(&Selector::Any)
     ///     .iter()
@@ -2135,7 +2135,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// let workspace_ids: Vec<usize> = manager
     ///     .all_clients(&Selector::Any)
     ///     .iter()
@@ -2190,7 +2190,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.n_screens(), 2);
     /// # Ok(())
     /// # }
@@ -2207,7 +2207,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.screen_size(0), Some(Region::new(0, 18, 800, 582)));
     /// assert_eq!(manager.screen_size(42), None);
     /// # Ok(())
@@ -2224,20 +2224,21 @@ impl<X: XConn> WindowManager<X> {
     /// to the root window not any individual screen).
     pub fn position_client(&self, id: Xid, region: Region, stack_above: bool) -> Result<()> {
         let bpx = self.config.border_px;
-        self.conn.position_client(id, region, bpx, stack_above)
+        Ok(self.conn.position_client(id, region, bpx, stack_above)?)
     }
 
     /// Make the Client with ID 'id' visible at its last known position.
     pub fn show_client(&mut self, id: Xid) -> Result<()> {
         self.conn
             .map_client_if_needed(self.client_map.get_mut(&id))?;
-        self.conn.set_client_workspace(id, self.active_ws_index())
+        Ok(self.conn.set_client_workspace(id, self.active_ws_index())?)
     }
 
     /// Hide the Client with ID 'id'.
     pub fn hide_client(&mut self, id: Xid) -> Result<()> {
-        self.conn
-            .unmap_client_if_needed(self.client_map.get_mut(&id))
+        Ok(self
+            .conn
+            .unmap_client_if_needed(self.client_map.get_mut(&id))?)
     }
 
     /// Layout the workspace currently shown on the given screen index.
@@ -2255,7 +2256,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> Result<()> {
+    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
     /// assert_eq!(manager.active_screen_index(), 0);
     ///
     /// manager.cycle_screen(Forward)?;
@@ -2276,8 +2277,12 @@ impl<X: XConn> WindowManager<X> {
 mod tests {
     use super::*;
     use crate::core::{
-        data_types::*, helpers::logging_error_handler, layout::*, ring::Direction::*, screen::*,
-        xconnection::*,
+        data_types::*,
+        helpers::logging_error_handler,
+        layout::*,
+        ring::Direction::*,
+        screen::*,
+        xconnection::{MockXConn, XEvent},
     };
 
     use std::cell::Cell;
@@ -2569,7 +2574,7 @@ mod tests {
         client_config: {}
         event_handler: {}
         state: {
-            fn mock_current_screens(&self) -> Result<Vec<Screen>> {
+            fn mock_current_screens(&self) -> crate::core::xconnection::Result<Vec<Screen>> {
                 let num_screens = self.num_screens.get();
                 Ok((0..(num_screens))
                     .map(|n| Screen::new(Region::new(800 * n as u32, 600 * n as u32, 800, 600), n))

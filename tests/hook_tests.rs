@@ -10,9 +10,9 @@ use penrose::{
         hooks::{Hook, Hooks},
         manager::WindowManager,
         screen::Screen,
-        xconnection::{Atom, Prop, XConn, XEvent, Xid},
+        xconnection::{Atom, Prop, Result, XConn, XError, XEvent, Xid},
     },
-    logging_error_handler, PenroseError, Result,
+    logging_error_handler,
 };
 
 use std::{
@@ -46,11 +46,11 @@ __impl_stub_xcon! {
     for TestXConn;
 
     client_properties: {
-        fn mock_get_prop(&self, _id: Xid, name: &str) -> Result<Prop> {
+        fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
             if name == Atom::NetWmName.as_ref() {
                 Ok(Prop::UTF8String(vec!["mock name".into()]))
             } else {
-                Err(PenroseError::Raw("mocked".into()))
+                Err(XError::MissingProperty(name.into(), id))
             }
         }
     }
@@ -65,7 +65,7 @@ __impl_stub_xcon! {
         fn mock_wait_for_event(&self) -> Result<XEvent> {
             let mut remaining = self.events.replace(vec![]);
             if remaining.is_empty() {
-                return Err(PenroseError::Raw("mock conn closed".into()));
+                return Err(XError::ConnectionClosed);
             }
             let next = remaining.remove(0);
             self.events.set(remaining);
@@ -111,7 +111,7 @@ macro_rules! __impl_test_hook {
         where
             X: XConn,
         {
-            $(fn $name(&mut self, _: &mut WindowManager<X>, $(_: $t),*) -> Result<()> {
+            $(fn $name(&mut self, _: &mut WindowManager<X>, $(_: $t),*) -> penrose::Result<()> {
                 self.mark_called(stringify!($name));
                 Ok(())
             })+

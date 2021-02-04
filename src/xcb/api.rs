@@ -17,7 +17,7 @@ use strum::*;
 use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
 
 #[cfg(feature = "keysyms")]
-use crate::{core::bindings::KeyPress, draw::KeyPressParseAttempt};
+use crate::core::{bindings::KeyPress, xconnection::KeyPressParseAttempt};
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
 

@@ -159,7 +159,7 @@ impl Workspace {
     ///
     /// ```
     /// # use penrose::__example_helpers::*;
-    /// # fn example(mut workspace: Workspace) -> Result<()> {
+    /// # fn example(mut workspace: Workspace) -> penrose::Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0]);
     ///
     /// workspace.add_client(1, &InsertPoint::Last)?;

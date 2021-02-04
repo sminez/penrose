@@ -12,9 +12,9 @@ use penrose::{
         layout::{floating, side_stack, LayoutFunc},
         manager::WindowManager,
         screen::Screen,
-        xconnection::{Atom, Prop, XEvent, Xid},
+        xconnection::{Atom, Prop, Result, XError, XEvent, Xid},
     },
-    logging_error_handler, PenroseError, Result,
+    logging_error_handler, PenroseError,
 };
 
 use std::{cell::Cell, collections::HashMap};
@@ -41,18 +41,18 @@ __impl_stub_xcon! {
     for EarlyExitConn;
 
     client_properties: {
-        fn mock_get_prop(&self, _id: Xid, name: &str) -> Result<Prop> {
+        fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
             if name == Atom::NetWmName.as_ref() {
                 Ok(Prop::UTF8String(vec!["mock name".into()]))
             } else {
-                Err(PenroseError::Raw("mocked".into()))
+                Err(XError::MissingProperty(name.into(), id))
             }
         }
     }
     client_handler: {}
     client_config: {}
     event_handler: {
-        fn mock_wait_for_event(&self) -> penrose::Result<XEvent> {
+        fn mock_wait_for_event(&self) -> Result<XEvent> {
             let mut remaining = self.events.replace(vec![]);
             if remaining.is_empty() {
                 return Ok(XEvent::KeyPress(common::EXIT_CODE));
