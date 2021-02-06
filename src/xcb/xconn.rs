@@ -18,7 +18,8 @@ use crate::{
         manager::WindowManager,
         screen::Screen,
         xconnection::{
-            Atom, ClientAttr, ClientConfig, Prop, Result, XConn, XEvent, XEventHandler, Xid,
+            Atom, ClientAttr, ClientConfig, ClientMessage, ClientMessageKind, Prop, Result, XConn,
+            XEvent, XEventHandler, Xid,
         },
     },
     xcb::{Api, XcbError},
@@ -85,6 +86,7 @@ impl WindowManager<XcbConnection> {
     }
 }
 
+crate::__xcb_impl_xatom_querier!(XcbConnection);
 crate::__xcb_impl_xclientconfig!(XcbConnection);
 crate::__xcb_impl_xclienthandler!(XcbConnection);
 crate::__xcb_impl_xclientproperties!(XcbConnection);

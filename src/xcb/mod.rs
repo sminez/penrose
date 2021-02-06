@@ -172,6 +172,22 @@ pub enum XcbError {
 
 #[doc(hidden)]
 #[macro_export]
+macro_rules! __xcb_impl_xatom_querier {
+    { $struct:ident } => {
+        impl $crate::core::xconnection::XAtomQuerier for $struct {
+            fn atom_name(&self, atom: Xid) -> $crate::core::xconnection::Result<String> {
+                Ok(self.api.atom_name(atom)?)
+            }
+
+            fn atom_id(&self, name: &str) -> $crate::core::xconnection::Result<Xid> {
+                Ok(self.api.atom(name)?)
+            }
+        }
+    }
+}
+
+#[doc(hidden)]
+#[macro_export]
 macro_rules! __xcb_impl_xstate {
     { $struct:ident } => {
         impl $crate::core::xconnection::XState for $struct {
@@ -213,10 +229,6 @@ macro_rules! __xcb_impl_xstate {
             fn focused_client(&self) -> $crate::core::xconnection::Result<Xid> {
                 Ok(self.api.focused_client()?)
             }
-
-            fn atom_name(&self, atom: Xid) -> $crate::core::xconnection::Result<String> {
-                Ok(self.api.atom_name(atom)?)
-            }
         }
     }
 }
@@ -234,8 +246,12 @@ macro_rules! __xcb_impl_xeventhandler {
                 Ok(self.api.wait_for_event()?)
             }
 
-            fn send_client_event(&self, id: Xid, atom_name: &str, data: &[u32]) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.send_client_event(id, atom_name, data)?)
+            fn send_client_event(&self, msg: ClientMessage) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.send_client_event(msg)?)
+            }
+
+            fn build_client_event(&self, kind: ClientMessageKind) -> $crate::core::xconnection::Result<ClientMessage> {
+                        Ok(self.api.build_client_event(kind)?)
             }
         }
     }

@@ -243,6 +243,12 @@ macro_rules! str_slice {
     };
 }
 
+macro_rules! cast_slice {
+    ($s:expr, $t:ty) => {
+        $s.iter().map(|&v| v as $t).collect::<Vec<$t>>()
+    };
+}
+
 // Auto generate a struct and associated builder struct with getter methods
 // on the generated (private) struct fields but no setters.
 //
@@ -379,6 +385,7 @@ macro_rules! __impl_stub_xcon {
     {
         for $struct:ident;
 
+        atom_queries: { $($atomquery:tt)* }
         client_properties: { $($cprops:tt)* }
         client_handler: { $($chandler:tt)* }
         client_config: { $($cconfig:tt)* }
@@ -386,6 +393,7 @@ macro_rules! __impl_stub_xcon {
         state: { $($state:tt)* }
         conn: { $($conn:tt)* }
     } => {
+        impl $crate::core::xconnection::StubXAtomQuerier for $struct { $($atomquery)* }
         impl $crate::core::xconnection::StubXClientProperties for $struct { $($cprops)* }
         impl $crate::core::xconnection::StubXClientHandler for $struct { $($chandler)* }
         impl $crate::core::xconnection::StubXClientConfig for $struct { $($cconfig)* }

@@ -4,7 +4,9 @@ use crate::core::{
     bindings::{KeyCode, MouseEvent},
     client::Client,
     data_types::{Point, Region},
-    xconnection::{Atom, XConn, XEvent, Xid},
+    xconnection::{
+        Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XConn, XEvent, Xid,
+    },
 };
 
 use std::{collections::HashMap, str::FromStr};
@@ -65,91 +67,88 @@ where
 {
     match event {
         // Direct 1-n mappings of XEvents -> EventActions
-        XEvent::Destroy { id } => vec![EventAction::DestroyClient(id)],
-        XEvent::Expose { .. } => vec![], // TODO: work out if this needs handling in the WindowManager
+        XEvent::Destroy(id) => vec![EventAction::DestroyClient(id)],
+        XEvent::Expose(_) => vec![], // FIXME: work out if this needs handling in the WindowManager
         XEvent::KeyPress(code) => vec![EventAction::RunKeyBinding(code)],
-        XEvent::Leave { id, rpt, .. } => vec![
-            EventAction::ClientFocusLost(id),
-            EventAction::SetScreenFromPoint(Some(rpt)),
+        XEvent::Leave(p) => vec![
+            EventAction::ClientFocusLost(p.id),
+            EventAction::SetScreenFromPoint(Some(p.abs)),
         ],
         XEvent::MouseEvent(evt) => vec![EventAction::RunMouseBinding(evt)],
         XEvent::RandrNotify => vec![EventAction::DetectScreens],
         XEvent::ScreenChange => vec![EventAction::SetScreenFromPoint(None)],
 
         // Require processing based on current WindowManager state
-        XEvent::ClientMessage { id, dtype, data } => {
-            process_client_message(state, id, &dtype, &data)
-        }
-        XEvent::ConfigureNotify { id, r, is_root } => process_configure_notify(id, r, is_root),
-        XEvent::ConfigureRequest { id, r, is_root } => process_configure_request(id, r, is_root),
-        XEvent::Enter { id, rpt, .. } => process_enter_notify(state, id, rpt),
-        XEvent::MapRequest { id, ignore } => process_map_request(state, id, ignore),
-        XEvent::PropertyNotify { id, atom, is_root } => process_property_notify(id, atom, is_root),
+        XEvent::ClientMessage(msg) => process_client_message(state, msg),
+        XEvent::ConfigureNotify(evt) => process_configure_notify(evt),
+        XEvent::ConfigureRequest(evt) => process_configure_request(evt),
+        XEvent::Enter(p) => process_enter_notify(state, p),
+        XEvent::MapRequest(id, ignore) => process_map_request(state, id, ignore),
+        XEvent::PropertyNotify(evt) => process_property_notify(evt),
     }
 }
 
-fn process_client_message<X>(
-    state: WmState<'_, X>,
-    id: Xid,
-    dtype: &str,
-    data: &[usize],
-) -> Vec<EventAction>
+fn process_client_message<X>(state: WmState<'_, X>, msg: ClientMessage) -> Vec<EventAction>
 where
     X: XConn,
 {
+    let data = msg.data();
     debug!(
         "GOT CLIENT MESSAGE: id={} atom={} data={:?}",
-        id, dtype, data
+        msg.id, msg.dtype, data
     );
 
-    let is_fullscreen = |data: &[usize]| {
+    let is_fullscreen = |data: &[u32]| {
         data.iter()
-            .map(|&a| state.conn.atom_name(a as u32))
+            .map(|&a| state.conn.atom_name(a))
             .flatten()
             .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
     };
 
-    match Atom::from_str(&dtype) {
-        Ok(Atom::NetActiveWindow) => vec![EventAction::SetActiveClient(id)],
-        Ok(Atom::NetCurrentDesktop) => vec![EventAction::SetActiveWorkspace(data[0])],
-        Ok(Atom::NetWmDesktop) => vec![EventAction::ClientToWorkspace(id, data[0])],
+    match Atom::from_str(&msg.dtype) {
+        Ok(Atom::NetActiveWindow) => vec![EventAction::SetActiveClient(msg.id)],
+        Ok(Atom::NetCurrentDesktop) => vec![EventAction::SetActiveWorkspace(data[0] as usize)],
+        Ok(Atom::NetWmDesktop) => vec![EventAction::ClientToWorkspace(msg.id, data[0] as usize)],
         Ok(Atom::NetWmState) if is_fullscreen(&data[1..3]) => {
             // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
             let should_fullscreen = [1, 2].contains(&data[0]);
-            vec![EventAction::ToggleClientFullScreen(id, should_fullscreen)]
+            vec![EventAction::ToggleClientFullScreen(
+                msg.id,
+                should_fullscreen,
+            )]
         }
 
         _ => vec![],
     }
 }
 
-fn process_configure_notify(_id: Xid, _r: Region, is_root: bool) -> Vec<EventAction> {
-    if is_root {
+fn process_configure_notify(evt: ConfigureEvent) -> Vec<EventAction> {
+    if evt.is_root {
         vec![EventAction::DetectScreens]
     } else {
         vec![]
     }
 }
 
-fn process_configure_request(id: Xid, r: Region, is_root: bool) -> Vec<EventAction> {
-    if !is_root {
-        vec![EventAction::MoveClientIfFloating(id, r)]
+fn process_configure_request(evt: ConfigureEvent) -> Vec<EventAction> {
+    if !evt.is_root {
+        vec![EventAction::MoveClientIfFloating(evt.id, evt.r)]
     } else {
         vec![]
     }
 }
 
-fn process_enter_notify<X>(state: WmState<'_, X>, id: Xid, rpt: Point) -> Vec<EventAction>
+fn process_enter_notify<X>(state: WmState<'_, X>, p: PointerChange) -> Vec<EventAction>
 where
     X: XConn,
 {
     let mut actions = vec![
-        EventAction::ClientFocusGained(id),
-        EventAction::SetScreenFromPoint(Some(rpt)),
+        EventAction::ClientFocusGained(p.id),
+        EventAction::SetScreenFromPoint(Some(p.abs)),
     ];
 
     if let Some(current) = state.focused_client {
-        if current != id {
+        if current != p.id {
             actions.insert(0, EventAction::ClientFocusLost(current));
         }
     }
@@ -168,11 +167,15 @@ where
     }
 }
 
-fn process_property_notify(id: Xid, atom: String, is_root: bool) -> Vec<EventAction> {
-    match Atom::from_str(&atom) {
+fn process_property_notify(evt: PropertyEvent) -> Vec<EventAction> {
+    match Atom::from_str(&evt.atom) {
         Ok(a) if a == Atom::WmName || a == Atom::NetWmName => {
-            vec![EventAction::ClientNameChanged(id, is_root)]
+            vec![EventAction::ClientNameChanged(evt.id, evt.is_root)]
         }
-        _ => vec![EventAction::UnknownPropertyChange(id, atom, is_root)],
+        _ => vec![EventAction::UnknownPropertyChange(
+            evt.id,
+            evt.atom,
+            evt.is_root,
+        )],
     }
 }

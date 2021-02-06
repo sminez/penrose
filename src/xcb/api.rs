@@ -6,8 +6,9 @@ use crate::{
         helpers::spawn_for_output,
         screen::Screen,
         xconnection::{
-            Atom, ClientAttr, ClientConfig, Prop, WmHints, WmNormalHints, XEvent, Xid,
-            UNMANAGED_WINDOW_TYPES,
+            Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageKind,
+            ConfigureEvent, ExposeEvent, PointerChange, Prop, PropertyEvent, WmHints,
+            WmNormalHints, XAtomQuerier, XEvent, Xid, UNMANAGED_WINDOW_TYPES,
         },
     },
     xcb::{Result, XcbError, XcbGenericEvent},
@@ -90,6 +91,16 @@ impl fmt::Debug for Api {
     }
 }
 
+impl XAtomQuerier for Api {
+    fn atom_name(&self, atom: Xid) -> crate::core::xconnection::Result<String> {
+        Ok(self.atom_name(atom)?)
+    }
+
+    fn atom_id(&self, name: &str) -> crate::core::xconnection::Result<Xid> {
+        Ok(self.atom(name)?)
+    }
+}
+
 impl Drop for Api {
     fn drop(&mut self) {
         if let Err(e) = self.destroy_client(self.check_win) {
@@ -144,10 +155,10 @@ impl Api {
         let reply = cookie.get_reply()?;
         let (maj, min) = (reply.major_version(), reply.minor_version());
         if (maj, min) != (RANDR_MAJ, RANDR_MIN) {
-            panic!(format!(
+            return Err(XcbError::Randr(format!(
                 "penrose requires RandR version >= {}.{}: detected {}.{}\nplease update RandR to a newer version",
                 RANDR_MAJ, RANDR_MIN, maj, min
-            ))
+            )));
         }
 
         self.check_win = self.conn.generate_id();
@@ -410,38 +421,35 @@ impl Api {
                 xcb::xproto::get_window_attributes(&self.conn, id)
                     .get_reply()
                     .ok()
-                    .map(|r| XEvent::MapRequest {
-                        id,
-                        ignore: r.override_redirect(),
-                    })
+                    .map(|r| XEvent::MapRequest(id, r.override_redirect()))
             }
 
             xcb::ENTER_NOTIFY => {
                 let e: &xcb::EnterNotifyEvent = unsafe { xcb::cast_event(&event) };
-                Some(XEvent::Enter {
+                Some(XEvent::Enter(PointerChange {
                     id: e.event(),
-                    rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                    wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                })
+                    abs: Point::new(e.root_x() as u32, e.root_y() as u32),
+                    relative: Point::new(e.event_x() as u32, e.event_y() as u32),
+                }))
             }
 
             xcb::LEAVE_NOTIFY => {
                 let e: &xcb::LeaveNotifyEvent = unsafe { xcb::cast_event(&event) };
-                Some(XEvent::Leave {
+                Some(XEvent::Leave(PointerChange {
                     id: e.event(),
-                    rpt: Point::new(e.root_x() as u32, e.root_y() as u32),
-                    wpt: Point::new(e.event_x() as u32, e.event_y() as u32),
-                })
+                    abs: Point::new(e.root_x() as u32, e.root_y() as u32),
+                    relative: Point::new(e.event_x() as u32, e.event_y() as u32),
+                }))
             }
 
             xcb::DESTROY_NOTIFY => {
                 let e: &xcb::DestroyNotifyEvent = unsafe { xcb::cast_event(&event) };
-                Some(XEvent::Destroy { id: e.window() })
+                Some(XEvent::Destroy(e.window()))
             }
 
             xcb::CONFIGURE_NOTIFY => {
                 let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
-                Some(XEvent::ConfigureNotify {
+                Some(XEvent::ConfigureNotify(ConfigureEvent {
                     id: e.window(),
                     r: Region::new(
                         e.x() as u32,
@@ -450,12 +458,12 @@ impl Api {
                         e.height() as u32,
                     ),
                     is_root: e.window() == self.root,
-                })
+                }))
             }
 
             xcb::CONFIGURE_REQUEST => {
                 let e: &xcb::ConfigureNotifyEvent = unsafe { xcb::cast_event(&event) };
-                Some(XEvent::ConfigureRequest {
+                Some(XEvent::ConfigureRequest(ConfigureEvent {
                     id: e.window(),
                     r: Region::new(
                         e.x() as u32,
@@ -464,12 +472,12 @@ impl Api {
                         e.height() as u32,
                     ),
                     is_root: e.window() == self.root,
-                })
+                }))
             }
 
             xcb::EXPOSE => {
                 let e: &xcb::ExposeEvent = unsafe { xcb::cast_event(&event) };
-                Some(XEvent::Expose {
+                Some(XEvent::Expose(ExposeEvent {
                     id: e.window(),
                     r: Region::new(
                         e.x() as u32,
@@ -478,26 +486,32 @@ impl Api {
                         e.height() as u32,
                     ),
                     count: e.count() as usize,
-                })
+                }))
             }
 
             xcb::CLIENT_MESSAGE => {
                 let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
                 xcb::xproto::get_atom_name(&self.conn, e.type_())
                     .get_reply()
-                    .ok()
-                    .map(|a| XEvent::ClientMessage {
-                        id: e.window(),
-                        dtype: a.name().to_string(),
-                        data: match e.format() {
-                            8 => e.data().data8().iter().map(|&d| d as usize).collect(),
-                            16 => e.data().data16().iter().map(|&d| d as usize).collect(),
-                            32 => e.data().data32().iter().map(|&d| d as usize).collect(),
-                            _ => unreachable!(
-                                "ClientMessageEvent.format should really be an enum..."
-                            ),
-                        },
+                    .map_err(|e| XcbError::XcbGeneric(e))
+                    .and_then(|a| {
+                        ClientMessage::try_from_data(
+                            e.window(),
+                            ClientEventMask::NoEventMask,
+                            a.name(),
+                            &match e.format() {
+                                8 => cast_slice!(e.data().data8(), u32),
+                                16 => cast_slice!(e.data().data16(), u32),
+                                32 => e.data().data32().to_vec(),
+                                _ => unreachable!(
+                                    "ClientMessageEvent.format should really be an enum..."
+                                ),
+                            },
+                        )
+                        .map_err(|e| XcbError::Raw(format!("Invalid client message data: {}", e)))
+                        .map(|cm| XEvent::ClientMessage(cm))
                     })
+                    .ok()
             }
 
             xcb::PROPERTY_NOTIFY => {
@@ -505,10 +519,12 @@ impl Api {
                 xcb::xproto::get_atom_name(&self.conn, e.atom())
                     .get_reply()
                     .ok()
-                    .map(|a| XEvent::PropertyNotify {
-                        id: e.window(),
-                        atom: a.name().to_string(),
-                        is_root: e.window() == self.root,
+                    .map(|a| {
+                        XEvent::PropertyNotify(PropertyEvent {
+                            id: e.window(),
+                            atom: a.name().to_string(),
+                            is_root: e.window() == self.root,
+                        })
                     })
             }
 
@@ -746,18 +762,25 @@ impl Api {
         )
     }
 
-    // FIXME: work out the correct way of sending arbitrary client events
     /// Send an event to a client
-    pub fn send_client_event(&self, id: Xid, atom_name: &str, _data: &[u32]) -> Result<()> {
-        let atom = self.atom(atom_name)?;
-        let wm_protocols = self.known_atom(Atom::WmProtocols);
-        let data = xcb::ClientMessageData::from_data32([atom, xcb::CURRENT_TIME, 0, 0, 0]);
-        let event = xcb::ClientMessageEvent::new(32, id, wm_protocols, data);
+    pub fn send_client_event(&self, msg: ClientMessage) -> Result<()> {
+        let (dtype, d) = (self.atom(&msg.dtype)?, msg.data());
+        let data = xcb::ClientMessageData::from_data32([d[0], d[1], d[2], d[3], d[4]]);
+        let event = xcb::ClientMessageEvent::new(32, msg.id, dtype, data);
+        let mask = match msg.mask {
+            ClientEventMask::NoEventMask => xcb::EVENT_MASK_NO_EVENT,
+            ClientEventMask::SubstructureNotify => xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY,
+        };
 
-        Ok(
-            xcb::send_event_checked(&self.conn, false, id, xcb::EVENT_MASK_NO_EVENT, &event)
-                .request_check()?,
-        )
+        Ok(xcb::send_event_checked(&self.conn, false, msg.id, mask, &event).request_check()?)
+    }
+
+    /// Build a new known client event
+    pub fn build_client_event(
+        &self,
+        kind: ClientMessageKind,
+    ) -> crate::core::xconnection::Result<ClientMessage> {
+        kind.as_message(self)
     }
 
     /// Set attributes on the target client

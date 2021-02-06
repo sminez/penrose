@@ -260,6 +260,7 @@ mod tests {
 
     struct OutputsXConn(Vec<Screen>);
 
+    impl StubXAtomQuerier for OutputsXConn {}
     impl StubXState for OutputsXConn {
         fn mock_current_screens(&self) -> Result<Vec<Screen>> {
             Ok(self.0.clone())

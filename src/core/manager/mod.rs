@@ -2569,6 +2569,7 @@ mod tests {
     __impl_stub_xcon! {
         for ScreenChangingXConn;
 
+        atom_queries: {}
         client_properties: {}
         client_handler: {}
         client_config: {}

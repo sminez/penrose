@@ -85,9 +85,7 @@ pub fn row_layout(
 }
 
 pub fn n_clients(n: u32) -> Vec<XEvent> {
-    (0..n)
-        .map(|id| XEvent::MapRequest { id, ignore: false })
-        .collect()
+    (0..n).map(|id| XEvent::MapRequest(id, false)).collect()
 }
 
 pub fn example_key_bindings() -> ExampleKeyBindings {
@@ -164,6 +162,7 @@ impl ExampleXConn {
 __impl_stub_xcon! {
     for ExampleXConn;
 
+    atom_queries: {}
     client_properties: {}
     client_handler: {
         fn mock_focus_client(&self, id: Xid) -> Result<()> {

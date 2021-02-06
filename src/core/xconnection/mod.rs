@@ -28,7 +28,10 @@ pub mod property;
 pub use atom::{
     Atom, AtomIter, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS, UNMANAGED_WINDOW_TYPES,
 };
-pub use event::XEvent;
+pub use event::{
+    ClientEventMask, ClientMessage, ClientMessageKind, ConfigureEvent, ExposeEvent, PointerChange,
+    PropertyEvent, XEvent,
+};
 pub use property::{Prop, WmHints, WmNormalHints, WmNormalHintsFlags};
 
 /// An X resource ID
@@ -42,6 +45,10 @@ pub enum XError {
     /// The underlying connection to the X server is closed
     #[error("The underlying connection to the X server is closed")]
     ConnectionClosed,
+
+    /// Client data was malformed
+    #[error("ClientMessage data must be 5 u32s: got {0}")]
+    InvalidClientMessageData(usize),
 
     /// The requested property is not set for the given client
     #[error("The {0} property is not set for client {1}")]
@@ -113,9 +120,21 @@ pub enum KeyPressParseAttempt {
     XEvent(XEvent),
 }
 
+/// Convert between string representations of X atoms and their IDs
+#[stubbed_companion_trait(doc_hidden = "true")]
+pub trait XAtomQuerier {
+    /// Convert an X atom id to its human friendly name
+    #[stub(Err(XError::Raw("mocked".into())))]
+    fn atom_name(&self, atom: Xid) -> Result<String>;
+
+    /// Fetch or intern an atom by name
+    #[stub(Err(XError::Raw("mocked".into())))]
+    fn atom_id(&self, name: &str) -> Result<Xid>;
+}
+
 /// State queries against the running X server
 #[stubbed_companion_trait(doc_hidden = "true")]
-pub trait XState {
+pub trait XState: XAtomQuerier {
     /// The root window ID
     #[stub(42)]
     fn root(&self) -> Xid;
@@ -144,10 +163,6 @@ pub trait XState {
     /// Return the client ID of the [crate::core::client::Client] that currently holds X focus
     #[stub(Ok(0))]
     fn focused_client(&self) -> Result<Xid>;
-
-    /// Convert an X atom id to its human friendly name
-    #[stub(Err(XError::Raw("mocked".into())))]
-    fn atom_name(&self, atom: Xid) -> Result<String>;
 }
 
 /// Sending and receiving X events
@@ -161,9 +176,18 @@ pub trait XEventHandler {
     #[stub(Err(XError::Raw("mocked".into())))]
     fn wait_for_event(&self) -> Result<XEvent>;
 
-    /// Send an X event to the target window
-    #[stub(Ok(()))]
-    fn send_client_event(&self, id: Xid, atom_name: &str, data: &[u32]) -> Result<()>;
+    /// Send an X event to the target client
+    ///
+    /// The `msg` being sent can be composed by hand or, for known common message types, generated
+    /// using the [build_client_event][1] method.
+    ///
+    /// [1]: XEventHandler::build_client_event
+    #[stub(Err(XError::Raw("mocked".into())))]
+    fn send_client_event(&self, msg: ClientMessage) -> Result<()>;
+
+    /// Build the required event data for sending a known client event.
+    #[stub(Err(XError::Raw("mocked".into())))]
+    fn build_client_event(&self, kind: ClientMessageKind) -> Result<ClientMessage>;
 }
 
 /// Management of the visibility and lifecycle of X clients
@@ -568,6 +592,7 @@ mod mock_conn {
     __impl_stub_xcon! {
         for MockXConn;
 
+        atom_queries: {}
         client_properties: {
             fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
                 if name == Atom::WmName.as_ref() || name == Atom::NetWmName.as_ref() {

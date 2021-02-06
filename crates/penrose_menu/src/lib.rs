@@ -16,7 +16,7 @@ use penrose::{
     core::{
         bindings::KeyPress,
         data_types::{Region, WinType},
-        xconnection::{Atom, KeyPressParseAttempt, Prop, XEvent, Xid},
+        xconnection::{Atom, ExposeEvent, KeyPressParseAttempt, Prop, XEvent, Xid},
     },
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
@@ -329,7 +329,7 @@ where
         loop {
             debug!("waiting for keypress");
             match self.drw.next_keypress_blocking()? {
-                KeyPressParseAttempt::XEvent(XEvent::Expose { id, count, .. }) => {
+                KeyPressParseAttempt::XEvent(XEvent::Expose(ExposeEvent { id, count, .. })) => {
                     debug!("got expose event");
                     if Some(id) == self.id && count == 0 {
                         self.redraw(with_prompt)?;

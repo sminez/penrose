@@ -10,7 +10,7 @@ use penrose::{
         hooks::{Hook, Hooks},
         manager::WindowManager,
         screen::Screen,
-        xconnection::{Atom, Prop, Result, XConn, XError, XEvent, Xid},
+        xconnection::{Atom, Prop, PropertyEvent, Result, XConn, XError, XEvent, Xid},
     },
     logging_error_handler,
 };
@@ -45,6 +45,7 @@ impl TestXConn {
 __impl_stub_xcon! {
     for TestXConn;
 
+    atom_queries: {}
     client_properties: {
         fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
             if name == Atom::NetWmName.as_ref() {
@@ -141,25 +142,25 @@ test_cases! {
     args: (method: &'static str, n_calls: usize, events: Vec<XEvent>);
 
     case: client_name_updated => ("client_name_updated", 2, vec![
-        XEvent::PropertyNotify { id: 1, atom: "WM_NAME".into(), is_root: false },
-        XEvent::PropertyNotify { id: 1, atom: "_NET_WM_NAME".into(), is_root: false },
+        XEvent::PropertyNotify(PropertyEvent { id: 1, atom: "WM_NAME".into(), is_root: false }),
+        XEvent::PropertyNotify(PropertyEvent { id: 1, atom: "_NET_WM_NAME".into(), is_root: false }),
     ]);
     case: client_added_to_workspace => ("client_added_to_workspace", 2, vec![
-        XEvent::MapRequest { id: 1, ignore: false },
+        XEvent::MapRequest(1, false),
         XEvent::KeyPress(common::CLIENT_TO_WORKSPACE_CODE)
     ]);
     case: event_handled => ("event_handled", 2, vec![XEvent::ScreenChange]);
     case: focus_change => ("focus_change", 3, vec![
-        XEvent::MapRequest { id: 1, ignore: false },
-        XEvent::MapRequest { id: 2, ignore: false },
+        XEvent::MapRequest(1, false),
+        XEvent::MapRequest(2, false),
         XEvent::KeyPress(common::FOCUS_CHANGE_CODE)
     ]);
     case: layout_applied => ("layout_applied", 3, vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)]);
     case: layout_change => ("layout_change", 1, vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)]);
-    case: new_client => ("new_client", 1, vec![XEvent::MapRequest { id: 1, ignore: false}]);
+    case: new_client => ("new_client", 1, vec![XEvent::MapRequest(1, false)]);
     case: randr_notify => ("randr_notify", 1, vec![XEvent::RandrNotify]);
     case: remove_client => ("remove_client", 1, vec![
-        XEvent::MapRequest { id: 1, ignore: false},
+        XEvent::MapRequest(1, false),
         XEvent::KeyPress(common::KILL_CLIENT_CODE)
     ]);
     case: screen_change => ("screen_change", 1, vec![XEvent::KeyPress(common::SCREEN_CHANGE_CODE)]);

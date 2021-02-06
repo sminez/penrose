@@ -40,6 +40,7 @@ impl EarlyExitConn {
 __impl_stub_xcon! {
     for EarlyExitConn;
 
+    atom_queries: {}
     client_properties: {
         fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
             if name == Atom::NetWmName.as_ref() {
@@ -99,19 +100,10 @@ fn get_seeded_wm(valid_clients: bool) -> WindowManager<EarlyExitConn> {
     let conn = EarlyExitConn::new(
         valid_clients,
         vec![
-            XEvent::MapRequest {
-                id: 1,
-                ignore: false,
-            },
+            XEvent::MapRequest(1, false),
             XEvent::KeyPress(common::WORKSPACE_CHANGE_CODE),
-            XEvent::MapRequest {
-                id: 2,
-                ignore: false,
-            },
-            XEvent::MapRequest {
-                id: 3,
-                ignore: false,
-            },
+            XEvent::MapRequest(2, false),
+            XEvent::MapRequest(3, false),
             XEvent::KeyPress(common::FOCUS_CHANGE_CODE),
         ],
     );
