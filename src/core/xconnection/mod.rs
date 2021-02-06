@@ -263,6 +263,16 @@ pub trait XClientProperties {
      *  equivaled to those implemented here.
      */
 
+    /// Check to see if a given client window supports a particular protocol or not
+    fn client_supports_protocol(&self, id: Xid, proto: &str) -> Result<bool> {
+        match self.get_prop(id, Atom::WmProtocols.as_ref()) {
+            Ok(Prop::Atom(protocols)) => Ok(protocols.iter().any(|p| p == proto)),
+            Ok(p) => Err(XError::Raw(format!("Expected atoms, got {:?}", p))),
+            Err(XError::MissingProperty(_, _)) => Ok(false),
+            Err(e) => Err(e),
+        }
+    }
+
     /// Toggle the fullscreen state of the given client ID with the X server
     fn toggle_client_fullscreen(&self, id: Xid, client_is_fullscreen: bool) -> Result<()> {
         let data = if client_is_fullscreen {

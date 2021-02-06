@@ -35,7 +35,7 @@ run-embeded:
 
 .PHONY: test
 test:
-	cargo test --all-features
+	cargo test --lib
 
 .PHONY: test-and-publish
 test-and-publish:

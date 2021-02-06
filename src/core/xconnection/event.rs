@@ -72,11 +72,11 @@ impl ClientMessageKind {
     where
         Q: XAtomQuerier,
     {
-        let atom_msg = |id: Xid, atom: Atom| {
-            let atom = atom.as_ref();
-            let data = &[s.atom_id(atom)?, 0, 0, 0, 0];
+        let proto_msg = |id: Xid, atom: Atom| {
+            let proto = Atom::WmProtocols.as_ref();
+            let data = &[s.atom_id(atom.as_ref())?, 0, 0, 0, 0];
             let mask = ClientEventMask::NoEventMask;
-            Ok(ClientMessage::from_data_unchecked(id, mask, atom, data))
+            Ok(ClientMessage::from_data_unchecked(id, mask, proto, data))
         };
 
         // https://specifications.freedesktop.org/xembed-spec/xembed-spec-latest.html
@@ -94,8 +94,8 @@ impl ClientMessageKind {
         };
 
         match self {
-            ClientMessageKind::DeleteWindow(id) => atom_msg(*id, Atom::WmDeleteWindow),
-            ClientMessageKind::TakeFocus(id) => atom_msg(*id, Atom::WmTakeFocus),
+            ClientMessageKind::DeleteWindow(id) => proto_msg(*id, Atom::WmDeleteWindow),
+            ClientMessageKind::TakeFocus(id) => proto_msg(*id, Atom::WmTakeFocus),
 
             ClientMessageKind::TakeSystrayOwnership(root_id, systray_id) => {
                 let atom = Atom::Manager.as_ref();

@@ -9,7 +9,7 @@ use crate::{
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{XConn, Xid},
+        xconnection::{Atom, ClientMessageKind, XConn, Xid},
     },
     ErrorHandler, PenroseError, Result,
 };
@@ -1559,14 +1559,25 @@ impl<X: XConn> WindowManager<X> {
     /// # example(manager).unwrap();
     /// ```
     pub fn kill_client(&mut self) -> Result<()> {
-        let id = self.conn.focused_client()?;
-        if let Err(e) = self.conn.destroy_client(id) {
-            error!("Error killing client: {}", e);
-        }
-        self.conn.flush();
+        if let Some(id) = self.focused_client {
+            let del = Atom::WmDeleteWindow.as_ref();
+            let res = if let Ok(true) = self.conn.client_supports_protocol(id, del) {
+                ClientMessageKind::DeleteWindow(id)
+                    .as_message(&self.conn)
+                    .and_then(|msg| self.conn.send_client_event(msg))
+                    .or(self.conn.destroy_client(id))
+            } else {
+                self.conn.destroy_client(id)
+            };
 
-        self.remove_client(id)?;
-        self.apply_layout(self.active_ws_index())?;
+            if let Err(e) = res {
+                error!("Error killing client: {}", e);
+            }
+
+            self.conn.flush();
+            self.remove_client(id)?;
+            self.apply_layout(self.active_ws_index())?;
+        }
 
         Ok(())
     }
