@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - develop
-  pull_request_target:
+  pull_request:
     branches:
       - develop
 
@@ -60,7 +60,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         args: --workspace --all-targets --all-features --examples --tests
-    # - run: cargo clippy --workspace --all-targets --all-features --examples --tests --verbose
 
   rustdoc-links:
     name: Check doc links are valid
