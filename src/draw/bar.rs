@@ -7,6 +7,21 @@
 //!
 //! A minimal example bar configuration is provided in the form of [dwm_bar] which aims to emulate
 //! the behaviour and appearance of the built in status bar from `dwm`.
+//!
+//! Example
+//! ```rust
+//! let hooks = vec![
+//!     Box::new(dwm_bar(
+//!         XcbDraw::new()?,
+//!         HEIGHT,
+//!         &style,
+//!         highlight,
+//!         empty_ws,
+//!         workspaces,
+//!     )?)
+//! ];
+//! let mut wm = new_xcb_backend_window_manager(config, hooks, logging_error_handler())?;
+//! ```
 use crate::{
     core::{
         client::Client,
