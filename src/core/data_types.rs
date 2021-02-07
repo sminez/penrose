@@ -187,7 +187,7 @@ impl Region {
         }
     }
 
-    /// Check whether this Region contains `other` as a sub-Region
+    /// Check whether this Region contains `p`
     ///
     /// # Examples
     ///

@@ -45,9 +45,6 @@ impl Screen {
     /// Determine whether or not an absolute coordinate Point (relative to the root window) is
     /// located on this screen.
     pub fn contains(&self, p: Point) -> bool {
-        let (x1, y1, w, h) = self.true_region.values();
-        let (x2, y2) = (x1 + w, x1 + h);
-
-        p.x >= x1 && p.x < x2 && p.y >= y1 && p.y < y2
+        self.true_region.contains_point(&p)
     }
 }
