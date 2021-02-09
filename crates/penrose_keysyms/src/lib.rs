@@ -1988,6 +1988,558 @@ pub enum XKeySym {
     /// XK_EuroSign
     #[strum(serialize = "EuroSign")]
     XK_EuroSign,
+    /// XF86XK_ModeLock
+    #[strum(serialize = "XF86ModeLock")]
+    XF86XK_ModeLock,
+    /// XF86XK_MonBrightnessUp
+    #[strum(serialize = "XF86MonBrightnessUp")]
+    XF86XK_MonBrightnessUp,
+    /// XF86XK_MonBrightnessDown
+    #[strum(serialize = "XF86MonBrightnessDown")]
+    XF86XK_MonBrightnessDown,
+    /// XF86XK_KbdLightOnOff
+    #[strum(serialize = "XF86KbdLightOnOff")]
+    XF86XK_KbdLightOnOff,
+    /// XF86XK_KbdBrightnessUp
+    #[strum(serialize = "XF86KbdBrightnessUp")]
+    XF86XK_KbdBrightnessUp,
+    /// XF86XK_KbdBrightnessDown
+    #[strum(serialize = "XF86KbdBrightnessDown")]
+    XF86XK_KbdBrightnessDown,
+    /// XF86XK_MonBrightnessCycle
+    #[strum(serialize = "XF86MonBrightnessCycle")]
+    XF86XK_MonBrightnessCycle,
+    /// XF86XK_Standby
+    #[strum(serialize = "XF86Standby")]
+    XF86XK_Standby,
+    /// XF86XK_AudioLowerVolume
+    #[strum(serialize = "XF86AudioLowerVolume")]
+    XF86XK_AudioLowerVolume,
+    /// XF86XK_AudioMute
+    #[strum(serialize = "XF86AudioMute")]
+    XF86XK_AudioMute,
+    /// XF86XK_AudioRaiseVolume
+    #[strum(serialize = "XF86AudioRaiseVolume")]
+    XF86XK_AudioRaiseVolume,
+    /// XF86XK_AudioPlay
+    #[strum(serialize = "XF86AudioPlay")]
+    XF86XK_AudioPlay,
+    /// XF86XK_AudioStop
+    #[strum(serialize = "XF86AudioStop")]
+    XF86XK_AudioStop,
+    /// XF86XK_AudioPrev
+    #[strum(serialize = "XF86AudioPrev")]
+    XF86XK_AudioPrev,
+    /// XF86XK_AudioNext
+    #[strum(serialize = "XF86AudioNext")]
+    XF86XK_AudioNext,
+    /// XF86XK_HomePage
+    #[strum(serialize = "XF86HomePage")]
+    XF86XK_HomePage,
+    /// XF86XK_Mail
+    #[strum(serialize = "XF86Mail")]
+    XF86XK_Mail,
+    /// XF86XK_Start
+    #[strum(serialize = "XF86Start")]
+    XF86XK_Start,
+    /// XF86XK_Search
+    #[strum(serialize = "XF86Search")]
+    XF86XK_Search,
+    /// XF86XK_AudioRecord
+    #[strum(serialize = "XF86AudioRecord")]
+    XF86XK_AudioRecord,
+    /// XF86XK_Calculator
+    #[strum(serialize = "XF86Calculator")]
+    XF86XK_Calculator,
+    /// XF86XK_Memo
+    #[strum(serialize = "XF86Memo")]
+    XF86XK_Memo,
+    /// XF86XK_ToDoList
+    #[strum(serialize = "XF86ToDoList")]
+    XF86XK_ToDoList,
+    /// XF86XK_Calendar
+    #[strum(serialize = "XF86Calendar")]
+    XF86XK_Calendar,
+    /// XF86XK_PowerDown
+    #[strum(serialize = "XF86PowerDown")]
+    XF86XK_PowerDown,
+    /// XF86XK_ContrastAdjust
+    #[strum(serialize = "XF86ContrastAdjust")]
+    XF86XK_ContrastAdjust,
+    /// XF86XK_RockerUp
+    #[strum(serialize = "XF86RockerUp")]
+    XF86XK_RockerUp,
+    /// XF86XK_RockerDown
+    #[strum(serialize = "XF86RockerDown")]
+    XF86XK_RockerDown,
+    /// XF86XK_RockerEnter
+    #[strum(serialize = "XF86RockerEnter")]
+    XF86XK_RockerEnter,
+    /// XF86XK_Back
+    #[strum(serialize = "XF86Back")]
+    XF86XK_Back,
+    /// XF86XK_Forward
+    #[strum(serialize = "XF86Forward")]
+    XF86XK_Forward,
+    /// XF86XK_Stop
+    #[strum(serialize = "XF86Stop")]
+    XF86XK_Stop,
+    /// XF86XK_Refresh
+    #[strum(serialize = "XF86Refresh")]
+    XF86XK_Refresh,
+    /// XF86XK_PowerOff
+    #[strum(serialize = "XF86PowerOff")]
+    XF86XK_PowerOff,
+    /// XF86XK_WakeUp
+    #[strum(serialize = "XF86WakeUp")]
+    XF86XK_WakeUp,
+    /// XF86XK_Eject
+    #[strum(serialize = "XF86Eject")]
+    XF86XK_Eject,
+    /// XF86XK_ScreenSaver
+    #[strum(serialize = "XF86ScreenSaver")]
+    XF86XK_ScreenSaver,
+    /// XF86XK_WWW
+    #[strum(serialize = "XF86WWW")]
+    XF86XK_WWW,
+    /// XF86XK_Sleep
+    #[strum(serialize = "XF86Sleep")]
+    XF86XK_Sleep,
+    /// XF86XK_Favorites
+    #[strum(serialize = "XF86Favorites")]
+    XF86XK_Favorites,
+    /// XF86XK_AudioPause
+    #[strum(serialize = "XF86AudioPause")]
+    XF86XK_AudioPause,
+    /// XF86XK_AudioMedia
+    #[strum(serialize = "XF86AudioMedia")]
+    XF86XK_AudioMedia,
+    /// XF86XK_MyComputer
+    #[strum(serialize = "XF86MyComputer")]
+    XF86XK_MyComputer,
+    /// XF86XK_VendorHome
+    #[strum(serialize = "XF86VendorHome")]
+    XF86XK_VendorHome,
+    /// XF86XK_LightBulb
+    #[strum(serialize = "XF86LightBulb")]
+    XF86XK_LightBulb,
+    /// XF86XK_Shop
+    #[strum(serialize = "XF86Shop")]
+    XF86XK_Shop,
+    /// XF86XK_History
+    #[strum(serialize = "XF86History")]
+    XF86XK_History,
+    /// XF86XK_OpenURL
+    #[strum(serialize = "XF86OpenURL")]
+    XF86XK_OpenURL,
+    /// XF86XK_AddFavorite
+    #[strum(serialize = "XF86AddFavorite")]
+    XF86XK_AddFavorite,
+    /// XF86XK_HotLinks
+    #[strum(serialize = "XF86HotLinks")]
+    XF86XK_HotLinks,
+    /// XF86XK_BrightnessAdjust
+    #[strum(serialize = "XF86BrightnessAdjust")]
+    XF86XK_BrightnessAdjust,
+    /// XF86XK_Finance
+    #[strum(serialize = "XF86Finance")]
+    XF86XK_Finance,
+    /// XF86XK_Community
+    #[strum(serialize = "XF86Community")]
+    XF86XK_Community,
+    /// XF86XK_AudioRewind
+    #[strum(serialize = "XF86AudioRewind")]
+    XF86XK_AudioRewind,
+    /// XF86XK_BackForward
+    #[strum(serialize = "XF86BackForward")]
+    XF86XK_BackForward,
+    /// XF86XK_Launch0
+    #[strum(serialize = "XF86Launch0")]
+    XF86XK_Launch0,
+    /// XF86XK_Launch1
+    #[strum(serialize = "XF86Launch1")]
+    XF86XK_Launch1,
+    /// XF86XK_Launch2
+    #[strum(serialize = "XF86Launch2")]
+    XF86XK_Launch2,
+    /// XF86XK_Launch3
+    #[strum(serialize = "XF86Launch3")]
+    XF86XK_Launch3,
+    /// XF86XK_Launch4
+    #[strum(serialize = "XF86Launch4")]
+    XF86XK_Launch4,
+    /// XF86XK_Launch5
+    #[strum(serialize = "XF86Launch5")]
+    XF86XK_Launch5,
+    /// XF86XK_Launch6
+    #[strum(serialize = "XF86Launch6")]
+    XF86XK_Launch6,
+    /// XF86XK_Launch7
+    #[strum(serialize = "XF86Launch7")]
+    XF86XK_Launch7,
+    /// XF86XK_Launch8
+    #[strum(serialize = "XF86Launch8")]
+    XF86XK_Launch8,
+    /// XF86XK_Launch9
+    #[strum(serialize = "XF86Launch9")]
+    XF86XK_Launch9,
+    /// XF86XK_LaunchA
+    #[strum(serialize = "XF86LaunchA")]
+    XF86XK_LaunchA,
+    /// XF86XK_LaunchB
+    #[strum(serialize = "XF86LaunchB")]
+    XF86XK_LaunchB,
+    /// XF86XK_LaunchC
+    #[strum(serialize = "XF86LaunchC")]
+    XF86XK_LaunchC,
+    /// XF86XK_LaunchD
+    #[strum(serialize = "XF86LaunchD")]
+    XF86XK_LaunchD,
+    /// XF86XK_LaunchE
+    #[strum(serialize = "XF86LaunchE")]
+    XF86XK_LaunchE,
+    /// XF86XK_LaunchF
+    #[strum(serialize = "XF86LaunchF")]
+    XF86XK_LaunchF,
+    /// XF86XK_ApplicationLeft
+    #[strum(serialize = "XF86ApplicationLeft")]
+    XF86XK_ApplicationLeft,
+    /// XF86XK_ApplicationRight
+    #[strum(serialize = "XF86ApplicationRight")]
+    XF86XK_ApplicationRight,
+    /// XF86XK_Book
+    #[strum(serialize = "XF86Book")]
+    XF86XK_Book,
+    /// XF86XK_CD
+    #[strum(serialize = "XF86CD")]
+    XF86XK_CD,
+    /// XF86XK_Calculater
+    #[strum(serialize = "XF86Calculater")]
+    XF86XK_Calculater,
+    /// XF86XK_Clear
+    #[strum(serialize = "XF86Clear")]
+    XF86XK_Clear,
+    /// XF86XK_Close
+    #[strum(serialize = "XF86Close")]
+    XF86XK_Close,
+    /// XF86XK_Copy
+    #[strum(serialize = "XF86Copy")]
+    XF86XK_Copy,
+    /// XF86XK_Cut
+    #[strum(serialize = "XF86Cut")]
+    XF86XK_Cut,
+    /// XF86XK_Display
+    #[strum(serialize = "XF86Display")]
+    XF86XK_Display,
+    /// XF86XK_DOS
+    #[strum(serialize = "XF86DOS")]
+    XF86XK_DOS,
+    /// XF86XK_Documents
+    #[strum(serialize = "XF86Documents")]
+    XF86XK_Documents,
+    /// XF86XK_Excel
+    #[strum(serialize = "XF86Excel")]
+    XF86XK_Excel,
+    /// XF86XK_Explorer
+    #[strum(serialize = "XF86Explorer")]
+    XF86XK_Explorer,
+    /// XF86XK_Game
+    #[strum(serialize = "XF86Game")]
+    XF86XK_Game,
+    /// XF86XK_Go
+    #[strum(serialize = "XF86Go")]
+    XF86XK_Go,
+    /// XF86XK_iTouch
+    #[strum(serialize = "XF86iTouch")]
+    XF86XK_iTouch,
+    /// XF86XK_LogOff
+    #[strum(serialize = "XF86LogOff")]
+    XF86XK_LogOff,
+    /// XF86XK_Market
+    #[strum(serialize = "XF86Market")]
+    XF86XK_Market,
+    /// XF86XK_Meeting
+    #[strum(serialize = "XF86Meeting")]
+    XF86XK_Meeting,
+    /// XF86XK_MenuKB
+    #[strum(serialize = "XF86MenuKB")]
+    XF86XK_MenuKB,
+    /// XF86XK_MenuPB
+    #[strum(serialize = "XF86MenuPB")]
+    XF86XK_MenuPB,
+    /// XF86XK_MySites
+    #[strum(serialize = "XF86MySites")]
+    XF86XK_MySites,
+    /// XF86XK_New
+    #[strum(serialize = "XF86New")]
+    XF86XK_New,
+    /// XF86XK_News
+    #[strum(serialize = "XF86News")]
+    XF86XK_News,
+    /// XF86XK_OfficeHome
+    #[strum(serialize = "XF86OfficeHome")]
+    XF86XK_OfficeHome,
+    /// XF86XK_Open
+    #[strum(serialize = "XF86Open")]
+    XF86XK_Open,
+    /// XF86XK_Option
+    #[strum(serialize = "XF86Option")]
+    XF86XK_Option,
+    /// XF86XK_Paste
+    #[strum(serialize = "XF86Paste")]
+    XF86XK_Paste,
+    /// XF86XK_Phone
+    #[strum(serialize = "XF86Phone")]
+    XF86XK_Phone,
+    /// XF86XK_Q
+    #[strum(serialize = "XF86Q")]
+    XF86XK_Q,
+    /// XF86XK_Reply
+    #[strum(serialize = "XF86Reply")]
+    XF86XK_Reply,
+    /// XF86XK_Reload
+    #[strum(serialize = "XF86Reload")]
+    XF86XK_Reload,
+    /// XF86XK_RotateWindows
+    #[strum(serialize = "XF86RotateWindows")]
+    XF86XK_RotateWindows,
+    /// XF86XK_RotationPB
+    #[strum(serialize = "XF86RotationPB")]
+    XF86XK_RotationPB,
+    /// XF86XK_RotationKB
+    #[strum(serialize = "XF86RotationKB")]
+    XF86XK_RotationKB,
+    /// XF86XK_Save
+    #[strum(serialize = "XF86Save")]
+    XF86XK_Save,
+    /// XF86XK_ScrollUp
+    #[strum(serialize = "XF86ScrollUp")]
+    XF86XK_ScrollUp,
+    /// XF86XK_ScrollDown
+    #[strum(serialize = "XF86ScrollDown")]
+    XF86XK_ScrollDown,
+    /// XF86XK_ScrollClick
+    #[strum(serialize = "XF86ScrollClick")]
+    XF86XK_ScrollClick,
+    /// XF86XK_Send
+    #[strum(serialize = "XF86Send")]
+    XF86XK_Send,
+    /// XF86XK_Spell
+    #[strum(serialize = "XF86Spell")]
+    XF86XK_Spell,
+    /// XF86XK_SplitScreen
+    #[strum(serialize = "XF86SplitScreen")]
+    XF86XK_SplitScreen,
+    /// XF86XK_Support
+    #[strum(serialize = "XF86Support")]
+    XF86XK_Support,
+    /// XF86XK_TaskPane
+    #[strum(serialize = "XF86TaskPane")]
+    XF86XK_TaskPane,
+    /// XF86XK_Terminal
+    #[strum(serialize = "XF86Terminal")]
+    XF86XK_Terminal,
+    /// XF86XK_Tools
+    #[strum(serialize = "XF86Tools")]
+    XF86XK_Tools,
+    /// XF86XK_Travel
+    #[strum(serialize = "XF86Travel")]
+    XF86XK_Travel,
+    /// XF86XK_UserPB
+    #[strum(serialize = "XF86UserPB")]
+    XF86XK_UserPB,
+    /// XF86XK_User1KB
+    #[strum(serialize = "XF86User1KB")]
+    XF86XK_User1KB,
+    /// XF86XK_User2KB
+    #[strum(serialize = "XF86User2KB")]
+    XF86XK_User2KB,
+    /// XF86XK_Video
+    #[strum(serialize = "XF86Video")]
+    XF86XK_Video,
+    /// XF86XK_WheelButton
+    #[strum(serialize = "XF86WheelButton")]
+    XF86XK_WheelButton,
+    /// XF86XK_Word
+    #[strum(serialize = "XF86Word")]
+    XF86XK_Word,
+    /// XF86XK_Xfer
+    #[strum(serialize = "XF86Xfer")]
+    XF86XK_Xfer,
+    /// XF86XK_ZoomIn
+    #[strum(serialize = "XF86ZoomIn")]
+    XF86XK_ZoomIn,
+    /// XF86XK_ZoomOut
+    #[strum(serialize = "XF86ZoomOut")]
+    XF86XK_ZoomOut,
+    /// XF86XK_Away
+    #[strum(serialize = "XF86Away")]
+    XF86XK_Away,
+    /// XF86XK_Messenger
+    #[strum(serialize = "XF86Messenger")]
+    XF86XK_Messenger,
+    /// XF86XK_WebCam
+    #[strum(serialize = "XF86WebCam")]
+    XF86XK_WebCam,
+    /// XF86XK_MailForward
+    #[strum(serialize = "XF86MailForward")]
+    XF86XK_MailForward,
+    /// XF86XK_Pictures
+    #[strum(serialize = "XF86Pictures")]
+    XF86XK_Pictures,
+    /// XF86XK_Music
+    #[strum(serialize = "XF86Music")]
+    XF86XK_Music,
+    /// XF86XK_Battery
+    #[strum(serialize = "XF86Battery")]
+    XF86XK_Battery,
+    /// XF86XK_Bluetooth
+    #[strum(serialize = "XF86Bluetooth")]
+    XF86XK_Bluetooth,
+    /// XF86XK_WLAN
+    #[strum(serialize = "XF86WLAN")]
+    XF86XK_WLAN,
+    /// XF86XK_UWB
+    #[strum(serialize = "XF86UWB")]
+    XF86XK_UWB,
+    /// XF86XK_AudioForward
+    #[strum(serialize = "XF86AudioForward")]
+    XF86XK_AudioForward,
+    /// XF86XK_AudioRepeat
+    #[strum(serialize = "XF86AudioRepeat")]
+    XF86XK_AudioRepeat,
+    /// XF86XK_AudioRandomPlay
+    #[strum(serialize = "XF86AudioRandomPlay")]
+    XF86XK_AudioRandomPlay,
+    /// XF86XK_Subtitle
+    #[strum(serialize = "XF86Subtitle")]
+    XF86XK_Subtitle,
+    /// XF86XK_AudioCycleTrack
+    #[strum(serialize = "XF86AudioCycleTrack")]
+    XF86XK_AudioCycleTrack,
+    /// XF86XK_CycleAngle
+    #[strum(serialize = "XF86CycleAngle")]
+    XF86XK_CycleAngle,
+    /// XF86XK_FrameBack
+    #[strum(serialize = "XF86FrameBack")]
+    XF86XK_FrameBack,
+    /// XF86XK_FrameForward
+    #[strum(serialize = "XF86FrameForward")]
+    XF86XK_FrameForward,
+    /// XF86XK_Time
+    #[strum(serialize = "XF86Time")]
+    XF86XK_Time,
+    /// XF86XK_Select
+    #[strum(serialize = "XF86Select")]
+    XF86XK_Select,
+    /// XF86XK_View
+    #[strum(serialize = "XF86View")]
+    XF86XK_View,
+    /// XF86XK_TopMenu
+    #[strum(serialize = "XF86TopMenu")]
+    XF86XK_TopMenu,
+    /// XF86XK_Red
+    #[strum(serialize = "XF86Red")]
+    XF86XK_Red,
+    /// XF86XK_Green
+    #[strum(serialize = "XF86Green")]
+    XF86XK_Green,
+    /// XF86XK_Yellow
+    #[strum(serialize = "XF86Yellow")]
+    XF86XK_Yellow,
+    /// XF86XK_Blue
+    #[strum(serialize = "XF86Blue")]
+    XF86XK_Blue,
+    /// XF86XK_Suspend
+    #[strum(serialize = "XF86Suspend")]
+    XF86XK_Suspend,
+    /// XF86XK_Hibernate
+    #[strum(serialize = "XF86Hibernate")]
+    XF86XK_Hibernate,
+    /// XF86XK_TouchpadToggle
+    #[strum(serialize = "XF86TouchpadToggle")]
+    XF86XK_TouchpadToggle,
+    /// XF86XK_TouchpadOn
+    #[strum(serialize = "XF86TouchpadOn")]
+    XF86XK_TouchpadOn,
+    /// XF86XK_TouchpadOff
+    #[strum(serialize = "XF86TouchpadOff")]
+    XF86XK_TouchpadOff,
+    /// XF86XK_AudioMicMute
+    #[strum(serialize = "XF86AudioMicMute")]
+    XF86XK_AudioMicMute,
+    /// XF86XK_Keyboard
+    #[strum(serialize = "XF86Keyboard")]
+    XF86XK_Keyboard,
+    /// XF86XK_WWAN
+    #[strum(serialize = "XF86WWAN")]
+    XF86XK_WWAN,
+    /// XF86XK_RFKill
+    #[strum(serialize = "XF86RFKill")]
+    XF86XK_RFKill,
+    /// XF86XK_AudioPreset
+    #[strum(serialize = "XF86AudioPreset")]
+    XF86XK_AudioPreset,
+    /// XF86XK_RotationLockToggle
+    #[strum(serialize = "XF86RotationLockToggle")]
+    XF86XK_RotationLockToggle,
+    /// XF86XK_FullScreen
+    #[strum(serialize = "XF86FullScreen")]
+    XF86XK_FullScreen,
+    /// XF86XK_Switch_VT_1
+    #[strum(serialize = "XF86Switch_VT_1")]
+    XF86XK_Switch_VT_1,
+    /// XF86XK_Switch_VT_2
+    #[strum(serialize = "XF86Switch_VT_2")]
+    XF86XK_Switch_VT_2,
+    /// XF86XK_Switch_VT_3
+    #[strum(serialize = "XF86Switch_VT_3")]
+    XF86XK_Switch_VT_3,
+    /// XF86XK_Switch_VT_4
+    #[strum(serialize = "XF86Switch_VT_4")]
+    XF86XK_Switch_VT_4,
+    /// XF86XK_Switch_VT_5
+    #[strum(serialize = "XF86Switch_VT_5")]
+    XF86XK_Switch_VT_5,
+    /// XF86XK_Switch_VT_6
+    #[strum(serialize = "XF86Switch_VT_6")]
+    XF86XK_Switch_VT_6,
+    /// XF86XK_Switch_VT_7
+    #[strum(serialize = "XF86Switch_VT_7")]
+    XF86XK_Switch_VT_7,
+    /// XF86XK_Switch_VT_8
+    #[strum(serialize = "XF86Switch_VT_8")]
+    XF86XK_Switch_VT_8,
+    /// XF86XK_Switch_VT_9
+    #[strum(serialize = "XF86Switch_VT_9")]
+    XF86XK_Switch_VT_9,
+    /// XF86XK_Switch_VT_10
+    #[strum(serialize = "XF86Switch_VT_10")]
+    XF86XK_Switch_VT_10,
+    /// XF86XK_Switch_VT_11
+    #[strum(serialize = "XF86Switch_VT_11")]
+    XF86XK_Switch_VT_11,
+    /// XF86XK_Switch_VT_12
+    #[strum(serialize = "XF86Switch_VT_12")]
+    XF86XK_Switch_VT_12,
+    /// XF86XK_Ungrab
+    #[strum(serialize = "XF86Ungrab")]
+    XF86XK_Ungrab,
+    /// XF86XK_ClearGrab
+    #[strum(serialize = "XF86ClearGrab")]
+    XF86XK_ClearGrab,
+    /// XF86XK_Next_VMode
+    #[strum(serialize = "XF86Next_VMode")]
+    XF86XK_Next_VMode,
+    /// XF86XK_Prev_VMode
+    #[strum(serialize = "XF86Prev_VMode")]
+    XF86XK_Prev_VMode,
+    /// XF86XK_LogWindowTree
+    #[strum(serialize = "XF86LogWindowTree")]
+    XF86XK_LogWindowTree,
+    /// XF86XK_LogGrabInfo
+    #[strum(serialize = "XF86LogGrabInfo")]
+    XF86XK_LogGrabInfo,
 }
 
 impl XKeySym {
@@ -2656,6 +3208,190 @@ impl XKeySym {
                 XKeySym::XK_NewSheqelSign => 0x10020aa,
                 XKeySym::XK_DongSign => 0x10020ab,
                 XKeySym::XK_EuroSign => 0x20ac,
+                XKeySym::XF86XK_ModeLock => 0x1008FF01,
+                XKeySym::XF86XK_MonBrightnessUp => 0x1008FF02,
+                XKeySym::XF86XK_MonBrightnessDown => 0x1008FF03,
+                XKeySym::XF86XK_KbdLightOnOff => 0x1008FF04,
+                XKeySym::XF86XK_KbdBrightnessUp => 0x1008FF05,
+                XKeySym::XF86XK_KbdBrightnessDown => 0x1008FF06,
+                XKeySym::XF86XK_MonBrightnessCycle => 0x1008FF07,
+                XKeySym::XF86XK_Standby => 0x1008FF10,
+                XKeySym::XF86XK_AudioLowerVolume => 0x1008FF11,
+                XKeySym::XF86XK_AudioMute => 0x1008FF12,
+                XKeySym::XF86XK_AudioRaiseVolume => 0x1008FF13,
+                XKeySym::XF86XK_AudioPlay => 0x1008FF14,
+                XKeySym::XF86XK_AudioStop => 0x1008FF15,
+                XKeySym::XF86XK_AudioPrev => 0x1008FF16,
+                XKeySym::XF86XK_AudioNext => 0x1008FF17,
+                XKeySym::XF86XK_HomePage => 0x1008FF18,
+                XKeySym::XF86XK_Mail => 0x1008FF19,
+                XKeySym::XF86XK_Start => 0x1008FF1A,
+                XKeySym::XF86XK_Search => 0x1008FF1B,
+                XKeySym::XF86XK_AudioRecord => 0x1008FF1C,
+                XKeySym::XF86XK_Calculator => 0x1008FF1D,
+                XKeySym::XF86XK_Memo => 0x1008FF1E,
+                XKeySym::XF86XK_ToDoList => 0x1008FF1F,
+                XKeySym::XF86XK_Calendar => 0x1008FF20,
+                XKeySym::XF86XK_PowerDown => 0x1008FF21,
+                XKeySym::XF86XK_ContrastAdjust => 0x1008FF22,
+                XKeySym::XF86XK_RockerUp => 0x1008FF23,
+                XKeySym::XF86XK_RockerDown => 0x1008FF24,
+                XKeySym::XF86XK_RockerEnter => 0x1008FF25,
+                XKeySym::XF86XK_Back => 0x1008FF26,
+                XKeySym::XF86XK_Forward => 0x1008FF27,
+                XKeySym::XF86XK_Stop => 0x1008FF28,
+                XKeySym::XF86XK_Refresh => 0x1008FF29,
+                XKeySym::XF86XK_PowerOff => 0x1008FF2A,
+                XKeySym::XF86XK_WakeUp => 0x1008FF2B,
+                XKeySym::XF86XK_Eject => 0x1008FF2C,
+                XKeySym::XF86XK_ScreenSaver => 0x1008FF2D,
+                XKeySym::XF86XK_WWW => 0x1008FF2E,
+                XKeySym::XF86XK_Sleep => 0x1008FF2F,
+                XKeySym::XF86XK_Favorites => 0x1008FF30,
+                XKeySym::XF86XK_AudioPause => 0x1008FF31,
+                XKeySym::XF86XK_AudioMedia => 0x1008FF32,
+                XKeySym::XF86XK_MyComputer => 0x1008FF33,
+                XKeySym::XF86XK_VendorHome => 0x1008FF34,
+                XKeySym::XF86XK_LightBulb => 0x1008FF35,
+                XKeySym::XF86XK_Shop => 0x1008FF36,
+                XKeySym::XF86XK_History => 0x1008FF37,
+                XKeySym::XF86XK_OpenURL => 0x1008FF38,
+                XKeySym::XF86XK_AddFavorite => 0x1008FF39,
+                XKeySym::XF86XK_HotLinks => 0x1008FF3A,
+                XKeySym::XF86XK_BrightnessAdjust => 0x1008FF3B,
+                XKeySym::XF86XK_Finance => 0x1008FF3C,
+                XKeySym::XF86XK_Community => 0x1008FF3D,
+                XKeySym::XF86XK_AudioRewind => 0x1008FF3E,
+                XKeySym::XF86XK_BackForward => 0x1008FF3F,
+                XKeySym::XF86XK_Launch0 => 0x1008FF40,
+                XKeySym::XF86XK_Launch1 => 0x1008FF41,
+                XKeySym::XF86XK_Launch2 => 0x1008FF42,
+                XKeySym::XF86XK_Launch3 => 0x1008FF43,
+                XKeySym::XF86XK_Launch4 => 0x1008FF44,
+                XKeySym::XF86XK_Launch5 => 0x1008FF45,
+                XKeySym::XF86XK_Launch6 => 0x1008FF46,
+                XKeySym::XF86XK_Launch7 => 0x1008FF47,
+                XKeySym::XF86XK_Launch8 => 0x1008FF48,
+                XKeySym::XF86XK_Launch9 => 0x1008FF49,
+                XKeySym::XF86XK_LaunchA => 0x1008FF4A,
+                XKeySym::XF86XK_LaunchB => 0x1008FF4B,
+                XKeySym::XF86XK_LaunchC => 0x1008FF4C,
+                XKeySym::XF86XK_LaunchD => 0x1008FF4D,
+                XKeySym::XF86XK_LaunchE => 0x1008FF4E,
+                XKeySym::XF86XK_LaunchF => 0x1008FF4F,
+                XKeySym::XF86XK_ApplicationLeft => 0x1008FF50,
+                XKeySym::XF86XK_ApplicationRight => 0x1008FF51,
+                XKeySym::XF86XK_Book => 0x1008FF52,
+                XKeySym::XF86XK_CD => 0x1008FF53,
+                XKeySym::XF86XK_Calculater => 0x1008FF54,
+                XKeySym::XF86XK_Clear => 0x1008FF55,
+                XKeySym::XF86XK_Close => 0x1008FF56,
+                XKeySym::XF86XK_Copy => 0x1008FF57,
+                XKeySym::XF86XK_Cut => 0x1008FF58,
+                XKeySym::XF86XK_Display => 0x1008FF59,
+                XKeySym::XF86XK_DOS => 0x1008FF5A,
+                XKeySym::XF86XK_Documents => 0x1008FF5B,
+                XKeySym::XF86XK_Excel => 0x1008FF5C,
+                XKeySym::XF86XK_Explorer => 0x1008FF5D,
+                XKeySym::XF86XK_Game => 0x1008FF5E,
+                XKeySym::XF86XK_Go => 0x1008FF5F,
+                XKeySym::XF86XK_iTouch => 0x1008FF60,
+                XKeySym::XF86XK_LogOff => 0x1008FF61,
+                XKeySym::XF86XK_Market => 0x1008FF62,
+                XKeySym::XF86XK_Meeting => 0x1008FF63,
+                XKeySym::XF86XK_MenuKB => 0x1008FF65,
+                XKeySym::XF86XK_MenuPB => 0x1008FF66,
+                XKeySym::XF86XK_MySites => 0x1008FF67,
+                XKeySym::XF86XK_New => 0x1008FF68,
+                XKeySym::XF86XK_News => 0x1008FF69,
+                XKeySym::XF86XK_OfficeHome => 0x1008FF6A,
+                XKeySym::XF86XK_Open => 0x1008FF6B,
+                XKeySym::XF86XK_Option => 0x1008FF6C,
+                XKeySym::XF86XK_Paste => 0x1008FF6D,
+                XKeySym::XF86XK_Phone => 0x1008FF6E,
+                XKeySym::XF86XK_Q => 0x1008FF70,
+                XKeySym::XF86XK_Reply => 0x1008FF72,
+                XKeySym::XF86XK_Reload => 0x1008FF73,
+                XKeySym::XF86XK_RotateWindows => 0x1008FF74,
+                XKeySym::XF86XK_RotationPB => 0x1008FF75,
+                XKeySym::XF86XK_RotationKB => 0x1008FF76,
+                XKeySym::XF86XK_Save => 0x1008FF77,
+                XKeySym::XF86XK_ScrollUp => 0x1008FF78,
+                XKeySym::XF86XK_ScrollDown => 0x1008FF79,
+                XKeySym::XF86XK_ScrollClick => 0x1008FF7A,
+                XKeySym::XF86XK_Send => 0x1008FF7B,
+                XKeySym::XF86XK_Spell => 0x1008FF7C,
+                XKeySym::XF86XK_SplitScreen => 0x1008FF7D,
+                XKeySym::XF86XK_Support => 0x1008FF7E,
+                XKeySym::XF86XK_TaskPane => 0x1008FF7F,
+                XKeySym::XF86XK_Terminal => 0x1008FF80,
+                XKeySym::XF86XK_Tools => 0x1008FF81,
+                XKeySym::XF86XK_Travel => 0x1008FF82,
+                XKeySym::XF86XK_UserPB => 0x1008FF84,
+                XKeySym::XF86XK_User1KB => 0x1008FF85,
+                XKeySym::XF86XK_User2KB => 0x1008FF86,
+                XKeySym::XF86XK_Video => 0x1008FF87,
+                XKeySym::XF86XK_WheelButton => 0x1008FF88,
+                XKeySym::XF86XK_Word => 0x1008FF89,
+                XKeySym::XF86XK_Xfer => 0x1008FF8A,
+                XKeySym::XF86XK_ZoomIn => 0x1008FF8B,
+                XKeySym::XF86XK_ZoomOut => 0x1008FF8C,
+                XKeySym::XF86XK_Away => 0x1008FF8D,
+                XKeySym::XF86XK_Messenger => 0x1008FF8E,
+                XKeySym::XF86XK_WebCam => 0x1008FF8F,
+                XKeySym::XF86XK_MailForward => 0x1008FF90,
+                XKeySym::XF86XK_Pictures => 0x1008FF91,
+                XKeySym::XF86XK_Music => 0x1008FF92,
+                XKeySym::XF86XK_Battery => 0x1008FF93,
+                XKeySym::XF86XK_Bluetooth => 0x1008FF94,
+                XKeySym::XF86XK_WLAN => 0x1008FF95,
+                XKeySym::XF86XK_UWB => 0x1008FF96,
+                XKeySym::XF86XK_AudioForward => 0x1008FF97,
+                XKeySym::XF86XK_AudioRepeat => 0x1008FF98,
+                XKeySym::XF86XK_AudioRandomPlay => 0x1008FF99,
+                XKeySym::XF86XK_Subtitle => 0x1008FF9A,
+                XKeySym::XF86XK_AudioCycleTrack => 0x1008FF9B,
+                XKeySym::XF86XK_CycleAngle => 0x1008FF9C,
+                XKeySym::XF86XK_FrameBack => 0x1008FF9D,
+                XKeySym::XF86XK_FrameForward => 0x1008FF9E,
+                XKeySym::XF86XK_Time => 0x1008FF9F,
+                XKeySym::XF86XK_Select => 0x1008FFA0,
+                XKeySym::XF86XK_View => 0x1008FFA1,
+                XKeySym::XF86XK_TopMenu => 0x1008FFA2,
+                XKeySym::XF86XK_Red => 0x1008FFA3,
+                XKeySym::XF86XK_Green => 0x1008FFA4,
+                XKeySym::XF86XK_Yellow => 0x1008FFA5,
+                XKeySym::XF86XK_Blue => 0x1008FFA6,
+                XKeySym::XF86XK_Suspend => 0x1008FFA7,
+                XKeySym::XF86XK_Hibernate => 0x1008FFA8,
+                XKeySym::XF86XK_TouchpadToggle => 0x1008FFA9,
+                XKeySym::XF86XK_TouchpadOn => 0x1008FFB0,
+                XKeySym::XF86XK_TouchpadOff => 0x1008FFB1,
+                XKeySym::XF86XK_AudioMicMute => 0x1008FFB2,
+                XKeySym::XF86XK_Keyboard => 0x1008FFB3,
+                XKeySym::XF86XK_WWAN => 0x1008FFB4,
+                XKeySym::XF86XK_RFKill => 0x1008FFB5,
+                XKeySym::XF86XK_AudioPreset => 0x1008FFB6,
+                XKeySym::XF86XK_RotationLockToggle => 0x1008FFB7,
+                XKeySym::XF86XK_FullScreen => 0x1008FFB8,
+                XKeySym::XF86XK_Switch_VT_1 => 0x1008FE01,
+                XKeySym::XF86XK_Switch_VT_2 => 0x1008FE02,
+                XKeySym::XF86XK_Switch_VT_3 => 0x1008FE03,
+                XKeySym::XF86XK_Switch_VT_4 => 0x1008FE04,
+                XKeySym::XF86XK_Switch_VT_5 => 0x1008FE05,
+                XKeySym::XF86XK_Switch_VT_6 => 0x1008FE06,
+                XKeySym::XF86XK_Switch_VT_7 => 0x1008FE07,
+                XKeySym::XF86XK_Switch_VT_8 => 0x1008FE08,
+                XKeySym::XF86XK_Switch_VT_9 => 0x1008FE09,
+                XKeySym::XF86XK_Switch_VT_10 => 0x1008FE0A,
+                XKeySym::XF86XK_Switch_VT_11 => 0x1008FE0B,
+                XKeySym::XF86XK_Switch_VT_12 => 0x1008FE0C,
+                XKeySym::XF86XK_Ungrab => 0x1008FE20,
+                XKeySym::XF86XK_ClearGrab => 0x1008FE21,
+                XKeySym::XF86XK_Next_VMode => 0x1008FE22,
+                XKeySym::XF86XK_Prev_VMode => 0x1008FE23,
+                XKeySym::XF86XK_LogWindowTree => 0x1008FE24,
+                XKeySym::XF86XK_LogGrabInfo => 0x1008FE25,
             } as u32)
                 .to_le_bytes()
                 .to_vec()
