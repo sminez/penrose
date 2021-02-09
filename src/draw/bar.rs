@@ -9,18 +9,42 @@
 //! the behaviour and appearance of the built in status bar from `dwm`.
 //!
 //! Example
-//! ```rust
-//! let hooks = vec![
+//! ```no_run
+//! # use penrose::__example_helpers::*;
+//! use penrose::core::hooks::Hooks;
+//! use penrose::draw::{Color, dwm_bar, TextStyle};
+//! use penrose::xcb::{XcbDraw, new_xcb_backed_window_manager};
+//!
+//! use std::convert::TryFrom;
+//!
+//! # fn example() -> penrose::Result<()> {
+//! let height = 18;
+//! let BLACK = "#282828";
+//! let WHITE = "#ebdbb2";
+//! let GREY = "#3c3836";
+//! let BLUE = "#458588";
+//! let style = TextStyle {
+//!     font: "mono".to_string(),
+//!     point_size: 11,
+//!     fg: Color::try_from(WHITE)?,
+//!     bg: Some(Color::try_from(BLACK)?),
+//!     padding: (2.0, 2.0),
+//! };
+//!
+//! let config = Config::default();
+//! let hooks: Hooks<_> = vec![
 //!     Box::new(dwm_bar(
 //!         XcbDraw::new()?,
-//!         HEIGHT,
+//!         height,
 //!         &style,
-//!         highlight,
-//!         empty_ws,
-//!         workspaces,
+//!         Color::try_from(BLUE)?, // highlight
+//!         Color::try_from(GREY)?, // empty_ws
+//!         config.workspaces().clone(),
 //!     )?)
 //! ];
-//! let mut wm = new_xcb_backend_window_manager(config, hooks, logging_error_handler())?;
+//! let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
+//! # Ok(())
+//! # }
 //! ```
 use crate::{
     core::{
