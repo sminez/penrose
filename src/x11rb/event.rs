@@ -3,14 +3,11 @@ use crate::{
         bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
         data_types::{Point, Region},
         xconnection::{
-            ConfigureEvent, PropertyEvent, ClientMessage, ExposeEvent, PointerChange, Result, XAtomQuerier,
-            XError, XEvent, event::ClientEventMask,
+            event::ClientEventMask, ClientMessage, ConfigureEvent, ExposeEvent, PointerChange,
+            PropertyEvent, Result, XAtomQuerier, XError, XEvent,
         },
     },
-    x11rb::{
-        X11rbError,
-        xconn::X11rbConnection
-    },
+    x11rb::{xconn::X11rbConnection, X11rbError},
 };
 
 use strum::IntoEnumIterator;
@@ -18,8 +15,8 @@ use strum::IntoEnumIterator;
 use x11rb::{
     connection::Connection,
     protocol::{
+        xproto::{ClientMessageEvent, ConnectionExt as _, ModMask},
         Event,
-        xproto::{ConnectionExt as _, ClientMessageEvent, ModMask},
     },
 };
 
@@ -30,8 +27,8 @@ pub(crate) fn convert_event<C: Connection>(
     match event {
         Event::RandrNotify(_) => Ok(Some(XEvent::RandrNotify)),
         Event::RandrScreenChangeNotify(_) => Ok(Some(XEvent::ScreenChange)),
-        Event::ButtonPress(event) => Ok(to_mouse_state(event.detail, event.state)
-            .map(|state| XEvent::MouseEvent(MouseEvent::new(
+        Event::ButtonPress(event) => Ok(to_mouse_state(event.detail, event.state).map(|state| {
+            XEvent::MouseEvent(MouseEvent::new(
                 event.event,
                 event.root_x,
                 event.root_y,
@@ -39,10 +36,10 @@ pub(crate) fn convert_event<C: Connection>(
                 event.event_y,
                 state,
                 MouseEventKind::Press,
-            )))
-        ),
-        Event::ButtonRelease(event) => Ok(to_mouse_state(event.detail, event.state)
-            .map(|state| XEvent::MouseEvent(MouseEvent::new(
+            ))
+        })),
+        Event::ButtonRelease(event) => Ok(to_mouse_state(event.detail, event.state).map(|state| {
+            XEvent::MouseEvent(MouseEvent::new(
                 event.event,
                 event.root_x,
                 event.root_y,
@@ -50,11 +47,11 @@ pub(crate) fn convert_event<C: Connection>(
                 event.event_y,
                 state,
                 MouseEventKind::Release,
-            )))
-        ),
+            ))
+        })),
         // FIXME: The 5 is due to https://github.com/sminez/penrose/issues/113
-        Event::MotionNotify(event) => Ok(to_mouse_state(5, event.state)
-            .map(|state| XEvent::MouseEvent(MouseEvent::new(
+        Event::MotionNotify(event) => Ok(to_mouse_state(5, event.state).map(|state| {
+            XEvent::MouseEvent(MouseEvent::new(
                 event.event,
                 event.root_x,
                 event.root_y,
@@ -62,19 +59,27 @@ pub(crate) fn convert_event<C: Connection>(
                 event.event_y,
                 state,
                 MouseEventKind::Motion,
-            )))
-        ),
+            ))
+        })),
         Event::KeyPress(event) => {
             let code = KeyCode {
                 mask: event.state,
                 code: event.detail,
             };
             let numlock = ModMask::M2;
-            Ok(Some(XEvent::KeyPress(code.ignoring_modifier(numlock.into()))))
+            Ok(Some(XEvent::KeyPress(
+                code.ignoring_modifier(numlock.into()),
+            )))
         }
         Event::MapRequest(event) => {
-            let attr = conn.connection().get_window_attributes(event.window)?.reply()?;
-            Ok(Some(XEvent::MapRequest(event.window, attr.override_redirect)))
+            let attr = conn
+                .connection()
+                .get_window_attributes(event.window)?
+                .reply()?;
+            Ok(Some(XEvent::MapRequest(
+                event.window,
+                attr.override_redirect,
+            )))
         }
         Event::EnterNotify(event) => Ok(Some(XEvent::Enter(PointerChange {
             id: event.event,
@@ -149,11 +154,16 @@ fn to_mouse_state(detail: u8, state: u16) -> Option<MouseState> {
     Some(MouseState { button, modifiers })
 }
 
-fn to_client_message<C: Connection>(conn: &X11rbConnection<C>, event: ClientMessageEvent) -> Result<XEvent> {
+fn to_client_message<C: Connection>(
+    conn: &X11rbConnection<C>,
+    event: ClientMessageEvent,
+) -> Result<XEvent> {
     if event.format != 32 {
         // FIXME: This makes no sense, but is for compatibility with penrose::xcb.
         // See https://github.com/sminez/penrose/issues/143
-        return Err(XError::InvalidClientMessageData(usize::from(event.format) * 20 / 8));
+        return Err(XError::InvalidClientMessageData(
+            usize::from(event.format) * 20 / 8,
+        ));
     }
     let name = conn.atom_name(event.type_)?;
     let msg = ClientMessage::try_from_data(
