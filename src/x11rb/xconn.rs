@@ -101,6 +101,11 @@ impl<C: Connection> X11rbConnection<C> {
         })
     }
 
+    /// The root window ID
+    pub fn root(&self) -> Xid {
+        self.root
+    }
+
     /// Get a handle to the underlying connection.
     pub fn connection(&self) -> &C {
         &self.conn
@@ -323,7 +328,12 @@ impl<C: Connection> XEventHandler for X11rbConnection<C> {
     }
 
     fn wait_for_event(&self) -> Result<XEvent> {
-        todo!()
+        loop {
+            let event = self.conn.wait_for_event()?;
+            if let Some(event) = super::event::convert_event(self, event)? {
+                return Ok(event);
+            }
+        }
     }
 
     fn send_client_event(&self, msg: ClientMessage) -> Result<()> {
