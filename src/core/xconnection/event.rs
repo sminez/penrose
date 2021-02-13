@@ -146,6 +146,11 @@ impl ClientMessage {
         &self.data
     }
 
+    /// The raw data being sent in this message as an array
+    pub fn data_array(&self) -> &[u32; 5] {
+        &self.data
+    }
+
     /// Try to build a new ClientMessage. Fails if the data is invalid
     pub fn try_from_data(
         id: Xid,

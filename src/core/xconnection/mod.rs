@@ -82,6 +82,13 @@ pub enum XError {
     #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] crate::xcb::XcbError),
+
+    /// Something went wrong using the [x11rb][crate::x11rb] module.
+    ///
+    /// See [X11Result][crate::x11rb::X11Result] for variants.
+    #[cfg(feature = "x11rb")]
+    #[error(transparent)]
+    X11rb(#[from] crate::x11rb::X11rbError),
 }
 
 /// Result type for errors raised by X traits
