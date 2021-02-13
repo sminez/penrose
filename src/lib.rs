@@ -152,6 +152,9 @@ pub mod draw;
 #[cfg(feature = "xcb")]
 pub mod xcb;
 
+#[cfg(feature = "x11rb")]
+pub mod x11rb;
+
 #[doc(hidden)]
 pub mod __example_helpers;
 
@@ -243,6 +246,13 @@ pub enum PenroseError {
     #[cfg(feature = "xcb")]
     #[error(transparent)]
     Xcb(#[from] crate::xcb::XcbError),
+
+    /// Something went wrong using the [x11rb] module.
+    ///
+    /// See [X11rbError][crate::x11rb::X11rbError] for variants.
+    #[cfg(feature = "x11rb")]
+    #[error(transparent)]
+    X11rb(#[from] crate::x11rb::X11rbError),
 
     /// Something went wrong when communicating with the X server
     #[error(transparent)]
