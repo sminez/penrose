@@ -5,6 +5,8 @@ use crate::core::{
     xconnection::{Atom, Result, XAtomQuerier, XError, Xid},
 };
 
+use std::convert::TryInto;
+
 /// Wrapper around the low level X event types that correspond to request / response data when
 /// communicating with the X server itself.
 ///
@@ -135,7 +137,7 @@ pub struct ClientMessage {
     pub mask: ClientEventMask,
     /// The data type being set
     pub dtype: String,
-    data: Vec<u32>,
+    data: [u32; 5],
 }
 
 impl ClientMessage {
@@ -151,24 +153,24 @@ impl ClientMessage {
         dtype: impl Into<String>,
         data: &[u32],
     ) -> Result<Self> {
-        if data.len() != 5 {
-            return Err(XError::InvalidClientMessageData(data.len()));
+        if let Ok(data) = data.try_into() {
+            Ok(Self::from_data_unchecked(id, mask, dtype, data))
+        } else {
+            Err(XError::InvalidClientMessageData(data.len()))
         }
-
-        Ok(Self::from_data_unchecked(id, mask, dtype, data))
     }
 
     pub(crate) fn from_data_unchecked(
         id: Xid,
         mask: ClientEventMask,
         dtype: impl Into<String>,
-        data: &[u32],
+        data: &[u32; 5],
     ) -> Self {
         Self {
             id,
             mask,
             dtype: dtype.into(),
-            data: data.to_vec(),
+            data: *data,
         }
     }
 }
