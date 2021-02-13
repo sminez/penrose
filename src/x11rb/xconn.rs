@@ -18,30 +18,24 @@ use crate::{
             XClientProperties, XConn, XEvent, XEventHandler, XState, Xid,
         },
     },
-    x11rb::{
-        atom::Atoms,
-        X11rbError,
-    },
+    x11rb::{atom::Atoms, X11rbError},
 };
 
-use std::{
-    convert::TryFrom,
-    str::FromStr,
-};
+use std::{convert::TryFrom, str::FromStr};
 
 use x11rb::{
-    CURRENT_TIME,
     connection::Connection,
     protocol::{
         randr::{self, ConnectionExt as _},
         xproto::{
-            AtomEnum, ButtonIndex, CLIENT_MESSAGE_EVENT, ChangeWindowAttributesAux,
-            ClientMessageData, ClientMessageEvent, ConfigureWindowAux, ConnectionExt as _,
-            CreateWindowAux, EventMask, Grab, GrabMode, InputFocus, ModMask, PropMode, StackMode,
-            WindowClass,
-        }
+            AtomEnum, ButtonIndex, ChangeWindowAttributesAux, ClientMessageData,
+            ClientMessageEvent, ConfigureWindowAux, ConnectionExt as _, CreateWindowAux, EventMask,
+            Grab, GrabMode, InputFocus, ModMask, PropMode, StackMode, WindowClass,
+            CLIENT_MESSAGE_EVENT,
+        },
     },
     wrapper::ConnectionExt as _,
+    CURRENT_TIME,
 };
 
 const RANDR_VER: (u32, u32) = (1, 2);
@@ -62,10 +56,15 @@ impl<C: Connection> X11rbConnection<C> {
         conn.prefetch_extension_information(randr::X11_EXTENSION_NAME)?;
         let atoms = Atoms::new(&conn)?;
 
-        if conn.extension_information(randr::X11_EXTENSION_NAME)?.is_none() {
+        if conn
+            .extension_information(randr::X11_EXTENSION_NAME)?
+            .is_none()
+        {
             return Err(X11rbError::Randr("RandR not supported".to_string()).into());
         }
-        let randr_ver = conn.randr_query_version(RANDR_VER.0, RANDR_VER.1)?.reply()?;
+        let randr_ver = conn
+            .randr_query_version(RANDR_VER.0, RANDR_VER.1)?
+            .reply()?;
         let (maj, min) = (randr_ver.major_version, randr_ver.minor_version);
         if (maj, min) != RANDR_VER {
             return Err(X11rbError::Randr(format!(
@@ -90,7 +89,7 @@ impl<C: Connection> X11rbConnection<C> {
             0,
             WindowClass::INPUT_OUTPUT,
             x11rb::COPY_FROM_PARENT,
-            &CreateWindowAux::new().override_redirect(1)
+            &CreateWindowAux::new().override_redirect(1),
         )?;
 
         Ok(Self {
@@ -121,8 +120,7 @@ impl<C: Connection> XAtomQuerier for X11rbConnection<C> {
 
         // Nope, ask the X11 server
         let reply = self.conn.get_atom_name(atom)?.reply()?;
-        let name = String::from_utf8(reply.name)
-            .map_err(|err| X11rbError::from(err))?;
+        let name = String::from_utf8(reply.name).map_err(|err| X11rbError::from(err))?;
         Ok(name)
     }
 
@@ -143,10 +141,7 @@ impl<C: Connection> XClientConfig for X11rbConnection<C> {
                 ClientConfig::BorderPx(px) => aux = aux.border_width(*px),
                 ClientConfig::Position(region) => {
                     let (x, y, w, h) = region.values();
-                    aux = aux.x(x as i32)
-                        .y(y as i32)
-                        .width(w)
-                        .height(h);
+                    aux = aux.x(x as i32).y(y as i32).width(w).height(h);
                 }
                 ClientConfig::StackAbove => aux = aux.stack_mode(StackMode::ABOVE),
             }
@@ -191,9 +186,14 @@ impl<C: Connection> XClientHandler for X11rbConnection<C> {
     }
 
     fn focus_client(&self, id: Xid) -> Result<()> {
-        self.conn.set_input_focus(InputFocus::PARENT, id, CURRENT_TIME)?;
+        self.conn
+            .set_input_focus(InputFocus::PARENT, id, CURRENT_TIME)?;
 
-        self.change_prop(self.root, Atom::NetActiveWindow.as_ref(), Prop::Window(vec![id]))
+        self.change_prop(
+            self.root,
+            Atom::NetActiveWindow.as_ref(),
+            Prop::Window(vec![id]),
+        )
     }
 
     fn destroy_client(&self, id: Xid) -> Result<()> {
@@ -205,7 +205,10 @@ impl<C: Connection> XClientHandler for X11rbConnection<C> {
 impl<C: Connection> XClientProperties for X11rbConnection<C> {
     fn get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
         let atom = self.atom_id(name)?;
-        let r = self.conn.get_property(false, id, atom, AtomEnum::ANY, 0, 1024)?.reply()?;
+        let r = self
+            .conn
+            .get_property(false, id, atom, AtomEnum::ANY, 0, 1024)?
+            .reply()?;
         let prop_type = self.atom_name(r.type_)?;
 
         Ok(match prop_type.as_ref() {
@@ -226,25 +229,31 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
                     .trim_matches('\0')
                     .split('\0')
                     .map(|s| s.to_string())
-                    .collect()
+                    .collect(),
             ),
 
-            "WINDOW" => Prop::Window(r.value32()
+            "WINDOW" => Prop::Window(
+                r.value32()
                     .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
-                    .collect()),
+                    .collect(),
+            ),
 
             "WM_HINTS" => Prop::WmHints(
-                WmHints::try_from_bytes(&r.value32()
+                WmHints::try_from_bytes(
+                    &r.value32()
                         .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
-                        .collect::<Vec<_>>())
-                    .map_err(|e| X11rbError::InvalidPropertyData(e.to_string()))?,
+                        .collect::<Vec<_>>(),
+                )
+                .map_err(|e| X11rbError::InvalidPropertyData(e.to_string()))?,
             ),
 
             "WM_SIZE_HINTS" => Prop::WmNormalHints(
-                WmNormalHints::try_from_bytes(&r.value32()
+                WmNormalHints::try_from_bytes(
+                    &r.value32()
                         .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
-                        .collect::<Vec<_>>())
-                    .map_err(|e| X11rbError::InvalidPropertyData(e.to_string()))?,
+                        .collect::<Vec<_>>(),
+                )
+                .map_err(|e| X11rbError::InvalidPropertyData(e.to_string()))?,
             ),
 
             // Default to returning the raw bytes as u32s which the user can then
@@ -256,19 +265,20 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
                 _ => {
                     return Err(X11rbError::InvalidPropertyData(format!(
                         "prop type for {} was {} which claims to have a data format of {}",
-                        name,
-                        prop_type,
-                        r.type_
-                    )).into())
+                        name, prop_type, r.type_
+                    ))
+                    .into())
                 }
             }),
         })
     }
 
     fn list_props(&self, id: Xid) -> Result<Vec<String>> {
-        self.conn.list_properties(id)?
+        self.conn
+            .list_properties(id)?
             .reply()?
-            .atoms.into_iter()
+            .atoms
+            .into_iter()
             .map(|a| self.atom_name(a))
             .collect()
     }
@@ -294,7 +304,8 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
 
             Prop::Atom(atoms) => (
                 AtomEnum::ATOM,
-                atoms.iter()
+                atoms
+                    .iter()
                     .map(|a| self.atom_id(a))
                     .collect::<Result<Vec<u32>>>()?,
             ),
@@ -302,7 +313,8 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
             Prop::Bytes(_) => {
                 return Err(X11rbError::InvalidPropertyData(
                     "unable to change non standard props".into(),
-                ).into())
+                )
+                .into())
             }
 
             Prop::Cardinal(val) => (AtomEnum::CARDINAL, vec![val]),
@@ -313,11 +325,13 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
             Prop::WmHints(_) | Prop::WmNormalHints(_) => {
                 return Err(X11rbError::InvalidPropertyData(
                     "unable to change WmHints or WmNormalHints".into(),
-                ).into())
+                )
+                .into())
             }
         };
 
-        self.conn.change_property32(PropMode::REPLACE, id, a, ty, &data)?;
+        self.conn
+            .change_property32(PropMode::REPLACE, id, a, ty, &data)?;
         Ok(())
     }
 }
@@ -370,12 +384,19 @@ impl<C: Connection> XState for X11rbConnection<C> {
         let resources = self.conn.randr_get_screen_resources(self.root)?.reply()?;
 
         // Send queries for all CRTCs
-        let crtcs = resources.crtcs.iter()
-            .map(|c| self.conn.randr_get_crtc_info(*c, 0).map_err(|err| err.into()))
+        let crtcs = resources
+            .crtcs
+            .iter()
+            .map(|c| {
+                self.conn
+                    .randr_get_crtc_info(*c, 0)
+                    .map_err(|err| err.into())
+            })
             .collect::<Result<Vec<_>>>()?;
 
         // Get the replies and construct screens
-        let screens = crtcs.into_iter()
+        let screens = crtcs
+            .into_iter()
             .flat_map(|cookie| cookie.reply().ok())
             .enumerate()
             .filter(|(_, reply)| reply.width > 0)
@@ -409,7 +430,8 @@ impl<C: Connection> XState for X11rbConnection<C> {
             }
         };
 
-        self.conn.warp_pointer(x11rb::NONE, id, 0, 0, 0, 0, x as i16, y as i16)?;
+        self.conn
+            .warp_pointer(x11rb::NONE, id, 0, 0, 0, 0, x as i16, y as i16)?;
         Ok(())
     }
 
@@ -452,10 +474,12 @@ impl<C: Connection> XConn for X11rbConnection<C> {
     fn cleanup(&self) -> Result<()> {
         self.conn.ungrab_keyboard(x11rb::CURRENT_TIME)?;
         self.conn.ungrab_key(Grab::ANY, self.root, ModMask::ANY)?;
-        self.conn.ungrab_button(ButtonIndex::ANY, self.root, ModMask::ANY)?;
+        self.conn
+            .ungrab_button(ButtonIndex::ANY, self.root, ModMask::ANY)?;
         self.conn.destroy_window(self.check_win)?;
         let net_name = Atom::NetActiveWindow.as_ref();
-        self.conn.delete_property(self.root, self.atom_id(net_name)?)?;
+        self.conn
+            .delete_property(self.root, self.atom_id(net_name)?)?;
         self.conn.flush()?;
 
         Ok(())

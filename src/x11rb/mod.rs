@@ -44,8 +44,7 @@ pub fn new_x11rb_backed_window_manager(
     hooks: Vec<Box<dyn Hook<X11rbConnection<RustConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<RustConnection>>> {
-    let (inner_conn, _) = RustConnection::connect(None)
-        .map_err(|err| X11rbError::from(err))?;
+    let (inner_conn, _) = RustConnection::connect(None).map_err(|err| X11rbError::from(err))?;
     let conn = X11rbConnection::new_for_connection(inner_conn)?;
     let mut wm = WindowManager::new(config, conn, hooks, error_handler);
     wm.init()?;
@@ -101,7 +100,7 @@ macro_rules! from_error {
                 X11rbError::from(error).into()
             }
         }
-    }
+    };
 }
 
 from_error!(ConnectError);

@@ -1,16 +1,10 @@
-use crate::{
-    core::xconnection::Atom,
-    x11rb::Result,
-};
+use crate::{core::xconnection::Atom, x11rb::Result};
 
 use std::collections::HashMap;
 
 use strum::IntoEnumIterator;
 
-use x11rb::{
-    connection::Connection,
-    protocol::xproto::ConnectionExt,
-};
+use x11rb::{connection::Connection, protocol::xproto::ConnectionExt};
 
 #[derive(Debug)]
 pub(crate) struct Atoms {
@@ -25,7 +19,8 @@ impl Atoms {
             .collect::<Result<Vec<_>>>()?;
         // ..then get all the replies (so that we only need one instead of many round-trips to the
         // X11 server)
-        let atoms = atom_requests.into_iter()
+        let atoms = atom_requests
+            .into_iter()
             .map(|(atom, cookie)| Ok((atom, cookie.reply()?.atom)))
             .collect::<Result<HashMap<_, _>>>()?;
         Ok(Self { atoms })
@@ -36,7 +31,8 @@ impl Atoms {
     }
 
     pub(crate) fn atom_name(&self, atom: u32) -> Option<Atom> {
-        self.atoms.iter()
+        self.atoms
+            .iter()
             .find(|(_, value)| atom == **value)
             .map(|(key, _)| *key)
     }
