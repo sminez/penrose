@@ -7,10 +7,19 @@
 //! [1]: https://www.x.org/releases/X11R7.6/doc/xproto/x11protocol.html
 //! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt
 
-use crate::core::xconnection::{XError, Xid};
+use crate::{
+    core::{
+        config::Config,
+        hooks::{Hook, Hooks},
+        manager::WindowManager,
+        xconnection::{XError, Xid},
+    },
+    ErrorHandler,
+};
 
 use x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
+    rust_connection::RustConnection,
     x11_utils::X11Error,
 };
 
@@ -18,8 +27,31 @@ pub(crate) mod atom;
 pub(crate) mod event;
 pub mod xconn;
 
-/// Result type for fallible methods using XCB
+#[doc(inline)]
+pub use xconn::X11rbConnection;
+
+/// Result type for fallible methods using x11rb
 pub type Result<T> = std::result::Result<T, X11rbError>;
+
+/// Helper type for when you are defining your [Hook] vector in your main.rs when using
+/// the default x11rb impls
+pub type X11rbHooks = Hooks<X11rbConnection<RustConnection>>;
+
+/// Construct a penrose [WindowManager] backed by the [x11rb][crate::x11rb] backend using
+/// [x11rb::rust_connection::RustConnection].
+pub fn new_x11rb_backed_window_manager(
+    config: Config,
+    hooks: Vec<Box<dyn Hook<X11rbConnection<RustConnection>>>>,
+    error_handler: ErrorHandler,
+) -> crate::Result<WindowManager<X11rbConnection<RustConnection>>> {
+    let (inner_conn, _) = RustConnection::connect(None)
+        .map_err(|err| X11rbError::from(err))?;
+    let conn = X11rbConnection::new_for_connection(inner_conn)?;
+    let mut wm = WindowManager::new(config, conn, hooks, error_handler);
+    wm.init()?;
+
+    Ok(wm)
+}
 
 /// Enum to store the various ways that operations can fail inside of the
 /// x11rb implementations of penrose traits.
