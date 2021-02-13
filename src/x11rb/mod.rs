@@ -9,9 +9,13 @@
 
 use crate::core::xconnection::{XError, Xid};
 
-use x11rb::errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError};
+use x11rb::{
+    errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
+    x11_utils::X11Error,
+};
 
 pub(crate) mod atom;
+pub(crate) mod event;
 pub mod xconn;
 
 /// Result type for fallible methods using XCB
@@ -52,6 +56,10 @@ pub enum X11rbError {
     /// A query via the randr API was unsuccessful
     #[error("randr query failed: {0}")]
     Randr(String),
+
+    /// Wrapper around low level X11 errors
+    #[error("X11 error: {0:?}")]
+    X11Error(X11Error),
 }
 
 macro_rules! from_error {
