@@ -85,7 +85,7 @@ pub enum XError {
 
     /// Something went wrong using the [x11rb][crate::x11rb] module.
     ///
-    /// See [X11Result][crate::x11rb::X11Result] for variants.
+    /// See [X11rbError][crate::x11rb::X11rbError] for variants.
     #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rb(#[from] crate::x11rb::X11rbError),
