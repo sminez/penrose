@@ -243,6 +243,11 @@ macro_rules! str_slice {
     };
 }
 
+// Helper for quickly converting args to debug strings
+macro_rules! strings {
+    { $($arg:expr),+ } => { vec![$(format!("{:?}", $arg)),+] }
+}
+
 macro_rules! cast_slice {
     ($s:expr, $t:ty) => {
         $s.iter().map(|&v| v as $t).collect::<Vec<$t>>()
