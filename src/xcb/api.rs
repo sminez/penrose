@@ -959,7 +959,7 @@ impl Api {
     pub fn ungrab_mouse_buttons(&self) -> Result<()> {
         Ok(xcb::ungrab_button_checked(
             &self.conn, // xcb connection to X11
-            xcb::GRAB_ANY as u8,
+            xcb::BUTTON_INDEX_ANY as u8,
             self.root, // the window to ungrab keys for
             xcb::MOD_MASK_ANY as u16,
         )
