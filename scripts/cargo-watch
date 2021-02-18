@@ -23,4 +23,5 @@ function require {
 
 require git entr
 
-git ls-files | entr -ac cargo test
+shift
+git ls-files | entr -ac cargo test $*
