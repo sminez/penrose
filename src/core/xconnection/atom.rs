@@ -32,6 +32,12 @@ pub enum Atom {
     /// WM_DELETE_WINDOW
     #[strum(serialize = "WM_DELETE_WINDOW")]
     WmDeleteWindow,
+    /// WM_HINTS
+    #[strum(serialize = "WM_HINTS")]
+    WmHints,
+    /// WM_NORMAL_HINTS
+    #[strum(serialize = "WM_NORMAL_HINTS")]
+    WmNormalHints,
     /// WM_PROTOCOLS
     #[strum(serialize = "WM_PROTOCOLS")]
     WmProtocols,

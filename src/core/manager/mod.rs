@@ -1110,7 +1110,7 @@ impl<X: XConn> WindowManager<X> {
             ws.rotate_clients(direction)
         };
 
-        Ok(())
+        self.apply_layout(wix)
     }
 
     /// Move the focused [Client] through the stack of clients on the active [Workspace].
@@ -2287,13 +2287,16 @@ impl<X: XConn> WindowManager<X> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{
-        data_types::*,
-        helpers::logging_error_handler,
-        layout::*,
-        ring::Direction::*,
-        screen::*,
-        xconnection::{MockXConn, XEvent},
+    use crate::{
+        __example_helpers::RecordingXConn,
+        core::{
+            data_types::*,
+            helpers::logging_error_handler,
+            layout::*,
+            ring::Direction::*,
+            screen::*,
+            xconnection::{MockXConn, XEvent},
+        },
     };
 
     use std::cell::Cell;
@@ -2639,4 +2642,61 @@ mod tests {
         assert_eq!(wm.screens.len(), 1);
         assert_eq!(wm.screens.get(0).unwrap().wix, 3);
     }
+
+    // Check that workspace layout is triggered correctly from public methods
+
+    macro_rules! layout_trigger_test {
+        { $method:ident; $should_layout:expr; $($arg:expr),* } => {
+            paste::paste! {
+                #[test]
+                fn [<layout_trigger_test _ $method>]() {
+                    let conn = RecordingXConn::init();
+                    let conf = Config {
+                        layouts: test_layouts(),
+                        ..Default::default()
+                    };
+                    let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+                    wm.init().unwrap();
+                    add_n_clients(&mut wm, 3, 0);
+                    wm.focus_workspace(&Selector::Index(1)).unwrap();
+                    add_n_clients(&mut wm, 3, 30);
+                    wm.focus_workspace(&Selector::Index(0)).unwrap();
+                    wm.conn.clear();
+                    wm.$method($($arg),*).unwrap();
+
+                    // Defining "we applied layout" as "position_client" was called
+                    // at least once. Tests around layout application itself being
+                    // correct are handled separately
+                    let did_layout = wm
+                        .conn
+                        .calls()
+                        .iter()
+                        .any(|c| c.0 == "position_client".to_string());
+                    assert_eq!(did_layout, $should_layout);
+                }
+            }
+        }
+    }
+
+    layout_trigger_test!(cycle_workspace; true; Forward);
+    layout_trigger_test!(drag_workspace; true; Forward);
+    layout_trigger_test!(cycle_client; false; Forward);
+    layout_trigger_test!(focus_client; false; &Selector::Any);
+    layout_trigger_test!(rotate_clients; true; Forward);
+    layout_trigger_test!(drag_client; true; Forward);
+    layout_trigger_test!(cycle_layout; true; Forward);
+    layout_trigger_test!(update_max_main; true; Change::More);
+    layout_trigger_test!(update_main_ratio; true; Change::More);
+    layout_trigger_test!(exit; false;);
+    layout_trigger_test!(set_root_window_name; false; "test");
+    layout_trigger_test!(set_client_insert_point; false; InsertPoint::First);
+    layout_trigger_test!(focus_workspace; true; &Selector::Index(1));
+    layout_trigger_test!(toggle_workspace; true;);
+    layout_trigger_test!(client_to_workspace; true; &Selector::Index(1));
+    layout_trigger_test!(client_to_screen; true; &Selector::Index(1));
+    layout_trigger_test!(toggle_client_fullscreen; true; &Selector::WinId(10));
+    layout_trigger_test!(kill_client; true;);
+    layout_trigger_test!(remove_workspace; true; &Selector::Index(0));
+    layout_trigger_test!(position_client; true; 10, Region::default(), true);
+    layout_trigger_test!(layout_screen; true; 0);
 }
