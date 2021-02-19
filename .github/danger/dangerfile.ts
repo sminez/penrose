@@ -109,9 +109,11 @@ if (DELETED.length > 0) {
 update_labels(
   danger.github.issue.labels.map((label: { name: string }) => label.name),
   [
+    { path: "crates", label: "crates" },
     { path: "src/core", label: "core" },
-    { path: "src/draw", label: "core" },
+    { path: "src/draw", label: "draw" },
     { path: "src/contrib", label: "contrib" },
+    { path: "src/x11rb", label: "x11rb" },
     { path: "src/xcb", label: "xcb" },
   ],
 );
