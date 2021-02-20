@@ -1988,6 +1988,27 @@ pub enum XKeySym {
     /// XK_EuroSign
     #[strum(serialize = "EuroSign")]
     XK_EuroSign,
+    /// XF86XK_AudioLowerVolume
+    #[strum(serialize = "XF86AudioLowerVolume")]
+    XF86XK_AudioLowerVolume,
+    /// XF86XK_AudioMute
+    #[strum(serialize = "XF86AudioMute")]
+    XF86XK_AudioMute,
+    /// XF86XK_AudioRaiseVolume
+    #[strum(serialize = "XF86AudioRaiseVolume")]
+    XF86XK_AudioRaiseVolume,
+    /// XF86XK_AudioPlay
+    #[strum(serialize = "XF86AudioPlay")]
+    XF86XK_AudioPlay,
+    /// XF86XK_AudioStop
+    #[strum(serialize = "XF86AudioStop")]
+    XF86XK_AudioStop,
+    /// XF86XK_AudioPrev
+    #[strum(serialize = "XF86AudioPrev")]
+    XF86XK_AudioPrev,
+    /// XF86XK_AudioNext
+    #[strum(serialize = "XF86AudioNext")]
+    XF86XK_AudioNext,
 }
 
 impl XKeySym {
@@ -2656,6 +2677,13 @@ impl XKeySym {
                 XKeySym::XK_NewSheqelSign => 0x10020aa,
                 XKeySym::XK_DongSign => 0x10020ab,
                 XKeySym::XK_EuroSign => 0x20ac,
+                XKeySym::XF86XK_AudioLowerVolume => 0x1008FF11,
+                XKeySym::XF86XK_AudioMute => 0x1008FF12,
+                XKeySym::XF86XK_AudioRaiseVolume => 0x1008FF13,
+                XKeySym::XF86XK_AudioPlay => 0x1008FF14,
+                XKeySym::XF86XK_AudioStop => 0x1008FF15,
+                XKeySym::XF86XK_AudioPrev => 0x1008FF16,
+                XKeySym::XF86XK_AudioNext => 0x1008FF17,
             } as u32)
                 .to_le_bytes()
                 .to_vec()
