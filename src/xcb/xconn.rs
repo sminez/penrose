@@ -14,7 +14,7 @@
 use crate::{
     core::{
         bindings::{KeyBindings, MouseBindings},
-        data_types::{Point, Region, WinType},
+        data_types::{Point, Region},
         manager::WindowManager,
         screen::Screen,
         xconnection::{
@@ -37,7 +37,6 @@ use std::collections::HashMap;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct XcbConnection {
     api: Api,
-    check_win: Xid,
 }
 
 impl XcbConnection {
@@ -46,9 +45,8 @@ impl XcbConnection {
         let api = Api::new()?;
 
         api.set_randr_notify_mask()?;
-        let check_win = api.create_window(WinType::CheckWin, Region::new(0, 0, 1, 1), false)?;
 
-        Ok(Self { api, check_win })
+        Ok(Self { api })
     }
 
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
@@ -113,7 +111,6 @@ impl XConn for XcbConnection {
     fn cleanup(&self) -> Result<()> {
         self.api.ungrab_keys()?;
         self.api.ungrab_mouse_buttons()?;
-        self.api.destroy_client(self.check_win)?;
         let net_name = Atom::NetActiveWindow.as_ref();
         self.api.delete_prop(self.api.root(), net_name)?;
         self.api.flush();

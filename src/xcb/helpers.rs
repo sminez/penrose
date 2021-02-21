@@ -33,7 +33,7 @@ pub fn parse_key_binding(pattern: String, known_codes: &CodeMap) -> Option<KeyCo
                 })
                 .fold(0, |acc, v| acc | v);
 
-            debug!("binding '{}' as [{}, {}]", pattern, mask, code);
+            trace!(?pattern, mask, code, "parsed keybinding");
             Some(KeyCode {
                 mask: mask as u16,
                 code: *code,

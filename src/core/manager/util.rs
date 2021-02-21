@@ -89,16 +89,18 @@ where
             .filter(|w| !visible_workspaces.contains(w))
             .collect(),
     );
-    debug!("Current workspace ordering: {:?}", visible_workspaces);
+    debug!(?visible_workspaces, "current workspace ordering");
     Ok(conn
         .current_screens()?
         .into_iter()
         .zip(visible_workspaces)
-        .map(|(mut s, wix)| {
+        .enumerate()
+        .map(|(ix, (mut s, wix))| {
             s.update_effective_region(bar_height, top_bar);
-            debug!("Setting focused workspace for screen {:?}", s);
+            trace!(screen = ix, workspace = wix, "setting workspace for screen");
             s.wix = wix;
-            info!("Detected Screen: {:?}", s);
+            let r = s.region(false);
+            info!(w = r.w, h = r.h, "detected screen");
             s
         })
         .collect())
@@ -115,7 +117,7 @@ where
     X: XClientHandler + XClientProperties + XClientConfig,
 {
     if !client_map.contains_key(&id) {
-        warn!("unable to make unknown client fullscreen: {}", id);
+        warn!(id, "attempt to make unknown client fullscreen");
         return Ok(false);
     }
     let client_currently_fullscreen = client_map.get(&id).map(|c| c.fullscreen).unwrap();
@@ -159,7 +161,7 @@ where
     // Tile first then place floating clients on top
     for (id, region) in actions.actions {
         let possible_client = client_map.get_mut(&id);
-        debug!("configuring {} with {:?}", id, region);
+        debug!(id, ?region, "positioning client");
         if let Some(region) = region {
             let reg = pad_region(&region, lc.gapless, gap_px, border_px);
             conn.position_client(id, reg, border_px, false)?;
@@ -170,6 +172,7 @@ where
     }
 
     for id in actions.floating {
+        debug!(id, "mapping floating client above tiled");
         conn.raise_client(id)?;
     }
 

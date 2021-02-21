@@ -83,7 +83,9 @@ where
         XEvent::ConfigureNotify(evt) => process_configure_notify(evt),
         XEvent::ConfigureRequest(evt) => process_configure_request(evt),
         XEvent::Enter(p) => process_enter_notify(state, p),
-        XEvent::MapRequest(id, ignore) => process_map_request(state, id, ignore),
+        XEvent::MapRequest(id, override_redirect) => {
+            process_map_request(state, id, override_redirect)
+        }
         XEvent::PropertyNotify(evt) => process_property_notify(evt),
     }
 }
@@ -93,10 +95,7 @@ where
     X: XConn,
 {
     let data = msg.data();
-    debug!(
-        "GOT CLIENT MESSAGE: id={} atom={} data={:?}",
-        msg.id, msg.dtype, data
-    );
+    trace!(id = msg.id, dtype = ?msg.dtype, ?data, "got client message");
 
     let is_fullscreen = |data: &[u32]| {
         data.iter()
@@ -156,11 +155,18 @@ where
     actions
 }
 
-fn process_map_request<X>(state: WmState<'_, X>, id: Xid, ignore: bool) -> Vec<EventAction>
+// Processing around map_request is currently copied from dwm:
+//   - if override_redirect is set we completely ignore the window
+//   - if the client is in the client_map (i.e. we are already managing this client) then ignore
+fn process_map_request<X>(
+    state: WmState<'_, X>,
+    id: Xid,
+    override_redirect: bool,
+) -> Vec<EventAction>
 where
     X: XConn,
 {
-    if ignore || state.client_map.contains_key(&id) {
+    if override_redirect || state.client_map.contains_key(&id) {
         vec![]
     } else {
         vec![EventAction::MapWindow(id)]

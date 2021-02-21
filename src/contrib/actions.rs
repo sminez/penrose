@@ -11,7 +11,7 @@ use crate::{
         workspace::Workspace,
         xconnection::XConn,
     },
-    PenroseError, Result,
+    Result,
 };
 
 /**
@@ -85,13 +85,11 @@ pub fn update_monitors_via_xrandr(
     let secondary_line = raw
         .lines()
         .find(|line| line.starts_with(secondary))
-        .ok_or_else(|| {
-            PenroseError::Raw("unable to find secondary monitor in xrandr output".into())
-        })?;
+        .ok_or_else(|| perror!("unable to find secondary monitor in xrandr output"))?;
     let status = secondary_line
         .split(' ')
         .nth(1)
-        .ok_or_else(|| PenroseError::Raw("unexpected xrandr output".into()))?;
+        .ok_or_else(|| perror!("unexpected xrandr output"))?;
 
     let position_flag = match position {
         RelativePosition::Left => "--left-of",

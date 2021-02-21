@@ -3,7 +3,8 @@ CUR_DIR="$(dirname $(readlink -f $0))"
 SCREEN_SIZE=${SCREEN_SIZE:-800x600}
 XDISPLAY=${XDISPLAY:-:1}
 EXAMPLE=${EXAMPLE:-local_test}
-APP=${APP:-st}
+# APP=${APP:-st}
+APP=${APP:-alacritty}
 
 Xephyr +extension RANDR -screen ${SCREEN_SIZE} ${XDISPLAY} -ac &
 XEPHYR_PID=$!

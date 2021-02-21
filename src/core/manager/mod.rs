@@ -18,6 +18,7 @@ use crate::{
 use crate::core::{helpers::logging_error_handler, layout::LayoutFunc};
 
 use nix::sys::signal::{signal, SigHandler, Signal};
+use tracing::Level;
 
 use std::{cell::Cell, collections::HashMap, fmt};
 
@@ -32,7 +33,7 @@ use event::{process_next_event, WmState};
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks {
     ($method:ident, $_self:expr, $($arg:expr),*) => {
-        debug!("Running {} hooks", stringify!($method));
+        trace!(target: "hooks", "Running {} hooks", stringify!($method));
         let mut hooks = $_self.hooks.replace(vec![]);
         let res = hooks.iter_mut().try_for_each(|h| h.$method($_self, $($arg),*));
         $_self.hooks.replace(hooks);
@@ -135,7 +136,7 @@ impl<X: XConn> WindowManager<X> {
     pub fn new(config: Config, conn: X, hooks: Hooks<X>, error_handler: ErrorHandler) -> Self {
         let layouts = config.layouts.clone();
 
-        debug!("Building initial workspaces");
+        trace!("building initial workspaces");
         let workspaces = config
             .workspaces
             .iter()
@@ -206,6 +207,7 @@ impl<X: XConn> WindowManager<X> {
     /// # }
     /// ```
     #[cfg(feature = "serde")]
+    #[tracing::instrument(level = "debug", err, skip(self, hooks, error_handler, layout_funcs))]
     pub fn hydrate_and_init(
         &mut self,
         hooks: Hooks<X>,
@@ -233,21 +235,22 @@ impl<X: XConn> WindowManager<X> {
     /// # Example
     ///
     /// See [new][WindowManager::new]
+    #[tracing::instrument(level = "debug", err, skip(self))]
     pub fn init(&mut self) -> Result<()> {
         if !self.hydrated {
             panic!("Need to call 'hydrate_and_init' when restoring from serialised state")
         }
 
-        debug!("Initialising XConn");
+        trace!("Initialising XConn");
         self.conn().init()?;
 
-        debug!("Attempting initial screen detection");
+        trace!("Attempting initial screen detection");
         self.detect_screens()?;
 
-        debug!("Setting EWMH properties");
+        trace!("Setting EWMH properties");
         self.conn.set_wm_properties(&self.config.workspaces)?;
 
-        debug!("Forcing cursor to first screen");
+        trace!("Forcing cursor to first screen");
         Ok(self.conn.warp_cursor(None, &self.screens[0])?)
     }
 
@@ -260,8 +263,10 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
+    #[tracing::instrument(level = "debug", err, skip(self))]
     pub(crate) fn try_manage_existing_windows(&mut self) -> Result<()> {
         for id in self.conn.active_managed_clients()?.into_iter() {
+            trace!(id, "parsing existing client");
             let mut c = util::parse_existing_client(&self.conn, id)?;
             self.add_client_to_workspace(c.workspace(), id)?;
             self.conn.unmap_client_if_needed(Some(&mut c))?;
@@ -280,13 +285,13 @@ impl<X: XConn> WindowManager<X> {
 
     // Each XEvent from the XConn can result in multiple EventActions that need processing
     // depending on the current WindowManager state.
+    #[tracing::instrument(level = "trace", err, skip(self, key_bindings, mouse_bindings))]
     fn handle_event_action(
         &mut self,
         action: EventAction,
         key_bindings: &mut KeyBindings<X>,
         mouse_bindings: &mut MouseBindings<X>,
     ) -> Result<()> {
-        debug!("Handling event action: {:?}", action);
         match action {
             EventAction::ClientFocusGained(id) => self.client_gained_focus(id)?,
             EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
@@ -340,23 +345,28 @@ impl<X: XConn> WindowManager<X> {
         }
 
         // ignore SIGCHILD and allow child / inherited processes to be inherited by pid1
-        debug!("Registering SIGCHILD signal handler");
+        trace!("registering SIGCHILD signal handler");
         if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
             panic!("unable to set signal handler: {}", e);
         }
 
-        debug!("Grabbing key and mouse bindings");
+        trace!("grabbing key and mouse bindings");
         self.conn.grab_keys(&key_bindings, &mouse_bindings)?;
-        debug!("Forcing focus to first Workspace");
+
+        trace!("forcing focus to first workspace");
         self.focus_workspace(&Selector::Index(0))?;
+
         run_hooks!(startup, self,);
         self.running = true;
 
-        debug!("Entering main event loop");
+        trace!("entering main event loop");
         while self.running {
             match self.conn.wait_for_event() {
                 Ok(event) => {
-                    debug!("Got XEvent: {:?}", event);
+                    let span = span!(target: "penrose", Level::DEBUG, "XEvent", %event);
+                    let _enter = span.enter();
+                    trace!(details = ?event, "event details");
+
                     for action in process_next_event(event, self.current_state()) {
                         if let Err(e) =
                             self.handle_event_action(action, &mut key_bindings, &mut mouse_bindings)
@@ -364,14 +374,12 @@ impl<X: XConn> WindowManager<X> {
                             (self.error_handler)(e);
                         }
                     }
+
                     run_hooks!(event_handled, self,);
                     self.conn.flush();
                 }
 
-                Err(e) => {
-                    self.exit()?;
-                    return Err(PenroseError::X(e));
-                }
+                Err(e) => (self.error_handler)(PenroseError::X(e)),
             }
         }
 
@@ -432,6 +440,7 @@ impl<X: XConn> WindowManager<X> {
      */
 
     // The given X window ID is now considered focused by the X server
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn client_gained_focus(&mut self, id: Xid) -> Result<()> {
         let prev_focused = self.focused_client().map(|c| c.id());
         if let Some(id) = prev_focused {
@@ -440,11 +449,11 @@ impl<X: XConn> WindowManager<X> {
 
         let fb = self.config.focused_border;
         if let Err(e) = self.conn.set_client_border_color(id, fb) {
-            warn!("unable to set client border color for {}: {}", id, e);
+            warn!(id, "unable to set client border color: {}", e);
         }
 
         if let Err(e) = self.conn.focus_client(id) {
-            warn!("unable to focus client {}: {}", id, e);
+            warn!(id, "unable to focus client: {}", e);
         }
 
         if let Some(wix) = self.workspace_index_for_client(id) {
@@ -466,6 +475,7 @@ impl<X: XConn> WindowManager<X> {
     }
 
     // The given X window ID lost focus according to the X server
+    #[tracing::instrument(level = "trace", skip(self))]
     fn client_lost_focus(&mut self, id: Xid) {
         if self.focused_client == Some(id) {
             self.focused_client = None;
@@ -492,6 +502,7 @@ impl<X: XConn> WindowManager<X> {
     }
 
     // The given window ID has been destroyed so remove our internal state referencing it.
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn remove_client(&mut self, id: Xid) -> Result<()> {
         if let Some(client) = self.client_map.remove(&id) {
             let wix = client.workspace();
@@ -510,12 +521,13 @@ impl<X: XConn> WindowManager<X> {
             self.update_x_known_clients()?;
             run_hooks!(remove_client, self, id);
         } else {
-            debug!("attempt to remove unknown client {}", id);
+            debug!(id, "attempt to remove unknown client");
         }
 
         Ok(())
     }
 
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn move_client_to_workspace(&mut self, id: Xid, wix: usize) -> Result<()> {
         if !self.client_map.contains_key(&id) {
             return Err(PenroseError::UnknownClient(id));
@@ -546,6 +558,7 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn layout_visible(&mut self) -> Result<()> {
         for wix in self.visible_workspaces() {
             self.apply_layout(wix)?;
@@ -569,6 +582,7 @@ impl<X: XConn> WindowManager<X> {
     /// # }
     /// # example(example_windowmanager(1, vec![])).unwrap();
     /// ```
+    #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn detect_screens(&mut self) -> Result<()> {
         let screens = util::get_screens(
             &self.conn,
@@ -582,7 +596,7 @@ impl<X: XConn> WindowManager<X> {
             return Ok(()); // nothing changed
         }
 
-        info!("Updating known screens: {} screens detected", screens.len());
+        info!(n = screens.len(), "updating known screens");
         self.screens = Ring::new(screens);
         for wix in self.visible_workspaces() {
             self.apply_layout(wix)?;
@@ -595,13 +609,10 @@ impl<X: XConn> WindowManager<X> {
     }
 
     // Map a new client window.
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn handle_map_request(&mut self, id: Xid) -> Result<()> {
         let props = util::client_str_props(&self.conn, id);
-        debug!(
-            "Handling map request: name[{}] id[{}] class[{}] type[{}]",
-            props.name, id, props.class, props.ty
-        );
-
+        trace!(?props.name, ?props.class, ?props.ty, "handling map request");
         if !self.conn.is_managed_client(id) {
             return Ok(self.conn.map_client(id)?);
         }
@@ -654,7 +665,7 @@ impl<X: XConn> WindowManager<X> {
     fn handle_move_if_floating(&mut self, id: Xid, r: Region) -> Result<()> {
         if let Some(client) = self.client_map.get(&id) {
             if client.floating {
-                debug!("Repositioning floating window: id={} r={:?}", id, r);
+                debug!(id, region = ?r, "repositioning floating window");
                 let bpx = self.config.border_px;
                 self.conn.position_client(id, r, bpx, true)?;
             }
@@ -663,18 +674,15 @@ impl<X: XConn> WindowManager<X> {
     }
 
     fn handle_prop_change(&mut self, id: Xid, atom: String, is_root: bool) -> Result<()> {
-        debug!(
-            "GOT PROP CHANGE: id={} root={} atom={:?}",
-            id, is_root, atom
-        );
+        trace!(id, is_root, ?atom, "dropping prop change (unimplemented)");
         Ok(())
     }
 
     // NOTE: This defers control of the [WindowManager] to the user's key-binding action
     //       which can lead to arbitrary calls to public methods on the [WindowManager]
     //       including mutable methods.
+    #[tracing::instrument(level = "debug", skip(self, k, bindings), fields(k.code, k.mask))]
     fn run_key_binding(&mut self, k: KeyCode, bindings: &mut KeyBindings<X>) {
-        debug!("handling key code: {:?}", k);
         if let Some(action) = bindings.get_mut(&k) {
             // ignoring Child handlers and SIGCHILD
             if let Err(e) = action(self) {
@@ -686,8 +694,8 @@ impl<X: XConn> WindowManager<X> {
     // NOTE: This defers control of the [WindowManager] to the user's mouse-binding action
     //       which can lead to arbitrary calls to public methods on the [WindowManager]
     //       including mutable methods.
+    #[tracing::instrument(level = "debug", skip(self, e, bindings), fields(?e.state, ?e.kind))]
     fn run_mouse_binding(&mut self, e: MouseEvent, bindings: &mut MouseBindings<X>) {
-        debug!("handling mouse event: {:?} {:?}", e.state, e.kind);
         if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
             // ignoring Child handlers and SIGCHILD
             if let Err(e) = action(self, &e) {
@@ -736,7 +744,7 @@ impl<X: XConn> WindowManager<X> {
         let workspace = self
             .workspaces
             .get_mut(wix)
-            .ok_or_else(|| PenroseError::Raw(format!("unknown workspace: {}", wix)))?;
+            .ok_or_else(|| perror!("unknown workspace: {}", wix))?;
 
         if util::toggle_fullscreen(&self.conn, id, &mut self.client_map, workspace, r)? {
             self.apply_layout(wix)?;
@@ -749,15 +757,12 @@ impl<X: XConn> WindowManager<X> {
      * Common mid level actions that make up larger event response handlers.
      */
 
+    #[tracing::instrument(level = "debug", err, skip(self))]
     fn apply_layout(&mut self, wix: usize) -> Result<()> {
-        debug!("Attempting to layout workspace {}", wix);
         let ws = match self.workspaces.get(wix) {
             Some(ws) => ws,
             None => {
-                return Err(PenroseError::Raw(format!(
-                    "attempt to layout unknown workspace: {}",
-                    wix
-                )));
+                return Err(perror!("attempt to layout unknown workspace: {}", wix));
             }
         };
 
@@ -813,6 +818,7 @@ impl<X: XConn> WindowManager<X> {
         self.screens.focused()
     }
 
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn add_client_to_workspace(&mut self, wix: usize, id: Xid) -> Result<()> {
         self.client_map
             .entry(id)
@@ -897,7 +903,8 @@ impl<X: XConn> WindowManager<X> {
     /// # example(example_windowmanager(1, vec![])).unwrap();
     /// ```
     pub fn log(&self, msg: impl Into<String>) -> Result<()> {
-        info!("{}", msg.into());
+        let msg = msg.into();
+        info!("{}", msg);
 
         Ok(())
     }
@@ -1571,7 +1578,7 @@ impl<X: XConn> WindowManager<X> {
             };
 
             if let Err(e) = res {
-                error!("Error killing client: {}", e);
+                error!(id, "error killing client: {}", e);
             }
 
             self.conn.flush();
@@ -1798,15 +1805,13 @@ impl<X: XConn> WindowManager<X> {
         selector: &Selector<'_, Workspace>,
     ) -> Result<Option<Workspace>> {
         if self.workspaces.len() == self.screens.len() {
-            return Err(PenroseError::Raw(
-                "must have at least one workspace per screen".into(),
-            ));
+            return Err(perror!("must have at least one workspace per screen"));
         }
 
         let ws = self
             .workspaces
             .remove(&selector)
-            .ok_or_else(|| PenroseError::Raw("unknown workspace".into()))?;
+            .ok_or_else(|| perror!("unknown workspace"))?;
         ws.iter().try_for_each(|c| self.remove_client(*c))?;
 
         // Focus the workspace before the one we just removed. There is always at least one

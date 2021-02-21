@@ -236,6 +236,18 @@ macro_rules! gen_mousebindings {
     };
 }
 
+/// Quickly create a simple string error
+#[macro_export]
+macro_rules! perror {
+    ($msg:expr) => {
+        $crate::PenroseError::Raw($msg.to_string())
+    };
+
+    ($template:expr, $($arg:expr),+) => {
+        $crate::PenroseError::Raw(format!($template, $($arg),+))
+    };
+}
+
 // Helper for converting Vec<String> -> &[&str]
 macro_rules! str_slice {
     ($string_vec:expr) => {

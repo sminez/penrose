@@ -137,7 +137,7 @@
 extern crate bitflags;
 
 #[macro_use]
-extern crate log;
+extern crate tracing;
 
 #[cfg(feature = "serde")]
 #[macro_use]

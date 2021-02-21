@@ -31,7 +31,7 @@ examples:
 
 .PHONY: run-embeded
 run-embeded:
-	cargo build --examples && ./scripts/xephyr.sh
+	@cargo build --examples && ./scripts/xephyr.sh
 
 .PHONY: test
 test:

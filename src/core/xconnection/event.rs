@@ -43,6 +43,26 @@ pub enum XEvent {
     ScreenChange,
 }
 
+impl std::fmt::Display for XEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            XEvent::ClientMessage(_) => write!(f, "ClientMessage"),
+            XEvent::ConfigureNotify(_) => write!(f, "ConfigureNotify"),
+            XEvent::ConfigureRequest(_) => write!(f, "ConfigureRequest"),
+            XEvent::Enter(_) => write!(f, "Enter"),
+            XEvent::Expose(_) => write!(f, "Expose"),
+            XEvent::Destroy(_) => write!(f, "Destroy"),
+            XEvent::KeyPress(_) => write!(f, "KeyPress"),
+            XEvent::Leave(_) => write!(f, "Leave"),
+            XEvent::MapRequest(_, _) => write!(f, "MapRequest"),
+            XEvent::MouseEvent(_) => write!(f, "MouseEvent"),
+            XEvent::PropertyNotify(_) => write!(f, "PropertyNotify"),
+            XEvent::RandrNotify => write!(f, "RandrNotify"),
+            XEvent::ScreenChange => write!(f, "ScreenChange"),
+        }
+    }
+}
+
 /// Known common client message formats.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ClientMessageKind {

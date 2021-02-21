@@ -56,8 +56,9 @@ pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
 /// way that signal handling is set up. Use this function if you need to access the
 /// output of a process that you spawn.
 pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
-    let s = cmd.into();
-    let parts: Vec<&str> = s.split_whitespace().collect();
+    let cmd = cmd.into();
+    info!(?cmd, "spawning subprocess for output");
+    let parts: Vec<&str> = cmd.split_whitespace().collect();
     let result = if parts.len() > 1 {
         Command::new(parts[0])
             .stdout(Stdio::piped())
@@ -71,7 +72,7 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
     let mut buff = String::new();
     Ok(child
         .stdout
-        .ok_or(PenroseError::SpawnProc(s))?
+        .ok_or(PenroseError::SpawnProc(cmd))?
         .read_to_string(&mut buff)
         .map(|_| buff)?)
 }
@@ -84,13 +85,13 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
 pub fn spawn_for_output_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<String> {
     let cmd = cmd.into();
 
-    info!("spawning {} with {:?}", cmd, args);
+    info!(?cmd, ?args, "spawning subprocess for output");
     let child = Command::new(&cmd)
         .stdout(Stdio::piped())
         .args(args)
         .spawn()?;
 
-    info!("reading output...");
+    info!(?cmd, ?args, "reading output");
     let mut buff = String::new();
     Ok(child
         .stdout

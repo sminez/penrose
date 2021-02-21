@@ -146,7 +146,7 @@ fn to_mouse_state(detail: u8, state: u16) -> Option<MouseState> {
         4 => MouseButton::ScrollUp,
         5 => MouseButton::ScrollDown,
         _ => {
-            warn!("dropping unknown mouse button event");
+            warn!(button = detail, "dropping unknown mouse button event");
             return None;
         }
     };

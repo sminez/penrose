@@ -158,7 +158,7 @@ impl DMenu {
             let mut stdin = proc
                 .stdin
                 .take()
-                .ok_or_else(|| PenroseError::Raw("unable to open stdin".into()))?;
+                .ok_or_else(|| perror!("unable to open stdin"))?;
             stdin.write_all(choices.as_bytes())?;
         }
 

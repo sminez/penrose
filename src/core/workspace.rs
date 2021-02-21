@@ -15,7 +15,7 @@ use crate::{
         ring::{Direction, InsertPoint, Ring, Selector},
         xconnection::Xid,
     },
-    PenroseError, Result,
+    Result,
 };
 
 #[cfg(feature = "serde")]
@@ -174,10 +174,7 @@ impl Workspace {
     pub fn add_client(&mut self, id: Xid, ip: &InsertPoint) -> Result<()> {
         let existing = self.clients.element(&Selector::Condition(&|c| *c == id));
         if existing.is_some() {
-            return Err(PenroseError::Raw(format!(
-                "{} is already in this workspace",
-                id
-            )));
+            return Err(perror!("{} is already in this workspace", id));
         }
         self.clients.insert_at(ip, id);
 
@@ -272,10 +269,10 @@ impl Workspace {
                 .partition(|c| c.floating);
 
             debug!(
-                "applying '{}' layout for {} clients on workspace '{}'",
-                layout.symbol,
-                tiled.len(),
-                self.name
+                layout = ?layout.symbol,
+                n_clients = tiled.len(),
+                name = ?self.name,
+                "applying layout",
             );
 
             ArrangeActions {

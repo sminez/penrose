@@ -1,7 +1,7 @@
 //! Simple data types and enums
 use crate::{
     core::xconnection::{Atom, Xid},
-    PenroseError, Result,
+    Result,
 };
 
 /// Output of a Layout function: the new position a window should take
@@ -225,10 +225,10 @@ impl Region {
     /// ```
     pub fn centered_in(&self, enclosing: &Region) -> Result<Self> {
         if !enclosing.contains(self) {
-            return Err(PenroseError::Raw(format!(
+            return Err(perror!(
                 "enclosing does not conatain self: {:?} {:?}",
                 enclosing, self
-            )));
+            ));
         }
 
         Ok(Self {
@@ -308,10 +308,10 @@ impl Region {
     /// ```
     pub fn split_at_width(&self, new_width: u32) -> Result<(Self, Self)> {
         if new_width > self.w {
-            Err(PenroseError::Raw(format!(
+            Err(perror!(
                 "Region split is out of range: {} >= {}",
                 new_width, self.w
-            )))
+            ))
         } else {
             Ok((
                 Self {
@@ -347,10 +347,10 @@ impl Region {
     /// ```
     pub fn split_at_height(&self, new_height: u32) -> Result<(Self, Self)> {
         if new_height > self.h {
-            Err(PenroseError::Raw(format!(
+            Err(perror!(
                 "Region split is out of range: {} >= {}",
                 new_height, self.h
-            )))
+            ))
         } else {
             Ok((
                 Self {
