@@ -120,7 +120,7 @@ impl<C: Connection> XAtomQuerier for X11rbConnection<C> {
 
         // Nope, ask the X11 server
         let reply = self.conn.get_atom_name(atom)?.reply()?;
-        let name = String::from_utf8(reply.name).map_err(|err| X11rbError::from(err))?;
+        let name = String::from_utf8(reply.name).map_err(X11rbError::from)?;
         Ok(name)
     }
 
@@ -258,7 +258,7 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
             "STRING" | "UTF8_STRING" => Prop::UTF8String(
                 // FIXME: I think this should check prop.format == 8, but penrose::xcb does not
                 String::from_utf8(r.value)
-                    .map_err(|e| X11rbError::from(e))?
+                    .map_err(X11rbError::from)?
                     .trim_matches('\0')
                     .split('\0')
                     .map(|s| s.to_string())
