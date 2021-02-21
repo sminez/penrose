@@ -19,7 +19,7 @@ use crate::{
 };
 
 #[cfg(feature = "serde")]
-use crate::core::layout::LayoutFunc;
+use crate::{core::layout::LayoutFunc, PenroseError};
 
 use std::collections::HashMap;
 
