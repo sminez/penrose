@@ -19,8 +19,6 @@ use crate::{
 
 use penrose_proc::stubbed_companion_trait;
 
-use std::str::FromStr;
-
 pub mod atom;
 pub mod event;
 pub mod property;
@@ -32,7 +30,10 @@ pub use event::{
     ClientEventMask, ClientMessage, ClientMessageKind, ConfigureEvent, ExposeEvent, PointerChange,
     PropertyEvent, XEvent,
 };
-pub use property::{Prop, WmHints, WmNormalHints, WmNormalHintsFlags};
+pub use property::{
+    MapState, Prop, WindowAttributes, WindowClass, WindowState, WmHints, WmNormalHints,
+    WmNormalHintsFlags,
+};
 
 /// An X resource ID
 pub type Xid = u32;
@@ -320,6 +321,10 @@ pub trait XClientConfig {
     #[stub(Ok(()))]
     fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> Result<()>;
 
+    /// Get the [WindowAttributes] for this client
+    #[stub(Err(XError::Raw("mocked".into())))]
+    fn get_window_attributes(&self, id: Xid) -> Result<WindowAttributes>;
+
     /*
      *  The following default implementations should used if possible.
      *
@@ -537,17 +542,24 @@ pub trait XConn:
     }
 
     /// Check to see if this client is one that we should be handling or not
+    #[tracing::instrument(level = "trace", skip(self))]
     fn is_managed_client(&self, id: Xid) -> bool {
         if self.get_prop(id, Atom::WmTransientFor.as_ref()).is_ok() {
-            false
-        } else if let Ok(Prop::Atom(atoms)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
-            atoms.iter().any(|atom| match Atom::from_str(atom) {
-                Ok(a) => !UNMANAGED_WINDOW_TYPES.contains(&a),
-                _ => false,
-            })
-        } else {
-            false
+            trace!("window is transient: don't manage");
+            return false;
         }
+
+        if let Ok(Prop::Atom(types)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
+            let unmanaged_types: Vec<String> = UNMANAGED_WINDOW_TYPES
+                .iter()
+                .map(|t| t.as_ref().to_string())
+                .collect();
+            trace!(ty = ?types, "checking window type to see we should manage");
+            return types.iter().all(|ty| !unmanaged_types.contains(ty));
+        }
+
+        trace!("unable to find type: defaulting to manage");
+        return true;
     }
 
     /// The subset of active clients that are considered managed by penrose
@@ -555,7 +567,12 @@ pub trait XConn:
         Ok(self
             .active_clients()?
             .into_iter()
-            .filter(|&id| self.is_managed_client(id))
+            .filter(|&id| {
+                let attrs_ok = self.get_window_attributes(id).map_or(true, |a| {
+                    !a.override_redirect && a.map_state == MapState::Viewable
+                });
+                attrs_ok && self.is_managed_client(id)
+            })
             .collect())
     }
 }
@@ -657,6 +674,8 @@ mod mock_conn {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use std::str::FromStr;
 
     struct WmNameXConn {
         wm_name: bool,

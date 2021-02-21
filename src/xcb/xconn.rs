@@ -36,6 +36,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct XcbConnection {
+    check_win: Xid,
     api: Api,
 }
 
@@ -43,10 +44,10 @@ impl XcbConnection {
     /// Establish a new connection to the running X server. Fails if unable to connect
     pub fn new() -> Result<Self> {
         let api = Api::new()?;
-
+        let check_win = api.check_window();
         api.set_randr_notify_mask()?;
 
-        Ok(Self { api })
+        Ok(Self { api, check_win })
     }
 
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]
@@ -105,7 +106,7 @@ impl XConn for XcbConnection {
     }
 
     fn check_window(&self) -> Xid {
-        self.api.check_window()
+        self.check_win
     }
 
     fn cleanup(&self) -> Result<()> {
@@ -113,6 +114,7 @@ impl XConn for XcbConnection {
         self.api.ungrab_mouse_buttons()?;
         let net_name = Atom::NetActiveWindow.as_ref();
         self.api.delete_prop(self.api.root(), net_name)?;
+        self.api.destroy_client(self.check_win)?;
         self.api.flush();
 
         Ok(())

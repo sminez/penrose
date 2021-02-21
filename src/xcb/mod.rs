@@ -317,6 +317,10 @@ macro_rules! __xcb_impl_xclientconfig {
             fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> $crate::core::xconnection::Result<()> {
                 Ok(self.api.set_client_attributes(id, data)?)
             }
+
+            fn get_window_attributes(&self, id: Xid) -> $crate::core::xconnection::Result<$crate::core::xconnection::WindowAttributes> {
+                Ok(self.api.get_window_attributes(id)?)
+            }
         }
     }
 }

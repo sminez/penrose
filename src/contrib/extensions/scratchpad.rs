@@ -140,7 +140,7 @@ impl<X: XConn> Hook<X> for Scratchpad {
             self.client.replace(Some(c.id()));
             c.externally_managed();
             c.set_floating(true);
-            self.toggle_client(wm).unwrap();
+            return self.toggle_client(wm);
         }
 
         Ok(())

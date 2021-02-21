@@ -93,6 +93,30 @@ pub enum WindowState {
     Iconic,
 }
 
+/// The mapping states a window can be in
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum MapState {
+    /// The window is unmapped
+    Unmapped,
+    /// The window is never viewable
+    UnViewable,
+    /// The window is currently viewable
+    Viewable,
+}
+
+/// The input class for a window
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum WindowClass {
+    /// Class is copied from parent window
+    CopyFromParent,
+    /// Window can be displayed
+    InputOutput,
+    /// Window can only be used for queries
+    InputOnly,
+}
+
 /// Client requested hints about information other than window geometry.
 ///
 /// See the ICCCM [spec][1] for further details.
@@ -101,14 +125,14 @@ pub enum WindowState {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct WmHints {
-    flags: WmHintsFlags,
-    accepts_input: bool,
-    initial_state: WindowState,
-    icon_pixmap: u32,
-    icon_win: Xid,
-    icon_position: Point,
-    icon_mask: u32,
-    window_group: u32,
+    pub(crate) flags: WmHintsFlags,
+    pub(crate) accepts_input: bool,
+    pub(crate) initial_state: WindowState,
+    pub(crate) icon_pixmap: u32,
+    pub(crate) icon_win: Xid,
+    pub(crate) icon_position: Point,
+    pub(crate) icon_mask: u32,
+    pub(crate) window_group: u32,
 }
 
 impl WmHints {
@@ -201,11 +225,11 @@ impl WmHints {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct WmNormalHints {
-    flags: WmNormalHintsFlags,
-    base: Option<Region>,
-    min: Option<Region>,
-    max: Option<Region>,
-    user_specified: Option<Region>,
+    pub(crate) flags: WmNormalHintsFlags,
+    pub(crate) base: Option<Region>,
+    pub(crate) min: Option<Region>,
+    pub(crate) max: Option<Region>,
+    pub(crate) user_specified: Option<Region>,
 }
 
 impl WmNormalHints {
@@ -284,5 +308,52 @@ impl WmNormalHints {
             max: if_set(x, y, max_w, max_h),
             user_specified: if_set(x, y, user_w, user_h),
         })
+    }
+}
+
+/// Window Attributes honoured by penose.
+///
+/// Only a small subset of window attributes are checked and honoured by penrose. This list may be
+/// extended in future.
+///
+/// ```C
+/// typedef struct xcb_get_window_attributes_reply_t {
+///     uint8_t        response_type;
+///     uint8_t        backing_store;
+///     uint16_t       sequence;
+///     uint32_t       length;
+///     xcb_visualid_t visual;
+///     uint16_t       _class;
+///     uint8_t        bit_gravity;
+///     uint8_t        win_gravity;
+///     uint32_t       backing_planes;
+///     uint32_t       backing_pixel;
+///     uint8_t        save_under;
+///     uint8_t        map_is_installed;
+///     uint8_t        map_state;
+///     uint8_t        override_redirect;
+///     xcb_colormap_t colormap;
+///     uint32_t       all_event_masks;
+///     uint32_t       your_event_mask;
+///     uint16_t       do_not_propagate_mask;
+///     uint8_t        pad0[2];
+/// } xcb_get_window_attributes_reply_t;
+/// ```
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct WindowAttributes {
+    pub(crate) override_redirect: bool,
+    pub(crate) map_state: MapState,
+    pub(crate) window_class: WindowClass,
+}
+
+impl WindowAttributes {
+    /// Create a new instance from component parts
+    pub fn new(override_redirect: bool, map_state: MapState, window_class: WindowClass) -> Self {
+        Self {
+            override_redirect,
+            map_state,
+            window_class,
+        }
     }
 }

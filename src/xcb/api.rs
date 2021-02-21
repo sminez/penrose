@@ -7,8 +7,8 @@ use crate::{
         screen::Screen,
         xconnection::{
             Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageKind,
-            ConfigureEvent, ExposeEvent, PointerChange, Prop, PropertyEvent, WmHints,
-            WmNormalHints, XAtomQuerier, XEvent, Xid, UNMANAGED_WINDOW_TYPES,
+            ConfigureEvent, ExposeEvent, MapState, PointerChange, Prop, PropertyEvent,
+            WindowAttributes, WindowClass, WmHints, WmNormalHints, XAtomQuerier, XEvent, Xid,
         },
     },
     xcb::{Result, XcbError, XcbGenericEvent},
@@ -74,7 +74,6 @@ pub struct Api {
     #[cfg_attr(feature = "serde", serde(skip, default = "default_conn"))]
     conn: xcb::Connection,
     root: Xid,
-    check_win: Xid,
     randr_base: u8,
     atoms: HashMap<Atom, u32>,
     #[cfg(feature = "keysyms")]
@@ -101,14 +100,6 @@ impl XAtomQuerier for Api {
     }
 }
 
-impl Drop for Api {
-    fn drop(&mut self) {
-        if let Err(e) = self.destroy_client(self.check_win) {
-            error!("error destroying check window: {}", e);
-        }
-    }
-}
-
 impl Api {
     /// Connect to the X server using the [XCB API][1]
     ///
@@ -127,7 +118,6 @@ impl Api {
         let mut api = Self {
             conn,
             root: 0,
-            check_win: 0,
             randr_base: 0,
             atoms: HashMap::new(),
             #[cfg(feature = "keysyms")]
@@ -161,23 +151,6 @@ impl Api {
             )));
         }
 
-        self.check_win = self.conn.generate_id();
-        xcb::create_window(
-            &self.conn,
-            0,
-            self.check_win,
-            self.root,
-            0,
-            0,
-            1,
-            1,
-            0,
-            0,
-            0,
-            &[(xcb::CW_OVERRIDE_REDIRECT, 1)],
-        );
-        self.conn.flush();
-
         self.atoms = Atom::iter()
             .map(|atom| {
                 let val = self.atom(atom.as_ref())?;
@@ -208,22 +181,6 @@ impl Api {
             .iter()
             .map(|a| self.atom_name(*a))
             .collect::<Result<Vec<String>>>()
-    }
-
-    /// Check to see if a window should be managed or not
-    pub fn window_is_managed(&self, id: Xid) -> bool {
-        if self.get_prop(id, Atom::WmTransientFor.as_ref()).is_ok() {
-            return false;
-        }
-
-        if let Ok(Prop::Atom(atoms)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
-            return atoms.iter().any(|atom| match Atom::from_str(atom) {
-                Ok(a) => !UNMANAGED_WINDOW_TYPES.contains(&a),
-                _ => false,
-            });
-        }
-
-        false
     }
 
     /// Get a handle on the underlying xcb connection
@@ -309,6 +266,30 @@ impl Api {
                 }
             }),
         })
+    }
+
+    /// Fetch the `WindowAttributes` data for a target client id
+    pub fn get_window_attributes(&self, id: Xid) -> Result<WindowAttributes> {
+        let win_attrs = xcb::get_window_attributes(&self.conn, id).get_reply()?;
+        let override_redirect = win_attrs.override_redirect();
+        let map_state = match win_attrs.map_state() {
+            0 => MapState::Unmapped,
+            1 => MapState::UnViewable,
+            2 => MapState::Viewable,
+            s => return Err(XcbError::Raw(format!("invalid map state: {}", s))),
+        };
+        let window_class = match win_attrs.class() {
+            0 => WindowClass::CopyFromParent,
+            1 => WindowClass::InputOutput,
+            2 => WindowClass::InputOnly,
+            c => return Err(XcbError::Raw(format!("invalid window class: {}", c))),
+        };
+
+        Ok(WindowAttributes::new(
+            override_redirect,
+            map_state,
+            window_class,
+        ))
     }
 
     /// Grab control of all keyboard input
@@ -805,10 +786,11 @@ impl Api {
     /// [Screen] structs.
     pub fn current_screens(&self) -> Result<Vec<Screen>> {
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_screen_resources
-        let resources = xcb::randr::get_screen_resources(&self.conn, self.check_win);
+        let check_win = self.check_window();
+        let resources = xcb::randr::get_screen_resources(&self.conn, check_win);
 
         // xcb docs: https://www.mankier.com/3/xcb_randr_get_crtc_info
-        Ok(resources
+        let screens = resources
             .get_reply()?
             .crtcs()
             .iter()
@@ -827,7 +809,10 @@ impl Api {
                 let (_, _, w, _) = s.region(false).values();
                 w > 0
             })
-            .collect())
+            .collect();
+
+        self.destroy_client(check_win)?;
+        Ok(screens)
     }
 
     /// Query the randr API for current outputs and return the size of each screen
@@ -930,7 +915,23 @@ impl Api {
 
     /// The Xid being used as a check window
     pub fn check_window(&self) -> Xid {
-        self.check_win
+        let id = self.conn.generate_id();
+        xcb::create_window(
+            &self.conn,
+            0,
+            id,
+            self.root,
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            &[(xcb::CW_OVERRIDE_REDIRECT, 1)],
+        );
+        self.conn.flush();
+        id
     }
 
     /// Set a pre-defined notify mask for randr events to subscribe to
