@@ -174,7 +174,7 @@ impl Api {
             0,
             0,
             0,
-            &[],
+            &[(xcb::CW_OVERRIDE_REDIRECT, 1)],
         );
         self.conn.flush();
 

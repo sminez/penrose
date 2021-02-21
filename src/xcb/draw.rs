@@ -65,6 +65,17 @@ impl XcbDraw {
     }
 }
 
+impl Drop for XcbDraw {
+    fn drop(&mut self) {
+        // The surfaces themselves have their own drop impl
+        for id in self.surfaces.keys() {
+            if let Err(e) = self.destroy_client(*id) {
+                error!("error destroying window: {}", e);
+            }
+        }
+    }
+}
+
 impl Draw for XcbDraw {
     type Ctx = XcbDrawContext;
 
