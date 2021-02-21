@@ -23,7 +23,7 @@ struct Binding {
 struct BindingsInput(pub(crate) Vec<Binding>);
 
 impl Parse for BindingsInput {
-    fn parse(input: ParseStream) -> Result<Self> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         let mut bindings = as_bindings(comma_sep_strs(input)?);
 
         let templated_content;
@@ -42,7 +42,7 @@ impl Parse for BindingsInput {
     }
 }
 
-fn comma_sep_strs(input: ParseStream) -> Result<Vec<String>> {
+fn comma_sep_strs(input: ParseStream<'_>) -> Result<Vec<String>> {
     let content;
     parenthesized!(content in input);
     Ok(Punctuated::<LitStr, Token![,]>::parse_terminated(&content)?

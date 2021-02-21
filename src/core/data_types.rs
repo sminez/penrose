@@ -227,7 +227,8 @@ impl Region {
         if !enclosing.contains(self) {
             return Err(perror!(
                 "enclosing does not conatain self: {:?} {:?}",
-                enclosing, self
+                enclosing,
+                self
             ));
         }
 
@@ -310,7 +311,8 @@ impl Region {
         if new_width > self.w {
             Err(perror!(
                 "Region split is out of range: {} >= {}",
-                new_width, self.w
+                new_width,
+                self.w
             ))
         } else {
             Ok((
@@ -349,7 +351,8 @@ impl Region {
         if new_height > self.h {
             Err(perror!(
                 "Region split is out of range: {} >= {}",
-                new_height, self.h
+                new_height,
+                self.h
             ))
         } else {
             Ok((

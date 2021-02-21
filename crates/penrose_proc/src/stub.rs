@@ -18,7 +18,7 @@ const DEFAULT_PREFIX: &str = "Stub";
 struct Args(Vec<Meta>);
 
 impl Parse for Args {
-    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+    fn parse(input: ParseStream<'_>) -> syn::parse::Result<Self> {
         Ok(Self(
             Punctuated::<Meta, Token![,]>::parse_terminated(&input)?
                 .into_iter()
@@ -272,7 +272,7 @@ pub(crate) fn stubbed_companion_trait_inner(args: TokenStream, input: TokenStrea
     let trait_name = ast.ident.clone();
     let stub_trait_name = format_ident!("{}{}", prefix, trait_name);
     let visibility = ast.vis.clone();
-    let colon = ast.colon_token.clone();
+    let colon = ast.colon_token;
     let bounds = ast.supertraits.clone();
     let attrs = ast.attrs.clone();
 
