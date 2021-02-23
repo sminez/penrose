@@ -17,7 +17,10 @@ use crate::{
     ErrorHandler,
 };
 
+#[cfg(feature = "x11rb-xcb")]
+use x11rb::xcb_ffi::XCBConnection;
 use x11rb::{
+    connection::Connection,
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
     rust_connection::RustConnection,
     x11_utils::X11Error,
@@ -39,13 +42,36 @@ pub type X11rbHooks = Hooks<X11rbConnection<RustConnection>>;
 
 /// Construct a penrose [WindowManager] backed by the [x11rb][crate::x11rb] backend using
 /// [x11rb::rust_connection::RustConnection].
-pub fn new_x11rb_backed_window_manager(
+pub fn new_x11rb_rust_backed_window_manager(
     config: Config,
     hooks: Vec<Box<dyn Hook<X11rbConnection<RustConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<RustConnection>>> {
-    let (inner_conn, _) = RustConnection::connect(None).map_err(|err| X11rbError::from(err))?;
-    let conn = X11rbConnection::new_for_connection(inner_conn)?;
+    let (conn, _) = RustConnection::connect(None).map_err(|err| X11rbError::from(err))?;
+    new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
+}
+
+/// Construct a penrose [WindowManager] backed by the [x11rb][crate::x11rb] backend using
+/// [x11rb::xcb_ffi::XCBConnection].
+#[cfg(feature = "x11rb-xcb")]
+pub fn new_x11rb_xcb_backed_window_manager(
+    config: Config,
+    hooks: Vec<Box<dyn Hook<X11rbConnection<XCBConnection>>>>,
+    error_handler: ErrorHandler,
+) -> crate::Result<WindowManager<X11rbConnection<XCBConnection>>> {
+    let (conn, _) = XCBConnection::connect(None).map_err(|err| X11rbError::from(err))?;
+    new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
+}
+
+/// Construct a penrose [WindowManager] backed by the [x11rb][crate::x11rb] backend using
+/// the given connection.
+pub fn new_x11rb_backed_window_manager<C: Connection>(
+    connection: C,
+    config: Config,
+    hooks: Vec<Box<dyn Hook<X11rbConnection<C>>>>,
+    error_handler: ErrorHandler,
+) -> crate::Result<WindowManager<X11rbConnection<C>>> {
+    let conn = X11rbConnection::new_for_connection(connection)?;
     let mut wm = WindowManager::new(config, conn, hooks, error_handler);
     wm.init()?;
 
