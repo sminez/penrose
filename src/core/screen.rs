@@ -26,9 +26,19 @@ impl Screen {
     pub fn update_effective_region(&mut self, bar_height: u32, top_bar: bool, outer_gap: u32) {
         let (x, y, w, h) = self.true_region.values();
         self.effective_region = if top_bar {
-            Region::new(x + outer_gap, y + bar_height + outer_gap, w - 2*outer_gap, h - bar_height - 2*outer_gap)
+            Region::new(
+                x + outer_gap,
+                y + bar_height + outer_gap,
+                w - 2 * outer_gap,
+                h - bar_height - 2 * outer_gap,
+            )
         } else {
-            Region::new(x + outer_gap, y + outer_gap, w - 2*outer_gap, h - bar_height - 2*outer_gap)
+            Region::new(
+                x + outer_gap,
+                y + outer_gap,
+                w - 2 * outer_gap,
+                h - bar_height - 2 * outer_gap,
+            )
         }
     }
 
