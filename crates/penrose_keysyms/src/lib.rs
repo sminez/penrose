@@ -2009,6 +2009,12 @@ pub enum XKeySym {
     /// XF86XK_AudioNext
     #[strum(serialize = "XF86AudioNext")]
     XF86XK_AudioNext,
+    /// XF86XK_MonBrightnessUp
+    #[strum(serialize = "XF86MonBrightnessUp")]
+    XF86XK_MonBrightnessUp,
+    /// XF86XK_MonBrightnessDown
+    #[strum(serialize = "XF86MonBrightnessDown")]
+    XF86XK_MonBrightnessDown,
 }
 
 impl XKeySym {
@@ -2684,6 +2690,8 @@ impl XKeySym {
                 XKeySym::XF86XK_AudioStop => 0x1008FF15,
                 XKeySym::XF86XK_AudioPrev => 0x1008FF16,
                 XKeySym::XF86XK_AudioNext => 0x1008FF17,
+                XKeySym::XF86XK_MonBrightnessUp => 0x1008FF02,
+                XKeySym::XF86XK_MonBrightnessDown => 0x1008FF03,
             } as u32)
                 .to_le_bytes()
                 .to_vec()
