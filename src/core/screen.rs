@@ -23,12 +23,12 @@ impl Screen {
 
     /// Cache the current effective region of this screen based on whether or not a bar is
     /// displayed and if that bar is positioned at the top or bottom of the screen.
-    pub fn update_effective_region(&mut self, bar_height: u32, top_bar: bool) {
+    pub fn update_effective_region(&mut self, bar_height: u32, top_bar: bool, outer_gap: u32) {
         let (x, y, w, h) = self.true_region.values();
         self.effective_region = if top_bar {
-            Region::new(x, y + bar_height, w, h - bar_height)
+            Region::new(x + outer_gap, y + bar_height + outer_gap, w - 2*outer_gap, h - bar_height - 2*outer_gap)
         } else {
-            Region::new(x, y, w, h - bar_height)
+            Region::new(x + outer_gap, y + outer_gap, w - 2*outer_gap, h - bar_height - 2*outer_gap)
         }
     }
 

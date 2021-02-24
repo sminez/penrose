@@ -590,6 +590,7 @@ impl<X: XConn> WindowManager<X> {
             self.workspaces.len(),
             self.config.bar_height,
             self.config.top_bar,
+            self.config.outer_gap_px,
         )?;
 
         if screens == self.screens.as_vec() {

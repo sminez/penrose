@@ -78,6 +78,7 @@ pub(super) fn get_screens<X>(
     n_workspaces: usize,
     bar_height: u32,
     top_bar: bool,
+    outer_gap: u32,
 ) -> crate::Result<Vec<Screen>>
 where
     X: XState,
@@ -96,7 +97,7 @@ where
         .zip(visible_workspaces)
         .enumerate()
         .map(|(ix, (mut s, wix))| {
-            s.update_effective_region(bar_height, top_bar);
+            s.update_effective_region(bar_height, top_bar, outer_gap);
             trace!(screen = ix, workspace = wix, "setting workspace for screen");
             s.wix = wix;
             let r = s.region(false);
@@ -270,7 +271,7 @@ mod tests {
         }
     }
 
-    fn test_screens(h: u32, top_bar: bool) -> Vec<Screen> {
+    fn test_screens(h: u32, top_bar: bool, outer_gaps: u32) -> Vec<Screen> {
         let regions = &[
             Region::new(0, 0, 1000, 800),
             Region::new(1000, 0, 1400, 900),
@@ -280,7 +281,7 @@ mod tests {
             .enumerate()
             .map(|(i, &r)| {
                 let mut s = Screen::new(r, i);
-                s.update_effective_region(h, top_bar);
+                s.update_effective_region(h, top_bar, outer_gaps);
                 s
             })
             .collect()
@@ -298,10 +299,10 @@ mod tests {
         case: more_truncates => (vec![0], 1, vec![0]);
 
         body: {
-            let (bar_height, top_bar) = (10, true);
-            let screens = test_screens(bar_height, top_bar);
+            let (bar_height, top_bar, outer_gaps) = (10, true, 10);
+            let screens = test_screens(bar_height, top_bar, outer_gaps);
             let conn = OutputsXConn(screens);
-            let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar).unwrap();
+            let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar, outer_gaps).unwrap();
             let focused: Vec<usize> = new.iter().map(|s| s.wix).collect();
 
             assert_eq!(focused, expected);

@@ -86,6 +86,8 @@ __with_builder_and_getters! {
     Concrete border_px: u32; => 2;
     /// the gap between tiled windows in pixels
     Concrete gap_px: u32; => 5;
+    /// the gap around the whole screen, can be used to get uniform gaps
+    Concrete outer_gap_px: u32; => 0;
     /// the percentage of the screen to grow the main region by when incrementing
     Concrete main_ratio_step: f32; => 0.05;
     /// whether or not space should be reserved for a status bar
