@@ -161,7 +161,8 @@ test_cases! {
     case: randr_notify => ("randr_notify", 1, vec![XEvent::RandrNotify]);
     case: remove_client => ("remove_client", 1, vec![
         XEvent::MapRequest(1, false),
-        XEvent::KeyPress(common::KILL_CLIENT_CODE)
+        XEvent::KeyPress(common::KILL_CLIENT_CODE),
+        XEvent::Destroy(1),
     ]);
     case: screen_change => ("screen_change", 1, vec![XEvent::KeyPress(common::SCREEN_CHANGE_CODE)]);
     case: screens_updated => ("screens_updated", 1, vec![XEvent::RandrNotify]);

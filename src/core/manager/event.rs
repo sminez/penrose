@@ -178,10 +178,13 @@ fn process_property_notify(evt: PropertyEvent) -> Vec<EventAction> {
         Ok(a) if a == Atom::WmName || a == Atom::NetWmName => {
             vec![EventAction::ClientNameChanged(evt.id, evt.is_root)]
         }
-        _ => vec![EventAction::UnknownPropertyChange(
-            evt.id,
-            evt.atom,
-            evt.is_root,
-        )],
+        _ => vec![],
+        // TODO: handle other property changes and possibly allow users to process
+        //       unknown events?
+        // _ => vec![EventAction::UnknownPropertyChange(
+        //     evt.id,
+        //     evt.atom,
+        //     evt.is_root,
+        // )],
     }
 }

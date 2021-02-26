@@ -41,8 +41,14 @@ where
             Ok(Prop::UTF8String(strs)) => strs[0].clone(),
             _ => String::new(),
         },
+
+        // ...sooooo...this is an atom, not a string :facepalm: FIXME in the morning!
         ty: match conn.get_prop(id, Atom::NetWmWindowType.as_ref()) {
             Ok(Prop::UTF8String(strs)) => strs[0].clone(),
+            Err(e) => {
+                error!(id, "failed to pull window type: {}", e);
+                String::new()
+            }
             _ => String::new(),
         },
     }

@@ -514,8 +514,8 @@ impl<X: XConn> WindowManager<X> {
                 self.focused_client = None;
             }
 
-            if wix == self.active_ws_index() {
-                self.apply_layout(self.active_ws_index())?;
+            if self.visible_workspaces().contains(&wix) {
+                self.apply_layout(wix)?;
             }
 
             self.update_x_known_clients()?;
@@ -1551,29 +1551,25 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// # use penrose::__example_helpers::*;
     /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
-    /// assert_eq!(manager.active_workspace().client_ids(), vec![0]);
-    ///
     /// manager.kill_client()?;
-    /// assert_eq!(manager.active_workspace().client_ids(), vec![]);
     /// # Ok(())
     /// # }
-    /// # let mut manager = example_windowmanager(1, n_clients(1));
-    /// # manager.init().unwrap();
-    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
-    /// # example(manager).unwrap();
     /// ```
+    #[tracing::instrument(level = "debug", err, skip(self))]
     pub fn kill_client(&mut self) -> Result<()> {
         if let Some(id) = self.focused_client {
             let del = Atom::WmDeleteWindow.as_ref();
             let res = if let Ok(true) = self.conn.client_supports_protocol(id, del) {
+                trace!(id, "client supports WmDeleteWindow: sending client event");
                 ClientMessageKind::DeleteWindow(id)
                     .as_message(&self.conn)
                     .and_then(|msg| self.conn.send_client_event(msg))
                     .or(self.conn.destroy_client(id))
             } else {
+                trace!(id, "client doesn't supports WmDeleteWindow: destroying");
                 self.conn.destroy_client(id)
             };
 
@@ -1582,8 +1578,6 @@ impl<X: XConn> WindowManager<X> {
             }
 
             self.conn.flush();
-            self.remove_client(id)?;
-            self.apply_layout(self.active_ws_index())?;
         }
 
         Ok(())
@@ -2357,39 +2351,14 @@ mod tests {
     }
 
     #[test]
-    fn killing_a_client_removes_it_from_the_workspace() {
+    fn killing_a_client_does_not_remove_it_from_the_workspace() {
         let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0);
+        // Should trigger the kill but we wait for DestroyNotify before removing the
+        // client state
         wm.kill_client().unwrap();
 
-        assert_eq!(wm.workspaces[0].len(), 0);
-    }
-
-    #[test]
-    fn kill_client_kills_focused_not_first() {
-        let mut wm = wm_with_mock_conn(vec![], vec![]);
-        add_n_clients(&mut wm, 5, 0); // 50 40 30 20 10, 50 focused
-        assert_eq!(wm.active_ws_index(), 0);
-        wm.cycle_client(Forward).unwrap(); // 40 focused
-        assert_eq!(wm.workspaces[0].focused_client(), Some(40));
-        wm.kill_client().unwrap(); // remove 40, focus 30
-
-        let ids: Vec<Xid> = wm.workspaces[0].iter().cloned().collect();
-        assert_eq!(ids, vec![50, 30, 20, 10]);
-        assert_eq!(wm.workspaces[0].focused_client(), Some(30));
-    }
-
-    #[test]
-    fn moving_then_deleting_clients() {
-        let mut wm = wm_with_mock_conn(vec![], vec![]);
-        add_n_clients(&mut wm, 2, 0);
-        wm.client_to_workspace(&Selector::Index(1)).unwrap();
-        wm.client_to_workspace(&Selector::Index(1)).unwrap();
-        wm.focus_workspace(&Selector::Index(1)).unwrap();
-        wm.kill_client().unwrap();
-
-        // should have removed first client on ws::1 (last sent from ws::0)
-        assert_eq!(wm.workspaces[1].iter().collect::<Vec<&Xid>>(), vec![&20]);
+        assert_eq!(wm.workspaces[0].len(), 1);
     }
 
     #[test]
@@ -2700,7 +2669,7 @@ mod tests {
     layout_trigger_test!(client_to_workspace; true; &Selector::Index(1));
     layout_trigger_test!(client_to_screen; true; &Selector::Index(1));
     layout_trigger_test!(toggle_client_fullscreen; true; &Selector::WinId(10));
-    layout_trigger_test!(kill_client; true;);
+    layout_trigger_test!(kill_client; false;);
     layout_trigger_test!(remove_workspace; true; &Selector::Index(0));
     layout_trigger_test!(position_client; true; 10, Region::default(), true);
     layout_trigger_test!(layout_screen; true; 0);
