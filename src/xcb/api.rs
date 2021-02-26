@@ -213,7 +213,9 @@ impl Api {
     }
 
     /// Fetch the requested property for the target window
+    #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
+        trace!(name, "trying to pull prop");
         let atom = self.atom(name)?;
         let cookie = xcb::get_property(&self.conn, false, id, atom, xcb::ATOM_ANY, 0, 1024);
         let r = cookie.get_reply()?;
@@ -539,6 +541,7 @@ impl Api {
     /// is an issue with communicating with the X server. For known
     /// atoms that are included in the [Atom] enum,
     /// the [`Api::known_atom`] method should be used instead.
+    #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn atom(&self, name: &str) -> Result<u32> {
         if let Ok(known) = Atom::from_str(name) {
             // This could be us initialising in which case self.atoms is empty
@@ -547,6 +550,7 @@ impl Api {
             }
         }
 
+        trace!(name, "interning atom");
         Ok(xcb::intern_atom(&self.conn, false, name)
             .get_reply()?
             .atom())

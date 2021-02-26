@@ -155,6 +155,10 @@ pub enum XcbError {
     #[error("Error making xcb query: {0}")]
     XcbGeneric(#[from] ::xcb::Error<::xcb::ffi::base::xcb_generic_error_t>),
 
+    /// Wrapper around low level XCB C API errors
+    #[error("Error making xcb query: {0:?}")]
+    XcbKnown(XErr),
+
     /// Error in using the pango API
     #[cfg(feature = "xcb_draw")]
     #[error("Error calling Pango API: {0}")]
@@ -170,17 +174,65 @@ pub enum XcbError {
     UnknownMouseButton(u8),
 }
 
+/// Base X11 error codes taken from /usr/include/X11/X.h (line 347)
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Ord, PartialOrd)]
+pub enum XErr {
+    /// bad request code
+    BadRequest = 1,
+    /// int parameter out of range
+    BadValue = 2,
+    /// parameter not a Window
+    BadWindow = 3,
+    /// parameter not a Pixmap
+    BadPixmap = 4,
+    /// parameter not an Atom
+    BadAtom = 5,
+    /// parameter not a Cursor
+    BadCursor = 6,
+    /// parameter not a Font
+    BadFont = 7,
+    /// parameter mismatch
+    BadMatch = 8,
+    /// parameter not a Pixmap or Window
+    BadDrawable = 9,
+    /// depending on context:
+    ///   - key/button already grabbed
+    ///   - attempt to free an illegal cmap entry
+    ///   - attempt to store into a read-only color map entry.
+    ///   - attempt to modify the access control list from other than the local host.
+    BadAccess = 10,
+}
+
+// Doing this rather than impl TryFrom<u8> so that we don't need the trait
+// in scope when calling this inside of the helper macros that implement the
+// various X traits below
+impl XcbError {
+    fn if_known(err: XcbError) -> XcbError {
+        match err {
+            XcbError::XcbGeneric(ref e) => match e.error_code() {
+                code @ 1..=11 => XcbError::XcbKnown(unsafe { std::mem::transmute(code) }),
+                _ => err,
+            },
+            _ => err,
+        }
+    }
+}
+
+pub(crate) fn wrap<T>(res: Result<T>) -> crate::core::xconnection::Result<T> {
+    Ok(res.map_err(XcbError::if_known)?)
+}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __xcb_impl_xatom_querier {
     { $struct:ident } => {
         impl $crate::core::xconnection::XAtomQuerier for $struct {
             fn atom_name(&self, atom: Xid) -> $crate::core::xconnection::Result<String> {
-                Ok(self.api.atom_name(atom)?)
+                $crate::xcb::wrap(self.api.atom_name(atom))
             }
 
             fn atom_id(&self, name: &str) -> $crate::core::xconnection::Result<Xid> {
-                Ok(self.api.atom(name)?)
+                $crate::xcb::wrap(self.api.atom(name))
             }
         }
     }
@@ -196,11 +248,11 @@ macro_rules! __xcb_impl_xstate {
             }
 
             fn current_screens(&self) -> $crate::core::xconnection::Result<Vec<Screen>> {
-                Ok(self.api.current_screens()?)
+                $crate::xcb::wrap(self.api.current_screens())
             }
 
             fn cursor_position(&self) -> $crate::core::xconnection::Result<Point> {
-                Ok(self.api.cursor_position()?)
+                $crate::xcb::wrap(self.api.cursor_position())
             }
 
             fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> $crate::core::xconnection::Result<()> {
@@ -215,19 +267,19 @@ macro_rules! __xcb_impl_xstate {
                     }
                 };
 
-                Ok(self.api.warp_cursor(id, x as usize, y as usize)?)
+                $crate::xcb::wrap(self.api.warp_cursor(id, x as usize, y as usize))
             }
 
             fn client_geometry(&self, id: Xid) -> $crate::core::xconnection::Result<Region> {
-                Ok(self.api.client_geometry(id)?)
+                $crate::xcb::wrap(self.api.client_geometry(id))
             }
 
             fn active_clients(&self) -> $crate::core::xconnection::Result<Vec<Xid>> {
-                Ok(self.api.current_clients()?)
+                $crate::xcb::wrap(self.api.current_clients())
             }
 
             fn focused_client(&self) -> $crate::core::xconnection::Result<Xid> {
-                Ok(self.api.focused_client()?)
+                $crate::xcb::wrap(self.api.focused_client())
             }
         }
     }
@@ -243,15 +295,15 @@ macro_rules! __xcb_impl_xeventhandler {
             }
 
             fn wait_for_event(&self) -> $crate::core::xconnection::Result<XEvent> {
-                Ok(self.api.wait_for_event()?)
+                $crate::xcb::wrap(self.api.wait_for_event())
             }
 
             fn send_client_event(&self, msg: ClientMessage) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.send_client_event(msg)?)
+                $crate::xcb::wrap(self.api.send_client_event(msg))
             }
 
             fn build_client_event(&self, kind: ClientMessageKind) -> $crate::core::xconnection::Result<ClientMessage> {
-                        Ok(self.api.build_client_event(kind)?)
+                self.api.build_client_event(kind)
             }
         }
     }
@@ -263,19 +315,19 @@ macro_rules! __xcb_impl_xclienthandler {
     { $struct:ident } => {
         impl $crate::core::xconnection::XClientHandler for $struct {
             fn map_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.map_client(id)?)
+                $crate::xcb::wrap(self.api.map_client(id))
             }
 
             fn unmap_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.unmap_client(id)?)
+                $crate::xcb::wrap(self.api.unmap_client(id))
             }
 
             fn focus_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.focus_client(id)?)
+                $crate::xcb::wrap(self.api.focus_client(id))
             }
 
             fn destroy_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.destroy_client(id)?)
+                $crate::xcb::wrap(self.api.destroy_client(id))
             }
         }
     }
@@ -286,20 +338,22 @@ macro_rules! __xcb_impl_xclienthandler {
 macro_rules! __xcb_impl_xclientproperties {
     { $struct:ident } => {
         impl $crate::core::xconnection::XClientProperties for $struct {
+            #[tracing::instrument(level = "trace", err, skip(self))]
             fn get_prop(&self, id: Xid, name: &str) -> $crate::core::xconnection::Result<Prop> {
-                Ok(self.api.get_prop(id, name)?)
+                $crate::xcb::wrap(self.api.get_prop(id, name))
             }
 
+            #[tracing::instrument(level = "trace", err, skip(self))]
             fn list_props(&self, id: Xid) -> $crate::core::xconnection::Result<Vec<String>> {
-                Ok(self.api.list_props(id)?)
+                $crate::xcb::wrap(self.api.list_props(id))
             }
 
             fn delete_prop(&self, id: Xid, name: &str) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.delete_prop(id, name)?)
+                $crate::xcb::wrap(self.api.delete_prop(id, name))
             }
 
             fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.change_prop(id, prop, val)?)
+                $crate::xcb::wrap(self.api.change_prop(id, prop, val))
             }
         }
     }
@@ -311,15 +365,15 @@ macro_rules! __xcb_impl_xclientconfig {
     { $struct:ident } => {
         impl $crate::core::xconnection::XClientConfig for $struct {
             fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.configure_client(id, data)?)
+                $crate::xcb::wrap(self.api.configure_client(id, data))
             }
 
             fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.set_client_attributes(id, data)?)
+                $crate::xcb::wrap(self.api.set_client_attributes(id, data))
             }
 
             fn get_window_attributes(&self, id: Xid) -> $crate::core::xconnection::Result<$crate::core::xconnection::WindowAttributes> {
-                Ok(self.api.get_window_attributes(id)?)
+                $crate::xcb::wrap(self.api.get_window_attributes(id))
             }
         }
     }
@@ -331,19 +385,19 @@ macro_rules! __xcb_impl_xkeyboardhandler {
     { $struct:ident } => {
         impl XKeyboardHandler for $struct {
             fn grab_keyboard(&self) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.grab_keyboard()?)
+                $crate::xcb::wrap(self.api.grab_keyboard())
             }
 
             fn ungrab_keyboard(&self) -> $crate::core::xconnection::Result<()> {
-                Ok(self.api.ungrab_keyboard()?)
+                $crate::xcb::wrap(self.api.ungrab_keyboard())
             }
 
             fn next_keypress(&self) -> $crate::core::xconnection::Result<Option<KeyPressParseAttempt>> {
-                Ok(self.api.next_keypress()?)
+                $crate::xcb::wrap(self.api.next_keypress())
             }
 
             fn next_keypress_blocking(&self) -> $crate::core::xconnection::Result<KeyPressParseAttempt> {
-                Ok(self.api.next_keypress_blocking()?)
+                $crate::xcb::wrap(self.api.next_keypress_blocking())
             }
         }
     }
