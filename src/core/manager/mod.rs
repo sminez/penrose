@@ -612,17 +612,18 @@ impl<X: XConn> WindowManager<X> {
     // Map a new client window.
     #[tracing::instrument(level = "trace", err, skip(self))]
     fn handle_map_request(&mut self, id: Xid) -> Result<()> {
-        trace!("handling map request");
+        trace!(id, "handling map request");
+        let classes = str_slice!(self.config.floating_classes);
+        let mut client = Client::new(&self.conn, id, self.active_ws_index(), classes);
+        trace!(id, ?client.wm_name, ?client.wm_class, ?client.wm_type, "client details");
+
+        // Run hooks to allow them to modify the client
+        run_hooks!(new_client, self, &mut client);
+
         if !self.conn.is_managed_client(id) {
             return Ok(self.conn.map_client(id)?);
         }
 
-        let classes = str_slice!(self.config.floating_classes);
-        let mut client = Client::new(&self.conn, id, self.active_ws_index(), classes);
-        trace!(?client.wm_name, ?client.wm_class, ?client.wm_type, "client details");
-
-        // Run hooks to allow them to modify the client
-        run_hooks!(new_client, self, &mut client);
         let wix = client.workspace();
 
         if client.wm_managed {
