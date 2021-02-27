@@ -86,7 +86,10 @@ impl Client {
 
     /// The WM_CLASS property of this client
     pub fn wm_class(&self) -> &str {
-        &self.wm_class[0]
+        match self.wm_class.get(0) {
+            Some(class) => class,
+            None => "unknown",
+        }
     }
 
     /// The WM_NAME property of this client
@@ -120,7 +123,10 @@ impl Client {
 
     /// The WM_CLASS of the window that this Client is tracking
     pub fn class(&self) -> &str {
-        &self.wm_class[0]
+        match self.wm_class.get(0) {
+            Some(class) => class,
+            None => "unknown",
+        }
     }
 
     /// Mark this client as not being managed by the WindowManager directly
