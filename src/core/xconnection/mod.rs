@@ -549,6 +549,11 @@ pub trait XConn:
             return false;
         }
 
+        if self.get_prop(id, "_XEMBED_INFO").is_ok() {
+            trace!("embedded window: don't manage");
+            return false;
+        }
+
         if let Ok(Prop::Atom(types)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
             let unmanaged_types: Vec<String> = UNMANAGED_WINDOW_TYPES
                 .iter()
@@ -569,7 +574,7 @@ pub trait XConn:
             .into_iter()
             .filter(|&id| {
                 let attrs_ok = self.get_window_attributes(id).map_or(true, |a| {
-                    !a.override_redirect && a.map_state == MapState::Viewable
+                    !a.override_redirect && a.window_class == WindowClass::InputOutput
                 });
                 attrs_ok && self.is_managed_client(id)
             })
