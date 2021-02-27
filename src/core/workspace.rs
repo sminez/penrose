@@ -466,7 +466,7 @@ impl Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{layout::*, ring::Direction};
+    use crate::core::{layout::*, ring::Direction, xconnection::MockXConn};
 
     fn test_layouts() -> Vec<Layout> {
         vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)]
@@ -529,11 +529,12 @@ mod tests {
     #[test]
     fn applying_a_layout_gives_one_action_per_client() {
         let mut ws = Workspace::new("test", test_layouts());
+        let conn = MockXConn::new(vec![], vec![], vec![]);
         ws.clients = Ring::new(vec![1, 2, 3]);
         let client_map = map! {
-            1 => Client::new(1, "".into(), "".into(), 1, false),
-            2 => Client::new(2, "".into(), "".into(), 1, false),
-            3 => Client::new(3, "".into(), "".into(), 1, false),
+            1 => Client::new(&conn, 1, 0, &[]),
+            2 => Client::new(&conn, 2, 0, &[]),
+            3 => Client::new(&conn, 3, 0, &[]),
         };
         let res = ws.arrange(Region::new(0, 0, 2000, 1000), &client_map);
         assert_eq!(res.actions.len(), 3, "actions are not 1-1 for clients")

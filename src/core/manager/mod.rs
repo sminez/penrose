@@ -33,7 +33,7 @@ use event::{process_next_event, WmState};
 // Relies on all hooks taking &mut WindowManager as the first arg.
 macro_rules! run_hooks {
     ($method:ident, $_self:expr, $($arg:expr),*) => {
-        trace!(target: "hooks", "Running {} hooks", stringify!($method));
+        debug!(target: "hooks", "Running {} hooks", stringify!($method));
         let mut hooks = $_self.hooks.replace(vec![]);
         let res = hooks.iter_mut().try_for_each(|h| h.$method($_self, $($arg),*));
         $_self.hooks.replace(hooks);
@@ -267,7 +267,8 @@ impl<X: XConn> WindowManager<X> {
     pub(crate) fn try_manage_existing_windows(&mut self) -> Result<()> {
         for id in self.conn.active_managed_clients()?.into_iter() {
             trace!(id, "parsing existing client");
-            let mut c = util::parse_existing_client(&self.conn, id)?;
+            let classes = str_slice!(self.config.floating_classes);
+            let mut c = util::parse_existing_client(&self.conn, id, classes)?;
             self.add_client_to_workspace(c.workspace(), id)?;
             self.conn.unmap_client_if_needed(Some(&mut c))?;
             self.client_map.insert(id, c);
@@ -611,21 +612,14 @@ impl<X: XConn> WindowManager<X> {
     // Map a new client window.
     #[tracing::instrument(level = "trace", err, skip(self))]
     fn handle_map_request(&mut self, id: Xid) -> Result<()> {
-        let props = util::client_str_props(&self.conn, id);
-        trace!(?props.name, ?props.class, ?props.ty, "handling map request");
+        trace!("handling map request");
         if !self.conn.is_managed_client(id) {
             return Ok(self.conn.map_client(id)?);
         }
 
         let classes = str_slice!(self.config.floating_classes);
-        let floating = self.conn.client_should_float(id, classes);
-        let mut client = Client::new(
-            id,
-            props.name,
-            props.class,
-            self.active_ws_index(),
-            floating,
-        );
+        let mut client = Client::new(&self.conn, id, self.active_ws_index(), classes);
+        trace!(?client.wm_name, ?client.wm_class, ?client.wm_type, "client details");
 
         // Run hooks to allow them to modify the client
         run_hooks!(new_client, self, &mut client);
