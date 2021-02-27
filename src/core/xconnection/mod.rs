@@ -564,7 +564,7 @@ pub trait XConn:
         }
 
         trace!("unable to find type: defaulting to manage");
-        return true;
+        true
     }
 
     /// The subset of active clients that are considered managed by penrose

@@ -482,7 +482,7 @@ impl Api {
                 let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
                 xcb::xproto::get_atom_name(&self.conn, e.type_())
                     .get_reply()
-                    .map_err(|e| XcbError::from(e))
+                    .map_err(XcbError::from)
                     .and_then(|a| {
                         ClientMessage::try_from_data(
                             e.window(),
@@ -498,7 +498,7 @@ impl Api {
                             },
                         )
                         .map_err(|e| XcbError::Raw(format!("Invalid client message data: {}", e)))
-                        .map(|cm| XEvent::ClientMessage(cm))
+                        .map(XEvent::ClientMessage)
                     })
                     .ok()
             }

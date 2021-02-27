@@ -47,7 +47,7 @@ pub fn new_x11rb_rust_backed_window_manager(
     hooks: Vec<Box<dyn Hook<X11rbConnection<RustConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<RustConnection>>> {
-    let (conn, _) = RustConnection::connect(None).map_err(|err| X11rbError::from(err))?;
+    let (conn, _) = RustConnection::connect(None).map_err(X11rbError::from)?;
     new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
 }
 
@@ -59,7 +59,7 @@ pub fn new_x11rb_xcb_backed_window_manager(
     hooks: Vec<Box<dyn Hook<X11rbConnection<XCBConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<XCBConnection>>> {
-    let (conn, _) = XCBConnection::connect(None).map_err(|err| X11rbError::from(err))?;
+    let (conn, _) = XCBConnection::connect(None).map_err(X11rbError::from)?;
     new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
 }
 
