@@ -213,9 +213,7 @@ impl Api {
     }
 
     /// Fetch the requested property for the target window
-    #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
-        trace!(name, "trying to pull prop");
         let atom = self.atom(name)?;
         let cookie = xcb::get_property(&self.conn, false, id, atom, xcb::ATOM_ANY, 0, 1024);
         let r = cookie.get_reply()?;
@@ -231,7 +229,15 @@ impl Api {
 
             "CARDINAL" => Prop::Cardinal(r.value()[0]),
 
-            "STRING" | "UTF8_STRING" => Prop::UTF8String(
+            "STRING" => Prop::UTF8String(
+                String::from_utf8_lossy(r.value())
+                    .trim_matches('\0')
+                    .split('\0')
+                    .map(|s| s.to_string())
+                    .collect(),
+            ),
+
+            "UTF8_STRING" => Prop::UTF8String(
                 String::from_utf8(r.value().to_vec())?
                     .trim_matches('\0')
                     .split('\0')
@@ -476,7 +482,7 @@ impl Api {
                 let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
                 xcb::xproto::get_atom_name(&self.conn, e.type_())
                     .get_reply()
-                    .map_err(|e| XcbError::XcbGeneric(e))
+                    .map_err(|e| XcbError::from(e))
                     .and_then(|a| {
                         ClientMessage::try_from_data(
                             e.window(),
@@ -512,16 +518,8 @@ impl Api {
             }
 
             0 => {
-                // ...why is this what you have to do to get at an error?
                 let e: &xcb::GenericError = unsafe { xcb::cast_event(&event) };
-                let error = unsafe { *e.ptr };
-                return Err(XcbError::X11Error(
-                    error.sequence,
-                    error.error_code,
-                    error.resource_id,
-                    error.major_code,
-                    error.minor_code,
-                ));
+                return Err(XcbError::from(e));
             }
 
             // NOTE: ignoring other event types
@@ -541,7 +539,6 @@ impl Api {
     /// is an issue with communicating with the X server. For known
     /// atoms that are included in the [Atom] enum,
     /// the [`Api::known_atom`] method should be used instead.
-    #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn atom(&self, name: &str) -> Result<u32> {
         if let Ok(known) = Atom::from_str(name) {
             // This could be us initialising in which case self.atoms is empty
