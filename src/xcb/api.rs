@@ -6,9 +6,10 @@ use crate::{
         helpers::spawn_for_output,
         screen::Screen,
         xconnection::{
-            Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageKind,
-            ConfigureEvent, ExposeEvent, MapState, PointerChange, Prop, PropertyEvent,
-            WindowAttributes, WindowClass, WmHints, WmNormalHints, XAtomQuerier, XEvent, Xid,
+            Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageData,
+            ClientMessageKind, ConfigureEvent, ExposeEvent, MapState, PointerChange, Prop,
+            PropertyEvent, WindowAttributes, WindowClass, WmHints, WmNormalHints, XAtomQuerier,
+            XEvent, Xid,
         },
     },
     xcb::{Result, XcbError, XcbGenericEvent},
@@ -484,22 +485,22 @@ impl Api {
                     .get_reply()
                     .map_err(XcbError::from)
                     .and_then(|a| {
-                        ClientMessage::try_from_data(
+                        Ok(ClientMessage::new(
                             e.window(),
                             ClientEventMask::NoEventMask,
                             a.name(),
-                            &match e.format() {
-                                8 => cast_slice!(e.data().data8(), u32),
-                                16 => cast_slice!(e.data().data16(), u32),
-                                32 => e.data().data32().to_vec(),
+                            match e.format() {
+                                8 => ClientMessageData::try_from(e.data().data8()),
+                                16 => ClientMessageData::try_from(e.data().data16()),
+                                32 => ClientMessageData::try_from(e.data().data32()),
                                 _ => unreachable!(
                                     "ClientMessageEvent.format should really be an enum..."
                                 ),
-                            },
-                        )
-                        .map_err(|e| XcbError::Raw(format!("Invalid client message data: {}", e)))
-                        .map(XEvent::ClientMessage)
+                            }
+                            .map_err(|_| XcbError::InvalidClientMessage(e.format()))?,
+                        ))
                     })
+                    .map(XEvent::ClientMessage)
                     .ok()
             }
 
@@ -746,7 +747,7 @@ impl Api {
 
     /// Send an event to a client
     pub fn send_client_event(&self, msg: ClientMessage) -> Result<()> {
-        let (dtype, d) = (self.atom(&msg.dtype)?, msg.data());
+        let (dtype, d) = (self.atom(&msg.dtype)?, msg.data().as_u32());
         let data = xcb::ClientMessageData::from_data32([d[0], d[1], d[2], d[3], d[4]]);
         let event = xcb::ClientMessageEvent::new(32, msg.id, dtype, data);
         let mask = match msg.mask {

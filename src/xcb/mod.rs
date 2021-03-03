@@ -115,6 +115,10 @@ pub enum XcbError {
     MissingProp(String, Xid),
 
     /// Property data returned for the target window was in an invalid format
+    #[error("invalid client message data: format={0}")]
+    InvalidClientMessage(u8),
+
+    /// Property data returned for the target window was in an invalid format
     #[error("invalid property data: {0}")]
     InvalidPropertyData(String),
 

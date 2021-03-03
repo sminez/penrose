@@ -27,8 +27,8 @@ pub use atom::{
     Atom, AtomIter, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS, UNMANAGED_WINDOW_TYPES,
 };
 pub use event::{
-    ClientEventMask, ClientMessage, ClientMessageKind, ConfigureEvent, ExposeEvent, PointerChange,
-    PropertyEvent, XEvent,
+    ClientEventMask, ClientMessage, ClientMessageData, ClientMessageKind, ConfigureEvent,
+    ExposeEvent, PointerChange, PropertyEvent, XEvent,
 };
 pub use property::{
     MapState, Prop, WindowAttributes, WindowClass, WindowState, WmHints, WmNormalHints,
@@ -48,8 +48,8 @@ pub enum XError {
     ConnectionClosed,
 
     /// Client data was malformed
-    #[error("ClientMessage data must be 5 u32s: got {0}")]
-    InvalidClientMessageData(usize),
+    #[error("Invalid client message format: {0} (expected 8, 16 or 32)")]
+    InvalidClientMessageData(u8),
 
     /// The requested property is not set for the given client
     #[error("The {0} property is not set for client {1}")]

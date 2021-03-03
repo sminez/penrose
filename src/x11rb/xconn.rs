@@ -13,9 +13,10 @@ use crate::{
         data_types::{Point, Region},
         screen::Screen,
         xconnection::{
-            Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageKind,
-            Prop, Result, WindowAttributes, WmHints, WmNormalHints, XAtomQuerier, XClientConfig,
-            XClientHandler, XClientProperties, XConn, XError, XEvent, XEventHandler, XState, Xid,
+            self, Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage,
+            ClientMessageKind, Prop, Result, WindowAttributes, WmHints, WmNormalHints,
+            XAtomQuerier, XClientConfig, XClientHandler, XClientProperties, XConn, XError, XEvent,
+            XEventHandler, XState, Xid,
         },
     },
     x11rb::{atom::Atoms, X11rbError},
@@ -385,7 +386,11 @@ impl<C: Connection> XEventHandler for X11rbConnection<C> {
 
     fn send_client_event(&self, msg: ClientMessage) -> Result<()> {
         let type_ = self.atom_id(&msg.dtype)?;
-        let data = ClientMessageData::from(*msg.data_array());
+        let data = match msg.data() {
+            xconnection::ClientMessageData::U8(u8s) => ClientMessageData::from(*u8s),
+            xconnection::ClientMessageData::U16(u16s) => ClientMessageData::from(*u16s),
+            xconnection::ClientMessageData::U32(u32s) => ClientMessageData::from(*u32s),
+        };
         let event = ClientMessageEvent {
             response_type: CLIENT_MESSAGE_EVENT,
             format: 32,

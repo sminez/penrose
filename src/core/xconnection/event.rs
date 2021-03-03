@@ -2,10 +2,10 @@
 use crate::core::{
     bindings::{KeyCode, MouseEvent},
     data_types::{Point, Region},
-    xconnection::{Atom, Result, XAtomQuerier, XError, Xid},
+    xconnection::{Atom, Result, XAtomQuerier, Xid},
 };
 
-use std::convert::TryInto;
+use std::convert::TryFrom;
 
 /// Wrapper around the low level X event types that correspond to request / response data when
 /// communicating with the X server itself.
@@ -98,7 +98,7 @@ impl ClientMessageKind {
             let proto = Atom::WmProtocols.as_ref();
             let data = &[s.atom_id(atom.as_ref())?, 0, 0, 0, 0];
             let mask = ClientEventMask::NoEventMask;
-            Ok(ClientMessage::from_data_unchecked(id, mask, proto, data))
+            Ok(ClientMessage::new(id, mask, proto, data.into()))
         };
 
         // https://specifications.freedesktop.org/xembed-spec/xembed-spec-latest.html
@@ -112,7 +112,7 @@ impl ClientMessageKind {
             let atom = Atom::XEmbed.as_ref();
             let data = &[0, kind, 0, embedder, xembed_version];
             let mask = ClientEventMask::SubstructureNotify;
-            Ok(ClientMessage::from_data_unchecked(id, mask, atom, data))
+            Ok(ClientMessage::new(id, mask, atom, data.into()))
         };
 
         match self {
@@ -124,9 +124,7 @@ impl ClientMessageKind {
                 let systray = s.atom_id(Atom::NetSystemTrayS0.as_ref())?;
                 let data = &[0, systray, *systray_id, 0, 0];
                 let mask = ClientEventMask::SubstructureNotify;
-                Ok(ClientMessage::from_data_unchecked(
-                    *root_id, mask, atom, data,
-                ))
+                Ok(ClientMessage::new(*root_id, mask, atom, data.into()))
             }
 
             ClientMessageKind::XEmbedFocusIn(id, other) => xembed_msg(*id, *other, focus_in),
@@ -147,6 +145,71 @@ pub enum ClientEventMask {
     NoEventMask,
 }
 
+/// The raw data contained in a [`ClientMessage`]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ClientMessageData {
+    /// Slice of u8
+    U8([u8; 20]),
+    /// Slice of u16
+    U16([u16; 10]),
+    /// Slice of u32
+    U32([u32; 5]),
+}
+
+impl ClientMessageData {
+    /// Convert this client message into a single data format
+    ///
+    /// The number of raw values will be maintained but this allows you to have a consistant
+    /// interface without needing to match on the variant or cast all the time.
+    pub fn as_usize(&self) -> Vec<usize> {
+        match self {
+            Self::U8(data) => cast_slice!(data, usize),
+            Self::U16(data) => cast_slice!(data, usize),
+            Self::U32(data) => cast_slice!(data, usize),
+        }
+    }
+}
+
+macro_rules! __impl_client_message_data(
+    { $t:ty; $count:expr, $variant:expr, $method:ident } => {
+        impl ClientMessageData {
+            /// Convert this client message into a single data format
+            ///
+            /// The number of raw values will be maintained but this allows you to have a consistant
+            /// interface without needing to match on the variant or cast all the time.
+            pub fn $method(&self) -> Vec<$t> {
+                match self {
+                    Self::U8(data) => cast_slice!(data, $t),
+                    Self::U16(data) => cast_slice!(data, $t),
+                    Self::U32(data) => cast_slice!(data, $t),
+                }
+            }
+        }
+        impl From<[$t; $count]> for ClientMessageData {
+            fn from(data: [$t; $count]) -> Self {
+                $variant(data)
+            }
+        }
+        impl From<&[$t; $count]> for ClientMessageData {
+            fn from(data: &[$t; $count]) -> Self {
+                $variant(*data)
+            }
+        }
+        impl TryFrom<&[$t]> for ClientMessageData {
+            type Error = std::array::TryFromSliceError;
+
+            fn try_from(data: &[$t]) -> std::result::Result<Self, Self::Error> {
+                Ok($variant(<[$t; $count]>::try_from(data)?))
+            }
+        }
+    }
+);
+
+__impl_client_message_data!(u8; 20, ClientMessageData::U8, as_u8);
+__impl_client_message_data!(u16; 10, ClientMessageData::U16, as_u16);
+__impl_client_message_data!(u32; 5, ClientMessageData::U32, as_u32);
+
 /// A client message that needs to be parsed and handled based on its type
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -157,46 +220,28 @@ pub struct ClientMessage {
     pub mask: ClientEventMask,
     /// The data type being set
     pub dtype: String,
-    data: [u32; 5],
+    data: ClientMessageData,
 }
 
 impl ClientMessage {
-    /// The raw data being sent in this message
-    pub fn data(&self) -> &[u32] {
-        &self.data
-    }
-
-    /// The raw data being sent in this message as an array
-    pub fn data_array(&self) -> &[u32; 5] {
-        &self.data
-    }
-
     /// Try to build a new ClientMessage. Fails if the data is invalid
-    pub fn try_from_data(
+    pub fn new(
         id: Xid,
         mask: ClientEventMask,
         dtype: impl Into<String>,
-        data: &[u32],
-    ) -> Result<Self> {
-        if let Ok(data) = data.try_into() {
-            Ok(Self::from_data_unchecked(id, mask, dtype, data))
-        } else {
-            Err(XError::InvalidClientMessageData(data.len()))
-        }
-    }
-
-    pub(crate) fn from_data_unchecked(
-        id: Xid,
-        mask: ClientEventMask,
-        dtype: impl Into<String>,
-        data: &[u32; 5],
+        data: ClientMessageData,
     ) -> Self {
         Self {
             id,
             mask,
             dtype: dtype.into(),
-            data: *data,
+            data,
         }
+    }
+
+    /// The raw data being sent in this message
+    pub fn data(&self) -> &ClientMessageData {
+        &self.data
     }
 }
 

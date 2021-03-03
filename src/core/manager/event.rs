@@ -106,11 +106,11 @@ where
 
     match Atom::from_str(&msg.dtype) {
         Ok(Atom::NetActiveWindow) => vec![EventAction::SetActiveClient(msg.id)],
-        Ok(Atom::NetCurrentDesktop) => vec![EventAction::SetActiveWorkspace(data[0] as usize)],
-        Ok(Atom::NetWmDesktop) => vec![EventAction::ClientToWorkspace(msg.id, data[0] as usize)],
-        Ok(Atom::NetWmState) if is_fullscreen(&data[1..3]) => {
+        Ok(Atom::NetCurrentDesktop) => vec![EventAction::SetActiveWorkspace(data.as_usize()[0])],
+        Ok(Atom::NetWmDesktop) => vec![EventAction::ClientToWorkspace(msg.id, data.as_usize()[0])],
+        Ok(Atom::NetWmState) if is_fullscreen(&data.as_u32()[1..3]) => {
             // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
-            let should_fullscreen = [1, 2].contains(&data[0]);
+            let should_fullscreen = [1, 2].contains(&data.as_usize()[0]);
             vec![EventAction::ToggleClientFullScreen(
                 msg.id,
                 should_fullscreen,

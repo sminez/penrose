@@ -3,8 +3,8 @@ use crate::{
         bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
         data_types::{Point, Region},
         xconnection::{
-            event::ClientEventMask, ClientMessage, ConfigureEvent, ExposeEvent, PointerChange,
-            PropertyEvent, Result, XAtomQuerier, XError, XEvent,
+            event::ClientEventMask, ClientMessage, ClientMessageData, ConfigureEvent, ExposeEvent,
+            PointerChange, PropertyEvent, Result, XAtomQuerier, XError, XEvent,
         },
     },
     x11rb::{xconn::X11rbConnection, X11rbError},
@@ -158,19 +158,17 @@ fn to_client_message<C: Connection>(
     conn: &X11rbConnection<C>,
     event: ClientMessageEvent,
 ) -> Result<XEvent> {
-    if event.format != 32 {
-        // FIXME: This makes no sense, but is for compatibility with penrose::xcb.
-        // See https://github.com/sminez/penrose/issues/143
-        return Err(XError::InvalidClientMessageData(
-            usize::from(event.format) * 20 / 8,
-        ));
-    }
     let name = conn.atom_name(event.type_)?;
-    let msg = ClientMessage::try_from_data(
+    let data = match event.format {
+        8 => ClientMessageData::from(event.data.as_data8()),
+        16 => ClientMessageData::from(event.data.as_data16()),
+        32 => ClientMessageData::from(event.data.as_data32()),
+        invalid => return Err(XError::InvalidClientMessageData(invalid)),
+    };
+    Ok(XEvent::ClientMessage(ClientMessage::new(
         event.window,
         ClientEventMask::NoEventMask,
         name,
-        &event.data.as_data32().to_vec(),
-    )?;
-    Ok(XEvent::ClientMessage(msg))
+        data,
+    )))
 }
