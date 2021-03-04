@@ -19,6 +19,7 @@ pub struct Client {
     pub(crate) wm_hints: Option<WmHints>,
     pub(crate) wm_normal_hints: Option<WmNormalHints>,
     // state flags
+    pub(crate) accepts_focus: bool,
     pub(crate) floating: bool,
     pub(crate) fullscreen: bool,
     pub(crate) mapped: bool,
@@ -39,6 +40,7 @@ impl Client {
         // TODO: do we want error logging around setting defaults here?
         //       the xcb impl probably needs to catch BadAtom as "missing"?
         let floating = conn.client_should_float(id, floating_classes);
+        let accepts_focus = conn.client_accepts_focus(id);
         let wm_name = conn.client_name(id).unwrap_or("unknown".into());
 
         let wm_class = match conn.get_prop(id, Atom::WmClass.as_ref()) {
@@ -72,6 +74,7 @@ impl Client {
             wm_hints,
             wm_normal_hints,
             floating,
+            accepts_focus,
             fullscreen: false,
             mapped: false,
             urgent: false,

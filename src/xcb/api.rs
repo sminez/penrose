@@ -8,11 +8,11 @@ use crate::{
         xconnection::{
             Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageData,
             ClientMessageKind, ConfigureEvent, ExposeEvent, MapState, PointerChange, Prop,
-            PropertyEvent, WindowAttributes, WindowClass, WmHints, WmNormalHints, XAtomQuerier,
-            XEvent, Xid,
+            PropertyEvent, WindowAttributes, WindowClass, WindowState, WmHints, WmNormalHints,
+            XAtomQuerier, XEvent, Xid,
         },
     },
-    xcb::{Result, XcbError, XcbGenericEvent},
+    xcb::{Result, XErrorCode, XcbError, XcbGenericEvent},
 };
 use strum::*;
 
@@ -432,6 +432,11 @@ impl Api {
                 }))
             }
 
+            xcb::FOCUS_IN => {
+                let e: &xcb::FocusInEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::FocusIn(e.event()))
+            }
+
             xcb::DESTROY_NOTIFY => {
                 let e: &xcb::DestroyNotifyEvent = unsafe { xcb::cast_event(&event) };
                 Some(XEvent::Destroy(e.window()))
@@ -477,6 +482,11 @@ impl Api {
                     ),
                     count: e.count() as usize,
                 }))
+            }
+
+            xcb::UNMAP_NOTIFY => {
+                let e: &xcb::UnmapNotifyEvent = unsafe { xcb::cast_event(&event) };
+                Some(XEvent::UnmapNotify(e.window()))
             }
 
             xcb::CLIENT_MESSAGE => {
@@ -617,6 +627,24 @@ impl Api {
         };
 
         Ok(xcb::change_property_checked(&self.conn, mode, id, a, ty, 32, &data).request_check()?)
+    }
+
+    /// Set the target client's WM_STATE
+    pub fn set_client_state(&self, id: Xid, wm_state: WindowState) -> Result<()> {
+        let mode = xcb::PROP_MODE_REPLACE as u8;
+        let a = self.known_atom(Atom::WmState);
+        let state = match wm_state {
+            WindowState::Withdrawn => 0,
+            WindowState::Normal => 1,
+            WindowState::Iconic => 3,
+        };
+
+        let cookie = xcb::change_property_checked(&self.conn, mode, id, a, a, 32, &[state]);
+        Ok(match cookie.request_check().map_err(XcbError::from) {
+            // The window is already gone
+            Err(XcbError::XcbKnown(XErrorCode::BadWindow)) => (),
+            other => other?,
+        })
     }
 
     /// Create a new client window

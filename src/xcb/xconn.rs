@@ -18,8 +18,8 @@ use crate::{
         manager::WindowManager,
         screen::Screen,
         xconnection::{
-            Atom, ClientAttr, ClientConfig, ClientMessage, ClientMessageKind, Prop, Result, XConn,
-            XEvent, XEventHandler, Xid,
+            Atom, ClientAttr, ClientConfig, ClientMessage, ClientMessageKind, Prop, Result,
+            WindowState, XConn, XEvent, XEventHandler, Xid,
         },
     },
     xcb::{Api, XcbError},
