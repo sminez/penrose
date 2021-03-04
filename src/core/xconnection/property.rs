@@ -81,7 +81,11 @@ bitflags! {
     }
 }
 
-/// The display states that a window can be in.
+/// Possible valid values for setting the `WM_STATE` property on a client.
+///
+/// See the [ICCCM docs][1] for more information.
+///
+/// [1]: https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.3.1
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum WindowState {

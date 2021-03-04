@@ -9,7 +9,7 @@ use crate::{
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{Atom, ClientMessageKind, XConn, Xid},
+        xconnection::{Atom, ClientMessageKind, Prop, WindowState, XConn, Xid},
     },
     ErrorHandler, PenroseError, Result,
 };
@@ -276,7 +276,7 @@ impl<X: XConn> WindowManager<X> {
         }
 
         if let Some(id) = self.workspaces[0].focused_client() {
-            self.client_gained_focus(id)?;
+            self.update_focus(id)?;
         }
 
         self.update_x_known_clients()?;
@@ -294,7 +294,7 @@ impl<X: XConn> WindowManager<X> {
         mouse_bindings: &mut MouseBindings<X>,
     ) -> Result<()> {
         match action {
-            EventAction::ClientFocusGained(id) => self.client_gained_focus(id)?,
+            EventAction::ClientFocusGained(id) => self.update_focus(id)?,
             EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
             EventAction::ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
             EventAction::ClientToWorkspace(id, wix) => self.move_client_to_workspace(id, wix)?,
@@ -303,6 +303,7 @@ impl<X: XConn> WindowManager<X> {
                 run_hooks!(randr_notify, self,);
                 self.detect_screens()?
             }
+            EventAction::FocusIn(id) => self.focus_in(id)?,
             EventAction::MapWindow(id) => self.handle_map_request(id)?,
             EventAction::MoveClientIfFloating(id, r) => self.handle_move_if_floating(id, r)?,
             EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
@@ -316,6 +317,7 @@ impl<X: XConn> WindowManager<X> {
             EventAction::UnknownPropertyChange(id, atom, is_root) => {
                 self.handle_prop_change(id, atom, is_root)?;
             }
+            EventAction::Unmap(id) => self.handle_unmap_notify(id)?,
         }
         Ok(())
     }
@@ -440,38 +442,92 @@ impl<X: XConn> WindowManager<X> {
      * Top Level EventAction handlers
      */
 
-    // The given X window ID is now considered focused by the X server
+    // Set X focus to the requested client if it accepts focus, otherwise send a
+    // 'take focus' event for the client to process
     #[tracing::instrument(level = "trace", err, skip(self))]
-    fn client_gained_focus(&mut self, id: Xid) -> Result<()> {
-        let prev_focused = self.focused_client().map(|c| c.id());
-        if let Some(id) = prev_focused {
-            self.client_lost_focus(id);
+    fn set_focus(&self, id: Xid, accepts_focus: bool) -> Result<()> {
+        Ok(if accepts_focus {
+            if let Err(e) = self.conn.focus_client(id) {
+                warn!("unable to focus client {}: {}", id, e);
+            }
+            self.conn.change_prop(
+                self.conn.root(),
+                Atom::NetActiveWindow.as_ref(),
+                Prop::Window(vec![id]),
+            )?
+        } else {
+            let msg = ClientMessageKind::TakeFocus(id).as_message(&self.conn)?;
+            self.conn.send_client_event(msg)?
+        })
+    }
+
+    fn focus_in(&self, id: Xid) -> Result<()> {
+        self.set_focus(id, self.conn.client_accepts_focus(id))
+    }
+
+    // Set the current focus point based on client focus hints
+    fn update_focus(&mut self, id: Xid) -> Result<()> {
+        // Fallback to the focused_client on the active workspace if this ID is unknown to us
+        let target = if !self.client_map.contains_key(&id) {
+            self.active_workspace().focused_client()
+        } else {
+            Some(id)
+        };
+
+        // Remove focus from the currently focused client if there is one
+        let prev = self.focused_client_id();
+        if prev.is_some() && target != prev {
+            prev.map(|id| self.client_lost_focus(id));
         }
 
-        let fb = self.config.focused_border;
-        if let Err(e) = self.conn.set_client_border_color(id, fb) {
-            warn!(id, "unable to set client border color: {}", e);
-        }
+        self.focused_client = target;
 
-        if let Err(e) = self.conn.focus_client(id) {
-            warn!(id, "unable to focus client: {}", e);
-        }
+        let id = match target {
+            // We have a known client to focus so set border color and attempt to focus it
+            // This may also trigger a layout application if the layout triggers on focus change
+            // and the previous focus was a client in the workspace (i.e. not something that is
+            // externally managed)
+            Some(id) => {
+                let (wix, accepts_focus) = {
+                    let c = self.client_map.get(&id).unwrap();
+                    (c.workspace(), c.accepts_focus)
+                };
+                let fb = self.config.focused_border;
+                if let Err(e) = self.conn.set_client_border_color(id, fb) {
+                    warn!("unable to set client border color for {}: {}", id, e);
+                }
+                self.focus_screen(&Selector::Condition(&|s| s.wix == wix));
+                self.set_focus(id, accepts_focus)?;
 
-        if let Some(wix) = self.workspace_index_for_client(id) {
-            if let Some(ws) = self.workspaces.get_mut(wix) {
-                ws.focus_client(id);
-                let prev_was_in_ws = prev_focused.map_or(false, |id| ws.client_ids().contains(&id));
-                if ws.layout_conf().follow_focus && prev_was_in_ws {
-                    if let Err(e) = self.apply_layout(wix) {
-                        error!("unable to apply layout on ws {}: {}", wix, e);
+                if let Some(ws) = self.workspaces.get_mut(wix) {
+                    ws.focus_client(id);
+                    let in_ws = prev.map_or(false, |id| ws.client_ids().contains(&id));
+                    if ws.layout_conf().follow_focus && in_ws {
+                        if let Err(e) = self.apply_layout(wix) {
+                            error!("unable to apply layout on ws {}: {}", wix, e);
+                        }
                     }
                 }
+
+                id
             }
-        }
 
-        self.focused_client = Some(id);
+            // The requested id wasn't something we know about and we don't have any clients on the
+            // active workspace so all we can do is drop our focused state and revert focus back to
+            // the root window.
+            None => {
+                let root = self.conn.root();
+                if let Err(e) = self.conn.focus_client(root) {
+                    warn!("unable to focus root window: {}", e);
+                }
+                let active_window = Atom::NetActiveWindow.as_ref();
+                self.conn.delete_prop(root, active_window)?;
+
+                root
+            }
+        };
+
         run_hooks!(focus_change, self, id);
-
         Ok(())
     }
 
@@ -643,7 +699,7 @@ impl<X: XConn> WindowManager<X> {
 
         self.client_map.insert(id, client);
         self.conn.mark_new_client(id)?;
-        self.client_gained_focus(id)?;
+        self.update_focus(id)?;
         self.update_x_known_clients()?;
 
         if wix == self.active_ws_index() {
@@ -671,6 +727,10 @@ impl<X: XConn> WindowManager<X> {
     fn handle_prop_change(&mut self, id: Xid, atom: String, is_root: bool) -> Result<()> {
         trace!(id, is_root, ?atom, "dropping prop change (unimplemented)");
         Ok(())
+    }
+
+    fn handle_unmap_notify(&mut self, id: Xid) -> Result<()> {
+        Ok(self.conn.set_client_state(id, WindowState::Withdrawn)?)
     }
 
     // NOTE: This defers control of the [WindowManager] to the user's key-binding action
@@ -1031,7 +1091,7 @@ impl<X: XConn> WindowManager<X> {
             .and_then(|ws| ws.cycle_client(direction));
         if let Some((prev, new)) = res {
             self.client_lost_focus(prev);
-            self.client_gained_focus(new)?;
+            self.update_focus(new)?;
             let screen = self.screens.focused_unchecked();
             self.conn.warp_cursor(Some(new), screen)?;
         }
@@ -1079,7 +1139,7 @@ impl<X: XConn> WindowManager<X> {
             Some(c) => c.id(),
             None => return Err(PenroseError::NoMatchingElement),
         };
-        self.client_gained_focus(id)?;
+        self.update_focus(id)?;
         let screen = self.screens.focused_unchecked();
         self.conn.warp_cursor(Some(id), screen)?;
         Ok(id)
@@ -1143,7 +1203,7 @@ impl<X: XConn> WindowManager<X> {
                 .get_mut(wix)
                 .and_then(|ws| ws.drag_client(direction));
             self.apply_layout(wix)?;
-            self.client_gained_focus(id)?;
+            self.update_focus(id)?;
             self.conn
                 .warp_cursor(Some(id), self.screens.focused_unchecked())?;
         }
@@ -1386,7 +1446,7 @@ impl<X: XConn> WindowManager<X> {
 
                     let ws = self.workspaces.get(index);
                     if let Some(id) = ws.and_then(|ws| ws.focused_client()) {
-                        self.client_gained_focus(id)?;
+                        self.update_focus(id)?;
                     };
 
                     self.workspaces.focus(&Selector::Index(index));
@@ -1417,7 +1477,7 @@ impl<X: XConn> WindowManager<X> {
 
             let ws = self.workspaces.get(index);
             if let Some(id) = ws.and_then(|ws| ws.focused_client()) {
-                self.client_gained_focus(id)?;
+                self.update_focus(id)?;
             };
 
             self.workspaces.focus(&Selector::Index(index));
@@ -2282,7 +2342,7 @@ impl<X: XConn> WindowManager<X> {
 mod tests {
     use super::*;
     use crate::{
-        __example_helpers::RecordingXConn,
+        __example_helpers::{RecordedCall, RecordingXConn},
         core::{
             data_types::*,
             helpers::logging_error_handler,
@@ -2291,14 +2351,15 @@ mod tests {
             screen::*,
             xconnection::{MockXConn, XEvent},
         },
+        draw::Color,
     };
 
-    use std::cell::Cell;
+    use std::{cell::Cell, convert::TryFrom};
 
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> WindowManager<MockXConn> {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
         let conf = Config {
-            layouts: test_layouts(),
+            layouts: test_layouts(false),
             ..Default::default()
         };
         let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
@@ -2307,8 +2368,12 @@ mod tests {
         wm
     }
 
-    fn test_layouts() -> Vec<Layout> {
-        vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)]
+    fn test_layouts(follow_focus: bool) -> Vec<Layout> {
+        let conf = LayoutConf {
+            follow_focus,
+            ..Default::default()
+        };
+        vec![Layout::new("t", conf, mock_layout, 1, 0.6)]
     }
 
     fn test_screens() -> Vec<Screen> {
@@ -2414,7 +2479,7 @@ mod tests {
     fn x_focus_events_set_workspace_focus() {
         let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 5, 0); // focus on last client: 50
-        wm.client_gained_focus(10).unwrap();
+        wm.update_focus(10).unwrap();
 
         assert_eq!(wm.workspaces[0].focused_client(), Some(10));
     }
@@ -2449,7 +2514,7 @@ mod tests {
         assert_eq!(wm.focused_client().unwrap().id(), 50);
         assert_eq!(clients(&mut wm), vec![40, 30, 50, 20, 10]);
 
-        wm.client_gained_focus(20).unwrap();
+        wm.update_focus(20).unwrap();
         wm.drag_client(Forward).unwrap();
         assert_eq!(wm.focused_client().unwrap().id(), 20);
         assert_eq!(clients(&mut wm), vec![40, 30, 50, 10, 20]);
@@ -2621,7 +2686,7 @@ mod tests {
                 fn [<layout_trigger_test _ $method>]() {
                     let conn = RecordingXConn::init();
                     let conf = Config {
-                        layouts: test_layouts(),
+                        layouts: test_layouts(false),
                         ..Default::default()
                     };
                     let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
@@ -2668,4 +2733,118 @@ mod tests {
     layout_trigger_test!(remove_workspace; true; &Selector::Index(0));
     layout_trigger_test!(position_client; true; 10, Region::default(), true);
     layout_trigger_test!(layout_screen; true; 0);
+
+    /*
+     * Helpers for specifying expected events with RecordingXConn
+     */
+
+    fn _focus(id: Xid) -> RecordedCall {
+        ("focus_client".into(), strings!(id))
+    }
+
+    fn _take_focus(id: Xid) -> RecordedCall {
+        let conn = RecordingXConn::init();
+        let evt = ClientMessageKind::TakeFocus(id).as_message(&conn).unwrap();
+        ("send_client_event".into(), strings!(evt))
+    }
+
+    fn _id(a: Atom) -> RecordedCall {
+        ("atom_id".into(), strings!(a.as_ref()))
+    }
+
+    fn _border(id: Xid, focused: bool) -> RecordedCall {
+        let color = if focused {
+            Color::try_from("#00ff00").unwrap()
+        } else {
+            Color::try_from("#ff0000").unwrap()
+        };
+        ("set_client_border_color".into(), strings!(id, color))
+    }
+
+    fn _active(id: Xid) -> RecordedCall {
+        let args = strings!(42, "_NET_ACTIVE_WINDOW", Prop::Window(vec![id]));
+        ("change_prop".into(), args)
+    }
+
+    fn _remove_active() -> RecordedCall {
+        ("delete_prop".into(), strings!(42, "_NET_ACTIVE_WINDOW"))
+    }
+
+    test_cases! {
+        update_focus;
+        args: (
+            target: Xid,
+            accepts_focus: bool,
+            current: Option<Xid>,
+            n_clients: usize,
+            follow_focus: bool,
+            expected_focus: Option<Xid>,
+            expected_calls: Vec<RecordedCall>
+        );
+
+        // We should still run focusing logic when the requested target is our current focus
+        case: client_is_current_focus => (
+            10, true, Some(10), 3, false,
+            Some(10), vec![_border(10, true), _focus(10), _active(10)]
+        );
+
+        // We should remove the focused border from the current client first
+        case: client_is_not_current_focus => (
+            20, true, Some(10), 3, false,
+            Some(20), vec![_border(10, false), _border(20, true), _focus(20), _active(20)]
+        );
+
+        // Focus should default to the focused client on the active workspace if the given client
+        // is not in the client_map
+        case: client_is_unknown_workspace_populated => (
+            999, true, Some(10), 3, false,
+            Some(30), vec![_border(10, false), _border(30, true), _focus(30), _active(30)]
+        );
+
+        // If the client is unknown and the workspace is empty, focus should revert to root
+        case: client_is_unknown_workspace_empty => (
+            999, true, None, 0, false,
+            None, vec![_focus(42), _remove_active()]
+        );
+
+        // If the client doesn't accept focus then we should still mark it as focused in the
+        // internal state, but a TakeFocus client message should be sent instead of forcing
+        // focus.
+        case: client_does_not_accept_focus_different => (
+            20, false, Some(10), 3, false,
+            Some(20), vec![
+                _border(10, false), _border(20, true), _id(Atom::WmTakeFocus), _take_focus(20)
+            ]
+        );
+
+        // If the client doesn't accept focus, and it is the current focus then we should just
+        // set the border and send the TakeFocus event
+        case: client_does_not_accept_focus_same => (
+            20, false, Some(20), 3, false,
+            Some(20), vec![_border(20, true), _id(Atom::WmTakeFocus), _take_focus(20)]
+        );
+
+        // TODO: add test cases for follow_focus layout triggering
+
+        body: {
+            let conn = RecordingXConn::init();
+            let conf = Config {
+                layouts: test_layouts(follow_focus),
+                focused_border: Color::try_from("#00ff00").unwrap(),
+                unfocused_border: Color::try_from("#ff0000").unwrap(),
+                ..Default::default()
+            };
+            let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+            wm.init().unwrap();
+            add_n_clients(&mut wm, n_clients, 0);
+            wm.conn().clear();
+            wm.focused_client = current;
+            wm.client_map.entry(target).and_modify(|c| c.accepts_focus = accepts_focus);
+
+            wm.update_focus(target).unwrap();
+
+            assert_eq!(wm.focused_client, expected_focus);
+            assert_eq!(wm.conn().calls(), expected_calls);
+        }
+    }
 }

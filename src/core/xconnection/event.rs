@@ -25,6 +25,8 @@ pub enum XEvent {
     Enter(PointerChange),
     /// A part or all of a client has become visible
     Expose(ExposeEvent),
+    /// A client should have focus
+    FocusIn(Xid),
     /// A client window has been closed
     Destroy(Xid),
     /// A grabbed key combination has been entered by the user
@@ -41,6 +43,8 @@ pub enum XEvent {
     RandrNotify,
     /// Focus has moved to a different screen
     ScreenChange,
+    /// A client is being unmapped
+    UnmapNotify(Xid),
 }
 
 impl std::fmt::Display for XEvent {
@@ -51,6 +55,7 @@ impl std::fmt::Display for XEvent {
             XEvent::ConfigureRequest(_) => write!(f, "ConfigureRequest"),
             XEvent::Enter(_) => write!(f, "Enter"),
             XEvent::Expose(_) => write!(f, "Expose"),
+            XEvent::FocusIn(_) => write!(f, "FocusIn"),
             XEvent::Destroy(_) => write!(f, "Destroy"),
             XEvent::KeyPress(_) => write!(f, "KeyPress"),
             XEvent::Leave(_) => write!(f, "Leave"),
@@ -59,6 +64,7 @@ impl std::fmt::Display for XEvent {
             XEvent::PropertyNotify(_) => write!(f, "PropertyNotify"),
             XEvent::RandrNotify => write!(f, "RandrNotify"),
             XEvent::ScreenChange => write!(f, "ScreenChange"),
+            XEvent::UnmapNotify(_) => write!(f, "UnmapNotify"),
         }
     }
 }

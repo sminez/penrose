@@ -8,7 +8,7 @@
 use crate::{
     core::{
         data_types::{Region, WinType},
-        xconnection::{Prop, XClientHandler, Xid},
+        xconnection::{Prop, WindowState, XClientHandler, Xid},
     },
     draw::{Color, Draw, DrawContext, DrawError, Result},
     xcb::{Api, XcbError},

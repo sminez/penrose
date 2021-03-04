@@ -362,6 +362,10 @@ macro_rules! __xcb_impl_xclientproperties {
             fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> $crate::core::xconnection::Result<()> {
                 Ok(self.api.change_prop(id, prop, val)?)
             }
+
+            fn set_client_state(&self, id: Xid, state: WindowState) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.set_client_state(id, state)?)
+            }
         }
     }
 }

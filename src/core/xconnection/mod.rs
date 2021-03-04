@@ -120,7 +120,7 @@ pub enum ClientAttr {
 }
 
 /// An [XEvent] parsed into a [KeyPress] if possible, otherwise the original `XEvent`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KeyPressParseAttempt {
     /// The event was parasble as a [KeyPress]
     KeyPress(KeyPress),
@@ -264,6 +264,14 @@ pub trait XClientProperties {
     #[stub(Ok(()))]
     fn change_prop(&self, id: Xid, name: &str, val: Prop) -> Result<()>;
 
+    /// Update a client's `WM_STATE` property to the given value.
+    ///
+    /// See the [ICCCM docs][1] for more information on what each value means for the client.
+    ///
+    /// [1]: https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.3.1
+    #[stub(Ok(()))]
+    fn set_client_state(&self, id: Xid, wm_state: WindowState) -> Result<()>;
+
     /*
      *  The following default implementations should used if possible.
      *
@@ -278,6 +286,14 @@ pub trait XClientProperties {
             Ok(p) => Err(XError::Raw(format!("Expected atoms, got {:?}", p))),
             Err(XError::MissingProperty(_, _)) => Ok(false),
             Err(e) => Err(e),
+        }
+    }
+
+    /// Check to see if a given client accepts input focus
+    fn client_accepts_focus(&self, id: Xid) -> bool {
+        match self.get_prop(id, Atom::WmHints.as_ref()) {
+            Ok(Prop::WmHints(WmHints { accepts_input, .. })) => accepts_input,
+            _ => true,
         }
     }
 
