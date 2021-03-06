@@ -444,8 +444,8 @@ impl<X: XConn> WindowManager<X> {
 
     // Set X focus to the requested client if it accepts focus, otherwise send a
     // 'take focus' event for the client to process
-    #[tracing::instrument(level = "trace", err, skip(self))]
     fn set_focus(&self, id: Xid, accepts_focus: bool) -> Result<()> {
+        trace!(id, accepts_focus, "setting focus");
         Ok(if accepts_focus {
             if let Err(e) = self.conn.focus_client(id) {
                 warn!("unable to focus client {}: {}", id, e);
@@ -454,78 +454,79 @@ impl<X: XConn> WindowManager<X> {
                 self.conn.root(),
                 Atom::NetActiveWindow.as_ref(),
                 Prop::Window(vec![id]),
-            )?
+            )?;
+            let fb = self.config.focused_border;
+            if let Err(e) = self.conn.set_client_border_color(id, fb) {
+                warn!("unable to set client border color for {}: {}", id, e);
+            }
         } else {
             let msg = ClientMessageKind::TakeFocus(id).as_message(&self.conn)?;
-            self.conn.send_client_event(msg)?
+            self.conn.send_client_event(msg)?;
         })
     }
 
     fn focus_in(&self, id: Xid) -> Result<()> {
-        self.set_focus(id, self.conn.client_accepts_focus(id))
+        let accepts_focus = match self.client_map.get(&id) {
+            Some(client) => client.accepts_focus,
+            None => self.conn.client_accepts_focus(id),
+        };
+        self.set_focus(id, accepts_focus)
     }
 
     // Set the current focus point based on client focus hints
+    #[tracing::instrument(level = "trace", err, skip(self))]
     fn update_focus(&mut self, id: Xid) -> Result<()> {
-        // Fallback to the focused_client on the active workspace if this ID is unknown to us
-        let target = if !self.client_map.contains_key(&id) {
-            self.active_workspace().focused_client()
+        let target = if self.client_map.contains_key(&id) {
+            id
         } else {
-            Some(id)
+            // Try to fallback to the focused_client on the active workspace if this ID is unknown to us
+            // FIXME: Is this behaviour correct? We might want to instead try to pull the details
+            //        of this client and add it to the client_map. Not if we ever hit this case or
+            //        not, and if we do, why we do...
+            warn!(id, "An unknown client has gained focus");
+            match self.active_workspace().focused_client() {
+                Some(id) => id,
+
+                // The requested id wasn't something we know about and we don't have any clients on the
+                // active workspace so all we can do is drop our focused state and revert focus back to
+                // the root window.
+                None => {
+                    let root = self.conn.root();
+                    if let Err(e) = self.conn.focus_client(root) {
+                        warn!("unable to focus root window: {}", e);
+                    }
+                    let active_window = Atom::NetActiveWindow.as_ref();
+                    self.conn.delete_prop(root, active_window)?;
+                    run_hooks!(focus_change, self, root);
+                    return Ok(());
+                }
+            }
         };
 
-        // Remove focus from the currently focused client if there is one
         let prev = self.focused_client_id();
-        if prev.is_some() && target != prev {
-            prev.map(|id| self.client_lost_focus(id));
+        self.focused_client = Some(target);
+        if prev.is_some() && Some(target) != prev {
+            prev.map(|prev_id| self.client_lost_focus(prev_id));
         }
 
-        self.focused_client = target;
-
-        let id = match target {
-            // We have a known client to focus so set border color and attempt to focus it
-            // This may also trigger a layout application if the layout triggers on focus change
-            // and the previous focus was a client in the workspace (i.e. not something that is
-            // externally managed)
-            Some(id) => {
-                let (wix, accepts_focus) = {
-                    let c = self.client_map.get(&id).unwrap();
-                    (c.workspace(), c.accepts_focus)
-                };
-                let fb = self.config.focused_border;
-                if let Err(e) = self.conn.set_client_border_color(id, fb) {
-                    warn!("unable to set client border color for {}: {}", id, e);
-                }
-                self.focus_screen(&Selector::Condition(&|s| s.wix == wix));
-                self.set_focus(id, accepts_focus)?;
-
-                if let Some(ws) = self.workspaces.get_mut(wix) {
-                    ws.focus_client(id);
-                    let in_ws = prev.map_or(false, |id| ws.client_ids().contains(&id));
-                    if ws.layout_conf().follow_focus && in_ws {
-                        if let Err(e) = self.apply_layout(wix) {
-                            error!("unable to apply layout on ws {}: {}", wix, e);
-                        }
-                    }
-                }
-
-                id
-            }
-
-            // The requested id wasn't something we know about and we don't have any clients on the
-            // active workspace so all we can do is drop our focused state and revert focus back to
-            // the root window.
-            None => {
-                let root = self.conn.root();
-                if let Err(e) = self.conn.focus_client(root) {
-                    warn!("unable to focus root window: {}", e);
-                }
-                let active_window = Atom::NetActiveWindow.as_ref();
-                self.conn.delete_prop(root, active_window)?;
-
-                root
-            }
+        let (wix, accepts_focus) = {
+            // Safe to unwrap because we make sure this is a known client above
+            let c = self.client_map.get(&id).unwrap();
+            (c.workspace(), c.accepts_focus)
         };
+
+        self.focus_screen(&Selector::Condition(&|s| s.wix == wix));
+        self.set_focus(id, accepts_focus)?;
+
+        if let Some(ws) = self.workspaces.get_mut(wix) {
+            ws.focus_client(id);
+            let in_ws = prev.map_or(false, |id| ws.client_ids().contains(&id));
+            if ws.layout_conf().follow_focus && in_ws {
+                if let Err(e) = self.apply_layout(wix) {
+                    error!("unable to apply layout on ws {}: {}", wix, e);
+                }
+            }
+        }
 
         run_hooks!(focus_change, self, id);
         Ok(())
@@ -1616,18 +1617,20 @@ impl<X: XConn> WindowManager<X> {
     #[tracing::instrument(level = "debug", err, skip(self))]
     pub fn kill_client(&mut self) -> Result<()> {
         if let Some(id) = self.focused_client {
-            let del = Atom::WmDeleteWindow.as_ref();
-            let res = if let Ok(true) = self.conn.client_supports_protocol(id, del) {
-                trace!(id, "client supports WmDeleteWindow: sending client event");
-                ClientMessageKind::DeleteWindow(id)
-                    .as_message(&self.conn)
-                    .and_then(|msg| self.conn.send_client_event(msg))
-                    .or(self.conn.destroy_client(id))
-            } else {
-                trace!(id, "client doesn't supports WmDeleteWindow: destroying");
-                self.conn.destroy_client(id)
-            };
+            // let del = Atom::WmDeleteWindow.as_ref();
+            // let res = if let Ok(true) = self.conn.client_supports_protocol(id, del) {
+            //     trace!(id, "client supports WmDeleteWindow: sending client event");
+            //     ClientMessageKind::DeleteWindow(id)
+            //         .as_message(&self.conn)
+            //         .and_then(|msg| self.conn.send_client_event(msg))
+            //         .or(self.conn.destroy_client(id))
+            // } else {
+            //     trace!(id, "client doesn't supports WmDeleteWindow: destroying");
+            //     self.conn.destroy_client(id)
+            // };
 
+            trace!(id, "sending destroy");
+            let res = self.conn.destroy_client(id);
             if let Err(e) = res {
                 error!(id, "error killing client: {}", e);
             }
