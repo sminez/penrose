@@ -511,16 +511,16 @@ impl<X: XConn> WindowManager<X> {
 
         let (wix, accepts_focus) = {
             // Safe to unwrap because we make sure this is a known client above
-            let c = self.client_map.get(&id).unwrap();
+            let c = self.client_map.get(&target).unwrap();
             (c.workspace(), c.accepts_focus)
         };
 
         self.focus_screen(&Selector::Condition(&|s| s.wix == wix));
-        self.set_focus(id, accepts_focus)?;
+        self.set_focus(target, accepts_focus)?;
 
         if let Some(ws) = self.workspaces.get_mut(wix) {
-            ws.focus_client(id);
-            let in_ws = prev.map_or(false, |id| ws.client_ids().contains(&id));
+            ws.focus_client(target);
+            let in_ws = prev.map_or(false, |prev_id| ws.client_ids().contains(&prev_id));
             if ws.layout_conf().follow_focus && in_ws {
                 if let Err(e) = self.apply_layout(wix) {
                     error!("unable to apply layout on ws {}: {}", wix, e);
@@ -528,7 +528,7 @@ impl<X: XConn> WindowManager<X> {
             }
         }
 
-        run_hooks!(focus_change, self, id);
+        run_hooks!(focus_change, self, target);
         Ok(())
     }
 
@@ -2788,20 +2788,20 @@ mod tests {
         // We should still run focusing logic when the requested target is our current focus
         case: client_is_current_focus => (
             10, true, Some(10), 3, false,
-            Some(10), vec![_border(10, true), _focus(10), _active(10)]
+            Some(10), vec![_focus(10), _active(10), _border(10, true)]
         );
 
         // We should remove the focused border from the current client first
         case: client_is_not_current_focus => (
             20, true, Some(10), 3, false,
-            Some(20), vec![_border(10, false), _border(20, true), _focus(20), _active(20)]
+            Some(20), vec![_border(10, false), _focus(20), _active(20), _border(20, true)]
         );
 
         // Focus should default to the focused client on the active workspace if the given client
         // is not in the client_map
         case: client_is_unknown_workspace_populated => (
             999, true, Some(10), 3, false,
-            Some(30), vec![_border(10, false), _border(30, true), _focus(30), _active(30)]
+            Some(30), vec![_border(10, false), _focus(30), _active(30), _border(30, true)]
         );
 
         // If the client is unknown and the workspace is empty, focus should revert to root
@@ -2816,7 +2816,7 @@ mod tests {
         case: client_does_not_accept_focus_different => (
             20, false, Some(10), 3, false,
             Some(20), vec![
-                _border(10, false), _border(20, true), _id(Atom::WmTakeFocus), _take_focus(20)
+                _border(10, false), _id(Atom::WmTakeFocus), _take_focus(20)
             ]
         );
 
@@ -2824,7 +2824,7 @@ mod tests {
         // set the border and send the TakeFocus event
         case: client_does_not_accept_focus_same => (
             20, false, Some(20), 3, false,
-            Some(20), vec![_border(20, true), _id(Atom::WmTakeFocus), _take_focus(20)]
+            Some(20), vec![_id(Atom::WmTakeFocus), _take_focus(20)]
         );
 
         // TODO: add test cases for follow_focus layout triggering
