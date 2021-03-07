@@ -1988,6 +1988,35 @@ pub enum XKeySym {
     /// XK_EuroSign
     #[strum(serialize = "EuroSign")]
     XK_EuroSign,
+
+    /// XF86XK_MonBrightnessUp
+    #[strum(serialize = "XF86MonBrightnessUp")]
+    XF86XK_MonBrightnessUp,
+
+    /// XF86XK_MonBrightnessDown
+    #[strum(serialize = "XF86MonBrightnessDown")]
+    XF86XK_MonBrightnessDown,
+
+    /// XF86XK_KbdLightOnOff
+    #[strum(serialize = "XF86KbdLightOnOff")]
+    XF86XK_KbdLightOnOff,
+
+    /// XF86XK_KbdBrightnessUp
+    #[strum(serialize = "XF86KbdBrightnessUp")]
+    XF86XK_KbdBrightnessUp,
+
+    /// XF86XK_KbdBrightnessDown
+    #[strum(serialize = "XF86KbdBrightnessDown")]
+    XF86XK_KbdBrightnessDown,
+
+    /// XF86XK_MonBrightnessCycle
+    #[strum(serialize = "XF86MonBrightnessCycle")]
+    XF86XK_MonBrightnessCycle,
+
+    /// XF86XK_Standby
+    #[strum(serialize = "XF86Standby")]
+    XF86XK_Standby,
+
     /// XF86XK_AudioLowerVolume
     #[strum(serialize = "XF86AudioLowerVolume")]
     XF86XK_AudioLowerVolume,
@@ -2677,6 +2706,13 @@ impl XKeySym {
                 XKeySym::XK_NewSheqelSign => 0x10020aa,
                 XKeySym::XK_DongSign => 0x10020ab,
                 XKeySym::XK_EuroSign => 0x20ac,
+                XKeySym::XF86XK_MonBrightnessUp => 0x1008FF02,
+                XKeySym::XF86XK_MonBrightnessDown => 0x1008FF03,
+                XKeySym::XF86XK_KbdLightOnOff => 0x1008FF04,
+                XKeySym::XF86XK_KbdBrightnessUp => 0x1008FF05,
+                XKeySym::XF86XK_KbdBrightnessDown => 0x1008FF06,
+                XKeySym::XF86XK_MonBrightnessCycle => 0x1008FF07,
+                XKeySym::XF86XK_Standby => 0x1008FF10,
                 XKeySym::XF86XK_AudioLowerVolume => 0x1008FF11,
                 XKeySym::XF86XK_AudioMute => 0x1008FF12,
                 XKeySym::XF86XK_AudioRaiseVolume => 0x1008FF13,
