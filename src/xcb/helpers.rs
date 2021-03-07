@@ -18,10 +18,10 @@ use crate::core::bindings::{CodeMap, KeyCode};
  * The user friendly patterns are parsed into a modifier mask and X key code
  * pair that is then grabbed by penrose to trigger the bound action.
  */
-pub fn parse_key_binding(pattern: String, known_codes: &CodeMap) -> Option<KeyCode> {
+pub fn parse_key_binding(pattern: String, known_codes: &CodeMap) -> Option<Vec<KeyCode>> {
     let mut parts: Vec<&str> = pattern.split('-').collect();
     match known_codes.get(parts.remove(parts.len() - 1)) {
-        Some(code) => {
+        Some(codes) => {
             let mask = parts
                 .iter()
                 .map(|&s| match s {
@@ -33,11 +33,18 @@ pub fn parse_key_binding(pattern: String, known_codes: &CodeMap) -> Option<KeyCo
                 })
                 .fold(0, |acc, v| acc | v);
 
-            trace!(?pattern, mask, code, "parsed keybinding");
-            Some(KeyCode {
-                mask: mask as u16,
-                code: *code,
-            })
+            Some(
+                codes
+                    .iter()
+                    .map(|code| {
+                        trace!(?pattern, mask, code, "parsed keybinding");
+                        KeyCode {
+                            mask: mask as u16,
+                            code: *code,
+                        }
+                    })
+                    .collect(),
+            )
         }
         None => None,
     }

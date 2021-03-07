@@ -23,7 +23,7 @@ pub type KeyBindings<X> = HashMap<KeyCode, KeyEventHandler<X>>;
 /// User defined mouse bindings
 pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;
 
-pub(crate) type CodeMap = HashMap<String, u8>;
+pub(crate) type CodeMap = HashMap<String, Vec<u8>>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -115,9 +115,9 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
         Err(e) => panic!("unable to fetch keycodes via xmodmap: {}", e),
         Ok(o) => match String::from_utf8(o.stdout) {
             Err(e) => panic!("invalid utf8 from xmodmap: {}", e),
-            Ok(s) => s
-                .lines()
-                .flat_map(|l| {
+            Ok(s) => {
+                let mut codemap = CodeMap::new();
+                for l in s.lines() {
                     let mut words = l.split_whitespace(); // keycode <code> = <names ...>
                     let key_code: u8 = match words.nth(1) {
                         Some(word) => match word.parse() {
@@ -126,9 +126,12 @@ pub fn keycodes_from_xmodmap() -> CodeMap {
                         },
                         None => panic!("unexpected output format from xmodmap -pke"),
                     };
-                    words.skip(1).map(move |name| (name.into(), key_code))
-                })
-                .collect::<CodeMap>(),
+                    for name in words.skip(1) {
+                        codemap.entry(name.into()).or_default().push(key_code);
+                    }
+                }
+                codemap
+            }
         },
     }
 }

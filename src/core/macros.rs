@@ -472,13 +472,17 @@ macro_rules! __private {
                     let binding = format!($binding, name);
                     match $parse(binding.clone(), &$codes) {
                         None => panic!("invalid key binding: {}", binding),
-                        Some(key_code) => $map.insert(
-                            key_code,
-                            run_internal!(
-                                $method,
-                                __private!(@parsemapparams arg; []; $($params,)*)
-                            )
-                        ),
+                        Some(key_codes) => {
+                            for key_code in key_codes {
+                                $map.insert(
+                                    key_code,
+                                    run_internal!(
+                                        $method,
+                                        __private!(@parsemapparams arg; []; $($params,)*)
+                                    )
+                                );
+                            }
+                        }
                     };
                 }
             )+
@@ -498,7 +502,11 @@ macro_rules! __private {
     } => {
         match $parse($binding.to_string(), &$codes) {
             None => panic!("invalid key binding: {}", $binding),
-            Some(key_code) => $map.insert(key_code, $action),
+            Some(key_codes) => {
+                for key_code in key_codes {
+                    $map.insert(key_code, $action);
+                }
+            }
         };
         __private!(@parsekey $map, $codes, $parse,
             [ $binding, $($patt,)* ], [ $(($($template),+; $($name),+)),* ],
