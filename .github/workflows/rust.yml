@@ -71,4 +71,4 @@ jobs:
       with:
         rust-version: nightly
     - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
-    - run: cargo rustdoc --all-features -- -D warnings
+    - run: cargo rustdoc --all-features
