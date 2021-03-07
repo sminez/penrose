@@ -119,7 +119,6 @@
 //! [14]: https://xcb.freedesktop.org/
 //! [15]: https://www.rust-lang.org
 #![warn(
-    broken_intra_doc_links,
     clippy::complexity,
     clippy::correctness,
     clippy::style,
