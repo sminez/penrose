@@ -1,0 +1,7 @@
+error: proc macro panicked
+ --> $DIR/invalid-templates-are-rejected.rs:5:5
+  |
+5 |     validate_user_bindings!(()((("Not a template")("1", "2", "3"))));
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: message: 'Not a template' is an invalid template: expected '<Modifiers>-{}'

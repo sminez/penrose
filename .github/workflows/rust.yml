@@ -33,7 +33,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
 
     - name: Run tests
-      run: cargo test --features ${{ matrix.features }} --verbose
+      run: cargo test --workspace --features ${{ matrix.features }} --verbose
 
   rustfmt:
     name: Ensure rustfmt is happy
