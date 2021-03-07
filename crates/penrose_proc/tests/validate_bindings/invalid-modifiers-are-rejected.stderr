@@ -1,0 +1,8 @@
+error: proc macro panicked
+ --> $DIR/invalid-modifiers-are-rejected.rs:5:5
+  |
+5 |     validate_user_bindings!(("NOTAREALMODIFIER-a")());
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: message: 'NOTAREALMODIFIER-a' is an invalid key binding: 'NOTAREALMODIFIER' is an invalid modifer set: valid modifiers are ["A", "M", "S", "C"]
+          Key bindings should be of the form <modifiers>-<key name> e.g:  M-j, M-S-slash, M-C-Up

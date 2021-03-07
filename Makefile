@@ -19,7 +19,7 @@ check-all:
 	cargo fmt --all -- --check
 	cargo clippy --workspace --all-targets --all-features --examples --tests
 	cargo rustdoc --all-features -- -D warnings
-	cargo test --all-features
+	cargo test --workspace --all-features
 
 .PHONY: doc
 doc:
