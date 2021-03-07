@@ -122,17 +122,6 @@ where
     D: KeyPressDraw,
 {
     /// Construct a new [PMenu] with the given config.
-    ///
-    /// # Example
-    /// ```no_run
-    /// use penrose::xcb::XcbDraw;
-    /// use penrose_menu::{PMenu, PMenuConfig};
-    ///
-    /// let mut pmenu = match XcbDraw::new() {
-    ///     Ok(drw) => PMenu::new(drw, PMenuConfig::default()),
-    ///     Err(e) => panic!("unable to initialise Draw: {}", e),
-    /// };
-    /// ```
     pub fn new(mut drw: D, config: PMenuConfig) -> Result<Self> {
         if !(0.0..=1.0).contains(&config.min_width_perc) {
             return Err(DrawError::Raw(format!(
