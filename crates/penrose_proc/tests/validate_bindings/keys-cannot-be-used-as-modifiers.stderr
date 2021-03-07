@@ -1,0 +1,8 @@
+error: proc macro panicked
+ --> $DIR/keys-cannot-be-used-as-modifiers.rs:5:5
+  |
+5 |     validate_user_bindings!(("Return-a")());
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: message: 'Return-a' is an invalid key binding: 'Return' is an invalid modifer set: valid modifiers are ["A", "M", "S", "C"]
+          Key bindings should be of the form <modifiers>-<key name> or <key name> e.g:  M-j, M-S-slash, M-C-Up, XF86AudioMute
