@@ -1,7 +1,8 @@
 //! Proc macros for use in the main Penrose crate
 #![warn(
-    broken_intra_doc_links,
-    clippy::all,
+    clippy::complexity,
+    clippy::correctness,
+    clippy::style,
     future_incompatible,
     missing_debug_implementations,
     missing_docs,
