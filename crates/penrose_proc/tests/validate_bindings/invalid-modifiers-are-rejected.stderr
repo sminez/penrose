@@ -5,4 +5,4 @@ error: proc macro panicked
   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
   = help: message: 'NOTAREALMODIFIER-a' is an invalid key binding: 'NOTAREALMODIFIER' is an invalid modifer set: valid modifiers are ["A", "M", "S", "C"]
-          Key bindings should be of the form <modifiers>-<key name> e.g:  M-j, M-S-slash, M-C-Up
+          Key bindings should be of the form <modifiers>-<key name> or <key name> e.g:  M-j, M-S-slash, M-C-Up, XF86AudioMute

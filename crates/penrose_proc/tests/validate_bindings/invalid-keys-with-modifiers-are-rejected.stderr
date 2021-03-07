@@ -1,0 +1,8 @@
+error: proc macro panicked
+ --> $DIR/invalid-keys-with-modifiers-are-rejected.rs:5:5
+  |
+5 |     validate_user_bindings!(("M-notarealkey")());
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: message: 'M-notarealkey' is an invalid key binding: 'notarealkey' is not a known key: run 'xmodmap -pke' to see valid key names
+          Key bindings should be of the form <modifiers>-<key name> or <key name> e.g:  M-j, M-S-slash, M-C-Up, XF86AudioMute

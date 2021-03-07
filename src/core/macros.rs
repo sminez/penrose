@@ -108,6 +108,7 @@ macro_rules! map {
 /// let key_bindings = gen_keybindings! {
 ///     "M-semicolon" => run_external!("dmenu_run");
 ///     "M-Return" => run_external!("alacritty");
+///     "XF86AudioMute" => run_external!("amixer set Master toggle");
 ///     "M-A-Escape" => run_internal!(exit);
 ///
 ///     "M-j" => run_internal!(cycle_client, Forward);

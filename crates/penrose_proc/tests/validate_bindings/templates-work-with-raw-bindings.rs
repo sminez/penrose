@@ -3,15 +3,17 @@ use penrose_proc::validate_user_bindings;
 
 fn main() {
     validate_user_bindings!((
-        "M-a",
-        "A-b",
-        "S-c",
-        "C-d",
-        "M-A-e",
-        "A-S-f",
-        "M-S-C-g",
-        "M-A-S-C-h"
+        "a",
+        "M-b",
+        "A-c",
+        "S-d",
+        "C-e",
+        "M-A-f",
+        "A-S-g",
+        "M-S-C-h",
+        "M-A-S-C-i"
     )(((
+        "{}",
         "M-{}",
         "M-S-{}",
         "M-C-{}",
@@ -19,6 +21,7 @@ fn main() {
         "M-A-C-{}",
         "M-S-C-A-{}"
     )("1", "2", "3"))((
+        "{}",
         "M-{}",
         "M-S-{}",
         "M-C-{}",

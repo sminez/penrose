@@ -15,7 +15,9 @@ fn tests() {
     t.pass("tests/validate_bindings/valid-template-bindings-are-accepted.rs");
     t.pass("tests/validate_bindings/templates-work-with-raw-bindings.rs");
     t.compile_fail("tests/validate_bindings/invalid-keys-are-rejected.rs");
+    t.compile_fail("tests/validate_bindings/invalid-keys-with-modifiers-are-rejected.rs");
     t.compile_fail("tests/validate_bindings/invalid-modifiers-are-rejected.rs");
+    t.compile_fail("tests/validate_bindings/keys-cannot-be-used-as-modifiers.rs");
     t.compile_fail("tests/validate_bindings/invalid-templates-are-rejected.rs");
     t.compile_fail("tests/validate_bindings/repeated-bindings-are-rejected.rs");
     t.compile_fail("tests/validate_bindings/bindings-clashing-with-templates-are-rejected.rs");

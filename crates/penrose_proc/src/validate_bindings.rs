@@ -56,7 +56,7 @@ fn as_bindings(raw: Vec<String>) -> Vec<Binding> {
         .map(|s| {
             let mut parts: Vec<&str> = s.split('-').collect();
             let (keyname, mods) = if parts.len() <= 1 {
-                (None, vec![s.clone()])
+                (Some(s.clone()), vec![])
             } else {
                 (
                     parts.pop().map(String::from),
@@ -97,11 +97,10 @@ fn expand_templates(templates: Vec<String>, keynames: Vec<String>) -> Vec<Bindin
 }
 
 fn has_valid_modifiers(binding: &Binding) -> bool {
-    !binding.mods.is_empty()
-        && binding
-            .mods
-            .iter()
-            .all(|s| VALID_MODIFIERS.contains(&s.as_ref()))
+    binding
+        .mods
+        .iter()
+        .all(|s| VALID_MODIFIERS.contains(&s.as_ref()))
 }
 
 fn is_valid_keyname(binding: &Binding, names: &[String]) -> bool {
@@ -115,7 +114,7 @@ fn is_valid_keyname(binding: &Binding, names: &[String]) -> bool {
 fn report_error(msg: impl AsRef<str>, b: &Binding) {
     panic!(
         "'{}' is an invalid key binding: {}\n\
-        Key bindings should be of the form <modifiers>-<key name> e.g:  M-j, M-S-slash, M-C-Up",
+        Key bindings should be of the form <modifiers>-<key name> or <key name> e.g:  M-j, M-S-slash, M-C-Up, XF86AudioMute",
         b.raw,
         msg.as_ref()
     )
