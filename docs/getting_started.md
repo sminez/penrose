@@ -119,7 +119,7 @@ use penrose::{
     },
     logging_error_handler,
     xcb::new_xcb_backed_window_manager,
-    Backward, Forward, Less, More,
+    Backward, Forward, Less, More, Selector
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
