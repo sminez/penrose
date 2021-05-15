@@ -209,9 +209,13 @@ pub trait XClientHandler {
     #[stub(Ok(()))]
     fn unmap_client(&self, id: Xid) -> Result<()>;
 
-    /// Destroy and existing client.
+    /// Destroy an existing client.
     #[stub(Ok(()))]
     fn destroy_client(&self, id: Xid) -> Result<()>;
+
+    /// Forcably kill an existing client.
+    #[stub(Ok(()))]
+    fn kill_client(&self, id: Xid) -> Result<()>;
 
     /// Mark the given client as having focus
     #[stub(Ok(()))]
@@ -327,6 +331,11 @@ pub trait XClientProperties {
 
     /// Determine whether the target client should be tiled or allowed to float
     fn client_should_float(&self, id: Xid, floating_classes: &[&str]) -> bool {
+        if let Ok(_) = self.get_prop(id, Atom::WmTransientFor.as_ref()) {
+            trace!("window is transient: setting to floating state");
+            return true;
+        }
+
         if let Ok(Prop::UTF8String(strs)) = self.get_prop(id, Atom::WmClass.as_ref()) {
             if strs.iter().any(|c| floating_classes.contains(&c.as_ref())) {
                 return true;
@@ -560,11 +569,6 @@ pub trait XConn:
     /// Check to see if this client is one that we should be handling or not
     #[tracing::instrument(level = "trace", skip(self))]
     fn is_managed_client(&self, id: Xid) -> bool {
-        if self.get_prop(id, Atom::WmTransientFor.as_ref()).is_ok() {
-            trace!("window is transient: don't manage");
-            return false;
-        }
-
         if let Ok(Prop::Atom(types)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
             let unmanaged_types: Vec<String> = UNMANAGED_WINDOW_TYPES
                 .iter()

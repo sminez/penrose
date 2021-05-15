@@ -234,6 +234,11 @@ impl<C: Connection> XClientHandler for X11rbConnection<C> {
         self.conn.destroy_window(id)?;
         Ok(())
     }
+
+    fn kill_client(&self, id: Xid) -> Result<()> {
+        self.conn.kill_client(id)?;
+        Ok(())
+    }
 }
 
 impl<C: Connection> XClientProperties for X11rbConnection<C> {

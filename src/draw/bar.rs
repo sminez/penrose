@@ -130,7 +130,8 @@ where
 {
     drw: D,
     position: Position,
-    widgets: Vec<Box<dyn HookableWidget<X>>>,
+    /// The widgets contained within this status bar
+    pub widgets: Vec<Box<dyn HookableWidget<X>>>,
     screens: Vec<(Xid, f64)>, // window and width
     hpx: usize,
     h: f64,

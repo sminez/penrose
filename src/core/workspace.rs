@@ -265,7 +265,7 @@ impl Workspace {
             let (floating, tiled): (Vec<&Client>, Vec<&Client>) = self
                 .clients
                 .iter()
-                .map(|id| client_map.get(id).unwrap())
+                .flat_map(|id| client_map.get(id))
                 .partition(|c| c.floating);
 
             debug!(

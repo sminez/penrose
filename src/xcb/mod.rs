@@ -333,6 +333,10 @@ macro_rules! __xcb_impl_xclienthandler {
             fn destroy_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
                 Ok(self.api.destroy_client(id)?)
             }
+
+            fn kill_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+                Ok(self.api.kill_client(id)?)
+            }
         }
     }
 }

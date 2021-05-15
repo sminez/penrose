@@ -746,6 +746,11 @@ impl Api {
         Ok(xcb::destroy_window_checked(&self.conn, id).request_check()?)
     }
 
+    /// Forcibly kill an X client
+    pub fn kill_client(&self, id: Xid) -> Result<()> {
+        Ok(xcb::kill_client_checked(&self.conn, id).request_check()?)
+    }
+
     /// Send a [XEvent::MapRequest] for the target window
     pub fn map_client(&self, id: Xid) -> Result<()> {
         Ok(xcb::map_window_checked(&self.conn, id).request_check()?)
