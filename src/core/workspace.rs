@@ -1,8 +1,8 @@
 //! A set of clients and accompanying layout logic for display on a single screen
 //!
 //! The [Workspace] struct is Penrose' control structure for what should be displayed on a single
-//! screen at any one point. Each individual [Client] is owned centrally by the [WindowManager][2]
-//! but can be obtained via its ID which is traked in the `Workspace`. [Layouts][2] are managed per
+//! screen at any one point. Each individual [Client] is owned centrally by the [WindowManager][1]
+//! but can be obtained via its ID which is tracked in the `Workspace`. [Layouts][2] are managed per
 //! workspace, allowing you to specialise layout behaviour for individual workspaces if desired.
 //!
 //! [1]: crate::core::manager::WindowManager
@@ -30,7 +30,7 @@ pub(crate) struct ArrangeActions {
 
 /// A Workspace represents a named set of clients that are tiled according
 /// to a specific layout. Layout properties are tracked per workspace and
-/// clients are referenced by ID. Workspaces are independant of monitors and
+/// clients are referenced by ID. Workspaces are independent of monitors and
 /// can be moved between monitors freely, bringing their clients with them.
 ///
 /// The parent WindowManager struct tracks which client is focused from the
