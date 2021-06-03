@@ -29,9 +29,9 @@ where
 /// [2]: crate::core::xconnection::XConn
 #[derive(Debug, Clone)]
 pub enum EventAction {
-    /// An X window gained focus
-    ClientFocusLost(Xid),
     /// An X window lost focus
+    ClientFocusLost(Xid),
+    /// An X window gained focus
     ClientFocusGained(Xid),
     /// An X window had its WM_NAME or _NET_WM_NAME property changed
     ClientNameChanged(Xid, bool),

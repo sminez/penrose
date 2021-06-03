@@ -2,7 +2,7 @@
 //!
 //! The [Workspace] struct is Penrose' control structure for what should be displayed on a single
 //! screen at any one point. Each individual [Client] is owned centrally by the [WindowManager][2]
-//! but can be obtained via its ID which is traked in the `Workspace`. [Layouts][2] are managed per
+//! but can be obtained via its ID which is tracked in the `Workspace`. [Layouts][2] are managed per
 //! workspace, allowing you to specialise layout behaviour for individual workspaces if desired.
 //!
 //! [1]: crate::core::manager::WindowManager
