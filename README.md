@@ -2,7 +2,7 @@
 penrose - a tiling window manager library
 =========================================
 
-[![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=develop)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose)
+[![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=develop)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose) [![docs.rs](https://img.shields.io/docsrs/penrose?logo=rust)](https://docs.rs/penrose)
 
 `Penrose` is a modular library for configuring your own X11 window manager in Rust.
 
