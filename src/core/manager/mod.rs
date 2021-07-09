@@ -265,10 +265,9 @@ impl<X: XConn> WindowManager<X> {
 
     #[tracing::instrument(level = "debug", err, skip(self))]
     pub(crate) fn try_manage_existing_windows(&mut self) -> Result<()> {
-        for id in self.conn.active_managed_clients()?.into_iter() {
-            trace!(id, "parsing existing client");
-            let classes = str_slice!(self.config.floating_classes);
-            let mut c = util::parse_existing_client(&self.conn, id, classes)?;
+        let classes = str_slice!(self.config.floating_classes);
+        for mut c in self.conn.active_managed_clients(classes)?.into_iter() {
+            let id = c.id();
             self.add_client_to_workspace(c.workspace(), id)?;
             self.conn.unmap_client_if_needed(Some(&mut c))?;
             self.client_map.insert(id, c);
@@ -677,11 +676,17 @@ impl<X: XConn> WindowManager<X> {
         // Run hooks to allow them to modify the client
         run_hooks!(new_client, self, &mut client);
 
-        if !self.conn.is_managed_client(id) {
-            return Ok(self.conn.map_client(id)?);
+        if let Some(ref wmh) = client.wm_hints {
+            if wmh.initial_state == WindowState::Withdrawn {
+                return Ok(()); // Don't map withdrawn clients
+            }
         }
 
         let wix = client.workspace();
+
+        if !self.conn.is_managed_client(&client) {
+            return Ok(self.conn.map_client(id)?);
+        }
 
         if client.wm_managed {
             self.add_client_to_workspace(wix, id)?;

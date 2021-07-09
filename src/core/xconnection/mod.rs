@@ -568,30 +568,39 @@ pub trait XConn:
 
     /// Check to see if this client is one that we should be handling or not
     #[tracing::instrument(level = "trace", skip(self))]
-    fn is_managed_client(&self, id: Xid) -> bool {
-        if let Ok(Prop::Atom(types)) = self.get_prop(id, Atom::NetWmWindowType.as_ref()) {
-            let unmanaged_types: Vec<String> = UNMANAGED_WINDOW_TYPES
-                .iter()
-                .map(|t| t.as_ref().to_string())
-                .collect();
-            trace!(ty = ?types, "checking window type to see we should manage");
-            return types.iter().all(|ty| !unmanaged_types.contains(ty));
-        }
-
-        trace!("unable to find type: defaulting to manage");
-        true
+    fn is_managed_client(&self, c: &Client) -> bool {
+        let unmanaged_types: Vec<String> = UNMANAGED_WINDOW_TYPES
+            .iter()
+            .map(|t| t.as_ref().to_string())
+            .collect();
+        trace!(ty = ?c.wm_type, "checking window type to see we should manage");
+        return c.wm_type.iter().all(|ty| !unmanaged_types.contains(ty));
     }
 
     /// The subset of active clients that are considered managed by penrose
-    fn active_managed_clients(&self) -> Result<Vec<Xid>> {
+    fn active_managed_clients(&self, floating_classes: &[&str]) -> Result<Vec<Client>> {
         Ok(self
             .active_clients()?
             .into_iter()
-            .filter(|&id| {
+            .filter_map(|id| {
                 let attrs_ok = self.get_window_attributes(id).map_or(true, |a| {
-                    !a.override_redirect && a.window_class == WindowClass::InputOutput
+                    !a.override_redirect
+                        && a.window_class == WindowClass::InputOutput
+                        && a.map_state == MapState::Viewable
                 });
-                attrs_ok && self.is_managed_client(id)
+                if attrs_ok {
+                    trace!(id, "parsing existing client");
+                    let wix = match self.get_prop(id, Atom::NetWmDesktop.as_ref()) {
+                        Ok(Prop::Cardinal(wix)) => wix,
+                        _ => 0, // Drop unknown clients onto ws 0 as we know that is always there
+                    };
+
+                    let c = Client::new(self, id, wix as usize, floating_classes);
+                    if self.is_managed_client(&c) {
+                        return Some(c);
+                    }
+                }
+                None
             })
             .collect())
     }
@@ -646,7 +655,11 @@ mod mock_conn {
     __impl_stub_xcon! {
         for MockXConn;
 
-        atom_queries: {}
+        atom_queries: {
+            fn mock_atom_id(&self, name: &str) -> Result<Xid> {
+                Ok(name.len() as u32)
+            }
+        }
         client_properties: {
             fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
                 if name == Atom::WmName.as_ref() || name == Atom::NetWmName.as_ref() {
@@ -673,6 +686,10 @@ mod mock_conn {
                 self.events.set(remaining);
                 Ok(next)
             }
+
+            fn mock_send_client_event(&self, _: ClientMessage) -> Result<()> {
+                Ok(())
+            }
         }
         state: {
             fn mock_current_screens(&self) -> Result<Vec<Screen>> {
@@ -684,8 +701,8 @@ mod mock_conn {
             }
         }
         conn: {
-            fn mock_is_managed_client(&self, id: Xid) -> bool {
-                !self.unmanaged_ids.contains(&id)
+            fn mock_is_managed_client(&self, c: &Client) -> bool {
+                !self.unmanaged_ids.contains(&c.id())
             }
         }
     }

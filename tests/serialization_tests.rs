@@ -8,6 +8,7 @@ extern crate serde;
 
 use penrose::{
     core::{
+        client::Client,
         config::Config,
         layout::{floating, side_stack, LayoutFunc},
         manager::WindowManager,
@@ -77,7 +78,7 @@ __impl_stub_xcon! {
         }
     }
     conn: {
-        fn mock_is_managed_client(&self, _id: Xid) -> bool {
+        fn mock_is_managed_client(&self, _c: &Client) -> bool {
             true
         }
     }

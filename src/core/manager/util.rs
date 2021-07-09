@@ -4,7 +4,7 @@ use crate::core::{
     layout::LayoutConf,
     screen::Screen,
     workspace::{ArrangeActions, Workspace},
-    xconnection::{Atom, Prop, XClientConfig, XClientHandler, XClientProperties, XState, Xid},
+    xconnection::{XClientConfig, XClientHandler, XClientProperties, XState, Xid},
 };
 
 #[cfg(feature = "serde")]
@@ -193,22 +193,6 @@ where
     }
 
     Ok(())
-}
-
-pub(super) fn parse_existing_client<X>(
-    conn: &X,
-    id: Xid,
-    floating_classes: &[&str],
-) -> crate::Result<Client>
-where
-    X: XClientProperties,
-{
-    let wix = match conn.get_prop(id, Atom::NetWmDesktop.as_ref()) {
-        Ok(Prop::Cardinal(wix)) => wix,
-        _ => 0, // Drop unknown clients onto ws 0 as we know that is always there
-    };
-
-    Ok(Client::new(conn, id, wix as usize, floating_classes))
 }
 
 #[cfg(test)]
