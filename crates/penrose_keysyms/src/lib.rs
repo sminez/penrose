@@ -2043,7 +2043,7 @@ pub enum XKeySym {
 impl XKeySym {
     /// Convert this keysym to its utf8 representation if possible
     pub fn as_utf8_string(&self) -> Result<String, std::string::FromUtf8Error> {
-        Ok(String::from_utf8(
+        String::from_utf8(
             (match self {
                 XKeySym::XK_BackSpace => 0xff08,
                 XKeySym::XK_Tab => 0xff09,
@@ -2726,6 +2726,6 @@ impl XKeySym {
                 .into_iter()
                 .filter(|&b| b > 0)
                 .collect(),
-        )?)
+        )
     }
 }

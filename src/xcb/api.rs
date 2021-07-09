@@ -640,11 +640,13 @@ impl Api {
         };
 
         let cookie = xcb::change_property_checked(&self.conn, mode, id, a, a, 32, &[state]);
-        Ok(match cookie.request_check().map_err(XcbError::from) {
+        match cookie.request_check().map_err(XcbError::from) {
             // The window is already gone
             Err(XcbError::XcbKnown(XErrorCode::BadWindow)) => (),
             other => other?,
-        })
+        }
+
+        Ok(())
     }
 
     /// Create a new client window

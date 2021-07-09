@@ -198,10 +198,7 @@ impl Workspace {
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
     pub fn focus_client(&mut self, id: Xid) -> Option<Xid> {
-        let prev = match self.clients.focused() {
-            Some(c) => Some(*c),
-            None => None,
-        };
+        let prev = self.clients.focused().copied();
         self.clients.focus(&Selector::Condition(&|c| *c == id));
 
         prev

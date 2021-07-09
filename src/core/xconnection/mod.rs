@@ -331,8 +331,8 @@ pub trait XClientProperties {
 
     /// Determine whether the target client should be tiled or allowed to float
     fn client_should_float(&self, id: Xid, floating_classes: &[&str]) -> bool {
-        if let Ok(_) = self.get_prop(id, Atom::WmTransientFor.as_ref()) {
-            trace!("window is transient: setting to floating state");
+        if let Ok(prop) = self.get_prop(id, Atom::WmTransientFor.as_ref()) {
+            trace!(?prop, "window is transient: setting to floating state");
             return true;
         }
 

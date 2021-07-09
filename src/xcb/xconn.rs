@@ -47,7 +47,7 @@ impl XcbConnection {
         let check_win = api.check_window();
         api.set_randr_notify_mask()?;
 
-        Ok(Self { api, check_win })
+        Ok(Self { check_win, api })
     }
 
     /// Get a handle on the underlying [XCB Connection][::xcb::Connection] used by [Api]

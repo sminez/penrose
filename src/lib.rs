@@ -127,7 +127,7 @@
     missing_docs,
     rust_2018_idioms
 )]
-#![allow(clippy::too_many_arguments, clippy::clippy::borrowed_box)]
+#![allow(clippy::too_many_arguments, clippy::borrowed_box, clippy::or_fun_call)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"

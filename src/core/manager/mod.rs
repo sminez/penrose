@@ -445,7 +445,7 @@ impl<X: XConn> WindowManager<X> {
     // 'take focus' event for the client to process
     fn set_focus(&self, id: Xid, accepts_focus: bool) -> Result<()> {
         trace!(id, accepts_focus, "setting focus");
-        Ok(if accepts_focus {
+        if accepts_focus {
             if let Err(e) = self.conn.focus_client(id) {
                 warn!("unable to focus client {}: {}", id, e);
             }
@@ -461,7 +461,9 @@ impl<X: XConn> WindowManager<X> {
         } else {
             let msg = ClientMessageKind::TakeFocus(id).as_message(&self.conn)?;
             self.conn.send_client_event(msg)?;
-        })
+        }
+
+        Ok(())
     }
 
     fn focus_in(&self, id: Xid) -> Result<()> {
@@ -504,8 +506,10 @@ impl<X: XConn> WindowManager<X> {
 
         let prev = self.focused_client_id();
         self.focused_client = Some(target);
-        if prev.is_some() && Some(target) != prev {
-            prev.map(|prev_id| self.client_lost_focus(prev_id));
+        if let Some(prev_id) = prev {
+            if target != prev_id {
+                self.client_lost_focus(prev_id);
+            }
         }
 
         let (wix, accepts_focus) = {
