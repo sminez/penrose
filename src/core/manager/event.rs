@@ -4,6 +4,8 @@ use crate::core::{
     bindings::{KeyCode, MouseEvent},
     client::Client,
     data_types::{Point, Region},
+    hooks::HookName,
+    manager::WindowManager,
     xconnection::{
         Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XConn, XEvent, Xid,
     },
@@ -20,6 +22,19 @@ where
     pub(super) focused_client: Option<Xid>,
 }
 
+impl<'a, X> WmState<'a, X>
+where
+    X: XConn,
+{
+    pub(super) fn new(manager: &'a WindowManager<X>) -> Self {
+        Self {
+            conn: &manager.conn,
+            client_map: &manager.client_map,
+            focused_client: manager.focused_client,
+        }
+    }
+}
+
 /// Actions that will be carried out by the [WindowManager][1] in response to individual each
 /// [XEvent] received from the provided [XConn][2].
 ///
@@ -27,8 +42,10 @@ where
 ///
 /// [1]: crate::core::manager::WindowManager
 /// [2]: crate::core::xconnection::XConn
-#[derive(Debug, Clone)]
-pub enum EventAction {
+#[non_exhaustive]
+#[must_use = "Generated event actions must be handled"]
+#[derive(Debug)]
+pub enum EventAction<'a> {
     /// An X window lost focus
     ClientFocusLost(Xid),
     /// An X window gained focus
@@ -43,10 +60,14 @@ pub enum EventAction {
     DetectScreens,
     /// A client should have focus
     FocusIn(Xid),
+    /// The workspace on each screen should be layed out again
+    LayoutVisible,
     /// A new X window needs to be mapped
     MapWindow(Xid),
     /// A client is requesting to be moved: honoured if the client is floating
     MoveClientIfFloating(Xid, Region),
+    /// The named hook should now be run
+    RunHook(HookName<'a>),
     /// A grabbed keybinding was triggered
     RunKeyBinding(KeyCode),
     /// A grabbed mouse state was triggered
@@ -65,8 +86,12 @@ pub enum EventAction {
     Unmap(Xid),
 }
 
-pub(super) fn process_next_event<X>(event: XEvent, state: WmState<'_, X>) -> Vec<EventAction>
+pub(super) fn process_next_event<'a, 'b, X>(
+    event: XEvent,
+    state: WmState<'a, X>,
+) -> Vec<EventAction<'b>>
 where
+    'b: 'a,
     X: XConn,
 {
     match event {
@@ -96,7 +121,10 @@ where
     }
 }
 
-fn process_client_message<X>(state: WmState<'_, X>, msg: ClientMessage) -> Vec<EventAction>
+fn process_client_message<'a, 'b, X>(
+    state: WmState<'a, X>,
+    msg: ClientMessage,
+) -> Vec<EventAction<'b>>
 where
     X: XConn,
 {
@@ -127,7 +155,7 @@ where
     }
 }
 
-fn process_configure_notify(evt: ConfigureEvent) -> Vec<EventAction> {
+fn process_configure_notify<'a>(evt: ConfigureEvent) -> Vec<EventAction<'a>> {
     if evt.is_root {
         vec![EventAction::DetectScreens]
     } else {
@@ -135,7 +163,7 @@ fn process_configure_notify(evt: ConfigureEvent) -> Vec<EventAction> {
     }
 }
 
-fn process_configure_request(evt: ConfigureEvent) -> Vec<EventAction> {
+fn process_configure_request<'a>(evt: ConfigureEvent) -> Vec<EventAction<'a>> {
     if !evt.is_root {
         vec![EventAction::MoveClientIfFloating(evt.id, evt.r)]
     } else {
@@ -143,7 +171,7 @@ fn process_configure_request(evt: ConfigureEvent) -> Vec<EventAction> {
     }
 }
 
-fn process_enter_notify<X>(state: WmState<'_, X>, p: PointerChange) -> Vec<EventAction>
+fn process_enter_notify<'a, 'b, X>(state: WmState<'a, X>, p: PointerChange) -> Vec<EventAction<'b>>
 where
     X: XConn,
 {
@@ -164,11 +192,11 @@ where
 // Processing around map_request is currently copied from dwm:
 //   - if override_redirect is set we completely ignore the window
 //   - if the client is in the client_map (i.e. we are already managing this client) then ignore
-fn process_map_request<X>(
-    state: WmState<'_, X>,
+fn process_map_request<'a, 'b, X>(
+    state: WmState<'a, X>,
     id: Xid,
     override_redirect: bool,
-) -> Vec<EventAction>
+) -> Vec<EventAction<'b>>
 where
     X: XConn,
 {
@@ -179,7 +207,7 @@ where
     }
 }
 
-fn process_property_notify(evt: PropertyEvent) -> Vec<EventAction> {
+fn process_property_notify<'a>(evt: PropertyEvent) -> Vec<EventAction<'a>> {
     match Atom::from_str(&evt.atom) {
         Ok(a) if a == Atom::WmName || a == Atom::NetWmName => {
             vec![EventAction::ClientNameChanged(evt.id, evt.is_root)]

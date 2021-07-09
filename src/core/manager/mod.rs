@@ -5,7 +5,7 @@ use crate::{
         client::Client,
         config::Config,
         data_types::{Change, Point, Region},
-        hooks::Hooks,
+        hooks::{HookName, Hooks},
         ring::{Direction, InsertPoint, Ring, Selector},
         screen::Screen,
         workspace::Workspace,
@@ -13,35 +13,25 @@ use crate::{
     },
     ErrorHandler, PenroseError, Result,
 };
+use nix::sys::signal::{signal, SigHandler, Signal};
+use std::{cell::Cell, collections::HashMap, fmt};
+use tracing::Level;
 
 #[cfg(feature = "serde")]
 use crate::core::{helpers::logging_error_handler, layout::LayoutFunc};
 
-use nix::sys::signal::{signal, SigHandler, Signal};
-use tracing::Level;
-
-use std::{cell::Cell, collections::HashMap, fmt};
-
 mod event;
+mod screens;
+// mod workspaces;
+// mod clients;
 mod util;
 
 #[doc(inline)]
 pub use event::EventAction;
+#[doc(inline)]
+pub use screens::ScreenSet;
 
 use event::{process_next_event, WmState};
-
-// Relies on all hooks taking &mut WindowManager as the first arg.
-macro_rules! run_hooks {
-    ($method:ident, $_self:expr, $($arg:expr),*) => {
-        debug!(target: "hooks", "Running {} hooks", stringify!($method));
-        let mut hooks = $_self.hooks.replace(vec![]);
-        let res = hooks.iter_mut().try_for_each(|h| h.$method($_self, $($arg),*));
-        $_self.hooks.replace(hooks);
-        if let Err(e) = res {
-            ($_self.error_handler)(e);
-        }
-    };
-}
 
 // Mark a result that returns () as being ignored in this case.
 macro_rules! ignore_error {
@@ -73,21 +63,21 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
 /// [1]: https://github.com/sminez/penrose/tree/develop/examples
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager<X: XConn> {
-    conn: X,
-    config: Config,
-    screens: Ring<Screen>,
-    workspaces: Ring<Workspace>,
-    client_map: HashMap<Xid, Client>,
+    pub(super) conn: X,
+    pub(super) config: Config,
+    pub(super) screens: Ring<Screen>,
+    pub(super) workspaces: Ring<Workspace>,
+    pub(super) client_map: HashMap<Xid, Client>,
     #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
-    hooks: Cell<Hooks<X>>,
-    previous_workspace: usize,
-    client_insert_point: InsertPoint,
-    focused_client: Option<Xid>,
-    running: bool,
+    pub(super) hooks: Cell<Hooks<X>>,
+    pub(super) previous_workspace: usize,
+    pub(super) client_insert_point: InsertPoint,
+    pub(super) focused_client: Option<Xid>,
+    pub(super) running: bool,
     #[cfg_attr(feature = "serde", serde(skip, default = "logging_error_handler"))]
-    error_handler: ErrorHandler,
+    pub(super) error_handler: ErrorHandler,
     #[cfg_attr(feature = "serde", serde(skip))]
-    hydrated: bool,
+    pub(super) hydrated: bool,
 }
 
 impl<X: XConn> fmt::Debug for WindowManager<X> {
@@ -254,15 +244,6 @@ impl<X: XConn> WindowManager<X> {
         Ok(self.conn.warp_cursor(None, &self.screens[0])?)
     }
 
-    // Subset of current immutable state that is needed for processing XEvents into EventActions
-    fn current_state(&self) -> WmState<'_, X> {
-        WmState {
-            conn: &self.conn,
-            client_map: &self.client_map,
-            focused_client: self.focused_client,
-        }
-    }
-
     #[tracing::instrument(level = "debug", err, skip(self))]
     pub(crate) fn try_manage_existing_windows(&mut self) -> Result<()> {
         let classes = str_slice!(self.config.floating_classes);
@@ -283,41 +264,94 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
+    #[tracing::instrument(level = "trace", skip(self))]
+    fn run_hook(&mut self, hook_name: HookName<'_>) {
+        use HookName::*;
+
+        // Relies on all hooks taking &mut WindowManager as the first arg.
+        macro_rules! run_hooks {
+            ($method:ident, $_self:expr, $($arg:expr),*) => {
+                {
+                    debug!(target: "hooks", "Running {} hooks", stringify!($method));
+                    let mut hooks = $_self.hooks.replace(vec![]);
+                    let res = hooks.iter_mut().try_for_each(|h| h.$method($_self, $($arg),*));
+                    $_self.hooks.replace(hooks);
+                    if let Err(e) = res {
+                        ($_self.error_handler)(e);
+                    }
+                }
+            };
+        }
+
+        match hook_name {
+            Startup => run_hooks!(startup, self,),
+            NewClient(client) => run_hooks!(new_client, self, client),
+            RemoveClient(id) => run_hooks!(remove_client, self, id),
+            ClientAddedToWorkspace(id, wix) => run_hooks!(client_added_to_workspace, self, id, wix),
+            ClientNameUpdated(id, name, is_root) => {
+                run_hooks!(client_name_updated, self, id, &name, is_root);
+            }
+            LayoutApplied(wix, i) => run_hooks!(layout_applied, self, wix, i),
+            LayoutChange(wix) => {
+                let i = self.active_screen_index();
+                run_hooks!(layout_change, self, wix, i);
+            }
+            WorkspaceChange(active, index) => run_hooks!(workspace_change, self, active, index),
+            WorkspacesUpdated(names, wix) => run_hooks!(workspaces_updated, self, names, wix),
+            ScreenChange => {
+                let i = self.screens.focused_index();
+                run_hooks!(screen_change, self, i);
+            }
+            ScreenUpdated => {
+                let regions = self.screens.vec_map(|s| s.region(false));
+                run_hooks!(screens_updated, self, &regions);
+            }
+            RanderNotify => run_hooks!(randr_notify, self,),
+            FocusChange(root) => run_hooks!(focus_change, self, root),
+            EventHandled => run_hooks!(event_handled, self,),
+        }
+    }
+
     // Each XEvent from the XConn can result in multiple EventActions that need processing
     // depending on the current WindowManager state.
     #[tracing::instrument(level = "trace", err, skip(self, key_bindings, mouse_bindings))]
     fn handle_event_action(
         &mut self,
-        action: EventAction,
+        action: EventAction<'_>,
         key_bindings: &mut KeyBindings<X>,
         mouse_bindings: &mut MouseBindings<X>,
     ) -> Result<()> {
+        use EventAction::*;
+
         match action {
-            EventAction::ClientFocusGained(id) => self.update_focus(id)?,
-            EventAction::ClientFocusLost(id) => self.client_lost_focus(id),
-            EventAction::ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
-            EventAction::ClientToWorkspace(id, wix) => self.move_client_to_workspace(id, wix)?,
-            EventAction::DestroyClient(id) => self.remove_client(id)?,
-            EventAction::DetectScreens => {
-                run_hooks!(randr_notify, self,);
+            ClientFocusGained(id) => self.update_focus(id)?,
+            ClientFocusLost(id) => self.client_lost_focus(id),
+            ClientNameChanged(id, is_root) => self.client_name_changed(id, is_root)?,
+            ClientToWorkspace(id, wix) => self.move_client_to_workspace(id, wix)?,
+            DestroyClient(id) => self.remove_client(id)?,
+            DetectScreens => {
+                self.run_hook(HookName::RanderNotify);
                 self.detect_screens()?
             }
-            EventAction::FocusIn(id) => self.focus_in(id)?,
-            EventAction::MapWindow(id) => self.handle_map_request(id)?,
-            EventAction::MoveClientIfFloating(id, r) => self.handle_move_if_floating(id, r)?,
-            EventAction::RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
-            EventAction::RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
-            EventAction::SetActiveClient(id) => self.set_active_client(id)?,
-            EventAction::SetActiveWorkspace(wix) => self.focus_workspace(&Selector::Index(wix))?,
-            EventAction::SetScreenFromPoint(p) => self.set_screen_from_point(p)?,
-            EventAction::ToggleClientFullScreen(id, should_fullscreen) => {
+            FocusIn(id) => self.focus_in(id)?,
+            LayoutVisible => self.layout_visible()?,
+            MapWindow(id) => self.handle_map_request(id)?,
+            MoveClientIfFloating(id, r) => self.handle_move_if_floating(id, r)?,
+            RunHook(hook_name) => self.run_hook(hook_name),
+            RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
+            RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
+            SetActiveClient(id) => self.set_active_client(id)?,
+            SetActiveWorkspace(wix) => self.focus_workspace(&Selector::Index(wix))?,
+            SetScreenFromPoint(p) => self.set_screen_from_point(p)?,
+            ToggleClientFullScreen(id, should_fullscreen) => {
                 self.set_fullscreen(id, should_fullscreen)?;
             }
-            EventAction::UnknownPropertyChange(id, atom, is_root) => {
+            UnknownPropertyChange(id, atom, is_root) => {
                 self.handle_prop_change(id, atom, is_root)?;
             }
-            EventAction::Unmap(id) => self.handle_unmap_notify(id)?,
+            Unmap(id) => self.handle_unmap_notify(id)?,
         }
+
         Ok(())
     }
 
@@ -358,7 +392,7 @@ impl<X: XConn> WindowManager<X> {
         trace!("forcing focus to first workspace");
         self.focus_workspace(&Selector::Index(0))?;
 
-        run_hooks!(startup, self,);
+        self.run_hook(HookName::Startup);
         self.running = true;
 
         trace!("entering main event loop");
@@ -369,7 +403,8 @@ impl<X: XConn> WindowManager<X> {
                     let _enter = span.enter();
                     trace!(details = ?event, "event details");
 
-                    for action in process_next_event(event, self.current_state()) {
+                    let actions = process_next_event(event, WmState::new(self));
+                    for action in actions {
                         if let Err(e) =
                             self.handle_event_action(action, &mut key_bindings, &mut mouse_bindings)
                         {
@@ -377,7 +412,7 @@ impl<X: XConn> WindowManager<X> {
                         }
                     }
 
-                    run_hooks!(event_handled, self,);
+                    self.run_hook(HookName::EventHandled);
                     self.conn.flush();
                 }
 
@@ -498,7 +533,7 @@ impl<X: XConn> WindowManager<X> {
                     }
                     let active_window = Atom::NetActiveWindow.as_ref();
                     self.conn.delete_prop(root, active_window)?;
-                    run_hooks!(focus_change, self, root);
+                    self.run_hook(HookName::FocusChange(root));
                     return Ok(());
                 }
             }
@@ -531,7 +566,7 @@ impl<X: XConn> WindowManager<X> {
             }
         }
 
-        run_hooks!(focus_change, self, target);
+        self.run_hook(HookName::FocusChange(target));
         Ok(())
     }
 
@@ -558,7 +593,7 @@ impl<X: XConn> WindowManager<X> {
                 c.set_name(&name)
             }
         }
-        run_hooks!(client_name_updated, self, id, &name, is_root);
+        self.run_hook(HookName::ClientNameUpdated(id, &name, is_root));
         Ok(())
     }
 
@@ -580,7 +615,7 @@ impl<X: XConn> WindowManager<X> {
             }
 
             self.update_x_known_clients()?;
-            run_hooks!(remove_client, self, id);
+            self.run_hook(HookName::RemoveClient(id));
         } else {
             debug!(id, "attempt to remove unknown client");
         }
@@ -663,8 +698,7 @@ impl<X: XConn> WindowManager<X> {
             self.apply_layout(wix)?;
         }
 
-        let regions = self.screens.vec_map(|s| s.region(false));
-        run_hooks!(screens_updated, self, &regions);
+        self.run_hook(HookName::ScreenUpdated);
 
         Ok(())
     }
@@ -678,7 +712,7 @@ impl<X: XConn> WindowManager<X> {
         trace!(id, ?client.wm_name, ?client.wm_class, ?client.wm_type, "client details");
 
         // Run hooks to allow them to modify the client
-        run_hooks!(new_client, self, &mut client);
+        self.run_hook(HookName::NewClient(&mut client));
 
         if let Some(ref wmh) = client.wm_hints {
             if wmh.initial_state == WindowState::Withdrawn {
@@ -850,19 +884,17 @@ impl<X: XConn> WindowManager<X> {
             )?;
         }
 
-        run_hooks!(layout_applied, self, wix, i);
+        self.run_hook(HookName::LayoutApplied(wix, i));
         Ok(())
     }
 
     fn update_x_workspace_details(&mut self) -> Result<()> {
         let names = self.workspaces.vec_map(|w| w.name().to_string());
         self.conn.update_desktops(&names)?;
-        run_hooks!(
-            workspaces_updated,
-            self,
+        self.run_hook(HookName::WorkspacesUpdated(
             str_slice!(names),
-            self.active_ws_index()
-        );
+            self.active_ws_index(),
+        ));
 
         Ok(())
     }
@@ -875,7 +907,7 @@ impl<X: XConn> WindowManager<X> {
     fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
         if let Some((changed, _)) = self.screens.focus(sel) {
             if changed {
-                run_hooks!(screen_change, self, self.screens.focused_index());
+                self.run_hook(HookName::ScreenChange);
             }
         }
         let wix = self.screens.focused_unchecked().wix;
@@ -892,7 +924,7 @@ impl<X: XConn> WindowManager<X> {
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.add_client(id, &cip)?;
             self.conn.set_client_workspace(id, wix)?;
-            run_hooks!(client_added_to_workspace, self, id, wix);
+            self.run_hook(HookName::ClientAddedToWorkspace(id, wix));
         };
 
         Ok(())
@@ -1004,8 +1036,7 @@ impl<X: XConn> WindowManager<X> {
             let wix = self.workspaces.focused_index();
             self.conn.set_current_workspace(wix)?;
 
-            let i = self.screens.focused_index();
-            run_hooks!(screen_change, self, i);
+            self.run_hook(HookName::ScreenChange);
         }
 
         Ok(())
@@ -1247,7 +1278,7 @@ impl<X: XConn> WindowManager<X> {
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.cycle_layout(direction);
         }
-        run_hooks!(layout_change, self, wix, self.active_screen_index());
+        self.run_hook(HookName::LayoutChange(wix));
         self.apply_layout(wix)?;
 
         Ok(())
@@ -1460,7 +1491,7 @@ impl<X: XConn> WindowManager<X> {
                     };
 
                     self.workspaces.focus(&Selector::Index(index));
-                    run_hooks!(workspace_change, self, active, index);
+                    self.run_hook(HookName::WorkspaceChange(active, index));
                     return Ok(());
                 }
             }
@@ -1491,7 +1522,7 @@ impl<X: XConn> WindowManager<X> {
             };
 
             self.workspaces.focus(&Selector::Index(index));
-            run_hooks!(workspace_change, self, active, index);
+            self.run_hook(HookName::WorkspaceChange(active, index));
         }
 
         Ok(())

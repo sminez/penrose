@@ -94,6 +94,15 @@ pub(crate) struct Ring<T> {
     focused: usize,
 }
 
+impl<T> Default for Ring<T> {
+    fn default() -> Self {
+        Self {
+            elements: VecDeque::new(),
+            focused: 0,
+        }
+    }
+}
+
 impl<T> Ring<T> {
     pub fn new(elements: Vec<T>) -> Ring<T> {
         Ring {
