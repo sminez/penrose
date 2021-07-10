@@ -29,7 +29,7 @@ mod util;
 #[doc(inline)]
 pub use event::EventAction;
 #[doc(inline)]
-pub use screens::ScreenSet;
+pub use screens::Screens;
 
 use event::{process_next_event, WmState};
 

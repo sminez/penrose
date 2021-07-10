@@ -15,13 +15,13 @@ use tracing::{debug, info, trace};
 /// State and management of screens being layed out by Penrose.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct ScreenSet {
+pub struct Screens {
     screens: Ring<Screen>,
     bar_height: u32,
     top_bar: bool,
 }
 
-impl ScreenSet {
+impl Screens {
     /// Create a new [ScreenSet] by querying the X Server for currently connected displays.
     pub fn new<S>(state: &S, n_workspaces: usize, bar_height: u32, top_bar: bool) -> Result<Self>
     where
@@ -149,5 +149,109 @@ impl ScreenSet {
         } else {
             Ok(vec![])
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::xconnection::MockXConn;
+
+    fn raw_screens() -> Vec<Screen> {
+        vec![
+            Screen::new(Region::new(0, 0, 1366, 768), 0),
+            Screen::new(Region::new(1366, 0, 1366, 768), 1),
+        ]
+    }
+
+    fn simple_screens() -> Screens {
+        Screens {
+            screens: Ring::new(raw_screens()),
+            bar_height: 10,
+            top_bar: true,
+        }
+    }
+
+    #[test]
+    fn new_detects_current_screens() {
+        let conn = MockXConn::new(raw_screens(), vec![], vec![]);
+        let s = Screens::new(&conn, 10, 10, true).unwrap();
+
+        assert_eq!(s.screens.len(), 2);
+    }
+
+    #[test]
+    fn update_known_screens_generates_events_when_there_is_a_change() {
+        let mut s = Screens {
+            screens: Ring::default(),
+            bar_height: 10,
+            top_bar: true,
+        };
+
+        let conn = MockXConn::new(raw_screens(), vec![], vec![]);
+        let events = s.update_known_screens(&conn, 10).unwrap();
+
+        assert_eq!(
+            events,
+            vec![
+                EventAction::LayoutVisible,
+                EventAction::RunHook(HookName::ScreenChange),
+            ]
+        )
+    }
+
+    #[test]
+    fn update_known_screens_doesnt_generates_events_when_screens_are_unchanged() {
+        let conn = MockXConn::new(raw_screens(), vec![], vec![]);
+        let mut s = Screens::new(&conn, 10, 10, true).unwrap();
+        let events = s.update_known_screens(&conn, 10).unwrap();
+
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn changing_focus_generates_event_actions() {
+        let mut s = simple_screens();
+        let events = s.focus_screen(&Selector::Index(1));
+
+        assert_eq!(
+            events,
+            vec![
+                EventAction::SetActiveWorkspace(1),
+                EventAction::RunHook(HookName::ScreenChange)
+            ]
+        )
+    }
+
+    #[test]
+    fn changing_focus_only_generates_event_actions_on_change() {
+        let mut s = simple_screens();
+        let events = s.focus_screen(&Selector::Index(0));
+
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn cycle_screen_generates_event_actions() {
+        let mut s = simple_screens();
+        let conn = MockXConn::new(vec![], vec![], vec![]);
+        let events = s.cycle_screen(Direction::Forward, conn).unwrap();
+
+        assert_eq!(
+            events,
+            vec![
+                EventAction::SetActiveWorkspace(1),
+                EventAction::RunHook(HookName::ScreenChange)
+            ]
+        )
+    }
+
+    #[test]
+    fn cycle_screen_does_not_generate_event_actions_when_unable_to_cycle() {
+        let mut s = simple_screens();
+        let conn = MockXConn::new(vec![], vec![], vec![]);
+        let events = s.cycle_screen(Direction::Backward, conn);
+
+        assert!(events.unwrap().is_empty())
     }
 }

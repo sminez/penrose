@@ -44,7 +44,7 @@ where
 /// [2]: crate::core::xconnection::XConn
 #[non_exhaustive]
 #[must_use = "Generated event actions must be handled"]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EventAction<'a> {
     /// An X window lost focus
     ClientFocusLost(Xid),
