@@ -65,7 +65,7 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
 pub struct WindowManager<X: XConn> {
     pub(super) conn: X,
     pub(super) config: Config,
-    pub(super) screens: Ring<Screen>,
+    pub(super) screens: Screens,
     pub(super) workspaces: Ring<Workspace>,
     pub(super) client_map: HashMap<Xid, Client>,
     #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
@@ -133,10 +133,12 @@ impl<X: XConn> WindowManager<X> {
             .map(|name| Workspace::new(name, layouts.to_vec()))
             .collect();
 
+        let screens = Screens::new(config.bar_height, config.top_bar);
+
         Self {
             conn,
             config,
-            screens: Ring::new(vec![]),
+            screens,
             workspaces,
             client_map: HashMap::new(),
             previous_workspace: 0,
@@ -241,7 +243,7 @@ impl<X: XConn> WindowManager<X> {
         self.conn.set_wm_properties(&self.config.workspaces)?;
 
         trace!("Forcing cursor to first screen");
-        Ok(self.conn.warp_cursor(None, &self.screens[0])?)
+        Ok(self.conn.warp_cursor(None, &self.screens.inner[0])?)
     }
 
     #[tracing::instrument(level = "debug", err, skip(self))]
@@ -303,7 +305,7 @@ impl<X: XConn> WindowManager<X> {
                 run_hooks!(screen_change, self, i);
             }
             ScreenUpdated => {
-                let regions = self.screens.vec_map(|s| s.region(false));
+                let regions = self.screens.inner.vec_map(|s| s.region(false));
                 run_hooks!(screens_updated, self, &regions);
             }
             RanderNotify => run_hooks!(randr_notify, self,),
@@ -312,14 +314,22 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
+    fn handle_event_actions(&mut self, actions: Vec<EventAction<'_>>) -> Result<()> {
+        for a in actions {
+            self.handle_event_action(a, None, None)?;
+        }
+
+        Ok(())
+    }
+
     // Each XEvent from the XConn can result in multiple EventActions that need processing
     // depending on the current WindowManager state.
     #[tracing::instrument(level = "trace", err, skip(self, key_bindings, mouse_bindings))]
     fn handle_event_action(
         &mut self,
         action: EventAction<'_>,
-        key_bindings: &mut KeyBindings<X>,
-        mouse_bindings: &mut MouseBindings<X>,
+        key_bindings: Option<&mut KeyBindings<X>>,
+        mouse_bindings: Option<&mut MouseBindings<X>>,
     ) -> Result<()> {
         use EventAction::*;
 
@@ -338,8 +348,14 @@ impl<X: XConn> WindowManager<X> {
             MapWindow(id) => self.handle_map_request(id)?,
             MoveClientIfFloating(id, r) => self.handle_move_if_floating(id, r)?,
             RunHook(hook_name) => self.run_hook(hook_name),
-            RunKeyBinding(k) => self.run_key_binding(k, key_bindings),
-            RunMouseBinding(e) => self.run_mouse_binding(e, mouse_bindings),
+            RunKeyBinding(e) => match key_bindings {
+                Some(kb) => self.run_key_binding(e, kb),
+                None => return Err(perror!("keybindings can only be triggered from X events")),
+            },
+            RunMouseBinding(e) => match mouse_bindings {
+                Some(mb) => self.run_mouse_binding(e, mb),
+                None => return Err(perror!("mousebindings can only be triggered from X events")),
+            },
             SetActiveClient(id) => self.set_active_client(id)?,
             SetActiveWorkspace(wix) => self.focus_workspace(&Selector::Index(wix))?,
             SetScreenFromPoint(p) => self.set_screen_from_point(p)?,
@@ -405,9 +421,11 @@ impl<X: XConn> WindowManager<X> {
 
                     let actions = process_next_event(event, WmState::new(self));
                     for action in actions {
-                        if let Err(e) =
-                            self.handle_event_action(action, &mut key_bindings, &mut mouse_bindings)
-                        {
+                        if let Err(e) = self.handle_event_action(
+                            action,
+                            Some(&mut key_bindings),
+                            Some(&mut mouse_bindings),
+                        ) {
                             (self.error_handler)(e);
                         }
                     }
@@ -427,22 +445,6 @@ impl<X: XConn> WindowManager<X> {
      * Common state queries that we re-use in multiple places.
      */
 
-    // If the requsted workspace index is out of bounds or not currently visible then return None.
-    fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
-        self.screens
-            .indexed_element(&Selector::Condition(&|s| s.wix == wix))
-    }
-
-    // We always have at least one `Screen] so no need for an Option.
-    fn active_ws_index(&self) -> usize {
-        self.screens.focused().expect("there were no screens").wix
-    }
-
-    // The ordered list of currently visible [Workspace] indices (one per screen).
-    fn visible_workspaces(&self) -> Vec<usize> {
-        self.screens.vec_map(|s| s.wix)
-    }
-
     // The index of the [Workspace] holding the requested X window ID. This can return None if
     // the id does not map to a [WindowManager] managed [Client] which happens if the window
     // is unmanaged (e.g. a dock or toolbar) or if a client [Hook] has requested ownership
@@ -457,7 +459,7 @@ impl<X: XConn> WindowManager<X> {
     pub fn focused_client_id(&self) -> Option<Xid> {
         self.focused_client.or(self
             .workspaces
-            .map_selected(&Selector::Index(self.active_ws_index()), |ws| {
+            .map_selected(&Selector::Index(self.screens.active_ws_index()), |ws| {
                 ws.focused_client()
             })?)
     }
@@ -610,7 +612,7 @@ impl<X: XConn> WindowManager<X> {
                 self.focused_client = None;
             }
 
-            if self.visible_workspaces().contains(&wix) {
+            if self.screens.visible_workspaces().contains(&wix) {
                 self.apply_layout(wix)?;
             }
 
@@ -640,8 +642,8 @@ impl<X: XConn> WindowManager<X> {
                 .entry(id)
                 .and_modify(|c| c.set_workspace(wix));
 
-            if self.visible_workspaces().contains(&wix) {
-                let s = self.screens.focused_unchecked();
+            if self.screens.visible_workspaces().contains(&wix) {
+                let s = self.screens.focused();
                 self.conn.warp_cursor(Some(id), s)?;
             } else {
                 self.conn
@@ -656,7 +658,7 @@ impl<X: XConn> WindowManager<X> {
 
     #[tracing::instrument(level = "trace", err, skip(self))]
     fn layout_visible(&mut self) -> Result<()> {
-        for wix in self.visible_workspaces() {
+        for wix in self.screens.visible_workspaces() {
             self.apply_layout(wix)?;
         }
         Ok(())
@@ -680,27 +682,11 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn detect_screens(&mut self) -> Result<()> {
-        let screens = util::get_screens(
-            &self.conn,
-            self.visible_workspaces(),
-            self.workspaces.len(),
-            self.config.bar_height,
-            self.config.top_bar,
-        )?;
+        let actions = self
+            .screens
+            .update_known_screens(&self.conn, self.workspaces.len())?;
 
-        if screens == self.screens.as_vec() {
-            return Ok(()); // nothing changed
-        }
-
-        info!(n = screens.len(), "updating known screens");
-        self.screens = Ring::new(screens);
-        for wix in self.visible_workspaces() {
-            self.apply_layout(wix)?;
-        }
-
-        self.run_hook(HookName::ScreenUpdated);
-
-        Ok(())
+        self.handle_event_actions(actions)
     }
 
     // Map a new client window.
@@ -708,7 +694,7 @@ impl<X: XConn> WindowManager<X> {
     fn handle_map_request(&mut self, id: Xid) -> Result<()> {
         trace!(id, "handling map request");
         let classes = str_slice!(self.config.floating_classes);
-        let mut client = Client::new(&self.conn, id, self.active_ws_index(), classes);
+        let mut client = Client::new(&self.conn, id, self.screens.active_ws_index(), classes);
         trace!(id, ?client.wm_name, ?client.wm_class, ?client.wm_type, "client details");
 
         // Run hooks to allow them to modify the client
@@ -731,7 +717,7 @@ impl<X: XConn> WindowManager<X> {
         }
 
         if client.floating {
-            if let Some((_, s)) = self.indexed_screen_for_workspace(wix) {
+            if let Some((_, s)) = self.screens.indexed_screen_for_workspace(wix) {
                 util::position_floating_client(
                     &self.conn,
                     id,
@@ -746,11 +732,11 @@ impl<X: XConn> WindowManager<X> {
         self.update_focus(id)?;
         self.update_x_known_clients()?;
 
-        if wix == self.active_ws_index() {
+        if wix == self.screens.active_ws_index() {
             self.apply_layout(wix)?;
             self.conn
                 .map_client_if_needed(self.client_map.get_mut(&id))?;
-            let s = self.screens.focused_unchecked();
+            let s = self.screens.focused();
             self.conn.warp_cursor(Some(id), s)?;
         }
 
@@ -817,6 +803,7 @@ impl<X: XConn> WindowManager<X> {
             Some(p) => p,
             None => self.conn.cursor_position()?,
         };
+
         self.focus_screen(&Selector::Condition(&|s: &Screen| s.contains(point)));
         Ok(())
     }
@@ -865,7 +852,7 @@ impl<X: XConn> WindowManager<X> {
             }
         };
 
-        let (i, s) = match self.indexed_screen_for_workspace(wix) {
+        let (i, s) = match self.screens.indexed_screen_for_workspace(wix) {
             Some(index_and_screen) => index_and_screen,
             None => return Ok(()), // workspace is not currently visible
         };
@@ -893,7 +880,7 @@ impl<X: XConn> WindowManager<X> {
         self.conn.update_desktops(&names)?;
         self.run_hook(HookName::WorkspacesUpdated(
             str_slice!(names),
-            self.active_ws_index(),
+            self.screens.active_ws_index(),
         ));
 
         Ok(())
@@ -904,14 +891,12 @@ impl<X: XConn> WindowManager<X> {
         Ok(self.conn.update_known_clients(&clients)?)
     }
 
-    fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Option<&Screen> {
-        if let Some((changed, _)) = self.screens.focus(sel) {
-            if changed {
-                self.run_hook(HookName::ScreenChange);
-            }
+    fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> &Screen {
+        let actions = self.screens.focus_screen(sel);
+        if let Err(e) = self.handle_event_actions(actions) {
+            (self.error_handler)(e);
         }
-        let wix = self.screens.focused_unchecked().wix;
-        self.workspaces.focus(&Selector::Index(wix));
+
         self.screens.focused()
     }
 
@@ -1027,19 +1012,8 @@ impl<X: XConn> WindowManager<X> {
     /// # example(example_windowmanager(2, vec![])).unwrap();
     /// ```
     pub fn cycle_screen(&mut self, direction: Direction) -> Result<()> {
-        if !self.screens.would_wrap(direction) {
-            self.screens.cycle_focus(direction);
-            let i = self.screens.focused_unchecked().wix;
-            self.workspaces.focus(&Selector::Index(i));
-            self.conn
-                .warp_cursor(None, self.screens.focused_unchecked())?;
-            let wix = self.workspaces.focused_index();
-            self.conn.set_current_workspace(wix)?;
-
-            self.run_hook(HookName::ScreenChange);
-        }
-
-        Ok(())
+        let actions = self.screens.cycle_screen(direction, &self.conn)?;
+        self.handle_event_actions(actions)
     }
 
     /// Cycle between [workspaces][1] on the current [screen][2].
@@ -1091,7 +1065,7 @@ impl<X: XConn> WindowManager<X> {
     /// # example(example_windowmanager(2, vec![])).unwrap();
     /// ```
     pub fn drag_workspace(&mut self, direction: Direction) -> Result<()> {
-        let wix = self.active_ws_index();
+        let wix = self.screens.active_ws_index();
         self.cycle_screen(direction)?;
         self.focus_workspace(&Selector::Index(wix)) // focus_workspace will pull it to the new screen
     }
@@ -1125,7 +1099,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// [1]: Client
     pub fn cycle_client(&mut self, direction: Direction) -> Result<()> {
-        let wix = self.active_ws_index();
+        let wix = self.screens.active_ws_index();
         let res = self
             .workspaces
             .get_mut(wix)
@@ -1133,7 +1107,7 @@ impl<X: XConn> WindowManager<X> {
         if let Some((prev, new)) = res {
             self.client_lost_focus(prev);
             self.update_focus(new)?;
-            let screen = self.screens.focused_unchecked();
+            let screen = self.screens.focused();
             self.conn.warp_cursor(Some(new), screen)?;
         }
 
@@ -1181,7 +1155,7 @@ impl<X: XConn> WindowManager<X> {
             None => return Err(PenroseError::NoMatchingElement),
         };
         self.update_focus(id)?;
-        let screen = self.screens.focused_unchecked();
+        let screen = self.screens.focused();
         self.conn.warp_cursor(Some(id), screen)?;
         Ok(id)
     }
@@ -1208,7 +1182,7 @@ impl<X: XConn> WindowManager<X> {
     /// # example(manager).unwrap();
     /// ```
     pub fn rotate_clients(&mut self, direction: Direction) -> Result<()> {
-        let wix = self.active_ws_index();
+        let wix = self.screens.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.rotate_clients(direction)
         };
@@ -1239,14 +1213,13 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     pub fn drag_client(&mut self, direction: Direction) -> Result<()> {
         if let Some(id) = self.focused_client().map(|c| c.id()) {
-            let wix = self.active_ws_index();
+            let wix = self.screens.active_ws_index();
             self.workspaces
                 .get_mut(wix)
                 .and_then(|ws| ws.drag_client(direction));
             self.apply_layout(wix)?;
             self.update_focus(id)?;
-            self.conn
-                .warp_cursor(Some(id), self.screens.focused_unchecked())?;
+            self.conn.warp_cursor(Some(id), self.screens.focused())?;
         }
 
         Ok(())
@@ -1274,7 +1247,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// [1]: crate::core::layout::Layout
     pub fn cycle_layout(&mut self, direction: Direction) -> Result<()> {
-        let wix = self.active_ws_index();
+        let wix = self.screens.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.cycle_layout(direction);
         }
@@ -1302,7 +1275,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// [1]: crate::core::layout::Layout
     pub fn update_max_main(&mut self, change: Change) -> Result<()> {
-        let wix = self.active_ws_index();
+        let wix = self.screens.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.update_max_main(change)
         };
@@ -1331,7 +1304,7 @@ impl<X: XConn> WindowManager<X> {
     /// [1]: crate::core::layout::Layout
     pub fn update_main_ratio(&mut self, change: Change) -> Result<()> {
         let step = self.config.main_ratio_step;
-        let wix = self.active_ws_index();
+        let wix = self.screens.active_ws_index();
         if let Some(ws) = self.workspaces.get_mut(wix) {
             ws.update_main_ratio(change, step)
         }
@@ -1382,7 +1355,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// [1]: crate::core::layout::Layout
     pub fn current_layout_symbol(&self) -> &str {
-        match self.workspaces.get(self.active_ws_index()) {
+        match self.workspaces.get(self.screens.active_ws_index()) {
             Some(ws) => ws.layout_symbol(),
             None => "???",
         }
@@ -1464,22 +1437,22 @@ impl<X: XConn> WindowManager<X> {
     /// [1]: crate::core::helpers::index_selectors
     /// [2]: crate::core::ring::Selector
     pub fn focus_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<()> {
-        let active_ws = Selector::Index(self.screens.focused_unchecked().wix);
+        let active_ws = Selector::Index(self.screens.focused().wix);
         if self.workspaces.equivalent_selectors(selector, &active_ws) {
             return Ok(());
         }
 
         if let Some(index) = self.workspaces.index(selector) {
-            let active = self.active_ws_index();
+            let active = self.screens.active_ws_index();
             self.previous_workspace = active;
 
-            for i in 0..self.screens.len() {
-                if self.screens[i].wix == index {
+            for i in 0..self.screens.n_screens() {
+                if self.screens.inner[i].wix == index {
                     // The workspace we want is currently displayed on another screen so
                     // pull the target workspace to the focused screen, and place the
                     // workspace we had on the screen where the target was
-                    self.screens[i].wix = self.screens.focused_unchecked().wix;
-                    self.screens.focused_mut_unchecked().wix = index;
+                    self.screens.inner[i].wix = self.screens.focused().wix;
+                    self.screens.focused_mut().wix = index;
 
                     // re-apply layouts as screen dimensions may differ
                     self.apply_layout(active)?;
@@ -1512,7 +1485,7 @@ impl<X: XConn> WindowManager<X> {
                 }
             }
 
-            self.screens.focused_mut_unchecked().wix = index;
+            self.screens.focused_mut().wix = index;
             self.apply_layout(index)?;
             self.conn.set_current_workspace(index)?;
 
@@ -1705,10 +1678,10 @@ impl<X: XConn> WindowManager<X> {
         if let Selector::WinId(id) = selector {
             self.client_map.get(&id).and_then(|c| {
                 self.screens
-                    .element(&Selector::Condition(&|s| s.wix == c.workspace()))
+                    .screen(&Selector::Condition(&|s| s.wix == c.workspace()))
             })
         } else {
-            self.screens.element(&selector)
+            self.screens.screen(&selector)
         }
     }
 
@@ -1726,7 +1699,7 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     pub fn active_workspace(&self) -> &Workspace {
         self.workspaces
-            .element(&Selector::Index(self.active_ws_index()))
+            .element(&Selector::Index(self.screens.active_ws_index()))
             .unwrap()
     }
 
@@ -1750,7 +1723,7 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     pub fn active_workspace_mut(&mut self) -> &mut Workspace {
         self.workspaces
-            .element_mut(&Selector::Index(self.active_ws_index()))
+            .element_mut(&Selector::Index(self.screens.active_ws_index()))
             .unwrap()
     }
 
@@ -1770,7 +1743,7 @@ impl<X: XConn> WindowManager<X> {
     /// # example(manager).unwrap();
     /// ```
     pub fn focused_workspaces(&self) -> Vec<usize> {
-        self.screens.iter().map(|s| s.wix).collect()
+        self.screens.visible_workspaces()
     }
 
     /// Add a new workspace at `index`, shifting all workspaces with indices greater to the right.
@@ -1880,7 +1853,7 @@ impl<X: XConn> WindowManager<X> {
         &mut self,
         selector: &Selector<'_, Workspace>,
     ) -> Result<Option<Workspace>> {
-        if self.workspaces.len() == self.screens.len() {
+        if self.workspaces.len() == self.screens.n_screens() {
             return Err(perror!("must have at least one workspace per screen"));
         }
 
@@ -1892,7 +1865,7 @@ impl<X: XConn> WindowManager<X> {
 
         // Focus the workspace before the one we just removed. There is always at least one
         // workspace before this one due to the guard above.
-        let ix = self.screens.focused_unchecked().wix.saturating_sub(1);
+        let ix = self.screens.focused().wix.saturating_sub(1);
         self.focus_workspace(&Selector::Index(ix))?;
         self.update_x_workspace_details()?;
 
@@ -2127,7 +2100,7 @@ impl<X: XConn> WindowManager<X> {
             Selector::Condition(f) => self.client_map.iter().find(|(_, v)| f(v)).map(|(_, v)| v),
             Selector::Index(i) => self
                 .workspaces
-                .get(self.active_ws_index())
+                .get(self.screens.active_ws_index())
                 .and_then(|ws| ws.iter().nth(*i))
                 .and_then(|id| self.client_map.get(id)),
         }
@@ -2162,7 +2135,7 @@ impl<X: XConn> WindowManager<X> {
                 .map(|(_, v)| v),
             Selector::Index(i) => match self
                 .workspaces
-                .get(self.active_ws_index())
+                .get(self.screens.active_ws_index())
                 .and_then(|ws| ws.iter().nth(*i))
             {
                 Some(id) => self.client_map.get_mut(id),
@@ -2208,7 +2181,7 @@ impl<X: XConn> WindowManager<X> {
             Selector::Condition(f) => self.client_map.values().filter(|v| f(v)).collect(),
             Selector::Index(i) => self
                 .workspaces
-                .get(self.active_ws_index())
+                .get(self.screens.active_ws_index())
                 .and_then(|ws| ws.iter().nth(*i))
                 .and_then(|id| self.client_map.get(id))
                 .into_iter()
@@ -2263,7 +2236,7 @@ impl<X: XConn> WindowManager<X> {
             Selector::Index(i) => {
                 match self
                     .workspaces
-                    .get(self.active_ws_index())
+                    .get(self.screens.active_ws_index())
                     .and_then(|ws| ws.iter().nth(*i))
                 {
                     Some(id) => self.client_map.get_mut(id).into_iter().collect(),
@@ -2289,7 +2262,7 @@ impl<X: XConn> WindowManager<X> {
     /// # example(example_windowmanager(2, vec![])).unwrap();
     /// ```
     pub fn n_screens(&self) -> usize {
-        self.screens.len()
+        self.screens.n_screens()
     }
 
     /// The current effective screen size of the target screen. Effective screen size is the
@@ -2306,10 +2279,8 @@ impl<X: XConn> WindowManager<X> {
     /// # }
     /// # example(example_windowmanager(2, vec![])).unwrap();
     /// ```
-    pub fn screen_size(&self, screen_index: usize) -> Option<Region> {
-        self.screens
-            .get(screen_index)
-            .map(|s| s.region(self.config.show_bar))
+    pub fn screen_size(&self, index: usize) -> Option<Region> {
+        self.screens.screen_size(index, self.config.show_bar)
     }
 
     /// Position an individual client on the display. (x,y) coordinates are absolute (i.e. relative
@@ -2323,7 +2294,9 @@ impl<X: XConn> WindowManager<X> {
     pub fn show_client(&mut self, id: Xid) -> Result<()> {
         self.conn
             .map_client_if_needed(self.client_map.get_mut(&id))?;
-        Ok(self.conn.set_client_workspace(id, self.active_ws_index())?)
+        Ok(self
+            .conn
+            .set_client_workspace(id, self.screens.active_ws_index())?)
     }
 
     /// Hide the Client with ID 'id'.
@@ -2361,7 +2334,7 @@ impl<X: XConn> WindowManager<X> {
     /// # example(manager).unwrap();
     /// ```
     pub fn active_screen_index(&self) -> usize {
-        self.screens.focused_index()
+        self.screens.active_screen_index()
     }
 }
 
@@ -2515,10 +2488,10 @@ mod tests {
     fn focus_workspace_sets_focus_in_ring() {
         let mut wm = wm_with_mock_conn(vec![], vec![]);
         assert_eq!(wm.workspaces.focused_index(), 0);
-        assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
+        assert_eq!(wm.workspaces.focused_index(), wm.screens.active_ws_index());
         wm.focus_workspace(&Selector::Index(3)).unwrap();
         assert_eq!(wm.workspaces.focused_index(), 3);
-        assert_eq!(wm.workspaces.focused_index(), wm.active_ws_index());
+        assert_eq!(wm.workspaces.focused_index(), wm.screens.active_ws_index());
     }
 
     #[test]
@@ -2527,7 +2500,7 @@ mod tests {
         add_n_clients(&mut wm, 5, 0); // focus on last client (50) ix == 0
 
         let clients = |w: &mut WindowManager<_>| {
-            w.workspaces[w.screens[0].wix]
+            w.workspaces[w.screens.get(0).unwrap().wix]
                 .iter()
                 .cloned()
                 .collect::<Vec<_>>()
@@ -2579,7 +2552,7 @@ mod tests {
         let mut wm = wm_with_mock_conn(vec![], vec![]);
         add_n_clients(&mut wm, 1, 0);
 
-        assert_eq!(wm.screen(&Selector::Focused), wm.screens.focused());
+        assert_eq!(wm.screen(&Selector::Focused), Some(wm.screens.focused()));
         assert_eq!(wm.screen(&Selector::Index(1)), wm.screens.get(1));
         assert_eq!(wm.screen(&Selector::WinId(10)), wm.screens.get(0));
         assert_eq!(
@@ -2676,22 +2649,22 @@ mod tests {
         wm.init().unwrap();
 
         // detect_screens is called on init so should have one screen
-        assert_eq!(wm.screens.len(), 1);
-        assert_eq!(wm.screens.focused_unchecked().wix, 0);
+        assert_eq!(wm.screens.n_screens(), 1);
+        assert_eq!(wm.screens.focused().wix, 0);
 
         // Focus workspace 1 the redetect screens: should have 1 and 0
         wm.focus_workspace(&Selector::Index(1)).unwrap();
-        assert_eq!(wm.screens.focused_unchecked().wix, 1);
+        assert_eq!(wm.screens.focused().wix, 1);
         wm.set_num_screens(2);
         wm.detect_screens().unwrap();
-        assert_eq!(wm.screens.len(), 2);
+        assert_eq!(wm.screens.n_screens(), 2);
         assert_eq!(wm.screens.get(0).unwrap().wix, 1);
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
 
         // Adding another screen should now have WS 2 as 1 is taken
         wm.set_num_screens(3);
         wm.detect_screens().unwrap();
-        assert_eq!(wm.screens.len(), 3);
+        assert_eq!(wm.screens.n_screens(), 3);
         assert_eq!(wm.screens.get(0).unwrap().wix, 1);
         assert_eq!(wm.screens.get(1).unwrap().wix, 0);
         assert_eq!(wm.screens.get(2).unwrap().wix, 2);
@@ -2700,7 +2673,7 @@ mod tests {
         wm.focus_workspace(&Selector::Index(3)).unwrap();
         wm.set_num_screens(1);
         wm.detect_screens().unwrap();
-        assert_eq!(wm.screens.len(), 1);
+        assert_eq!(wm.screens.n_screens(), 1);
         assert_eq!(wm.screens.get(0).unwrap().wix, 3);
     }
 

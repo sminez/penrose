@@ -2,7 +2,6 @@ use crate::core::{
     client::Client,
     data_types::Region,
     layout::LayoutConf,
-    screen::Screen,
     workspace::{ArrangeActions, Workspace},
     xconnection::{XClientConfig, XClientHandler, XClientProperties, XState, Xid},
 };
@@ -44,40 +43,6 @@ where
     );
 
     Ok(conn.position_client(id, reg, border_px, false)?)
-}
-
-pub(super) fn get_screens<X>(
-    conn: &X,
-    mut visible_workspaces: Vec<usize>,
-    n_workspaces: usize,
-    bar_height: u32,
-    top_bar: bool,
-) -> crate::Result<Vec<Screen>>
-where
-    X: XState,
-{
-    // Keeping the currently displayed workspaces on the active screens if possible and then
-    // filling in with remaining workspaces in ascending order
-    visible_workspaces.append(
-        &mut (0..n_workspaces)
-            .filter(|w| !visible_workspaces.contains(w))
-            .collect(),
-    );
-    debug!(?visible_workspaces, "current workspace ordering");
-    Ok(conn
-        .current_screens()?
-        .into_iter()
-        .zip(visible_workspaces)
-        .enumerate()
-        .map(|(ix, (mut s, wix))| {
-            s.update_effective_region(bar_height, top_bar);
-            trace!(screen = ix, workspace = wix, "setting workspace for screen");
-            s.wix = wix;
-            let r = s.region(false);
-            info!(w = r.w, h = r.h, "detected screen");
-            s
-        })
-        .collect())
 }
 
 pub(super) fn toggle_fullscreen<X>(
@@ -214,53 +179,6 @@ mod tests {
         let b = 3;
         assert_eq!(pad_region(&r, false, g, b), Region::new(10, 10, 174, 74));
         assert_eq!(pad_region(&r, true, g, b), Region::new(0, 0, 194, 94));
-    }
-
-    struct OutputsXConn(Vec<Screen>);
-
-    impl StubXAtomQuerier for OutputsXConn {}
-    impl StubXState for OutputsXConn {
-        fn mock_current_screens(&self) -> Result<Vec<Screen>> {
-            Ok(self.0.clone())
-        }
-    }
-
-    fn test_screens(h: u32, top_bar: bool) -> Vec<Screen> {
-        let regions = &[
-            Region::new(0, 0, 1000, 800),
-            Region::new(1000, 0, 1400, 900),
-        ];
-        regions
-            .iter()
-            .enumerate()
-            .map(|(i, &r)| {
-                let mut s = Screen::new(r, i);
-                s.update_effective_region(h, top_bar);
-                s
-            })
-            .collect()
-    }
-
-    test_cases! {
-        get_screens;
-        args: (current: Vec<usize>, n_workspaces: usize, expected: Vec<usize>);
-
-        case: unchanged => (vec![0, 1], 10, vec![0, 1]);
-        case: non_default_workspaces => (vec![5, 7], 10, vec![5, 7]);
-        case: new_take_first_available_0 => (vec![0], 10, vec![0, 1]);
-        case: new_take_first_available_2 => (vec![2], 10, vec![2, 0]);
-        case: fewer_retains_from_left => (vec![3, 5, 9], 10, vec![3, 5]);
-        case: more_truncates => (vec![0], 1, vec![0]);
-
-        body: {
-            let (bar_height, top_bar) = (10, true);
-            let screens = test_screens(bar_height, top_bar);
-            let conn = OutputsXConn(screens);
-            let new = get_screens(&conn, current, n_workspaces, bar_height, top_bar).unwrap();
-            let focused: Vec<usize> = new.iter().map(|s| s.wix).collect();
-
-            assert_eq!(focused, expected);
-        }
     }
 
     struct RecordingXConn {
