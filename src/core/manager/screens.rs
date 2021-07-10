@@ -22,7 +22,7 @@ pub struct Screens {
 }
 
 impl Screens {
-    /// Create a new [ScreenSet] by querying the X Server for currently connected displays.
+    /// Create a new [Screens] by querying the X Server for currently connected displays.
     pub fn new(bar_height: u32, top_bar: bool) -> Self {
         Self {
             inner: Ring::default(),
@@ -58,7 +58,9 @@ impl Screens {
         self.inner.focused_index()
     }
 
-    /// The ordered list of currently visible [Workspace] indices (one per screen).
+    /// The ordered list of currently visible [Workspace][0] indices (one per screen).
+    ///
+    /// [0]: crate::core::workspace::Workspace
     pub fn visible_workspaces(&self) -> Vec<usize> {
         self.inner.vec_map(|s| s.wix)
     }

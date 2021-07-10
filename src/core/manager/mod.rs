@@ -2706,7 +2706,12 @@ mod tests {
                         .calls()
                         .iter()
                         .any(|c| c.0 == *"position_client");
-                    assert_eq!(did_layout, $should_layout);
+
+                    if $should_layout {
+                        assert!(did_layout);
+                    } else {
+                        assert!(!did_layout);
+                    }
                 }
             }
         }
