@@ -20,12 +20,14 @@ use tracing::Level;
 #[cfg(feature = "serde")]
 use crate::core::{helpers::logging_error_handler, layout::LayoutFunc};
 
+mod clients;
 mod event;
 mod screens;
-// mod workspaces;
-// mod clients;
 mod util;
+// mod workspaces;
 
+#[doc(inline)]
+pub use clients::Clients;
 #[doc(inline)]
 pub use event::EventAction;
 #[doc(inline)]
@@ -595,7 +597,7 @@ impl<X: XConn> WindowManager<X> {
                 c.set_name(&name)
             }
         }
-        self.run_hook(HookName::ClientNameUpdated(id, &name, is_root));
+        self.run_hook(HookName::ClientNameUpdated(id, name, is_root));
         Ok(())
     }
 

@@ -135,7 +135,7 @@ pub enum HookName<'a> {
     NewClient(&'a mut Client),
     RemoveClient(Xid),
     ClientAddedToWorkspace(Xid, usize),
-    ClientNameUpdated(Xid, &'a str, bool),
+    ClientNameUpdated(Xid, String, bool),
     LayoutApplied(usize, usize),
     LayoutChange(usize),
     WorkspaceChange(usize, usize),
