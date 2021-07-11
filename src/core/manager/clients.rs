@@ -31,17 +31,17 @@ pub struct Clients {
 
 impl Clients {
     /// Create a new empty client map
-    pub fn new(focused_border: Color, unfocused_border: Color) -> Self {
+    pub fn new(focused_border: impl Into<Color>, unfocused_border: impl Into<Color>) -> Self {
         Self {
             inner: HashMap::new(),
             focused_client_id: None,
-            focused_border,
-            unfocused_border,
+            focused_border: focused_border.into(),
+            unfocused_border: unfocused_border.into(),
         }
     }
 
     /// Whether or not a client with the given id is currently known
-    pub fn known(&self, id: Xid) -> bool {
+    pub fn is_known(&self, id: Xid) -> bool {
         self.inner.contains_key(&id)
     }
 
@@ -54,8 +54,7 @@ impl Clients {
 
     /// A reference to the current focused [Client] if there is one
     pub fn focused_client(&self) -> Option<&Client> {
-        self.focused_client_id
-            .and_then(move |id| self.inner.get(&id))
+        self.focused_client_id.and_then(|id| self.inner.get(&id))
     }
 
     /// A mutable reference to the current focused [Client] if there is one
@@ -334,8 +333,8 @@ impl Clients {
             // client was not fullscreen
             } else if i == id {
                 conn.position_client(id, screen_size, 0, false)?;
-                let known = self.known(id);
-                if known {
+                let is_known = self.is_known(id);
+                if is_known {
                     self.map_if_needed(id, conn)?;
                     self.modify(id, |c| c.fullscreen = true);
                 }
@@ -357,6 +356,16 @@ mod tests {
     use super::*;
     use crate::core::xconnection::{self, *};
     use std::cell::Cell;
+
+    #[test]
+    fn client_lost_focus_on_focused_clears_focused_client_id() {
+        let conn = MockXConn::new(vec![], vec![], vec![]);
+        let mut clients = Clients::new(0xffffff, 0x000000);
+
+        clients.focused_client_id = Some(42);
+        clients.client_lost_focus(42, &conn);
+        assert!(clients.focused_client_id.is_none());
+    }
 
     struct RecordingXConn {
         positions: Cell<Vec<(Xid, Region)>>,

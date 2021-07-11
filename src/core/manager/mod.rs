@@ -452,7 +452,7 @@ impl<X: XConn> WindowManager<X> {
     // Set the current focus point based on client focus hints
     #[tracing::instrument(level = "trace", err, skip(self))]
     fn update_focus(&mut self, id: Xid) -> Result<()> {
-        let target = if self.clients.known(id) {
+        let target = if self.clients.is_known(id) {
             id
         } else {
             // Try to fallback to the focused_client on the active workspace if this ID is unknown to us

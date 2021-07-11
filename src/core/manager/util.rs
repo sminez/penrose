@@ -64,9 +64,9 @@ where
         return Err(PenroseError::MissingClientIds(missing_ids));
     }
 
-    // Workspace clients are all need to be present in the client_map
+    // Workspace clients all need to be present in the client_map
     wm.workspaces.iter().try_for_each(|w| {
-        if w.iter().all(|id| wm.clients.known(*id)) {
+        if w.iter().all(|id| wm.clients.is_known(*id)) {
             Ok(())
         } else {
             Err(PenroseError::HydrationState(
@@ -78,7 +78,7 @@ where
     // If current focused client is not in the client_map then it was most likely being
     // managed by a user defined hook.
     if let Some(id) = wm.clients.focused_client_id() {
-        if !wm.clients.known(id) {
+        if !wm.clients.is_known(id) {
             wm.clients.clear_focused()
         }
     }

@@ -199,7 +199,7 @@ fn process_map_request<'a, 'b, X>(
 where
     X: XConn,
 {
-    if override_redirect || state.clients.known(id) {
+    if override_redirect || state.clients.is_known(id) {
         vec![]
     } else {
         vec![EventAction::MapWindow(id)]
