@@ -2,24 +2,22 @@
 /// messages to penrose actions is done.
 use crate::core::{
     bindings::{KeyCode, MouseEvent},
-    client::Client,
     data_types::{Point, Region},
     hooks::HookName,
-    manager::WindowManager,
+    manager::{clients::Clients, WindowManager},
     xconnection::{
         Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XConn, XEvent, Xid,
     },
 };
 
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
 
 pub(super) struct WmState<'a, X>
 where
     X: XConn,
 {
-    pub(super) conn: &'a X,
-    pub(super) client_map: &'a HashMap<Xid, Client>,
-    pub(super) focused_client: Option<Xid>,
+    conn: &'a X,
+    clients: &'a Clients,
 }
 
 impl<'a, X> WmState<'a, X>
@@ -29,8 +27,7 @@ where
     pub(super) fn new(manager: &'a WindowManager<X>) -> Self {
         Self {
             conn: &manager.conn,
-            client_map: &manager.client_map,
-            focused_client: manager.focused_client,
+            clients: &manager.clients,
         }
     }
 }
@@ -62,6 +59,8 @@ pub enum EventAction<'a> {
     FocusIn(Xid),
     /// The workspace on each screen should be layed out again
     LayoutVisible,
+    /// Layout the workspace at the given index
+    LayoutWorkspace(usize),
     /// A new X window needs to be mapped
     MapWindow(Xid),
     /// A client is requesting to be moved: honoured if the client is floating
@@ -180,7 +179,7 @@ where
         EventAction::SetScreenFromPoint(Some(p.abs)),
     ];
 
-    if let Some(current) = state.focused_client {
+    if let Some(current) = state.clients.focused_client_id() {
         if current != p.id {
             actions.insert(0, EventAction::ClientFocusLost(current));
         }
@@ -200,7 +199,7 @@ fn process_map_request<'a, 'b, X>(
 where
     X: XConn,
 {
-    if override_redirect || state.client_map.contains_key(&id) {
+    if override_redirect || state.clients.known(id) {
         vec![]
     } else {
         vec![EventAction::MapWindow(id)]
