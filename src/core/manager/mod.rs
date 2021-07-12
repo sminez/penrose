@@ -882,6 +882,11 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
+    /// The currently focused client ID if there is one
+    pub fn focused_client_id(&self) -> Option<Xid> {
+        self.clients.focused_client_id()
+    }
+
     /// Cycle between known [screens][Screen]. Does not wrap from first to last
     ///
     /// # Example
@@ -968,16 +973,16 @@ impl<X: XConn> WindowManager<X> {
     /// ```
     /// # use penrose::__example_helpers::*;
     /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
-    /// assert_eq!(manager.clients.focused_client_id(), Some(0));
+    /// assert_eq!(manager.focused_client_id(), Some(0));
     ///
     /// manager.cycle_client(Backward)?;
-    /// assert_eq!(manager.clients.focused_client_id(), Some(1));
+    /// assert_eq!(manager.focused_client_id(), Some(1));
     ///
     /// manager.cycle_client(Backward)?;
-    /// assert_eq!(manager.clients.focused_client_id(), Some(2));
+    /// assert_eq!(manager.focused_client_id(), Some(2));
     ///
     /// manager.cycle_client(Backward)?;
-    /// assert_eq!(manager.clients.focused_client_id(), Some(0));
+    /// assert_eq!(manager.focused_client_id(), Some(0));
     /// # Ok(())
     /// # }
     /// #
