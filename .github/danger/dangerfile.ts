@@ -10,13 +10,6 @@ type LabelRule = {
 // CONFIG
 const TRUSTED_USERS = ["sminez"];
 const BIG_PR = 1000;
-const WIN_GIFS = [
-  "https://www.omega-level.net/wp-content/uploads/2015/11/nice.gif",
-  "https://img.buzzfeed.com/buzzfeed-static/static/2018-05/9/22/asset/buzzfeed-prod-web-03/anigif_sub-buzz-2321-1525918809-1.gif",
-  "https://media3.giphy.com/media/3oEjHYibHwRL7mrNyo/giphy.gif?cid=ecf05e47yzf4an9z010kev8wmv8phc4yft96zbwptp98smwr&rid=giphy.gif",
-  "https://media4.giphy.com/media/1jkV5ifEE5EENHESRa/giphy.gif?cid=ecf05e47yzf4an9z010kev8wmv8phc4yft96zbwptp98smwr&rid=giphy.gif",
-  "https://media2.giphy.com/media/yyZRSvISN1vvW/giphy.gif?cid=ecf05e47yzf4an9z010kev8wmv8phc4yft96zbwptp98smwr&rid=giphy.gif",
-];
 
 // ----------------------------------------------------------------------------
 // DETAILS
@@ -63,13 +56,6 @@ const update_labels = async (initial_labels: string[], rules: LabelRule[]) => {
       labels: labels,
     });
   }
-};
-
-const win_gif = (): string => {
-  const ix = _.random(WIN_GIFS.length);
-  const gif = WIN_GIFS[ix];
-  _.remove(WIN_GIFS, gif);
-  return gif;
 };
 
 // ----------------------------------------------------------------------------
@@ -119,11 +105,9 @@ update_labels(
 );
 
 if (PR.author_association === "FIRST_TIME_CONTRIBUTOR") {
-  markdown(
-    `:tada: Thank you for raising your first PR for penrose!\n![thanks](${win_gif()})`,
-  );
+  markdown(":tada: Thank you for raising your first PR for penrose!\n!");
 }
 
 if (PR.body.match(/\.gif/g)) {
-  markdown(`:tophat: Oooooh! A GIF...nice\n![nice](${win_gif()})`);
+  markdown(":tophat: Oooooh! A GIF...nice\n!");
 }

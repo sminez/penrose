@@ -21,6 +21,7 @@ use crate::{
 #[cfg(feature = "serde")]
 use crate::{core::layout::LayoutFunc, PenroseError};
 
+#[cfg(feature = "serde")]
 use std::collections::HashMap;
 
 pub(crate) struct ArrangeActions {
@@ -198,10 +199,7 @@ impl Workspace {
     /// # example(example_workspace("example", 5)).unwrap();
     /// ```
     pub fn focus_client(&mut self, id: Xid) -> Option<Xid> {
-        let prev = match self.clients.focused() {
-            Some(c) => Some(*c),
-            None => None,
-        };
+        let prev = self.clients.focused().copied();
         self.clients.focus(&Selector::Condition(&|c| *c == id));
 
         prev
@@ -258,15 +256,12 @@ impl Workspace {
     pub(crate) fn arrange(
         &self,
         screen_region: Region,
-        client_map: &HashMap<Xid, Client>,
+        managed_workspace_clients: &[&Client],
     ) -> ArrangeActions {
         if self.clients.len() > 0 {
             let layout = self.layouts.focused_unchecked();
-            let (floating, tiled): (Vec<&Client>, Vec<&Client>) = self
-                .clients
-                .iter()
-                .map(|id| client_map.get(id).unwrap())
-                .partition(|c| c.floating);
+            let (floating, tiled): (Vec<&Client>, Vec<&Client>) =
+                managed_workspace_clients.iter().partition(|c| c.floating);
 
             debug!(
                 layout = ?layout.symbol,
@@ -531,12 +526,13 @@ mod tests {
         let mut ws = Workspace::new("test", test_layouts());
         let conn = MockXConn::new(vec![], vec![], vec![]);
         ws.clients = Ring::new(vec![1, 2, 3]);
-        let client_map = map! {
-            1 => Client::new(&conn, 1, 0, &[]),
-            2 => Client::new(&conn, 2, 0, &[]),
-            3 => Client::new(&conn, 3, 0, &[]),
-        };
-        let res = ws.arrange(Region::new(0, 0, 2000, 1000), &client_map);
+        let clients = vec![
+            Client::new(&conn, 1, 0, &[]),
+            Client::new(&conn, 2, 0, &[]),
+            Client::new(&conn, 3, 0, &[]),
+        ];
+        let refs: Vec<&Client> = clients.iter().collect();
+        let res = ws.arrange(Region::new(0, 0, 2000, 1000), &refs[..]);
         assert_eq!(res.actions.len(), 3, "actions are not 1-1 for clients")
     }
 

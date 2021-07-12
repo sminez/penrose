@@ -94,6 +94,15 @@ pub(crate) struct Ring<T> {
     focused: usize,
 }
 
+impl<T> Default for Ring<T> {
+    fn default() -> Self {
+        Self {
+            elements: VecDeque::new(),
+            focused: 0,
+        }
+    }
+}
+
 impl<T> Ring<T> {
     pub fn new(elements: Vec<T>) -> Ring<T> {
         Ring {
@@ -227,10 +236,6 @@ impl<T> Ring<T> {
         if let Some(index) = self.index(s) {
             f(&mut self.elements[index]);
         }
-    }
-
-    pub fn map_selected<U, F: Fn(&T) -> U>(&self, s: &Selector<'_, T>, f: F) -> Option<U> {
-        self.index(s).map(|i| f(&self.elements[i]))
     }
 
     fn clamp_focus(&mut self) {
@@ -631,12 +636,5 @@ mod tests {
         let mut r = Ring::new(contents.clone());
         r.apply_to(&Selector::Index(2), |s| *s = "mutated");
         assert_eq!(r.as_vec(), vec!["original", "original", "mutated"]);
-    }
-
-    #[test]
-    fn map_selected() {
-        let contents = vec!["badgers", "love", "worms"];
-        let r = Ring::new(contents.clone());
-        assert_eq!(r.map_selected(&Selector::Index(1), |s| s.len()), Some(4));
     }
 }

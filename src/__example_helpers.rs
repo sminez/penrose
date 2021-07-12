@@ -196,8 +196,8 @@ __impl_stub_xcon! {
         }
     }
     conn: {
-        fn mock_is_managed_client(&self, id: Xid) -> bool {
-            !self.unmanaged_ids.contains(&id)
+        fn mock_is_managed_client(&self, c: &Client) -> bool {
+            !self.unmanaged_ids.contains(&c.id())
         }
     }
 }
@@ -304,8 +304,8 @@ __impl_stub_xcon! {
         }
     }
     conn: {
-        fn mock_is_managed_client(&self, id: Xid) -> bool {
-            self.add_call("is_managed_client", strings!(id));
+        fn mock_is_managed_client(&self, c: &Client) -> bool {
+            self.add_call("is_managed_client", strings!(c.id()));
             true
         }
     }

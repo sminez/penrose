@@ -123,6 +123,30 @@ use crate::{
     Result,
 };
 
+/// Names of each of the individual hooks that are triggerable in Penrose.
+///
+/// This enum is used to indicate to the [WindowManager] that a particular hook should now be
+/// triggered as the result of some other action that has taken place during execution.
+#[non_exhaustive]
+#[allow(missing_docs)]
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum HookName<'a> {
+    Startup,
+    NewClient(&'a mut Client),
+    RemoveClient(Xid),
+    ClientAddedToWorkspace(Xid, usize),
+    ClientNameUpdated(Xid, String, bool),
+    LayoutApplied(usize, usize),
+    LayoutChange(usize),
+    WorkspaceChange(usize, usize),
+    WorkspacesUpdated(&'a [&'a str], usize),
+    ScreenChange,
+    ScreenUpdated,
+    RanderNotify,
+    FocusChange(u32),
+    EventHandled,
+}
+
 /// Utility type for defining hooks in your penrose configuration.
 pub type Hooks<X> = Vec<Box<dyn Hook<X>>>;
 

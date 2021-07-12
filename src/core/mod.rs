@@ -55,7 +55,7 @@ pub use client::Client;
 #[doc(inline)]
 pub use config::Config;
 #[doc(inline)]
-pub use hooks::Hook;
+pub use hooks::{Hook, HookName};
 #[doc(inline)]
 pub use layout::Layout;
 #[doc(inline)]

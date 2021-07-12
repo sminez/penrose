@@ -81,7 +81,7 @@ where
     let highlight = highlight.into();
     let workspaces: Vec<String> = workspaces.into_iter().map(|w| w.into()).collect();
 
-    Ok(StatusBar::try_new(
+    StatusBar::try_new(
         drw,
         Position::Top,
         height,
@@ -109,7 +109,7 @@ where
                 true,
             )),
         ],
-    )?)
+    )
 }
 
 /// The position of a status bar
@@ -130,7 +130,8 @@ where
 {
     drw: D,
     position: Position,
-    widgets: Vec<Box<dyn HookableWidget<X>>>,
+    /// The widgets contained within this status bar
+    pub widgets: Vec<Box<dyn HookableWidget<X>>>,
     screens: Vec<(Xid, f64)>, // window and width
     hpx: usize,
     h: f64,

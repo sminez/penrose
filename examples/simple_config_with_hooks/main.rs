@@ -102,28 +102,28 @@ fn main() -> Result<()> {
      * that they are defined. Hooks may maintain their own internal state which they can use to
      * modify their behaviour if desired.
      */
-    let mut hooks: XcbHooks = vec![];
-    hooks.push(Box::new(MyClientHook {}));
 
-    // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
-    // method that returns a boxed instance of the hook with any configuration performed so that it
-    // is ready to push onto the corresponding *_hooks vec.
-    hooks.push(LayoutSymbolAsRootName::new());
-
-    // Here we are using a contrib hook that requires configuration to set up a default workspace
-    // on workspace "9". This will set the layout and spawn the supplied programs if we make
-    // workspace "9" active while it has no clients.
-    hooks.push(DefaultWorkspace::new(
-        "9",
-        "[botm]",
-        vec![my_terminal, my_terminal, my_file_manager],
-    ));
-
-    // Scratchpad is an extension: it makes use of the same Hook points as the examples above but
+    // Scratchpad is an extension: it makes use of the same Hook points as the examples below but
     // additionally provides a 'toggle' method that can be bound to a key combination in order to
     // trigger the bound scratchpad client.
     let sp = Scratchpad::new("st", 0.8, 0.8);
-    hooks.push(sp.get_hook());
+
+    let hooks: XcbHooks = vec![
+        Box::new(MyClientHook {}),
+        // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
+        // method that returns a boxed instance of the hook with any configuration performed so that it
+        // is ready to push onto the corresponding *_hooks vec.
+        LayoutSymbolAsRootName::new(),
+        // Here we are using a contrib hook that requires configuration to set up a default workspace
+        // on workspace "9". This will set the layout and spawn the supplied programs if we make
+        // workspace "9" active while it has no clients.
+        DefaultWorkspace::new(
+            "9",
+            "[botm]",
+            vec![my_terminal, my_terminal, my_file_manager],
+        ),
+        sp.get_hook(),
+    ];
 
     /* The gen_keybindings macro parses user friendly key binding definitions into X keycodes and
      * modifier masks. It uses the 'xmodmap' program to determine your current keymap and create
