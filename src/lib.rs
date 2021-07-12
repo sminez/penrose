@@ -14,9 +14,9 @@
 //! Penrose itself is not a binary application that you can build, install and run. You need to
 //! write your own **main.rs** as a rust binary crate that uses Penrose to set up, configure and
 //! run your very own window manager exactly how you want it. In short, you *will* need to write
-//! some code and you *will* need to know rust so some degree.
+//! some code and you *will* need to know rust to some degree.
 //!
-//! For learning rust itself, there is some fantastic official [guides][4] available on
+//! For learning rust itself, there are some fantastic official [guides][4] available on
 //! [rust-lang.org][15] and if you are sticking to using the out of the box
 //! functionality provided by the penrose crate, working through [the book][5] before diving into
 //! Penrose should be more than enough to get you started.
