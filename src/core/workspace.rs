@@ -256,7 +256,7 @@ impl Workspace {
     pub(crate) fn arrange(
         &self,
         screen_region: Region,
-        managed_workspace_clients: Vec<&Client>,
+        managed_workspace_clients: &[&Client],
     ) -> ArrangeActions {
         if self.clients.len() > 0 {
             let layout = self.layouts.focused_unchecked();
@@ -531,7 +531,8 @@ mod tests {
             Client::new(&conn, 2, 0, &[]),
             Client::new(&conn, 3, 0, &[]),
         ];
-        let res = ws.arrange(Region::new(0, 0, 2000, 1000), clients.iter().collect());
+        let refs: Vec<&Client> = clients.iter().collect();
+        let res = ws.arrange(Region::new(0, 0, 2000, 1000), &refs[..]);
         assert_eq!(res.actions.len(), 3, "actions are not 1-1 for clients")
     }
 

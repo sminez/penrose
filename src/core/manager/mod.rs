@@ -35,6 +35,8 @@ pub use clients::Clients;
 pub use event::EventAction;
 #[doc(inline)]
 pub use screens::Screens;
+// #[doc(inline)]
+// pub use workspaces::Workspaces;
 
 use event::{process_next_event, WmState};
 
@@ -63,13 +65,11 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
 /// [1]: https://github.com/sminez/penrose/tree/develop/examples
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager<X: XConn> {
-    /// The screens being tracked by Penrose
-    pub screens: Screens,
-    /// The clients being tracked by Penrose
-    pub clients: Clients,
     pub(super) conn: X,
     pub(super) config: Config,
     pub(super) workspaces: Ring<Workspace>,
+    pub(super) screens: Screens,
+    pub(super) clients: Clients,
     #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
     pub(super) hooks: Cell<Hooks<X>>,
     pub(super) previous_workspace: usize,
@@ -688,9 +688,8 @@ impl<X: XConn> WindowManager<X> {
 
     fn set_active_client(&mut self, id: Xid) -> Result<()> {
         self.focus_client(&Selector::WinId(id))
-            .map_err(|_| PenroseError::UnknownClient(id))?;
-
-        Ok(())
+            .map_err(|_| PenroseError::UnknownClient(id))
+            .map(|_| ())
     }
 
     // Set the active [Screen] based on an (x, y) [Point]. If point is None then we set
@@ -760,7 +759,7 @@ impl<X: XConn> WindowManager<X> {
             let region = s.region(self.config.show_bar);
             let (border, gap) = (self.config.border_px, self.config.gap_px);
             let managed_workspace_clients = self.clients.clients_for_workspace(wix);
-            let arrange_actions = ws.arrange(region, managed_workspace_clients);
+            let arrange_actions = ws.arrange(region, &managed_workspace_clients);
             self.clients
                 .apply_arrange_actions(arrange_actions, &lc, border, gap, &self.conn)?;
         }
