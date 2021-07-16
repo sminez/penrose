@@ -52,19 +52,39 @@ pub fn paper(
         .collect()
 }
 
-fn dwindle_recurisive(clients: &[&Client], region: &Region, horizontal: bool) -> Vec<ResizeAction> {
+fn dwindle_recurisive(
+    clients: &[&Client],
+    region: &Region,
+    horizontal: bool,
+    min_size: u32,
+) -> Vec<ResizeAction> {
     if clients.len() > 1 {
-        let split = ((if horizontal { region.w } else { region.h } as f32) / 2.) as u32;
-        let (main, other) = if horizontal {
-            region.split_at_width(split)
+        if region.w < min_size || region.h < min_size {
+            clients
+                .iter()
+                .enumerate()
+                .map(|(i, c)| {
+                    if i == 0 {
+                        (c.id(), Some(*region))
+                    } else {
+                        (c.id(), None)
+                    }
+                })
+                .collect()
         } else {
-            region.split_at_height(split)
-        }
-        .unwrap();
+            let split = ((if horizontal { region.w } else { region.h } as f32) / 2.) as u32;
+            let (main, other) = if horizontal {
+                region.split_at_width(split)
+            } else {
+                region.split_at_height(split)
+            }
+            .unwrap();
 
-        let mut vec = dwindle_recurisive(&clients[..clients.len() - 1], &other, !horizontal);
-        vec.push((clients.last().unwrap().id(), Some(main)));
-        vec
+            let mut vec =
+                dwindle_recurisive(&clients[..clients.len() - 1], &other, !horizontal, min_size);
+            vec.push((clients.last().unwrap().id(), Some(main)));
+            vec
+        }
     } else {
         clients
             .get(0)
@@ -86,5 +106,5 @@ pub fn dwindle(
     _: u32,
     _: f32,
 ) -> Vec<ResizeAction> {
-    dwindle_recurisive(clients, monitor_region, true)
+    dwindle_recurisive(clients, monitor_region, true, 50)
 }
