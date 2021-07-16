@@ -29,6 +29,8 @@
 //!
 //! use std::collections::{HashMap, HashSet};
 //!
+//! use tracing::info;
+//!
 //! // Start with the struct itself which will contain any internal state we need to track
 //! pub struct LogAddedClients {
 //!     seen: HashMap<usize, HashSet<Xid>>,
@@ -52,14 +54,14 @@
 //!         wix: usize
 //!     ) -> Result<()> {
 //!         let clients = self.seen.entry(wix).or_insert(HashSet::new());
-//!         let msg = if clients.contains(&id) {
-//!             format!("'{}' has been on '{}' before!", id, wix)
+//!         if clients.contains(&id) {
+//!             info!("'{}' has been on '{}' before!", id, wix)
 //!         } else {
 //!             clients.insert(id);
-//!             format!("'{}' was added to '{}' for the first time", id, wix)
+//!             info!("'{}' was added to '{}' for the first time", id, wix)
 //!         };
 //!
-//!         wm.log(&msg)
+//!         Ok(())
 //!     }
 //! }
 //!

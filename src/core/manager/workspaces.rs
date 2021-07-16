@@ -4,7 +4,7 @@ use crate::{
         client::Client,
         data_types::{Change, Region},
         hooks::HookName,
-        layout::{LayoutConf, LayoutFunc},
+        layout::LayoutConf,
         manager::EventAction,
         ring::{Direction, InsertPoint, Ring, Selector},
         workspace::{ArrangeActions, Workspace},
@@ -13,10 +13,13 @@ use crate::{
     Result,
 };
 
-use std::{
-    collections::HashMap,
-    ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
+
+#[cfg(feature = "serde")]
+use std::collections::HashMap;
+
+#[cfg(feature = "serde")]
+use crate::core::layout::LayoutFunc;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -246,6 +249,7 @@ impl Workspaces {
         self.inner[ix].focused_client()
     }
 
+    #[cfg(feature = "serde")]
     pub fn restore_layout_functions(
         &mut self,
         layout_funcs: &HashMap<&str, LayoutFunc>,

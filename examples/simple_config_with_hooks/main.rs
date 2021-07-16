@@ -32,13 +32,15 @@ use penrose::{
 
 use simplelog::{LevelFilter, SimpleLogger};
 use std::collections::HashMap;
+use tracing::info;
 
 // An example of a simple custom hook. In this case we are creating a NewClientHook which will
 // be run each time a new client program is spawned.
 struct MyClientHook {}
 impl<X: XConn> Hook<X> for MyClientHook {
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
-        wm.log(&format!("new client with WM_CLASS='{}'", c.wm_class()))
+    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+        info!("new client with WM_CLASS='{}'", c.wm_class());
+        Ok(())
     }
 }
 
