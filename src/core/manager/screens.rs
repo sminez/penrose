@@ -1,4 +1,4 @@
-//! Management of screens
+//! State and management of screens being layed out by Penrose.
 use crate::{
     core::{
         data_types::Region,
@@ -12,17 +12,15 @@ use crate::{
 };
 use tracing::{debug, info, trace};
 
-/// State and management of screens being layed out by Penrose.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Screens {
+pub(super) struct Screens {
     pub(super) inner: Ring<Screen>,
     bar_height: u32,
     top_bar: bool,
 }
 
 impl Screens {
-    /// Create a new [Screens] by querying the X Server for currently connected displays.
     pub fn new(bar_height: u32, top_bar: bool) -> Self {
         Self {
             inner: Ring::default(),
@@ -31,69 +29,54 @@ impl Screens {
         }
     }
 
-    /// If the requsted workspace index is out of bounds or not currently visible then return None.
     pub fn indexed_screen_for_workspace(&self, wix: usize) -> Option<(usize, &Screen)> {
         self.inner
             .indexed_element(&Selector::Condition(&|s| s.wix == wix))
     }
 
-    /// The currently focused screen
     pub fn focused(&self) -> &Screen {
         // There is always at least one screen attached
         self.inner.focused_unchecked()
     }
 
-    pub(super) fn focused_mut(&mut self) -> &mut Screen {
+    pub fn focused_mut(&mut self) -> &mut Screen {
         // There is always at least one screen attached
         self.inner.focused_mut_unchecked()
     }
 
-    /// Get a reference to the [Screen] at the requested index if it exists
     pub fn get(&self, index: usize) -> Option<&Screen> {
         self.inner.get(index)
     }
 
-    /// The currently focused screen index
     pub fn focused_index(&self) -> usize {
         self.inner.focused_index()
     }
 
-    /// The ordered list of currently visible [Workspace][0] indices (one per screen).
-    ///
-    /// [0]: crate::core::workspace::Workspace
     pub fn visible_workspaces(&self) -> Vec<usize> {
         self.inner.vec_map(|s| s.wix)
     }
 
-    /// Get a reference to the first Screen satisfying 'selector'. Xid selectors will return
-    /// the screen containing that Client if the client is known.
-    /// NOTE: It is not possible to get a mutable reference to a Screen.
     pub fn screen(&self, selector: &Selector<'_, Screen>) -> Option<&Screen> {
         self.inner.element(selector)
     }
 
-    /// The number of detected screens currently being tracked by the WindowManager.
     pub fn n_screens(&self) -> usize {
         self.inner.len()
     }
 
-    /// The current effective screen size of the target screen. Effective screen size is the
-    /// physical screen size minus any space reserved for a status bar.
     pub fn screen_size(&self, index: usize, bar_visible: bool) -> Option<Region> {
         self.inner.get(index).map(|s| s.region(bar_visible))
     }
 
-    /// The index of the currently focused screen
     pub fn active_screen_index(&self) -> usize {
         self.inner.focused_index()
     }
 
-    /// The index of the active Workspace
     pub fn active_ws_index(&self) -> usize {
         self.inner.focused_unchecked().wix
     }
 
-    pub(super) fn update_known_screens<'a, S>(
+    pub fn update_known_screens<'a, S>(
         &mut self,
         state: &S,
         n_workspaces: usize,
@@ -137,7 +120,7 @@ impl Screens {
         })
     }
 
-    pub(super) fn focus_screen<'a>(&mut self, sel: &Selector<'_, Screen>) -> Vec<EventAction<'a>> {
+    pub fn focus_screen<'a>(&mut self, sel: &Selector<'_, Screen>) -> Vec<EventAction<'a>> {
         match self.inner.focus(sel) {
             Some((true, focused)) => vec![
                 EventAction::SetActiveWorkspace(focused.wix),
@@ -147,7 +130,7 @@ impl Screens {
         }
     }
 
-    pub(super) fn cycle_screen<'a, S>(
+    pub fn cycle_screen<'a, S>(
         &mut self,
         direction: Direction,
         state: &S,

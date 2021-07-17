@@ -1,4 +1,4 @@
-//! Management of clients
+//! State and management of clients being managed by Penrose.
 use crate::{
     core::{
         client::Client,
@@ -19,10 +19,9 @@ use crate::{
 use std::collections::HashMap;
 use tracing::{trace, warn};
 
-/// State and management of clients being managed by Penrose.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Clients {
+pub(super) struct Clients {
     inner: HashMap<Xid, Client>,
     focused_client_id: Option<Xid>,
     focused_border: Color,
@@ -30,7 +29,6 @@ pub struct Clients {
 }
 
 impl Clients {
-    /// Create a new empty client map
     pub fn new(focused_border: impl Into<Color>, unfocused_border: impl Into<Color>) -> Self {
         Self {
             inner: HashMap::new(),
@@ -40,30 +38,23 @@ impl Clients {
         }
     }
 
-    /// Whether or not a client with the given id is currently known
     pub fn is_known(&self, id: Xid) -> bool {
         self.inner.contains_key(&id)
     }
 
-    /// The [Xid] of the client that currently has focus.
-    ///
-    /// `None` if there are no clients to focus.
     pub fn focused_client_id(&self) -> Option<Xid> {
         self.focused_client_id
     }
 
-    /// A reference to the current focused [Client] if there is one
     pub fn focused_client(&self) -> Option<&Client> {
         self.focused_client_id.and_then(|id| self.inner.get(&id))
     }
 
-    /// A mutable reference to the current focused [Client] if there is one
-    pub(super) fn focused_client_mut(&mut self) -> Option<&mut Client> {
+    pub fn focused_client_mut(&mut self) -> Option<&mut Client> {
         self.focused_client_id
             .and_then(move |id| self.inner.get_mut(&id))
     }
 
-    /// A reference to the first [Client] matching the given [Selector]
     pub fn client(&self, selector: &Selector<'_, Client>) -> Option<&Client> {
         match selector {
             Selector::Focused | Selector::Any => self.focused_client(),
@@ -73,7 +64,6 @@ impl Clients {
         }
     }
 
-    /// A mutable reference to the first [Client] matching the given [Selector]
     pub fn client_mut(&mut self, selector: &Selector<'_, Client>) -> Option<&mut Client> {
         match selector {
             Selector::Focused | Selector::Any => self.focused_client_mut(),
@@ -83,7 +73,6 @@ impl Clients {
         }
     }
 
-    /// References to every [Client] matching the given [Selector]
     pub fn matching_clients(&self, selector: &Selector<'_, Client>) -> Vec<&Client> {
         let mut clients: Vec<&Client> = match selector {
             Selector::Any => self.inner.values().collect(),
@@ -97,7 +86,6 @@ impl Clients {
         clients
     }
 
-    /// Mutable references to every [Client] matching the given [Selector]
     pub fn matching_clients_mut(&mut self, selector: &Selector<'_, Client>) -> Vec<&mut Client> {
         let mut clients: Vec<&mut Client> = match selector {
             Selector::Any => self.inner.values_mut().collect(),
@@ -111,7 +99,7 @@ impl Clients {
         clients
     }
 
-    pub(super) fn set_focused<X>(&mut self, id: Xid, conn: &X) -> Option<Xid>
+    pub fn set_focused<X>(&mut self, id: Xid, conn: &X) -> Option<Xid>
     where
         X: XClientConfig,
     {
@@ -128,15 +116,15 @@ impl Clients {
     }
 
     #[allow(dead_code)]
-    pub(super) fn clear_focused(&mut self) {
+    pub fn clear_focused(&mut self) {
         self.focused_client_id = None
     }
 
-    pub(super) fn insert(&mut self, id: Xid, c: Client) -> Option<Client> {
+    pub fn insert(&mut self, id: Xid, c: Client) -> Option<Client> {
         self.inner.insert(id, c)
     }
 
-    pub(super) fn remove(&mut self, id: Xid) -> Option<Client> {
+    pub fn remove(&mut self, id: Xid) -> Option<Client> {
         if self.focused_client_id == Some(id) {
             self.focused_client_id = None;
         }
@@ -144,26 +132,26 @@ impl Clients {
         self.inner.remove(&id)
     }
 
-    pub(super) fn get(&self, id: Xid) -> Option<&Client> {
+    pub fn get(&self, id: Xid) -> Option<&Client> {
         self.inner.get(&id)
     }
 
-    pub(super) fn get_mut(&mut self, id: Xid) -> Option<&mut Client> {
+    pub fn get_mut(&mut self, id: Xid) -> Option<&mut Client> {
         self.inner.get_mut(&id)
     }
 
-    pub(super) fn set_client_workspace(&mut self, id: Xid, wix: usize) {
+    pub fn set_client_workspace(&mut self, id: Xid, wix: usize) {
         self.inner.entry(id).and_modify(|c| c.set_workspace(wix));
     }
 
-    pub(super) fn map_if_needed<X>(&mut self, id: Xid, conn: &X) -> Result<()>
+    pub fn map_if_needed<X>(&mut self, id: Xid, conn: &X) -> Result<()>
     where
         X: XClientHandler,
     {
         Ok(conn.map_client_if_needed(self.inner.get_mut(&id))?)
     }
 
-    pub(super) fn unmap_if_needed<X>(&mut self, id: Xid, conn: &X) -> Result<()>
+    pub fn unmap_if_needed<X>(&mut self, id: Xid, conn: &X) -> Result<()>
     where
         X: XClientHandler,
     {
@@ -174,25 +162,25 @@ impl Clients {
     // the id does not map to a [WindowManager] managed [Client] which happens if the window
     // is unmanaged (e.g. a dock or toolbar) or if a client [Hook] has requested ownership
     // of that particular [Client].
-    pub(super) fn workspace_index_for_client(&self, id: Xid) -> Option<usize> {
+    pub fn workspace_index_for_client(&self, id: Xid) -> Option<usize> {
         self.inner.get(&id).map(|c| c.workspace())
     }
 
-    pub(super) fn clients_for_workspace(&self, wix: usize) -> Vec<&Client> {
+    pub fn clients_for_workspace(&self, wix: usize) -> Vec<&Client> {
         self.matching_clients(&Selector::Condition(&|c: &Client| c.workspace == wix))
     }
 
-    pub(super) fn all_known_ids(&self) -> Vec<Xid> {
+    pub fn all_known_ids(&self) -> Vec<Xid> {
         self.inner.keys().copied().collect()
     }
 
-    pub(super) fn modify(&mut self, id: Xid, f: impl Fn(&mut Client)) {
+    pub fn modify(&mut self, id: Xid, f: impl Fn(&mut Client)) {
         self.inner.entry(id).and_modify(f);
     }
 
     // Set X focus to the requested client if it accepts focus, otherwise send a
     // 'take focus' event for the client to process
-    pub(super) fn set_x_focus<X>(&self, id: Xid, accepts_focus: bool, conn: &X) -> Result<()>
+    pub fn set_x_focus<X>(&self, id: Xid, accepts_focus: bool, conn: &X) -> Result<()>
     where
         X: XState + XEventHandler + XClientConfig + XClientHandler + XClientProperties,
     {
@@ -219,7 +207,7 @@ impl Clients {
         Ok(())
     }
 
-    pub(super) fn focus_in<X>(&self, id: Xid, conn: &X) -> Result<()>
+    pub fn focus_in<X>(&self, id: Xid, conn: &X) -> Result<()>
     where
         X: XState + XEventHandler + XClientConfig + XClientHandler + XClientProperties,
     {
@@ -233,7 +221,7 @@ impl Clients {
 
     // The given X window ID lost focus according to the X server
     #[tracing::instrument(level = "trace", skip(self, conn))]
-    pub(super) fn client_lost_focus<X>(&mut self, id: Xid, conn: &X)
+    pub fn client_lost_focus<X>(&mut self, id: Xid, conn: &X)
     where
         X: XClientConfig,
     {
@@ -250,7 +238,7 @@ impl Clients {
     }
 
     // The given window ID has had its EWMH name updated by something
-    pub(super) fn client_name_changed<'a, X>(
+    pub fn client_name_changed<'a, X>(
         &mut self,
         id: Xid,
         is_root: bool,
@@ -271,7 +259,7 @@ impl Clients {
         )))
     }
 
-    pub(super) fn apply_arrange_actions<X>(
+    pub fn apply_arrange_actions<X>(
         &mut self,
         actions: ArrangeActions,
         lc: &LayoutConf,
@@ -302,7 +290,7 @@ impl Clients {
         Ok(())
     }
 
-    pub(super) fn toggle_fullscreen<'a, X>(
+    pub fn toggle_fullscreen<'a, X>(
         &mut self,
         id: Xid,
         wix: usize,
