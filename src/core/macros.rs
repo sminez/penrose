@@ -6,8 +6,8 @@
 ///
 /// ```no_run
 /// # #[macro_use] extern crate penrose;
-/// # use penrose::__example_helpers::*;
-/// # fn example() -> ExampleKeyHandler {
+/// # use penrose::__test_helpers::*;
+/// # fn example() -> TestKeyHandler {
 /// # Box::new(
 /// run_external!("dmenu_run")
 /// # )}
@@ -25,8 +25,8 @@ macro_rules! run_external {
 ///
 /// ```no_run
 /// # #[macro_use] extern crate penrose;
-/// # use penrose::__example_helpers::*;
-/// # fn example() -> ExampleKeyHandler {
+/// # use penrose::__test_helpers::*;
+/// # fn example() -> TestKeyHandler {
 /// # Box::new(
 /// run_internal!(cycle_client, Forward)
 /// # )}
@@ -103,8 +103,8 @@ macro_rules! map {
 ///
 /// ```no_run
 /// # #[macro_use] extern crate penrose;
-/// # use penrose::__example_helpers::*;
-/// # fn example() -> ExampleKeyBindings {
+/// # use penrose::__test_helpers::*;
+/// # fn example() -> TestKeyBindings {
 /// let key_bindings = gen_keybindings! {
 ///     "M-semicolon" => run_external!("dmenu_run");
 ///     "M-Return" => run_external!("alacritty");
@@ -140,8 +140,8 @@ macro_rules! map {
 ///
 /// ```no_run
 /// # #[macro_use] extern crate penrose;
-/// # use penrose::__example_helpers::*;
-/// # fn example() -> ExampleKeyBindings {
+/// # use penrose::__test_helpers::*;
+/// # fn example() -> TestKeyBindings {
 /// # gen_keybindings! {
 /// "M-j" => run_internal!(cycle_client, Forward);
 /// "M-S-j" => run_internal!(drag_client, Forward);
@@ -162,8 +162,8 @@ macro_rules! map {
 ///
 /// ```no_run
 /// # #[macro_use] extern crate penrose;
-/// # use penrose::__example_helpers::*;
-/// # fn example() -> ExampleKeyBindings {
+/// # use penrose::__test_helpers::*;
+/// # fn example() -> TestKeyBindings {
 /// # gen_keybindings! {
 /// // VAL: values are passed to the method directly
 /// map: { "Up", "Down" } to vec![More, Less] => {

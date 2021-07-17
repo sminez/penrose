@@ -156,7 +156,7 @@ pub mod xcb;
 pub mod x11rb;
 
 #[doc(hidden)]
-pub mod __example_helpers;
+pub mod __test_helpers;
 
 #[doc(hidden)]
 pub use penrose_proc::validate_user_bindings;

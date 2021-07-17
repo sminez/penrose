@@ -106,14 +106,14 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// let ids: Vec<Xid> = workspace.iter().map(|id| *id).collect();
     ///
     /// assert_eq!(ids, vec![0, 1, 2, 3, 4]);
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 5)).unwrap();
+    /// # example(test_workspace("example", 5)).unwrap();
     /// ```
     pub fn iter(&self) -> std::collections::vec_deque::Iter<'_, Xid> {
         self.clients.iter()
@@ -124,12 +124,12 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0, 1, 2, 3, 4]);
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 5)).unwrap();
+    /// # example(test_workspace("example", 5)).unwrap();
     /// ```
     pub fn client_ids(&self) -> Vec<Xid> {
         self.clients.as_vec()
@@ -140,7 +140,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.focused_client(), Some(0));
     ///
@@ -148,7 +148,7 @@ impl Workspace {
     /// assert_eq!(workspace.focused_client(), Some(2));
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 5)).unwrap();
+    /// # example(test_workspace("example", 5)).unwrap();
     /// ```
     pub fn focused_client(&self) -> Option<Xid> {
         self.clients.focused().copied()
@@ -159,7 +159,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> penrose::Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0]);
     ///
@@ -170,7 +170,7 @@ impl Workspace {
     /// assert_eq!(workspace.client_ids(), vec![2, 0, 1]);
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 1)).unwrap();
+    /// # example(test_workspace("example", 1)).unwrap();
     /// ```
     pub fn add_client(&mut self, id: Xid, ip: &InsertPoint) -> Result<()> {
         let existing = self.clients.element(&Selector::Condition(&|c| *c == id));
@@ -188,7 +188,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.focused_client(), Some(0));
     ///
@@ -196,7 +196,7 @@ impl Workspace {
     /// assert_eq!(workspace.focused_client(), Some(3));
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 5)).unwrap();
+    /// # example(test_workspace("example", 5)).unwrap();
     /// ```
     pub fn focus_client(&mut self, id: Xid) -> Option<Xid> {
         let prev = self.clients.focused().copied();
@@ -211,7 +211,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0, 1, 2, 3, 4]);
     ///
@@ -222,7 +222,7 @@ impl Workspace {
     /// assert_eq!(workspace.client_ids(), vec![0, 1, 3, 4]);
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 5)).unwrap();
+    /// # example(test_workspace("example", 5)).unwrap();
     /// ```
     pub fn remove_client(&mut self, id: Xid) -> Option<Xid> {
         self.clients.remove(&Selector::Condition(&|c| *c == id))
@@ -234,7 +234,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0, 1]);
     /// assert_eq!(workspace.focused_client(), Some(0));
@@ -245,7 +245,7 @@ impl Workspace {
     /// assert_eq!(workspace.client_ids(), vec![]);
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 2)).unwrap();
+    /// # example(test_workspace("example", 2)).unwrap();
     /// ```
     pub fn remove_focused_client(&mut self) -> Option<Xid> {
         self.clients.remove(&Selector::Focused)
@@ -288,7 +288,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.layout_symbol(), "first");
     ///
@@ -299,7 +299,7 @@ impl Workspace {
     /// assert_eq!(workspace.layout_symbol(), "second");
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 2)).unwrap();
+    /// # example(test_workspace("example", 2)).unwrap();
     /// ```
     pub fn try_set_layout(&mut self, symbol: &str) -> Option<&Layout> {
         self.layouts
@@ -312,14 +312,14 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.layout_symbol(), "first");
     /// assert_eq!(workspace.cycle_layout(Forward), "second");
     /// assert_eq!(workspace.cycle_layout(Forward), "first");
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 2)).unwrap();
+    /// # example(test_workspace("example", 2)).unwrap();
     /// ```
     pub fn cycle_layout(&mut self, direction: Direction) -> &str {
         self.layouts.cycle_focus(direction);
@@ -331,12 +331,12 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.layout_symbol(), "first");
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 2)).unwrap();
+    /// # example(test_workspace("example", 2)).unwrap();
     /// ```
     pub fn layout_symbol(&self) -> &str {
         &self.layouts.focused_unchecked().symbol
@@ -348,12 +348,12 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.layout_conf(), LayoutConf::default());
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 2)).unwrap();
+    /// # example(test_workspace("example", 2)).unwrap();
     /// ```
     pub fn layout_conf(&self) -> LayoutConf {
         self.layouts.focused_unchecked().conf
@@ -365,7 +365,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0, 1, 2]);
     /// assert_eq!(workspace.focused_client(), Some(0));
@@ -374,7 +374,7 @@ impl Workspace {
     /// assert_eq!(workspace.cycle_client(Forward), Some((2, 0)));
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 3)).unwrap();
+    /// # example(test_workspace("example", 3)).unwrap();
     /// ```
     pub fn cycle_client(&mut self, direction: Direction) -> Option<(Xid, Xid)> {
         if self.clients.len() < 2 {
@@ -399,7 +399,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0, 1, 2]);
     /// assert_eq!(workspace.focused_client(), Some(0));
@@ -409,7 +409,7 @@ impl Workspace {
     /// assert_eq!(workspace.focused_client(), Some(0));
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 3)).unwrap();
+    /// # example(test_workspace("example", 3)).unwrap();
     /// ```
     pub fn drag_client(&mut self, direction: Direction) -> Option<Xid> {
         if !self.layout_conf().allow_wrapping && self.clients.would_wrap(direction) {
@@ -423,7 +423,7 @@ impl Workspace {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
+    /// # use penrose::__test_helpers::*;
     /// # fn example(mut workspace: Workspace) -> Result<()> {
     /// assert_eq!(workspace.client_ids(), vec![0, 1, 2, 3]);
     /// assert_eq!(workspace.focused_client(), Some(0));
@@ -437,7 +437,7 @@ impl Workspace {
     /// assert_eq!(workspace.focused_client(), Some(2));
     /// # Ok(())
     /// # }
-    /// # example(example_workspace("example", 4)).unwrap();
+    /// # example(test_workspace("example", 4)).unwrap();
     /// ```
     pub fn rotate_clients(&mut self, direction: Direction) {
         self.clients.rotate(direction)

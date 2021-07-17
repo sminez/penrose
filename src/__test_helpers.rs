@@ -1,10 +1,10 @@
-//! Internal doc-test example helpers. NOT A PUBLIC API
+//! Internal test helpers. NOT A PUBLIC API
 //!
 //! # WARNING
 //!
 //! The contents of this module can and will be modified in breaking ways that will not be refleted
 //! in the semantic versioning of Penrose itself. This module is intended purely for supporting
-//! internal doc tests and reducing boilerplate.
+//! internal tests and reducing boilerplate.
 pub use crate::{
     core::{
         bindings::{KeyBindings, KeyCode, KeyEventHandler, MouseBindings},
@@ -24,10 +24,10 @@ pub use crate::{
 
 pub use std::{cell::Cell, collections::HashMap, fmt};
 
-pub type ExampleWM = WindowManager<ExampleXConn>;
-pub type ExampleKeyBindings = KeyBindings<ExampleXConn>;
-pub type ExampleKeyHandler = KeyEventHandler<ExampleXConn>;
-pub type ExampleMouseBindings = MouseBindings<ExampleXConn>;
+pub type TestWM = WindowManager<TestXConn>;
+pub type TestKeyBindings = KeyBindings<TestXConn>;
+pub type TestKeyHandler = KeyEventHandler<TestXConn>;
+pub type TestMouseBindings = MouseBindings<TestXConn>;
 
 pub const EXIT_CODE: KeyCode = KeyCode { mask: 0, code: 0 };
 pub const LAYOUT_CHANGE_CODE: KeyCode = KeyCode { mask: 0, code: 1 };
@@ -38,10 +38,10 @@ pub const KILL_CLIENT_CODE: KeyCode = KeyCode { mask: 0, code: 5 };
 pub const ADD_WORKSPACE_CODE: KeyCode = KeyCode { mask: 0, code: 6 };
 pub const CLIENT_TO_WORKSPACE_CODE: KeyCode = KeyCode { mask: 0, code: 7 };
 
-pub fn example_windowmanager(n_screens: u32, events: Vec<XEvent>) -> ExampleWM {
-    let conn = ExampleXConn::new(n_screens, events, vec![]);
+pub fn test_windowmanager(n_screens: u32, events: Vec<XEvent>) -> TestWM {
+    let conn = TestXConn::new(n_screens, events, vec![]);
     let conf = Config {
-        layouts: example_layouts(),
+        layouts: test_layouts(),
         ..Default::default()
     };
     let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
@@ -50,20 +50,20 @@ pub fn example_windowmanager(n_screens: u32, events: Vec<XEvent>) -> ExampleWM {
     wm
 }
 
-pub fn example_workspace(name: impl Into<String>, n_clients: u32) -> Workspace {
-    let mut ws = Workspace::new(name, example_layouts());
+pub fn test_workspace(name: impl Into<String>, n_clients: u32) -> Workspace {
+    let mut ws = Workspace::new(name, test_layouts());
     (0..n_clients).for_each(|n| ws.add_client(n, &InsertPoint::Last).unwrap());
 
     ws
 }
 
-pub fn example_screens(n: u32) -> Vec<Screen> {
+pub fn test_screens(n: u32) -> Vec<Screen> {
     (0..n)
         .map(|i| Screen::new(Region::new(1080 * n, 800 * n, 1080, 800), i as usize))
         .collect()
 }
 
-pub fn example_layouts() -> Vec<Layout> {
+pub fn test_layouts() -> Vec<Layout> {
     vec![
         Layout::new("first", LayoutConf::default(), row_layout, 1, 0.6),
         Layout::new("second", LayoutConf::default(), row_layout, 1, 0.6),
@@ -89,16 +89,16 @@ pub fn n_clients(n: u32) -> Vec<XEvent> {
     (0..n).map(|id| XEvent::MapRequest(id, false)).collect()
 }
 
-pub fn example_key_bindings() -> ExampleKeyBindings {
+pub fn test_key_bindings() -> TestKeyBindings {
     map! {
         EXIT_CODE =>
-            Box::new(|wm: &mut ExampleWM| wm.exit()) as ExampleKeyHandler,
+            Box::new(|wm: &mut TestWM| wm.exit()) as TestKeyHandler,
         LAYOUT_CHANGE_CODE =>
             Box::new(|wm| wm.cycle_layout(Forward)),
         WORKSPACE_CHANGE_CODE =>
             Box::new(|wm| wm.focus_workspace(&Selector::Index(1))),
         ADD_WORKSPACE_CODE =>
-            Box::new(|wm| wm.push_workspace(Workspace::new("new", example_layouts()))),
+            Box::new(|wm| wm.push_workspace(Workspace::new("new", test_layouts()))),
         SCREEN_CHANGE_CODE =>
             Box::new(|wm| wm.cycle_screen(Forward)),
         FOCUS_CHANGE_CODE =>
@@ -110,12 +110,12 @@ pub fn example_key_bindings() -> ExampleKeyBindings {
     }
 }
 
-pub fn example_mouse_bindings() -> ExampleMouseBindings {
+pub fn test_mouse_bindings() -> TestMouseBindings {
     map! {}
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct ExampleXConn {
+pub struct TestXConn {
     #[cfg_attr(feature = "serde", serde(skip))]
     events: Cell<Vec<XEvent>>,
     focused: Cell<Xid>,
@@ -123,7 +123,7 @@ pub struct ExampleXConn {
     unmanaged_ids: Vec<Xid>,
 }
 
-impl fmt::Debug for ExampleXConn {
+impl fmt::Debug for TestXConn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ExampleXConn")
             .field("n_screens", &self.n_screens.get())
@@ -134,8 +134,8 @@ impl fmt::Debug for ExampleXConn {
     }
 }
 
-impl ExampleXConn {
-    /// Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
+impl TestXConn {
+    // Set up a new [MockXConn] with pre-defined [Screen]s and an event stream to pull from
     pub fn new(n_screens: u32, events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> Self {
         Self {
             events: Cell::new(events),
@@ -161,7 +161,7 @@ impl ExampleXConn {
 }
 
 __impl_stub_xcon! {
-    for ExampleXConn;
+    for TestXConn;
 
     atom_queries: {}
     client_properties: {}

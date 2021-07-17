@@ -919,8 +919,8 @@ impl<X: XConn> WindowManager<X> {
     /// # Example
     ///
     /// ```
-    /// # use penrose::__example_helpers::*;
-    /// # fn example(mut manager: ExampleWM) -> penrose::Result<()> {
+    /// # use penrose::__test_helpers::*;
+    /// # fn example(mut manager: TestWM) -> penrose::Result<()> {
     /// // Starting with three clients that have been inserted via InsertPoint::First
     /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
     ///
@@ -937,9 +937,9 @@ impl<X: XConn> WindowManager<X> {
     /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
     /// # Ok(())
     /// # }
-    /// # let mut manager = example_windowmanager(1, n_clients(3));
+    /// # let mut manager = test_windowmanager(1, n_clients(3));
     /// # manager.init().unwrap();
-    /// # manager.grab_keys_and_run(example_key_bindings(), example_mouse_bindings()).unwrap();
+    /// # manager.grab_keys_and_run(test_key_bindings(), test_mouse_bindings()).unwrap();
     /// # example(manager).unwrap();
     /// ```
     pub fn set_client_insert_point(&mut self, cip: InsertPoint) -> Result<()> {
@@ -1294,9 +1294,9 @@ impl<X: XConn> WindowManager<X> {
 mod tests {
     use super::*;
     use crate::{
-        __example_helpers::{
-            example_key_bindings, example_layouts, example_mouse_bindings, example_windowmanager,
-            n_clients, RecordedCall, RecordingXConn,
+        __test_helpers::{
+            n_clients, test_key_bindings, test_layouts, test_mouse_bindings, test_windowmanager,
+            RecordedCall, RecordingXConn,
         },
         core::{
             data_types::*,
@@ -1314,7 +1314,7 @@ mod tests {
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> WindowManager<MockXConn> {
         let conn = MockXConn::new(test_screens(), events, unmanaged_ids);
         let conf = Config {
-            layouts: test_layouts(false),
+            layouts: focus_test_layouts(false),
             ..Default::default()
         };
         let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
@@ -1323,7 +1323,7 @@ mod tests {
         wm
     }
 
-    fn test_layouts(follow_focus: bool) -> Vec<Layout> {
+    fn focus_test_layouts(follow_focus: bool) -> Vec<Layout> {
         let conf = LayoutConf {
             follow_focus,
             ..Default::default()
@@ -1630,7 +1630,7 @@ mod tests {
                 fn [<layout_trigger_test _ $method>]() {
                     let conn = RecordingXConn::init();
                     let conf = Config {
-                        layouts: test_layouts(false),
+                        layouts: focus_test_layouts(false),
                         ..Default::default()
                     };
                     let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
@@ -1778,7 +1778,7 @@ mod tests {
         body: {
             let conn = RecordingXConn::init();
             let conf = Config {
-                layouts: test_layouts(follow_focus),
+                layouts: focus_test_layouts(follow_focus),
                 focused_border: Color::try_from("#00ff00").unwrap(),
                 unfocused_border: Color::try_from("#ff0000").unwrap(),
                 ..Default::default()
@@ -1801,7 +1801,7 @@ mod tests {
 
     #[test]
     fn cycle_screen_updates_active() {
-        let mut wm = example_windowmanager(2, vec![]);
+        let mut wm = test_windowmanager(2, vec![]);
 
         assert_eq!(wm.active_screen_index(), 0);
         wm.cycle_screen(Forward).unwrap();
@@ -1812,7 +1812,7 @@ mod tests {
 
     #[test]
     fn cycle_workspace_updates_focused() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
         assert_eq!(wm.focused_workspaces(), vec![0]);
         wm.cycle_workspace(Forward).unwrap();
@@ -1824,7 +1824,7 @@ mod tests {
 
     #[test]
     fn drag_workspace_move_focused_workspaces_between_screens() {
-        let mut wm = example_windowmanager(2, vec![]);
+        let mut wm = test_windowmanager(2, vec![]);
 
         assert_eq!(wm.focused_workspaces(), vec![0, 1]);
         wm.drag_workspace(Forward).unwrap();
@@ -1833,9 +1833,9 @@ mod tests {
 
     #[test]
     fn cycle_client_updates_focus() {
-        let mut wm = example_windowmanager(1, n_clients(3));
+        let mut wm = test_windowmanager(1, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), HashMap::new())
+        wm.grab_keys_and_run(test_key_bindings(), HashMap::new())
             .unwrap();
         wm.focus_client(&Selector::WinId(0)).unwrap();
 
@@ -1850,9 +1850,9 @@ mod tests {
 
     #[test]
     fn focus_client() {
-        let mut wm = example_windowmanager(1, n_clients(3));
+        let mut wm = test_windowmanager(1, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), HashMap::new())
+        wm.grab_keys_and_run(test_key_bindings(), HashMap::new())
             .unwrap();
 
         let focused = wm.focus_client(&Selector::WinId(0));
@@ -1867,16 +1867,16 @@ mod tests {
 
     #[test]
     fn focus_client_no_clients() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
         let focused = wm.focus_client(&Selector::WinId(0));
         assert!(focused.is_err());
     }
 
     #[test]
     fn rotate_clients() {
-        let mut wm = example_windowmanager(1, n_clients(3));
+        let mut wm = test_windowmanager(1, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(wm.active_workspace().client_ids(), vec![2, 1, 0]);
@@ -1886,9 +1886,9 @@ mod tests {
 
     #[test]
     fn drag_client() {
-        let mut wm = example_windowmanager(1, n_clients(4));
+        let mut wm = test_windowmanager(1, n_clients(4));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(wm.active_workspace().client_ids(), vec![3, 2, 1, 0]);
@@ -1900,7 +1900,7 @@ mod tests {
 
     #[test]
     fn cycle_layout() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
         assert_eq!(wm.current_layout_symbol(), "first");
         wm.cycle_layout(Forward).unwrap();
@@ -1911,7 +1911,7 @@ mod tests {
 
     #[test]
     fn focus_workspace() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
         assert_eq!(wm.active_workspace().name(), "1");
         wm.focus_workspace(&Selector::Index(3)).unwrap();
@@ -1923,7 +1923,7 @@ mod tests {
 
     #[test]
     fn toggle_workspace() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
         wm.focus_workspace(&Selector::Index(1)).unwrap();
         assert_eq!(wm.active_workspace().name(), "2");
@@ -1935,9 +1935,9 @@ mod tests {
 
     #[test]
     fn client_to_workspace() {
-        let mut wm = example_windowmanager(1, n_clients(3));
+        let mut wm = test_windowmanager(1, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(wm.active_workspace().client_ids(), vec![2, 1, 0]);
@@ -1948,9 +1948,9 @@ mod tests {
 
     #[test]
     fn client_to_screen() {
-        let mut wm = example_windowmanager(2, n_clients(3));
+        let mut wm = test_windowmanager(2, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(wm.focused_workspaces(), vec![0, 1]);
@@ -1965,9 +1965,9 @@ mod tests {
 
     #[test]
     fn toggle_client_fullscreen() {
-        let mut wm = example_windowmanager(1, n_clients(1));
+        let mut wm = test_windowmanager(1, n_clients(1));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert!(!wm.client(&Selector::Focused).unwrap().is_fullscreen(),);
@@ -1979,9 +1979,9 @@ mod tests {
 
     #[test]
     fn screen() {
-        let mut wm = example_windowmanager(2, n_clients(3));
+        let mut wm = test_windowmanager(2, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(wm.active_workspace().client_ids(), vec![2, 1, 0]);
@@ -2002,9 +2002,9 @@ mod tests {
 
     #[test]
     fn add_workspace() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
-        let ws = Workspace::new("new", example_layouts());
+        let ws = Workspace::new("new", test_layouts());
         wm.add_workspace(1, ws).unwrap();
 
         let new_names: Vec<_> = wm
@@ -2021,9 +2021,9 @@ mod tests {
 
     #[test]
     fn push_workspace() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
-        let ws = Workspace::new("new", example_layouts());
+        let ws = Workspace::new("new", test_layouts());
         wm.push_workspace(ws).unwrap();
 
         let new_names: Vec<_> = wm
@@ -2040,7 +2040,7 @@ mod tests {
 
     #[test]
     fn remove_workspace() {
-        let mut wm = example_windowmanager(1, vec![]);
+        let mut wm = test_windowmanager(1, vec![]);
 
         let removed = wm.remove_workspace(&Selector::Index(2)).unwrap();
         assert!(removed.is_some());
@@ -2057,9 +2057,9 @@ mod tests {
 
     #[test]
     fn client() {
-        let mut wm = example_windowmanager(1, n_clients(3));
+        let mut wm = test_windowmanager(1, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(wm.client(&Selector::Focused).unwrap().id(), 2);
@@ -2068,9 +2068,9 @@ mod tests {
 
     #[test]
     fn client_mut() {
-        let mut wm = example_windowmanager(1, n_clients(3));
+        let mut wm = test_windowmanager(1, n_clients(3));
         wm.init().unwrap();
-        wm.grab_keys_and_run(example_key_bindings(), example_mouse_bindings())
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
             .unwrap();
 
         assert_eq!(

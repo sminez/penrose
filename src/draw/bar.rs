@@ -10,7 +10,7 @@
 //!
 //! Example
 //! ```no_run
-//! # use penrose::__example_helpers::*;
+//! # use penrose::__test_helpers::*;
 //! use penrose::core::hooks::Hooks;
 //! use penrose::draw::{Color, dwm_bar, TextStyle};
 //! use penrose::xcb::{XcbDraw, new_xcb_backed_window_manager};
