@@ -69,7 +69,6 @@ pub struct WindowManager<X: XConn> {
     #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
     pub(super) hooks: Cell<Hooks<X>>,
     pub(super) previous_workspace: usize,
-    pub(super) client_insert_point: InsertPoint,
     pub(super) running: bool,
     #[cfg_attr(feature = "serde", serde(skip, default = "logging_error_handler"))]
     pub(super) error_handler: ErrorHandler,
@@ -87,7 +86,6 @@ impl<X: XConn> fmt::Debug for WindowManager<X> {
             .field("screens", &self.screens)
             .field("hooks", &stringify!(self.hooks))
             .field("previous_workspace", &self.previous_workspace)
-            .field("client_insert_point", &self.client_insert_point)
             .field("running", &self.running)
             .finish()
     }
@@ -120,7 +118,6 @@ impl<X: XConn> WindowManager<X> {
             clients,
             previous_workspace: 0,
             hooks: Cell::new(hooks),
-            client_insert_point: InsertPoint::First,
             running: false,
             hydrated: true,
             error_handler,
@@ -915,33 +912,6 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Set the insert point for new clients. Default is to insert at index 0.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use penrose::__test_helpers::*;
-    /// # fn example(mut manager: TestWM) -> penrose::Result<()> {
-    /// // Starting with three clients that have been inserted via InsertPoint::First
-    /// assert_eq!(manager.active_workspace().client_ids(), vec![2, 1, 0]);
-    ///
-    /// // Move them all over to another workspace, still using InsertPoint::First
-    /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(1)));
-    /// manager.focus_workspace(&Selector::Index(1))?;
-    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
-    ///
-    /// // Change to InsertPoint::Last and move them back
-    /// manager.set_client_insert_point(InsertPoint::Last)?;
-    ///
-    /// (0..3).try_for_each(|_| manager.client_to_workspace(&Selector::Index(0)));
-    /// manager.focus_workspace(&Selector::Index(0))?;
-    /// assert_eq!(manager.active_workspace().client_ids(), vec![0, 1, 2]);
-    /// # Ok(())
-    /// # }
-    /// # let mut manager = test_windowmanager(1, n_clients(3));
-    /// # manager.init().unwrap();
-    /// # manager.grab_keys_and_run(test_key_bindings(), test_mouse_bindings()).unwrap();
-    /// # example(manager).unwrap();
-    /// ```
     pub fn set_client_insert_point(&mut self, cip: InsertPoint) -> Result<()> {
         self.workspaces.set_client_insert_point(cip);
 
@@ -1144,21 +1114,11 @@ impl<X: XConn> WindowManager<X> {
     }
 
     /// Get a vector of immutable references to _all_ workspaces that match the provided [Selector].
-    ///
-    /// To return only a single workspace in the case that a selector matches multiple workspaces,
-    /// use the [workspace][1] method instead.
-    ///
-    /// [1]: crate::core::manager::WindowManager::workspace
     pub fn all_workspaces(&self, selector: &Selector<'_, Workspace>) -> Vec<&Workspace> {
         self.workspaces.matching_workspaces(selector)
     }
 
     /// Get a vector of mutable references to _all_ workspaces that match the provided [Selector].
-    ///
-    /// To return only a single workspace in the case that a selector matches multiple workspaces,
-    /// use the [workspace_mut][1] method instead.
-    ///
-    /// [1]: crate::core::manager::WindowManager::workspace_mut
     pub fn all_workspaces_mut(
         &mut self,
         selector: &Selector<'_, Workspace>,
@@ -1258,16 +1218,18 @@ impl<X: XConn> WindowManager<X> {
     /// to the root window not any individual screen).
     pub fn position_client(&self, id: Xid, region: Region, stack_above: bool) -> Result<()> {
         let bpx = self.config.border_px;
-        Ok(self.conn.position_client(id, region, bpx, stack_above)?)
+        self.conn
+            .position_client(id, region, bpx, stack_above)
+            .map_err(|e| e.into())
     }
 
     /// Make the Client with ID 'id' visible at its last known position.
     pub fn show_client(&mut self, id: Xid) -> Result<()> {
         self.clients.map_if_needed(id, &self.conn)?;
         // TODO: is this right? Need to double check...
-        Ok(self
-            .conn
-            .set_client_workspace(id, self.screens.active_ws_index())?)
+        self.conn
+            .set_client_workspace(id, self.screens.active_ws_index())
+            .map_err(|e| e.into())
     }
 
     /// Hide the Client with ID 'id'.
@@ -1295,8 +1257,8 @@ mod tests {
     use super::*;
     use crate::{
         __test_helpers::{
-            n_clients, test_key_bindings, test_layouts, test_mouse_bindings, test_windowmanager,
-            RecordedCall, RecordingXConn,
+            n_clients, test_key_bindings, test_mouse_bindings, test_windowmanager, RecordedCall,
+            RecordingXConn,
         },
         core::{
             data_types::*,
@@ -1998,61 +1960,6 @@ mod tests {
             wm.screen(&Selector::WinId(2)),
             wm.screen(&Selector::Index(1)),
         );
-    }
-
-    #[test]
-    fn add_workspace() {
-        let mut wm = test_windowmanager(1, vec![]);
-
-        let ws = Workspace::new("new", test_layouts());
-        wm.add_workspace(1, ws).unwrap();
-
-        let new_names: Vec<_> = wm
-            .all_workspaces(&Selector::Any)
-            .iter()
-            .map(|w| w.name())
-            .collect();
-
-        assert_eq!(
-            new_names,
-            vec!["1", "new", "2", "3", "4", "5", "6", "7", "8", "9"]
-        );
-    }
-
-    #[test]
-    fn push_workspace() {
-        let mut wm = test_windowmanager(1, vec![]);
-
-        let ws = Workspace::new("new", test_layouts());
-        wm.push_workspace(ws).unwrap();
-
-        let new_names: Vec<_> = wm
-            .all_workspaces(&Selector::Any)
-            .iter()
-            .map(|w| w.name())
-            .collect();
-
-        assert_eq!(
-            new_names,
-            vec!["1", "2", "3", "4", "5", "6", "7", "8", "9", "new"]
-        );
-    }
-
-    #[test]
-    fn remove_workspace() {
-        let mut wm = test_windowmanager(1, vec![]);
-
-        let removed = wm.remove_workspace(&Selector::Index(2)).unwrap();
-        assert!(removed.is_some());
-        assert_eq!(removed.unwrap().name(), "3");
-
-        let new_names: Vec<_> = wm
-            .all_workspaces(&Selector::Any)
-            .iter()
-            .map(|w| w.name())
-            .collect();
-
-        assert_eq!(new_names, vec!["1", "2", "4", "5", "6", "7", "8", "9"]);
     }
 
     #[test]

@@ -259,3 +259,86 @@ impl Workspaces {
             .try_for_each(|ws| ws.restore_layout_functions(&layout_funcs))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::__test_helpers::*;
+
+    // 9 empty workspaces
+    fn workspaces() -> Workspaces {
+        Workspaces::new(
+            (1..10)
+                .map(|ix| test_workspace(format!("{}", ix), 0))
+                .collect(),
+            0.1,
+        )
+    }
+
+    #[test]
+    fn add_workspace() {
+        let mut wss = workspaces();
+
+        wss.add_workspace(1, test_workspace("new", 0));
+        assert_eq!(
+            wss.workspace_names(),
+            vec!["1", "new", "2", "3", "4", "5", "6", "7", "8", "9"]
+        );
+    }
+
+    #[test]
+    fn push_workspace() {
+        let mut wss = workspaces();
+
+        wss.push_workspace(test_workspace("new", 0));
+        assert_eq!(
+            wss.workspace_names(),
+            vec!["1", "2", "3", "4", "5", "6", "7", "8", "9", "new"]
+        );
+    }
+
+    #[test]
+    fn remove_workspace() {
+        let mut wss = workspaces();
+
+        let removed = wss.remove_workspace(&Selector::Index(2)).unwrap();
+        assert_eq!(removed.name(), "3");
+        assert_eq!(
+            wss.workspace_names(),
+            vec!["1", "2", "4", "5", "6", "7", "8", "9"]
+        );
+    }
+
+    #[test]
+    fn remove_workspace_unknown_is_error() {
+        let mut wss = workspaces();
+
+        let res = wss.remove_workspace(&Selector::Index(42));
+        assert!(res.is_err())
+    }
+
+    // Full tests of Ring::insert are handled in ring.rs
+    // This is just to validate that Workspaces honours the insert point being set
+    #[test]
+    fn set_client_insert_point() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 2)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0, 1]);
+
+        wss.set_client_insert_point(InsertPoint::First);
+        wss.add_client(0, 2).unwrap();
+        assert_eq!(wss[0].client_ids(), vec![2, 0, 1]);
+
+        wss.set_client_insert_point(InsertPoint::Last);
+        wss.add_client(0, 3).unwrap();
+        assert_eq!(wss[0].client_ids(), vec![2, 0, 1, 3]);
+    }
+
+    #[test]
+    fn add_duplicate_client_is_error() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 1)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0]);
+
+        let res = wss.add_client(0, 0);
+        assert!(res.is_err());
+    }
+}
