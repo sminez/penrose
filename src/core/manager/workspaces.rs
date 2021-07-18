@@ -129,7 +129,7 @@ impl Workspaces {
         self.inner.len()
     }
 
-    pub fn add_client<'a>(&mut self, wix: usize, id: Xid) -> Result<Option<EventAction<'a>>> {
+    pub fn add_client(&mut self, wix: usize, id: Xid) -> Result<Option<EventAction>> {
         if let Some(ws) = self.inner.get_mut(wix) {
             ws.add_client(id, &self.client_insert_point)?;
             Ok(Some(EventAction::RunHook(

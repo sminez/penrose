@@ -233,7 +233,7 @@ impl<X: XConn> WindowManager<X> {
     }
 
     #[tracing::instrument(level = "trace", skip(self))]
-    fn run_hook(&mut self, hook_name: HookName<'_>) {
+    fn run_hook(&mut self, hook_name: HookName) {
         use HookName::*;
 
         // Relies on all hooks taking &mut WindowManager as the first arg.
@@ -253,7 +253,7 @@ impl<X: XConn> WindowManager<X> {
 
         match hook_name {
             Startup => run_hooks!(startup, self,),
-            NewClient(client) => run_hooks!(new_client, self, client),
+            NewClient(id) => run_hooks!(new_client, self, id),
             RemoveClient(id) => run_hooks!(remove_client, self, id),
             ClientAddedToWorkspace(id, wix) => run_hooks!(client_added_to_workspace, self, id, wix),
             ClientNameUpdated(id, name, is_root) => {
@@ -265,7 +265,9 @@ impl<X: XConn> WindowManager<X> {
                 run_hooks!(layout_change, self, wix, i);
             }
             WorkspaceChange(active, index) => run_hooks!(workspace_change, self, active, index),
-            WorkspacesUpdated(names, wix) => run_hooks!(workspaces_updated, self, names, wix),
+            WorkspacesUpdated(names, wix) => {
+                run_hooks!(workspaces_updated, self, str_slice!(names), wix)
+            }
             ScreenChange => {
                 let i = self.screens.focused_index();
                 run_hooks!(screen_change, self, i);
@@ -280,7 +282,7 @@ impl<X: XConn> WindowManager<X> {
         }
     }
 
-    fn handle_event_actions(&mut self, actions: Vec<EventAction<'_>>) -> Result<()> {
+    fn handle_event_actions(&mut self, actions: Vec<EventAction>) -> Result<()> {
         for a in actions {
             self.handle_event_action(a, None, None)?;
         }
@@ -293,7 +295,7 @@ impl<X: XConn> WindowManager<X> {
     #[tracing::instrument(level = "trace", err, skip(self, key_bindings, mouse_bindings))]
     fn handle_event_action(
         &mut self,
-        action: EventAction<'_>,
+        action: EventAction,
         key_bindings: Option<&mut KeyBindings<X>>,
         mouse_bindings: Option<&mut MouseBindings<X>>,
     ) -> Result<()> {
@@ -540,29 +542,42 @@ impl<X: XConn> WindowManager<X> {
     fn handle_map_request(&mut self, id: Xid) -> Result<()> {
         trace!(id, "handling map request");
         let classes = str_slice!(self.config.floating_classes);
-        let mut client = Client::new(&self.conn, id, self.screens.active_ws_index(), classes);
+        let client = Client::new(&self.conn, id, self.screens.active_ws_index(), classes);
+        let is_managed_type = self.conn.is_managed_client(&client);
         trace!(id, ?client.wm_name, ?client.wm_class, ?client.wm_type, "client details");
 
         // Run hooks to allow them to modify the client
-        self.run_hook(HookName::NewClient(&mut client));
+        self.clients.insert(id, client);
+        self.run_hook(HookName::NewClient(id));
 
-        if let Some(ref wmh) = client.wm_hints {
+        let details = self
+            .clients
+            .get(id)
+            .map(|c| (c.workspace(), c.wm_hints.clone(), c.wm_managed, c.floating));
+
+        if details.is_none() {
+            debug!(id, "Client was removed from the client map by a hook");
+            return Ok(());
+        }
+
+        let (wix, wm_hints, wm_managed, floating) = details.unwrap();
+
+        if let Some(ref wmh) = wm_hints {
             if wmh.initial_state == WindowState::Withdrawn {
+                self.clients.remove(id);
                 return Ok(()); // Don't map withdrawn clients
             }
         }
 
-        let wix = client.workspace();
-
-        if !self.conn.is_managed_client(&client) {
+        if !is_managed_type {
             return Ok(self.conn.map_client(id)?);
         }
 
-        if client.wm_managed {
+        if wm_managed {
             self.add_client_to_workspace(wix, id)?;
         }
 
-        if client.floating {
+        if floating {
             if let Some((_, s)) = self.screens.indexed_screen_for_workspace(wix) {
                 util::position_floating_client(
                     &self.conn,
@@ -573,7 +588,6 @@ impl<X: XConn> WindowManager<X> {
             }
         }
 
-        self.clients.insert(id, client);
         self.conn.mark_new_client(id)?;
         self.update_focus(id)?;
         self.update_known_x_clients()?;
@@ -709,7 +723,7 @@ impl<X: XConn> WindowManager<X> {
         let names = self.workspaces.workspace_names();
         self.conn.update_desktops(&names)?;
         self.run_hook(HookName::WorkspacesUpdated(
-            str_slice!(names),
+            names,
             self.screens.active_ws_index(),
         ));
 
@@ -1495,13 +1509,13 @@ mod tests {
     }
 
     #[test]
-    fn unmanaged_window_types_are_not_tracked() {
+    fn unmanaged_window_types_are_not_added_to_workspaces() {
         // Setting the unmanaged window IDs here sets the return of
         // MockXConn.is_managed_window to false for those IDs
         let mut wm = wm_with_mock_conn(vec![], vec![10]);
 
         wm.handle_map_request(10).unwrap(); // should not be tiled
-        assert!(wm.clients.get(10).is_none());
+        assert!(wm.clients.get(10).is_some());
         assert!(wm.workspaces[0].is_empty());
 
         wm.handle_map_request(20).unwrap(); // should be tiled

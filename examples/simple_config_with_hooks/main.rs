@@ -16,14 +16,13 @@ use penrose::{
         layouts::paper,
     },
     core::{
-        client::Client,
         config::Config,
         helpers::index_selectors,
         hooks::Hook,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
         manager::WindowManager,
         ring::Selector,
-        xconnection::XConn,
+        xconnection::{XConn, Xid},
     },
     logging_error_handler,
     xcb::{XcbConnection, XcbHooks},
@@ -38,7 +37,8 @@ use tracing::info;
 // be run each time a new client program is spawned.
 struct MyClientHook {}
 impl<X: XConn> Hook<X> for MyClientHook {
-    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
+        let c = wm.client(&Selector::WinId(id)).unwrap();
         info!("new client with WM_CLASS='{}'", c.wm_class());
         Ok(())
     }

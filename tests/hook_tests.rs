@@ -127,7 +127,7 @@ __impl_test_hook! {
     focus_change => Xid;
     layout_applied => usize, usize;
     layout_change => usize, usize;
-    new_client => &mut Client;
+    new_client => Xid;
     randr_notify => ;
     remove_client => Xid;
     screen_change => usize;

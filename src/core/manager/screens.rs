@@ -76,11 +76,11 @@ impl Screens {
         self.inner.focused_unchecked().wix
     }
 
-    pub fn update_known_screens<'a, S>(
+    pub fn update_known_screens<S>(
         &mut self,
         state: &S,
         n_workspaces: usize,
-    ) -> Result<Vec<EventAction<'a>>>
+    ) -> Result<Vec<EventAction>>
     where
         S: XState,
     {
@@ -120,7 +120,7 @@ impl Screens {
         })
     }
 
-    pub fn focus_screen<'a>(&mut self, sel: &Selector<'_, Screen>) -> Vec<EventAction<'a>> {
+    pub fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> Vec<EventAction> {
         match self.inner.focus(sel) {
             Some((true, focused)) => vec![
                 EventAction::SetActiveWorkspace(focused.wix),
@@ -130,11 +130,7 @@ impl Screens {
         }
     }
 
-    pub fn cycle_screen<'a, S>(
-        &mut self,
-        direction: Direction,
-        state: &S,
-    ) -> Result<Vec<EventAction<'a>>>
+    pub fn cycle_screen<S>(&mut self, direction: Direction, state: &S) -> Result<Vec<EventAction>>
     where
         S: XState,
     {

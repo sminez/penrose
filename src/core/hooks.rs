@@ -82,13 +82,13 @@
 //! }
 //! ```
 //!
-//! Now, whenever a [Client] is added to a [Workspace][1] (either because it has been newly created,
-//! or because it has been moved from one workspace to another) our hook will be called, and our
-//! log message will be included in the penrose log stream. More complicated hooks can be built
-//! that listen to multiple triggers, but most of the time you will likely only need to implement a
-//! single method. For an example of a more complex set up, see the [Scratchpad][2] extension which
-//! uses multiple hooks to spawn and manage a client program outside of normal `WindowManager`
-//! operation.
+//! Now, whenever a [Client][4] is added to a [Workspace][1] (either because it has been newly
+//! created, or because it has been moved from one workspace to another) our hook will be called,
+//! and our log message will be included in the penrose log stream. More complicated hooks can be
+//! built that listen to multiple triggers, but most of the time you will likely only need to
+//! implement a single method. For an example of a more complex set up, see the [Scratchpad][2]
+//! extension which uses multiple hooks to spawn and manage a client program outside of normal
+//! `WindowManager` operation.
 //!
 //! # When hooks are called
 //!
@@ -115,9 +115,9 @@
 //! [1]: crate::core::workspace::Workspace
 //! [2]: crate::contrib::extensions::scratchpad::Scratchpad
 //! [3]: crate::core::xconnection::XEvent
+//! [4]: crate::core::client::Client
 use crate::{
     core::{
-        client::Client,
         data_types::Region,
         manager::WindowManager,
         xconnection::{XConn, Xid},
@@ -131,17 +131,18 @@ use crate::{
 /// triggered as the result of some other action that has taken place during execution.
 #[non_exhaustive]
 #[allow(missing_docs)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Hash)]
-pub enum HookName<'a> {
+pub enum HookName {
     Startup,
-    NewClient(&'a mut Client),
+    NewClient(Xid),
     RemoveClient(Xid),
     ClientAddedToWorkspace(Xid, usize),
     ClientNameUpdated(Xid, String, bool),
     LayoutApplied(usize, usize),
     LayoutChange(usize),
     WorkspaceChange(usize, usize),
-    WorkspacesUpdated(&'a [&'a str], usize),
+    WorkspacesUpdated(Vec<String>, usize),
     ScreenChange,
     ScreenUpdated,
     RanderNotify,
@@ -198,7 +199,7 @@ pub trait Hook<X: XConn> {
 
     /// # Trigger Point
     ///
-    /// Called when a new [Client] has been created in response to map request and all penrose
+    /// Called when a new [Client][5] has been created in response to map request and all penrose
     /// specific state has been initialised, but before the client has been added to the active
     /// [Workspace][1] and before any [Layouts][2] have been applied.
     ///
@@ -217,15 +218,16 @@ pub trait Hook<X: XConn> {
     /// [2]: crate::core::layout::Layout
     /// [3]: crate::core::client::Client::externally_managed
     /// [4]: crate::contrib::extensions::scratchpad::Scratchpad
+    /// [5]: crate::core::client::Client
     #[allow(unused_variables)]
-    fn new_client(&mut self, wm: &mut WindowManager<X>, client: &mut Client) -> Result<()> {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
         Ok(())
     }
 
     /// # Trigger Point
     ///
-    /// Called *after* a [Client] is removed from internal [WindowManager] state, either through a
-    /// user initiated [kill_client][1] action or the underlying program exiting.
+    /// Called *after* a [Client][3] is removed from internal [WindowManager] state, either through
+    /// a user initiated [kill_client][1] action or the underlying program exiting.
     ///
     /// # Example Uses
     ///
@@ -235,6 +237,7 @@ pub trait Hook<X: XConn> {
     ///
     /// [1]: crate::core::manager::WindowManager::kill_client
     /// [2]: Hook::new_client
+    /// [3]: crate::core::client::Client
     #[allow(unused_variables)]
     fn remove_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
         Ok(())
@@ -242,7 +245,7 @@ pub trait Hook<X: XConn> {
 
     /// # Trigger Point
     ///
-    /// Called whenever an existing [Client] is added to a [Workspace][1]. This includes newly
+    /// Called whenever an existing [Client][5] is added to a [Workspace][1]. This includes newly
     /// created clients when they are first mapped and clients being moved between workspaces using
     /// the [client_to_workspace][2] method on [WindowManager].
     ///
@@ -255,6 +258,7 @@ pub trait Hook<X: XConn> {
     /// [2]: crate::core::manager::WindowManager::client_to_workspace
     /// [3]: crate::draw::bar::StatusBar
     /// [4]: crate::draw::widget::bar::Workspaces
+    /// [5]: crate::core::client::Client
     #[allow(unused_variables)]
     fn client_added_to_workspace(
         &mut self,

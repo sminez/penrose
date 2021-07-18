@@ -2,7 +2,6 @@
 use crate::{
     core::{
         bindings::KeyEventHandler,
-        client::Client,
         data_types::Region,
         helpers::spawn,
         hooks::Hook,
@@ -15,13 +14,15 @@ use crate::{
 
 use std::{cell::RefCell, fmt, rc::Rc};
 
-/// Spawn and manage a single [Client] which can then be shown above the current layout.
+/// Spawn and manage a single [Client][1] which can then be shown above the current layout.
 ///
 /// The [get_hook][Scratchpad::get_hook] method must be called to pass the associated [Hook] to your
 /// [WindowManager] before calling init in order to register the necessary hooks to spawn, capture
 /// and manage the embedded client. The client is spawned when 'toggle' is called and there is no
 /// existing client, after that 'toggle' will show/hide the client on the active screen. If the
 /// client is removed, calling 'toggle' again will spawn a new client in the same way.
+///
+/// [1]: crate::core::client::Client
 #[derive(Clone, PartialEq)]
 pub struct Scratchpad {
     client: Rc<RefCell<Option<Xid>>>,
@@ -81,7 +82,9 @@ impl Scratchpad {
     /// Construct the associated [Hook] for adding to the [WindowManager].
     ///
     /// NOTE: If the hook is not registered, [Scratchpad] will not be able to
-    ///       capture and manage spawned [Client] windows.
+    ///       capture and manage spawned [Client][1] windows.
+    ///
+    /// [1]: crate::core::client::Client
     pub fn get_hook(&self) -> Box<Self> {
         self.boxed_clone()
     }
@@ -134,7 +137,8 @@ impl Scratchpad {
 }
 
 impl<X: XConn> Hook<X> for Scratchpad {
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
+        let c = wm.client_mut(&Selector::WinId(id)).unwrap();
         if *self.pending.borrow() && self.client.borrow().is_none() {
             self.pending.replace(false);
             self.client.replace(Some(c.id()));

@@ -1,7 +1,6 @@
 //! Widgets intended for use in statusbars
 use crate::{
     core::{
-        client::Client,
         data_types::Region,
         hooks::Hook,
         manager::WindowManager,
@@ -123,7 +122,8 @@ impl<X> Hook<X> for Workspaces
 where
     X: XConn,
 {
-    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) -> crate::Result<()> {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> crate::Result<()> {
+        let c = wm.client(&Selector::WinId(id)).unwrap();
         if let Some(ws) = self.workspaces.get_mut(c.workspace()) {
             self.require_draw = !ws.occupied;
             ws.occupied = true;

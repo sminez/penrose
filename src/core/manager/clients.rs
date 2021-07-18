@@ -238,12 +238,12 @@ impl Clients {
     }
 
     // The given window ID has had its EWMH name updated by something
-    pub fn client_name_changed<'a, X>(
+    pub fn client_name_changed<X>(
         &mut self,
         id: Xid,
         is_root: bool,
         conn: &X,
-    ) -> Result<EventAction<'a>>
+    ) -> Result<EventAction>
     where
         X: XClientProperties,
     {
@@ -290,14 +290,14 @@ impl Clients {
         Ok(())
     }
 
-    pub fn toggle_fullscreen<'a, X>(
+    pub fn toggle_fullscreen<X>(
         &mut self,
         id: Xid,
         wix: usize,
         workspace_clients: &[Xid],
         screen_size: Region,
         conn: &X,
-    ) -> Result<Vec<EventAction<'a>>>
+    ) -> Result<Vec<EventAction>>
     where
         X: XClientHandler + XClientProperties + XClientConfig,
     {

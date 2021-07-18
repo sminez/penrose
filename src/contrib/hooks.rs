@@ -2,8 +2,12 @@
 use crate::{
     contrib::actions::update_monitors_via_xrandr,
     core::{
-        client::Client, data_types::RelativePosition, helpers::spawn, hooks::Hook,
-        manager::WindowManager, ring::Selector, xconnection::XConn,
+        data_types::RelativePosition,
+        helpers::spawn,
+        hooks::Hook,
+        manager::WindowManager,
+        ring::Selector,
+        xconnection::{XConn, Xid},
     },
     Result,
 };
@@ -28,7 +32,8 @@ impl ActiveClientAsRootName {
 }
 
 impl<X: XConn> Hook<X> for ActiveClientAsRootName {
-    fn new_client(&mut self, wm: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
+        let c = wm.client(&Selector::WinId(id)).unwrap();
         wm.set_root_window_name(c.wm_name())
     }
 }
@@ -187,7 +192,8 @@ impl ClientSpawnRules {
 impl<X: XConn> Hook<X> for ClientSpawnRules {
     /// This sets the client workspace to the desired value which is then picked up and
     /// trigers the spawn on that workspace in WindowManager.handle_map_request
-    fn new_client(&mut self, _: &mut WindowManager<X>, c: &mut Client) -> Result<()> {
+    fn new_client(&mut self, wm: &mut WindowManager<X>, id: Xid) -> Result<()> {
+        let c = wm.client_mut(&Selector::WinId(id)).unwrap();
         if let Some(wix) = self.class_rules.get(c.wm_class()) {
             c.set_workspace(*wix);
         } else if let Some(wix) = self.name_rules.get(c.wm_name()) {

@@ -48,7 +48,6 @@
 //! ```
 use crate::{
     core::{
-        client::Client,
         data_types::{Region, WinType},
         hooks::Hook,
         manager::WindowManager,
@@ -341,7 +340,7 @@ __impl_status_bar_as_hook! {
     focus_change => id: Xid;
     layout_applied => workspace_index: usize, screen_index: usize;
     layout_change => workspace_index: usize, screen_index: usize;
-    new_client => id: &mut Client;
+    new_client => id: Xid;
     randr_notify => ;
     remove_client => id: Xid;
     workspace_change => prev: usize, new: usize;
