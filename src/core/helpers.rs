@@ -5,33 +5,29 @@ use crate::{
 };
 
 use std::{
+    ffi::OsStr,
     io::Read,
+    os::unix::ffi::OsStrExt,
     process::{Command, Stdio},
 };
 
 /// Run an external command
 ///
 /// This redirects the process stdout and stderr to /dev/null.
-pub fn spawn<S: Into<String>>(cmd: S) -> Result<()> {
-    let s = cmd.into();
-    let parts: Vec<&str> = s.split_whitespace().collect();
-    let result = if parts.len() > 1 {
-        Command::new(parts[0])
-            .args(&parts[1..])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-    } else {
-        Command::new(parts[0])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-    };
+pub fn spawn<S: AsRef<OsStr>>(cmd: S) -> Result<()> {
+    let mut args = cmd
+        .as_ref()
+        .as_bytes()
+        .split(|b| b.is_ascii_whitespace())
+        .map(|bytes| OsStr::from_bytes(bytes));
 
-    match result {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e.into()),
-    }
+    // maybe we should check for an empty string beforehand?
+    Command::new(args.next().expect("always one item in split"))
+        .args(args)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()?;
+    Ok(())
 }
 
 /// Run an external command with the specified command line arguments
