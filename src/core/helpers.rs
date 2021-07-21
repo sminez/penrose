@@ -18,8 +18,8 @@ pub fn spawn<S: AsRef<OsStr>>(cmd: S) -> Result<()> {
     let mut args = cmd
         .as_ref()
         .as_bytes()
-        .split(|b| b.is_ascii_whitespace())
-        .map(|bytes| OsStr::from_bytes(bytes));
+        .split(u8::is_ascii_whitespace)
+        .map(OsStr::from_bytes);
 
     // maybe we should check for an empty string beforehand?
     Command::new(args.next().expect("always one item in split"))
