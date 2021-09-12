@@ -20,6 +20,7 @@ pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px:
     // Check that the resulting size would not be zero or negative
     // Do not allow zero-size as this is chosen by the WM
     if w <= padding || h <= padding {
+        warn!("not padding region to avoid integer underflow");
         return *region;
     }
 
@@ -51,6 +52,7 @@ where
             h - (2 * border_px),
         )
     } else {
+        warn!("floating client too small {}", id);
         Region::new(x, y, w, h)
     };
 
