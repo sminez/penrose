@@ -16,6 +16,13 @@ pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px:
     let gpx = if gapless { 0 } else { gap_px };
     let padding = 2 * (border_px + gpx);
     let (x, y, w, h) = region.values();
+
+    // Check that the resulting size would not be zero or negative
+    // Do not allow zero-size as this is chosen by the WM
+    if w <= padding || h <= padding {
+        return *region;
+    }
+
     Region::new(x + gpx, y + gpx, w - padding, h - padding)
 }
 
@@ -33,12 +40,19 @@ where
     let (sx, sy, _, _) = screen_region.values();
     x = if x < sx { sx } else { x };
     y = if y < sy { sy } else { y };
-    let reg = Region::new(
-        x + border_px,
-        y + border_px,
-        w - (2 * border_px),
-        h - (2 * border_px),
-    );
+
+    // Check that the resulting size would not be negative
+    // Allow zero-size here as it is chosen by the client
+    let reg = if w >= 2 * border_px && h >= 2 * border_px {
+        Region::new(
+            x + border_px,
+            y + border_px,
+            w - (2 * border_px),
+            h - (2 * border_px),
+        )
+    } else {
+        Region::new(x, y, w, h)
+    };
 
     Ok(conn.position_client(id, reg, border_px, false)?)
 }
