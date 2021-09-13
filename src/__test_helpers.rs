@@ -121,6 +121,7 @@ pub struct TestXConn {
     focused: Cell<Xid>,
     n_screens: Cell<u32>,
     unmanaged_ids: Vec<Xid>,
+    client_geometry: Cell<Region>,
 }
 
 impl fmt::Debug for TestXConn {
@@ -142,6 +143,7 @@ impl TestXConn {
             focused: Cell::new(0),
             n_screens: Cell::new(n_screens),
             unmanaged_ids,
+            client_geometry: Cell::new(Region::default()),
         }
     }
 
@@ -171,7 +173,12 @@ __impl_stub_xcon! {
             Ok(())
         }
     }
-    client_config: {}
+    client_config: {
+        fn mock_position_client(&self, _id: Xid, r: Region, _border: u32, _stack_above: bool) -> Result<()> {
+            self.client_geometry.set(r);
+            Ok(())
+        }
+    }
     event_handler: {
         fn mock_wait_for_event(&self) -> Result<XEvent> {
             let mut remaining = self.events.replace(vec![]);
@@ -193,6 +200,10 @@ __impl_stub_xcon! {
 
         fn mock_focused_client(&self) -> Result<Xid> {
             Ok(self.focused.get())
+        }
+
+        fn mock_client_geometry(&self, id: Xid) -> Result<Region> {
+            Ok(self.client_geometry.get())
         }
     }
     conn: {

@@ -105,6 +105,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::__test_helpers::*;
 
     #[test]
     fn pad_region_centered() {
@@ -122,5 +123,33 @@ mod tests {
         let b = 3;
         assert_eq!(pad_region(&r, false, g, b), r);
         assert_eq!(pad_region(&r, true, g, b), r);
+    }
+
+    #[test]
+    fn position_floating() {
+        let conn = TestXConn::new(1, vec![], vec![]);
+        conn.position_client(0, Region::new(0, 0, 400, 300), 2, false)
+            .unwrap();
+
+        position_floating_client(&conn, 0, Region::default(), 2).unwrap();
+
+        assert_eq!(
+            conn.client_geometry(0).unwrap(),
+            Region::new(2, 2, 396, 296)
+        );
+    }
+
+    #[test]
+    fn position_floating_tiny() {
+        let conn = TestXConn::new(1, vec![], vec![]);
+        conn.position_client(0, Region::new(0, 0, 4, 3), 2, false)
+            .unwrap();
+
+        position_floating_client(&conn, 0, Region::default(), 2).unwrap();
+
+        assert_eq!(
+            conn.client_geometry(0).unwrap(),
+            Region::new(0, 0, 4, 3)
+        );
     }
 }
