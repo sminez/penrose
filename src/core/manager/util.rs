@@ -114,4 +114,13 @@ mod tests {
         assert_eq!(pad_region(&r, false, g, b), Region::new(10, 10, 174, 74));
         assert_eq!(pad_region(&r, true, g, b), Region::new(0, 0, 194, 94));
     }
+
+    #[test]
+    fn pad_region_tiny() {
+        let r = Region::new(0, 0, 3, 3);
+        let g = 10;
+        let b = 3;
+        assert_eq!(pad_region(&r, false, g, b), r);
+        assert_eq!(pad_region(&r, true, g, b), r);
+    }
 }
