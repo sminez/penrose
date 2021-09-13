@@ -202,7 +202,7 @@ __impl_stub_xcon! {
             Ok(self.focused.get())
         }
 
-        fn mock_client_geometry(&self, id: Xid) -> Result<Region> {
+        fn mock_client_geometry(&self, _id: Xid) -> Result<Region> {
             Ok(self.client_geometry.get())
         }
     }
