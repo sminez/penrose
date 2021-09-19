@@ -4,7 +4,6 @@ fn tests() {
 
     // Stubbed companion trait
     t.compile_fail("tests/stub/meta-args-reject-correctly.rs");
-    t.compile_fail("tests/stub/bounds-are-maintained.rs");
     t.compile_fail("tests/stub/test-only-attr-works.rs");
 
     // Validate key bindings
