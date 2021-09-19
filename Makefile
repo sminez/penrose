@@ -29,6 +29,10 @@ doc:
 examples:
 	cargo build --examples
 
+.PHONY: format
+format:
+	cargo fmt
+
 .PHONY: run-embeded
 run-embeded:
 	@cargo build --examples && ./scripts/xephyr.sh
