@@ -20,7 +20,7 @@ struct Args(Vec<Meta>);
 impl Parse for Args {
     fn parse(input: ParseStream<'_>) -> syn::parse::Result<Self> {
         Ok(Self(
-            Punctuated::<Meta, Token![,]>::parse_terminated(&input)?
+            Punctuated::<Meta, Token![,]>::parse_terminated(input)?
                 .into_iter()
                 .collect(),
         ))

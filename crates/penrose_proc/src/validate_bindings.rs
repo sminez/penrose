@@ -105,7 +105,7 @@ fn has_valid_modifiers(binding: &Binding) -> bool {
 
 fn is_valid_keyname(binding: &Binding, names: &[String]) -> bool {
     if let Some(ref k) = binding.keyname {
-        names.contains(&k)
+        names.contains(k)
     } else {
         false
     }

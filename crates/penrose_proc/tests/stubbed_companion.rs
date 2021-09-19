@@ -112,7 +112,7 @@ impl CustomPrefixMusical for ImplMusical {}
 fn custom_prefix_works() {
     let i = ImplMusical;
     assert_eq!(i.musical_note(17), "F#");
-    assert_eq!(i.musical_scale(3.14), Scale::Blues);
+    assert_eq!(i.musical_scale(3.0), Scale::Blues);
 }
 
 // -----
