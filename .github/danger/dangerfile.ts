@@ -1,5 +1,4 @@
 import { danger, warn, fail, markdown } from "danger";
-import _ from "lodash";
 
 type LabelRule = {
   path: string;
