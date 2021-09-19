@@ -147,9 +147,6 @@ mod tests {
 
         position_floating_client(&conn, 0, Region::default(), 2).unwrap();
 
-        assert_eq!(
-            conn.client_geometry(0).unwrap(),
-            Region::new(0, 0, 4, 3)
-        );
+        assert_eq!(conn.client_geometry(0).unwrap(), Region::new(0, 0, 4, 3));
     }
 }
