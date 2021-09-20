@@ -2,7 +2,6 @@
 use crate::{
     core::{
         client::Client,
-        data_types::Region,
         hooks::HookName,
         layout::LayoutConf,
         manager::{event::EventAction, util::pad_region},
@@ -294,8 +293,6 @@ impl Clients {
         &mut self,
         id: Xid,
         wix: usize,
-        workspace_clients: &[Xid],
-        screen_size: Region,
         conn: &X,
     ) -> Result<Vec<EventAction>>
     where
@@ -310,32 +307,9 @@ impl Clients {
         };
 
         conn.toggle_client_fullscreen(id, client_currently_fullscreen)?;
+        self.modify(id, |c| c.fullscreen = !client_currently_fullscreen);
 
-        for &i in workspace_clients.iter() {
-            if client_currently_fullscreen {
-                if i == id {
-                    self.inner.entry(id).and_modify(|c| c.fullscreen = false);
-                } else {
-                    self.map_if_needed(i, conn)?;
-                }
-            // client was not fullscreen
-            } else if i == id {
-                conn.position_client(id, screen_size, 0, false)?;
-                let is_known = self.is_known(id);
-                if is_known {
-                    self.map_if_needed(id, conn)?;
-                    self.modify(id, |c| c.fullscreen = true);
-                }
-            } else {
-                self.unmap_if_needed(i, conn)?;
-            }
-        }
-
-        Ok(if client_currently_fullscreen {
-            vec![EventAction::LayoutWorkspace(wix)]
-        } else {
-            vec![]
-        })
+        Ok(vec![EventAction::LayoutWorkspace(wix)])
     }
 }
 

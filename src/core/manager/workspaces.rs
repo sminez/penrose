@@ -238,13 +238,6 @@ impl Workspaces {
         }
     }
 
-    pub fn client_ids(&self, wix: usize) -> Result<Vec<Xid>> {
-        self.inner
-            .get(wix)
-            .map(|ws| ws.client_ids())
-            .ok_or_else(|| perror!("unknown workspace: {}", wix))
-    }
-
     pub fn focused_client(&self, ix: usize) -> Option<Xid> {
         self.inner[ix].focused_client()
     }

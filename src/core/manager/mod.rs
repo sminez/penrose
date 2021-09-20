@@ -6,9 +6,10 @@ use crate::{
         config::Config,
         data_types::{Change, Point, Region},
         hooks::{HookName, Hooks},
+        layout::LayoutConf,
         ring::{Direction, InsertPoint, Selector},
         screen::Screen,
-        workspace::Workspace,
+        workspace::{ArrangeActions, Workspace},
         xconnection::{Atom, ClientMessageKind, WindowState, XConn, Xid},
     },
     ErrorHandler, PenroseError, Result,
@@ -680,15 +681,7 @@ impl<X: XConn> WindowManager<X> {
             return Ok(()); // Client is already in the correct state, we shouldn't have been called
         }
 
-        let r = match self.screen(&Selector::Condition(&|s| s.wix == wix)) {
-            Some(s) => s.region(false),
-            None => return Ok(()),
-        };
-
-        let client_ids = self.workspaces.client_ids(wix)?;
-        let actions = self
-            .clients
-            .toggle_fullscreen(id, wix, &client_ids, r, &self.conn)?;
+        let actions = self.clients.toggle_fullscreen(id, wix, &self.conn)?;
 
         self.handle_event_actions(actions)
     }
@@ -704,16 +697,38 @@ impl<X: XConn> WindowManager<X> {
             None => return Ok(()), // workspace is not currently visible
         };
 
-        let region = s.region(self.config.show_bar);
         let clients = self.clients.clients_for_workspace(wix);
-        let (lc, arrange_actions) = self.workspaces.get_arrange_actions(wix, region, &clients)?;
-        self.clients.apply_arrange_actions(
-            arrange_actions,
-            &lc,
-            self.config.border_px,
-            self.config.gap_px,
-            &self.conn,
-        )?;
+
+        if clients.iter().any(|c| c.fullscreen) {
+            let region = s.region(false);
+            // TODO: Default may be enough
+            let lc = LayoutConf {
+                floating: false,
+                gapless: true,
+                follow_focus: false,
+                allow_wrapping: false,
+            };
+            let arrange_actions = ArrangeActions {
+                actions: clients
+                    .iter()
+                    .map(|c| (c.id(), if c.fullscreen { Some(region) } else { None }))
+                    .collect(),
+                floating: vec![],
+            };
+            self.clients
+                .apply_arrange_actions(arrange_actions, &lc, 0, 0, &self.conn)?;
+        } else {
+            let region = s.region(self.config.show_bar);
+            let (lc, arrange_actions) =
+                self.workspaces.get_arrange_actions(wix, region, &clients)?;
+            self.clients.apply_arrange_actions(
+                arrange_actions,
+                &lc,
+                self.config.border_px,
+                self.config.gap_px,
+                &self.conn,
+            )?;
+        }
 
         self.run_hook(HookName::LayoutApplied(wix, i));
         Ok(())
