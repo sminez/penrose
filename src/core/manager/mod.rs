@@ -702,12 +702,7 @@ impl<X: XConn> WindowManager<X> {
         if clients.iter().any(|c| c.fullscreen) {
             let region = s.region(false);
             // TODO: Default may be enough
-            let lc = LayoutConf {
-                floating: false,
-                gapless: true,
-                follow_focus: false,
-                allow_wrapping: false,
-            };
+            let lc = LayoutConf::default();
             let arrange_actions = ArrangeActions {
                 actions: clients
                     .iter()

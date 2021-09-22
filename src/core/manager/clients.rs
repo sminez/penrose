@@ -316,7 +316,10 @@ impl Clients {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::xconnection::{self, *};
+    use crate::core::{
+        data_types::Region,
+        xconnection::{self, *},
+    };
     use std::cell::Cell;
 
     #[test]
@@ -384,17 +387,12 @@ mod tests {
             n_clients: u32,
             fullscreen: Option<Xid>,
             target: Xid,
-            unmapped: &[Xid],
-            should_apply_layout: bool,
-            expected_positions: Vec<Xid>,
-            expected_maps: Vec<Xid>,
-            expected_unmaps: Vec<Xid>,
         );
 
-        case: single_client_on => (1, None, 0, &[], false, vec![0], vec![], vec![]);
-        case: single_client_off => (1, Some(0), 0, &[], true, vec![], vec![], vec![]);
-        case: multiple_clients_on => (4, None, 1, &[], false, vec![1], vec![], vec![0, 2, 3]);
-        case: multiple_clients_off => (4, Some(1), 1, &[0, 2, 3], true, vec![], vec![0, 2, 3], vec![]);
+        case: single_client_on => (1, None, 0);
+        case: single_client_off => (1, Some(0), 0);
+        case: multiple_clients_on => (4, None, 1);
+        case: multiple_clients_off => (4, Some(1), 1);
 
         body: {
             let conn = RecordingXConn::init();
@@ -413,23 +411,13 @@ mod tests {
                 unfocused_border: 0x000000.into(),
             };
 
-            let r = Region::new(0, 0, 1000, 800);
-            let expected_positions: Vec<_> = expected_positions.iter().map(|id| (*id, r)).collect();
-
-            for id in unmapped {
-                clients.modify(*id, |c| c.mapped = false);
-            }
-
             if let Some(id) = fullscreen {
                 clients.modify(id, |c| c.fullscreen = true);
             }
 
-            let events = clients.toggle_fullscreen(target, 42, &ids, r, &conn).unwrap();
+            let events = clients.toggle_fullscreen(target, 42, &conn).unwrap();
 
-            assert_eq!(!events.is_empty(), should_apply_layout);
-            assert_eq!(conn.positions.take(), expected_positions);
-            assert_eq!(conn.maps.take(), expected_maps);
-            assert_eq!(conn.unmaps.take(), expected_unmaps);
+            assert_eq!(events.len(), 1);
         }
     }
 }
