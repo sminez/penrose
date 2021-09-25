@@ -6,10 +6,9 @@ use crate::{
         config::Config,
         data_types::{Change, Point, Region},
         hooks::{HookName, Hooks},
-        layout::LayoutConf,
         ring::{Direction, InsertPoint, Selector},
         screen::Screen,
-        workspace::{ArrangeActions, Workspace},
+        workspace::Workspace,
         xconnection::{Atom, ClientMessageKind, WindowState, XConn, Xid},
     },
     ErrorHandler, PenroseError, Result,
@@ -697,33 +696,20 @@ impl<X: XConn> WindowManager<X> {
             None => return Ok(()), // workspace is not currently visible
         };
 
+        let region = s.region(self.config.show_bar);
+        let fullscreen_region = s.region(false);
         let clients = self.clients.clients_for_workspace(wix);
-
-        if clients.iter().any(|c| c.fullscreen) {
-            let region = s.region(false);
-            // TODO: Default may be enough
-            let lc = LayoutConf::default();
-            let arrange_actions = ArrangeActions {
-                actions: clients
-                    .iter()
-                    .map(|c| (c.id(), if c.fullscreen { Some(region) } else { None }))
-                    .collect(),
-                floating: vec![],
-            };
-            self.clients
-                .apply_arrange_actions(arrange_actions, &lc, 0, 0, &self.conn)?;
-        } else {
-            let region = s.region(self.config.show_bar);
-            let (lc, arrange_actions) =
-                self.workspaces.get_arrange_actions(wix, region, &clients)?;
-            self.clients.apply_arrange_actions(
-                arrange_actions,
-                &lc,
-                self.config.border_px,
-                self.config.gap_px,
-                &self.conn,
-            )?;
-        }
+        let (lc, borderless, arrange_actions) =
+            self.workspaces
+                .get_arrange_actions(wix, region, fullscreen_region, &clients)?;
+        let border_px = if borderless { 0 } else { self.config.border_px };
+        self.clients.apply_arrange_actions(
+            arrange_actions,
+            &lc,
+            border_px,
+            self.config.gap_px,
+            &self.conn,
+        )?;
 
         self.run_hook(HookName::LayoutApplied(wix, i));
         Ok(())

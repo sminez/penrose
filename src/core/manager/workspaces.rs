@@ -168,24 +168,50 @@ impl Workspaces {
         &mut self,
         wix: usize,
         region: Region,
+        fullscreen_region: Region,
         clients: &[&Client],
-    ) -> Result<(LayoutConf, ArrangeActions)> {
+    ) -> Result<(LayoutConf, bool, ArrangeActions)> {
         let ws = self
             .inner
             .get(wix)
             .ok_or_else(|| perror!("attempt to layout unknown workspace: {}", wix))?;
-
         let lc = ws.layout_conf();
-        if !lc.floating {
-            Ok((lc, ws.arrange(region, clients)))
-        } else {
+
+        if clients.iter().any(|c| c.is_fullscreen()) {
+            return Ok((
+                LayoutConf {
+                    gapless: true,
+                    ..lc
+                },
+                true,
+                ArrangeActions {
+                    actions: clients
+                        .iter()
+                        .map(|c| {
+                            (
+                                c.id(),
+                                if c.is_fullscreen() {
+                                    Some(fullscreen_region)
+                                } else {
+                                    None
+                                },
+                            )
+                        })
+                        .collect(),
+                    floating: vec![],
+                },
+            ));
+        } else if lc.floating {
             Ok((
                 lc,
+                false,
                 ArrangeActions {
                     actions: vec![],
                     floating: clients.iter().map(|c| c.id()).collect(),
                 },
             ))
+        } else {
+            Ok((lc, false, ws.arrange(region, clients)))
         }
     }
 
