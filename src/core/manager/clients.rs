@@ -7,7 +7,7 @@ use crate::{
         layout::LayoutConf,
         manager::{event::EventAction, util::pad_region},
         ring::Selector,
-        workspace::ArrangeActions,
+        workspace::{ArrangeActions, Workspace},
         xconnection::{
             Atom, ClientMessageKind, Prop, XClientConfig, XClientHandler, XClientProperties,
             XEventHandler, XState, Xid,
@@ -166,8 +166,12 @@ impl Clients {
         self.inner.get(&id).map(|c| c.workspace())
     }
 
-    pub fn clients_for_workspace(&self, wix: usize) -> Vec<&Client> {
-        self.matching_clients(&Selector::Condition(&|c: &Client| c.workspace == wix))
+    pub fn clients_for_workspace(&self, workspace: &Workspace) -> Vec<&Client> {
+        workspace
+            .client_ids()
+            .into_iter()
+            .flat_map(|id| self.get(id))
+            .collect()
     }
 
     pub fn all_known_ids(&self) -> Vec<Xid> {

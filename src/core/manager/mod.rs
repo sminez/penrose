@@ -705,7 +705,11 @@ impl<X: XConn> WindowManager<X> {
         };
 
         let region = s.region(self.config.show_bar);
-        let clients = self.clients.clients_for_workspace(wix);
+        let ws = self.workspaces.get(wix).ok_or(perror!(
+            "attempt to apply layout for unknown workspace: {}",
+            wix
+        ))?;
+        let clients = self.clients.clients_for_workspace(ws);
         let (lc, arrange_actions) = self.workspaces.get_arrange_actions(wix, region, &clients)?;
         self.clients.apply_arrange_actions(
             arrange_actions,

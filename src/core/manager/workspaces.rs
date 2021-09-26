@@ -165,7 +165,7 @@ impl Workspaces {
     }
 
     pub fn get_arrange_actions(
-        &mut self,
+        &self,
         wix: usize,
         region: Region,
         clients: &[&Client],
