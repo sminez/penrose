@@ -702,11 +702,11 @@ impl<X: XConn> WindowManager<X> {
         let (lc, borderless, arrange_actions) =
             self.workspaces
                 .get_arrange_actions(wix, region, fullscreen_region, &clients)?;
-        let border_px = if borderless { 0 } else { self.config.border_px };
         self.clients.apply_arrange_actions(
             arrange_actions,
             &lc,
-            border_px,
+            borderless,
+            self.config.border_px,
             self.config.gap_px,
             &self.conn,
         )?;

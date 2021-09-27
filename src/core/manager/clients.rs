@@ -262,6 +262,7 @@ impl Clients {
         &mut self,
         actions: ArrangeActions,
         lc: &LayoutConf,
+        borderless: bool,
         border_px: u32,
         gap_px: u32,
         conn: &X,
@@ -269,12 +270,14 @@ impl Clients {
     where
         X: XClientHandler + XClientConfig,
     {
+        let bpx = if borderless { 0 } else { border_px };
+
         // Tile first then place floating clients on top
         for (id, region) in actions.actions {
             trace!(id, ?region, "positioning client");
             if let Some(region) = region {
-                let reg = pad_region(&region, lc.gapless, gap_px, border_px);
-                conn.position_client(id, reg, border_px, false)?;
+                let reg = pad_region(&region, lc.gapless, gap_px, bpx);
+                conn.position_client(id, reg, bpx, false)?;
                 self.map_if_needed(id, conn)?;
             } else {
                 self.unmap_if_needed(id, conn)?;
