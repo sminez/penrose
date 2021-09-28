@@ -65,7 +65,7 @@ impl<X: XConn> Hook<X> for LayoutSymbolAsRootName {
  * set a specific layout and spawn a set of default clients.
  *
  * The layout is set first and then clients are spawned in the order they are defined using the
- * penrose::core::helpers::spawn function. This means that the final client will have focus and the
+ * [crate::core::helpers::spawn] function. This means that the final client will have focus and
  * the clients will be arranged based on the order they are spawned.
  */
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
