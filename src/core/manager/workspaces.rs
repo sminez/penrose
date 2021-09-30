@@ -496,8 +496,8 @@ mod tests {
                 assert_eq!(lc, wss[0].layout_conf());
             }
             assert_eq!(borderless, expected_borderless);
-            assert_eq!(actions.actions, expected_actions.actions);
-            assert_eq!(actions.floating, expected_actions.floating);
+            assert_eq!(actions.actions, expected_actions);
+            assert_eq!(actions.floating, expected_floating);
         }
     }
 }
