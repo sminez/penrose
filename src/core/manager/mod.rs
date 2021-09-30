@@ -668,7 +668,6 @@ impl<X: XConn> WindowManager<X> {
 
     // Toggle the given client fullscreen. This has knock on effects for other windows and can
     // be triggered by user key bindings as well as applications requesting full screen as well.
-    // TODO: should something going fullscreen also hide unmaged windows?
     fn set_fullscreen(&mut self, id: Xid, should_fullscreen: bool) -> Result<()> {
         let (currently_fullscreen, wix) = self
             .clients
@@ -680,15 +679,7 @@ impl<X: XConn> WindowManager<X> {
             return Ok(()); // Client is already in the correct state, we shouldn't have been called
         }
 
-        let r = match self.screen(&Selector::Condition(&|s| s.wix == wix)) {
-            Some(s) => s.region(false),
-            None => return Ok(()),
-        };
-
-        let client_ids = self.workspaces.client_ids(wix)?;
-        let actions = self
-            .clients
-            .toggle_fullscreen(id, wix, &client_ids, r, &self.conn)?;
+        let actions = self.clients.toggle_fullscreen(id, wix, &self.conn)?;
 
         self.handle_event_actions(actions)
     }
@@ -705,15 +696,19 @@ impl<X: XConn> WindowManager<X> {
         };
 
         let region = s.region(self.config.show_bar);
+        let fullscreen_region = s.region(false);
         let ws = self.workspaces.get(wix).ok_or(perror!(
             "attempt to apply layout for unknown workspace: {}",
             wix
         ))?;
         let clients = self.clients.clients_for_workspace(ws);
-        let (lc, arrange_actions) = self.workspaces.get_arrange_actions(wix, region, &clients)?;
+        let (lc, borderless, arrange_actions) =
+            self.workspaces
+                .get_arrange_actions(wix, region, fullscreen_region, &clients)?;
         self.clients.apply_arrange_actions(
             arrange_actions,
             &lc,
+            borderless,
             self.config.border_px,
             self.config.gap_px,
             &self.conn,

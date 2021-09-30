@@ -2,7 +2,6 @@
 use crate::{
     core::{
         client::Client,
-        data_types::Region,
         hooks::HookName,
         layout::LayoutConf,
         manager::{event::EventAction, util::pad_region},
@@ -267,6 +266,7 @@ impl Clients {
         &mut self,
         actions: ArrangeActions,
         lc: &LayoutConf,
+        borderless: bool,
         border_px: u32,
         gap_px: u32,
         conn: &X,
@@ -274,12 +274,14 @@ impl Clients {
     where
         X: XClientHandler + XClientConfig,
     {
+        let bpx = if borderless { 0 } else { border_px };
+
         // Tile first then place floating clients on top
         for (id, region) in actions.actions {
             trace!(id, ?region, "positioning client");
             if let Some(region) = region {
-                let reg = pad_region(&region, lc.gapless, gap_px, border_px);
-                conn.position_client(id, reg, border_px, false)?;
+                let reg = pad_region(&region, lc.gapless, gap_px, bpx);
+                conn.position_client(id, reg, bpx, false)?;
                 self.map_if_needed(id, conn)?;
             } else {
                 self.unmap_if_needed(id, conn)?;
@@ -298,8 +300,6 @@ impl Clients {
         &mut self,
         id: Xid,
         wix: usize,
-        workspace_clients: &[Xid],
-        screen_size: Region,
         conn: &X,
     ) -> Result<Vec<EventAction>>
     where
@@ -314,39 +314,19 @@ impl Clients {
         };
 
         conn.toggle_client_fullscreen(id, client_currently_fullscreen)?;
+        self.modify(id, |c| c.fullscreen = !client_currently_fullscreen);
 
-        for &i in workspace_clients.iter() {
-            if client_currently_fullscreen {
-                if i == id {
-                    self.inner.entry(id).and_modify(|c| c.fullscreen = false);
-                } else {
-                    self.map_if_needed(i, conn)?;
-                }
-            // client was not fullscreen
-            } else if i == id {
-                conn.position_client(id, screen_size, 0, false)?;
-                let is_known = self.is_known(id);
-                if is_known {
-                    self.map_if_needed(id, conn)?;
-                    self.modify(id, |c| c.fullscreen = true);
-                }
-            } else {
-                self.unmap_if_needed(i, conn)?;
-            }
-        }
-
-        Ok(if client_currently_fullscreen {
-            vec![EventAction::LayoutWorkspace(wix)]
-        } else {
-            vec![]
-        })
+        Ok(vec![EventAction::LayoutWorkspace(wix)])
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::xconnection::{self, *};
+    use crate::core::{
+        data_types::Region,
+        xconnection::{self, *},
+    };
     use std::cell::Cell;
 
     #[test]
@@ -414,17 +394,13 @@ mod tests {
             n_clients: u32,
             fullscreen: Option<Xid>,
             target: Xid,
-            unmapped: &[Xid],
-            should_apply_layout: bool,
-            expected_positions: Vec<Xid>,
-            expected_maps: Vec<Xid>,
-            expected_unmaps: Vec<Xid>,
+            expect_fullscreen: bool,
         );
 
-        case: single_client_on => (1, None, 0, &[], false, vec![0], vec![], vec![]);
-        case: single_client_off => (1, Some(0), 0, &[], true, vec![], vec![], vec![]);
-        case: multiple_clients_on => (4, None, 1, &[], false, vec![1], vec![], vec![0, 2, 3]);
-        case: multiple_clients_off => (4, Some(1), 1, &[0, 2, 3], true, vec![], vec![0, 2, 3], vec![]);
+        case: single_client_on => (1, None, 0, true);
+        case: single_client_off => (1, Some(0), 0, false);
+        case: multiple_clients_on => (4, None, 1, true);
+        case: multiple_clients_off => (4, Some(1), 1, false);
 
         body: {
             let conn = RecordingXConn::init();
@@ -443,23 +419,14 @@ mod tests {
                 unfocused_border: 0x000000.into(),
             };
 
-            let r = Region::new(0, 0, 1000, 800);
-            let expected_positions: Vec<_> = expected_positions.iter().map(|id| (*id, r)).collect();
-
-            for id in unmapped {
-                clients.modify(*id, |c| c.mapped = false);
-            }
-
             if let Some(id) = fullscreen {
                 clients.modify(id, |c| c.fullscreen = true);
             }
 
-            let events = clients.toggle_fullscreen(target, 42, &ids, r, &conn).unwrap();
+            let events = clients.toggle_fullscreen(target, 42, &conn).unwrap();
 
-            assert_eq!(!events.is_empty(), should_apply_layout);
-            assert_eq!(conn.positions.take(), expected_positions);
-            assert_eq!(conn.maps.take(), expected_maps);
-            assert_eq!(conn.unmaps.take(), expected_unmaps);
+            assert_eq!(events.len(), 1);
+            assert_eq!(clients.get(target).map(|c| c.fullscreen), Some(expect_fullscreen));
         }
     }
 }

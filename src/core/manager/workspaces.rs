@@ -168,24 +168,50 @@ impl Workspaces {
         &self,
         wix: usize,
         region: Region,
+        fullscreen_region: Region,
         clients: &[&Client],
-    ) -> Result<(LayoutConf, ArrangeActions)> {
+    ) -> Result<(LayoutConf, bool, ArrangeActions)> {
         let ws = self
             .inner
             .get(wix)
             .ok_or_else(|| perror!("attempt to layout unknown workspace: {}", wix))?;
-
         let lc = ws.layout_conf();
-        if !lc.floating {
-            Ok((lc, ws.arrange(region, clients)))
-        } else {
+
+        if clients.iter().any(|c| c.is_fullscreen()) {
+            return Ok((
+                LayoutConf {
+                    gapless: true,
+                    ..lc
+                },
+                true,
+                ArrangeActions {
+                    actions: clients
+                        .iter()
+                        .map(|c| {
+                            (
+                                c.id(),
+                                if c.is_fullscreen() {
+                                    Some(fullscreen_region)
+                                } else {
+                                    None
+                                },
+                            )
+                        })
+                        .collect(),
+                    floating: vec![],
+                },
+            ));
+        } else if lc.floating {
             Ok((
                 lc,
+                false,
                 ArrangeActions {
                     actions: vec![],
                     floating: clients.iter().map(|c| c.id()).collect(),
                 },
             ))
+        } else {
+            Ok((lc, false, ws.arrange(region, clients)))
         }
     }
 
@@ -236,13 +262,6 @@ impl Workspaces {
             Some(ws) => ws.layout_symbol(),
             None => "???",
         }
-    }
-
-    pub fn client_ids(&self, wix: usize) -> Result<Vec<Xid>> {
-        self.inner
-            .get(wix)
-            .map(|ws| ws.client_ids())
-            .ok_or_else(|| perror!("unknown workspace: {}", wix))
     }
 
     pub fn focused_client(&self, ix: usize) -> Option<Xid> {
@@ -340,5 +359,198 @@ mod tests {
 
         let res = wss.add_client(0, 0);
         assert!(res.is_err());
+    }
+
+    fn test_client(id: Xid, floating: bool, fullscreen: bool) -> Client {
+        Client {
+            id,
+            workspace: 0,
+            accepts_focus: true,
+            floating,
+            fullscreen,
+            mapped: true,
+            urgent: false,
+            wm_class: vec![],
+            wm_hints: None,
+            wm_managed: true,
+            wm_name: "test".into(),
+            wm_normal_hints: None,
+            wm_protocols: vec![],
+            wm_type: vec![],
+        }
+    }
+
+    #[test]
+    fn arrange_none() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 0)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![]);
+
+        let (lc, borderless, actions) = wss
+            .get_arrange_actions(
+                0,
+                Region::new(0, 20, 800, 580),
+                Region::new(0, 0, 800, 600),
+                &vec![],
+            )
+            .unwrap();
+
+        assert_eq!(lc, wss[0].layout_conf());
+        assert!(!borderless);
+        assert_eq!(actions.actions, vec![]);
+        assert_eq!(actions.floating, vec![]);
+    }
+
+    #[test]
+    fn arrange_single() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 1)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0]);
+
+        let client_0 = test_client(0, false, false);
+
+        let (lc, borderless, actions) = wss
+            .get_arrange_actions(
+                0,
+                Region::new(0, 20, 800, 580),
+                Region::new(0, 0, 800, 600),
+                &vec![&client_0],
+            )
+            .unwrap();
+
+        assert_eq!(lc, wss[0].layout_conf());
+        assert!(!borderless);
+        assert_eq!(
+            actions.actions,
+            vec![(0, Some(Region::new(0, 20, 800, 580)))]
+        );
+        assert_eq!(actions.floating, vec![]);
+    }
+
+    #[test]
+    fn arrange_multiple() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 4)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0, 1, 2, 3]);
+
+        let client_0 = test_client(0, false, false);
+        let client_1 = test_client(1, false, false);
+        let client_2 = test_client(2, false, false);
+        let client_3 = test_client(3, false, false);
+
+        let (lc, borderless, actions) = wss
+            .get_arrange_actions(
+                0,
+                Region::new(0, 20, 800, 580),
+                Region::new(0, 0, 800, 600),
+                &vec![&client_0, &client_1, &client_2, &client_3],
+            )
+            .unwrap();
+
+        assert_eq!(lc, LayoutConf::default());
+        assert!(!borderless);
+        assert_eq!(
+            actions.actions,
+            vec![
+                (0, Some(Region::new(0, 20, 800, 145))),
+                (1, Some(Region::new(0, 165, 800, 145))),
+                (2, Some(Region::new(0, 310, 800, 145))),
+                (3, Some(Region::new(0, 455, 800, 145))),
+            ]
+        );
+        assert_eq!(actions.floating, vec![]);
+    }
+
+    #[test]
+    fn arrange_fullscreen() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 4)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0, 1, 2, 3]);
+
+        let client_0 = test_client(0, false, false);
+        let client_1 = test_client(1, false, true);
+        let client_2 = test_client(2, true, false);
+        let client_3 = test_client(3, false, false);
+
+        let (lc, borderless, actions) = wss
+            .get_arrange_actions(
+                0,
+                Region::new(0, 20, 800, 580),
+                Region::new(0, 0, 800, 600),
+                &vec![&client_0, &client_1, &client_2, &client_3],
+            )
+            .unwrap();
+
+        assert_eq!(
+            lc,
+            LayoutConf {
+                gapless: true,
+                ..wss[0].layout_conf()
+            }
+        );
+        assert!(borderless);
+        assert_eq!(
+            actions.actions,
+            vec![
+                (0, None),
+                (1, Some(Region::new(0, 0, 800, 600))),
+                (2, None),
+                (3, None),
+            ]
+        );
+        assert_eq!(actions.floating, vec![]);
+    }
+
+    #[test]
+    fn arrange_some_floating() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 4)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0, 1, 2, 3]);
+
+        let client_0 = test_client(0, false, false);
+        let client_1 = test_client(1, true, false);
+        let client_2 = test_client(2, true, false);
+        let client_3 = test_client(3, false, false);
+
+        let (lc, borderless, actions) = wss
+            .get_arrange_actions(
+                0,
+                Region::new(0, 20, 800, 580),
+                Region::new(0, 0, 800, 600),
+                &vec![&client_0, &client_1, &client_2, &client_3],
+            )
+            .unwrap();
+
+        assert_eq!(lc, wss[0].layout_conf());
+        assert!(!borderless);
+        assert_eq!(
+            actions.actions,
+            vec![
+                (0, Some(Region::new(0, 20, 800, 290))),
+                (3, Some(Region::new(0, 310, 800, 290))),
+            ]
+        );
+        assert_eq!(actions.floating, vec![1, 2]);
+    }
+
+    #[test]
+    fn arrange_all_floating() {
+        let mut wss = Workspaces::new(vec![test_workspace("test", 4)], 0.1);
+        assert_eq!(wss[0].client_ids(), vec![0, 1, 2, 3]);
+        wss[0].cycle_layout(Forward); // Switch to the floating test layout
+
+        let client_0 = test_client(0, false, false);
+        let client_1 = test_client(1, true, false);
+        let client_2 = test_client(2, false, false);
+        let client_3 = test_client(3, true, false);
+
+        let (lc, borderless, actions) = wss
+            .get_arrange_actions(
+                0,
+                Region::new(0, 20, 800, 580),
+                Region::new(0, 0, 800, 600),
+                &vec![&client_0, &client_1, &client_2, &client_3],
+            )
+            .unwrap();
+
+        assert_eq!(lc, wss[0].layout_conf());
+        assert!(!borderless);
+        assert_eq!(actions.actions, vec![]);
+        assert_eq!(actions.floating, vec![0, 1, 2, 3]);
     }
 }
