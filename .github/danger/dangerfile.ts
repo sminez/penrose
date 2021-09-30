@@ -102,11 +102,3 @@ update_labels(
     { path: "src/xcb", label: "xcb" },
   ],
 );
-
-if (PR.author_association === "FIRST_TIME_CONTRIBUTOR") {
-  markdown(":tada: Thank you for raising your first PR for penrose!\n!");
-}
-
-if (PR.body.match(/\.gif/g)) {
-  markdown(":tophat: Oooooh! A GIF...nice\n!");
-}
