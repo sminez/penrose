@@ -1279,7 +1279,7 @@ mod tests {
             layout::*,
             ring::Direction::*,
             screen::*,
-            xconnection::{MockXConn, Prop, XEvent},
+            xconnection::{MockXConn, Prop, XEvent, XState},
         },
         draw::Color,
     };
@@ -2001,6 +2001,65 @@ mod tests {
         assert_eq!(
             wm.client(&Selector::Focused).map(|c| c.workspace()),
             Some(5)
+        );
+    }
+
+    #[test]
+    fn apply_layout_default_order() {
+        let mut wm = test_windowmanager(1, n_clients(4));
+        wm.init().unwrap();
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
+            .unwrap();
+
+        wm.apply_layout(0).unwrap();
+
+        assert_eq!(
+            wm.conn.client_geometry(3).unwrap(),
+            Region::new(5, 23, 786, 131)
+        );
+        assert_eq!(
+            wm.conn.client_geometry(2).unwrap(),
+            Region::new(5, 168, 786, 131)
+        );
+        assert_eq!(
+            wm.conn.client_geometry(1).unwrap(),
+            Region::new(5, 313, 786, 131)
+        );
+        assert_eq!(
+            wm.conn.client_geometry(0).unwrap(),
+            Region::new(5, 458, 786, 131)
+        );
+    }
+
+    #[test]
+    fn apply_layout_custom_order() {
+        let mut wm = test_windowmanager(1, n_clients(4));
+        wm.init().unwrap();
+        wm.grab_keys_and_run(test_key_bindings(), test_mouse_bindings())
+            .unwrap();
+
+        wm.drag_client(Forward).unwrap();
+        wm.drag_client(Forward).unwrap();
+        wm.cycle_client(Backward).unwrap();
+        wm.drag_client(Backward).unwrap();
+
+        wm.apply_layout(0).unwrap();
+
+        assert_eq!(
+            wm.conn.client_geometry(1).unwrap(),
+            Region::new(5, 23, 786, 131)
+        );
+        assert_eq!(
+            wm.conn.client_geometry(2).unwrap(),
+            Region::new(5, 168, 786, 131)
+        );
+        assert_eq!(
+            wm.conn.client_geometry(3).unwrap(),
+            Region::new(5, 313, 786, 131)
+        );
+        assert_eq!(
+            wm.conn.client_geometry(0).unwrap(),
+            Region::new(5, 458, 786, 131)
         );
     }
 }

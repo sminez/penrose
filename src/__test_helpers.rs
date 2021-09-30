@@ -22,7 +22,11 @@ pub use crate::{
     logging_error_handler, Backward, Forward, Less, More, PenroseError, WindowManager,
 };
 
-pub use std::{cell::Cell, collections::HashMap, fmt};
+pub use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    fmt,
+};
 
 pub type TestWM = WindowManager<TestXConn>;
 pub type TestKeyBindings = KeyBindings<TestXConn>;
@@ -132,7 +136,7 @@ pub struct TestXConn {
     focused: Cell<Xid>,
     n_screens: Cell<u32>,
     unmanaged_ids: Vec<Xid>,
-    client_geometry: Cell<Region>,
+    client_geometry: RefCell<HashMap<Xid, Region>>,
 }
 
 impl fmt::Debug for TestXConn {
@@ -154,7 +158,7 @@ impl TestXConn {
             focused: Cell::new(0),
             n_screens: Cell::new(n_screens),
             unmanaged_ids,
-            client_geometry: Cell::new(Region::default()),
+            client_geometry: RefCell::new(HashMap::new()),
         }
     }
 
@@ -185,8 +189,8 @@ __impl_stub_xcon! {
         }
     }
     client_config: {
-        fn mock_position_client(&self, _id: Xid, r: Region, _border: u32, _stack_above: bool) -> Result<()> {
-            self.client_geometry.set(r);
+        fn mock_position_client(&self, id: Xid, r: Region, _border: u32, _stack_above: bool) -> Result<()> {
+            self.client_geometry.borrow_mut().insert(id, r);
             Ok(())
         }
     }
@@ -213,8 +217,8 @@ __impl_stub_xcon! {
             Ok(self.focused.get())
         }
 
-        fn mock_client_geometry(&self, _id: Xid) -> Result<Region> {
-            Ok(self.client_geometry.get())
+        fn mock_client_geometry(&self, id: Xid) -> Result<Region> {
+            Ok(self.client_geometry.borrow().get(&id).copied().unwrap_or_default())
         }
     }
     conn: {
