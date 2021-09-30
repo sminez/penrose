@@ -390,12 +390,13 @@ mod tests {
             n_clients: u32,
             fullscreen: Option<Xid>,
             target: Xid,
+            expect_fullscreen: bool,
         );
 
-        case: single_client_on => (1, None, 0);
-        case: single_client_off => (1, Some(0), 0);
-        case: multiple_clients_on => (4, None, 1);
-        case: multiple_clients_off => (4, Some(1), 1);
+        case: single_client_on => (1, None, 0, true);
+        case: single_client_off => (1, Some(0), 0, false);
+        case: multiple_clients_on => (4, None, 1, true);
+        case: multiple_clients_off => (4, Some(1), 1, false);
 
         body: {
             let conn = RecordingXConn::init();
@@ -421,6 +422,7 @@ mod tests {
             let events = clients.toggle_fullscreen(target, 42, &conn).unwrap();
 
             assert_eq!(events.len(), 1);
+            assert_eq!(clients.get(target).map(|c| c.fullscreen), Some(expect_fullscreen));
         }
     }
 }

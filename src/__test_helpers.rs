@@ -66,7 +66,18 @@ pub fn test_screens(n: u32) -> Vec<Screen> {
 pub fn test_layouts() -> Vec<Layout> {
     vec![
         Layout::new("first", LayoutConf::default(), row_layout, 1, 0.6),
-        Layout::new("second", LayoutConf::default(), row_layout, 1, 0.6),
+        Layout::new(
+            "second",
+            LayoutConf {
+                allow_wrapping: true,
+                floating: true,
+                follow_focus: false,
+                gapless: false,
+            },
+            row_layout,
+            1,
+            0.6,
+        ),
     ]
 }
 

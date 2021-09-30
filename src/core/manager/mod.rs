@@ -668,7 +668,6 @@ impl<X: XConn> WindowManager<X> {
 
     // Toggle the given client fullscreen. This has knock on effects for other windows and can
     // be triggered by user key bindings as well as applications requesting full screen as well.
-    // TODO: should something going fullscreen also hide unmaged windows?
     fn set_fullscreen(&mut self, id: Xid, should_fullscreen: bool) -> Result<()> {
         let (currently_fullscreen, wix) = self
             .clients
