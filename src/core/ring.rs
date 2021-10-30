@@ -65,6 +65,18 @@ pub enum Selector<'a, T> {
     Condition(&'a dyn Fn(&T) -> bool),
 }
 
+impl<'a, T> From<Xid> for Selector<'a, T> {
+    fn from(id: Xid) -> Self {
+        Self::WinId(id)
+    }
+}
+
+impl<'a, T> From<usize> for Selector<'a, T> {
+    fn from(index: usize) -> Self {
+        Self::Index(index)
+    }
+}
+
 impl<'a, T> fmt::Debug for Selector<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

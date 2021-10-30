@@ -21,9 +21,9 @@ members = [ "crates/*" ]
 
 [features]
 default = ["xcb", "xcb_draw"]
-xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 keysyms = ["penrose_keysyms"]
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
+xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 
 [dependencies]
 penrose_keysyms = { version = "0.1.0", path = "crates/penrose_keysyms", optional = true }
