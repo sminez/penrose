@@ -4,33 +4,14 @@ use crate::core::{
     bindings::{KeyCode, MouseEvent},
     data_types::{Point, Region},
     hooks::HookName,
-    manager::{clients::Clients, WindowManager},
+    manager::state::WmState,
     xconnection::{
-        Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XConn, XEvent, Xid,
+        Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XAtomQuerier, XEvent,
+        Xid,
     },
 };
 
 use std::str::FromStr;
-
-pub(super) struct WmState<'a, X>
-where
-    X: XConn,
-{
-    conn: &'a X,
-    clients: &'a Clients,
-}
-
-impl<'a, X> WmState<'a, X>
-where
-    X: XConn,
-{
-    pub(super) fn new(manager: &'a WindowManager<X>) -> Self {
-        Self {
-            conn: &manager.conn,
-            clients: &manager.clients,
-        }
-    }
-}
 
 /// Actions that will be carried out by the [WindowManager][1] in response to individual each
 /// [XEvent] received from the provided [XConn][2].
@@ -86,9 +67,9 @@ pub enum EventAction {
     Unmap(Xid),
 }
 
-pub(super) fn process_next_event<X>(event: XEvent, state: WmState<'_, X>) -> Vec<EventAction>
+pub(super) fn process_next_event<X>(event: XEvent, state: &WmState, conn: &X) -> Vec<EventAction>
 where
-    X: XConn,
+    X: XAtomQuerier,
 {
     match event {
         // Direct 1-n mappings of XEvents -> EventActions
@@ -106,7 +87,7 @@ where
         XEvent::UnmapNotify(id) => vec![EventAction::Unmap(id)],
 
         // Require processing based on current WindowManager state
-        XEvent::ClientMessage(msg) => process_client_message(state, msg),
+        XEvent::ClientMessage(msg) => process_client_message(state, conn, msg),
         XEvent::ConfigureNotify(evt) => process_configure_notify(evt),
         XEvent::ConfigureRequest(evt) => process_configure_request(evt),
         XEvent::Enter(p) => process_enter_notify(state, p),
@@ -117,16 +98,16 @@ where
     }
 }
 
-fn process_client_message<X>(state: WmState<'_, X>, msg: ClientMessage) -> Vec<EventAction>
+fn process_client_message<X>(state: &WmState, conn: &X, msg: ClientMessage) -> Vec<EventAction>
 where
-    X: XConn,
+    X: XAtomQuerier,
 {
     let data = msg.data();
     trace!(id = msg.id, dtype = ?msg.dtype, ?data, "got client message");
 
     let is_fullscreen = |data: &[u32]| {
         data.iter()
-            .map(|&a| state.conn.atom_name(a))
+            .map(|&a| conn.atom_name(a))
             .flatten()
             .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
     };
@@ -164,10 +145,7 @@ fn process_configure_request(evt: ConfigureEvent) -> Vec<EventAction> {
     }
 }
 
-fn process_enter_notify<X>(state: WmState<'_, X>, p: PointerChange) -> Vec<EventAction>
-where
-    X: XConn,
-{
+fn process_enter_notify(state: &WmState, p: PointerChange) -> Vec<EventAction> {
     let mut actions = vec![
         EventAction::ClientFocusGained(p.id),
         EventAction::SetScreenFromPoint(Some(p.abs)),
@@ -185,14 +163,7 @@ where
 // Processing around map_request is currently copied from dwm:
 //   - if override_redirect is set we completely ignore the window
 //   - if the client is in the client_map (i.e. we are already managing this client) then ignore
-fn process_map_request<X>(
-    state: WmState<'_, X>,
-    id: Xid,
-    override_redirect: bool,
-) -> Vec<EventAction>
-where
-    X: XConn,
-{
+fn process_map_request(state: &WmState, id: Xid, override_redirect: bool) -> Vec<EventAction> {
     if override_redirect || state.clients.is_known(id) {
         vec![]
     } else {

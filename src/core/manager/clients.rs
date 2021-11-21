@@ -170,6 +170,10 @@ impl Clients {
         self.matching_clients(&Selector::Condition(&|c: &Client| c.workspace == wix))
     }
 
+    pub fn clients_for_ids(&self, ids: &[Xid]) -> Vec<&Client> {
+        ids.iter().map(|i| &self.inner[i]).collect()
+    }
+
     pub fn all_known_ids(&self) -> Vec<Xid> {
         self.inner.keys().copied().collect()
     }

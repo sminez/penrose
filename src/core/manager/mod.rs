@@ -25,16 +25,19 @@ use std::collections::HashMap;
 
 mod clients;
 mod event;
+mod layout;
 mod screens;
+mod state;
 mod util;
 mod workspaces;
 
 use clients::Clients;
+use event::process_next_event;
 use event::EventAction;
+use layout::{apply_layout, layout_visible};
 use screens::Screens;
+use state::WmState;
 use workspaces::Workspaces;
-
-use event::{process_next_event, WmState};
 
 #[cfg(feature = "serde")]
 fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
@@ -62,10 +65,7 @@ fn default_hooks<X: XConn>() -> Cell<Hooks<X>> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WindowManager<X: XConn> {
     pub(super) conn: X,
-    pub(super) config: Config,
-    clients: Clients,
-    workspaces: Workspaces,
-    screens: Screens,
+    pub(super) state: WmState,
     #[cfg_attr(feature = "serde", serde(skip, default = "default_hooks"))]
     pub(super) hooks: Cell<Hooks<X>>,
     pub(super) previous_workspace: usize,
@@ -80,10 +80,7 @@ impl<X: XConn> fmt::Debug for WindowManager<X> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WindowManager")
             .field("conn", &stringify!(self.conn))
-            .field("config", &self.config)
-            .field("clients", &self.clients)
-            .field("workspaces", &self.workspaces)
-            .field("screens", &self.screens)
+            .field("state", &self.state)
             .field("hooks", &stringify!(self.hooks))
             .field("previous_workspace", &self.previous_workspace)
             .field("running", &self.running)
@@ -110,12 +107,16 @@ impl<X: XConn> WindowManager<X> {
         let screens = Screens::new(config.bar_height, config.top_bar);
         let clients = Clients::new(config.focused_border, config.unfocused_border);
 
-        Self {
-            conn,
+        let state = WmState {
             config,
+            clients,
             screens,
             workspaces,
-            clients,
+        };
+
+        Self {
+            conn,
+            state,
             previous_workspace: 0,
             hooks: Cell::new(hooks),
             running: false,
@@ -303,9 +304,12 @@ impl<X: XConn> WindowManager<X> {
 
         match action {
             ClientFocusGained(id) => self.update_focus(id)?,
-            ClientFocusLost(id) => self.clients.client_lost_focus(id, &self.conn),
+            ClientFocusLost(id) => self.state.clients.client_lost_focus(id, &self.conn),
             ClientNameChanged(id, is_root) => {
-                let action = self.clients.client_name_changed(id, is_root, &self.conn)?;
+                let action = self
+                    .state
+                    .clients
+                    .client_name_changed(id, is_root, &self.conn)?;
                 self.handle_event_action(action, None, None)?
             }
             ClientToWorkspace(id, wix) => self.move_client_to_workspace(id, wix)?,
@@ -391,7 +395,7 @@ impl<X: XConn> WindowManager<X> {
                     let _enter = span.enter();
                     trace!(details = ?event, "event details");
 
-                    let actions = process_next_event(event, WmState::new(self));
+                    let actions = process_next_event(event, &self.state, &self.conn);
                     for action in actions {
                         if let Err(e) = self.handle_event_action(
                             action,
@@ -447,7 +451,7 @@ impl<X: XConn> WindowManager<X> {
             }
         };
 
-        let prev = self.clients.set_focused(target, &self.conn);
+        let prev = self.state.clients.set_focused(target, &self.conn);
 
         let (wix, accepts_focus) = {
             // Safe to unwrap because we make sure this is a known client above
@@ -509,7 +513,7 @@ impl<X: XConn> WindowManager<X> {
                 let s = self.screens.focused();
                 self.conn.warp_cursor(Some(id), s)?;
             } else {
-                self.clients.unmap_if_needed(id, &self.conn)?;
+                self.state.clients.unmap_if_needed(id, &self.conn)?;
             }
 
             self.layout_visible()?;
@@ -518,19 +522,12 @@ impl<X: XConn> WindowManager<X> {
         Ok(())
     }
 
-    #[tracing::instrument(level = "trace", err, skip(self))]
-    fn layout_visible(&mut self) -> Result<()> {
-        for wix in self.screens.visible_workspaces() {
-            self.apply_layout(wix)?;
-        }
-        Ok(())
-    }
-
     /// Query the [XConn] for the current connected [Screen] list and reposition displayed
     /// [Workspace] instances if needed.
     #[tracing::instrument(level = "trace", err, skip(self))]
     pub fn detect_screens(&mut self) -> Result<()> {
         let actions = self
+            .state
             .screens
             .update_known_screens(&self.conn, self.workspaces.len())?;
 
@@ -594,7 +591,7 @@ impl<X: XConn> WindowManager<X> {
 
         if wix == self.screens.active_ws_index() {
             self.apply_layout(wix)?;
-            self.clients.map_if_needed(id, &self.conn)?;
+            self.state.clients.map_if_needed(id, &self.conn)?;
             let s = self.screens.focused();
             self.conn.warp_cursor(Some(id), s)?;
         }
@@ -687,6 +684,7 @@ impl<X: XConn> WindowManager<X> {
 
         let client_ids = self.workspaces.client_ids(wix)?;
         let actions = self
+            .state
             .clients
             .toggle_fullscreen(id, wix, &client_ids, r, &self.conn)?;
 
@@ -697,26 +695,18 @@ impl<X: XConn> WindowManager<X> {
      * Common mid level actions that make up larger event response handlers.
      */
 
-    #[tracing::instrument(level = "debug", err, skip(self))]
     fn apply_layout(&mut self, wix: usize) -> Result<()> {
-        let (i, s) = match self.screens.indexed_screen_for_workspace(wix) {
-            Some(index_and_screen) => index_and_screen,
-            None => return Ok(()), // workspace is not currently visible
-        };
+        if let Some(action) = apply_layout(&mut self.state, &self.conn, wix)? {
+            self.handle_event_action(action, None, None)
+        } else {
+            Ok(())
+        }
+    }
 
-        let region = s.region(self.config.show_bar);
-        let clients = self.clients.clients_for_workspace(wix);
-        let (lc, arrange_actions) = self.workspaces.get_arrange_actions(wix, region, &clients)?;
-        self.clients.apply_arrange_actions(
-            arrange_actions,
-            &lc,
-            self.config.border_px,
-            self.config.gap_px,
-            &self.conn,
-        )?;
-
-        self.run_hook(HookName::LayoutApplied(wix, i));
-        Ok(())
+    #[tracing::instrument(level = "trace", err, skip(self))]
+    fn layout_visible(&mut self) -> Result<()> {
+        let actions = layout_visible(&mut self.state, &self.conn)?;
+        self.handle_event_actions(actions)
     }
 
     fn update_x_workspace_details(&mut self) -> Result<()> {
@@ -791,7 +781,7 @@ impl<X: XConn> WindowManager<X> {
 
     /// Cycle between known [screens][Screen]. Does not wrap from first to last
     pub fn cycle_screen(&mut self, direction: Direction) -> Result<()> {
-        let actions = self.screens.cycle_screen(direction, &self.conn)?;
+        let actions = self.state.screens.cycle_screen(direction, &self.conn)?;
         self.handle_event_actions(actions)
     }
 
@@ -821,7 +811,7 @@ impl<X: XConn> WindowManager<X> {
         let wix = self.screens.active_ws_index();
         let res = self.workspaces.cycle_client(wix, direction);
         if let Some((prev, new)) = res {
-            self.clients.client_lost_focus(prev, &self.conn);
+            self.state.clients.client_lost_focus(prev, &self.conn);
             self.update_focus(new)?;
             let screen = self.screens.focused();
             self.conn.warp_cursor(Some(new), screen)?;
@@ -977,12 +967,12 @@ impl<X: XConn> WindowManager<X> {
             // displayed and replace it with the target workspace
             let ws = self.workspaces.get_workspace(active)?;
             for id in ws.client_ids().iter() {
-                self.clients.unmap_if_needed(*id, &self.conn)?;
+                self.state.clients.unmap_if_needed(*id, &self.conn)?;
             }
 
             let ws = self.workspaces.get_workspace(index)?;
             for id in ws.client_ids().iter() {
-                self.clients.map_if_needed(*id, &self.conn)?;
+                self.state.clients.map_if_needed(*id, &self.conn)?;
             }
 
             self.screens.focused_mut().wix = index;
@@ -1012,7 +1002,7 @@ impl<X: XConn> WindowManager<X> {
             if let Some(wix) = self.workspaces.index(selector) {
                 self.move_client_to_workspace(id, wix)?;
                 if let Some(now_focused) = self.active_workspace().focused_client() {
-                    self.clients.set_focused(now_focused, &self.conn);
+                    self.state.clients.set_focused(now_focused, &self.conn);
                 }
             }
         }
@@ -1071,7 +1061,8 @@ impl<X: XConn> WindowManager<X> {
 
     /// A mutable reference to the current active [Workspace]
     pub fn active_workspace_mut(&mut self) -> &mut Workspace {
-        self.workspaces
+        self.state
+            .workspaces
             .workspace_mut(&Selector::Index(self.screens.active_ws_index()))
             .expect("no active workspace")
     }
@@ -1166,11 +1157,12 @@ impl<X: XConn> WindowManager<X> {
     pub fn client_mut(&mut self, selector: &Selector<'_, Client>) -> Option<&mut Client> {
         match selector {
             Selector::Index(i) => match self
+                .state
                 .workspaces
                 .get(self.screens.active_ws_index())
                 .and_then(|ws| ws.iter().nth(*i))
             {
-                Some(id) => self.clients.get_mut(*id),
+                Some(id) => self.state.clients.get_mut(*id),
                 None => None,
             },
             _ => self.clients.client_mut(selector),
@@ -1202,11 +1194,12 @@ impl<X: XConn> WindowManager<X> {
         let mut clients: Vec<&mut Client> = match selector {
             Selector::Index(i) => {
                 match self
+                    .state
                     .workspaces
                     .get(self.screens.active_ws_index())
                     .and_then(|ws| ws.iter().nth(*i))
                 {
-                    Some(id) => self.clients.get_mut(*id).into_iter().collect(),
+                    Some(id) => self.state.clients.get_mut(*id).into_iter().collect(),
                     None => vec![],
                 }
             }
@@ -1239,7 +1232,7 @@ impl<X: XConn> WindowManager<X> {
 
     /// Make the Client with ID 'id' visible at its last known position.
     pub fn show_client(&mut self, id: Xid) -> Result<()> {
-        self.clients.map_if_needed(id, &self.conn)?;
+        self.state.clients.map_if_needed(id, &self.conn)?;
         // TODO: is this right? Need to double check...
         self.conn
             .set_client_workspace(id, self.screens.active_ws_index())
@@ -1248,7 +1241,7 @@ impl<X: XConn> WindowManager<X> {
 
     /// Hide the Client with ID 'id'.
     pub fn hide_client(&mut self, id: Xid) -> Result<()> {
-        self.clients.unmap_if_needed(id, &self.conn)
+        self.state.clients.unmap_if_needed(id, &self.conn)
     }
 
     /// Layout the workspace currently shown on the given screen index.
@@ -1763,7 +1756,7 @@ mod tests {
             wm.init().unwrap();
             add_n_clients(&mut wm, n_clients, 0);
             if let Some(id) = current {
-                wm.clients.set_focused(id, &wm.conn);
+                wm.state.clients.set_focused(id, &wm.conn);
             }
             wm.clients.modify(target, |c| c.accepts_focus = accepts_focus);
             wm.conn().clear();
