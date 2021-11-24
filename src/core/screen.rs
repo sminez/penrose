@@ -11,6 +11,12 @@ pub struct Screen {
     effective_region: Region,
 }
 
+impl PartialOrd for Screen {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.true_region.x.partial_cmp(&other.true_region.x)
+    }
+}
+
 impl Screen {
     /// Create a new screen instance directly
     pub fn new(region: Region, wix: usize) -> Screen {

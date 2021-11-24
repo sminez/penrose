@@ -93,8 +93,12 @@ impl Screens {
 
         debug!(?workspace_ordering, "current workspace ordering");
 
-        let detected: Vec<Screen> = state
-            .current_screens()?
+        let mut detected: Vec<Screen> = state.current_screens()?;
+
+        // sort the screens to be in the correct order
+        detected.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let detected = detected
             .into_iter()
             .zip(workspace_ordering)
             .enumerate()
