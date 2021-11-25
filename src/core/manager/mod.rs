@@ -731,6 +731,11 @@ impl<X: XConn> WindowManager<X> {
             (self.error_handler)(e);
         }
 
+        let wix = self.screens.focused().wix;
+        if let Err(e) = self.conn.set_current_workspace(wix) {
+            error!("Got error when setting current workspace {}", e);
+        };
+
         self.screens.focused()
     }
 
