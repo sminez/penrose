@@ -952,6 +952,9 @@ impl<X: XConn> WindowManager<X> {
                     self.apply_layout(active)?;
                     self.apply_layout(index)?;
 
+                    // update xproperty _NET_CURRENT_DESKTOP
+                    self.conn.set_current_workspace(index)?;
+
                     let ws = self.workspaces.get_workspace(index)?;
                     if let Some(id) = ws.focused_client() {
                         self.update_focus(id)?;
