@@ -726,15 +726,20 @@ impl<X: XConn> WindowManager<X> {
     }
 
     fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> &Screen {
+        let prev_wix = self.screens.focused().wix;
+
         let actions = self.screens.focus_screen(sel);
         if let Err(e) = self.handle_event_actions(actions) {
             (self.error_handler)(e);
         }
 
+        // update current workspace if it is different
         let wix = self.screens.focused().wix;
-        if let Err(e) = self.conn.set_current_workspace(wix) {
-            error!("Got error when setting current workspace {}", e);
-        };
+        if prev_wix != wix {
+            if let Err(e) = self.conn.set_current_workspace(wix) {
+                error!("Got error when setting current workspace {}", e);
+            };
+        }
 
         self.screens.focused()
     }
