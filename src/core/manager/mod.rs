@@ -827,16 +827,16 @@ impl<X: XConn> WindowManager<X> {
             None => return Err(PenroseError::NoMatchingElement),
         };
 
-        // update focused client if there is a new client that is in focus
-        let wix = self.screens.active_ws_index();
-        let ws = self.workspaces.get_workspace(wix)?;
-        if let Some(fid) = ws.focused_client() {
-            if fid != id {
-                self.update_focus(id)?;
-                let screen = self.screens.focused();
-                self.conn.warp_cursor(Some(id), screen)?;
+        if let Some(wid) = self.active_workspace().focused_client() {
+            if wid == id {
+                return Ok(id);
             }
         }
+
+        // update focused client if there is a new client that is in focus
+        self.update_focus(id)?;
+        let screen = self.screens.focused();
+        self.conn.warp_cursor(Some(id), screen)?;
 
         Ok(id)
     }
