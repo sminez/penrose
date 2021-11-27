@@ -7,14 +7,8 @@ use crate::core::data_types::{Point, Region};
 pub struct Screen {
     /// The current workspace index being displayed
     pub wix: usize,
-    true_region: Region,
+    pub(crate) true_region: Region,
     effective_region: Region,
-}
-
-impl PartialOrd for Screen {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.true_region.x.partial_cmp(&other.true_region.x)
-    }
 }
 
 impl Screen {

@@ -96,7 +96,7 @@ impl Screens {
         let mut detected: Vec<Screen> = state.current_screens()?;
 
         // sort the screens to be in the correct order
-        detected.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        detected.sort_by_key(|s| s.true_region.x);
 
         let detected = detected
             .into_iter()
