@@ -162,7 +162,7 @@ fn serde_hydrating_when_x_state_is_wrong_errors() {
     match res {
         Ok(_) => panic!("this should have returned an error"),
         Err(e) => match e {
-            PenroseError::MissingClientIds(ids) => assert_eq!(&ids, &[1, 2, 3]),
+            penrose::PenroseError::MissingClientIds(ids) => assert_eq!(&ids, &[1, 2, 3]),
             _ => panic!("unexpected Error type from hydration"),
         },
     }
