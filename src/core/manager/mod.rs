@@ -1785,6 +1785,44 @@ mod tests {
         }
     }
 
+    macro_rules! cycle_screen_test {
+        ($method:ident, $pre_commands:expr, $test_command:expr, $expected:expr) => {
+            paste::paste! {
+                #[test]
+                fn [<cycle_screen_test _ $method>]() {
+                    let conn = RecordingXConn::init();
+                    let conf = Default::default();
+                    let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+                    wm.init().unwrap();
+                    for command in $pre_commands {
+                        wm.cycle_screen(command).unwrap();
+                    }
+                    let expected = $expected
+                            .into_iter()
+                            .map(|id| {
+                                (
+                                    "change_prop".into(),
+                                    strings!(42, "_NET_CURRENT_DESKTOP", Prop::Cardinal(id)),
+                                )
+                            })
+                            .collect::<Vec<RecordedCall>>();
+                    wm.conn().clear();
+
+                    // cycle the screen
+                    wm.cycle_screen($test_command).unwrap();
+
+                    // check that the recorded calls are the expected values
+                    assert_eq!(wm.conn().calls(),expected);
+                }
+            }
+        };
+    }
+
+    cycle_screen_test!(backwards_on_first_screen, [], Backward, vec![]);
+    cycle_screen_test!(backwards_on_second_screen, [Forward], Backward, vec![0]);
+    cycle_screen_test!(forwards_on_first_screen, [], Forward, vec![1]);
+    cycle_screen_test!(forwards_on_last_screen, [Forward], Forward, vec![]); // the mock setup apparently only has two screens
+
     #[test]
     fn cycle_screen_updates_active() {
         let mut wm = test_windowmanager(2, vec![]);
