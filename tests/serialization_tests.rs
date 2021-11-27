@@ -15,7 +15,7 @@ use penrose::{
         screen::Screen,
         xconnection::{Atom, Prop, Result, XError, XEvent, Xid},
     },
-    logging_error_handler, PenroseError,
+    logging_error_handler,
 };
 
 use std::{cell::Cell, collections::HashMap};

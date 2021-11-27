@@ -98,7 +98,7 @@ where
     }
 }
 
-fn process_client_message<X>(state: &WmState, conn: &X, msg: ClientMessage) -> Vec<EventAction>
+fn process_client_message<X>(_state: &WmState, conn: &X, msg: ClientMessage) -> Vec<EventAction>
 where
     X: XAtomQuerier,
 {
