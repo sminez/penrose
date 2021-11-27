@@ -1785,43 +1785,78 @@ mod tests {
         }
     }
 
-    macro_rules! cycle_screen_test {
-        ($method:ident, $pre_commands:expr, $test_command:expr, $expected:expr) => {
-            paste::paste! {
-                #[test]
-                fn [<cycle_screen_test _ $method>]() {
-                    let conn = RecordingXConn::init();
-                    let conf = Default::default();
-                    let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
-                    wm.init().unwrap();
-                    for command in $pre_commands {
-                        wm.cycle_screen(command).unwrap();
-                    }
-                    let expected = $expected
-                            .into_iter()
-                            .map(|id| {
-                                (
-                                    "change_prop".into(),
-                                    strings!(42, "_NET_CURRENT_DESKTOP", Prop::Cardinal(id)),
-                                )
-                            })
-                            .collect::<Vec<RecordedCall>>();
-                    wm.conn().clear();
+    macro_rules! changing_screen_focus_test {
+        ($method:ident, $start_screen:expr, $test:expr, $expected:expr) => {
+            #[test]
+            fn $method() {
+                let conn = RecordingXConn::init();
+                let conf = Default::default();
+                let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+                wm.init().unwrap();
 
-                    // cycle the screen
-                    wm.cycle_screen($test_command).unwrap();
+                wm.focus_screen(&Selector::Index($start_screen));
 
-                    // check that the recorded calls are the expected values
-                    assert_eq!(wm.conn().calls(),expected);
-                }
+                let expected = $expected
+                    .into_iter()
+                    .map(|id| {
+                        (
+                            "change_prop".into(),
+                            strings!(42, "_NET_CURRENT_DESKTOP", Prop::Cardinal(id)),
+                        )
+                    })
+                    .collect::<Vec<RecordedCall>>();
+                wm.conn().clear();
+
+                // cycle the screen
+                $test(&mut wm);
+
+                // check that the recorded calls are the expected values
+                assert_eq!(wm.conn().calls(), expected);
             }
         };
     }
 
-    cycle_screen_test!(backwards_on_first_screen, [], Backward, vec![]);
-    cycle_screen_test!(backwards_on_second_screen, [Forward], Backward, vec![0]);
-    cycle_screen_test!(forwards_on_first_screen, [], Forward, vec![1]);
-    cycle_screen_test!(forwards_on_last_screen, [Forward], Forward, vec![]); // the mock setup apparently only has two screens
+    changing_screen_focus_test!(
+        cycle_screen_backwards_on_first_screen,
+        0,
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Backward).unwrap() },
+        vec![]
+    );
+    changing_screen_focus_test!(
+        cycle_screen_backwards_on_second_screen,
+        1,
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Backward).unwrap() },
+        vec![0]
+    );
+    changing_screen_focus_test!(
+        cycle_screen_forwards_on_first_screen,
+        0,
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Forward).unwrap() },
+        vec![1]
+    );
+    changing_screen_focus_test!(
+        cycle_screen_forwards_on_last_screen,
+        1, // the mock setup apparently only has two screens
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Forward).unwrap() },
+        vec![]
+    );
+
+    changing_screen_focus_test!(
+        focus_screen_same,
+        0, // the mock setup apparently only has two screens
+        |wm: &mut WindowManager<_>| {
+            wm.focus_screen(&Selector::Index(0));
+        },
+        vec![]
+    );
+    changing_screen_focus_test!(
+        focus_screen_different,
+        0, // the mock setup apparently only has two screens
+        |wm: &mut WindowManager<_>| {
+            wm.focus_screen(&Selector::Index(1));
+        },
+        vec![1]
+    );
 
     #[test]
     fn cycle_screen_updates_active() {
