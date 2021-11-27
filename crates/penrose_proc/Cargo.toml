@@ -23,3 +23,4 @@ proc-macro2 = "1.0"
 
 penrose_keysyms = { version = "0.1.0", path = "../penrose_keysyms" }
 strum = "0.19.2"
+rustversion = "1.0.4"
