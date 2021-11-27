@@ -791,10 +791,13 @@ impl<X: XConn> WindowManager<X> {
 
     /// Cycle between known [screens][Screen]. Does not wrap from first to last
     pub fn cycle_screen(&mut self, direction: Direction) -> Result<()> {
+        let old_wix = self.screens.focused().wix;
         let actions = self.state.screens.cycle_screen(direction, &self.conn)?;
 
         let wix = self.screens.active_ws_index();
-        self.conn.set_current_workspace(wix)?;
+        if old_wix != wix {
+            self.conn.set_current_workspace(wix)?;
+        }
 
         self.handle_event_actions(actions)
     }
