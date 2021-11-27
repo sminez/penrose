@@ -20,7 +20,7 @@ categories = [ "window manager" ]
 members = [ "crates/*" ]
 
 [features]
-default = ["xcb", "xcb_draw"]
+default = ["xcb", "xcb_draw", "keysyms"]
 keysyms = ["penrose_keysyms"]
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]

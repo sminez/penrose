@@ -13,5 +13,5 @@ keywords = [ "windowmanager", "window", "manager", "x11", "keysym" ]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-strum = { version = "0.19.2", features = ["derive"] }
-strum_macros = "0.19.2"
+strum = { version = "0.20.0", features = ["derive"] }
+strum_macros = "0.20.1"
