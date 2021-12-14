@@ -2038,6 +2038,15 @@ pub enum XKeySym {
     /// XF86XK_AudioNext
     #[strum(serialize = "XF86AudioNext")]
     XF86XK_AudioNext,
+    /// XF86XK_AudioMicMute
+    #[strum(serialize = "XF86XK_AudioMicMute")]
+    XF86XK_AudioMicMute,
+    /// XF86XK_DisplayOff
+    #[strum(serialize = "XF86XK_DisplayOff")]
+    XF86XK_DisplayOff,
+    /// XF86XK_TouchpadToggle
+    #[strum(serialize = "XF86XK_TouchpadToggle")]
+    XF86XK_TouchpadToggle,
 }
 
 impl XKeySym {
@@ -2720,6 +2729,10 @@ impl XKeySym {
                 XKeySym::XF86XK_AudioStop => 0x1008FF15,
                 XKeySym::XF86XK_AudioPrev => 0x1008FF16,
                 XKeySym::XF86XK_AudioNext => 0x1008FF17,
+                XKeySym::XF86XK_AudioMicMute => 0x1008FF18,
+                XKeySym::XF86XK_DisplayOff => 0x1008FF19,
+                XKeySym::XF86XK_TouchpadToggle => 0x1008FF1A,
+
             } as u32)
                 .to_le_bytes()
                 .to_vec()
