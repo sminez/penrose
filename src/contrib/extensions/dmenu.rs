@@ -81,7 +81,10 @@ impl DMenuConfig {
             s.push_str(" -P");
         }
 
-        let mut flags = s.split_whitespace().map(|s| s.into()).collect::<Vec<String>>();
+        let mut flags = s
+            .split_whitespace()
+            .map(|s| s.into())
+            .collect::<Vec<String>>();
 
         if !prompt.is_empty() {
             flags.append(&mut vec!["-p".into(), prompt.into()]);
