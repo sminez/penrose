@@ -27,7 +27,7 @@ xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 
 [dependencies]
 penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional = true }
-penrose_proc = { version = "0.1.2", path = "crates/penrose_proc" }
+penrose_proc = { version = "0.1.3", path = "crates/penrose_proc" }
 
 bitflags = "1.2.1"
 nix = "0.20.0"
