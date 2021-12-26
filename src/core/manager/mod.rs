@@ -726,9 +726,19 @@ impl<X: XConn> WindowManager<X> {
     }
 
     fn focus_screen(&mut self, sel: &Selector<'_, Screen>) -> &Screen {
+        let prev_wix = self.screens.focused().wix;
+
         let actions = self.screens.focus_screen(sel);
         if let Err(e) = self.handle_event_actions(actions) {
             (self.error_handler)(e);
+        }
+
+        // update current workspace if it is different
+        let wix = self.screens.focused().wix;
+        if prev_wix != wix {
+            if let Err(e) = self.conn.set_current_workspace(wix) {
+                error!("Got error when setting current workspace {}", e);
+            };
         }
 
         self.screens.focused()
@@ -781,7 +791,14 @@ impl<X: XConn> WindowManager<X> {
 
     /// Cycle between known [screens][Screen]. Does not wrap from first to last
     pub fn cycle_screen(&mut self, direction: Direction) -> Result<()> {
+        let old_wix = self.screens.focused().wix;
         let actions = self.state.screens.cycle_screen(direction, &self.conn)?;
+
+        let wix = self.screens.active_ws_index();
+        if old_wix != wix {
+            self.conn.set_current_workspace(wix)?;
+        }
+
         self.handle_event_actions(actions)
     }
 
@@ -960,6 +977,9 @@ impl<X: XConn> WindowManager<X> {
                     // re-apply layouts as screen dimensions may differ
                     self.apply_layout(active)?;
                     self.apply_layout(index)?;
+
+                    // update xproperty _NET_CURRENT_DESKTOP
+                    self.conn.set_current_workspace(index)?;
 
                     let ws = self.workspaces.get_workspace(index)?;
                     if let Some(id) = ws.focused_client() {
@@ -1776,6 +1796,79 @@ mod tests {
             assert_eq!(wm.conn().calls(), expected_calls);
         }
     }
+
+    macro_rules! changing_screen_focus_test {
+        ($method:ident, $start_screen:expr, $test:expr, $expected:expr) => {
+            #[test]
+            fn $method() {
+                let conn = RecordingXConn::init();
+                let conf = Default::default();
+                let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+                wm.init().unwrap();
+
+                wm.focus_screen(&Selector::Index($start_screen));
+
+                let expected = $expected
+                    .into_iter()
+                    .map(|id| {
+                        (
+                            "change_prop".into(),
+                            strings!(42, "_NET_CURRENT_DESKTOP", Prop::Cardinal(id)),
+                        )
+                    })
+                    .collect::<Vec<RecordedCall>>();
+                wm.conn().clear();
+
+                // cycle the screen
+                $test(&mut wm);
+
+                // check that the recorded calls are the expected values
+                assert_eq!(wm.conn().calls(), expected);
+            }
+        };
+    }
+
+    changing_screen_focus_test!(
+        cycle_screen_backwards_on_first_screen,
+        0,
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Backward).unwrap() },
+        vec![]
+    );
+    changing_screen_focus_test!(
+        cycle_screen_backwards_on_second_screen,
+        1,
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Backward).unwrap() },
+        vec![0]
+    );
+    changing_screen_focus_test!(
+        cycle_screen_forwards_on_first_screen,
+        0,
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Forward).unwrap() },
+        vec![1]
+    );
+    changing_screen_focus_test!(
+        cycle_screen_forwards_on_last_screen,
+        1, // the mock setup apparently only has two screens
+        |wm: &mut WindowManager<_>| { wm.cycle_screen(Forward).unwrap() },
+        vec![]
+    );
+
+    changing_screen_focus_test!(
+        focus_screen_same,
+        0, // the mock setup apparently only has two screens
+        |wm: &mut WindowManager<_>| {
+            wm.focus_screen(&Selector::Index(0));
+        },
+        vec![]
+    );
+    changing_screen_focus_test!(
+        focus_screen_different,
+        0, // the mock setup apparently only has two screens
+        |wm: &mut WindowManager<_>| {
+            wm.focus_screen(&Selector::Index(1));
+        },
+        vec![1]
+    );
 
     #[test]
     fn cycle_screen_updates_active() {
