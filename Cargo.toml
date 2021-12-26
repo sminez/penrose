@@ -1,6 +1,6 @@
 [package]
 name = "penrose"
-version = "0.3.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license = "MIT"
@@ -26,7 +26,7 @@ x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 
 [dependencies]
-penrose_keysyms = { version = "0.1.0", path = "crates/penrose_keysyms", optional = true }
+penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional = true }
 penrose_proc = { version = "0.1.2", path = "crates/penrose_proc" }
 
 bitflags = "1.2.1"
@@ -49,3 +49,4 @@ paste = "1.0.5"
 serde_json = "1.0.64"
 simplelog = "0.10.0"
 tracing-subscriber = "0.2.17"
+test-case = "1.1.0"
