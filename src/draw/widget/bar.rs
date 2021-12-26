@@ -152,11 +152,22 @@ where
     fn workspace_change(
         &mut self,
         wm: &mut WindowManager<X>,
-        _: usize,
+        pre: usize,
         new: usize,
     ) -> crate::Result<()> {
         let screen = wm.active_screen_index();
         if self.focused_ws[screen] != new {
+            if let Some(index) = self.focused_ws.iter().position(|&item| item == new) {
+                self.focused_ws[index] = pre;
+                if let Some(ws) = self.workspaces.get_mut(pre) {
+                    let res = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name));
+                    ws.occupied = if let Some(w) = res {
+                        !w.is_empty()
+                    } else {
+                        false
+                    };
+                }
+            }
             self.focused_ws[screen] = new;
             if let Some(ws) = self.workspaces.get_mut(new) {
                 let res = wm.workspace(&Selector::Condition(&|w| w.name() == ws.name));
