@@ -200,7 +200,7 @@ macro_rules! gen_keybindings {
             let mut map = ::std::collections::HashMap::new();
             let codes = $crate::core::helpers::keycodes_from_xmodmap();
             let parse = $crate::xcb::helpers::parse_key_binding;
-            __private!(@parsekey map, codes, parse, [], [], $($tokens)*);
+            $crate::core::macros::__private!(@parsekey map, codes, parse, [], [], $($tokens)*);
             map
         }
     };
@@ -477,14 +477,14 @@ macro_rules! __private {
                             key_code,
                             run_internal!(
                                 $method,
-                                __private!(@parsemapparams arg; []; $($params,)*)
+                                $crate::core::macros::__private!(@parsemapparams arg; []; $($params,)*)
                             )
                         ),
                     };
                 }
             )+
 
-            __private!(@parsekey $map, $codes, $parse,
+            $crate::core::macros::__private!(@parsekey $map, $codes, $parse,
                 [ $($patt,)* ], [ $(($($template),+; $($name),+),)* ($($binding),+; $($str),+) ],
                 $($tail)*
             );
@@ -501,7 +501,7 @@ macro_rules! __private {
             None => panic!("invalid key binding: {}", $binding),
             Some(key_code) => $map.insert(key_code, $action),
         };
-        __private!(@parsekey $map, $codes, $parse,
+        $crate::core::macros::__private!(@parsekey $map, $codes, $parse,
             [ $binding, $($patt,)* ], [ $(($($template),+; $($name),+)),* ],
             $($tail)*
         );
@@ -539,20 +539,22 @@ macro_rules! __private {
     { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ];
       REF, $($params:tt)*
     } => {
-        __private!(@parsemapparams $replacement; [$($arg),* , &$replacement]; $($params)*)
+        $crate::core::macros::__private!(@parsemapparams $replacement; [$($arg),* , &$replacement]; $($params)*)
     };
 
     { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ];
       VAL, $($params:tt)*
     } => {
-        __private!(@parsemapparams $replacement; [$($arg),* , $replacement]; $($params)*)
+        $crate::core::macros::__private!(@parsemapparams $replacement; [$($arg),* , $replacement]; $($params)*)
     };
 
     { @parsemapparams $replacement:expr; [ $(,$arg:expr),* ];
       $expr:expr, $($params:tt)*
     } => {
-        __private!(@parsemapparams $replacement; [$($arg),* , $expr]; $($params)*)
+        $crate::core::macros::__private!(@parsemapparams $replacement; [$($arg),* , $expr]; $($params)*)
     };
 
     { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ]; } => { $($arg),* };
 }
+
+pub use __private;
