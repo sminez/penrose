@@ -1643,16 +1643,10 @@ mod tests {
                     // Defining "we applied layout" as "position_client" was called
                     // at least once. Tests around layout application itself being
                     // correct are handled separately
-                    let did_layout = wm
-                        .conn
-                        .calls()
-                        .iter()
-                        .any(|c| c.0 == *"position_client");
-
                     if $should_layout {
-                        assert!(did_layout);
+                        assert!(wm.conn.was_called("position_client"));
                     } else {
-                        assert!(!did_layout);
+                        assert!(wm.conn.was_not_called("position_client"));
                     }
                 }
             }
@@ -1682,7 +1676,7 @@ mod tests {
     layout_trigger_test!(layout_screen; true; 0);
 
     #[test]
-    fn layout_trigger_test_follow_focus_cycle_client() {
+    fn layout_trigger_test_cycle_client_follow_focus() {
         let conn = RecordingXConn::init();
         let conf = Config {
             layouts: focus_test_layouts(true),
@@ -1697,13 +1691,11 @@ mod tests {
         wm.conn.clear();
         wm.cycle_client(Direction::Forward).unwrap();
 
-        let should_be_true = wm.conn.calls().iter().any(|c| c.0 == *"position_client");
-
-        assert!(should_be_true);
+        assert!(wm.conn.was_called("position_client"));
     }
 
     #[test]
-    fn layout_trigger_test_follow_focus_focus_client() {
+    fn layout_trigger_test_focus_client_follow_focus() {
         let conn = RecordingXConn::init();
         let conf = Config {
             layouts: focus_test_layouts(true),
@@ -1718,15 +1710,13 @@ mod tests {
 
         // shouldn't trigger layout when re-focusing same client
         wm.focus_client(&Selector::WinId(0)).unwrap();
-        let should_be_false = wm.conn.calls().iter().any(|c| c.0 == *"position_client");
+        assert!(wm.conn.was_not_called("position_client"));
+
         wm.conn.clear();
 
         // focusing any other client should trigger layout stuff
         wm.focus_client(&Selector::WinId(1)).unwrap();
-        let should_be_true = wm.conn.calls().iter().any(|c| c.0 == *"position_client");
-
-        assert!(!should_be_false);
-        assert!(should_be_true);
+        assert!(wm.conn.was_called("position_client"));
     }
 
     /*
