@@ -5,15 +5,12 @@ use crate::core::{
     xconnection::Xid,
 };
 
-/**
- * A layout that aims to mimic the feel of having multiple pieces of paper fanned out on a desk,
- * inspired by <http://10gui.com/>
- *
- * Without access to the custom hardware required for 10gui, we instead have to rely on the WM
- * actions we have available: n_main is ignored and instead, the focused client takes up ratio% of
- * the screen, with the remaining windows being stacked on top of one another to either side. Think
- * fanning out a hand of cards and then pulling one out and placing it on top of the fan.
- */
+/// A layout that aims to mimic the feel of having multiple pieces of paper fanned out on a desk.
+///
+/// Without access to the custom hardware required for 10gui, we instead have to rely on the WM
+/// actions we have available: n_main is ignored and instead, the focused client takes up ratio% of
+/// the screen, with the remaining windows being stacked on top of one another to either side. Think
+/// fanning out a hand of cards and then pulling one out and placing it on top of the fan.
 pub fn paper(
     clients: &[&Client],
     focused: Option<Xid>,
@@ -93,12 +90,10 @@ fn dwindle_recurisive(
     }
 }
 
-/**
- * A layout based on the dwindle layout from AwesomeWM.
- *
- * The second region is recursively split in two other regions, alternating between
- * splitting horizontally and vertically.
- */
+/// A layout based on the dwindle layout from AwesomeWM.
+///
+/// The second region is recursively split in two other regions, alternating between
+/// splitting horizontally and vertically.
 pub fn dwindle(
     clients: &[&Client],
     _: Option<Xid>,
