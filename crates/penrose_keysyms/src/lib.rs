@@ -2039,13 +2039,13 @@ pub enum XKeySym {
     #[strum(serialize = "XF86AudioNext")]
     XF86XK_AudioNext,
     /// XF86XK_AudioMicMute
-    #[strum(serialize = "XF86XK_AudioMicMute")]
+    #[strum(serialize = "XF86AudioMicMute")]
     XF86XK_AudioMicMute,
     /// XF86XK_DisplayOff
-    #[strum(serialize = "XF86XK_DisplayOff")]
+    #[strum(serialize = "XF86DisplayOff")]
     XF86XK_DisplayOff,
     /// XF86XK_TouchpadToggle
-    #[strum(serialize = "XF86XK_TouchpadToggle")]
+    #[strum(serialize = "XF86TouchpadToggle")]
     XF86XK_TouchpadToggle,
 }
 
