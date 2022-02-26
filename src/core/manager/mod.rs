@@ -827,8 +827,8 @@ impl<X: XConn> WindowManager<X> {
     pub fn cycle_client(&mut self, direction: Direction) -> Result<()> {
         let wix = self.screens.active_ws_index();
         let res = self.workspaces.cycle_client(wix, direction);
-        if let Some((prev, new)) = res {
-            self.state.clients.client_lost_focus(prev, &self.conn);
+        // 1st parameter is not needed because self.state.clients.focused_client_id has not been updated
+        if let Some((_, new)) = res {
             self.update_focus(new)?;
             let screen = self.screens.focused();
             self.conn.warp_cursor(Some(new), screen)?;
@@ -1643,16 +1643,10 @@ mod tests {
                     // Defining "we applied layout" as "position_client" was called
                     // at least once. Tests around layout application itself being
                     // correct are handled separately
-                    let did_layout = wm
-                        .conn
-                        .calls()
-                        .iter()
-                        .any(|c| c.0 == *"position_client");
-
                     if $should_layout {
-                        assert!(did_layout);
+                        assert!(wm.conn.was_called("position_client"));
                     } else {
-                        assert!(!did_layout);
+                        assert!(wm.conn.was_not_called("position_client"));
                     }
                 }
             }
@@ -1680,6 +1674,50 @@ mod tests {
     layout_trigger_test!(remove_workspace; true; &Selector::Index(0));
     layout_trigger_test!(position_client; true; 10, Region::default(), true);
     layout_trigger_test!(layout_screen; true; 0);
+
+    #[test]
+    fn layout_trigger_test_cycle_client_follow_focus() {
+        let conn = RecordingXConn::init();
+        let conf = Config {
+            layouts: focus_test_layouts(true),
+            ..Default::default()
+        };
+        let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+        wm.init().unwrap();
+        add_n_clients(&mut wm, 3, 0);
+        wm.focus_workspace(&Selector::Index(1)).unwrap();
+        add_n_clients(&mut wm, 3, 30);
+        wm.focus_workspace(&Selector::Index(0)).unwrap();
+        wm.conn.clear();
+        wm.cycle_client(Direction::Forward).unwrap();
+
+        assert!(wm.conn.was_called("position_client"));
+    }
+
+    #[test]
+    fn layout_trigger_test_focus_client_follow_focus() {
+        let conn = RecordingXConn::init();
+        let conf = Config {
+            layouts: focus_test_layouts(true),
+            ..Default::default()
+        };
+        let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+        wm.init().unwrap();
+        wm.handle_map_request(0).unwrap();
+        wm.handle_map_request(1).unwrap();
+        wm.focus_client(&Selector::WinId(0)).unwrap();
+        wm.conn.clear();
+
+        // shouldn't trigger layout when re-focusing same client
+        wm.focus_client(&Selector::WinId(0)).unwrap();
+        assert!(wm.conn.was_not_called("position_client"));
+
+        wm.conn.clear();
+
+        // focusing any other client should trigger layout stuff
+        wm.focus_client(&Selector::WinId(1)).unwrap();
+        assert!(wm.conn.was_called("position_client"));
+    }
 
     /*
      * Helpers for specifying expected events with RecordingXConn

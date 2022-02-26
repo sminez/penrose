@@ -238,6 +238,14 @@ impl RecordingXConn {
         self.0.take()
     }
 
+    pub fn was_called(&self, method: &str) -> bool {
+        self.calls().iter().any(|(m, _)| m == method)
+    }
+
+    pub fn was_not_called(&self, method: &str) -> bool {
+        self.calls().iter().all(|(m, _)| m != method)
+    }
+
     // Returns a result to neaten up the code below
     fn add_call(&self, method: &str, args: Vec<String>) {
         let mut inner = self.0.take();
