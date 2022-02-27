@@ -77,7 +77,7 @@ impl Widget for Text {
     fn draw(&mut self, ctx: &mut dyn DrawContext, _: usize, _: bool, w: f64, h: f64) -> Result<()> {
         if let Some(color) = self.bg {
             ctx.color(&color);
-            ctx.rectangle(0.0, 0.0, w, h);
+            ctx.rectangle(0.0, 0.0, w, h)?;
         }
 
         let (ew, eh) = self.current_extent(ctx, h)?;
@@ -233,7 +233,7 @@ impl Widget for LinesWithSelection {
         h: f64,
     ) -> Result<()> {
         ctx.color(&self.bg);
-        ctx.rectangle(0.0, 0.0, w, h);
+        ctx.rectangle(0.0, 0.0, w, h)?;
         ctx.font(&self.font, self.point_size)?;
         ctx.translate(self.padding, self.padding);
 
@@ -249,7 +249,7 @@ impl Widget for LinesWithSelection {
                 let (_, lh) = ctx.text_extent(line)?;
                 let fg = if ix == self.selected {
                     ctx.color(&self.bg_sel);
-                    ctx.rectangle(0.0, 0.0, w + self.padding * 2.0, lh);
+                    ctx.rectangle(0.0, 0.0, w + self.padding * 2.0, lh)?;
                     self.fg_sel
                 } else {
                     self.fg

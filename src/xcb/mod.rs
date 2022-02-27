@@ -102,6 +102,10 @@ pub enum XcbError {
     #[error("Unable to connect to the X server via XCB")]
     Connection(#[from] ::xcb::ConnError),
 
+    /// Reply from the X server was an error
+    #[error(transparent)]
+    Reply(#[from] ::xcb::base::ReplyError),
+
     /// A xcb query failed to return a value
     #[error("Xcb query returned None: {0}")]
     EmptyResponse(String),

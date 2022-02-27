@@ -81,7 +81,7 @@ fn simple_draw() -> Result<()> {
     let mut ctx = drw.context_for(id)?;
 
     ctx.color(&WHITE.into());
-    ctx.rectangle(0.0, 0.0, w as f64, HEIGHT as f64);
+    ctx.rectangle(0.0, 0.0, w as f64, HEIGHT as f64)?;
     ctx.translate(1.0, 1.0);
 
     ctx.color(&BLACK.into());

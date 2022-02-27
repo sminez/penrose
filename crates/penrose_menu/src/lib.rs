@@ -213,14 +213,14 @@ where
         let id = self.id.unwrap();
         let mut ctx = self.drw.context_for(id)?;
 
-        ctx.clear();
+        ctx.clear()?;
         ctx.color(&self.bg);
-        ctx.rectangle(0.0, 0.0, self.w, self.h);
+        ctx.rectangle(0.0, 0.0, self.w, self.h)?;
 
         let (w, h) = if with_prompt {
             let (w, h) = self.prompt.current_extent(&mut ctx, self.h)?;
             ctx.color(&self.ac);
-            ctx.rectangle(0.0, 0.0, w + PAD_PX, h + PAD_PX);
+            ctx.rectangle(0.0, 0.0, w + PAD_PX, h + PAD_PX)?;
             (w, h)
         } else {
             let (_, h) = self.patt.current_extent(&mut ctx, self.h)?;

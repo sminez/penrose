@@ -235,7 +235,7 @@ impl Widget for Workspaces {
         h: f64,
     ) -> Result<()> {
         ctx.color(&self.bg_2);
-        ctx.rectangle(0.0, 0.0, w, h);
+        ctx.rectangle(0.0, 0.0, w, h)?;
         ctx.font(&self.font, self.point_size)?;
         ctx.translate(PADDING, 0.0);
         let (_, eh) = self.extent.unwrap();
@@ -244,7 +244,7 @@ impl Widget for Workspaces {
             let (fg, bg) = self.ws_colors(i, screen, screen_has_focus, ws.occupied);
             if let Some(c) = bg {
                 ctx.color(c);
-                ctx.rectangle(0.0, 0.0, ws.extent.0, h);
+                ctx.rectangle(0.0, 0.0, ws.extent.0, h)?;
             }
 
             ctx.color(fg);
@@ -253,6 +253,7 @@ impl Widget for Workspaces {
         }
 
         self.require_draw = false;
+
         Ok(())
     }
 

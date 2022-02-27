@@ -223,10 +223,10 @@ where
             let screen_has_focus = self.active_screen == i;
             let mut ctx = self.drw.context_for(id)?;
 
-            ctx.clear();
+            ctx.clear()?;
 
             ctx.color(&self.bg);
-            ctx.rectangle(0.0, 0.0, w, self.h as f64);
+            ctx.rectangle(0.0, 0.0, w, self.h as f64)?;
 
             let extents = self.layout(&mut ctx, w)?;
             let mut x = 0.0;

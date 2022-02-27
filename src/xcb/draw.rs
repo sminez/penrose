@@ -112,7 +112,7 @@ impl Draw for XcbDraw {
             self.surfaces
                 .get(&id)
                 .ok_or(XcbError::UnintialisedSurface(id))?,
-        );
+        )?;
 
         Ok(Self::Ctx {
             ctx,
@@ -142,7 +142,7 @@ impl Draw for XcbDraw {
         };
 
         let surface = surface.create_similar(cairo::Content::Color, w as i32, h as i32)?;
-        let ctx = cairo::Context::new(&surface);
+        let ctx = cairo::Context::new(&surface)?;
 
         Ok(Self::Ctx {
             ctx,
@@ -187,11 +187,13 @@ impl DrawContext for XcbDrawContext {
         self.ctx.set_source_rgba(r, g, b, a);
     }
 
-    fn clear(&mut self) {
-        self.ctx.save();
+    fn clear(&mut self) -> Result<()> {
+        self.ctx.save()?;
         self.ctx.set_operator(cairo::Operator::Clear);
-        self.ctx.paint();
-        self.ctx.restore();
+        self.ctx.paint()?;
+        self.ctx.restore()?;
+
+        Ok(())
     }
 
     fn translate(&self, dx: f64, dy: f64) {
@@ -199,20 +201,22 @@ impl DrawContext for XcbDrawContext {
     }
 
     fn set_x_offset(&self, x: f64) {
-        let (_, y_offset) = self.ctx.get_matrix().transform_point(0.0, 0.0);
+        let (_, y_offset) = self.ctx.matrix().transform_point(0.0, 0.0);
         self.ctx.set_matrix(cairo::Matrix::identity());
         self.ctx.translate(x, y_offset);
     }
 
     fn set_y_offset(&self, y: f64) {
-        let (x_offset, _) = self.ctx.get_matrix().transform_point(0.0, 0.0);
+        let (x_offset, _) = self.ctx.matrix().transform_point(0.0, 0.0);
         self.ctx.set_matrix(cairo::Matrix::identity());
         self.ctx.translate(x_offset, y);
     }
 
-    fn rectangle(&self, x: f64, y: f64, w: f64, h: f64) {
+    fn rectangle(&self, x: f64, y: f64, w: f64, h: f64) -> Result<()> {
         self.ctx.rectangle(x, y, w, h);
-        self.ctx.fill();
+        self.ctx.fill()?;
+
+        Ok(())
     }
 
     fn text(&self, txt: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)> {
@@ -224,7 +228,7 @@ impl DrawContext for XcbDrawContext {
         layout.set_text(txt);
         layout.set_ellipsize(pango::EllipsizeMode::End);
 
-        let (w, h) = layout.get_pixel_size();
+        let (w, h) = layout.pixel_size();
         let (l, r) = padding;
         self.ctx.translate(l, h_offset);
         show_layout(&self.ctx, &layout);
@@ -242,12 +246,12 @@ impl DrawContext for XcbDrawContext {
             layout.set_font_description(Some(font));
         }
         layout.set_text(&s);
-        let (w, h) = layout.get_pixel_size();
+        let (w, h) = layout.pixel_size();
 
         Ok((w as f64, h as f64))
     }
 
     fn flush(&self) {
-        self.ctx.get_target().flush();
+        self.ctx.target().flush();
     }
 }

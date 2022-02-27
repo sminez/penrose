@@ -215,7 +215,7 @@ pub trait DrawContext {
     /// Set the color used for subsequent drawing operations
     fn color(&mut self, color: &Color);
     /// Clears the context
-    fn clear(&mut self);
+    fn clear(&mut self) -> Result<()>;
     /// Translate this context by (dx, dy) from its current position
     fn translate(&self, dx: f64, dy: f64);
     /// Set the x offset for this context absolutely
@@ -223,7 +223,7 @@ pub trait DrawContext {
     /// Set the y offset for this context absolutely
     fn set_y_offset(&self, y: f64);
     /// Draw a filled rectangle using the current color
-    fn rectangle(&self, x: f64, y: f64, w: f64, h: f64);
+    fn rectangle(&self, x: f64, y: f64, w: f64, h: f64) -> Result<()>;
     /// Render 's' using the current font with the supplied padding. returns the extent taken
     /// up by the rendered text
     fn text(&self, s: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)>;
