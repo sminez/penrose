@@ -166,9 +166,9 @@ fn main() -> penrose::Result<()> {
         "M-A-Right" => run_internal!(update_main_ratio, More);
         "M-A-Left" => run_internal!(update_main_ratio, Less);
 
-        refmap [ config.ws_range() ] in {
-            "M-{}" => focus_workspace [ index_selectors(config.workspaces().len()) ];
-            "M-S-{}" => client_to_workspace [ index_selectors(config.workspaces().len()) ];
+        map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
+            "M-{}" => focus_workspace (REF);
+            "M-S-{}" => client_to_workspace (REF);
         };
     };
 
