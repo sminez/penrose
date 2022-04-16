@@ -1,25 +1,30 @@
 //! The main user API and control logic for Penrose.
 use crate::{
-    core::{
+    common::{
         bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
+        geometry::{Point, Region},
+        Change, Xid,
+    },
+    core::{
         client::Client,
         config::Config,
-        data_types::{Change, Point, Region},
         hooks::{HookName, Hooks},
         ring::{Direction, InsertPoint, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{Atom, ClientMessageKind, WindowState, XConn, Xid},
     },
-    ErrorHandler, PenroseError, Result,
+    perror, str_slice,
+    xconnection::{Atom, ClientMessageKind, WindowState, XConn},
+    Error, ErrorHandler, Result,
 };
 use nix::sys::signal::{signal, SigHandler, Signal};
 use std::{cell::Cell, fmt};
-use tracing::Level;
+use tracing::{debug, error, span, trace, warn, Level};
 
 #[cfg(feature = "serde")]
-use crate::core::{helpers::logging_error_handler, layout::LayoutFunc};
-
+use crate::{common::helpers::logging_error_handler, core::layout::LayoutFunc};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
 use std::collections::HashMap;
 
@@ -379,7 +384,12 @@ impl<X: XConn> WindowManager<X> {
         }
 
         trace!("grabbing key and mouse bindings");
-        self.conn.grab_keys(&key_bindings, &mouse_bindings)?;
+        let key_codes: Vec<_> = key_bindings.keys().copied().collect();
+        let mouse_states: Vec<_> = mouse_bindings
+            .keys()
+            .map(|(_, state)| state.clone())
+            .collect();
+        self.conn.grab_keys(&key_codes, &mouse_states)?;
 
         trace!("forcing focus to first workspace");
         self.focus_workspace(&Selector::Index(0))?;
@@ -410,7 +420,7 @@ impl<X: XConn> WindowManager<X> {
                     self.conn.flush();
                 }
 
-                Err(e) => (self.error_handler)(PenroseError::X(e)),
+                Err(e) => (self.error_handler)(Error::X(e)),
             }
         }
 
@@ -501,7 +511,7 @@ impl<X: XConn> WindowManager<X> {
     fn move_client_to_workspace(&mut self, id: Xid, wix: usize) -> Result<()> {
         let current_wix = match self.clients.workspace_index_for_client(id) {
             Some(ix) => ix,
-            None => return Err(PenroseError::UnknownClient(id)),
+            None => return Err(Error::UnknownClient(id)),
         };
 
         if current_wix != wix {
@@ -647,7 +657,7 @@ impl<X: XConn> WindowManager<X> {
 
     fn set_active_client(&mut self, id: Xid) -> Result<()> {
         self.focus_client(&Selector::WinId(id))
-            .map_err(|_| PenroseError::UnknownClient(id))
+            .map_err(|_| Error::UnknownClient(id))
             .map(|_| ())
     }
 
@@ -671,7 +681,7 @@ impl<X: XConn> WindowManager<X> {
             .clients
             .get(id)
             .map(|c| (c.fullscreen, c.workspace()))
-            .ok_or(PenroseError::UnknownClient(id))?;
+            .ok_or(Error::UnknownClient(id))?;
 
         if currently_fullscreen == should_fullscreen {
             return Ok(()); // Client is already in the correct state, we shouldn't have been called
@@ -841,7 +851,7 @@ impl<X: XConn> WindowManager<X> {
     pub fn focus_client(&mut self, selector: &Selector<'_, Client>) -> Result<Xid> {
         let id = match self.client(selector) {
             Some(c) => c.id(),
-            None => return Err(PenroseError::NoMatchingElement),
+            None => return Err(Error::NoMatchingElement),
         };
 
         if let Some(wid) = self.active_workspace().focused_client() {
@@ -1077,7 +1087,7 @@ impl<X: XConn> WindowManager<X> {
             let wix = self.clients.workspace_index_for_client(*id)?;
             self.screens.screen(&Selector::Condition(&|s| s.wix == wix))
         } else {
-            self.screens.screen(&selector)
+            self.screens.screen(selector)
         }
     }
 
@@ -1123,7 +1133,7 @@ impl<X: XConn> WindowManager<X> {
             return Err(perror!("must have at least one workspace per screen"));
         }
 
-        let ws = self.workspaces.remove_workspace(&selector)?;
+        let ws = self.workspaces.remove_workspace(selector)?;
         ws.iter().try_for_each(|c| self.remove_client(*c))?;
 
         // Focus the workspace before the one we just removed. There is always at least one
@@ -1292,21 +1302,18 @@ impl<X: XConn> WindowManager<X> {
 mod tests {
     use super::*;
     use crate::{
+        __impl_stub_xcon,
         __test_helpers::{
             n_clients, test_key_bindings, test_mouse_bindings, test_windowmanager, RecordedCall,
             RecordingXConn,
         },
-        core::{
-            data_types::*,
-            helpers::logging_error_handler,
-            layout::*,
-            ring::Direction::*,
-            screen::*,
-            xconnection::{MockXConn, Prop, XEvent},
-        },
+        common::{geometry::*, helpers::logging_error_handler},
+        core::{layout::*, ring::Direction::*, screen::*},
         draw::Color,
+        strings,
+        xconnection::{MockXConn, Prop, XEvent},
     };
-
+    use simple_test_case::test_case;
     use std::{cell::Cell, collections::HashMap, convert::TryFrom};
 
     fn wm_with_mock_conn(events: Vec<XEvent>, unmanaged_ids: Vec<Xid>) -> WindowManager<MockXConn> {
@@ -1564,7 +1571,7 @@ mod tests {
         client_config: {}
         event_handler: {}
         state: {
-            fn mock_current_screens(&self) -> crate::core::xconnection::Result<Vec<Screen>> {
+            fn mock_current_screens(&self) -> crate::xconnection::Result<Vec<Screen>> {
                 let num_screens = self.num_screens.get();
                 Ok((0..(num_screens))
                     .map(|n| Screen::new(Region::new(800 * n as u32, 600 * n as u32, 800, 600), n))
@@ -1738,11 +1745,7 @@ mod tests {
     }
 
     fn _border(id: Xid, focused: bool) -> RecordedCall {
-        let color = if focused {
-            Color::try_from("#00ff00").unwrap()
-        } else {
-            Color::try_from("#ff0000").unwrap()
-        };
+        let color = if focused { 0x00ff00 } else { 0xff0000 };
         ("set_client_border_color".into(), strings!(id, color))
     }
 
@@ -1755,84 +1758,76 @@ mod tests {
         ("delete_prop".into(), strings!(42, "_NET_ACTIVE_WINDOW"))
     }
 
-    test_cases! {
-        update_focus;
-        args: (
-            target: Xid,
-            accepts_focus: bool,
-            current: Option<Xid>,
-            n_clients: usize,
-            follow_focus: bool,
-            expected_focus: Option<Xid>,
-            expected_calls: Vec<RecordedCall>
-        );
-
-        // We should still run focusing logic when the requested target is our current focus
-        case: client_is_current_focus => (
-            10, true, Some(10), 3, false,
-            Some(10), vec![_focus(10), _active(10), _border(10, true)]
-        );
-
-        // We should remove the focused border from the current client first
-        case: client_is_not_current_focus => (
-            20, true, Some(10), 3, false,
-            Some(20), vec![_border(10, false), _focus(20), _active(20), _border(20, true)]
-        );
-
+    #[test_case(
+        // Still run focusing logic when the requested target is current focus
+        10, true, Some(10), 3, false, Some(10),
+        vec![_focus(10), _active(10), _border(10, true)];
+        "client is current focus"
+    )]
+    #[test_case(
+        // Remove focused border from current client first
+        20, true, Some(10), 3, false, Some(20),
+        vec![_border(10, false), _focus(20), _active(20), _border(20, true)];
+        "client not current focus"
+    )]
+    #[test_case(
         // Focus should default to the focused client on the active workspace if the given client
         // is not in the client_map
-        case: client_is_unknown_workspace_populated => (
-            999, true, Some(10), 3, false,
-            Some(30), vec![_border(10, false), _focus(30), _active(30), _border(30, true)]
-        );
-
+        999, true, Some(10), 3, false, Some(30),
+        vec![_border(10, false), _focus(30), _active(30), _border(30, true)];
+        "unknown client workspace populated"
+    )]
+    #[test_case(
         // If the client is unknown and the workspace is empty, focus should revert to root
-        case: client_is_unknown_workspace_empty => (
-            999, true, None, 0, false,
-            None, vec![_focus(42), _remove_active()]
-        );
-
+        999, true, None, 0, false, None, vec![_focus(42), _remove_active()];
+        "unknown client workspace empty"
+    )]
+    #[test_case(
         // If the client doesn't accept focus then we should still mark it as focused in the
         // internal state, but a TakeFocus client message should be sent instead of forcing
         // focus.
-        case: client_does_not_accept_focus_different => (
-            20, false, Some(10), 3, false,
-            Some(20), vec![
-                _border(10, false), _id(Atom::WmTakeFocus), _take_focus(20)
-            ]
-        );
-
+        20, false, Some(10), 3, false, Some(20),
+        vec![_border(10, false), _id(Atom::WmTakeFocus), _take_focus(20)];
+        "different client does not accept focus"
+    )]
+    #[test_case(
         // If the client doesn't accept focus, and it is the current focus then we should just
         // set the border and send the TakeFocus event
-        case: client_does_not_accept_focus_same => (
-            20, false, Some(20), 3, false,
-            Some(20), vec![_id(Atom::WmTakeFocus), _take_focus(20)]
-        );
-
-        // TODO: add test cases for follow_focus layout triggering
-
-        body: {
-            let conn = RecordingXConn::init();
-            let conf = Config {
-                layouts: focus_test_layouts(follow_focus),
-                focused_border: Color::try_from("#00ff00").unwrap(),
-                unfocused_border: Color::try_from("#ff0000").unwrap(),
-                ..Default::default()
-            };
-            let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
-            wm.init().unwrap();
-            add_n_clients(&mut wm, n_clients, 0);
-            if let Some(id) = current {
-                wm.state.clients.set_focused(id, &wm.conn);
-            }
-            wm.clients.modify(target, |c| c.accepts_focus = accepts_focus);
-            wm.conn().clear();
-
-            wm.update_focus(target).unwrap();
-
-            assert_eq!(wm.clients.focused_client_id(), expected_focus);
-            assert_eq!(wm.conn().calls(), expected_calls);
+        20, false, Some(20), 3, false, Some(20),
+        vec![_id(Atom::WmTakeFocus), _take_focus(20)];
+        "same client does not accept focus"
+    )]
+    #[test]
+    fn update_focus(
+        target: Xid,
+        accepts_focus: bool,
+        current: Option<Xid>,
+        n_clients: usize,
+        follow_focus: bool,
+        expected_focus: Option<Xid>,
+        expected_calls: Vec<RecordedCall>,
+    ) {
+        let conn = RecordingXConn::init();
+        let conf = Config {
+            layouts: focus_test_layouts(follow_focus),
+            focused_border: Color::try_from("#00ff00").unwrap(),
+            unfocused_border: Color::try_from("#ff0000").unwrap(),
+            ..Default::default()
+        };
+        let mut wm = WindowManager::new(conf, conn, vec![], logging_error_handler());
+        wm.init().unwrap();
+        add_n_clients(&mut wm, n_clients, 0);
+        if let Some(id) = current {
+            wm.state.clients.set_focused(id, &wm.conn);
         }
+        wm.clients
+            .modify(target, |c| c.accepts_focus = accepts_focus);
+        wm.conn().clear();
+
+        wm.update_focus(target).unwrap();
+
+        assert_eq!(wm.clients.focused_client_id(), expected_focus);
+        assert_eq!(wm.conn().calls(), expected_calls);
     }
 
     macro_rules! changing_screen_focus_test {

@@ -1,8 +1,12 @@
-use crate::core::{
-    config::Config,
-    manager::{clients::Clients, screens::Screens, workspaces::Workspaces, WindowManager},
+use crate::{
+    core::{
+        config::Config,
+        manager::{clients::Clients, screens::Screens, workspaces::Workspaces, WindowManager},
+    },
     xconnection::XConn,
 };
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug)]

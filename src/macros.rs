@@ -16,8 +16,8 @@
 macro_rules! run_external {
     ($cmd:tt) => {{
         Box::new(move |_: &mut $crate::core::manager::WindowManager<_>| {
-            $crate::core::helpers::spawn($cmd)
-        }) as $crate::core::bindings::KeyEventHandler<_>
+            $crate::common::helpers::spawn($cmd)
+        }) as $crate::common::bindings::KeyEventHandler<_>
     }};
 }
 
@@ -36,13 +36,13 @@ macro_rules! run_internal {
     ($func:ident) => {
         Box::new(|wm: &mut $crate::core::manager::WindowManager<_>| {
             wm.$func()
-        }) as $crate::core::bindings::KeyEventHandler<_>
+        }) as $crate::common::bindings::KeyEventHandler<_>
     };
 
     ($func:ident, $($arg:expr),+) => {
         Box::new(move |wm: &mut $crate::core::manager::WindowManager<_>| {
             wm.$func($($arg),+)
-        }) as $crate::core::bindings::KeyEventHandler<_>
+        }) as $crate::common::bindings::KeyEventHandler<_>
     };
 }
 
@@ -198,9 +198,9 @@ macro_rules! gen_keybindings {
     { $($tokens:tt)* } => {
         {
             let mut map = ::std::collections::HashMap::new();
-            let codes = $crate::core::helpers::keycodes_from_xmodmap();
+            let codes = $crate::common::helpers::keycodes_from_xmodmap();
             let parse = $crate::xcb::helpers::parse_key_binding;
-            __private!(@parsekey map, codes, parse, [], [], $($tokens)*);
+            $crate::__private!(@parsekey map, codes, parse, [], [], $($tokens)*);
             map
         }
     };
@@ -218,17 +218,17 @@ macro_rules! gen_mousebindings {
 
             $(
                 let mut modifiers = Vec::new();
-                $(modifiers.push($crate::core::bindings::ModifierKey::$modifier);)+
+                $(modifiers.push($crate::common::bindings::ModifierKey::$modifier);)+
 
-                let state = $crate::core::bindings::MouseState::new(
-                    $crate::core::bindings::MouseButton::$button,
+                let state = $crate::common::bindings::MouseState::new(
+                    $crate::common::bindings::MouseButton::$button,
                     modifiers
                 );
 
-                let kind = $crate::core::bindings::MouseEventKind::$kind;
+                let kind = $crate::common::bindings::MouseEventKind::$kind;
                 _map.insert(
                     (kind, state),
-                    Box::new($action) as $crate::core::bindings::MouseEventHandler<_>
+                    Box::new($action) as $crate::common::bindings::MouseEventHandler<_>
                 );
             )+
 
@@ -241,26 +241,30 @@ macro_rules! gen_mousebindings {
 #[macro_export]
 macro_rules! perror {
     ($msg:expr) => {
-        $crate::PenroseError::Raw($msg.to_string())
+        $crate::Error::Raw($msg.to_string())
     };
 
     ($template:expr, $($arg:expr),+) => {
-        $crate::PenroseError::Raw(format!($template, $($arg),+))
+        $crate::Error::Raw(format!($template, $($arg),+))
     };
 }
 
-// Helper for converting Vec<String> -> &[&str]
+/// Helper for converting Vec<String> -> &[&str]
+#[macro_export]
 macro_rules! str_slice {
     ($string_vec:expr) => {
         &$string_vec.iter().map(AsRef::as_ref).collect::<Vec<&str>>()
     };
 }
 
-// Helper for quickly converting args to debug strings
+/// Helper for quickly converting args to debug strings
+#[macro_export]
 macro_rules! strings {
     { $($arg:expr),+ } => { vec![$(format!("{:?}", $arg)),+] }
 }
 
+/// Cast elements of a slice as a given type
+#[macro_export]
 macro_rules! cast_slice {
     ($s:expr, $t:ty) => {
         $s.iter().map(|&v| v as $t).collect::<Vec<$t>>()
@@ -411,43 +415,14 @@ macro_rules! __impl_stub_xcon {
         state: { $($state:tt)* }
         conn: { $($conn:tt)* }
     } => {
-        impl $crate::core::xconnection::StubXAtomQuerier for $struct { $($atomquery)* }
-        impl $crate::core::xconnection::StubXClientProperties for $struct { $($cprops)* }
-        impl $crate::core::xconnection::StubXClientHandler for $struct { $($chandler)* }
-        impl $crate::core::xconnection::StubXClientConfig for $struct { $($cconfig)* }
-        impl $crate::core::xconnection::StubXEventHandler for $struct { $($ehandler)* }
-        impl $crate::core::xconnection::StubXState for $struct { $($state)* }
-        impl $crate::core::xconnection::StubXConn for $struct { $($conn)* }
+        impl $crate::xconnection::StubXAtomQuerier for $struct { $($atomquery)* }
+        impl $crate::xconnection::StubXClientProperties for $struct { $($cprops)* }
+        impl $crate::xconnection::StubXClientHandler for $struct { $($chandler)* }
+        impl $crate::xconnection::StubXClientConfig for $struct { $($cconfig)* }
+        impl $crate::xconnection::StubXEventHandler for $struct { $($ehandler)* }
+        impl $crate::xconnection::StubXState for $struct { $($state)* }
+        impl $crate::xconnection::StubXConn for $struct { $($conn)* }
     }
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! test_cases {
-    {
-        $test_name:ident;
-        args: ( $($arg:ident: $t:ty),* $(,)? );
-
-        $(
-            case: $case_name:ident => ( $($param:expr),* );
-        )+
-        body: $body:expr
-    } => {
-        paste::paste! {
-            fn [<$test_name _helper>]($($arg: $t),*) {
-                $body
-            }
-        }
-
-        $(
-            paste::paste! {
-                #[test]
-                fn [<$test_name _ $case_name>]() {
-                    [<$test_name _helper>]($($param),*)
-                }
-            }
-        )+
-    };
 }
 
 // Helper to avoid polluting the documented patterns in other public macros
@@ -477,14 +452,14 @@ macro_rules! __private {
                             key_code,
                             run_internal!(
                                 $method,
-                                __private!(@parsemapparams arg; []; $($params,)*)
+                                $crate::__private!(@parsemapparams arg; []; $($params,)*)
                             )
                         ),
                     };
                 }
             )+
 
-            __private!(@parsekey $map, $codes, $parse,
+            $crate::__private!(@parsekey $map, $codes, $parse,
                 [ $($patt,)* ], [ $(($($template),+; $($name),+),)* ($($binding),+; $($str),+) ],
                 $($tail)*
             );
@@ -501,23 +476,10 @@ macro_rules! __private {
             None => panic!("invalid key binding: {}", $binding),
             Some(key_code) => $map.insert(key_code, $action),
         };
-        __private!(@parsekey $map, $codes, $parse,
+        $crate::__private!(@parsekey $map, $codes, $parse,
             [ $binding, $($patt,)* ], [ $(($($template),+; $($name),+)),* ],
             $($tail)*
         );
-    };
-
-    // TODO: remove this target in 0.2.2
-    {   @parsekey $map:expr, $codes:expr, $parse:expr,
-        [ $($patt:expr,)* ], [ $(($($template:expr),+; $($name:expr),+)),* ],
-        $(refmap)? $(map)? [ $from:expr ] in { $($binding:expr => $method:ident [ $to:expr ];)+ };
-        $($tail:tt)*
-    } => {
-        compile_error!(
-            "the '(ref)map [ <impl Iterator> ] in { ... }' pattern is deprecated: please use \
-            'map: { ... } to <impl Iterator> => { ... }' instead. Examples are available in \
-            the documentation for the 'gen_keybindings' macro."
-        )
     };
 
     // base case (should be out of tokens)
@@ -526,7 +488,7 @@ macro_rules! __private {
         $($tail:tt)*
     } => {
         $(compile_error!(stringify!("unexpected tokens in gen_keybindings macro: " $tail));)*
-        validate_user_bindings!(
+        $crate::validate_user_bindings!(
             ( $($patt),* )
             ( $((($($template),+) ($($name),+)))* )
         )
@@ -539,19 +501,19 @@ macro_rules! __private {
     { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ];
       REF, $($params:tt)*
     } => {
-        __private!(@parsemapparams $replacement; [$($arg),* , &$replacement]; $($params)*)
+        $crate::__private!(@parsemapparams $replacement; [$($arg),* , &$replacement]; $($params)*)
     };
 
     { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ];
       VAL, $($params:tt)*
     } => {
-        __private!(@parsemapparams $replacement; [$($arg),* , $replacement]; $($params)*)
+        $crate::__private!(@parsemapparams $replacement; [$($arg),* , $replacement]; $($params)*)
     };
 
     { @parsemapparams $replacement:expr; [ $(,$arg:expr),* ];
       $expr:expr, $($params:tt)*
     } => {
-        __private!(@parsemapparams $replacement; [$($arg),* , $expr]; $($params)*)
+        $crate::__private!(@parsemapparams $replacement; [$($arg),* , $expr]; $($params)*)
     };
 
     { @parsemapparams $replacement:expr; [ $(,$arg:expr)* ]; } => { $($arg),* };

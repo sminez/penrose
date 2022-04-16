@@ -1,18 +1,12 @@
 //! A scratchpad that holds a single client
 use crate::{
-    core::{
-        bindings::KeyEventHandler,
-        data_types::Region,
-        helpers::spawn,
-        hooks::Hook,
-        manager::WindowManager,
-        ring::Selector,
-        xconnection::{XConn, Xid},
-    },
+    common::{bindings::KeyEventHandler, geometry::Region, helpers::spawn, Xid},
+    core::{hooks::Hook, manager::WindowManager, ring::Selector},
+    xconnection::XConn,
     Result,
 };
-
 use std::{cell::RefCell, fmt, rc::Rc};
+use tracing::error;
 
 /// Spawn and manage a single [Client][1] which can then be shown above the current layout.
 ///

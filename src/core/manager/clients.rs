@@ -1,23 +1,25 @@
 //! State and management of clients being managed by Penrose.
 use crate::{
+    common::{geometry::Region, Xid},
     core::{
         client::Client,
-        data_types::Region,
         hooks::HookName,
         layout::LayoutConf,
         manager::{event::EventAction, util::pad_region},
         ring::Selector,
         workspace::ArrangeActions,
-        xconnection::{
-            Atom, ClientMessageKind, Prop, XClientConfig, XClientHandler, XClientProperties,
-            XEventHandler, XState, Xid,
-        },
     },
     draw::Color,
+    xconnection::{
+        Atom, ClientMessageKind, Prop, XClientConfig, XClientHandler, XClientProperties,
+        XEventHandler, XState,
+    },
     Result,
 };
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{trace, warn};
+use tracing::{debug, trace, warn};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -199,7 +201,7 @@ impl Clients {
                 Prop::Window(vec![id]),
             )?;
             let fb = self.focused_border;
-            if let Err(e) = conn.set_client_border_color(id, fb) {
+            if let Err(e) = conn.set_client_border_color(id, fb.rgb_u32()) {
                 warn!("unable to set client border color for {}: {}", id, e);
             }
         } else {
@@ -237,7 +239,7 @@ impl Clients {
             let ub = self.unfocused_border;
             // The target window may have lost focus because it has just been closed and
             // we have not yet updated our state.
-            conn.set_client_border_color(id, ub).unwrap_or(());
+            conn.set_client_border_color(id, ub.rgb_u32()).unwrap_or(());
         }
     }
 
@@ -346,7 +348,8 @@ impl Clients {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::xconnection::{self, *};
+    use crate::xconnection::{self, *};
+    use simple_test_case::test_case;
     use std::cell::Cell;
 
     #[test]
@@ -408,58 +411,56 @@ mod tests {
         }
     }
 
-    test_cases! {
-        toggle_fullscreen;
-        args: (
-            n_clients: u32,
-            fullscreen: Option<Xid>,
-            target: Xid,
-            unmapped: &[Xid],
-            should_apply_layout: bool,
-            expected_positions: Vec<Xid>,
-            expected_maps: Vec<Xid>,
-            expected_unmaps: Vec<Xid>,
-        );
+    #[test_case(1, None, 0, &[], false, vec![0], vec![], vec![]; "single client on")]
+    #[test_case(1, Some(0), 0, &[], true, vec![], vec![], vec![]; "single client off")]
+    #[test_case(4, None, 1, &[], false, vec![1], vec![], vec![0, 2, 3]; "multiple clients on")]
+    #[test_case(4, Some(1), 1, &[0, 2, 3], true, vec![], vec![0, 2, 3], vec![]; "multiple clients off")]
+    #[test]
+    fn toggle_fullscreen(
+        n_clients: u32,
+        fullscreen: Option<Xid>,
+        target: Xid,
+        unmapped: &[Xid],
+        should_apply_layout: bool,
+        expected_positions: Vec<Xid>,
+        expected_maps: Vec<Xid>,
+        expected_unmaps: Vec<Xid>,
+    ) {
+        let conn = RecordingXConn::init();
+        let ids: Vec<Xid> = (0..n_clients).collect();
 
-        case: single_client_on => (1, None, 0, &[], false, vec![0], vec![], vec![]);
-        case: single_client_off => (1, Some(0), 0, &[], true, vec![], vec![], vec![]);
-        case: multiple_clients_on => (4, None, 1, &[], false, vec![1], vec![], vec![0, 2, 3]);
-        case: multiple_clients_off => (4, Some(1), 1, &[0, 2, 3], true, vec![], vec![0, 2, 3], vec![]);
-
-        body: {
-            let conn = RecordingXConn::init();
-            let ids: Vec<Xid> = (0..n_clients).collect();
-
-            let mut clients = Clients {
-                inner: ids.iter()
+        let mut clients = Clients {
+            inner: ids
+                .iter()
                 .map(|&id| {
                     let mut client = Client::new(&conn, id, 0, &[]);
                     client.mapped = true;
                     (id, client)
                 })
                 .collect(),
-                focused_client_id: None,
-                focused_border: 0xffffff.into(),
-                unfocused_border: 0x000000.into(),
-            };
+            focused_client_id: None,
+            focused_border: 0xffffff.into(),
+            unfocused_border: 0x000000.into(),
+        };
 
-            let r = Region::new(0, 0, 1000, 800);
-            let expected_positions: Vec<_> = expected_positions.iter().map(|id| (*id, r)).collect();
+        let r = Region::new(0, 0, 1000, 800);
+        let expected_positions: Vec<_> = expected_positions.iter().map(|id| (*id, r)).collect();
 
-            for id in unmapped {
-                clients.modify(*id, |c| c.mapped = false);
-            }
-
-            if let Some(id) = fullscreen {
-                clients.modify(id, |c| c.fullscreen = true);
-            }
-
-            let events = clients.toggle_fullscreen(target, 42, &ids, r, &conn).unwrap();
-
-            assert_eq!(!events.is_empty(), should_apply_layout);
-            assert_eq!(conn.positions.take(), expected_positions);
-            assert_eq!(conn.maps.take(), expected_maps);
-            assert_eq!(conn.unmaps.take(), expected_unmaps);
+        for id in unmapped {
+            clients.modify(*id, |c| c.mapped = false);
         }
+
+        if let Some(id) = fullscreen {
+            clients.modify(id, |c| c.fullscreen = true);
+        }
+
+        let events = clients
+            .toggle_fullscreen(target, 42, &ids, r, &conn)
+            .unwrap();
+
+        assert_eq!(!events.is_empty(), should_apply_layout);
+        assert_eq!(conn.positions.take(), expected_positions);
+        assert_eq!(conn.maps.take(), expected_maps);
+        assert_eq!(conn.unmaps.take(), expected_unmaps);
     }
 }

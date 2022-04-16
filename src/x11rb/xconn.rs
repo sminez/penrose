@@ -8,18 +8,18 @@
 //! some explanation on how the XML is turned into Rust code.
 
 use crate::{
-    core::{
-        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
-        data_types::{Point, Region},
-        screen::Screen,
-        xconnection::{
-            self, Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage,
-            ClientMessageKind, Prop, Result, WindowAttributes, WindowState, WmHints, WmNormalHints,
-            XAtomQuerier, XClientConfig, XClientHandler, XClientProperties, XConn, XError, XEvent,
-            XEventHandler, XState, Xid,
-        },
+    common::{
+        bindings::{KeyCode, MouseState},
+        geometry::{Point, Region},
+        Xid,
     },
-    x11rb::{atom::Atoms, X11rbError},
+    core::screen::Screen,
+    x11rb::{atom::Atoms, Error},
+    xconnection::{
+        self, Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageKind,
+        Prop, Result, WindowAttributes, WindowState, WmHints, WmNormalHints, XAtomQuerier,
+        XClientConfig, XClientHandler, XClientProperties, XConn, XEvent, XEventHandler, XState,
+    },
 };
 
 use std::{convert::TryFrom, str::FromStr};
@@ -61,14 +61,14 @@ impl<C: Connection> X11rbConnection<C> {
             .extension_information(randr::X11_EXTENSION_NAME)?
             .is_none()
         {
-            return Err(X11rbError::Randr("RandR not supported".to_string()).into());
+            return Err(Error::Randr("RandR not supported".to_string()).into());
         }
         let randr_ver = conn
             .randr_query_version(RANDR_VER.0, RANDR_VER.1)?
             .reply()?;
         let (maj, min) = (randr_ver.major_version, randr_ver.minor_version);
         if (maj, min) != RANDR_VER {
-            return Err(X11rbError::Randr(format!(
+            return Err(Error::Randr(format!(
                 "penrose requires RandR version >= {}.{}: detected {}.{}\nplease update RandR to a newer version",
                 RANDR_VER.0, RANDR_VER.1, maj, min
             )).into());
@@ -121,7 +121,7 @@ impl<C: Connection> XAtomQuerier for X11rbConnection<C> {
 
         // Nope, ask the X11 server
         let reply = self.conn.get_atom_name(atom)?.reply()?;
-        let name = String::from_utf8(reply.name).map_err(X11rbError::from)?;
+        let name = String::from_utf8(reply.name).map_err(Error::from)?;
         Ok(name)
     }
 
@@ -178,22 +178,22 @@ impl<C: Connection> XClientConfig for X11rbConnection<C> {
         let win_attrs = self.conn.get_window_attributes(id)?.reply()?;
         let override_redirect = win_attrs.override_redirect;
         let map_state = match win_attrs.map_state {
-            MapState::UNMAPPED => crate::core::xconnection::MapState::Unmapped,
-            MapState::UNVIEWABLE => crate::core::xconnection::MapState::UnViewable,
-            MapState::VIEWABLE => crate::core::xconnection::MapState::Viewable,
+            MapState::UNMAPPED => crate::xconnection::MapState::Unmapped,
+            MapState::UNVIEWABLE => crate::xconnection::MapState::UnViewable,
+            MapState::VIEWABLE => crate::xconnection::MapState::Viewable,
             _ => {
-                return Err(XError::Raw(format!(
+                return Err(xconnection::Error::Raw(format!(
                     "invalid map state: {:?}",
                     win_attrs.map_state
                 )))
             }
         };
         let window_class = match win_attrs.class {
-            WindowClass::COPY_FROM_PARENT => crate::core::xconnection::WindowClass::CopyFromParent,
-            WindowClass::INPUT_OUTPUT => crate::core::xconnection::WindowClass::InputOutput,
-            WindowClass::INPUT_ONLY => crate::core::xconnection::WindowClass::InputOnly,
+            WindowClass::COPY_FROM_PARENT => crate::xconnection::WindowClass::CopyFromParent,
+            WindowClass::INPUT_OUTPUT => crate::xconnection::WindowClass::InputOutput,
+            WindowClass::INPUT_ONLY => crate::xconnection::WindowClass::InputOnly,
             _ => {
-                return Err(XError::Raw(format!(
+                return Err(xconnection::Error::Raw(format!(
                     "invalid window class: {:?}",
                     win_attrs.class
                 )))
@@ -253,7 +253,7 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
         Ok(match prop_type.as_ref() {
             "ATOM" => Prop::Atom(
                 r.value32()
-                    .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
+                    .ok_or_else(|| Error::InvalidPropertyData(prop_type.to_string()))?
                     .map(|a| self.atom_name(a))
                     .collect::<Result<Vec<String>>>()?,
             ),
@@ -264,7 +264,7 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
             "STRING" | "UTF8_STRING" => Prop::UTF8String(
                 // FIXME: I think this should check prop.format == 8, but penrose::xcb does not
                 String::from_utf8(r.value)
-                    .map_err(X11rbError::from)?
+                    .map_err(Error::from)?
                     .trim_matches('\0')
                     .split('\0')
                     .map(|s| s.to_string())
@@ -273,26 +273,26 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
 
             "WINDOW" => Prop::Window(
                 r.value32()
-                    .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
+                    .ok_or_else(|| Error::InvalidPropertyData(prop_type.to_string()))?
                     .collect(),
             ),
 
             "WM_HINTS" => Prop::WmHints(
                 WmHints::try_from_bytes(
                     &r.value32()
-                        .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
+                        .ok_or_else(|| Error::InvalidPropertyData(prop_type.to_string()))?
                         .collect::<Vec<_>>(),
                 )
-                .map_err(|e| X11rbError::InvalidPropertyData(e.to_string()))?,
+                .map_err(|e| Error::InvalidPropertyData(e.to_string()))?,
             ),
 
             "WM_SIZE_HINTS" => Prop::WmNormalHints(
                 WmNormalHints::try_from_bytes(
                     &r.value32()
-                        .ok_or_else(|| X11rbError::InvalidPropertyData(prop_type.to_string()))?
+                        .ok_or_else(|| Error::InvalidPropertyData(prop_type.to_string()))?
                         .collect::<Vec<_>>(),
                 )
-                .map_err(|e| X11rbError::InvalidPropertyData(e.to_string()))?,
+                .map_err(|e| Error::InvalidPropertyData(e.to_string()))?,
             ),
 
             // Default to returning the raw bytes as u32s which the user can then
@@ -302,7 +302,7 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
                 16 => r.value16().unwrap().map(From::from).collect(),
                 32 => r.value32().unwrap().collect(),
                 _ => {
-                    return Err(X11rbError::InvalidPropertyData(format!(
+                    return Err(Error::InvalidPropertyData(format!(
                         "prop type for {} was {} which claims to have a data format of {}",
                         name, prop_type, r.type_
                     ))
@@ -350,7 +350,7 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
             ),
 
             Prop::Bytes(_) => {
-                return Err(X11rbError::InvalidPropertyData(
+                return Err(Error::InvalidPropertyData(
                     "unable to change non standard props".into(),
                 )
                 .into())
@@ -362,7 +362,7 @@ impl<C: Connection> XClientProperties for X11rbConnection<C> {
 
             // FIXME: handle changing WmHints and WmNormalHints correctly in change_prop
             Prop::WmHints(_) | Prop::WmNormalHints(_) => {
-                return Err(X11rbError::InvalidPropertyData(
+                return Err(Error::InvalidPropertyData(
                     "unable to change WmHints or WmNormalHints".into(),
                 )
                 .into())
@@ -539,18 +539,9 @@ impl<C: Connection> XConn for X11rbConnection<C> {
         Ok(())
     }
 
-    fn grab_keys(
-        &self,
-        key_bindings: &KeyBindings<Self>,
-        mouse_bindings: &MouseBindings<Self>,
-    ) -> Result<()> {
-        self.grab_key_bindings(&key_bindings.keys().collect::<Vec<_>>())?;
-        self.grab_mouse_buttons(
-            &mouse_bindings
-                .keys()
-                .map(|(_, state)| state)
-                .collect::<Vec<_>>(),
-        )?;
+    fn grab_keys(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+        self.grab_key_bindings(key_codes)?;
+        self.grab_mouse_buttons(mouse_states)?;
         self.flush();
 
         Ok(())
@@ -558,7 +549,7 @@ impl<C: Connection> XConn for X11rbConnection<C> {
 }
 
 impl<C: Connection> X11rbConnection<C> {
-    fn grab_key_bindings(&self, keys: &[&KeyCode]) -> Result<()> {
+    fn grab_key_bindings(&self, keys: &[KeyCode]) -> Result<()> {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
@@ -582,7 +573,7 @@ impl<C: Connection> X11rbConnection<C> {
         Ok(())
     }
 
-    fn grab_mouse_buttons(&self, states: &[&MouseState]) -> Result<()> {
+    fn grab_mouse_buttons(&self, states: &[MouseState]) -> Result<()> {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.

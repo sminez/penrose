@@ -1,8 +1,10 @@
 //! Additional layout functions
-use crate::core::{
-    client::Client,
-    data_types::{Region, ResizeAction},
-    xconnection::Xid,
+use crate::{
+    common::{
+        geometry::{Region, ResizeAction},
+        Xid,
+    },
+    core::client::Client,
 };
 
 /// A layout that aims to mimic the feel of having multiple pieces of paper fanned out on a desk.

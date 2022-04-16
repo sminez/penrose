@@ -1,13 +1,9 @@
 //! Widgets intended for use in statusbars
 use crate::{
-    core::{
-        data_types::Region,
-        hooks::Hook,
-        manager::WindowManager,
-        ring::Selector,
-        xconnection::{XConn, Xid},
-    },
+    common::{geometry::Region, Xid},
+    core::{hooks::Hook, manager::WindowManager, ring::Selector},
     draw::{widget::Text, Color, DrawContext, Result, TextStyle, Widget},
+    xconnection::XConn,
 };
 
 const PADDING: f64 = 3.0;

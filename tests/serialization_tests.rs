@@ -1,21 +1,19 @@
 // Check that restoring from serialised state is working
-#[macro_use]
-extern crate penrose;
-
 #[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
+use serde::{Deserialize, Serialize};
 
 use penrose::{
+    __impl_stub_xcon,
+    common::Xid,
     core::{
         client::Client,
         config::Config,
         layout::{floating, side_stack, LayoutFunc},
         manager::WindowManager,
         screen::Screen,
-        xconnection::{Atom, Prop, Result, XError, XEvent, Xid},
     },
-    logging_error_handler,
+    logging_error_handler, map,
+    xconnection::{Atom, Error, Prop, Result, XEvent},
 };
 
 use std::{cell::Cell, collections::HashMap};
@@ -47,7 +45,7 @@ __impl_stub_xcon! {
             if name == Atom::NetWmName.as_ref() {
                 Ok(Prop::UTF8String(vec!["mock name".into()]))
             } else {
-                Err(XError::MissingProperty(name.into(), id))
+                Err(Error::MissingProperty(name.into(), id))
             }
         }
     }
@@ -162,7 +160,7 @@ fn serde_hydrating_when_x_state_is_wrong_errors() {
     match res {
         Ok(_) => panic!("this should have returned an error"),
         Err(e) => match e {
-            penrose::PenroseError::MissingClientIds(ids) => assert_eq!(&ids, &[1, 2, 3]),
+            penrose::Error::MissingClientIds(ids) => assert_eq!(&ids, &[1, 2, 3]),
             _ => panic!("unexpected Error type from hydration"),
         },
     }

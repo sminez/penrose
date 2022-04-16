@@ -1,16 +1,16 @@
 //! Additional helper functions and actions for use with penrose.
 use crate::{
-    core::{
+    common::{
         bindings::KeyEventHandler,
-        client::Client,
-        data_types::RelativePosition,
         helpers::{spawn, spawn_for_output},
-        layout::Layout,
-        manager::WindowManager,
-        ring::Selector,
-        workspace::Workspace,
-        xconnection::XConn,
+        RelativePosition,
     },
+    core::{
+        client::Client, layout::Layout, manager::WindowManager, ring::Selector,
+        workspace::Workspace,
+    },
+    perror,
+    xconnection::XConn,
     Result,
 };
 

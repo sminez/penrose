@@ -5,8 +5,10 @@
 //!
 //! [1]: crate::draw::Draw
 use crate::{
-    core::{bindings::KeyPress, hooks::Hook, xconnection::XConn},
+    common::bindings::KeyPress,
+    core::hooks::Hook,
     draw::{DrawContext, Result},
+    xconnection::XConn,
 };
 
 pub mod bar;

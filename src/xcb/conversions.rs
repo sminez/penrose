@@ -1,15 +1,11 @@
 //! Conversions to Penrose types from XCB types
 use crate::{
-    core::{
-        bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
-        xconnection::{ClientAttr, ClientConfig},
-    },
-    xcb::{Result, XcbError, XcbGenericEvent},
+    common::bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
+    xcb::{Error, Result, XcbGenericEvent},
+    xconnection::{ClientAttr, ClientConfig},
 };
-
-use strum::IntoEnumIterator;
-
 use std::convert::TryFrom;
+use strum::IntoEnumIterator;
 
 impl ModifierKey {
     fn was_held(&self, mask: u16) -> bool {
@@ -47,7 +43,7 @@ impl From<&xcb::KeyPressEvent> for KeyCode {
 }
 
 impl TryFrom<XcbGenericEvent> for KeyCode {
-    type Error = XcbError;
+    type Error = Error;
 
     fn try_from(e: XcbGenericEvent) -> Result<Self> {
         let r = e.response_type();
@@ -55,13 +51,13 @@ impl TryFrom<XcbGenericEvent> for KeyCode {
             let key_press: &xcb::KeyPressEvent = unsafe { xcb::cast_event(&e) };
             Ok(key_press.into())
         } else {
-            Err(XcbError::Raw("not an xcb key press".into()))
+            Err(Error::Raw("not an xcb key press".into()))
         }
     }
 }
 
 impl TryFrom<&XcbGenericEvent> for KeyCode {
-    type Error = XcbError;
+    type Error = Error;
 
     fn try_from(e: &XcbGenericEvent) -> Result<Self> {
         let r = e.response_type();
@@ -69,13 +65,13 @@ impl TryFrom<&XcbGenericEvent> for KeyCode {
             let key_press: &xcb::KeyPressEvent = unsafe { xcb::cast_event(e) };
             Ok(key_press.into())
         } else {
-            Err(XcbError::Raw("not an xcb key press".into()))
+            Err(Error::Raw("not an xcb key press".into()))
         }
     }
 }
 
 impl TryFrom<u8> for MouseButton {
-    type Error = XcbError;
+    type Error = Error;
 
     fn try_from(n: u8) -> Result<Self> {
         match n {
@@ -84,7 +80,7 @@ impl TryFrom<u8> for MouseButton {
             3 => Ok(Self::Right),
             4 => Ok(Self::ScrollUp),
             5 => Ok(Self::ScrollDown),
-            _ => Err(XcbError::UnknownMouseButton(n)),
+            _ => Err(Error::UnknownMouseButton(n)),
         }
     }
 }
@@ -111,7 +107,7 @@ impl MouseState {
 }
 
 impl TryFrom<XcbGenericEvent> for MouseEvent {
-    type Error = XcbError;
+    type Error = Error;
 
     fn try_from(raw: XcbGenericEvent) -> Result<Self> {
         let (detail, state, id, rx, ry, x, y, kind) = data_from_event(raw)?;
@@ -167,7 +163,7 @@ fn data_from_event(
             )
         }
         _ => {
-            return Err(XcbError::Raw(
+            return Err(Error::Raw(
                 "not an xcb button press/release or motion notify".into(),
             ))
         }

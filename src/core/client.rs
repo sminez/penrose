@@ -1,5 +1,10 @@
 //! Metadata around X clients and manipulating them
-use crate::core::xconnection::{Atom, Prop, WmHints, WmNormalHints, XClientProperties, Xid};
+use crate::{
+    common::Xid,
+    xconnection::{Atom, Prop, WmHints, WmNormalHints, XClientProperties},
+};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /**
  * Meta-data around a client window that we are handling.

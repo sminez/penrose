@@ -1,14 +1,9 @@
 //! Additional common hooks that can be used out of the box with minimal config.
 use crate::{
+    common::{helpers::spawn, RelativePosition, Xid},
     contrib::actions::update_monitors_via_xrandr,
-    core::{
-        data_types::RelativePosition,
-        helpers::spawn,
-        hooks::Hook,
-        manager::WindowManager,
-        ring::Selector,
-        xconnection::{XConn, Xid},
-    },
+    core::{hooks::Hook, manager::WindowManager, ring::Selector},
+    xconnection::XConn,
     Result,
 };
 use std::collections::HashMap;

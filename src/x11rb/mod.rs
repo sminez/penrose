@@ -8,11 +8,11 @@
 //! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt
 
 use crate::{
+    common::Xid,
     core::{
         config::Config,
         hooks::{Hook, Hooks},
         manager::WindowManager,
-        xconnection::{XError, Xid},
     },
     ErrorHandler,
 };
@@ -34,7 +34,7 @@ pub mod xconn;
 pub use xconn::X11rbConnection;
 
 /// Result type for fallible methods using x11rb
-pub type Result<T> = std::result::Result<T, X11rbError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// Helper type for when you are defining your [Hook] vector in your main.rs when using
 /// the default x11rb impls
@@ -47,7 +47,7 @@ pub fn new_x11rb_rust_backed_window_manager(
     hooks: Vec<Box<dyn Hook<X11rbConnection<RustConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<RustConnection>>> {
-    let (conn, _) = RustConnection::connect(None).map_err(X11rbError::from)?;
+    let (conn, _) = RustConnection::connect(None).map_err(Error::from)?;
     new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
 }
 
@@ -59,7 +59,7 @@ pub fn new_x11rb_xcb_backed_window_manager(
     hooks: Vec<Box<dyn Hook<X11rbConnection<XCBConnection>>>>,
     error_handler: ErrorHandler,
 ) -> crate::Result<WindowManager<X11rbConnection<XCBConnection>>> {
-    let (conn, _) = XCBConnection::connect(None).map_err(X11rbError::from)?;
+    let (conn, _) = XCBConnection::connect(None).map_err(Error::from)?;
     new_x11rb_backed_window_manager(conn, config, hooks, error_handler)
 }
 
@@ -81,7 +81,7 @@ pub fn new_x11rb_backed_window_manager<C: Connection>(
 /// Enum to store the various ways that operations can fail inside of the
 /// x11rb implementations of penrose traits.
 #[derive(thiserror::Error, Debug)]
-pub enum X11rbError {
+pub enum Error {
     /// Unable to establish a connection to the X11 server
     #[error(transparent)]
     Connect(#[from] ConnectError),
@@ -121,9 +121,9 @@ pub enum X11rbError {
 
 macro_rules! from_error {
     ($type:ident) => {
-        impl From<$type> for XError {
+        impl From<$type> for $crate::xconnection::Error {
             fn from(error: $type) -> Self {
-                X11rbError::from(error).into()
+                Error::from(error).into()
             }
         }
     };

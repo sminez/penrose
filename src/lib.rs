@@ -133,27 +133,17 @@
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
 )]
 
-#[macro_use]
-extern crate bitflags;
-
-#[macro_use]
-extern crate tracing;
-
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
-
-#[macro_use]
-pub mod core;
-
+pub mod common;
 pub mod contrib;
+pub mod core;
 pub mod draw;
-
-#[cfg(feature = "xcb")]
-pub mod xcb;
+pub mod macros;
+pub mod xconnection;
 
 #[cfg(feature = "x11rb")]
 pub mod x11rb;
+#[cfg(feature = "xcb")]
+pub mod xcb;
 
 #[doc(hidden)]
 pub mod __test_helpers;
@@ -163,13 +153,13 @@ pub use penrose_proc::validate_user_bindings;
 
 // top level re-exports
 #[doc(inline)]
-pub use crate::core::{
-    config::Config,
-    data_types::Change::*,
-    helpers::logging_error_handler,
-    manager::WindowManager,
-    ring::{Direction::*, InsertPoint, Selector},
-    xconnection::Xid,
+pub use crate::{
+    common::{helpers::logging_error_handler, Change::*, Xid},
+    core::{
+        config::Config,
+        manager::WindowManager,
+        ring::{Direction::*, InsertPoint, Selector},
+    },
 };
 
 #[cfg(feature = "xcb")]
@@ -177,13 +167,13 @@ pub use crate::core::{
 pub use crate::xcb::{new_xcb_backed_window_manager, XcbConnection};
 
 /// Enum to store the various ways that operations can fail in Penrose
-#[derive(thiserror::Error, Debug)]
-pub enum PenroseError {
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
     /// Something went wrong using the [draw] module.
     ///
-    /// See [DrawError][crate::draw::DrawError] for variants.
+    /// See [DrawError][crate::draw::Error] for variants.
     #[error(transparent)]
-    Draw(#[from] crate::draw::DrawError),
+    Draw(#[from] crate::draw::Error),
 
     /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
     #[error("unable to rehydrate from serialized state: {0}")]
@@ -245,22 +235,22 @@ pub enum PenroseError {
     /// See [XcbError][crate::xcb::XcbError] for variants.
     #[cfg(feature = "xcb")]
     #[error(transparent)]
-    Xcb(#[from] crate::xcb::XcbError),
+    Xcb(#[from] crate::xcb::Error),
 
     /// Something went wrong using the [x11rb] module.
     ///
     /// See [X11rbError][crate::x11rb::X11rbError] for variants.
     #[cfg(feature = "x11rb")]
     #[error(transparent)]
-    X11rb(#[from] crate::x11rb::X11rbError),
+    X11rb(#[from] crate::x11rb::Error),
 
     /// Something went wrong when communicating with the X server
     #[error(transparent)]
-    X(#[from] crate::core::xconnection::XError),
+    X(#[from] crate::xconnection::Error),
 }
 
 /// Top level penrose Result type
-pub type Result<T> = std::result::Result<T, PenroseError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// A function that can be registered to handle errors that occur during [WindowManager] operation
-pub type ErrorHandler = Box<dyn FnMut(PenroseError)>;
+pub type ErrorHandler = Box<dyn FnMut(Error)>;

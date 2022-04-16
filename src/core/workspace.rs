@@ -8,19 +8,23 @@
 //! [1]: crate::core::manager::WindowManager
 //! [2]: crate::core::layout::Layout
 use crate::{
+    common::{
+        geometry::{Region, ResizeAction},
+        Change, Xid,
+    },
     core::{
         client::Client,
-        data_types::{Change, Region, ResizeAction},
         layout::{Layout, LayoutConf},
         ring::{Direction, InsertPoint, Ring, Selector},
-        xconnection::Xid,
     },
-    Result,
+    perror, Result,
 };
+use tracing::debug;
 
 #[cfg(feature = "serde")]
-use crate::{core::layout::LayoutFunc, PenroseError};
-
+use crate::{core::layout::LayoutFunc, Error};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
 use std::collections::HashMap;
 
@@ -82,7 +86,7 @@ impl Workspace {
                     layout.set_layout_function(*f);
                     Ok(())
                 }
-                None => Err(PenroseError::HydrationState(format!(
+                None => Err(Error::HydrationState(format!(
                     "'{}' is not a known layout symbol: {:?}",
                     layout.symbol,
                     layout_funcs.keys()
@@ -461,7 +465,10 @@ impl Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{layout::*, ring::Direction, xconnection::MockXConn};
+    use crate::{
+        core::{layout::*, ring::Direction},
+        xconnection::MockXConn,
+    };
 
     fn test_layouts() -> Vec<Layout> {
         vec![Layout::new("t", LayoutConf::default(), mock_layout, 1, 0.6)]

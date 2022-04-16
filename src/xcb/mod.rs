@@ -25,11 +25,11 @@
 //! [9]: crate::xcb::XcbDraw
 //! [10]: https://www.mankier.com/package/libxcb-devel
 use crate::{
+    common::Xid,
     core::{
         config::Config,
         hooks::{Hook, Hooks},
         manager::WindowManager,
-        xconnection::Xid,
     },
     ErrorHandler,
 };
@@ -57,7 +57,7 @@ pub use xconn::XcbConnection;
 pub type XcbGenericEvent = xcb::Event<xcb::ffi::base::xcb_generic_event_t>;
 
 /// Result type for fallible methods using XCB
-pub type Result<T> = std::result::Result<T, XcbError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// Helper type for when you are defining your [Hook] vector in your main.rs when using
 /// the default XCB impls
@@ -97,7 +97,7 @@ pub fn new_xcb_backed_status_bar(
 /// Enum to store the various ways that operations can fail inside of the
 /// XCB implementations of penrose traits.
 #[derive(thiserror::Error, Debug)]
-pub enum XcbError {
+pub enum Error {
     /// Unable to establish a connection to the X server
     #[error("Unable to connect to the X server via XCB")]
     Connection(#[from] ::xcb::ConnError),
@@ -143,7 +143,7 @@ pub enum XcbError {
     Randr(String),
 
     /// A generic error type for use in user code when needing to construct
-    /// a simple [XcbError].
+    /// a simple [Error].
     #[error("Unhandled error: {0}")]
     Raw(String),
 
@@ -182,20 +182,20 @@ pub enum XcbError {
     XcbUnknown(u8, u8),
 }
 
-fn from_error_code(code: u8, response_type: u8) -> XcbError {
+fn from_error_code(code: u8, response_type: u8) -> Error {
     match code {
-        1..=11 => XcbError::XcbKnown(unsafe { std::mem::transmute(code) }),
-        _ => XcbError::XcbUnknown(code, response_type),
+        1..=11 => Error::XcbKnown(unsafe { std::mem::transmute(code) }),
+        _ => Error::XcbUnknown(code, response_type),
     }
 }
 
-impl From<::xcb::GenericError> for XcbError {
+impl From<::xcb::GenericError> for Error {
     fn from(raw: ::xcb::GenericError) -> Self {
         from_error_code(raw.error_code(), raw.response_type())
     }
 }
 
-impl From<&::xcb::GenericError> for XcbError {
+impl From<&::xcb::GenericError> for Error {
     fn from(raw: &::xcb::GenericError) -> Self {
         from_error_code(raw.error_code(), raw.response_type())
     }
@@ -234,12 +234,12 @@ pub enum XErrorCode {
 #[macro_export]
 macro_rules! __xcb_impl_xatom_querier {
     { $struct:ident } => {
-        impl $crate::core::xconnection::XAtomQuerier for $struct {
-            fn atom_name(&self, atom: Xid) -> $crate::core::xconnection::Result<String> {
+        impl $crate::xconnection::XAtomQuerier for $struct {
+            fn atom_name(&self, atom: Xid) -> $crate::xconnection::Result<String> {
                 Ok(self.api.atom_name(atom)?)
             }
 
-            fn atom_id(&self, name: &str) -> $crate::core::xconnection::Result<Xid> {
+            fn atom_id(&self, name: &str) -> $crate::xconnection::Result<Xid> {
                 Ok(self.api.atom(name)?)
             }
         }
@@ -250,20 +250,20 @@ macro_rules! __xcb_impl_xatom_querier {
 #[macro_export]
 macro_rules! __xcb_impl_xstate {
     { $struct:ident } => {
-        impl $crate::core::xconnection::XState for $struct {
+        impl $crate::xconnection::XState for $struct {
             fn root(&self) -> Xid {
                 self.api.root()
             }
 
-            fn current_screens(&self) -> $crate::core::xconnection::Result<Vec<Screen>> {
+            fn current_screens(&self) -> $crate::xconnection::Result<Vec<Screen>> {
                 Ok(self.api.current_screens()?)
             }
 
-            fn cursor_position(&self) -> $crate::core::xconnection::Result<Point> {
+            fn cursor_position(&self) -> $crate::xconnection::Result<Point> {
                 Ok(self.api.cursor_position()?)
             }
 
-            fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> $crate::core::xconnection::Result<()> {
+            fn warp_cursor(&self, win_id: Option<Xid>, screen: &Screen) -> $crate::xconnection::Result<()> {
                 let (x, y, id) = match win_id {
                     Some(id) => {
                         let (_, _, w, h) = self.client_geometry(id)?.values();
@@ -278,15 +278,15 @@ macro_rules! __xcb_impl_xstate {
                 Ok(self.api.warp_cursor(id, x as usize, y as usize)?)
             }
 
-            fn client_geometry(&self, id: Xid) -> $crate::core::xconnection::Result<Region> {
+            fn client_geometry(&self, id: Xid) -> $crate::xconnection::Result<Region> {
                 Ok(self.api.client_geometry(id)?)
             }
 
-            fn active_clients(&self) -> $crate::core::xconnection::Result<Vec<Xid>> {
+            fn active_clients(&self) -> $crate::xconnection::Result<Vec<Xid>> {
                 Ok(self.api.current_clients()?)
             }
 
-            fn focused_client(&self) -> $crate::core::xconnection::Result<Xid> {
+            fn focused_client(&self) -> $crate::xconnection::Result<Xid> {
                 Ok(self.api.focused_client()?)
             }
         }
@@ -297,20 +297,20 @@ macro_rules! __xcb_impl_xstate {
 #[macro_export]
 macro_rules! __xcb_impl_xeventhandler {
     { $struct:ident } => {
-        impl $crate::core::xconnection::XEventHandler for $struct {
+        impl $crate::xconnection::XEventHandler for $struct {
             fn flush(&self) -> bool {
                 self.api.flush()
             }
 
-            fn wait_for_event(&self) -> $crate::core::xconnection::Result<XEvent> {
+            fn wait_for_event(&self) -> $crate::xconnection::Result<XEvent> {
                 Ok(self.api.wait_for_event()?)
             }
 
-            fn send_client_event(&self, msg: ClientMessage) -> $crate::core::xconnection::Result<()> {
+            fn send_client_event(&self, msg: ClientMessage) -> $crate::xconnection::Result<()> {
                 Ok(self.api.send_client_event(msg)?)
             }
 
-            fn build_client_event(&self, kind: ClientMessageKind) -> $crate::core::xconnection::Result<ClientMessage> {
+            fn build_client_event(&self, kind: ClientMessageKind) -> $crate::xconnection::Result<ClientMessage> {
                 self.api.build_client_event(kind)
             }
         }
@@ -321,24 +321,24 @@ macro_rules! __xcb_impl_xeventhandler {
 #[macro_export]
 macro_rules! __xcb_impl_xclienthandler {
     { $struct:ident } => {
-        impl $crate::core::xconnection::XClientHandler for $struct {
-            fn map_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+        impl $crate::xconnection::XClientHandler for $struct {
+            fn map_client(&self, id: Xid) -> $crate::xconnection::Result<()> {
                 Ok(self.api.map_client(id)?)
             }
 
-            fn unmap_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+            fn unmap_client(&self, id: Xid) -> $crate::xconnection::Result<()> {
                 Ok(self.api.unmap_client(id)?)
             }
 
-            fn focus_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+            fn focus_client(&self, id: Xid) -> $crate::xconnection::Result<()> {
                 Ok(self.api.focus_client(id)?)
             }
 
-            fn destroy_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+            fn destroy_client(&self, id: Xid) -> $crate::xconnection::Result<()> {
                 Ok(self.api.destroy_client(id)?)
             }
 
-            fn kill_client(&self, id: Xid) -> $crate::core::xconnection::Result<()> {
+            fn kill_client(&self, id: Xid) -> $crate::xconnection::Result<()> {
                 Ok(self.api.kill_client(id)?)
             }
         }
@@ -349,29 +349,29 @@ macro_rules! __xcb_impl_xclienthandler {
 #[macro_export]
 macro_rules! __xcb_impl_xclientproperties {
     { $struct:ident } => {
-        impl $crate::core::xconnection::XClientProperties for $struct {
-            fn get_prop(&self, id: Xid, name: &str) -> $crate::core::xconnection::Result<Prop> {
+        impl $crate::xconnection::XClientProperties for $struct {
+            fn get_prop(&self, id: Xid, name: &str) -> $crate::xconnection::Result<Prop> {
                 match self.api.get_prop(id, name) {
-                    Err(XcbError::XcbKnown($crate::xcb::XErrorCode::BadAtom)) => {
-                        Err($crate::core::xconnection::XError::MissingProperty(name.into(), id))
+                    Err(Error::XcbKnown($crate::xcb::XErrorCode::BadAtom)) => {
+                        Err($crate::xconnection::Error::MissingProperty(name.into(), id))
                     },
                     other => Ok(other?),
                 }
             }
 
-            fn list_props(&self, id: Xid) -> $crate::core::xconnection::Result<Vec<String>> {
+            fn list_props(&self, id: Xid) -> $crate::xconnection::Result<Vec<String>> {
                 Ok(self.api.list_props(id)?)
             }
 
-            fn delete_prop(&self, id: Xid, name: &str) -> $crate::core::xconnection::Result<()> {
+            fn delete_prop(&self, id: Xid, name: &str) -> $crate::xconnection::Result<()> {
                 Ok(self.api.delete_prop(id, name)?)
             }
 
-            fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> $crate::core::xconnection::Result<()> {
+            fn change_prop(&self, id: Xid, prop: &str, val: Prop) -> $crate::xconnection::Result<()> {
                 Ok(self.api.change_prop(id, prop, val)?)
             }
 
-            fn set_client_state(&self, id: Xid, state: WindowState) -> $crate::core::xconnection::Result<()> {
+            fn set_client_state(&self, id: Xid, state: WindowState) -> $crate::xconnection::Result<()> {
                 Ok(self.api.set_client_state(id, state)?)
             }
         }
@@ -382,16 +382,16 @@ macro_rules! __xcb_impl_xclientproperties {
 #[macro_export]
 macro_rules! __xcb_impl_xclientconfig {
     { $struct:ident } => {
-        impl $crate::core::xconnection::XClientConfig for $struct {
-            fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> $crate::core::xconnection::Result<()> {
+        impl $crate::xconnection::XClientConfig for $struct {
+            fn configure_client(&self, id: Xid, data: &[ClientConfig]) -> $crate::xconnection::Result<()> {
                 Ok(self.api.configure_client(id, data)?)
             }
 
-            fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> $crate::core::xconnection::Result<()> {
+            fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> $crate::xconnection::Result<()> {
                 Ok(self.api.set_client_attributes(id, data)?)
             }
 
-            fn get_window_attributes(&self, id: Xid) -> $crate::core::xconnection::Result<$crate::core::xconnection::WindowAttributes> {
+            fn get_window_attributes(&self, id: Xid) -> $crate::xconnection::Result<$crate::xconnection::WindowAttributes> {
                 Ok(self.api.get_window_attributes(id)?)
             }
         }
@@ -403,19 +403,19 @@ macro_rules! __xcb_impl_xclientconfig {
 macro_rules! __xcb_impl_xkeyboardhandler {
     { $struct:ident } => {
         impl XKeyboardHandler for $struct {
-            fn grab_keyboard(&self) -> $crate::core::xconnection::Result<()> {
+            fn grab_keyboard(&self) -> $crate::xconnection::Result<()> {
                 Ok(self.api.grab_keyboard()?)
             }
 
-            fn ungrab_keyboard(&self) -> $crate::core::xconnection::Result<()> {
+            fn ungrab_keyboard(&self) -> $crate::xconnection::Result<()> {
                 Ok(self.api.ungrab_keyboard()?)
             }
 
-            fn next_keypress(&self) -> $crate::core::xconnection::Result<Option<KeyPressParseAttempt>> {
+            fn next_keypress(&self) -> $crate::xconnection::Result<Option<KeyPressParseAttempt>> {
                 Ok(self.api.next_keypress()?)
             }
 
-            fn next_keypress_blocking(&self) -> $crate::core::xconnection::Result<KeyPressParseAttempt> {
+            fn next_keypress_blocking(&self) -> $crate::xconnection::Result<KeyPressParseAttempt> {
                 Ok(self.api.next_keypress_blocking()?)
             }
         }

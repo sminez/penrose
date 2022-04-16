@@ -1,7 +1,5 @@
-#[macro_use]
-extern crate penrose;
-
 use penrose::{
+    common::{bindings::KeyEventHandler, helpers::index_selectors},
     contrib::{
         actions::create_or_switch_to_workspace,
         extensions::{dmenu::*, Scratchpad},
@@ -9,19 +7,15 @@ use penrose::{
         layouts::paper,
     },
     core::{
-        bindings::KeyEventHandler,
         config::Config,
-        helpers::index_selectors,
-        hooks::Hooks,
+        hooks::{Hook, Hooks},
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
-        xconnection::XConn,
     },
-    logging_error_handler,
-    xcb::new_xcb_backed_window_manager,
+    gen_keybindings, logging_error_handler, run_external, run_internal,
+    xcb::{new_xcb_backed_window_manager, XcbConnection},
+    xconnection::XConn,
     Backward, Forward, Less, More, Result,
 };
-
-use simplelog::{LevelFilter, SimpleLogger};
 use std::collections::HashMap;
 
 fn my_layouts() -> Vec<Layout> {
@@ -57,9 +51,6 @@ fn dynamic_workspaces<X: XConn>() -> KeyEventHandler<X> {
 }
 
 fn main() -> Result<()> {
-    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())
-        .expect("failed to init logging");
-
     let mut config_builder = Config::default().builder();
     let config = config_builder
         .workspaces(vec!["main"])
@@ -70,7 +61,7 @@ fn main() -> Result<()> {
     let sp = Scratchpad::new("st", 0.8, 0.8);
 
     let hooks: Hooks<_> = vec![
-        LayoutSymbolAsRootName::new(),
+        LayoutSymbolAsRootName::new() as Box<dyn Hook<XcbConnection>>,
         RemoveEmptyWorkspaces::new(config.workspaces().clone()),
         DefaultWorkspace::new("1term", "[side]", vec!["st"]),
         DefaultWorkspace::new("2term", "[botm]", vec!["st", "st"]),

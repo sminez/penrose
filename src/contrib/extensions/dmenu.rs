@@ -1,8 +1,7 @@
 //! A simple wrapper for suckless' [dmenu][1] tool for providing quick text based menus
 //!
 //! [1]: https://tools.suckless.org/dmenu/
-use crate::{draw::Color, PenroseError, Result};
-
+use crate::{draw::Color, Error, Result};
 use std::{
     io::{Read, Write},
     process::{Command, Stdio},
@@ -163,13 +162,13 @@ impl DMenu {
             let mut stdin = proc
                 .stdin
                 .take()
-                .ok_or_else(|| perror!("unable to open stdin"))?;
+                .ok_or_else(|| crate::perror!("unable to open stdin"))?;
             stdin.write_all(choices.as_bytes())?;
         }
 
         let mut raw = String::new();
         proc.stdout
-            .ok_or_else(|| PenroseError::SpawnProc("failed to spawn dmenu".into()))?
+            .ok_or_else(|| Error::SpawnProc("failed to spawn dmenu".into()))?
             .read_to_string(&mut raw)?;
         let choice = raw.trim();
 

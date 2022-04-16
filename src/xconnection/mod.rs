@@ -1,48 +1,31 @@
 //! An abstraciton layer for talking to an underlying X server.
-//!
-//! An implementation of the [XConn] trait is required for running a [WindowManager][1]. The choice
-//! of back end (e.g. xlib, xcb...) is an implementation detail that does not surface in the
-//! `WindowManager` itself. All low level details of working with the X server should be captured in
-//! this trait, though accessing backend specific functionality is possible by writing an impl
-//! block for `WindowManager<YourXConn>` if desired.
-//!
-//! [1]: crate::core::manager::WindowManager
 use crate::{
-    core::{
-        bindings::{KeyBindings, KeyPress, MouseBindings},
-        client::Client,
-        data_types::{Point, Region},
-        screen::Screen,
+    common::{
+        bindings::{KeyCode, KeyPress, MouseState},
+        geometry::{Point, Region},
+        Xid,
     },
-    draw::Color,
+    core::{client::Client, screen::Screen},
 };
-
 use penrose_proc::stubbed_companion_trait;
+use tracing::trace;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub mod atom;
 pub mod event;
 pub mod property;
 
-pub use atom::{
-    Atom, AtomIter, AUTO_FLOAT_WINDOW_TYPES, EWMH_SUPPORTED_ATOMS, UNMANAGED_WINDOW_TYPES,
-};
-pub use event::{
-    ClientEventMask, ClientMessage, ClientMessageData, ClientMessageKind, ConfigureEvent,
-    ExposeEvent, PointerChange, PropertyEvent, XEvent,
-};
-pub use property::{
-    MapState, Prop, WindowAttributes, WindowClass, WindowState, WmHints, WmNormalHints,
-    WmNormalHintsFlags,
-};
-
-/// An X resource ID
-pub type Xid = u32;
+pub use atom::*;
+pub use event::*;
+pub use property::*;
 
 const WM_NAME: &str = "penrose";
 
 /// Enum to store the various ways that operations can fail in X traits
-#[derive(thiserror::Error, Debug)]
-pub enum XError {
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
     /// The underlying connection to the X server is closed
     #[error("The underlying connection to the X server is closed")]
     ConnectionClosed,
@@ -51,19 +34,23 @@ pub enum XError {
     #[error("Invalid client message format: {0} (expected 8, 16 or 32)")]
     InvalidClientMessageData(u8),
 
+    /// Wm(Normal)Hints received from the X server were invalid
+    #[error("Invalid window hints property: {0}")]
+    InvalidHints(String),
+
     /// The requested property is not set for the given client
     #[error("The {0} property is not set for client {1}")]
     MissingProperty(String, Xid),
 
     /// A generic error type for use in user code when needing to construct
-    /// a simple [XError].
-    #[error("Unhandled error: {0}")]
+    /// a simple [Error].
+    #[error("{0}")]
     Raw(String),
 
     /// Parsing an [Atom][crate::core::xconnection::Atom] from a str failed.
     ///
     /// This happens when the atom name being requested is not a known atom.
-    #[error(transparent)]
+    #[error("{0}")]
     Strum(#[from] strum::ParseError),
 
     /// An attempt was made to reference an atom that is not known to penrose
@@ -79,21 +66,34 @@ pub enum XError {
      */
     /// Something went wrong using the [xcb][crate::xcb] module.
     ///
-    /// See [XcbError][crate::xcb::XcbError] for variants.
+    /// See [XcbError][crate::xcb::Error] for variants.
     #[cfg(feature = "xcb")]
     #[error(transparent)]
-    Xcb(#[from] crate::xcb::XcbError),
+    Xcb(#[from] crate::xcb::Error),
 
     /// Something went wrong using the [x11rb][crate::x11rb] module.
     ///
-    /// See [X11rbError][crate::x11rb::X11rbError] for variants.
+    /// See [X11rbError][crate::x11rb::Error] for variants.
     #[cfg(feature = "x11rb")]
     #[error(transparent)]
-    X11rb(#[from] crate::x11rb::X11rbError),
+    X11rb(#[from] crate::x11rb::Error),
 }
 
 /// Result type for errors raised by X traits
-pub type Result<T> = std::result::Result<T, XError>;
+pub type Result<T> = std::result::Result<T, Error>;
+
+/// A window type to be specified when creating a new window in the X server
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum WinType {
+    /// A simple hidden stub window for facilitating other API calls
+    CheckWin,
+    /// A window that receives input only (not queryable)
+    InputOnly,
+    /// A regular window. The [Atom] passed should be a
+    /// valid _NET_WM_WINDOW_TYPE (this is not enforced)
+    InputOutput(Atom),
+}
 
 /// On screen configuration options for X clients (not all are curently implemented)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -132,11 +132,11 @@ pub enum KeyPressParseAttempt {
 #[stubbed_companion_trait(doc_hidden = "true")]
 pub trait XAtomQuerier {
     /// Convert an X atom id to its human friendly name
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn atom_name(&self, atom: Xid) -> Result<String>;
 
     /// Fetch or intern an atom by name
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn atom_id(&self, name: &str) -> Result<Xid>;
 }
 
@@ -181,7 +181,7 @@ pub trait XEventHandler {
     fn flush(&self) -> bool;
 
     /// Wait for the next event from the X server and return it as an [XEvent]
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn wait_for_event(&self) -> Result<XEvent>;
 
     /// Send an X event to the target client
@@ -190,11 +190,11 @@ pub trait XEventHandler {
     /// using the [build_client_event][1] method.
     ///
     /// [1]: XEventHandler::build_client_event
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn send_client_event(&self, msg: ClientMessage) -> Result<()>;
 
     /// Build the required event data for sending a known client event.
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn build_client_event(&self, kind: ClientMessageKind) -> Result<ClientMessage>;
 }
 
@@ -257,7 +257,7 @@ pub trait XClientProperties {
     /// Query a property for a client by ID and name.
     ///
     /// Can fail if the property name is invalid or we get a malformed response from xcb.
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn get_prop(&self, id: Xid, name: &str) -> Result<Prop>;
 
     /// Delete an existing property from a client
@@ -287,8 +287,8 @@ pub trait XClientProperties {
     fn client_supports_protocol(&self, id: Xid, proto: &str) -> Result<bool> {
         match self.get_prop(id, Atom::WmProtocols.as_ref()) {
             Ok(Prop::Atom(protocols)) => Ok(protocols.iter().any(|p| p == proto)),
-            Ok(p) => Err(XError::Raw(format!("Expected atoms, got {:?}", p))),
-            Err(XError::MissingProperty(_, _)) => Ok(false),
+            Ok(p) => Err(Error::Raw(format!("Expected atoms, got {:?}", p))),
+            Err(Error::MissingProperty(_, _)) => Ok(false),
             Err(e) => Err(e),
         }
     }
@@ -363,7 +363,7 @@ pub trait XClientConfig {
     fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> Result<()>;
 
     /// Get the [WindowAttributes] for this client
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn get_window_attributes(&self, id: Xid) -> Result<WindowAttributes>;
 
     /*
@@ -388,8 +388,8 @@ pub trait XClientConfig {
     }
 
     /// Change the border color for the given client
-    fn set_client_border_color(&self, id: Xid, color: Color) -> Result<()> {
-        self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgb_u32())])
+    fn set_client_border_color(&self, id: Xid, color: u32) -> Result<()> {
+        self.set_client_attributes(id, &[ClientAttr::BorderColor(color)])
     }
 }
 
@@ -413,7 +413,7 @@ pub trait XKeyboardHandler {
 
     /// Wait for the next [XEvent] from an underlying connection as a [KeyPress] and attempt to
     /// parse it as a [KeyPress].
-    #[stub(Err(XError::Raw("mocked".into())))]
+    #[stub(Err(Error::Raw("mocked".into())))]
     fn next_keypress_blocking(&self) -> Result<KeyPressParseAttempt>;
 }
 
@@ -461,11 +461,7 @@ pub trait XConn:
     /// This is what determines which key press events end up being sent through in the main event
     /// loop for the WindowManager.
     #[stub(Ok(()))]
-    fn grab_keys(
-        &self,
-        key_bindings: &KeyBindings<Self>,
-        mouse_bindings: &MouseBindings<Self>,
-    ) -> Result<()>;
+    fn grab_keys(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
 
     /*
      *  The following default implementations should used if possible.
@@ -612,6 +608,7 @@ pub use mock_conn::MockXConn;
 #[cfg(test)]
 mod mock_conn {
     use super::*;
+    use crate::__impl_stub_xcon;
     use std::{cell::Cell, fmt};
 
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -665,7 +662,7 @@ mod mock_conn {
                 if name == Atom::WmName.as_ref() || name == Atom::NetWmName.as_ref() {
                     Ok(Prop::UTF8String(vec!["mock name".into()]))
                 } else {
-                    Err(XError::MissingProperty(name.into(), id))
+                    Err(Error::MissingProperty(name.into(), id))
                 }
             }
         }
@@ -680,7 +677,7 @@ mod mock_conn {
             fn mock_wait_for_event(&self) -> Result<XEvent> {
                 let mut remaining = self.events.replace(vec![]);
                 if remaining.is_empty() {
-                    return Err(XError::ConnectionClosed)
+                    return Err(Error::ConnectionClosed)
                 }
                 let next = remaining.remove(0);
                 self.events.set(remaining);
@@ -704,54 +701,6 @@ mod mock_conn {
             fn mock_is_managed_client(&self, c: &Client) -> bool {
                 !self.unmanaged_ids.contains(&c.id())
             }
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    use std::str::FromStr;
-
-    struct WmNameXConn {
-        wm_name: bool,
-        net_wm_name: bool,
-        empty_net_wm_name: bool,
-    }
-
-    impl StubXClientProperties for WmNameXConn {
-        fn mock_get_prop(&self, id: Xid, name: &str) -> Result<Prop> {
-            match Atom::from_str(name)? {
-                Atom::WmName if self.wm_name => Ok(Prop::UTF8String(vec!["wm_name".into()])),
-                Atom::WmName if self.net_wm_name && self.empty_net_wm_name => {
-                    Ok(Prop::UTF8String(vec!["".into()]))
-                }
-                Atom::NetWmName if self.net_wm_name => {
-                    Ok(Prop::UTF8String(vec!["net_wm_name".into()]))
-                }
-                Atom::NetWmName if self.empty_net_wm_name => Ok(Prop::UTF8String(vec!["".into()])),
-                _ => Err(XError::MissingProperty(name.into(), id)),
-            }
-        }
-    }
-
-    test_cases! {
-        window_name;
-        args: (wm_name: bool, net_wm_name: bool, empty_net_wm_name: bool, expected: &str);
-
-        case: wm_name_only => (true, false, false, "wm_name");
-        case: net_wm_name_only => (false, true, false, "net_wm_name");
-        case: both_prefers_net => (true, true, false, "net_wm_name");
-        case: net_wm_name_empty => (true, false, true, "wm_name");
-
-        body: {
-            let conn = WmNameXConn {
-                wm_name,
-                net_wm_name,
-                empty_net_wm_name,
-            };
-            assert_eq!(&conn.client_name(42).unwrap(), expected);
         }
     }
 }

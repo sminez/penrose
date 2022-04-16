@@ -47,18 +47,16 @@
 //! # }
 //! ```
 use crate::{
-    core::{
-        data_types::{Region, WinType},
-        hooks::Hook,
-        manager::WindowManager,
-        xconnection::{Atom, Prop, XConn, Xid},
+    common::{geometry::Region, Xid},
+    core::{hooks::Hook, manager::WindowManager},
+    draw::{
+        widget::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces},
+        Color, Draw, DrawContext, HookableWidget, Result, TextStyle,
     },
-    draw::{Color, Draw, DrawContext, HookableWidget, Result, TextStyle},
+    xconnection::{Atom, Prop, WinType, XConn},
 };
-
 use std::fmt;
-
-use crate::draw::widget::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces};
+use tracing::error;
 
 const MAX_ACTIVE_WINDOW_CHARS: usize = 80;
 
@@ -87,7 +85,8 @@ where
         style.bg.unwrap_or_else(|| 0x000000.into()),
         &[&style.font],
         vec![
-            Box::new(Workspaces::new(&workspaces, style, highlight, empty_ws)),
+            Box::new(Workspaces::new(&workspaces, style, highlight, empty_ws))
+                as Box<dyn HookableWidget<X>>,
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 &TextStyle {

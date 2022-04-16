@@ -1,10 +1,14 @@
 //! Data types for working with X events
-use crate::core::{
-    bindings::{KeyCode, MouseEvent},
-    data_types::{Point, Region},
-    xconnection::{Atom, Result, XAtomQuerier, Xid},
+use crate::{
+    common::{
+        bindings::{KeyCode, MouseEvent},
+        geometry::{Point, Region},
+        Xid,
+    },
+    xconnection::{Atom, Result, XAtomQuerier},
 };
-
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
 /// Wrapper around the low level X event types that correspond to request / response data when
@@ -161,6 +165,12 @@ pub enum ClientMessageData {
     U16([u16; 10]),
     /// Slice of u32
     U32([u32; 5]),
+}
+
+macro_rules! cast_slice {
+    ($s:expr, $t:ty) => {
+        $s.iter().map(|&v| v as $t).collect::<Vec<$t>>()
+    };
 }
 
 impl ClientMessageData {

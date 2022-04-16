@@ -1,8 +1,8 @@
 //! An internal data structure and associated helpers for simplifying actions around
 //! manipulating focusable ordered collections.
-
-use crate::core::xconnection::Xid;
-
+use crate::common::Xid;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
     fmt,

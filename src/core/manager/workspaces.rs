@@ -1,25 +1,24 @@
 //! Management of workspaces
 use crate::{
+    common::{geometry::Region, Change, Xid},
     core::{
         client::Client,
-        data_types::{Change, Region},
         hooks::HookName,
         layout::LayoutConf,
         manager::EventAction,
         ring::{Direction, InsertPoint, Ring, Selector},
         workspace::{ArrangeActions, Workspace},
-        xconnection::Xid,
     },
     Result,
 };
-
 use std::ops::{Deref, DerefMut};
 
 #[cfg(feature = "serde")]
-use std::collections::HashMap;
-
-#[cfg(feature = "serde")]
 use crate::core::layout::LayoutFunc;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde")]
+use std::collections::HashMap;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -57,7 +56,7 @@ impl Workspaces {
     pub fn get_workspace(&self, ix: usize) -> Result<&Workspace> {
         self.inner
             .get(ix)
-            .ok_or_else(|| perror!("unknown workspace: {}", ix))
+            .ok_or_else(|| crate::perror!("unknown workspace: {}", ix))
     }
 
     pub fn would_focus(&self, ix: usize, selector: &Selector<'_, Workspace>) -> bool {
@@ -157,7 +156,7 @@ impl Workspaces {
     pub fn remove_workspace(&mut self, selector: &Selector<'_, Workspace>) -> Result<Workspace> {
         self.inner
             .remove(&selector)
-            .ok_or_else(|| perror!("unknown workspace"))
+            .ok_or_else(|| crate::perror!("unknown workspace"))
     }
 
     pub fn set_client_insert_point(&mut self, cip: InsertPoint) {
@@ -173,7 +172,7 @@ impl Workspaces {
         let ws = self
             .inner
             .get(wix)
-            .ok_or_else(|| perror!("attempt to layout unknown workspace: {}", wix))?;
+            .ok_or_else(|| crate::perror!("attempt to layout unknown workspace: {}", wix))?;
 
         let lc = ws.layout_conf();
         if !lc.floating {
@@ -242,7 +241,7 @@ impl Workspaces {
         self.inner
             .get(wix)
             .map(|ws| ws.client_ids())
-            .ok_or_else(|| perror!("unknown workspace: {}", wix))
+            .ok_or_else(|| crate::perror!("unknown workspace: {}", wix))
     }
 
     pub fn focused_client(&self, ix: usize) -> Option<Xid> {

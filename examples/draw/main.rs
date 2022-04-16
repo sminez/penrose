@@ -1,17 +1,13 @@
-use std::{thread, time};
-
 use penrose::{
-    core::{
-        config::Config,
-        data_types::{Region, WinType},
-        hooks::Hook,
-        xconnection::Atom,
-    },
+    common::geometry::Region,
+    core::{config::Config, hooks::Hook},
     draw::{bar::dwm_bar, Draw, DrawContext, TextStyle},
     logging_error_handler,
     xcb::{new_xcb_backed_window_manager, XcbDraw},
+    xconnection::{Atom, WinType},
     Result,
 };
+use std::{thread, time};
 
 const HEIGHT: usize = 18;
 

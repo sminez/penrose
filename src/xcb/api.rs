@@ -1,27 +1,29 @@
 //! A wrapper around the underlying xcb api layer that only exposes Penrose types
-use crate::{
-    core::{
-        bindings::{KeyCode, KeyCodeMask, KeyCodeValue, MouseEvent, MouseState},
-        data_types::{Point, Region, WinType},
-        helpers::spawn_for_output,
-        screen::Screen,
-        xconnection::{
-            Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageData,
-            ClientMessageKind, ConfigureEvent, ExposeEvent, MapState, PointerChange, Prop,
-            PropertyEvent, WindowAttributes, WindowClass, WindowState, WmHints, WmNormalHints,
-            XAtomQuerier, XEvent, Xid,
-        },
-    },
-    xcb::{Result, XErrorCode, XcbError, XcbGenericEvent},
-};
-use strum::*;
-
-use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
-
 #[cfg(feature = "keysyms")]
-use crate::core::{bindings::KeyPress, xconnection::KeyPressParseAttempt};
+use crate::{common::bindings::KeyPress, xconnection::KeyPressParseAttempt};
+use crate::{
+    common::{
+        bindings::{KeyCode, KeyCodeMask, KeyCodeValue, MouseEvent, MouseState},
+        geometry::{Point, Region},
+        helpers::spawn_for_output,
+        Xid,
+    },
+    core::screen::Screen,
+    xcb::{Error, Result, XErrorCode, XcbGenericEvent},
+    xconnection::{
+        Atom, ClientAttr, ClientConfig, ClientEventMask, ClientMessage, ClientMessageData,
+        ClientMessageKind, ConfigureEvent, ExposeEvent, MapState, PointerChange, Prop,
+        PropertyEvent, WinType, WindowAttributes, WindowClass, WindowState, WmHints, WmNormalHints,
+        XAtomQuerier, XEvent,
+    },
+};
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, convert::TryFrom, fmt, str::FromStr};
+use strum::*;
+use tracing::{trace, warn};
 
 /// A reverse lookup of KeyCode mask and value to key as a String using XKeySym mappings
 pub type ReverseCodeMap = HashMap<(KeyCodeMask, KeyCodeValue), String>;
@@ -46,7 +48,7 @@ fn default_conn() -> xcb::Connection {
 pub fn code_map_from_xmodmap() -> Result<ReverseCodeMap> {
     let output = match spawn_for_output("xmodmap -pke") {
         Ok(s) => s,
-        Err(e) => return Err(XcbError::Raw(e.to_string())), // failed to spawn
+        Err(e) => return Err(Error::Raw(e.to_string())), // failed to spawn
     };
     Ok(output
         .lines()
@@ -92,11 +94,11 @@ impl fmt::Debug for Api {
 }
 
 impl XAtomQuerier for Api {
-    fn atom_name(&self, atom: Xid) -> crate::core::xconnection::Result<String> {
+    fn atom_name(&self, atom: Xid) -> crate::xconnection::Result<String> {
         Ok(self.atom_name(atom)?)
     }
 
-    fn atom_id(&self, name: &str) -> crate::core::xconnection::Result<Xid> {
+    fn atom_id(&self, name: &str) -> crate::xconnection::Result<Xid> {
         Ok(self.atom(name)?)
     }
 }
@@ -132,12 +134,12 @@ impl Api {
     fn init(&mut self) -> Result<()> {
         self.root = match self.conn.get_setup().roots().next() {
             Some(r) => r.root(),
-            None => return Err(XcbError::NoScreens),
+            None => return Err(Error::NoScreens),
         };
         self.randr_base = self
             .conn
             .get_extension_data(&mut xcb::randr::id())
-            .ok_or_else(|| XcbError::Randr("unable to fetch extension data".into()))?
+            .ok_or_else(|| Error::Randr("unable to fetch extension data".into()))?
             .first_event();
 
         // Make sure we have new enough RandR so we can use 'get_screen_resources'
@@ -146,7 +148,7 @@ impl Api {
         let reply = cookie.get_reply()?;
         let (maj, min) = (reply.major_version(), reply.minor_version());
         if (maj, min) != (RANDR_MAJ, RANDR_MIN) {
-            return Err(XcbError::Randr(format!(
+            return Err(Error::Randr(format!(
                 "penrose requires RandR version >= {}.{}: detected {}.{}\nplease update RandR to a newer version",
                 RANDR_MAJ, RANDR_MIN, maj, min
             )));
@@ -193,7 +195,7 @@ impl Api {
         let mut roots: Vec<_> = self.conn.get_setup().roots().collect();
         let len = roots.len();
         if ix >= len {
-            Err(XcbError::UnknownScreen(ix, len - 1))
+            Err(Error::UnknownScreen(ix, len - 1))
         } else {
             Ok(roots.remove(ix))
         }
@@ -203,14 +205,14 @@ impl Api {
         screen
             .allowed_depths()
             .max_by(|x, y| x.depth().cmp(&y.depth()))
-            .ok_or(XcbError::QueryFailed("screen depth"))
+            .ok_or(Error::QueryFailed("screen depth"))
     }
 
     pub(crate) fn get_visual_type<'a>(&self, depth: &xcb::Depth<'a>) -> Result<xcb::Visualtype> {
         depth
             .visuals()
             .find(|v| v.class() == xcb::VISUAL_CLASS_TRUE_COLOR as u8)
-            .ok_or(XcbError::QueryFailed("visual type"))
+            .ok_or(Error::QueryFailed("visual type"))
     }
 
     /// Fetch the requested property for the target window
@@ -250,12 +252,12 @@ impl Api {
 
             "WM_HINTS" => Prop::WmHints(
                 WmHints::try_from_bytes(r.value())
-                    .map_err(|e| XcbError::InvalidPropertyData(e.to_string()))?,
+                    .map_err(|e| Error::InvalidPropertyData(e.to_string()))?,
             ),
 
             "WM_SIZE_HINTS" => Prop::WmNormalHints(
                 WmNormalHints::try_from_bytes(r.value())
-                    .map_err(|e| XcbError::InvalidPropertyData(e.to_string()))?,
+                    .map_err(|e| Error::InvalidPropertyData(e.to_string()))?,
             ),
 
             // Default to returning the raw bytes as u32s which the user can then
@@ -266,7 +268,7 @@ impl Api {
                 16 => r.value::<u16>().iter().map(|b| *b as u32).collect(),
                 32 => r.value::<u32>().to_vec(),
                 _ => {
-                    return Err(XcbError::InvalidPropertyData(format!(
+                    return Err(Error::InvalidPropertyData(format!(
                         "prop type for {} was {} which claims to have a data format of {}",
                         name,
                         prop_type,
@@ -285,13 +287,13 @@ impl Api {
             0 => MapState::Unmapped,
             1 => MapState::UnViewable,
             2 => MapState::Viewable,
-            s => return Err(XcbError::Raw(format!("invalid map state: {}", s))),
+            s => return Err(Error::Raw(format!("invalid map state: {}", s))),
         };
         let window_class = match win_attrs.class() {
             0 => WindowClass::CopyFromParent,
             1 => WindowClass::InputOutput,
             2 => WindowClass::InputOnly,
-            c => return Err(XcbError::Raw(format!("invalid window class: {}", c))),
+            c => return Err(Error::Raw(format!("invalid window class: {}", c))),
         };
 
         Ok(WindowAttributes::new(
@@ -493,7 +495,7 @@ impl Api {
                 let e: &xcb::ClientMessageEvent = unsafe { xcb::cast_event(&event) };
                 xcb::xproto::get_atom_name(&self.conn, e.type_())
                     .get_reply()
-                    .map_err(XcbError::from)
+                    .map_err(Error::from)
                     .and_then(|a| {
                         Ok(ClientMessage::new(
                             e.window(),
@@ -507,7 +509,7 @@ impl Api {
                                     "ClientMessageEvent.format should really be an enum..."
                                 ),
                             }
-                            .map_err(|_| XcbError::InvalidClientMessage(e.format()))?,
+                            .map_err(|_| Error::InvalidClientMessage(e.format()))?,
                         ))
                     })
                     .map(XEvent::ClientMessage)
@@ -530,7 +532,7 @@ impl Api {
 
             0 => {
                 let e: &xcb::GenericError = unsafe { xcb::cast_event(&event) };
-                return Err(XcbError::from(e));
+                return Err(Error::from(e));
             }
 
             // NOTE: ignoring other event types
@@ -596,7 +598,7 @@ impl Api {
             ),
 
             Prop::Bytes(_) => {
-                return Err(XcbError::InvalidPropertyData(
+                return Err(Error::InvalidPropertyData(
                     "unable to change non standard props".into(),
                 ))
             }
@@ -620,7 +622,7 @@ impl Api {
 
             // FIXME: handle changing WmHints and WmNormalHints correctly in change_prop
             Prop::WmHints(_) | Prop::WmNormalHints(_) => {
-                return Err(XcbError::InvalidPropertyData(
+                return Err(Error::InvalidPropertyData(
                     "unable to change WmHints or WmNormalHints".into(),
                 ))
             }
@@ -640,9 +642,9 @@ impl Api {
         };
 
         let cookie = xcb::change_property_checked(&self.conn, mode, id, a, a, 32, &[state]);
-        match cookie.request_check().map_err(XcbError::from) {
+        match cookie.request_check().map_err(Error::from) {
             // The window is already gone
-            Err(XcbError::XcbKnown(XErrorCode::BadWindow)) => (),
+            Err(Error::XcbKnown(XErrorCode::BadWindow)) => (),
             other => other?,
         }
 
@@ -797,7 +799,7 @@ impl Api {
     pub fn build_client_event(
         &self,
         kind: ClientMessageKind,
-    ) -> crate::core::xconnection::Result<ClientMessage> {
+    ) -> crate::xconnection::Result<ClientMessage> {
         kind.as_message(self)
     }
 
@@ -884,7 +886,7 @@ impl Api {
     }
 
     /// Register intercepts for each given [KeyCode]
-    pub fn grab_keys(&self, keys: &[&KeyCode]) -> Result<()> {
+    pub fn grab_keys(&self, keys: &[KeyCode]) -> Result<()> {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.
@@ -912,7 +914,7 @@ impl Api {
     }
 
     /// Register intercepts for each given [MouseState]
-    pub fn grab_mouse_buttons(&self, states: &[&MouseState]) -> Result<()> {
+    pub fn grab_mouse_buttons(&self, states: &[MouseState]) -> Result<()> {
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.

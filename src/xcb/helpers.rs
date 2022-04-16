@@ -1,5 +1,6 @@
 //! XCB based helper functions
-use crate::core::bindings::{CodeMap, KeyCode};
+use crate::common::bindings::{CodeMap, KeyCode};
+use tracing::trace;
 
 /**
  * Convert user friendly key bindings into X keycodes.

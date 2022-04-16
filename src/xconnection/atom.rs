@@ -1,13 +1,10 @@
 //! Data types for working with X atoms
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use strum::*;
 
 /// A Penrose internal representation of X atoms.
 ///
-/// Atom names are shared between all X11 API libraries so this enum allows us to get a little bit
-/// of type safety around their use. Implementors of [XConn][1] should accept any variant of [Atom]
-/// that they are passed by client code.
-///
-/// [1]: crate::core::xconnection::XConn
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Atom {

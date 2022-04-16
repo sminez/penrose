@@ -22,7 +22,7 @@
 //! the hook system for listening to internal `WindowManager` events, but these are not required in
 //! any way.
 //!
-//! [1]: crate::core::xconnection::XEvent
+//! [1]: crate::xconnection::XEvent
 //! [2]: crate::core::manager::WindowManager
 //! [3]: crate::core::xconnection::XConn
 //! [4]: https://xcb.freedesktop.org/
@@ -32,24 +32,16 @@
 //! [8]: crate::gen_mousebindings
 //! [9]: crate::core::hooks
 //! [10]: crate::draw::bar
-#[macro_use]
-pub mod macros;
 
-pub mod bindings;
 pub mod client;
 pub mod config;
-pub mod data_types;
-pub mod helpers;
 pub mod hooks;
 pub mod layout;
 pub mod manager;
 pub mod ring;
 pub mod screen;
 pub mod workspace;
-pub mod xconnection;
 
-#[doc(inline)]
-pub use bindings::{KeyEventHandler, MouseEventHandler};
 #[doc(inline)]
 pub use client::Client;
 #[doc(inline)]

@@ -1,5 +1,7 @@
 //! Information on connected displays
-use crate::core::data_types::{Point, Region};
+use crate::common::geometry::{Point, Region};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Display information for a connected screen
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

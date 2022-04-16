@@ -4,14 +4,10 @@
  * workspaces and simple client/workspace movement. For a more fleshed out example see the
  * 'simple_config_with_hooks' example.
  */
-#[macro_use]
-extern crate penrose;
-
 use penrose::{
-    core::{
-        bindings::MouseEvent, config::Config, helpers::index_selectors, manager::WindowManager,
-    },
-    logging_error_handler,
+    common::{bindings::MouseEvent, helpers::index_selectors},
+    core::{config::Config, manager::WindowManager},
+    gen_keybindings, gen_mousebindings, logging_error_handler, run_external, run_internal,
     xcb::new_xcb_backed_window_manager,
     Backward, Forward, Less, More, Result,
 };

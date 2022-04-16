@@ -1,14 +1,12 @@
 use penrose::{
-    core::{
+    common::{
         bindings::{KeyBindings, KeyCode, KeyEventHandler},
-        data_types::Region,
-        layout::*,
-        manager::WindowManager,
-        ring::Selector,
-        screen::Screen,
-        workspace::Workspace,
-        xconnection::XConn,
+        geometry::Region,
     },
+    core::{
+        layout::*, manager::WindowManager, ring::Selector, screen::Screen, workspace::Workspace,
+    },
+    xconnection::XConn,
     Forward,
 };
 

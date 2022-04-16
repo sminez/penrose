@@ -1,11 +1,12 @@
 //! Data types for working with X window properties
-use crate::{
-    core::{
-        data_types::{Point, Region},
-        xconnection::Xid,
-    },
-    PenroseError, Result,
+use crate::common::{
+    geometry::{Point, Region},
+    Xid,
 };
+use crate::{Error, Result};
+use bitflags::bitflags;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Know property types that should be returnable by XConn impls when they check
 /// window properties.
@@ -183,7 +184,7 @@ impl WmHints {
     /// ```
     pub fn try_from_bytes(raw: &[u32]) -> Result<Self> {
         if raw.len() != 9 {
-            return Err(PenroseError::InvalidHints(format!(
+            return Err(Error::InvalidHints(format!(
                 "raw bytes should be [u32; 9] for WmHints, got [u32; {}]",
                 raw.len()
             )));
@@ -196,7 +197,7 @@ impl WmHints {
             (true, 1) | (false, _) => WindowState::Normal,
             (true, 2) => WindowState::Iconic,
             _ => {
-                return Err(PenroseError::InvalidHints(format!(
+                return Err(Error::InvalidHints(format!(
                     "initial state flag should be 0, 1, 2: got {}",
                     raw[2]
                 )))
@@ -277,7 +278,7 @@ impl WmNormalHints {
     /// ```
     pub fn try_from_bytes(raw: &[u32]) -> Result<Self> {
         if raw.len() != 18 {
-            return Err(PenroseError::InvalidHints(format!(
+            return Err(Error::InvalidHints(format!(
                 "raw bytes should be [u32; 18] for WmNormalHints, got [u32; {}]",
                 raw.len()
             )));

@@ -1,15 +1,17 @@
 //! State and management of screens being layed out by Penrose.
 use crate::{
+    common::geometry::Region,
     core::{
-        data_types::Region,
         hooks::HookName,
         manager::event::EventAction,
         ring::{Direction, Ring, Selector},
         screen::Screen,
-        xconnection::XState,
     },
+    xconnection::XState,
     Result,
 };
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use tracing::{debug, info, trace};
 
 #[derive(Debug)]
@@ -156,7 +158,8 @@ impl Screens {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::xconnection::*;
+    use crate::xconnection::*;
+    use simple_test_case::test_case;
 
     fn raw_screens() -> Vec<Screen> {
         vec![
@@ -262,40 +265,36 @@ mod tests {
 
     impl StubXAtomQuerier for OutputsXConn {}
     impl StubXState for OutputsXConn {
-        fn mock_current_screens(&self) -> crate::core::xconnection::Result<Vec<Screen>> {
+        fn mock_current_screens(&self) -> crate::xconnection::Result<Vec<Screen>> {
             Ok(self.0.clone())
         }
     }
 
-    test_cases! {
-        update_known_screens;
-        args: (current: Vec<usize>, n_workspaces: usize, expected: Vec<usize>);
+    #[test_case(vec![0, 1], 10, vec![0, 1]; "unchanged")]
+    #[test_case(vec![5, 7], 10, vec![5, 7]; "non default workspaces")]
+    #[test_case(vec![0], 10, vec![0, 1]; "new take first available 0")]
+    #[test_case(vec![2], 10, vec![2, 0]; "new take first available 2")]
+    #[test_case(vec![3, 5, 9], 10, vec![3, 5]; "fewer retains from left")]
+    #[test_case(vec![0], 1, vec![0]; "more truncates")]
+    #[test]
+    fn update_known_screens(current: Vec<usize>, n_workspaces: usize, expected: Vec<usize>) {
+        let (bar_height, top_bar) = (10, true);
+        let screens = test_screens(bar_height, top_bar);
+        let conn = OutputsXConn(screens);
+        let mut s = Screens {
+            inner: Ring::new(
+                current
+                    .into_iter()
+                    .map(|wix| Screen::new(Region::new(0, 0, 0, 0), wix))
+                    .collect(),
+            ),
+            bar_height,
+            top_bar,
+        };
 
-        case: unchanged => (vec![0, 1], 10, vec![0, 1]);
-        case: non_default_workspaces => (vec![5, 7], 10, vec![5, 7]);
-        case: new_take_first_available_0 => (vec![0], 10, vec![0, 1]);
-        case: new_take_first_available_2 => (vec![2], 10, vec![2, 0]);
-        case: fewer_retains_from_left => (vec![3, 5, 9], 10, vec![3, 5]);
-        case: more_truncates => (vec![0], 1, vec![0]);
+        s.update_known_screens(&conn, n_workspaces).unwrap();
+        let focused: Vec<usize> = s.inner.iter().map(|s| s.wix).collect();
 
-        body: {
-            let (bar_height, top_bar) = (10, true);
-            let screens = test_screens(bar_height, top_bar);
-            let conn = OutputsXConn(screens);
-            let mut s = Screens {
-                inner: Ring::new(
-                    current.into_iter().map(|wix|
-                        Screen::new(Region::new(0, 0, 0, 0), wix)
-                    ).collect()
-                ),
-                bar_height,
-                top_bar
-            };
-
-            s.update_known_screens(&conn, n_workspaces).unwrap();
-            let focused: Vec<usize> = s.inner.iter().map(|s| s.wix).collect();
-
-            assert_eq!(focused, expected);
-        }
+        assert_eq!(focused, expected);
     }
 }

@@ -1,16 +1,12 @@
 use crate::{
-    core::{
-        data_types::Region,
-        xconnection::{XClientConfig, XState, Xid},
-    },
+    common::{geometry::Region, Xid},
+    xconnection::{XClientConfig, XState},
     Result,
 };
+use tracing::warn;
 
 #[cfg(feature = "serde")]
-use crate::{
-    core::{manager::WindowManager, xconnection::XConn},
-    PenroseError,
-};
+use crate::{core::manager::WindowManager, xconnection::XConn, Error};
 
 pub(super) fn pad_region(region: &Region, gapless: bool, gap_px: u32, border_px: u32) -> Region {
     let gpx = if gapless { 0 } else { gap_px };
@@ -77,7 +73,7 @@ where
 
     if !missing_ids.is_empty() {
         missing_ids.sort_unstable();
-        return Err(PenroseError::MissingClientIds(missing_ids));
+        return Err(Error::MissingClientIds(missing_ids));
     }
 
     // Workspace clients all need to be present in the client_map
@@ -85,7 +81,7 @@ where
         if w.iter().all(|id| wm.clients.is_known(*id)) {
             Ok(())
         } else {
-            Err(PenroseError::HydrationState(
+            Err(Error::HydrationState(
                 "one or more workspace clients we not in known client state".into(),
             ))
         }

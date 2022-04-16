@@ -12,20 +12,22 @@
  *  [Xlib manual](https://tronche.com/gui/x/xlib/)
  */
 use crate::{
-    core::{
-        bindings::{KeyBindings, MouseBindings},
-        data_types::{Point, Region},
-        manager::WindowManager,
-        screen::Screen,
-        xconnection::{
-            Atom, ClientAttr, ClientConfig, ClientMessage, ClientMessageKind, Prop, Result,
-            WindowState, XConn, XEvent, XEventHandler, Xid,
-        },
+    common::{
+        bindings::{KeyCode, MouseState},
+        geometry::{Point, Region},
+        Xid,
     },
-    xcb::{Api, XcbError},
+    core::{manager::WindowManager, screen::Screen},
+    xcb::{Api, Error},
+    xconnection::{
+        Atom, ClientAttr, ClientConfig, ClientMessage, ClientMessageKind, Prop, Result,
+        WindowState, XConn, XEvent, XEventHandler,
+    },
 };
-
 use std::collections::HashMap;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /**
  * Handles communication with an X server via the XCB library.
@@ -102,7 +104,7 @@ impl XConn for XcbConnection {
         Ok(self
             .api
             .set_client_attributes(self.api.root(), &[ClientAttr::RootEventMask])
-            .map_err(|e| XcbError::Raw(format!("Unable to set root window event mask: {}", e)))?)
+            .map_err(|e| Error::Raw(format!("Unable to set root window event mask: {}", e)))?)
     }
 
     fn check_window(&self) -> Xid {
@@ -120,19 +122,9 @@ impl XConn for XcbConnection {
         Ok(())
     }
 
-    fn grab_keys(
-        &self,
-        key_bindings: &KeyBindings<Self>,
-        mouse_bindings: &MouseBindings<Self>,
-    ) -> Result<()> {
-        self.api
-            .grab_keys(&key_bindings.keys().collect::<Vec<_>>())?;
-        self.api.grab_mouse_buttons(
-            &mouse_bindings
-                .keys()
-                .map(|(_, state)| state)
-                .collect::<Vec<_>>(),
-        )?;
+    fn grab_keys(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+        self.api.grab_keys(key_codes)?;
+        self.api.grab_mouse_buttons(mouse_states)?;
         self.flush();
 
         Ok(())

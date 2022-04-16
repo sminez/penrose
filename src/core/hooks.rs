@@ -117,13 +117,13 @@
 //! [3]: crate::core::xconnection::XEvent
 //! [4]: crate::core::client::Client
 use crate::{
-    core::{
-        data_types::Region,
-        manager::WindowManager,
-        xconnection::{XConn, Xid},
-    },
+    common::{geometry::Region, Xid},
+    core::manager::WindowManager,
+    xconnection::XConn,
     Result,
 };
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Names of each of the individual hooks that are triggerable in Penrose.
 ///

@@ -1,13 +1,10 @@
 //! Utility functions for use in other parts of penrose
-use crate::{
-    core::{bindings::CodeMap, ring::Selector},
-    ErrorHandler, PenroseError, Result,
-};
-
+use crate::{common::bindings::CodeMap, core::ring::Selector, Error, ErrorHandler, Result};
 use std::{
     io::Read,
     process::{Command, Stdio},
 };
+use tracing::{error, info};
 
 /// Run an external command
 ///
@@ -55,7 +52,7 @@ pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
 /// NOTE: std::process::Command::output will not work within penrose due to the
 /// way that signal handling is set up. Use this function if you need to access the
 /// output of a process that you spawn.
-pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
+pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
     let cmd = cmd.into();
     info!(?cmd, "spawning subprocess for output");
     let parts: Vec<&str> = cmd.split_whitespace().collect();
@@ -68,11 +65,12 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
         Command::new(parts[0]).stdout(Stdio::piped()).spawn()
     };
 
-    let child = result?;
+    let mut child = result?;
     let mut buff = String::new();
     Ok(child
         .stdout
-        .ok_or(PenroseError::SpawnProc(cmd))?
+        .take()
+        .expect("to have output")
         .read_to_string(&mut buff)
         .map(|_| buff)?)
 }
@@ -82,11 +80,14 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> Result<String> {
 /// NOTE: std::process::Command::output will not work within penrose due to the
 /// way that signal handling is set up. Use this function if you need to access the
 /// output of a process that you spawn.
-pub fn spawn_for_output_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<String> {
+pub fn spawn_for_output_with_args<S: Into<String>>(
+    cmd: S,
+    args: &[&str],
+) -> std::io::Result<String> {
     let cmd = cmd.into();
 
     info!(?cmd, ?args, "spawning subprocess for output");
-    let child = Command::new(&cmd)
+    let mut child = Command::new(&cmd)
         .stdout(Stdio::piped())
         .args(args)
         .spawn()?;
@@ -95,7 +96,8 @@ pub fn spawn_for_output_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Res
     let mut buff = String::new();
     Ok(child
         .stdout
-        .ok_or(PenroseError::SpawnProc(cmd))?
+        .take()
+        .unwrap()
         .read_to_string(&mut buff)
         .map(|_| buff)?)
 }
@@ -140,5 +142,5 @@ pub fn index_selectors<'a, T>(len: usize) -> Vec<Selector<'a, T>> {
 
 /// A simple error handler that just logs the error to the penrose log stream
 pub fn logging_error_handler() -> ErrorHandler {
-    Box::new(|e: PenroseError| error!("{}", e))
+    Box::new(|e: Error| error!("{}", e))
 }

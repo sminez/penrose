@@ -1,7 +1,7 @@
 //! A simple wrapper around notify-send to allow for generating notifications
-use crate::{core::helpers::spawn_with_args, ErrorHandler, PenroseError, Result};
-
+use crate::{common::helpers::spawn_with_args, Error, ErrorHandler, Result};
 use std::fmt;
+use tracing::error;
 
 /// A notification level when calling notify-send
 ///
@@ -85,7 +85,7 @@ pub fn notify_send(
 /// A simple error handler that uses 'notify-send' to display a dialog window with the error
 /// message.
 pub fn notify_send_error_handler() -> ErrorHandler {
-    Box::new(|e: PenroseError| {
+    Box::new(|e: Error| {
         if notify_send(
             "Unhandled Error",
             e.to_string(),

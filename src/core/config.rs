@@ -1,12 +1,13 @@
 //! User facing configuration of the penrose [WindowManager][crate::core::manager::WindowManager].
 use crate::{
     core::layout::{side_stack, Layout, LayoutConf},
-    draw::{Color, DrawError},
+    draw::{self, Color},
 };
-
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
-__with_builder_and_getters! {
+crate::__with_builder_and_getters! {
     /// The main user facing configuration details.
     ///
     /// See [ConfigBuilder] for details of what can be overwritten.
@@ -79,9 +80,9 @@ __with_builder_and_getters! {
         ];
 
     /// the focused border color as a hex literal
-    ImplTry DrawError; focused_border: Color; => "#cc241d";
+    ImplTry draw::Error; focused_border: Color; => "#cc241d";
     /// the unfocused border color as a hex literal
-    ImplTry DrawError; unfocused_border: Color; => "#3c3836";
+    ImplTry draw::Error; unfocused_border: Color; => "#3c3836";
     /// the border width of each window in pixels
     Concrete border_px: u32; => 2;
     /// the gap between tiled windows in pixels

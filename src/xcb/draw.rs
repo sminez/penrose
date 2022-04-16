@@ -6,23 +6,19 @@
  * installed on your system for it to work.
  */
 use crate::{
-    core::{
-        data_types::{Region, WinType},
-        xconnection::{Prop, WindowState, XClientHandler, Xid},
-    },
-    draw::{Color, Draw, DrawContext, DrawError, Result},
-    xcb::{Api, XcbError},
+    common::{geometry::Region, Xid},
+    draw::{self, Color, Draw, DrawContext, Result},
+    xcb::{Api, Error},
+    xconnection::{Prop, WinType, WindowState, XClientHandler},
 };
-
 use pangocairo::functions::{create_layout, show_layout};
-
 use std::collections::HashMap;
 
 #[cfg(feature = "keysyms")]
-use crate::core::xconnection::{KeyPressParseAttempt, XKeyboardHandler};
+use crate::xconnection::{KeyPressParseAttempt, XKeyboardHandler};
 
 fn pango_layout(ctx: &cairo::Context) -> Result<pango::Layout> {
-    Ok(create_layout(ctx).ok_or_else(|| XcbError::Pango("unable to create layout".into()))?)
+    Ok(create_layout(ctx).ok_or_else(|| Error::Pango("unable to create layout".into()))?)
 }
 
 /// An XCB based [Draw] implementation backed by pango and cairo
@@ -111,7 +107,7 @@ impl Draw for XcbDraw {
         let ctx = cairo::Context::new(
             self.surfaces
                 .get(&id)
-                .ok_or(XcbError::UnintialisedSurface(id))?,
+                .ok_or(Error::UnintialisedSurface(id))?,
         )?;
 
         Ok(Self::Ctx {
@@ -174,7 +170,7 @@ impl DrawContext for XcbDrawContext {
         let mut font = self
             .fonts
             .get_mut(font_name)
-            .ok_or_else(|| DrawError::UnknownFont(font_name.into()))?
+            .ok_or_else(|| draw::Error::UnknownFont(font_name.into()))?
             .clone();
         font.set_size(point_size * pango::SCALE);
         self.font = Some(font);

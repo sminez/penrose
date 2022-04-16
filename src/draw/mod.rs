@@ -4,6 +4,14 @@
 //! graphical applications within Penrose itself. While definitely not what you would want to use
 //! for writing a full GUI application, the [Draw] and [DrawContext] traits are enough for setting
 //! up simple text based UI elements such as status bars and menus.
+use crate::{
+    common::{geometry::Region, Xid},
+    xconnection::{WinType, XClientHandler, XClientProperties, XKeyboardHandler},
+};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+use std::{convert::TryFrom, convert::TryInto};
+
 pub mod bar;
 pub mod widget;
 
@@ -13,19 +21,9 @@ pub use bar::*;
 #[doc(inline)]
 pub use widget::{HookableWidget, KeyboardControlled, Widget};
 
-use crate::core::{
-    data_types::{Region, WinType},
-    xconnection::{XClientHandler, XClientProperties, XKeyboardHandler, Xid},
-};
-
-#[cfg(feature = "xcb")]
-use crate::xcb::XcbError;
-
-use std::{convert::TryFrom, convert::TryInto};
-
 /// Enum to store the various ways that operations can fail when rendering windows
 #[derive(thiserror::Error, Debug)]
-pub enum DrawError {
+pub enum Error {
     /// A hex literal provided to create a [Color] was not RGB / RGBA
     #[error("Invalid Hex color code: {0}")]
     InvalidHexColor(String),
@@ -46,11 +44,11 @@ pub enum DrawError {
     /// Wrapper around XCB implementation errors for [draw][crate::draw] traits
     #[cfg(feature = "xcb")]
     #[error(transparent)]
-    Xcb(#[from] XcbError),
+    Xcb(#[from] crate::xcb::Error),
 
     /// Something went wrong when communicating with the X server
     #[error(transparent)]
-    X(#[from] crate::core::xconnection::XError),
+    X(#[from] crate::xconnection::Error),
 
     /// An attempt to use the cairo C API failed when using an XCB implementation
     /// of [Draw] or [DrawContext]
@@ -60,7 +58,7 @@ pub enum DrawError {
 }
 
 /// Result type for fallible methods on [Draw] and [DrawContext]
-pub type Result<T> = std::result::Result<T, DrawError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq)]
@@ -153,7 +151,7 @@ impl From<(f64, f64, f64, f64)> for Color {
 }
 
 impl TryFrom<String> for Color {
-    type Error = DrawError;
+    type Error = Error;
 
     fn try_from(s: String) -> Result<Self> {
         (&s[..]).try_into()
@@ -161,7 +159,7 @@ impl TryFrom<String> for Color {
 }
 
 impl TryFrom<&str> for Color {
-    type Error = DrawError;
+    type Error = Error;
 
     fn try_from(s: &str) -> Result<Self> {
         let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(&s), 16)?;
@@ -171,7 +169,7 @@ impl TryFrom<&str> for Color {
         } else if s.len() == 9 {
             Ok(Self::new_from_hex(hex))
         } else {
-            Err(DrawError::InvalidHexColor(s.into()))
+            Err(Error::InvalidHexColor(s.into()))
         }
     }
 }
@@ -236,80 +234,56 @@ pub trait DrawContext {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use simple_test_case::test_case;
     use std::convert::TryFrom;
 
-    test_cases! {
-        color_from_hex_rgba;
-        args: (hex: u32, floats: (f64, f64, f64, f64));
-
-        case: black => (0x00000000, (0.0, 0.0, 0.0, 0.0));
-        case: black_alpha => (0x000000FF, (0.0, 0.0, 0.0, 1.0));
-        case: white => (0xFFFFFFFF, (1.0, 1.0, 1.0, 1.0));
-        case: red => (0xFF0000FF, (1.0, 0.0, 0.0, 1.0));
-        case: green => (0x00FF00FF, (0.0, 1.0, 0.0, 1.0));
-        case: blue => (0x0000FFFF, (0.0, 0.0, 1.0, 1.0));
-
-        body: {
-            assert_eq!(Color::new_from_hex(hex), Color::from(floats));
-        }
+    #[test_case(0x00000000, (0.0, 0.0, 0.0, 0.0); "black")]
+    #[test_case(0x000000FF, (0.0, 0.0, 0.0, 1.0); "black alpha")]
+    #[test_case(0xFFFFFFFF, (1.0, 1.0, 1.0, 1.0); "white")]
+    #[test_case(0xFF0000FF, (1.0, 0.0, 0.0, 1.0); "red")]
+    #[test_case(0x00FF00FF, (0.0, 1.0, 0.0, 1.0); "green")]
+    #[test_case(0x0000FFFF, (0.0, 0.0, 1.0, 1.0); "blue")]
+    #[test]
+    fn color_from_hex_rgba(hex: u32, floats: (f64, f64, f64, f64)) {
+        assert_eq!(Color::new_from_hex(hex), Color::from(floats));
     }
 
-    test_cases! {
-        color_from_str_or_string;
-        args: (s: &str, floats: (f64, f64, f64, f64));
-
-        case: alpha1 => ("#FFFF00FF", (1.0, 1.0, 0.0, 1.0));
-        case: alpha0 => ("#FFFF0000", (1.0, 1.0, 0.0, 0.0));
-
-        body: {
-            assert_eq!(Color::try_from(s).unwrap(), Color::from(floats));
-            assert_eq!(Color::try_from(s.to_string()).unwrap(), Color::from(floats));
-        }
+    #[test_case("#FFFF00FF", (1.0, 1.0, 0.0, 1.0); "alpha 1")]
+    #[test_case("#FFFF0000", (1.0, 1.0, 0.0, 0.0); "alpha 0")]
+    #[test]
+    fn color_from_str_or_string(s: &str, floats: (f64, f64, f64, f64)) {
+        assert_eq!(Color::try_from(s).unwrap(), Color::from(floats));
+        assert_eq!(Color::try_from(s.to_string()).unwrap(), Color::from(floats));
     }
 
-    test_cases! {
-        color_from_str_or_string_no_alpha;
-        args: (s: &str, floats: (f64, f64, f64, f64));
-
-        case: black => ("#000000", (0.0, 0.0, 0.0, 1.0));
-        case: white => ("#FFFFFF", (1.0, 1.0, 1.0, 1.0));
-        case: red => ("#FF0000", (1.0, 0.0, 0.0, 1.0));
-        case: green => ("#00FF00", (0.0, 1.0, 0.0, 1.0));
-        case: blue => ("#0000FF", (0.0, 0.0, 1.0, 1.0));
-
-        body: {
-            assert_eq!(Color::try_from(s).unwrap(), Color::from(floats));
-            assert_eq!(Color::try_from(s.to_string()).unwrap(), Color::from(floats));
-        }
+    #[test_case("#000000", (0.0, 0.0, 0.0, 1.0); "black")]
+    #[test_case("#FFFFFF", (1.0, 1.0, 1.0, 1.0); "white")]
+    #[test_case("#FF0000", (1.0, 0.0, 0.0, 1.0); "red")]
+    #[test_case("#00FF00", (0.0, 1.0, 0.0, 1.0); "green")]
+    #[test_case("#0000FF", (0.0, 0.0, 1.0, 1.0); "blue")]
+    #[test]
+    fn color_from_str_or_string_no_alpha(s: &str, floats: (f64, f64, f64, f64)) {
+        assert_eq!(Color::try_from(s).unwrap(), Color::from(floats));
+        assert_eq!(Color::try_from(s.to_string()).unwrap(), Color::from(floats));
     }
 
-    test_cases! {
-        color_rgb_u32;
-        args: (s: &str, expected: u32);
-
-        case: black => ("#000000", 0x000000);
-        case: white => ("#FFFFFF", 0xFFFFFF);
-        case: red => ("#FF0000", 0xFF0000);
-        case: green => ("#00FF00", 0x00FF00);
-        case: blue => ("#0000FF", 0x0000FF);
-
-        body: {
-            assert_eq!(Color::try_from(s).unwrap().rgb_u32(), expected);
-        }
+    #[test_case("#000000", 0x000000; "black")]
+    #[test_case("#FFFFFF", 0xFFFFFF; "white")]
+    #[test_case("#FF0000", 0xFF0000; "red")]
+    #[test_case("#00FF00", 0x00FF00; "green")]
+    #[test_case("#0000FF", 0x0000FF; "blue")]
+    #[test]
+    fn color_rgb_u32(s: &str, expected: u32) {
+        assert_eq!(Color::try_from(s).unwrap().rgb_u32(), expected);
     }
 
-    test_cases! {
-        color_rgba_u32;
-        args: (s: &str, expected: u32);
-
-        case: black => ("#00000000", 0x00000000);
-        case: white => ("#FFFFFF00", 0xFFFFFF00);
-        case: red => ("#FF000000", 0xFF000000);
-        case: green => ("#00FF0000", 0x00FF0000);
-        case: blue => ("#0000FF00", 0x0000FF00);
-
-        body: {
-            assert_eq!(Color::try_from(s).unwrap().rgba_u32(), expected);
-        }
+    #[test_case("#00000000", 0x00000000; "black")]
+    #[test_case("#FFFFFF00", 0xFFFFFF00; "white")]
+    #[test_case("#FF000000", 0xFF000000; "red")]
+    #[test_case("#00FF0000", 0x00FF0000; "green")]
+    #[test_case("#0000FF00", 0x0000FF00; "blue")]
+    #[test]
+    fn color_rgba_u32(s: &str, expected: u32) {
+        assert_eq!(Color::try_from(s).unwrap().rgba_u32(), expected);
     }
 }

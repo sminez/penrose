@@ -1,17 +1,21 @@
 /// This is where event parsing is handled and conversion of things like ICCCM and EWMH
 /// messages to penrose actions is done.
-use crate::core::{
-    bindings::{KeyCode, MouseEvent},
-    data_types::{Point, Region},
-    hooks::HookName,
-    manager::state::WmState,
-    xconnection::{
-        Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XAtomQuerier, XEvent,
+use crate::{
+    common::{
+        bindings::{KeyCode, MouseEvent},
+        geometry::{Point, Region},
         Xid,
     },
+    core::{hooks::HookName, manager::state::WmState},
+    xconnection::{
+        Atom, ClientMessage, ConfigureEvent, PointerChange, PropertyEvent, XAtomQuerier, XEvent,
+    },
 };
-
 use std::str::FromStr;
+use tracing::trace;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Actions that will be carried out by the [WindowManager][1] in response to individual each
 /// [XEvent] received from the provided [XConn][2].

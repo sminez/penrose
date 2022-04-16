@@ -1,9 +1,6 @@
-use crate::{core::xconnection::Atom, x11rb::Result};
-
+use crate::{x11rb::Result, xconnection::Atom};
 use std::collections::HashMap;
-
 use strum::IntoEnumIterator;
-
 use x11rb::{connection::Connection, protocol::xproto::ConnectionExt};
 
 #[derive(Debug)]

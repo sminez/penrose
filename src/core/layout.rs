@@ -54,13 +54,17 @@
 //! [3]: crate::core::data_types::Region
 //! [4]: crate::core::data_types::Region::as_rows
 //! [5]: crate::core::layout::side_stack
-use crate::core::{
-    client::Client,
-    data_types::{Change, Region, ResizeAction},
-    xconnection::Xid,
+use crate::{
+    common::{
+        geometry::{Region, ResizeAction},
+        Change, Xid,
+    },
+    core::client::Client,
 };
-
 use std::{cmp, fmt};
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// When and how a Layout should be applied.
 ///

@@ -3,10 +3,11 @@ use crate::{
         config::Config,
         hooks::HookName,
         manager::{event::EventAction, state::WmState, util::pad_region},
-        xconnection::{XClientConfig, XClientHandler},
     },
+    xconnection::{XClientConfig, XClientHandler},
     Result,
 };
+use tracing::{debug, trace};
 
 #[tracing::instrument(level = "trace", err, skip(conn))]
 pub(super) fn layout_visible<X>(state: &mut WmState, conn: &X) -> Result<Vec<EventAction>>

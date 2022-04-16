@@ -1,15 +1,17 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{data_types::Point, manager::WindowManager, xconnection::Xid},
-    PenroseError, Result,
+    common::{geometry::Point, Xid},
+    core::manager::WindowManager,
+    Result,
 };
-
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
-
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};
-
 use strum::EnumIter;
+
+pub type CodeMap = HashMap<String, u8>;
 
 /// Some action to be run by a user key binding
 pub type KeyEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>) -> Result<()>>;
@@ -22,8 +24,6 @@ pub type KeyBindings<X> = HashMap<KeyCode, KeyEventHandler<X>>;
 
 /// User defined mouse bindings
 pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;
-
-pub(crate) type CodeMap = HashMap<String, u8>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,9 +56,9 @@ pub enum KeyPress {
 
 #[cfg(feature = "keysyms")]
 impl TryFrom<XKeySym> for KeyPress {
-    type Error = PenroseError;
+    type Error = std::string::FromUtf8Error;
 
-    fn try_from(s: XKeySym) -> std::result::Result<KeyPress, PenroseError> {
+    fn try_from(s: XKeySym) -> std::result::Result<KeyPress, Self::Error> {
         Ok(match s {
             XKeySym::XK_Return | XKeySym::XK_KP_Enter | XKeySym::XK_ISO_Enter => KeyPress::Return,
             XKeySym::XK_Escape => KeyPress::Escape,
@@ -145,15 +145,15 @@ pub enum ModifierKey {
 }
 
 impl TryFrom<&str> for ModifierKey {
-    type Error = PenroseError;
+    type Error = String;
 
-    fn try_from(s: &str) -> Result<Self> {
+    fn try_from(s: &str) -> std::result::Result<Self, Self::Error> {
         match s {
             "C" => Ok(Self::Ctrl),
             "A" => Ok(Self::Alt),
             "S" => Ok(Self::Shift),
             "M" => Ok(Self::Meta),
-            _ => Err(PenroseError::UnknownModifier(s.into())),
+            _ => Err(format!("unknown modifier key: {s}")),
         }
     }
 }

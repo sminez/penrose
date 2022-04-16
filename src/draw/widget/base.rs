@@ -1,7 +1,9 @@
 //! Base widgets for building more complex structures
 use crate::{
-    core::{bindings::KeyPress, hooks::Hook, xconnection::XConn},
-    draw::{Color, DrawContext, DrawError, KeyboardControlled, Result, TextStyle, Widget},
+    common::bindings::KeyPress,
+    core::hooks::Hook,
+    draw::{Color, DrawContext, Error, KeyboardControlled, Result, TextStyle, Widget},
+    xconnection::XConn,
 };
 
 /// A simple piece of static text with an optional background color.
@@ -184,7 +186,7 @@ impl LinesWithSelection {
     /// Fails if the provided index is out of bounds
     pub fn set_selected(&mut self, selected: usize) -> Result<()> {
         if selected >= self.lines.len() {
-            return Err(DrawError::Raw(format!(
+            return Err(Error::Raw(format!(
                 "index out of bounds: {} >= {}",
                 selected,
                 self.lines.len()

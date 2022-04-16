@@ -6,10 +6,8 @@
  * writing your own window manager. Below is an example main.rs that can serve as a template should
  * you decide to write your own WM using penrose.
  */
-#[macro_use]
-extern crate penrose;
-
 use penrose::{
+    common::{helpers::index_selectors, Xid},
     contrib::{
         extensions::Scratchpad,
         hooks::{DefaultWorkspace, LayoutSymbolAsRootName},
@@ -17,19 +15,16 @@ use penrose::{
     },
     core::{
         config::Config,
-        helpers::index_selectors,
         hooks::Hook,
         layout::{bottom_stack, side_stack, Layout, LayoutConf},
         manager::WindowManager,
         ring::Selector,
-        xconnection::{XConn, Xid},
     },
-    logging_error_handler,
+    gen_keybindings, logging_error_handler, run_external, run_internal,
     xcb::{XcbConnection, XcbHooks},
+    xconnection::XConn,
     Backward, Forward, Less, More, Result,
 };
-
-use simplelog::{LevelFilter, SimpleLogger};
 use std::collections::HashMap;
 use tracing::info;
 
@@ -45,12 +40,6 @@ impl<X: XConn> Hook<X> for MyClientHook {
 }
 
 fn main() -> Result<()> {
-    // penrose will log useful information about the current state of the WindowManager during
-    // normal operation that can be used to drive scripts and related programs. Additional debug
-    // output can be helpful if you are hitting issues.
-    SimpleLogger::init(LevelFilter::Debug, simplelog::Config::default())
-        .expect("failed to init logging");
-
     // Created at startup. See keybindings below for how to access them
     let mut config_builder = Config::default().builder();
     config_builder
@@ -111,7 +100,7 @@ fn main() -> Result<()> {
     let sp = Scratchpad::new("st", 0.8, 0.8);
 
     let hooks: XcbHooks = vec![
-        Box::new(MyClientHook {}),
+        Box::new(MyClientHook {}) as Box<dyn Hook<XcbConnection>>,
         // Using a simple contrib hook that takes no config. By convention, contrib hooks have a 'new'
         // method that returns a boxed instance of the hook with any configuration performed so that it
         // is ready to push onto the corresponding *_hooks vec.

@@ -1,20 +1,18 @@
 // Check that each Hook variant is called at the expected points
-#[macro_use]
-extern crate penrose;
-
 use penrose::{
+    __impl_stub_xcon,
+    common::{geometry::Region, Xid},
     core::{
         client::Client,
         config::Config,
-        data_types::Region,
         hooks::{Hook, Hooks},
         manager::WindowManager,
         screen::Screen,
-        xconnection::{Atom, Prop, PropertyEvent, Result, XConn, XError, XEvent, Xid},
     },
     logging_error_handler,
+    xconnection::{Atom, Error, Prop, PropertyEvent, Result, XConn, XEvent},
 };
-
+use simple_test_case::test_case;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
@@ -51,7 +49,7 @@ __impl_stub_xcon! {
             if name == Atom::NetWmName.as_ref() {
                 Ok(Prop::UTF8String(vec!["mock name".into()]))
             } else {
-                Err(XError::MissingProperty(name.into(), id))
+                Err(Error::MissingProperty(name.into(), id))
             }
         }
     }
@@ -66,7 +64,7 @@ __impl_stub_xcon! {
         fn mock_wait_for_event(&self) -> Result<XEvent> {
             let mut remaining = self.events.replace(vec![]);
             if remaining.is_empty() {
-                return Err(XError::ConnectionClosed);
+                return Err(Error::ConnectionClosed);
             }
             let next = remaining.remove(0);
             self.events.set(remaining);
@@ -137,58 +135,88 @@ __impl_test_hook! {
     workspaces_updated => &[&str], usize;
 }
 
-test_cases! {
-    hook_triggers;
-    args: (method: &'static str, n_calls: usize, events: Vec<XEvent>);
-
-    case: client_name_updated => ("client_name_updated", 2, vec![
+#[test_case(
+    "client_name_updated", 2, vec![
         XEvent::PropertyNotify(PropertyEvent { id: 1, atom: "WM_NAME".into(), is_root: false }),
         XEvent::PropertyNotify(PropertyEvent { id: 1, atom: "_NET_WM_NAME".into(), is_root: false }),
-    ]);
-    case: client_added_to_workspace => ("client_added_to_workspace", 2, vec![
-        XEvent::MapRequest(1, false),
-        XEvent::KeyPress(common::CLIENT_TO_WORKSPACE_CODE)
-    ]);
-    case: event_handled => ("event_handled", 2, vec![XEvent::ScreenChange]);
-    case: focus_change => ("focus_change", 3, vec![
-        XEvent::MapRequest(1, false),
-        XEvent::MapRequest(2, false),
-        XEvent::KeyPress(common::FOCUS_CHANGE_CODE)
-    ]);
-    case: layout_applied => ("layout_applied", 3, vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)]);
-    case: layout_change => ("layout_change", 1, vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)]);
-    case: new_client => ("new_client", 1, vec![XEvent::MapRequest(1, false)]);
-    case: randr_notify => ("randr_notify", 1, vec![XEvent::RandrNotify]);
-    case: remove_client => ("remove_client", 1, vec![
-        XEvent::MapRequest(1, false),
-        XEvent::KeyPress(common::KILL_CLIENT_CODE),
-        XEvent::Destroy(1),
-    ]);
-    case: screen_change => ("screen_change", 1, vec![XEvent::KeyPress(common::SCREEN_CHANGE_CODE)]);
-    case: screens_updated => ("screens_updated", 1, vec![XEvent::RandrNotify]);
-    case: startup => ("startup", 1, vec![]);
-    case: workspace_change => ("workspace_change", 1, vec![XEvent::KeyPress(common::WORKSPACE_CHANGE_CODE)]);
-    case: workspaces_updated => ("workspaces_updated", 1, vec![XEvent::KeyPress(common::ADD_WORKSPACE_CODE)]);
+    ];
+    "client name updated"
+)]
+#[test_case(
+    "client_added_to_workspace", 2,
+    vec![ XEvent::MapRequest(1, false), XEvent::KeyPress(common::CLIENT_TO_WORKSPACE_CODE)];
+    "client added to workspace"
+)]
+#[test_case(
+    "event_handled", 2, vec![XEvent::ScreenChange];
+    "event handled"
+)]
+#[test_case(
+    "focus_change", 3,
+    vec![ XEvent::MapRequest(1, false), XEvent::MapRequest(2, false), XEvent::KeyPress(common::FOCUS_CHANGE_CODE)];
+    "focus change"
+)]
+#[test_case(
+    "layout_applied", 3, vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)];
+    "layout applied"
+)]
+#[test_case(
+    "layout_change", 1, vec![XEvent::KeyPress(common::LAYOUT_CHANGE_CODE)];
+    "layout change"
+)]
+#[test_case(
+    "new_client", 1, vec![XEvent::MapRequest(1, false)];
+    "new client"
+)]
+#[test_case(
+    "randr_notify", 1, vec![XEvent::RandrNotify];
+    "randr notify"
+)]
+#[test_case(
+    "remove_client", 1,
+    vec![ XEvent::MapRequest(1, false), XEvent::KeyPress(common::KILL_CLIENT_CODE), XEvent::Destroy(1)];
+    "remove client"
+)]
+#[test_case(
+    "screen_change", 1, vec![XEvent::KeyPress(common::SCREEN_CHANGE_CODE)];
+    "screen change"
+)]
+#[test_case(
+    "screens_updated", 1, vec![XEvent::RandrNotify];
+    "screens updated"
+)]
+#[test_case(
+    "startup", 1, vec![];
+    "startup"
+)]
+#[test_case(
+    "workspace_change", 1, vec![XEvent::KeyPress(common::WORKSPACE_CHANGE_CODE)];
+    "workspace change"
+)]
+#[test_case(
+    "workspaces_updated", 1, vec![XEvent::KeyPress(common::ADD_WORKSPACE_CODE)];
+    "workspaces updated"
+)]
+#[test]
+fn hook_triggers(method: &'static str, n_calls: usize, events: Vec<XEvent>) {
+    let calls = Rc::new(RefCell::new(vec![]));
+    let hooks: Hooks<TestXConn> = vec![Box::new(TestHook {
+        method,
+        calls: Rc::clone(&calls),
+    }) as Box<dyn Hook<TestXConn>>];
 
-    body: {
-        let calls = Rc::new(RefCell::new(vec![]));
-        let hooks: Hooks<TestXConn> = vec![Box::new(TestHook {
-            method,
-            calls: Rc::clone(&calls),
-        })];
+    let mut events = events;
+    events.push(XEvent::KeyPress(common::EXIT_CODE));
 
-        let mut events = events;
-        events.push(XEvent::KeyPress(common::EXIT_CODE));
+    let screens = vec![common::simple_screen(0), common::simple_screen(1)];
+    let conn = TestXConn::new(screens, events, vec![]);
+    let mut wm = WindowManager::new(Config::default(), conn, hooks, logging_error_handler());
 
-        let screens = vec![common::simple_screen(0), common::simple_screen(1)];
-        let conn = TestXConn::new(screens, events, vec![]);
-        let mut wm = WindowManager::new(Config::default(), conn, hooks, logging_error_handler());
+    wm.init().unwrap();
+    wm.grab_keys_and_run(common::test_bindings(), HashMap::new())
+        .unwrap();
+    drop(wm);
 
-        wm.init().unwrap();
-        wm.grab_keys_and_run(common::test_bindings(), HashMap::new()).unwrap();
-        drop(wm);
-
-        let actual_calls = Rc::try_unwrap(calls).unwrap().into_inner();
-        assert_eq!(actual_calls, [method].repeat(n_calls));
-    }
+    let actual_calls = Rc::try_unwrap(calls).unwrap().into_inner();
+    assert_eq!(actual_calls, [method].repeat(n_calls));
 }

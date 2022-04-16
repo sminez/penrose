@@ -13,15 +13,12 @@ extern crate log;
 
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use penrose::{
-    core::{
-        bindings::KeyPress,
-        data_types::{Region, WinType},
-        xconnection::{Atom, ExposeEvent, KeyPressParseAttempt, Prop, XEvent, Xid},
-    },
+    common::{bindings::KeyPress, geometry::Region, Xid},
     draw::{
         widget::{InputBox, LinesWithSelection, Text},
-        Color, DrawContext, DrawError, KeyPressDraw, KeyboardControlled, Result, TextStyle, Widget,
+        Color, DrawContext, Error, KeyPressDraw, KeyboardControlled, Result, TextStyle, Widget,
     },
+    xconnection::{Atom, ExposeEvent, KeyPressParseAttempt, Prop, WinType, XEvent},
 };
 
 use std::convert::TryInto;
@@ -124,7 +121,7 @@ where
     /// Construct a new [PMenu] with the given config.
     pub fn new(mut drw: D, config: PMenuConfig) -> Result<Self> {
         if !(0.0..=1.0).contains(&config.min_width_perc) {
-            return Err(DrawError::Raw(format!(
+            return Err(Error::Raw(format!(
                 "min_width_perc must be in the range 0.0..1.0: {}",
                 config.min_width_perc
             )));
@@ -178,7 +175,7 @@ where
             .drw
             .screen_sizes()?
             .get(screen_index)
-            .ok_or_else(|| DrawError::Raw("screen_index out of range".into()))?;
+            .ok_or_else(|| Error::Raw("screen_index out of range".into()))?;
 
         let (_, _, sw, sh) = screen_region.values();
 

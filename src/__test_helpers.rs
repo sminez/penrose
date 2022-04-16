@@ -6,23 +6,30 @@
 //! in the semantic versioning of Penrose itself. This module is intended purely for supporting
 //! internal tests and reducing boilerplate.
 pub use crate::{
-    core::{
+    __impl_stub_xcon,
+    common::{
         bindings::{KeyBindings, KeyCode, KeyEventHandler, MouseBindings},
+        geometry::{Region, ResizeAction},
+        helpers::index_selectors,
+        Xid,
+    },
+    core::{
         client::Client,
         config::Config,
-        data_types::{Region, ResizeAction},
-        helpers::index_selectors,
         layout::{Layout, LayoutConf},
         ring::{InsertPoint, Selector},
         screen::Screen,
         workspace::Workspace,
-        xconnection::{ClientMessage, Prop, Result, XConn, XEvent, Xid},
     },
     draw::Color,
-    logging_error_handler, Backward, Forward, Less, More, PenroseError, WindowManager,
+    logging_error_handler, map, strings,
+    xconnection::{ClientMessage, Prop, Result, XConn, XEvent},
+    Backward, Error, Forward, Less, More, WindowManager,
 };
-
 pub use std::{cell::Cell, collections::HashMap, fmt};
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 pub type TestWM = WindowManager<TestXConn>;
 pub type TestKeyBindings = KeyBindings<TestXConn>;
@@ -292,7 +299,7 @@ __impl_stub_xcon! {
         }
     }
     client_config: {
-        fn mock_set_client_border_color(&self, id: Xid, color: Color) -> Result<()> {
+        fn mock_set_client_border_color(&self, id: Xid, color: u32) -> Result<()> {
             self.add_call("set_client_border_color", strings!(id, color));
             Ok(())
         }

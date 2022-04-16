@@ -1,17 +1,16 @@
 use crate::{
-    core::{
+    common::{
         bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
-        data_types::{Point, Region},
-        xconnection::{
-            event::ClientEventMask, ClientMessage, ClientMessageData, ConfigureEvent, ExposeEvent,
-            PointerChange, PropertyEvent, Result, XAtomQuerier, XError, XEvent,
-        },
+        geometry::{Point, Region},
     },
-    x11rb::{xconn::X11rbConnection, X11rbError},
+    x11rb::{xconn::X11rbConnection, Error},
+    xconnection::{
+        event::ClientEventMask, ClientMessage, ClientMessageData, ConfigureEvent, Error as XError,
+        ExposeEvent, PointerChange, PropertyEvent, Result, XAtomQuerier, XEvent,
+    },
 };
-
 use strum::IntoEnumIterator;
-
+use tracing::warn;
 use x11rb::{
     connection::Connection,
     protocol::{
@@ -128,7 +127,7 @@ pub(crate) fn convert_event<C: Connection>(
             atom: conn.atom_name(event.atom)?,
             is_root: event.window == conn.root(),
         }))),
-        Event::Error(err) => Err(X11rbError::X11Error(err).into()),
+        Event::Error(err) => Err(Error::X11Error(err).into()),
 
         // NOTE: Ignoring other event types
         _ => Ok(None),
