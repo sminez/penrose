@@ -133,6 +133,7 @@
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
 )]
 
+pub mod actor;
 pub mod common;
 pub mod contrib;
 pub mod core;
