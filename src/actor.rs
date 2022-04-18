@@ -1,57 +1,70 @@
 //! A simple, lightweight actor framework for internal use
-use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
-use std::thread::{self, JoinHandle};
+use crossbeam_channel::{Receiver, Sender};
 use tracing::error;
 
 // TODO: the Send/Recv error variants here probably need better names
-/// An error encountered while interacting with an [`Actor`]
+/// An error encountered while interacting with an Actor
 #[derive(Debug, thiserror::Error)]
 pub enum Error<E> {
-    /// An error was returned from the [`Actor`] while resolving the [`Request`]
+    /// An error was returned from the Actor while resolving the [`Request`]
     #[error("error while running resolver")]
     Resolve(E),
-    /// The channel for communicating with the [`Actor`] is closed
+    /// The channel for communicating with the Actor is closed
     #[error("attempt to send on closed channel to the Actor")]
     Send,
-    /// The channel for receiving the response from the [`Actor`] is closed
+    /// The channel for receiving the response from the Actor is closed
     #[error("actor closed the response channel")]
     Recv,
 }
 
 type Result<R> = std::result::Result<<R as Request>::Response, Error<<R as Request>::Error>>;
 
-/// A lightweight actor for handling messages
-pub trait Actor: Send + Sized + 'static {
-    /// Run this Actor in its own thread until it is shut down, returning an
-    /// [`ActorHandle`] for sending requests to it. This is not the only way
-    /// to run an Actor but it is provided as a convenient way to handle the
-    /// lifecycle of the communication channels involved.
-    fn run_threaded(mut self) -> (ActorHandle<Self>, JoinHandle<()>) {
-        let (tx, rx) = unbounded::<Wrapper<Self>>();
-
-        let handle = thread::spawn(move || loop {
-            let mut w = match rx.recv() {
-                Ok(w) => w,
-                Err(_) => break, // channel is now disconnected
-            };
-
-            match w {
-                Wrapper::Request(ref mut req) => req.resolve(&mut self),
-                Wrapper::ShutDown => break,
-            }
-        });
-
-        (ActorHandle { tx }, handle)
-    }
+/// A request that can be handled by an Actor. For an Actor to be able to
+/// resolve a given [`Request`] it must implement [`Resolve`] for it.
+pub trait Request: Sized + Send {
+    /// The happy path response type
+    type Response: Send;
+    /// The error path response type
+    type Error: Send;
 }
 
-/// A handle for communicating with a running [`Actor`]
+/// Register the ability for an Actor to resolve a certain type of [`Request`]
+pub trait Resolve<R: Request> {
+    // NOTE: the request needs to be a mutable reference here as we are sending it
+    //       to the actor as a boxed trait object. Moving _out_ of a box requires
+    //       knowing the size of the type being moved which is unknown for a trait
+    //       object.
+
+    /// Resolve a request using this Actor
+    fn resolve(&mut self, req: &mut R) -> std::result::Result<R::Response, R::Error>;
+}
+
+/// A message for an actor
 #[derive(Debug)]
-pub struct ActorHandle<A: Actor> {
-    tx: Sender<Wrapper<A>>,
+pub struct Message<R: Request> {
+    /// The [`Request`] being sent
+    pub req: R,
+    /// A channel for sending back the response
+    pub tx: Sender<Result<R>>,
 }
 
-impl<A: Actor> Clone for ActorHandle<A> {
+/// Message wrapper for a given request type
+#[derive(Debug)]
+pub enum Wrapper<T> {
+    /// A [`Request`] for processing
+    Request(T),
+    /// Signal that the owner of the communication channel being used should shut down
+    ShutDown,
+}
+
+/// A handle for submitting Requests for processing
+#[derive(Debug)]
+pub struct Handle<T> {
+    tx: Sender<Wrapper<T>>,
+}
+
+// NOTE: implemented by hand to avoid requiring T to be Clone
+impl<T> Clone for Handle<T> {
     fn clone(&self) -> Self {
         Self {
             tx: self.tx.clone(),
@@ -59,16 +72,15 @@ impl<A: Actor> Clone for ActorHandle<A> {
     }
 }
 
-impl<A: Actor> ActorHandle<A> {
-    /// Send a request to the [`Actor`] for it to resolve and return the result
+impl<T> Handle<T> {
+    /// Send a request to the Actor for it to resolve and return the result
     pub fn resolve<R>(&self, req: R) -> Result<R>
     where
-        R: Request + 'static,
-        A: Resolve<R>,
+        R: Request + Into<(T, Receiver<Result<R>>)> + 'static,
     {
-        let (wrapped, rx) = Wrapper::message(req);
+        let (wrapped, rx) = req.into();
 
-        if let Err(_) = self.tx.send(wrapped) {
+        if self.tx.send(Wrapper::Request(wrapped)).is_err() {
             return Err(Error::Send);
         }
 
@@ -78,81 +90,13 @@ impl<A: Actor> ActorHandle<A> {
         }
     }
 
-    /// Shut down the associated [`Actor`].
+    /// Shut down the associated Actor.
     ///
     /// This is a no-op if the actor has already been shut down.
     pub fn shutdown(self) {
-        if let Err(_) = self.tx.send(Wrapper::ShutDown) {
+        if self.tx.send(Wrapper::ShutDown).is_err() {
             // channel already closed
-            return;
         }
-    }
-}
-
-/// A request that can be handled by an [`Actor`]. For an Actor to be able to
-/// resolve a given [`Request`] it must implement [`Resolve`] for it.
-pub trait Request: Send {
-    /// The happy path response type
-    type Response: Send;
-    /// The error path response type
-    type Error: Send;
-}
-
-/// Register the ability for an [`Actor`] to resolve a certain type of [`Request`]
-pub trait Resolve<R: Request>: Actor {
-    // NOTE: the request needs to be a mutable reference here as we are sending it
-    //       to the actor as a boxed trait object. Moving _out_ of a box requires
-    //       knowing the size of the type being moved which is unknown for a trait
-    //       object.
-
-    /// Resolve a request using this [`Actor`]
-    fn resolve(&mut self, req: &mut R) -> std::result::Result<R::Response, R::Error>;
-}
-
-pub(crate) struct Message<R: Request> {
-    req: R,
-    tx: Sender<Result<R>>,
-}
-
-pub(crate) trait Proxy<A: Actor> {
-    fn resolve(&mut self, actor: &mut A);
-}
-
-impl<A, R> Proxy<A> for Message<R>
-where
-    A: Resolve<R>,
-    R: Request,
-{
-    fn resolve(&mut self, actor: &mut A) {
-        let Message { req, tx } = self;
-        let res = match actor.resolve(req) {
-            Ok(res) => Ok(res),
-            Err(e) => Err(Error::Resolve(e)),
-        };
-
-        if let Err(_) = tx.send(res) {
-            error!("unable to send response when resolving Actor request");
-            return;
-        }
-    }
-}
-
-pub(crate) enum Wrapper<A: Actor> {
-    Request(Box<dyn Proxy<A> + Send>),
-    ShutDown,
-}
-
-impl<A: Actor> Wrapper<A> {
-    fn message<R>(req: R) -> (Self, Receiver<Result<R>>)
-    where
-        R: Request + 'static,
-        A: Resolve<R>,
-    {
-        let (tx, rx) = bounded(1);
-        let msg = Message { req, tx };
-        let w = Wrapper::Request(Box::new(msg));
-
-        (w, rx)
     }
 }
 
@@ -171,17 +115,15 @@ macro_rules! request {
     };
 }
 
-/// Quickly implement [`Actor`] for a given type and provide implementations of
-/// [`Resolve`] for a set of [`Request`] types.
+/// Quickly rovide implementations of [`Resolve`] for a set of [`Request`]
+/// types.
 #[macro_export]
 macro_rules! actor {
-	(
+    (
         type $actor:ty;
         params: ($self:ident, $r:ident);
         $($req:ty => $body:expr;)+
     ) => {
-		impl Actor for $actor {}
-
         $(
             impl Resolve<$req> for $actor {
                 fn resolve(
@@ -195,7 +137,67 @@ macro_rules! actor {
                 }
             }
         )+
-	};
+    };
+}
+
+/// Group a set of [`Request`] types together for the purposes of establishing a communication
+/// interface.
+#[macro_export]
+macro_rules! request_set {
+    ($vis:vis enum $enum:ident; trait $trait:ident => [ $($req:ident),+ ]) => {
+        $vis enum $enum {
+            $($req($crate::actor::Message<$req>),)+
+        }
+
+        $vis trait $trait: Send + Sized + 'static $(+ $crate::actor::Resolve<$req>)+ {
+            fn resolve_enum(&mut self, msg: $enum) {
+                match msg {
+                    $(
+                        $enum::$req($crate::actor::Message { mut req, tx }) => {
+                            let res = match self.resolve(&mut req) {
+                                Ok(res) => Ok(res),
+                                Err(e) => Err($crate::actor::Error::Resolve(e)),
+                            };
+
+                            if tx.send(res).is_err() {
+                                // The client dropped their end of the channel
+                            }
+                        },
+                    )+
+                }
+            }
+
+            fn run_threaded(mut self) -> ($crate::actor::Handle<$enum>, std::thread::JoinHandle<()>) {
+                let (tx, rx) = crossbeam_channel::unbounded::<$crate::actor::Wrapper<$enum>>();
+
+                let handle = std::thread::spawn(move || loop {
+                    let w = match rx.recv() {
+                        Ok(w) => w,
+                        Err(_) => break, // channel is now disconnected
+                    };
+
+                    match w {
+                       $crate::actor::Wrapper::Request(req) => self.resolve_enum(req),
+                       $crate::actor::Wrapper::ShutDown => break,
+                    }
+                });
+
+                ($crate::actor::Handle { tx }, handle)
+            }
+        }
+
+        $(
+            impl From<$req> for ($enum, crossbeam_channel::Receiver<Result<$req>>) {
+                fn from(req: $req) -> ($enum, crossbeam_channel::Receiver<Result<$req>>) {
+                    let (tx, rx) = crossbeam_channel::bounded(1);
+
+                    ($enum::$req($crate::actor::Message { req, tx }), rx)
+                }
+            }
+        )+
+
+        impl<T> $trait for T where T: Send + Sized + 'static $(+ Resolve<$req>)+ {}
+    };
 }
 
 #[cfg(test)]
@@ -226,6 +228,8 @@ mod tests {
             }
         };
     }
+
+    request_set!(enum Example; trait ResolveExample => [Add, Concat, Failure]);
 
     #[test]
     fn requests_work() {
@@ -258,7 +262,7 @@ mod tests {
         let cloned = handle.clone();
 
         handle.shutdown();
-        thread_handle.join().expect("thread to exit");
+        thread_handle.join().unwrap();
         let res = cloned.resolve(Add(1, 2));
 
         assert!(matches!(res, Err(Error::Send)));
