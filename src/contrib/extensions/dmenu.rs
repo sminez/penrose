@@ -51,6 +51,10 @@ pub struct DMenuConfig {
     ///
     /// Default: 10
     pub n_lines: usize,
+    /// Default font to use for rendering text
+    ///
+    /// Default: monospace
+    pub font: String,
 }
 
 impl Default for DMenuConfig {
@@ -62,6 +66,7 @@ impl Default for DMenuConfig {
             fg_color: 0xebdbb2ff.into(),
             selected_color: 0x458588ff.into(),
             n_lines: 10,
+            font: "monospace".into(),
         }
     }
 }
@@ -69,12 +74,13 @@ impl Default for DMenuConfig {
 impl DMenuConfig {
     fn flags(&self, prompt: &str, screen_index: usize) -> Vec<String> {
         let mut s = format!(
-            "-l {} -nb {} -nf {} -sb {} -m {}",
+            "-l {} -nb {} -nf {} -sb {} -m {} -fn {}",
             self.n_lines,
             self.bg_color.as_rgb_hex_string(),
             self.fg_color.as_rgb_hex_string(),
             self.selected_color.as_rgb_hex_string(),
             screen_index,
+            self.font,
         );
 
         if self.password_input {
