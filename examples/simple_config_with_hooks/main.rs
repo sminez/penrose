@@ -19,7 +19,7 @@ use penrose::{
         config::Config,
         helpers::index_selectors,
         hooks::Hook,
-        layout::{bottom_stack, side_stack, Layout, LayoutConf},
+        layout::{bottom_stack, right_stack, Layout, LayoutConf},
         manager::WindowManager,
         ring::Selector,
         xconnection::{XConn, Xid},
@@ -81,7 +81,7 @@ fn main() -> Result<()> {
     // Layouts to be used on each workspace. Currently all workspaces have the same set of Layouts
     // available to them, though they track modifications to n_main and ratio independently.
     config_builder.layouts(vec![
-        Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
+        Layout::new("[side]", LayoutConf::default(), right_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
         Layout::floating("[----]"),

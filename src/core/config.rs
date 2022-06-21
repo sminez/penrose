@@ -1,6 +1,6 @@
 //! User facing configuration of the penrose [WindowManager][crate::core::manager::WindowManager].
 use crate::{
-    core::layout::{side_stack, Layout, LayoutConf},
+    core::layout::{right_stack, Layout, LayoutConf},
     draw::{Color, DrawError},
 };
 
@@ -74,7 +74,7 @@ __with_builder_and_getters! {
     /// You must provide at least one layout function
     Concrete layouts: Vec<Layout>; =>
         vec![
-            Layout::new("[side]", LayoutConf::default(), side_stack, 1, 0.6),
+            Layout::new("[side]", LayoutConf::default(), right_stack, 1, 0.6),
             Layout::floating("[----]"),
         ];
 

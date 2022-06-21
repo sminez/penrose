@@ -13,7 +13,7 @@ use penrose::{
         config::Config,
         helpers::index_selectors,
         hooks::Hooks,
-        layout::{bottom_stack, side_stack, Layout, LayoutConf},
+        layout::{bottom_stack, right_stack, Layout, LayoutConf},
         xconnection::XConn,
     },
     logging_error_handler,
@@ -35,7 +35,7 @@ fn my_layouts() -> Vec<Layout> {
     };
 
     vec![
-        Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
+        Layout::new("[side]", LayoutConf::default(), right_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
     ]
