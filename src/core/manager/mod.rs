@@ -162,7 +162,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// // The layout functions we were using previously
     /// let layout_funcs = map! {
-    ///     "[side]" => side_stack as LayoutFunc,
+    ///     "[right]" => side_stack as LayoutFunc,
     ///     "[----]" => floating as LayoutFunc,
     /// };
     ///

@@ -86,7 +86,7 @@ __impl_stub_xcon! {
 
 fn layout_funcs() -> HashMap<&'static str, LayoutFunc> {
     map! {
-        "[side]" => right_stack as LayoutFunc,
+        "[right]" => right_stack as LayoutFunc,
         "[----]" => floating as LayoutFunc,
     }
 }

@@ -35,7 +35,7 @@ fn my_layouts() -> Vec<Layout> {
     };
 
     vec![
-        Layout::new("[side]", LayoutConf::default(), right_stack, n_main, ratio),
+        Layout::new("[right]", LayoutConf::default(), right_stack, n_main, ratio),
         Layout::new("[botm]", LayoutConf::default(), bottom_stack, n_main, ratio),
         Layout::new("[papr]", follow_focus_conf, paper, n_main, ratio),
     ]
@@ -72,9 +72,9 @@ fn main() -> Result<()> {
     let hooks: Hooks<_> = vec![
         LayoutSymbolAsRootName::new(),
         RemoveEmptyWorkspaces::new(config.workspaces().clone()),
-        DefaultWorkspace::new("1term", "[side]", vec!["st"]),
+        DefaultWorkspace::new("1term", "[right]", vec!["st"]),
         DefaultWorkspace::new("2term", "[botm]", vec!["st", "st"]),
-        DefaultWorkspace::new("3term", "[side]", vec!["st", "st", "st"]),
+        DefaultWorkspace::new("3term", "[right]", vec!["st", "st", "st"]),
         DefaultWorkspace::new("web", "[papr]", vec!["firefox"]),
         DefaultWorkspace::new("files", "[botm]", vec!["thunar"]),
         sp.get_hook(),

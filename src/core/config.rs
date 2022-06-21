@@ -41,7 +41,7 @@ __with_builder_and_getters! {
     ///     let ratio = 0.6;
     ///
     ///     vec![
-    ///         Layout::new("[side]", LayoutConf::default(), side_stack, n_main, ratio),
+    ///         Layout::new("[right]", LayoutConf::default(), side_stack, n_main, ratio),
     ///         Layout::new("[mono]", mono_conf, monocle, n_main, ratio),
     ///     ]
     /// }
@@ -74,7 +74,7 @@ __with_builder_and_getters! {
     /// You must provide at least one layout function
     Concrete layouts: Vec<Layout>; =>
         vec![
-            Layout::new("[side]", LayoutConf::default(), right_stack, 1, 0.6),
+            Layout::new("[right]", LayoutConf::default(), right_stack, 1, 0.6),
             Layout::floating("[----]"),
         ];
 
