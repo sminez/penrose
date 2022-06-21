@@ -367,6 +367,37 @@ pub fn bottom_stack(
         .collect()
 }
 
+/// A simple layout that places the main region at the bottom of the screen and tiles
+/// remaining windows in a single row above.
+pub fn top_stack(
+    clients: &[&Client],
+    _: Option<Xid>,
+    monitor_region: &Region,
+    max_main: u32,
+    ratio: f32,
+) -> Vec<ResizeAction> {
+    let n = clients.len() as u32;
+
+    if n <= max_main || max_main == 0 {
+        return monitor_region
+            .as_columns(n)
+            .iter()
+            .zip(clients)
+            .map(|(r, c)| (c.id(), Some(*r)))
+            .collect();
+    }
+
+    let split = ((monitor_region.h as f32) * (1. - ratio)) as u32;
+    let (stack, main) = monitor_region.split_at_height(split).unwrap();
+
+    main.as_columns(max_main)
+        .into_iter()
+        .chain(stack.as_columns(n.saturating_sub(max_main)))
+        .zip(clients)
+        .map(|(r, c)| (c.id(), Some(r)))
+        .collect()
+}
+
 /// A simple monolve layout that places uses the maximum available space for the focused client and
 /// unmaps all other windows.
 pub fn monocle(
