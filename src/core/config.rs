@@ -29,7 +29,7 @@ __with_builder_and_getters! {
     ///
     /// # Example
     /// ```
-    /// use penrose::core::{config::Config, layout::{LayoutConf, Layout, side_stack, monocle}};
+    /// use penrose::core::{config::Config, layout::{LayoutConf, Layout, right_stack, monocle}};
     ///
     /// fn my_layouts() -> Vec<Layout> {
     ///     let mono_conf = LayoutConf {
@@ -41,7 +41,7 @@ __with_builder_and_getters! {
     ///     let ratio = 0.6;
     ///
     ///     vec![
-    ///         Layout::new("[right]", LayoutConf::default(), side_stack, n_main, ratio),
+    ///         Layout::new("[right]", LayoutConf::default(), right_stack, n_main, ratio),
     ///         Layout::new("[mono]", mono_conf, monocle, n_main, ratio),
     ///     ]
     /// }

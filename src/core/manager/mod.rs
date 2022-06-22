@@ -144,7 +144,7 @@ impl<X: XConn> WindowManager<X> {
     ///     contrib::hooks::{SpawnRule, ClientSpawnRules},
     ///     core::{
     ///         hooks::Hooks,
-    ///         layout::{floating, side_stack, LayoutFunc},
+    ///         layout::{floating, right_stack, LayoutFunc},
     ///         manager::WindowManager,
     ///     },
     ///     xcb::XcbConnection,
@@ -162,7 +162,7 @@ impl<X: XConn> WindowManager<X> {
     ///
     /// // The layout functions we were using previously
     /// let layout_funcs = map! {
-    ///     "[right]" => side_stack as LayoutFunc,
+    ///     "[right]" => right_stack as LayoutFunc,
     ///     "[----]" => floating as LayoutFunc,
     /// };
     ///

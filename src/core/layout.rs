@@ -47,13 +47,13 @@
 //! those that have already been positioned if any of the Regions overlap one another.*
 //!
 //! This simple `rows` layout is a sub-set of the behaviour provided by the built in
-//! [side_stack][5] layout (in effect, clamping `max_main` at 0).
+//! [right_stack][5] layout (in effect, clamping `max_main` at 0).
 //!
 //! [1]: crate::core::client::Client
 //! [2]: crate::core::manager::WindowManager
 //! [3]: crate::core::data_types::Region
 //! [4]: crate::core::data_types::Region::as_rows
-//! [5]: crate::core::layout::side_stack
+//! [5]: crate::core::layout::right_stack
 use crate::core::{
     client::Client,
     data_types::{Change, Region, ResizeAction},
