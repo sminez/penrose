@@ -103,3 +103,65 @@ pub fn dwindle(
 ) -> Vec<ResizeAction> {
     dwindle_recurisive(clients, monitor_region, true, 50)
 }
+
+/// A simple layout that places the main region at the bottom of the screen and tiles
+/// remaining windows in a single row above.
+pub fn top_stack(
+    clients: &[&Client],
+    _: Option<Xid>,
+    monitor_region: &Region,
+    max_main: u32,
+    ratio: f32,
+) -> Vec<ResizeAction> {
+    let n = clients.len() as u32;
+
+    if n <= max_main || max_main == 0 {
+        return monitor_region
+            .as_columns(n)
+            .iter()
+            .zip(clients)
+            .map(|(r, c)| (c.id(), Some(*r)))
+            .collect();
+    }
+
+    let split = ((monitor_region.h as f32) * (1. - ratio)) as u32;
+    let (stack, main) = monitor_region.split_at_height(split).unwrap();
+
+    main.as_columns(max_main)
+        .into_iter()
+        .chain(stack.as_columns(n.saturating_sub(max_main)))
+        .zip(clients)
+        .map(|(r, c)| (c.id(), Some(r)))
+        .collect()
+}
+
+/// A simple layout that places the main region on the right and tiles remaining
+/// windows in a single column to the left.
+pub fn left_stack(
+    clients: &[&Client],
+    _: Option<Xid>,
+    monitor_region: &Region,
+    max_main: u32,
+    ratio: f32,
+) -> Vec<ResizeAction> {
+    let n = clients.len() as u32;
+
+    if n <= max_main || max_main == 0 {
+        return monitor_region
+            .as_rows(n)
+            .iter()
+            .zip(clients)
+            .map(|(r, c)| (c.id(), Some(*r)))
+            .collect();
+    }
+
+    let split = ((monitor_region.w as f32) * (1. - ratio)) as u32;
+    let (stack, main) = monitor_region.split_at_width(split).unwrap();
+
+    main.as_rows(max_main)
+        .into_iter()
+        .chain(stack.as_rows(n.saturating_sub(max_main)))
+        .zip(clients)
+        .map(|(r, c)| (c.id(), Some(r)))
+        .collect()
+}
