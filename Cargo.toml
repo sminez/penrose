@@ -16,8 +16,8 @@ include = [
 keywords = [ "windowmanager", "window", "manager", "x11" ]
 categories = [ "window manager" ]
 
-[workspace]
-members = [ "crates/*" ]
+# [workspace]
+# members = [ "crates/*" ]
 
 [features]
 default = ["xcb", "xcb_draw", "keysyms"]
