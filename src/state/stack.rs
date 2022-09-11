@@ -37,14 +37,35 @@ macro_rules! compose {
     }
 }
 
+/// A position within a [Stack].
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Position {
+    /// The current focus point
+    Focus,
+    /// Above the current focus point
+    Before,
+    /// Below the current focus point
+    After,
+    /// The first element of the stack
+    Head,
+    /// The last element of the stack
+    Tail,
+}
+
+impl Default for Position {
+    fn default() -> Self {
+        Position::Focus
+    }
+}
+
 /// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark
 /// a single element that currently holds focus. By convention, the main element is
 /// the first element in the stack (regardless of focus). Focusing operations do not
 /// reorder the elements of the stack or the resulting [Vec] that can be obtained
 /// from calling [Stack::flatten].
 ///
-/// This struct is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
-/// over a [LinkedList]
+/// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
+/// over a [LinkedList].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
     focus: T,
@@ -145,6 +166,31 @@ impl<T> Stack<T> {
     /// Return a reference to the focused element in this [Stack]
     pub fn focused(&self) -> &T {
         &self.focus
+    }
+
+    /// Insert the given element in place of the current focus, pushing
+    /// the current focus down the [Stack].
+    pub fn insert(&mut self, t: T) {
+        self.insert_at(Position::default(), t)
+    }
+
+    /// Insert the given element at the requested position in the [Stack].
+    /// See [Position] for the semantics of each case. For all cases, the
+    /// existing elements in the [Stack] are pushed down to make room for
+    /// the new one.
+    pub fn insert_at(&mut self, pos: Position, t: T) {
+        use Position::*;
+
+        match pos {
+            Focus => {
+                self.up.push_front(t);
+                self.focus_up();
+            }
+            Before => self.up.push_front(t),
+            After => self.down.push_front(t),
+            Head => self.up.push_back(t),
+            Tail => self.down.push_back(t),
+        }
     }
 
     /// Map a function over all elements in this [Stack], returning a new one.
@@ -328,7 +374,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         self.up
             .next_back()
-            .or(self.focus)
+            .or(self.focus.take())
             .or_else(|| self.down.next())
     }
 }
@@ -571,23 +617,33 @@ mod quickcheck_tests {
         rotate_down == reverse . rotate_up . reverse
     );
 
-    // A composition of methods that should leave the Stack un-altered
-    macro_rules! idempotent {
-        ($test:ident => $($f:ident).+) => {
-            #[quickcheck]
-            fn $test(mut stack: Stack<u8>) -> bool {
-                let original = stack.clone();
-                compose!(stack => $($f).+);
+    // Two methods that should act as both left and right inverses of one another
+    macro_rules! are_inverse {
+        ($test:ident => $a:ident <> $b:ident) => {
+            paste::paste! {
+                #[quickcheck]
+                fn [<inverse _ $test _ left_right>](mut stack: Stack<u8>) -> bool {
+                    let original = stack.clone();
+                    compose!(stack => $a . $b);
 
-                stack == original
+                    stack == original
+                }
+
+                #[quickcheck]
+                fn [<inverse _ $test _ right_left>](mut stack: Stack<u8>) -> bool {
+                    let original = stack.clone();
+                    compose!(stack => $b . $a);
+
+                    stack == original
+                }
             }
-        }
+        };
     }
 
-    idempotent!(focus_up_down => focus_up . focus_down);
-    idempotent!(focus_down_up => focus_down . focus_up);
-    idempotent!(swap_up_down => swap_up . swap_down);
-    idempotent!(swap_down_up => swap_down . swap_up);
-    idempotent!(rotate_up_down => rotate_up . rotate_down);
-    idempotent!(rotate_down_up => rotate_down . rotate_up);
+    are_inverse!(reverse  => reverse   <> reverse);
+    are_inverse!(rev_up   => rev_up    <> rev_up);
+    are_inverse!(rev_down => rev_down  <> rev_down);
+    are_inverse!(focus    => focus_up  <> focus_down);
+    are_inverse!(swap     => swap_up   <> swap_down);
+    are_inverse!(rotate   => rotate_up <> rotate_down);
 }

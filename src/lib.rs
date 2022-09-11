@@ -1,13 +1,7 @@
 //! # Penrose: a library for building your very own tiling window manager
-mod screen;
-mod stack;
-mod state;
-mod workspace;
+pub mod state;
 
-pub use screen::{Screen, ScreenDetail};
-pub use stack::Stack;
-pub use state::State;
-pub use workspace::Workspace;
+pub use state::{Position, Screen, Stack, State, Workspace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -19,17 +13,3 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
-
-#[derive(Debug, Default, PartialEq, Eq)]
-pub struct Rect {
-    x: u32,
-    y: u32,
-    w: u32,
-    h: u32,
-}
-
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
-pub struct Layout {}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct Client {}
