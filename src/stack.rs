@@ -553,17 +553,17 @@ mod quickcheck_tests {
     );
 
     composition_law!(
-        swap_down_from_focus_up =>
+        swap_down_from_swap_up =>
         swap_down == reverse . swap_up . reverse
     );
 
     composition_law!(
-        rotate_up_from_focus_up =>
+        rotate_up_from_swap_up =>
         rotate_up == rev_both . swap_up . rev_both
     );
 
     composition_law!(
-        rotate_down_from_focus_up =>
+        rotate_down_from_swap_up =>
         rotate_down == rev_both . reverse . swap_up . reverse . rev_both
     );
 
