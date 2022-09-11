@@ -223,7 +223,26 @@ impl<T> Stack<T> {
     /// Move focus from the current element down the stack, wrapping to the
     /// top if focus is already at the bottom.
     pub fn focus_down(&mut self) {
-        compose!(self => reverse . focus_up . reverse);
+        match (self.up.is_empty(), self.down.is_empty()) {
+            // xs f y:ys   -> xs:f y ys
+            // [] f y:ys   -> f y ys
+            (_, false) => {
+                let mut focus = self.down.pop_front().expect("non-empty");
+                self.swap_focus(&mut focus);
+                self.up.push_front(focus);
+            }
+
+            // x:xs f []   -> [] x xs:f
+            (false, true) => {
+                let mut focus = self.up.pop_back().expect("non-empty");
+                self.swap_focus(&mut focus);
+                self.up.push_front(focus);
+                compose!(self => reverse . rev_down);
+            }
+
+            // [] f []     -> [] f []
+            (true, true) => (),
+        }
     }
 
     /// Rotate all elements of the stack forward, wrapping from top to bottom.
@@ -478,4 +497,78 @@ mod tests {
 
         assert_eq!(s, expected);
     }
+}
+
+#[cfg(test)]
+mod quickcheck_tests {
+    use super::*;
+    use quickcheck::{Arbitrary, Gen};
+    use quickcheck_macros::quickcheck;
+
+    // For the tests below we only care about the stack structure not the elements themselves, so
+    // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
+    impl Arbitrary for Stack<u8> {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let mut up = Vec::arbitrary(g);
+            let focus = 42;
+
+            if up.is_empty() {
+                return stack!(focus); // return a minimal stack as we don't allow empty
+            }
+
+            let split_at = usize::arbitrary(g) % (up.len());
+            let down = up.split_off(split_at);
+
+            Self::new(up, focus, down)
+        }
+    }
+
+    impl<T> Stack<T> {
+        // Helper to reduce the verbosity of some of the composition laws
+        fn rev_both(&mut self) {
+            compose!(self => rev_up . rev_down)
+        }
+    }
+
+    // Define a composition law for operations on a Stack.
+    // Using these as the real implementation is not particularly efficient but the laws should
+    // hold for the hand written impls as well.
+    macro_rules! composition_law {
+        ($test:ident => $method:ident == $($f:ident).+) => {
+            #[quickcheck]
+            fn $test(mut stack: Stack<u8>) -> bool {
+                let mut by_composition = stack.clone();
+
+                stack.$method();
+                compose!(by_composition => $($f).+);
+
+                stack == by_composition
+            }
+        }
+    }
+
+    composition_law!(
+        focus_down_from_focus_up =>
+        focus_down == reverse . focus_up . reverse
+    );
+
+    composition_law!(
+        swap_down_from_focus_up =>
+        swap_down == reverse . swap_up . reverse
+    );
+
+    composition_law!(
+        rotate_up_from_focus_up =>
+        rotate_up == rev_both . swap_up . rev_both
+    );
+
+    composition_law!(
+        rotate_down_from_focus_up =>
+        rotate_down == rev_both . reverse . swap_up . reverse . rev_both
+    );
+
+    composition_law!(
+        rotate_down_from_rotate_up =>
+        rotate_down == reverse . rotate_up . reverse
+    );
 }

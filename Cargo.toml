@@ -1,6 +1,6 @@
 [package]
 name = "penrose"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license = "MIT"
@@ -50,3 +50,5 @@ paste = "1.0.6"
 serde_json = "1.0.79"
 tracing-subscriber = "0.3.9"
 simple_test_case = "1.1.0"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
