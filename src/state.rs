@@ -202,21 +202,27 @@ macro_rules! defer_to_current_stack {
 defer_to_current_stack!(
     /// Move focus from the current element up the [Stack], wrapping to
     /// the bottom if focus is already at the top.
+    /// This is a no-op if the current stack is empty.
     focus_up,
     /// Move focus from the current element down the [Stack], wrapping to
     /// the top if focus is already at the bottom.
+    /// This is a no-op if the current stack is empty.
     focus_down,
     /// Swap the position of the focused element with one above it.
     /// The currently focused element is maintained by this operation.
+    /// This is a no-op if the current stack is empty.
     swap_up,
     /// Swap the position of the focused element with one below it.
     /// The currently focused element is maintained by this operation.
+    /// This is a no-op if the current stack is empty.
     swap_down,
     /// Rotate all elements of the stack forward, wrapping from top to bottom.
     /// The currently focused position in the stack is maintained by this operation.
+    /// This is a no-op if the current stack is empty.
     rotate_up,
     /// Rotate all elements of the stack back, wrapping from bottom to top.
     /// The currently focused position in the stack is maintained by this operation.
+    /// This is a no-op if the current stack is empty.
     rotate_down
 );
 

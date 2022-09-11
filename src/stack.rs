@@ -538,9 +538,8 @@ mod quickcheck_tests {
             #[quickcheck]
             fn $test(mut stack: Stack<u8>) -> bool {
                 let mut by_composition = stack.clone();
-
-                stack.$method();
                 compose!(by_composition => $($f).+);
+                stack.$method();
 
                 stack == by_composition
             }
@@ -571,4 +570,24 @@ mod quickcheck_tests {
         rotate_down_from_rotate_up =>
         rotate_down == reverse . rotate_up . reverse
     );
+
+    // A composition of methods that should leave the Stack un-altered
+    macro_rules! idempotent {
+        ($test:ident => $($f:ident).+) => {
+            #[quickcheck]
+            fn $test(mut stack: Stack<u8>) -> bool {
+                let original = stack.clone();
+                compose!(stack => $($f).+);
+
+                stack == original
+            }
+        }
+    }
+
+    idempotent!(focus_up_down => focus_up . focus_down);
+    idempotent!(focus_down_up => focus_down . focus_up);
+    idempotent!(swap_up_down => swap_up . swap_down);
+    idempotent!(swap_down_up => swap_down . swap_up);
+    idempotent!(rotate_up_down => rotate_up . rotate_down);
+    idempotent!(rotate_down_up => rotate_down . rotate_up);
 }
