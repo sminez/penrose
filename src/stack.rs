@@ -21,7 +21,7 @@ macro_rules! stack {
 }
 
 // Helper for reversing a linked list in place
-macro_rules! rev {
+macro_rules! rev_lst {
     ($self:ident, $lst:ident) => {
         let mut placeholder = LinkedList::default();
         std::mem::swap(&mut $self.$lst, &mut placeholder);
@@ -30,22 +30,21 @@ macro_rules! rev {
     };
 }
 
-// TODO: xmonad store the `up` list in reverse order of the integral like so,
-//   ([2, 1], 3, [4, 5]) -> [1, 2, 3, 4, 5]
-// This gives better performance for the reordering operations as we just pop
-// the head of the list rather than traversing all nodes. It does lead to a more
-// confusing public API though if I want to be able to make the fields public for
-// users to interact with at some point.
-//
-// If performance looks off, it'd be worth reworking the methods that manipulate
-// `up` to store the list in reverse order but I suspect for the size of the lists
-// in question the difference is going to be minimal in practice.
+// Compose a chain of zero argument method calls on `self`
+macro_rules! compose {
+    ($self:ident => $($method:ident).+) => {
+        { $($self.$method();)+ }
+    }
+}
 
 /// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark
 /// a single element that currently holds focus. By convention, the main element is
 /// the first element in the stack (regardless of focus). Focusing operations do not
 /// reorder the elements of the stack or the resulting [Vec] that can be obtained
 /// from calling [Stack::flatten].
+///
+/// This struct is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
+/// over a [LinkedList]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
     focus: T,
@@ -61,9 +60,14 @@ impl<T> Stack<T> {
         I: IntoIterator<Item = T>,
         J: IntoIterator<Item = T>,
     {
+        let mut reversed_up = LinkedList::new();
+        for elem in up.into_iter() {
+            reversed_up.push_front(elem);
+        }
+
         Self {
             focus,
-            up: up.into_iter().collect(),
+            up: reversed_up,
             down: down.into_iter().collect(),
         }
     }
@@ -135,7 +139,7 @@ impl<T> Stack<T> {
 
     /// Return a reference to the first element in this [Stack]
     pub fn head(&self) -> &T {
-        self.up.front().unwrap_or(&self.focus)
+        self.up.back().unwrap_or(&self.focus)
     }
 
     /// Return a reference to the focused element in this [Stack]
@@ -164,7 +168,7 @@ impl<T> Stack<T> {
         let focus = if f(&self.focus) {
             self.focus
         } else {
-            match down.pop_front().or_else(|| up.pop_back()) {
+            match down.pop_front().or_else(|| up.pop_front()) {
                 Some(focus) => focus,
                 None => return None,
             }
@@ -176,13 +180,19 @@ impl<T> Stack<T> {
     /// Reverse the ordering of a Stack (up becomes down) while maintaining
     /// focus.
     pub fn reverse(&mut self) {
-        rev!(self, up);
-        rev!(self, down);
-        self.swap_up_down();
+        std::mem::swap(&mut self.up, &mut self.down);
     }
 
-    fn swap_up_down(&mut self) {
-        std::mem::swap(&mut self.up, &mut self.down);
+    fn swap_focus(&mut self, new: &mut T) {
+        std::mem::swap(&mut self.focus, new);
+    }
+
+    fn rev_up(&mut self) {
+        rev_lst!(self, up);
+    }
+
+    fn rev_down(&mut self) {
+        rev_lst!(self, down);
     }
 
     /// Move focus from the current element up the stack, wrapping to the
@@ -192,17 +202,17 @@ impl<T> Stack<T> {
             // xs:x f ys   -> xs x f:ys
             // xs:x f []   -> xs x f
             (false, _) => {
-                let mut focus = self.up.pop_back().expect("non-empty");
-                std::mem::swap(&mut self.focus, &mut focus);
+                let mut focus = self.up.pop_front().expect("non-empty");
+                self.swap_focus(&mut focus);
                 self.down.push_front(focus);
             }
 
             // [] f ys:y   -> f:ys y []
             (true, false) => {
                 let mut focus = self.down.pop_back().expect("non-empty");
-                std::mem::swap(&mut self.focus, &mut focus);
+                self.swap_focus(&mut focus);
                 self.down.push_front(focus);
-                self.swap_up_down();
+                compose!(self => reverse . rev_up);
             }
 
             // [] f []     -> [] f []
@@ -213,43 +223,43 @@ impl<T> Stack<T> {
     /// Move focus from the current element down the stack, wrapping to the
     /// top if focus is already at the bottom.
     pub fn focus_down(&mut self) {
-        self.reverse();
-        self.focus_up();
-        self.reverse();
+        compose!(self => reverse . focus_up . reverse);
     }
 
-    // NOTE: xmonad calls this swap_up?
     /// Rotate all elements of the stack forward, wrapping from top to bottom.
     /// The currently focused element is maintained by this operation.
-    pub fn rotate_up(&mut self) {
+    pub fn swap_up(&mut self) {
         match self.up.pop_front() {
-            Some(t) => self.down.push_back(t),
-            None => self.swap_up_down(),
+            Some(t) => self.down.push_front(t),
+            None => compose!(self => reverse . rev_up),
         }
     }
 
-    // NOTE: xmonad calls this swap_down?
     /// Rotate all elements of the stack forward, wrapping from top to bottom.
     /// The currently focused element is maintained by this operation.
-    pub fn rotate_down(&mut self) {
-        match self.down.pop_back() {
+    pub fn swap_down(&mut self) {
+        match self.down.pop_front() {
             Some(t) => self.up.push_front(t),
-            None => self.swap_up_down(),
+            None => compose!(self => reverse . rev_down),
         }
     }
 
     /// Rotate all elements of the stack forward, wrapping from top to bottom.
-    /// The currently focused position in the stack is maintained by this operation.
-    pub fn cycle_up(&mut self) {
-        self.focus_down();
-        self.rotate_up();
+    /// The currently focused element in the stack is maintained by this operation.
+    pub fn rotate_up(&mut self) {
+        match self.up.pop_back() {
+            Some(t) => self.down.push_back(t),
+            None => compose!(self => reverse . rev_up),
+        }
     }
 
     /// Rotate all elements of the stack back, wrapping from bottom to top.
-    /// The currently focused position in the stack is maintained by this operation.
-    pub fn cycle_down(&mut self) {
-        self.focus_up();
-        self.rotate_down();
+    /// The currently focused element in the stack is maintained by this operation.
+    pub fn rotate_down(&mut self) {
+        match self.down.pop_back() {
+            Some(t) => self.up.push_back(t),
+            None => compose!(self => reverse . rev_down),
+        }
     }
 }
 
@@ -267,7 +277,7 @@ impl<T> Iterator for IntoIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.up
-            .pop_front()
+            .pop_back()
             .or_else(|| self.focus.take())
             .or_else(|| self.down.pop_front())
     }
@@ -297,7 +307,10 @@ impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.up.next().or(self.focus).or_else(|| self.down.next())
+        self.up
+            .next_back()
+            .or(self.focus)
+            .or_else(|| self.down.next())
     }
 }
 
@@ -322,7 +335,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.up
-            .next()
+            .next_back()
             .or_else(|| self.focus.take())
             .or_else(|| self.down.next())
     }
@@ -422,6 +435,28 @@ mod tests {
         assert_eq!(s, expected);
     }
 
+    #[test_case(stack!([1, 2], 3, [4, 5]), stack!([1], 3, [2, 4, 5]); "items up and down")]
+    #[test_case(stack!(1, [2, 3]), stack!([2, 3], 1); "items down only")]
+    #[test_case(stack!([1, 2], 3), stack!([1], 3, [2]); "items up only")]
+    #[test_case(stack!(1), stack!(1); "only focused")]
+    #[test]
+    fn swap_up(mut s: Stack<usize>, expected: Stack<usize>) {
+        s.swap_up();
+
+        assert_eq!(s, expected);
+    }
+
+    #[test_case(stack!([1, 2], 3, [4, 5]), stack!([1, 2, 4], 3, [5]); "items up and down")]
+    #[test_case(stack!(1, [2, 3]), stack!([2], 1, [3]); "items down only")]
+    #[test_case(stack!([1, 2], 3), stack!(3, [1, 2]); "items up only")]
+    #[test_case(stack!(1), stack!(1); "only focused")]
+    #[test]
+    fn swap_down(mut s: Stack<usize>, expected: Stack<usize>) {
+        s.swap_down();
+
+        assert_eq!(s, expected);
+    }
+
     #[test_case(stack!([1, 2], 3, [4, 5]), stack!([2], 3, [4, 5, 1]); "items up and down")]
     #[test_case(stack!(1, [2, 3]), stack!([2, 3], 1); "items down only")]
     #[test_case(stack!([1, 2], 3), stack!([2], 3, [1]); "items up only")]
@@ -440,28 +475,6 @@ mod tests {
     #[test]
     fn rotate_down(mut s: Stack<usize>, expected: Stack<usize>) {
         s.rotate_down();
-
-        assert_eq!(s, expected);
-    }
-
-    #[test_case(stack!([1, 2], 3, [4, 5]), stack!([2, 3], 4, [5, 1]); "items up and down")]
-    #[test_case(stack!(1, [2, 3]), stack!(2, [3, 1]); "items down only")]
-    #[test_case(stack!([1, 2], 3), stack!([2, 3], 1); "items up only")]
-    #[test_case(stack!(1), stack!(1); "only focused")]
-    #[test]
-    fn cycle_up(mut s: Stack<usize>, expected: Stack<usize>) {
-        s.cycle_up();
-
-        assert_eq!(s, expected);
-    }
-
-    #[test_case(stack!([1, 2], 3, [4, 5]), stack!([5, 1], 2, [3, 4]); "items up and down")]
-    #[test_case(stack!(1, [2, 3]), stack!(3, [1, 2]); "items down only")]
-    #[test_case(stack!([1, 2], 3), stack!([3, 1], 2); "items up only")]
-    #[test_case(stack!(1), stack!(1); "only focused")]
-    #[test]
-    fn cycle_down(mut s: Stack<usize>, expected: Stack<usize>) {
-        s.cycle_down();
 
         assert_eq!(s, expected);
     }
