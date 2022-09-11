@@ -46,7 +46,7 @@ impl<C, D> State<C, D>
 where
     C: Clone + PartialEq,
 {
-    /// Create a new [StackSet] of empty stacks with the given workspace names.
+    /// Create a new [State] of empty stacks with the given workspace names.
     ///
     /// # Errors
     /// This method will error if there are not enough workspaces to cover the
