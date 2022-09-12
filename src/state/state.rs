@@ -132,6 +132,10 @@ where
         // so there is nothing for us to do
     }
 
+    /// Focus the given client and set its [Workspace] as current (see
+    /// focus_tag).
+    ///
+    /// If the client is unknown then this is a no-op.
     pub fn focus_client(&mut self, client: &C) {
         if self.current_client() == Some(client) {
             return; // already focused
@@ -406,31 +410,80 @@ mod tests {
         assert!(s.contains(&42))
     }
 
-    #[test]
-    fn iter_clients_returns_all_clients() {
-        let s = test_state_with_stacks(
+    fn test_iter_state() -> State<u8, u8> {
+        test_state_with_stacks(
             vec![
                 Some(stack!(1)),
                 Some(stack!([2], 3)),
                 Some(stack!(4, [5])),
+                None,
                 Some(stack!([6], 7, [8])),
             ],
-            1,
-        );
+            3,
+        )
+    }
 
+    #[test]
+    fn iter_screens_returns_all_screens() {
+        let s = test_iter_state();
+        let mut screen_indices: Vec<usize> = s.iter_screens().map(|s| s.index).collect();
+        screen_indices.sort();
+
+        assert_eq!(screen_indices, vec![0, 1, 2])
+    }
+
+    #[test]
+    fn iter_screens_mut_returns_all_screens() {
+        let mut s = test_iter_state();
+        let mut screen_indices: Vec<usize> = s.iter_screens_mut().map(|s| s.index).collect();
+        screen_indices.sort();
+
+        assert_eq!(screen_indices, vec![0, 1, 2])
+    }
+
+    #[test]
+    fn iter_workspaces_returns_all_workspaces() {
+        let s = test_iter_state();
+        let mut tags: Vec<&str> = s.iter_workspaces().map(|w| w.tag.as_str()).collect();
+        tags.sort();
+
+        assert_eq!(tags, vec!["1", "2", "3", "4", "5"])
+    }
+
+    #[test]
+    fn iter_workspaces_mut_returns_all_workspaces() {
+        let mut s = test_iter_state();
+        let mut tags: Vec<&str> = s.iter_workspaces_mut().map(|w| w.tag.as_str()).collect();
+        tags.sort();
+
+        assert_eq!(tags, vec!["1", "2", "3", "4", "5"])
+    }
+
+    #[test]
+    fn iter_clients_returns_all_clients() {
+        let s = test_iter_state();
         let mut clients: Vec<u8> = s.iter_clients().map(|c| *c).collect();
         clients.sort();
 
         assert_eq!(clients, vec![1, 2, 3, 4, 5, 6, 7, 8])
     }
 
-    #[test_case(Some(stack!(1)); "current stack with one element")]
-    #[test_case(Some(stack!([2], 1)); "current stack with up")]
-    #[test_case(Some(stack!(1, [3])); "current stack with down")]
-    #[test_case(Some(stack!([2], 1, [3])); "current stack with up and down")]
     #[test]
-    fn contains(stack: Option<Stack<u8>>) {
-        let s = test_state_with_stacks(vec![stack], 1);
+    fn iter_clients_mut_returns_all_clients() {
+        let mut s = test_iter_state();
+        let mut clients: Vec<u8> = s.iter_clients_mut().map(|c| *c).collect();
+        clients.sort();
+
+        assert_eq!(clients, vec![1, 2, 3, 4, 5, 6, 7, 8])
+    }
+
+    #[test_case(stack!(1); "current stack with one element")]
+    #[test_case(stack!([2], 1); "current stack with up")]
+    #[test_case(stack!(1, [3]); "current stack with down")]
+    #[test_case(stack!([2], 1, [3]); "current stack with up and down")]
+    #[test]
+    fn contains(stack: Stack<u8>) {
+        let s = test_state_with_stacks(vec![Some(stack)], 1);
 
         assert!(s.contains(&1))
     }
@@ -505,9 +558,25 @@ mod quickcheck_tests {
     #[quickcheck]
     fn insert_pushes_to_current_stack(mut s: State<u8, u8>) -> bool {
         let new_focus = s.minimal_unknown_client();
-
         s.insert(new_focus);
 
         s.current_client() == Some(&new_focus)
+    }
+
+    #[quickcheck]
+    fn focus_client_focused_the_enclosing_workspace(mut s: State<u8, u8>) -> bool {
+        let target = match s.iter_clients().max() {
+            Some(target) => target.clone(),
+            None => return true, // nothing to focus
+        };
+
+        let expected = s
+            .tag_for_client(&target)
+            .expect("client is known so tag is Some")
+            .to_owned();
+
+        s.focus_client(&target);
+
+        s.current_tag() == expected
     }
 }

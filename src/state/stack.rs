@@ -168,6 +168,11 @@ impl<T> Stack<T> {
         &self.focus
     }
 
+    /// Return a reference to the last element in this [Stack]
+    pub fn last(&self) -> &T {
+        self.down.back().unwrap_or(&self.focus)
+    }
+
     /// Insert the given element in place of the current focus, pushing
     /// the current focus down the [Stack].
     pub fn insert(&mut self, t: T) {
@@ -421,11 +426,39 @@ mod tests {
     use simple_test_case::test_case;
 
     #[test]
-    fn iter_yeilds_all_elements() {
+    fn focused() {
         let s = stack!([1, 2], 3, [4, 5]);
 
-        let mut elems: Vec<u8> = s.iter().map(|c| *c).collect();
-        elems.sort();
+        assert_eq!(s.focused(), &3)
+    }
+
+    #[test]
+    fn head() {
+        let s = stack!([1, 2], 3, [4, 5]);
+
+        assert_eq!(s.head(), &1)
+    }
+
+    #[test]
+    fn iter_yields_all_elements_in_order() {
+        let s = stack!([1, 2], 3, [4, 5]);
+        let elems: Vec<u8> = s.iter().map(|c| *c).collect();
+
+        assert_eq!(elems, vec![1, 2, 3, 4, 5])
+    }
+
+    #[test]
+    fn iter_mut_yields_all_elements_in_order() {
+        let mut s = stack!([1, 2], 3, [4, 5]);
+        let elems: Vec<u8> = s.iter_mut().map(|c| *c).collect();
+
+        assert_eq!(elems, vec![1, 2, 3, 4, 5])
+    }
+
+    #[test]
+    fn into_iter_yields_all_elements_in_order() {
+        let s = stack!([1, 2], 3, [4, 5]);
+        let elems: Vec<u8> = s.into_iter().map(|c| c).collect();
 
         assert_eq!(elems, vec![1, 2, 3, 4, 5])
     }
@@ -453,9 +486,9 @@ mod tests {
 
     #[test]
     fn integrate_is_correctly_ordered() {
-        let res = stack!([2, 3], 1, [4, 5]).integrate();
+        let res = stack!([1, 2], 3, [4, 5]).integrate();
 
-        assert_eq!(res, vec![2, 3, 1, 4, 5]);
+        assert_eq!(res, vec![1, 2, 3, 4, 5]);
     }
 
     #[test]
