@@ -211,6 +211,7 @@ where
     pub fn contains(&self, client: &C) -> bool {
         self.iter_clients().any(|c| c == client)
     }
+
     /// Extract a reference to the focused element of the current [Stack]
     pub fn current_client(&self) -> Option<&C> {
         self.current.workspace.stack.as_ref().map(|s| &s.focus)
@@ -403,6 +404,18 @@ mod tests {
         s.insert(42);
 
         assert!(s.contains(&42))
+    }
+
+    #[test_case(None; "empty current stack")]
+    #[test_case(Some(stack!(1)); "current stack with one element")]
+    #[test_case(Some(stack!([2], 1)); "current stack with up")]
+    #[test_case(Some(stack!(1, [3])); "current stack with down")]
+    #[test_case(Some(stack!([2], 1, [3])); "current stack with up and down")]
+    #[test]
+    fn contains(stack: Option<Stack<u8>>) {
+        let s = test_state_with_stacks(vec![stack], 1);
+
+        assert!(s.contains(&1))
     }
 }
 
