@@ -363,8 +363,8 @@ impl<T> IntoIterator for Stack<T> {
 
 #[derive(Debug)]
 pub struct Iter<'a, T> {
-    focus: Option<&'a T>,
     up: linked_list::Iter<'a, T>,
+    focus: Option<&'a T>,
     down: linked_list::Iter<'a, T>,
 }
 
@@ -374,7 +374,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         self.up
             .next_back()
-            .or(self.focus.take())
+            .or_else(|| self.focus.take())
             .or_else(|| self.down.next())
     }
 }
@@ -419,6 +419,16 @@ impl<'a, T> IntoIterator for &'a mut Stack<T> {
 mod tests {
     use super::*;
     use simple_test_case::test_case;
+
+    #[test]
+    fn iter_yeilds_all_elements() {
+        let s = stack!([1, 2], 3, [4, 5]);
+
+        let mut elems: Vec<u8> = s.iter().map(|c| *c).collect();
+        elems.sort();
+
+        assert_eq!(elems, vec![1, 2, 3, 4, 5])
+    }
 
     #[test]
     fn map_preserves_structure() {

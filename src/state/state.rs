@@ -406,7 +406,24 @@ mod tests {
         assert!(s.contains(&42))
     }
 
-    #[test_case(None; "empty current stack")]
+    #[test]
+    fn iter_clients_returns_all_clients() {
+        let s = test_state_with_stacks(
+            vec![
+                Some(stack!(1)),
+                Some(stack!([2], 3)),
+                Some(stack!(4, [5])),
+                Some(stack!([6], 7, [8])),
+            ],
+            1,
+        );
+
+        let mut clients: Vec<u8> = s.iter_clients().map(|c| *c).collect();
+        clients.sort();
+
+        assert_eq!(clients, vec![1, 2, 3, 4, 5, 6, 7, 8])
+    }
+
     #[test_case(Some(stack!(1)); "current stack with one element")]
     #[test_case(Some(stack!([2], 1)); "current stack with up")]
     #[test_case(Some(stack!(1, [3])); "current stack with down")]
@@ -419,12 +436,6 @@ mod tests {
     }
 }
 
-// FIXME: This isn't the right way to build arbitrary State instances.
-//        It may also be the wrong way to build the Stacks themselves? Probably want to inline
-//        the generation of the Stacks here as this is where we enforce the invariant that all
-//        clients are unique.
-//        Might be better to build a single HashSet, split it for each stack then run the algorithm
-//        for making a Stack from each set of clients?
 #[cfg(test)]
 mod quickcheck_tests {
     use super::{tests::test_state_with_stacks, *};
@@ -491,14 +502,12 @@ mod quickcheck_tests {
         }
     }
 
-    // FIXME: insert at focus seems broken
-    // #[quickcheck]
-    // fn insert_pushes_to_current_stack(mut s: State<u8, u8>) -> bool {
-    //     let new_focus = s.minimal_unknown_client();
+    #[quickcheck]
+    fn insert_pushes_to_current_stack(mut s: State<u8, u8>) -> bool {
+        let new_focus = s.minimal_unknown_client();
 
-    //     s.insert(new_focus);
+        s.insert(new_focus);
 
-    //     // s.current_client() == Some(&new_focus)
-    //     s.contains(&new_focus)
-    // }
+        s.current_client() == Some(&new_focus)
+    }
 }
