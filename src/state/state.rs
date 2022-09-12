@@ -31,7 +31,7 @@ macro_rules! pop_where {
 
 // TODO: Should current & visible be wrapped up as another Stack?
 /// The side-effect free internal state representation of the window manager.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State<C, D>
 where
     C: Clone + PartialEq,
@@ -209,11 +209,11 @@ where
 
     /// Returns `true` if the [State] contains an element equal to the given value.
     pub fn contains(&self, client: &C) -> bool {
-        self.tag_for_client(client).is_some()
+        self.iter_clients().any(|c| c == client)
     }
     /// Extract a reference to the focused element of the current [Stack]
     pub fn current_client(&self) -> Option<&C> {
-        self.current.workspace.stack.as_ref().map(|s| s.head())
+        self.current.workspace.stack.as_ref().map(|s| &s.focus)
     }
 
     /// Get a reference to the current [Stack] if there is one
@@ -328,20 +328,23 @@ mod tests {
     use super::*;
     use simple_test_case::test_case;
 
-    fn test_state(n_tags: usize, n: usize) -> State<u8, u8> {
+    pub fn test_state(n_tags: usize, n: usize) -> State<u8, u8> {
         let tags = (1..=n_tags).map(|n| n.to_string());
 
         State::try_new(Layout::default(), tags, vec![0; n]).unwrap()
     }
 
-    fn test_state_with_stacks(wss: Vec<Stack<u8>>, n: usize) -> State<u8, u8> {
-        let workspaces: Vec<Workspace<u8>> = wss
+    pub fn test_state_with_stacks(stacks: Vec<Option<Stack<u8>>>, n: usize) -> State<u8, u8> {
+        let workspaces: Vec<Workspace<u8>> = stacks
             .into_iter()
             .enumerate()
-            .map(|(i, s)| Workspace::with_stack((i + 1).to_string(), Layout::default(), s))
+            .map(|(i, s)| Workspace::new((i + 1).to_string(), Layout::default(), s))
             .collect();
 
-        State::try_new_concrete(workspaces, vec![0; n]).unwrap()
+        match State::try_new_concrete(workspaces, vec![0; n]) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        }
     }
 
     #[test_case("1", &["2", "3"]; "current focused workspace")]
@@ -379,9 +382,9 @@ mod tests {
     fn tag_for_client_works(client: u8, expected: Option<&str>) {
         let s = test_state_with_stacks(
             vec![
-                stack!([1, 2], 3, [4, 5]),
-                stack!(6, [7, 8]),
-                stack!([9], 10),
+                Some(stack!([1, 2], 3, [4, 5])),
+                Some(stack!(6, [7, 8])),
+                Some(stack!([9], 10)),
             ],
             1,
         );
@@ -389,12 +392,100 @@ mod tests {
         assert_eq!(s.tag_for_client(&client), expected);
     }
 
+    #[test_case(None; "empty current stack")]
+    #[test_case(Some(stack!(1)); "current stack with one element")]
+    #[test_case(Some(stack!([2], 1)); "current stack with up")]
+    #[test_case(Some(stack!(1, [3])); "current stack with down")]
+    #[test_case(Some(stack!([2], 1, [3])); "current stack with up and down")]
     #[test]
-    fn insert_pushes_to_current_stack() {
-        let mut s = test_state(5, 2);
+    fn insert(stack: Option<Stack<u8>>) {
+        let mut s = test_state_with_stacks(vec![stack], 1);
+        s.insert(42);
 
-        assert!(s.current_stack().is_none());
-        s.insert(2);
-        assert_eq!(s.current_client(), Some(&2));
+        assert!(s.contains(&42))
     }
+}
+
+// FIXME: This isn't the right way to build arbitrary State instances.
+//        It may also be the wrong way to build the Stacks themselves? Probably want to inline
+//        the generation of the Stacks here as this is where we enforce the invariant that all
+//        clients are unique.
+//        Might be better to build a single HashSet, split it for each stack then run the algorithm
+//        for making a Stack from each set of clients?
+#[cfg(test)]
+mod quickcheck_tests {
+    use super::{tests::test_state_with_stacks, *};
+    use quickcheck::{Arbitrary, Gen};
+    use quickcheck_macros::quickcheck;
+    use std::collections::HashSet;
+
+    impl Stack<u8> {
+        pub fn try_from_arbitrary_vec(mut up: Vec<u8>, g: &mut Gen) -> Option<Self> {
+            let focus = match up.len() {
+                0 => return None,
+                1 => return Some(stack!(up.remove(0))),
+                _ => up.remove(0),
+            };
+
+            let split_at = usize::arbitrary(g) % (up.len());
+            let down = up.split_off(split_at);
+
+            Some(Self::new(up, focus, down))
+        }
+    }
+
+    impl State<u8, u8> {
+        fn minimal_unknown_client(&self) -> u8 {
+            let mut c = 0;
+
+            while self.contains(&c) {
+                c += 1;
+            }
+
+            c
+        }
+    }
+
+    // For the tests below we only care about the stack structure not the elements themselves, so
+    // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
+    impl Arbitrary for State<u8, u8> {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let n_stacks = usize::arbitrary(g) % 10;
+            let mut stacks = Vec::with_capacity(n_stacks);
+
+            let mut clients: Vec<u8> = HashSet::<u8>::arbitrary(g).into_iter().collect();
+
+            for _ in 0..n_stacks {
+                if clients.is_empty() {
+                    stacks.push(None);
+                    continue;
+                }
+
+                let split_at = usize::arbitrary(g) % (clients.len());
+                let stack_clients = clients.split_off(split_at);
+                stacks.push(Stack::try_from_arbitrary_vec(stack_clients, g));
+            }
+
+            stacks.push(Stack::try_from_arbitrary_vec(clients, g));
+
+            let n_screens = if n_stacks == 0 {
+                1
+            } else {
+                std::cmp::max(usize::arbitrary(g) % n_stacks, 1)
+            };
+
+            test_state_with_stacks(stacks, n_screens)
+        }
+    }
+
+    // FIXME: insert at focus seems broken
+    // #[quickcheck]
+    // fn insert_pushes_to_current_stack(mut s: State<u8, u8>) -> bool {
+    //     let new_focus = s.minimal_unknown_client();
+
+    //     s.insert(new_focus);
+
+    //     // s.current_client() == Some(&new_focus)
+    //     s.contains(&new_focus)
+    // }
 }

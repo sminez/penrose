@@ -9,7 +9,7 @@ pub use stack::{Position, Stack};
 pub use state::State;
 pub use workspace::Workspace;
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Rect {
     x: u32,
     y: u32,
@@ -17,5 +17,5 @@ pub struct Rect {
     h: u32,
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Layout {}

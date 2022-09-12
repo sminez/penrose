@@ -68,8 +68,8 @@ impl Default for Position {
 /// over a [LinkedList].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
-    focus: T,
     up: LinkedList<T>,
+    pub(crate) focus: T,
     down: LinkedList<T>,
 }
 
@@ -109,8 +109,8 @@ impl<T> Stack<T> {
         };
 
         Some(Self {
-            focus,
             up: LinkedList::default(),
+            focus,
             down: it.collect(),
         })
     }
@@ -119,8 +119,8 @@ impl<T> Stack<T> {
     /// focus and then down.
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
         Iter {
-            focus: Some(&self.focus),
             up: self.up.iter(),
+            focus: Some(&self.focus),
             down: self.down.iter(),
         }
     }
@@ -129,8 +129,8 @@ impl<T> Stack<T> {
     /// focus and then down with mutable references.
     pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
         IterMut {
-            focus: Some(&mut self.focus),
             up: self.up.iter_mut(),
+            focus: Some(&mut self.focus),
             down: self.down.iter_mut(),
         }
     }
@@ -543,6 +543,19 @@ mod tests {
 
         assert_eq!(s, expected);
     }
+
+    #[test_case(Position::Focus, stack!([1,2], 6, [3,4,5]); "focus")]
+    #[test_case(Position::Before, stack!([1,2,6], 3, [4,5]); "before")]
+    #[test_case(Position::After, stack!([1,2], 3, [6,4,5]); "after")]
+    #[test_case(Position::Head, stack!([6,1,2], 3, [4,5]); "head")]
+    #[test_case(Position::Tail, stack!([1,2], 3, [4,5,6]); "tail")]
+    #[test]
+    fn insert_at(pos: Position, expected: Stack<usize>) {
+        let mut s = stack!([1, 2], 3, [4, 5]);
+        s.insert_at(pos, 6);
+
+        assert_eq!(s, expected);
+    }
 }
 
 #[cfg(test)]
@@ -550,12 +563,19 @@ mod quickcheck_tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
     use quickcheck_macros::quickcheck;
+    use std::collections::HashSet;
 
     // For the tests below we only care about the stack structure not the elements themselves, so
     // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
+    //
+    // Focus is always `42` and elements are unique.
     impl Arbitrary for Stack<u8> {
         fn arbitrary(g: &mut Gen) -> Self {
-            let mut up = Vec::arbitrary(g);
+            let mut up: Vec<u8> = HashSet::<u8>::arbitrary(g)
+                .into_iter()
+                .filter(|&n| n != 42)
+                .collect();
+
             let focus = 42;
 
             if up.is_empty() {
