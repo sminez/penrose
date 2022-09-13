@@ -21,14 +21,14 @@ macro_rules! stack {
     ($focus:expr) => { $crate::Stack::new([], $focus, []) };
 }
 
-// Helper for reversing a linked list in place
-macro_rules! rev_lst {
-    ($self:ident, $lst:ident) => {
-        let mut placeholder = LinkedList::default();
-        std::mem::swap(&mut $self.$lst, &mut placeholder);
-        let mut reversed = placeholder.into_iter().rev().collect();
-        std::mem::swap(&mut $self.$lst, &mut reversed);
-    };
+// Mem swap a default value in place of the given expression
+macro_rules! take {
+    ($item:expr) => {{
+        let mut tmp = Default::default();
+        std::mem::swap(&mut $item, &mut tmp);
+
+        tmp
+    }};
 }
 
 // Compose a chain of zero argument method calls on `self`
@@ -177,14 +177,38 @@ impl<T> Stack<T> {
     /// Swap the current head element with the focused element in the
     /// stack order. Focus stays with the original focused element.
     pub fn swap_focus_and_head(&mut self) {
-        let mut tmp = LinkedList::new();
-        std::mem::swap(&mut self.up, &mut tmp);
+        let mut tmp = take!(self.up);
 
         if let Some(head) = tmp.pop_back() {
             self.down.push_front(head);
         }
 
         for item in tmp.into_iter() {
+            self.down.push_front(item);
+        }
+    }
+
+    /// Rotate the Stack until the current focused element is in the head position
+    pub fn rotate_focus_to_head(&mut self) {
+        if self.up.is_empty() {
+            return;
+        }
+
+        for item in take!(self.up).into_iter().rev() {
+            self.down.push_back(item);
+        }
+    }
+
+    pub fn focus_head(&mut self) {
+        let mut head = match self.up.pop_back() {
+            None => return, // focus is already head
+            Some(t) => t,
+        };
+
+        std::mem::swap(&mut head, &mut self.focus);
+        self.down.push_front(head);
+
+        for item in take!(self.up).into_iter().rev() {
             self.down.push_front(item);
         }
     }
@@ -301,11 +325,13 @@ impl<T> Stack<T> {
     }
 
     fn rev_up(&mut self) {
-        rev_lst!(self, up);
+        let mut reversed = take!(self.up).into_iter().rev().collect();
+        std::mem::swap(&mut self.up, &mut reversed);
     }
 
     fn rev_down(&mut self) {
-        rev_lst!(self, down);
+        let mut reversed = take!(self.down).into_iter().rev().collect();
+        std::mem::swap(&mut self.down, &mut reversed);
     }
 
     /// Move focus from the current element up the stack, wrapping to the
@@ -508,6 +534,28 @@ mod tests {
     #[test]
     fn swap_focus_and_head(mut s: Stack<u8>, expected: Stack<u8>) {
         s.swap_focus_and_head();
+
+        assert_eq!(s, expected);
+    }
+
+    #[test_case(stack!([1, 2], 3, [4, 5]), stack!(3, [4, 5, 1, 2]); "items up and down")]
+    #[test_case(stack!([1, 2], 3), stack!(3, [1, 2]); "items up")]
+    #[test_case(stack!(3, [4, 5]), stack!(3, [4, 5]); "items down")]
+    #[test_case(stack!(3), stack!(3); "focus only")]
+    #[test]
+    fn rotate_focus_to_head(mut s: Stack<u8>, expected: Stack<u8>) {
+        s.rotate_focus_to_head();
+
+        assert_eq!(s, expected);
+    }
+
+    #[test_case(stack!([1, 2], 3, [4, 5]), stack!(1, [2, 3, 4, 5]); "items up and down")]
+    #[test_case(stack!([1, 2], 3), stack!(1, [2, 3]); "items up")]
+    #[test_case(stack!(3, [4, 5]), stack!(3, [4, 5]); "items down")]
+    #[test_case(stack!(3), stack!(3); "focus only")]
+    #[test]
+    fn focus_head(mut s: Stack<u8>, expected: Stack<u8>) {
+        s.focus_head();
 
         assert_eq!(s, expected);
     }
