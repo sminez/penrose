@@ -174,6 +174,21 @@ impl<T> Stack<T> {
         self.down.back().unwrap_or(&self.focus)
     }
 
+    /// Swap the current head element with the focused element in the
+    /// stack order. Focus stays with the original focused element.
+    pub fn swap_focus_and_head(&mut self) {
+        let mut tmp = LinkedList::new();
+        std::mem::swap(&mut self.up, &mut tmp);
+
+        if let Some(head) = tmp.pop_back() {
+            self.down.push_front(head);
+        }
+
+        for item in tmp.into_iter() {
+            self.down.push_front(item);
+        }
+    }
+
     /// Insert the given element in place of the current focus, pushing
     /// the current focus down the [Stack].
     pub fn insert(&mut self, t: T) {
@@ -486,6 +501,17 @@ mod tests {
         assert_eq!(s.head(), &1)
     }
 
+    #[test_case(stack!([1, 2], 3, [4, 5]), stack!(3, [2, 1, 4, 5]); "items up and down")]
+    #[test_case(stack!([1, 2], 3), stack!(3, [2, 1]); "items up")]
+    #[test_case(stack!(3, [4, 5]), stack!(3, [4, 5]); "items down")]
+    #[test_case(stack!(3), stack!(3); "focus only")]
+    #[test]
+    fn swap_focus_and_head(mut s: Stack<u8>, expected: Stack<u8>) {
+        s.swap_focus_and_head();
+
+        assert_eq!(s, expected);
+    }
+
     #[test]
     fn iter_yields_all_elements_in_order() {
         let s = stack!([1, 2], 3, [4, 5]);
@@ -696,7 +722,9 @@ mod quickcheck_tests {
                 s.insert(t);
                 s == original
             }
+
             (Some(t), None) => stack!(t) == original,
+
             _ => panic!("delete of focused returned None"),
         }
     }
