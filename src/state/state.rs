@@ -227,6 +227,22 @@ where
         self.insert_as_focus_for(tag, c)
     }
 
+    /// Move the given client to the focused position of the [Workspace] matching
+    /// the provided `tag`. If the client is already on the target workspace it is
+    /// moved to the focused position.
+    pub fn move_client_to_tag(&mut self, client: &C, tag: &str) {
+        if !self.contains_tag(tag) {
+            return;
+        }
+
+        let c = match self.remove_client(client) {
+            None => return,
+            Some(c) => c,
+        };
+
+        self.insert_as_focus_for(tag, c)
+    }
+
     fn insert_as_focus_for(&mut self, tag: &str, c: C) {
         self.iter_workspaces_mut().find(|w| w.tag == tag).map(|w| {
             w.stack = Some(match take(&mut w.stack) {
@@ -555,15 +571,6 @@ mod tests {
 
         assert!(s.contains(&1))
     }
-
-    // TODO: tests for the behaviour of this in each case of:
-    //   - no stacks at all
-    //   - no current client
-    //   - current stack with single client, empty target
-    //   - current stack with single client, occupied target
-    //   - current stack with other clients, empty target
-    //   - current stack with other clients, occupied target
-    // fn move_focused_to_tag() {}
 }
 
 #[cfg(test)]
@@ -597,6 +604,26 @@ mod quickcheck_tests {
             }
 
             c
+        }
+
+        fn last_tag(&self) -> String {
+            self.iter_workspaces()
+                .last()
+                .expect("at least one workspace")
+                .tag
+                .clone()
+        }
+
+        fn last_visible_client(&self) -> Option<&u8> {
+            self.visible
+                .back()
+                .unwrap_or(&self.current)
+                .workspace
+                .stack
+                .iter()
+                .map(|s| s.iter())
+                .flatten()
+                .last()
         }
     }
 
@@ -655,5 +682,35 @@ mod quickcheck_tests {
         s.focus_client(&target);
 
         s.current_tag() == expected
+    }
+
+    #[quickcheck]
+    fn move_focused_to_tag(mut s: State<u8, u8>) -> bool {
+        let tag = s.last_tag();
+
+        let c = match s.current_client() {
+            Some(&c) => c,
+            None => return true, // no focused client to move for this case
+        };
+
+        s.move_focused_to_tag(&tag);
+        s.focus_tag(&tag);
+
+        s.current_client() == Some(&c)
+    }
+
+    #[quickcheck]
+    fn move_client_to_tag(mut s: State<u8, u8>) -> bool {
+        let tag = s.last_tag();
+
+        let c = match s.last_visible_client() {
+            Some(&c) => c,
+            None => return true, // no client to move for this case
+        };
+
+        s.move_client_to_tag(&c, &tag);
+        s.focus_tag(&tag);
+
+        s.current_client() == Some(&c)
     }
 }
