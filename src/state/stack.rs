@@ -231,7 +231,9 @@ impl<T> Stack<T> {
         self
     }
 
-    fn extract_focus(mut self) -> (T, Option<Self>) {
+    /// Remove the focused element of this Stack. If this was the only element then
+    /// the stack is dropped and None is returned.
+    pub fn remove_focused(mut self) -> (T, Option<Self>) {
         let focus = match self.down.pop_front().or_else(|| self.up.pop_front()) {
             Some(focus) => focus,
             None => return (self.focus, None),
@@ -247,7 +249,7 @@ impl<T> Stack<T> {
         );
     }
 
-    /// Delete an element from the stack.
+    /// Remove an element from the stack.
     ///
     /// If the element was present it is returned along with the rest of the [Stack].
     /// If this was the last element in the stack, the stack is dropped and None is
@@ -265,7 +267,7 @@ impl<T> Stack<T> {
         }
 
         if t == &self.focus {
-            let (focus, stack) = self.extract_focus();
+            let (focus, stack) = self.remove_focused();
             (Some(focus), stack)
         } else {
             (None, Some(self))
@@ -302,7 +304,7 @@ impl<T> Stack<T> {
         if f(&new_stack.focus) {
             Some(new_stack)
         } else {
-            let (_, maybe_stack) = new_stack.extract_focus();
+            let (_, maybe_stack) = new_stack.remove_focused();
             maybe_stack
         }
     }

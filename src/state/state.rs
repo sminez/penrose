@@ -212,6 +212,37 @@ where
             .find(|opt| opt.is_some())?
     }
 
+    /// Move the focused client of the current [Workspace] to the focused position
+    /// of the workspace matching the provided `tag`.
+    pub fn move_focused_to_tag(&mut self, tag: &str) {
+        if self.current_tag() == tag || !self.contains_tag(tag) {
+            return;
+        }
+
+        let c = match self.current.workspace.remove_focused() {
+            None => return,
+            Some(c) => c,
+        };
+
+        self.insert_as_focus_for(tag, c)
+    }
+
+    fn insert_as_focus_for(&mut self, tag: &str, c: C) {
+        self.iter_workspaces_mut().find(|w| w.tag == tag).map(|w| {
+            w.stack = Some(match take(&mut w.stack) {
+                None => stack!(c),
+                Some(mut s) => {
+                    s.insert(c);
+                    s
+                }
+            });
+        });
+    }
+
+    fn contains_tag(&self, tag: &str) -> bool {
+        self.iter_workspaces().any(|w| w.tag == tag)
+    }
+
     /// Find the tag of the [Workspace] currently displayed on [Screen] `index`.
     ///
     /// Returns [None] if the index is out of bounds
@@ -269,8 +300,7 @@ where
     where
         F: FnOnce(Option<Stack<C>>) -> Option<Stack<C>>,
     {
-        let current_stack = self.current.workspace.stack.take();
-        self.current.workspace.stack = f(current_stack);
+        self.current.workspace.stack = f(take(&mut self.current.workspace.stack));
     }
 
     /// Apply a function to modify the current [Stack] if it is non-empty
@@ -525,6 +555,15 @@ mod tests {
 
         assert!(s.contains(&1))
     }
+
+    // TODO: tests for the behaviour of this in each case of:
+    //   - no stacks at all
+    //   - no current client
+    //   - current stack with single client, empty target
+    //   - current stack with single client, occupied target
+    //   - current stack with other clients, empty target
+    //   - current stack with other clients, occupied target
+    // fn move_focused_to_tag() {}
 }
 
 #[cfg(test)]
