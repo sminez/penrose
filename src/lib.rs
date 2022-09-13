@@ -8,8 +8,11 @@ pub enum Error {
     #[error("Only {n_ws} workspaces were provided but at least {n_screens} are required")]
     InsufficientWorkspaces { n_ws: usize, n_screens: usize },
 
-    #[error("there are no screens available")]
+    #[error("There are no screens available")]
     NoScreens,
+
+    #[error("The given client is not in this State")]
+    UnknownClient,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

@@ -1,3 +1,4 @@
+use crate::pop_where;
 use std::{
     collections::linked_list::{self, LinkedList},
     iter::IntoIterator,
@@ -198,12 +199,56 @@ impl<T> Stack<T> {
         }
     }
 
+    fn extract_focus(mut self) -> (T, Option<Self>) {
+        let focus = match self.down.pop_front().or_else(|| self.up.pop_front()) {
+            Some(focus) => focus,
+            None => return (self.focus, None),
+        };
+
+        return (
+            self.focus,
+            Some(Self {
+                focus,
+                up: self.up,
+                down: self.down,
+            }),
+        );
+    }
+
+    /// Delete an element from the stack.
+    ///
+    /// If the element was present it is returned along with the rest of the [Stack].
+    /// If this was the last element in the stack, the stack is dropped and None is
+    /// returned.
+    pub fn delete(mut self, t: &T) -> (Option<T>, Option<Self>)
+    where
+        T: PartialEq,
+    {
+        if let Some(found) = pop_where!(self, up, |elem: &T| elem == t) {
+            return (Some(found), Some(self));
+        }
+
+        if let Some(found) = pop_where!(self, down, |elem: &T| elem == t) {
+            return (Some(found), Some(self));
+        }
+
+        if t == &self.focus {
+            let (focus, stack) = self.extract_focus();
+            (Some(focus), stack)
+        } else {
+            (None, Some(self))
+        }
+    }
+
     /// Map a function over all elements in this [Stack], returning a new one.
-    pub fn map<U>(self, f: fn(T) -> U) -> Stack<U> {
+    pub fn map<F, U>(self, f: F) -> Stack<U>
+    where
+        F: Fn(T) -> U,
+    {
         Stack {
             focus: f(self.focus),
-            up: self.up.into_iter().map(f).collect(),
-            down: self.down.into_iter().map(f).collect(),
+            up: self.up.into_iter().map(&f).collect(),
+            down: self.down.into_iter().map(&f).collect(),
         }
     }
 
@@ -212,20 +257,22 @@ impl<T> Stack<T> {
     /// after it, if there are no elements after then focus moves to the first
     /// remaining element before. If no elements satisfy the predicate then
     /// None is returned.
-    pub fn filter(self, f: fn(&T) -> bool) -> Option<Self> {
-        let mut up: LinkedList<T> = self.up.into_iter().filter(f).collect();
-        let mut down: LinkedList<T> = self.down.into_iter().filter(f).collect();
-
-        let focus = if f(&self.focus) {
-            self.focus
-        } else {
-            match down.pop_front().or_else(|| up.pop_front()) {
-                Some(focus) => focus,
-                None => return None,
-            }
+    pub fn filter<F>(self, f: F) -> Option<Self>
+    where
+        F: Fn(&T) -> bool,
+    {
+        let new_stack = Self {
+            focus: self.focus,
+            up: self.up.into_iter().filter(&f).collect(),
+            down: self.down.into_iter().filter(&f).collect(),
         };
 
-        Some(Self { focus, up, down })
+        if f(&new_stack.focus) {
+            Some(new_stack)
+        } else {
+            let (_, maybe_stack) = new_stack.extract_focus();
+            maybe_stack
+        }
     }
 
     /// Reverse the ordering of a Stack (up becomes down) while maintaining
@@ -636,6 +683,21 @@ mod quickcheck_tests {
         // Helper to reduce the verbosity of some of the composition laws
         fn rev_both(&mut self) {
             compose!(self => rev_up . rev_down)
+        }
+    }
+
+    #[quickcheck]
+    fn delete_and_re_insert_is_idempotent(stack: Stack<u8>) -> bool {
+        let original = stack.clone();
+        let focused = *stack.focused();
+
+        match stack.delete(&focused) {
+            (Some(t), Some(mut s)) => {
+                s.insert(t);
+                s == original
+            }
+            (Some(t), None) => stack!(t) == original,
+            _ => panic!("delete of focused returned None"),
         }
     }
 

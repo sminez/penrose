@@ -3,9 +3,14 @@ use crate::{
     state::{Layout, Position, Rect, Screen, Stack, Workspace},
     Error, Result,
 };
-use std::collections::{HashMap, LinkedList};
+use std::{
+    collections::{HashMap, LinkedList},
+    hash::Hash,
+};
 
 // Helper for popping from the middle of a linked list
+#[doc(hidden)]
+#[macro_export]
 macro_rules! pop_where {
     ($self:ident, $lst:ident, $($pred:tt)+) => {{
         let mut placeholder = LinkedList::default();
@@ -34,17 +39,17 @@ macro_rules! pop_where {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct State<C, D>
 where
-    C: Clone + PartialEq,
+    C: Clone + PartialEq + Eq + Hash,
 {
     current: Screen<C, D>,             // Currently focused workspace
     visible: LinkedList<Screen<C, D>>, // Non-focused workspaces, visible in xinerama
     hidden: LinkedList<Workspace<C>>,  // Workspaces not currently on any screen
-    floating: HashMap<u32, Rect>,      // Floating windows
+    floating: HashMap<C, Rect>,        // Floating windows
 }
 
 impl<C, D> State<C, D>
 where
-    C: Clone + PartialEq,
+    C: Clone + PartialEq + Eq + Hash,
 {
     /// Create a new [State] of empty stacks with the given workspace names.
     ///
@@ -153,40 +158,62 @@ where
         }
     }
 
-    /// Iterate over each [Screen] in this [State] in an arbitrary order.
-    pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C, D>> {
-        std::iter::once(&self.current).chain(self.visible.iter())
+    /// Insert the given client to the current [Stack] in a default [Position].
+    pub fn insert(&mut self, client: C) {
+        self.insert_at(Position::default(), client)
     }
 
-    /// Mutably iterate over each [Screen] in this [State] in an arbitrary order.
-    pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C, D>> {
-        std::iter::once(&mut self.current).chain(self.visible.iter_mut())
+    /// Insert the given client to the current [Stack] at the requested [Position].
+    /// If the client is already present somewhere in the [State] the state is unmodified.
+    pub fn insert_at(&mut self, pos: Position, client: C) {
+        if self.contains(&client) {
+            return;
+        }
+
+        self.modify(|current_stack| match current_stack {
+            Some(mut s) => {
+                s.insert_at(pos, client);
+                Some(s)
+            }
+            None => Some(stack!(client)),
+        })
     }
 
-    /// Iterate over each [Workspace] in this [State] in an arbitrary order.
-    pub fn iter_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
-        std::iter::once(&self.current.workspace)
-            .chain(self.visible.iter().map(|s| &s.workspace))
-            .chain(self.hidden.iter())
+    /// Record a known client as floating, giving its preferred screen position.
+    ///
+    /// # Errors
+    /// This method with return [Error::UnknownClient] if the given client is
+    /// not already managed in this state.
+    pub fn float(&mut self, client: C, r: Rect) -> Result<()> {
+        if !self.contains(&client) {
+            return Err(Error::UnknownClient);
+        }
+        self.float_unchecked(client, r);
+
+        Ok(())
     }
 
-    /// Mutably iterate over each [Workspace] in this [State] in an arbitrary order.
-    pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
-        std::iter::once(&mut self.current.workspace)
-            .chain(self.visible.iter_mut().map(|s| &mut s.workspace))
-            .chain(self.hidden.iter_mut())
+    fn float_unchecked(&mut self, client: C, r: Rect) {
+        self.floating.insert(client, r);
     }
 
-    /// Iterate over each client in this [State] in an arbitrary order.
-    pub fn iter_clients(&self) -> impl Iterator<Item = &C> {
-        self.iter_workspaces()
-            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+    /// Clear the floating status of a client, returning its previous preferred
+    /// screen position if the client was known, otherwise `None`.
+    pub fn sink(&mut self, client: &C) -> Option<Rect> {
+        self.floating.remove(client)
     }
 
-    /// Iterate over each client in this [State] in an arbitrary order.
-    pub fn iter_clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
-        self.iter_workspaces_mut()
-            .flat_map(|w| w.stack.iter_mut().map(|s| s.iter_mut()).flatten())
+    /// Delete a client from this [State].
+    pub fn delete(&mut self, client: &C) {
+        self.sink(client);
+        self.remove_from_stack(client);
+    }
+
+    fn remove_from_stack(&mut self, client: &C) {
+        self.iter_workspaces_mut().for_each(|w| {
+            let current = w.stack.take();
+            w.stack = current.and_then(|s| s.filter(|c| c != client));
+        })
     }
 
     /// Find the tag of the [Workspace] currently displayed on [Screen] `index`.
@@ -259,25 +286,40 @@ where
         self.modify(|s| s.map(f))
     }
 
-    /// Insert the given client to the current [Stack] in a default [Position].
-    pub fn insert(&mut self, client: C) {
-        self.insert_at(Position::default(), client)
+    /// Iterate over each [Screen] in this [State] in an arbitrary order.
+    pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C, D>> {
+        std::iter::once(&self.current).chain(self.visible.iter())
     }
 
-    /// Insert the given client to the current [Stack] at the requested [Position].
-    /// If the client is already present somewhere in the [State] the state is unmodified.
-    pub fn insert_at(&mut self, pos: Position, client: C) {
-        if self.contains(&client) {
-            return;
-        }
+    /// Mutably iterate over each [Screen] in this [State] in an arbitrary order.
+    pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C, D>> {
+        std::iter::once(&mut self.current).chain(self.visible.iter_mut())
+    }
 
-        self.modify(|current_stack| match current_stack {
-            Some(mut s) => {
-                s.insert_at(pos, client);
-                Some(s)
-            }
-            None => Some(stack!(client)),
-        })
+    /// Iterate over each [Workspace] in this [State] in an arbitrary order.
+    pub fn iter_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+        std::iter::once(&self.current.workspace)
+            .chain(self.visible.iter().map(|s| &s.workspace))
+            .chain(self.hidden.iter())
+    }
+
+    /// Mutably iterate over each [Workspace] in this [State] in an arbitrary order.
+    pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
+        std::iter::once(&mut self.current.workspace)
+            .chain(self.visible.iter_mut().map(|s| &mut s.workspace))
+            .chain(self.hidden.iter_mut())
+    }
+
+    /// Iterate over each client in this [State] in an arbitrary order.
+    pub fn iter_clients(&self) -> impl Iterator<Item = &C> {
+        self.iter_workspaces()
+            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+    }
+
+    /// Iterate over each client in this [State] in an arbitrary order.
+    pub fn iter_clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
+        self.iter_workspaces_mut()
+            .flat_map(|w| w.stack.iter_mut().map(|s| s.iter_mut()).flatten())
     }
 }
 
@@ -288,7 +330,7 @@ macro_rules! defer_to_current_stack {
     ),+) => {
         impl<C, D> State<C, D>
         where
-            C: Clone + PartialEq
+            C: Clone + PartialEq + Eq + Hash
         {
             $(
                 pub fn $method(&mut self) {
