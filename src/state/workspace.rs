@@ -24,12 +24,12 @@ impl<C> Workspace<C> {
         self.stack.is_none()
     }
 
-    pub(crate) fn delete(&mut self, c: &C) -> Option<C>
+    pub(crate) fn remove(&mut self, c: &C) -> Option<C>
     where
         C: PartialEq,
     {
         let current = self.stack.take();
-        let (maybe_c, new_stack) = current?.delete(c);
+        let (maybe_c, new_stack) = current?.remove(c);
         self.stack = new_stack;
 
         maybe_c
@@ -50,7 +50,7 @@ mod tests {
     fn delete_returns_as_expected(stack: Option<Stack<u8>>, maybe_c: Option<u8>, is_some: bool) {
         let mut w = Workspace::new("test", Layout::default(), stack);
 
-        assert_eq!(w.delete(&5), maybe_c);
+        assert_eq!(w.remove(&5), maybe_c);
         assert_eq!(w.stack.is_some(), is_some);
     }
 }

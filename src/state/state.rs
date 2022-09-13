@@ -6,6 +6,7 @@ use crate::{
 use std::{
     collections::{HashMap, LinkedList},
     hash::Hash,
+    mem::{swap, take},
 };
 
 // Helper for popping from the middle of a linked list
@@ -13,8 +14,7 @@ use std::{
 #[macro_export]
 macro_rules! pop_where {
     ($self:ident, $lst:ident, $($pred:tt)+) => {{
-        let mut placeholder = LinkedList::default();
-        std::mem::swap(&mut $self.$lst, &mut placeholder);
+        let placeholder = take(&mut $self.$lst);
 
         let mut remaining = LinkedList::default();
         let mut popped = None;
@@ -28,7 +28,7 @@ macro_rules! pop_where {
             }
         }
 
-        std::mem::swap(&mut $self.$lst, &mut remaining);
+        swap(&mut $self.$lst, &mut remaining);
 
         popped
     }};
@@ -122,14 +122,14 @@ where
 
         // If the tag is visible on another screen, focus moves to that screen
         if let Some(mut s) = pop_where!(self, visible, |s: &Screen<C, D>| s.workspace.tag == tag) {
-            std::mem::swap(&mut s, &mut self.current);
+            swap(&mut s, &mut self.current);
             self.visible.push_back(s);
             return;
         }
 
         // If the tag is hidden then it gets moved to the current screen
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
-            std::mem::swap(&mut w, &mut self.current.workspace);
+            swap(&mut w, &mut self.current.workspace);
             self.hidden.push_back(w);
         }
 
@@ -204,15 +204,11 @@ where
     }
 
     /// Delete a client from this [State].
-    pub fn delete(&mut self, client: &C) -> Option<C> {
+    pub fn remove_client(&mut self, client: &C) -> Option<C> {
         self.sink(client); // Clear any floating information we might have
-        self.remove_from_stack(client)
-    }
 
-    // Remove a given client from [State], returning it if it was present.
-    fn remove_from_stack(&mut self, client: &C) -> Option<C> {
         self.iter_workspaces_mut()
-            .map(|w| w.delete(client))
+            .map(|w| w.remove(client))
             .find(|opt| opt.is_some())?
     }
 
@@ -335,7 +331,7 @@ macro_rules! defer_to_current_stack {
             $(
                 pub fn $method(&mut self) {
                     if let Some(ref mut stack) = self.current.workspace.stack {
-                        stack.$method()
+                        stack.$method();
                     }
                 }
             )+

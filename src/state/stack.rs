@@ -2,6 +2,7 @@ use crate::pop_where;
 use std::{
     collections::linked_list::{self, LinkedList},
     iter::IntoIterator,
+    mem::{swap, take},
 };
 
 /// Create a [Stack] containing the arguments. The only required element is the focus,
@@ -19,23 +20,6 @@ macro_rules! stack {
     ([$($up:expr),*], $focus:expr) => { $crate::Stack::new([$($up),*], $focus, []) };
     ($focus:expr, [$($down:expr),*]) => { $crate::Stack::new([], $focus, [$($down),*]) };
     ($focus:expr) => { $crate::Stack::new([], $focus, []) };
-}
-
-// Mem swap a default value in place of the given expression
-macro_rules! take {
-    ($item:expr) => {{
-        let mut tmp = Default::default();
-        std::mem::swap(&mut $item, &mut tmp);
-
-        tmp
-    }};
-}
-
-// Compose a chain of zero argument method calls on `self`
-macro_rules! compose {
-    ($self:ident => $($method:ident).+) => {
-        { $($self.$method();)+ }
-    }
 }
 
 /// A position within a [Stack].
@@ -66,7 +50,8 @@ impl Default for Position {
 /// from calling [Stack::flatten].
 ///
 /// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
-/// over a [LinkedList].
+/// over a [LinkedList]. Many of the methods that mutate the structure of the Stack
+/// return back a mutable reference so that they are able to be chained.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
     up: LinkedList<T>,
@@ -176,8 +161,8 @@ impl<T> Stack<T> {
 
     /// Swap the current head element with the focused element in the
     /// stack order. Focus stays with the original focused element.
-    pub fn swap_focus_and_head(&mut self) {
-        let mut tmp = take!(self.up);
+    pub fn swap_focus_and_head(&mut self) -> &mut Self {
+        let mut tmp = take(&mut self.up);
 
         if let Some(head) = tmp.pop_back() {
             self.down.push_front(head);
@@ -186,36 +171,42 @@ impl<T> Stack<T> {
         for item in tmp.into_iter() {
             self.down.push_front(item);
         }
+
+        self
     }
 
     /// Rotate the Stack until the current focused element is in the head position
-    pub fn rotate_focus_to_head(&mut self) {
+    pub fn rotate_focus_to_head(&mut self) -> &mut Self {
         if self.up.is_empty() {
-            return;
+            return self;
         }
 
-        for item in take!(self.up).into_iter().rev() {
+        for item in take(&mut self.up).into_iter().rev() {
             self.down.push_back(item);
         }
+
+        self
     }
 
-    pub fn focus_head(&mut self) {
+    pub fn focus_head(&mut self) -> &mut Self {
         let mut head = match self.up.pop_back() {
-            None => return, // focus is already head
+            None => return self, // focus is already head
             Some(t) => t,
         };
 
-        std::mem::swap(&mut head, &mut self.focus);
+        swap(&mut head, &mut self.focus);
         self.down.push_front(head);
 
-        for item in take!(self.up).into_iter().rev() {
+        for item in take(&mut self.up).into_iter().rev() {
             self.down.push_front(item);
         }
+
+        self
     }
 
     /// Insert the given element in place of the current focus, pushing
     /// the current focus down the [Stack].
-    pub fn insert(&mut self, t: T) {
+    pub fn insert(&mut self, t: T) -> &mut Self {
         self.insert_at(Position::default(), t)
     }
 
@@ -223,7 +214,7 @@ impl<T> Stack<T> {
     /// See [Position] for the semantics of each case. For all cases, the
     /// existing elements in the [Stack] are pushed down to make room for
     /// the new one.
-    pub fn insert_at(&mut self, pos: Position, t: T) {
+    pub fn insert_at(&mut self, pos: Position, t: T) -> &mut Self {
         use Position::*;
 
         match pos {
@@ -235,7 +226,9 @@ impl<T> Stack<T> {
             After => self.down.push_front(t),
             Head => self.up.push_back(t),
             Tail => self.down.push_back(t),
-        }
+        };
+
+        self
     }
 
     fn extract_focus(mut self) -> (T, Option<Self>) {
@@ -259,7 +252,7 @@ impl<T> Stack<T> {
     /// If the element was present it is returned along with the rest of the [Stack].
     /// If this was the last element in the stack, the stack is dropped and None is
     /// returned.
-    pub fn delete(mut self, t: &T) -> (Option<T>, Option<Self>)
+    pub fn remove(mut self, t: &T) -> (Option<T>, Option<Self>)
     where
         T: PartialEq,
     {
@@ -316,27 +309,33 @@ impl<T> Stack<T> {
 
     /// Reverse the ordering of a Stack (up becomes down) while maintaining
     /// focus.
-    pub fn reverse(&mut self) {
-        std::mem::swap(&mut self.up, &mut self.down);
+    pub fn reverse(&mut self) -> &mut Self {
+        swap(&mut self.up, &mut self.down);
+
+        self
     }
 
     fn swap_focus(&mut self, new: &mut T) {
-        std::mem::swap(&mut self.focus, new);
+        swap(&mut self.focus, new);
     }
 
-    fn rev_up(&mut self) {
-        let mut reversed = take!(self.up).into_iter().rev().collect();
-        std::mem::swap(&mut self.up, &mut reversed);
+    fn rev_up(&mut self) -> &mut Self {
+        let mut reversed = take(&mut self.up).into_iter().rev().collect();
+        swap(&mut self.up, &mut reversed);
+
+        self
     }
 
-    fn rev_down(&mut self) {
-        let mut reversed = take!(self.down).into_iter().rev().collect();
-        std::mem::swap(&mut self.down, &mut reversed);
+    fn rev_down(&mut self) -> &mut Self {
+        let mut reversed = take(&mut self.down).into_iter().rev().collect();
+        swap(&mut self.down, &mut reversed);
+
+        self
     }
 
     /// Move focus from the current element up the stack, wrapping to the
     /// bottom if focus is already at the top.
-    pub fn focus_up(&mut self) {
+    pub fn focus_up(&mut self) -> &mut Self {
         match (self.up.is_empty(), self.down.is_empty()) {
             // xs:x f ys   -> xs x f:ys
             // xs:x f []   -> xs x f
@@ -351,17 +350,19 @@ impl<T> Stack<T> {
                 let mut focus = self.down.pop_back().expect("non-empty");
                 self.swap_focus(&mut focus);
                 self.down.push_front(focus);
-                compose!(self => reverse . rev_up);
+                self.reverse().rev_up();
             }
 
             // [] f []     -> [] f []
             (true, true) => (),
         }
+
+        self
     }
 
     /// Move focus from the current element down the stack, wrapping to the
     /// top if focus is already at the bottom.
-    pub fn focus_down(&mut self) {
+    pub fn focus_down(&mut self) -> &mut Self {
         match (self.up.is_empty(), self.down.is_empty()) {
             // xs f y:ys   -> xs:f y ys
             // [] f y:ys   -> f y ys
@@ -376,47 +377,61 @@ impl<T> Stack<T> {
                 let mut focus = self.up.pop_back().expect("non-empty");
                 self.swap_focus(&mut focus);
                 self.up.push_front(focus);
-                compose!(self => reverse . rev_down);
+                self.reverse().rev_down();
             }
 
             // [] f []     -> [] f []
             (true, true) => (),
         }
+
+        self
     }
 
-    /// Rotate all elements of the stack forward, wrapping from top to bottom.
+    /// Swap the focused element with the one above, wrapping from top to bottom.
     /// The currently focused element is maintained by this operation.
-    pub fn swap_up(&mut self) {
+    pub fn swap_up(&mut self) -> &mut Self {
         match self.up.pop_front() {
-            Some(t) => self.down.push_front(t),
-            None => compose!(self => reverse . rev_up),
+            Some(t) => {
+                self.down.push_front(t);
+                self
+            }
+            None => self.reverse().rev_up(),
         }
     }
 
-    /// Rotate all elements of the stack forward, wrapping from top to bottom.
+    /// Swap the focused element with the one below, wrapping from top to bottom.
     /// The currently focused element is maintained by this operation.
-    pub fn swap_down(&mut self) {
+    pub fn swap_down(&mut self) -> &mut Self {
         match self.down.pop_front() {
-            Some(t) => self.up.push_front(t),
-            None => compose!(self => reverse . rev_down),
+            Some(t) => {
+                self.up.push_front(t);
+                self
+            }
+            None => self.reverse().rev_down(),
         }
     }
 
     /// Rotate all elements of the stack forward, wrapping from top to bottom.
     /// The currently focused element in the stack is maintained by this operation.
-    pub fn rotate_up(&mut self) {
+    pub fn rotate_up(&mut self) -> &mut Self {
         match self.up.pop_back() {
-            Some(t) => self.down.push_back(t),
-            None => compose!(self => reverse . rev_up),
+            Some(t) => {
+                self.down.push_back(t);
+                self
+            }
+            None => self.reverse().rev_up(),
         }
     }
 
     /// Rotate all elements of the stack back, wrapping from bottom to top.
     /// The currently focused element in the stack is maintained by this operation.
-    pub fn rotate_down(&mut self) {
+    pub fn rotate_down(&mut self) -> &mut Self {
         match self.down.pop_back() {
-            Some(t) => self.up.push_back(t),
-            None => compose!(self => reverse . rev_down),
+            Some(t) => {
+                self.up.push_back(t);
+                self
+            }
+            None => self.reverse().rev_down(),
         }
     }
 }
@@ -755,17 +770,17 @@ mod quickcheck_tests {
 
     impl<T> Stack<T> {
         // Helper to reduce the verbosity of some of the composition laws
-        fn rev_both(&mut self) {
-            compose!(self => rev_up . rev_down)
+        fn rev_both(&mut self) -> &mut Self {
+            self.rev_up().rev_down()
         }
     }
 
     #[quickcheck]
-    fn delete_and_re_insert_is_idempotent(stack: Stack<u8>) -> bool {
+    fn remove_and_re_insert_is_idempotent(stack: Stack<u8>) -> bool {
         let original = stack.clone();
         let focused = *stack.focused();
 
-        match stack.delete(&focused) {
+        match stack.remove(&focused) {
             (Some(t), Some(mut s)) => {
                 s.insert(t);
                 s == original
@@ -785,7 +800,7 @@ mod quickcheck_tests {
             #[quickcheck]
             fn $test(mut stack: Stack<u8>) -> bool {
                 let mut by_composition = stack.clone();
-                compose!(by_composition => $($f).+);
+                by_composition.$($f()).+;
                 stack.$method();
 
                 stack == by_composition
@@ -825,7 +840,7 @@ mod quickcheck_tests {
                 #[quickcheck]
                 fn [<inverse _ $test _ left_right>](mut stack: Stack<u8>) -> bool {
                     let original = stack.clone();
-                    compose!(stack => $a . $b);
+                    stack.$a().$b();
 
                     stack == original
                 }
@@ -833,7 +848,7 @@ mod quickcheck_tests {
                 #[quickcheck]
                 fn [<inverse _ $test _ right_left>](mut stack: Stack<u8>) -> bool {
                     let original = stack.clone();
-                    compose!(stack => $b . $a);
+                    stack.$b().$a();
 
                     stack == original
                 }
