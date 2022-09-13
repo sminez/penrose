@@ -64,7 +64,7 @@ where
     {
         let workspaces: Vec<Workspace<C>> = ws_tags
             .into_iter()
-            .map(|tag| Workspace::empty(tag, layout.clone()))
+            .map(|tag| Workspace::new(tag, layout.clone(), None))
             .collect();
 
         let screen_details: Vec<D> = screen_details.into_iter().collect();
@@ -204,16 +204,16 @@ where
     }
 
     /// Delete a client from this [State].
-    pub fn delete(&mut self, client: &C) {
-        self.sink(client);
-        self.remove_from_stack(client);
+    pub fn delete(&mut self, client: &C) -> Option<C> {
+        self.sink(client); // Clear any floating information we might have
+        self.remove_from_stack(client)
     }
 
-    fn remove_from_stack(&mut self, client: &C) {
-        self.iter_workspaces_mut().for_each(|w| {
-            let current = w.stack.take();
-            w.stack = current.and_then(|s| s.filter(|c| c != client));
-        })
+    // Remove a given client from [State], returning it if it was present.
+    fn remove_from_stack(&mut self, client: &C) -> Option<C> {
+        self.iter_workspaces_mut()
+            .map(|w| w.delete(client))
+            .find(|opt| opt.is_some())?
     }
 
     /// Find the tag of the [Workspace] currently displayed on [Screen] `index`.
