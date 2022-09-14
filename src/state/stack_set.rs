@@ -38,7 +38,7 @@ macro_rules! pop_where {
 // TODO: Should current & visible be wrapped up as another Stack?
 /// The side-effect free internal state representation of the window manager.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct State<C, D>
+pub struct StackSet<C, D>
 where
     C: Clone + PartialEq + Eq + Hash,
 {
@@ -48,11 +48,11 @@ where
     floating: HashMap<C, Rect>,        // Floating windows
 }
 
-impl<C, D> State<C, D>
+impl<C, D> StackSet<C, D>
 where
     C: Clone + PartialEq + Eq + Hash,
 {
-    /// Create a new [State] of empty stacks with the given workspace names.
+    /// Create a new [StackSet] of empty stacks with the given workspace names.
     ///
     /// # Errors
     /// This method will error if there are not enough workspaces to cover the
@@ -112,7 +112,7 @@ where
 
     /// Set focus to the [Workspace] with the specified tag.
     ///
-    /// If there is no matching workspace then the [State] is unmodified.
+    /// If there is no matching workspace then the [StackSet] is unmodified.
     /// If the [Workspace] is currently visible it becomes the active [Screen],
     /// otherwise the workspace replaces whatever was on the active screen.
     pub fn focus_tag(&mut self, tag: &str) {
@@ -165,7 +165,7 @@ where
     }
 
     /// Insert the given client to the current [Stack] at the requested [Position].
-    /// If the client is already present somewhere in the [State] the state is unmodified.
+    /// If the client is already present somewhere in the [StackSet] the stack_set is unmodified.
     pub fn insert_at(&mut self, pos: Position, client: C) {
         if self.contains(&client) {
             return;
@@ -184,7 +184,7 @@ where
     ///
     /// # Errors
     /// This method with return [Error::UnknownClient] if the given client is
-    /// not already managed in this state.
+    /// not already managed in this stack_set.
     pub fn float(&mut self, client: C, r: Rect) -> Result<()> {
         if !self.contains(&client) {
             return Err(Error::UnknownClient);
@@ -204,7 +204,7 @@ where
         self.floating.remove(client)
     }
 
-    /// Delete a client from this [State].
+    /// Delete a client from this [StackSet].
     pub fn remove_client(&mut self, client: &C) -> Option<C> {
         self.sink(client); // Clear any floating information we might have
 
@@ -282,7 +282,7 @@ where
             .map(|w| w.tag.as_str())
     }
 
-    /// Returns `true` if the [State] contains an element equal to the given value.
+    /// Returns `true` if the [StackSet] contains an element equal to the given value.
     pub fn contains(&self, client: &C) -> bool {
         self.iter_clients().any(|c| c == client)
     }
@@ -336,37 +336,37 @@ where
         self.iter_workspaces_mut().find(|w| w.tag == tag).map(f);
     }
 
-    /// Iterate over each [Screen] in this [State] in an arbitrary order.
+    /// Iterate over each [Screen] in this [StackSet] in an arbitrary order.
     pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C, D>> {
         std::iter::once(&self.current).chain(self.visible.iter())
     }
 
-    /// Mutably iterate over each [Screen] in this [State] in an arbitrary order.
+    /// Mutably iterate over each [Screen] in this [StackSet] in an arbitrary order.
     pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C, D>> {
         std::iter::once(&mut self.current).chain(self.visible.iter_mut())
     }
 
-    /// Iterate over each [Workspace] in this [State] in an arbitrary order.
+    /// Iterate over each [Workspace] in this [StackSet] in an arbitrary order.
     pub fn iter_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
         std::iter::once(&self.current.workspace)
             .chain(self.visible.iter().map(|s| &s.workspace))
             .chain(self.hidden.iter())
     }
 
-    /// Mutably iterate over each [Workspace] in this [State] in an arbitrary order.
+    /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
     pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
         std::iter::once(&mut self.current.workspace)
             .chain(self.visible.iter_mut().map(|s| &mut s.workspace))
             .chain(self.hidden.iter_mut())
     }
 
-    /// Iterate over each client in this [State] in an arbitrary order.
+    /// Iterate over each client in this [StackSet] in an arbitrary order.
     pub fn iter_clients(&self) -> impl Iterator<Item = &C> {
         self.iter_workspaces()
             .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
     }
 
-    /// Iterate over each client in this [State] in an arbitrary order.
+    /// Iterate over each client in this [StackSet] in an arbitrary order.
     pub fn iter_clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
         self.iter_workspaces_mut()
             .flat_map(|w| w.stack.iter_mut().map(|s| s.iter_mut()).flatten())
@@ -378,7 +378,7 @@ macro_rules! defer_to_current_stack {
         $(#[$doc_str:meta])*
         $method:ident
     ),+) => {
-        impl<C, D> State<C, D>
+        impl<C, D> StackSet<C, D>
         where
             C: Clone + PartialEq + Eq + Hash
         {
@@ -425,20 +425,23 @@ mod tests {
     use super::*;
     use simple_test_case::test_case;
 
-    pub fn test_state(n_tags: usize, n: usize) -> State<u8, u8> {
+    pub fn test_stack_set(n_tags: usize, n: usize) -> StackSet<u8, u8> {
         let tags = (1..=n_tags).map(|n| n.to_string());
 
-        State::try_new(Layout::default(), tags, vec![0; n]).unwrap()
+        StackSet::try_new(Layout::default(), tags, vec![0; n]).unwrap()
     }
 
-    pub fn test_state_with_stacks(stacks: Vec<Option<Stack<u8>>>, n: usize) -> State<u8, u8> {
+    pub fn test_stack_set_with_stacks(
+        stacks: Vec<Option<Stack<u8>>>,
+        n: usize,
+    ) -> StackSet<u8, u8> {
         let workspaces: Vec<Workspace<u8>> = stacks
             .into_iter()
             .enumerate()
             .map(|(i, s)| Workspace::new((i + 1).to_string(), Layout::default(), s))
             .collect();
 
-        match State::try_new_concrete(workspaces, vec![0; n]) {
+        match StackSet::try_new_concrete(workspaces, vec![0; n]) {
             Ok(s) => s,
             Err(e) => panic!("{e}"),
         }
@@ -449,7 +452,7 @@ mod tests {
     #[test_case("3", &["2", "1"]; "currently hidden")]
     #[test]
     fn focus_tag_sets_correct_visible_workspaces(target: &str, vis: &[&str]) {
-        let mut s = test_state(5, 3);
+        let mut s = test_stack_set(5, 3);
 
         s.focus_tag(target);
 
@@ -464,7 +467,7 @@ mod tests {
     #[test_case(2, None, None; "out of bounds")]
     #[test]
     fn tag_for_screen_works(index: usize, before: Option<&str>, after: Option<&str>) {
-        let mut s = test_state(5, 2);
+        let mut s = test_stack_set(5, 2);
 
         assert_eq!(s.tag_for_screen(index), before);
         s.focus_tag("3");
@@ -477,7 +480,7 @@ mod tests {
     #[test_case(42, None; "unknown")]
     #[test]
     fn tag_for_client_works(client: u8, expected: Option<&str>) {
-        let s = test_state_with_stacks(
+        let s = test_stack_set_with_stacks(
             vec![
                 Some(stack!([1, 2], 3, [4, 5])),
                 Some(stack!(6, [7, 8])),
@@ -496,14 +499,14 @@ mod tests {
     #[test_case(Some(stack!([2], 1, [3])); "current stack with up and down")]
     #[test]
     fn insert(stack: Option<Stack<u8>>) {
-        let mut s = test_state_with_stacks(vec![stack], 1);
+        let mut s = test_stack_set_with_stacks(vec![stack], 1);
         s.insert(42);
 
         assert!(s.contains(&42))
     }
 
-    fn test_iter_state() -> State<u8, u8> {
-        test_state_with_stacks(
+    fn test_iter_stack_set() -> StackSet<u8, u8> {
+        test_stack_set_with_stacks(
             vec![
                 Some(stack!(1)),
                 Some(stack!([2], 3)),
@@ -517,7 +520,7 @@ mod tests {
 
     #[test]
     fn iter_screens_returns_all_screens() {
-        let s = test_iter_state();
+        let s = test_iter_stack_set();
         let mut screen_indices: Vec<usize> = s.iter_screens().map(|s| s.index).collect();
         screen_indices.sort();
 
@@ -526,7 +529,7 @@ mod tests {
 
     #[test]
     fn iter_screens_mut_returns_all_screens() {
-        let mut s = test_iter_state();
+        let mut s = test_iter_stack_set();
         let mut screen_indices: Vec<usize> = s.iter_screens_mut().map(|s| s.index).collect();
         screen_indices.sort();
 
@@ -535,7 +538,7 @@ mod tests {
 
     #[test]
     fn iter_workspaces_returns_all_workspaces() {
-        let s = test_iter_state();
+        let s = test_iter_stack_set();
         let mut tags: Vec<&str> = s.iter_workspaces().map(|w| w.tag.as_str()).collect();
         tags.sort();
 
@@ -544,7 +547,7 @@ mod tests {
 
     #[test]
     fn iter_workspaces_mut_returns_all_workspaces() {
-        let mut s = test_iter_state();
+        let mut s = test_iter_stack_set();
         let mut tags: Vec<&str> = s.iter_workspaces_mut().map(|w| w.tag.as_str()).collect();
         tags.sort();
 
@@ -553,7 +556,7 @@ mod tests {
 
     #[test]
     fn iter_clients_returns_all_clients() {
-        let s = test_iter_state();
+        let s = test_iter_stack_set();
         let mut clients: Vec<u8> = s.iter_clients().map(|c| *c).collect();
         clients.sort();
 
@@ -562,7 +565,7 @@ mod tests {
 
     #[test]
     fn iter_clients_mut_returns_all_clients() {
-        let mut s = test_iter_state();
+        let mut s = test_iter_stack_set();
         let mut clients: Vec<u8> = s.iter_clients_mut().map(|c| *c).collect();
         clients.sort();
 
@@ -575,7 +578,7 @@ mod tests {
     #[test_case(stack!([2], 1, [3]); "current stack with up and down")]
     #[test]
     fn contains(stack: Stack<u8>) {
-        let s = test_state_with_stacks(vec![Some(stack)], 1);
+        let s = test_stack_set_with_stacks(vec![Some(stack)], 1);
 
         assert!(s.contains(&1))
     }
@@ -583,7 +586,7 @@ mod tests {
 
 #[cfg(test)]
 mod quickcheck_tests {
-    use super::{tests::test_state_with_stacks, *};
+    use super::{tests::test_stack_set_with_stacks, *};
     use quickcheck::{Arbitrary, Gen};
     use quickcheck_macros::quickcheck;
     use std::collections::HashSet;
@@ -603,7 +606,7 @@ mod quickcheck_tests {
         }
     }
 
-    impl State<u8, u8> {
+    impl StackSet<u8, u8> {
         fn minimal_unknown_client(&self) -> u8 {
             let mut c = 0;
 
@@ -637,7 +640,7 @@ mod quickcheck_tests {
 
     // For the tests below we only care about the stack structure not the elements themselves, so
     // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
-    impl Arbitrary for State<u8, u8> {
+    impl Arbitrary for StackSet<u8, u8> {
         fn arbitrary(g: &mut Gen) -> Self {
             let n_stacks = usize::arbitrary(g) % 10;
             let mut stacks = Vec::with_capacity(n_stacks);
@@ -663,12 +666,12 @@ mod quickcheck_tests {
                 std::cmp::max(usize::arbitrary(g) % n_stacks, 1)
             };
 
-            test_state_with_stacks(stacks, n_screens)
+            test_stack_set_with_stacks(stacks, n_screens)
         }
     }
 
     #[quickcheck]
-    fn insert_pushes_to_current_stack(mut s: State<u8, u8>) -> bool {
+    fn insert_pushes_to_current_stack(mut s: StackSet<u8, u8>) -> bool {
         let new_focus = s.minimal_unknown_client();
         s.insert(new_focus);
 
@@ -676,7 +679,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn focus_client_focused_the_enclosing_workspace(mut s: State<u8, u8>) -> bool {
+    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<u8, u8>) -> bool {
         let target = match s.iter_clients().max() {
             Some(target) => target.clone(),
             None => return true, // nothing to focus
@@ -693,7 +696,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_focused_to_tag(mut s: State<u8, u8>) -> bool {
+    fn move_focused_to_tag(mut s: StackSet<u8, u8>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.current_client() {
@@ -708,7 +711,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_client_to_tag(mut s: State<u8, u8>) -> bool {
+    fn move_client_to_tag(mut s: StackSet<u8, u8>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.last_visible_client() {

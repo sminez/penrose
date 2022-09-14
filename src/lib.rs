@@ -5,7 +5,7 @@ pub mod state;
 
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
-pub use state::{Position, Screen, Stack, State, Workspace};
+pub use state::{Position, Screen, Stack, StackSet, Workspace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
