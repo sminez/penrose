@@ -1,6 +1,7 @@
 use crate::{
+    geometry::Rect,
     stack,
-    state::{Layout, Position, Rect, Screen, Stack, Workspace},
+    state::{Layout, Position, Screen, Stack, Workspace},
     Error, Result,
 };
 use std::{

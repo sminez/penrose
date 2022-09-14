@@ -10,12 +10,4 @@ pub use state::State;
 pub use workspace::Workspace;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Rect {
-    x: u32,
-    y: u32,
-    w: u32,
-    h: u32,
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Layout {}
