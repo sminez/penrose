@@ -244,7 +244,7 @@ where
     }
 
     fn insert_as_focus_for(&mut self, tag: &str, c: C) {
-        self.iter_workspaces_mut().find(|w| w.tag == tag).map(|w| {
+        self.modify_workspace(tag, |w| {
             w.stack = Some(match take(&mut w.stack) {
                 None => stack!(c),
                 Some(mut s) => {
@@ -326,6 +326,13 @@ where
         F: FnOnce(Stack<C>) -> Stack<C>,
     {
         self.modify(|s| s.map(f))
+    }
+
+    fn modify_workspace<F>(&mut self, tag: &str, f: F)
+    where
+        F: FnOnce(&mut Workspace<C>),
+    {
+        self.iter_workspaces_mut().find(|w| w.tag == tag).map(f);
     }
 
     /// Iterate over each [Screen] in this [State] in an arbitrary order.
