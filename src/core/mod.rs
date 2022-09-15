@@ -1,6 +1,10 @@
 //! Core data structures and user facing functionality for the window manager
 use std::ops::Deref;
 
+pub mod layout;
+
+pub use layout::Layout;
+
 /// An X11 ID for a given resource
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Xid(u64);
