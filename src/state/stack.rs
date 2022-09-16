@@ -101,6 +101,10 @@ impl<T> Stack<T> {
         })
     }
 
+    pub fn len(&self) -> usize {
+        self.up.len() + self.down.len() + 1
+    }
+
     /// Provide an iterator over this stack iterating over up,
     /// focus and then down.
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
