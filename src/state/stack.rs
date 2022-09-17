@@ -321,7 +321,7 @@ impl<T> Stack<T> {
         self
     }
 
-    fn swap_focus(&mut self, new: &mut T) {
+    pub(crate) fn swap_focus(&mut self, new: &mut T) {
         swap(&mut self.focus, new);
     }
 

@@ -44,14 +44,14 @@ pub trait Layout {
     /// screen. It does not have to match the stack order of the clients within the [Workspace].
     ///
     /// # Returning a new layout
-    /// When a layout is run, it must return the layout that should be used the next time that this
-    /// workspace is being laid out. If the layout should remain unchanged you can simply return
-    /// the `self`, otherwise you can return a new Boxed [Layout] to be used in its place.
+    /// When a layout is run it may optionally replace itself with a new [Layout]. If `Some(layout)`
+    /// is returned from this method, it will be swapped out for the current one after the provided
+    /// positions have been applied.
     fn layout_workspace(
-        self: Box<Self>,
+        &mut self,
         w: &Workspace<Xid>,
         r: Rect,
-    ) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
+    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         match &w.stack {
             Some(s) => self.layout(s, r),
             None => self.layout_empty(r),
@@ -61,19 +61,23 @@ pub trait Layout {
     /// Generate screen positions for clients from a given [Stack].
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
-    fn layout(self: Box<Self>, s: &Stack<Xid>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>);
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>);
 
     /// Generate screen positions for an empty [Stack].
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
-    fn layout_empty(self: Box<Self>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>);
+    fn layout_empty(&mut self, _r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        (None, vec![])
+    }
 
     /// Process a dynamic [Message].
     ///
     /// See the trait level docs for details on what is possible with messages.
-    fn handle_message(self: Box<Self>, m: &Message) -> Box<dyn Layout>;
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>>;
 }
 
+/// A wrapper round another [Layout] that is able to intercept and modify both the positions being
+/// returned by the inner layout and messages being sent to it.
 pub trait LayoutTransformer: Sized + 'static {
     /// The same as [Layout::name] but for [LayoutTransformer] itself.
     fn transformed_name(&self) -> String;
@@ -83,38 +87,44 @@ pub trait LayoutTransformer: Sized + 'static {
     /// as `r`.
     fn transform_positions(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)>;
 
-    /// Construct a new instance of this [LayoutTransformer] containing the provided [Layout].
-    fn wrap(inner: Box<dyn Layout>) -> Self;
+    /// Provide a mutable reference to the [Layout] wrapped by this transformer.
+    fn inner_mut(&mut self) -> &mut dyn Layout;
 
-    /// Discard this [LayoutTransformer], returning the inner [Layout].
+    /// Replace the currently wrapped [Layout] with a new one.
+    fn swap_inner(&mut self, new: Box<dyn Layout>) -> Box<dyn Layout>;
+
+    /// Remove the inner [Layout] from this [LayoutTransformer].
     fn unwrap(self) -> Box<dyn Layout>;
 
     /// Apply the [LayoutTransformer] to its wrapped inner [Layout].
-    ///
-    /// The default implementation does this by calling `wrap` and `unwrap` to get at the
-    /// inner layout. If you need to maintain state or do not wish to incur the overhead of
-    /// unwrapping / wrapping you should implement this method directly.
-    fn run_transform<F>(self: Box<Self>, f: F, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>)
+    fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>)
     where
-        F: FnOnce(Box<dyn Layout>) -> (Box<dyn Layout>, Vec<(Xid, Rect)>),
+        F: FnOnce(&mut dyn Layout) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
-        let inner = self.unwrap();
-        let (new, positions) = (f)(inner);
+        let (new, positions) = (f)(self.inner_mut());
         let transformed = Self::transform_positions(r, positions);
 
-        (Box::new(Self::wrap(new)), transformed)
+        if let Some(l) = new {
+            self.swap_inner(l);
+        }
+
+        (None, transformed)
     }
 
     /// Pass a message on to the wrapped inner [Layout].
     ///
-    /// The default implementation does this by calling `wrap` and `unwrap` to get at the
-    /// inner layout. If you need to maintain state or do not wish to incur the overhead of
-    /// unwrapping / wrapping you should implement this method directly.
-    fn passthrough_message(self: Box<Self>, m: &Message) -> Box<dyn Layout> {
-        let inner = self.unwrap();
-        let new = inner.handle_message(m);
+    /// The default implementation of this method will return `Some(inner_layout)` if it
+    /// receives an [UnwrapTransformer] [Message] using the `unwrap` method of this trait.
+    fn passthrough_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        if let Some(&UnwrapTransformer) = m.downcast_ref() {
+            return Some(self.swap_inner(Box::new(NullLayout)));
+        }
+        
+        if let Some(new) = self.inner_mut().handle_message(m) {
+            self.swap_inner(new);
+        }
 
-        Box::new(Self::wrap(new))
+        None
     }
 }
 
@@ -127,24 +137,53 @@ where
     }
 
     fn layout_workspace(
-        self: Box<Self>,
+        &mut self,
         w: &Workspace<Xid>,
         r: Rect,
-    ) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
+    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         self.run_transform(|inner| inner.layout_workspace(w, r.clone()), r)
     }
 
-    fn layout(self: Box<Self>, s: &Stack<Xid>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         self.run_transform(|inner| inner.layout(s, r.clone()), r)
     }
 
-    fn layout_empty(self: Box<Self>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
+    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         self.run_transform(|inner| inner.layout_empty(r.clone()), r)
     }
 
-    fn handle_message(self: Box<Self>, m: &Message) -> Box<dyn Layout> {
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
         self.passthrough_message(m)
     }
+}
+
+/// A valid impl of Layout that can be used as a placeholder but will panic if used.
+struct NullLayout;
+impl Layout for NullLayout {
+    fn name(&self) -> String {
+        panic!("Null layout")
+    }
+    
+    fn layout_workspace(
+        &mut self,
+        _: &Workspace<Xid>,
+        _: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        panic!("Null layout")
+    }
+
+    fn layout(&mut self, _: &Stack<Xid>, _: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        panic!("Null layout")
+    }
+
+    fn layout_empty(&mut self, _: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        panic!("Null layout")
+    }
+
+    fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
+        panic!("Null layout")
+    }
+    
 }
 
 /// A stack of [Layout] options for use on a particular [Workspace].
@@ -154,27 +193,29 @@ where
 pub type LayoutStack = Stack<Box<dyn Layout>>;
 
 impl LayoutStack {
-    // NOTE: We allow for swapping out the current layout for a new one when layout operations
-    // run so we can't just deref down to the focus directly.
-    fn run_and_replace<F>(self, f: F) -> (Box<dyn Layout>, Vec<(Xid, Rect)>)
+    fn run_and_replace<F>(&mut self, f: F) -> Vec<(Xid, Rect)>
     where
-        F: FnOnce(Box<dyn Layout>) -> (Box<dyn Layout>, Vec<(Xid, Rect)>),
+        F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
-        let Self { up, focus, down } = self;
-        let (new_focus, rs) = (f)(focus);
-        let new = Box::new(Stack {
-            up,
-            focus: new_focus,
-            down,
-        });
+        let (new_focus, rs) = (f)(&mut self.focus);
 
-        (new, rs)
+        if let Some(mut new) = new_focus {
+            self.swap_focus(&mut new);
+        }
+
+        rs
     }
 
     /// Send the given [Message] to every [Layout] in this stack rather that just the
     /// currently focused one.
     pub fn broadcast_message(self, m: &Message) -> Self {
-        self.map(|l| l.handle_message(m))
+        self.map(|mut l| {
+            if let Some(new) = l.handle_message(m) {
+                new
+            } else {
+                l
+            }
+        })
     }
 }
 
@@ -184,30 +225,29 @@ impl Layout for LayoutStack {
     }
 
     fn layout_workspace(
-        self: Box<Self>,
+        &mut self,
         w: &Workspace<Xid>,
         r: Rect,
-    ) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
-        self.run_and_replace(|l| l.layout_workspace(w, r))
+    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        (None, self.run_and_replace(|l| l.layout_workspace(w, r)))
     }
 
-    fn layout(self: Box<Self>, s: &Stack<Xid>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
-        self.run_and_replace(|l| l.layout(s, r))
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        (None, self.run_and_replace(|l| l.layout(s, r)))
     }
 
-    fn layout_empty(self: Box<Self>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
-        self.run_and_replace(|l| l.layout_empty(r))
+    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        (None, self.run_and_replace(|l| l.layout_empty(r)))
     }
 
-    fn handle_message(self: Box<Self>, m: &Message) -> Box<dyn Layout> {
-        let Self { up, focus, down } = *self;
-        let new_focus = focus.handle_message(m);
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        let new_focus = self.focus.handle_message(m);
 
-        Box::new(Stack {
-            up,
-            focus: new_focus,
-            down,
-        })
+        if let Some(mut new) = new_focus {
+            self.swap_focus(&mut new);
+        }
+
+        None
     }
 }
 
@@ -294,11 +334,37 @@ impl MainAndStack {
                 .collect()
         }
     }
+}
 
-    // NOTE: Implemented like this rather than directly as part of the Layout trait
-    //       so that message handling can be tested more easily due to handle_message
-    //       required you to return Box<dyn Layout> rather than Box<Self>.
-    fn _handle_message(&mut self, m: &Message) {
+impl Default for MainAndStack {
+    fn default() -> Self {
+        Self {
+            pos: StackPosition::Side,
+            max_main: 1,
+            ratio: 0.6,
+            ratio_step: 0.1,
+        }
+    }
+}
+
+impl Layout for MainAndStack {
+    fn name(&self) -> String {
+        match self.pos {
+            StackPosition::Side => "SideStack".to_owned(),
+            StackPosition::Bottom => "BottomStack".to_owned(),
+        }
+    }
+
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        let positions = match self.pos {
+            StackPosition::Side => self.layout_side(s, r),
+            StackPosition::Bottom => self.layout_bottom(s, r),
+        };
+
+        (None, positions)
+    }
+
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
         if let Some(&ExpandMain) = m.downcast_ref() {
             self.ratio += self.ratio_step;
             if self.ratio > 1.0 {
@@ -321,108 +387,94 @@ impl MainAndStack {
                 StackPosition::Bottom => StackPosition::Side,
             };
         }
+
+        None
     }
 }
 
-impl Default for MainAndStack {
-    fn default() -> Self {
-        Self {
-            pos: StackPosition::Side,
-            max_main: 1,
-            ratio: 0.6,
-            ratio_step: 0.1,
+/// Quickly define a [LayoutTransformer] from a single element tuple struct and a
+/// transformation function: `fn(Rect, Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)>`.
+///
+/// The struct must have a single field which is a `Box<dyn Layout>`.
+///
+/// # Example
+/// ```no_run
+/// pub struct MyTransformer(Box<dyn Layout>);
+///
+/// fn my_transformation_function(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+///     todo!("transformation implmentation goes here")
+/// }
+///
+/// simple_transformer!(MyTransformer, my_transformation_function);
+/// ```
+#[macro_export]
+macro_rules! simple_transformer {
+    ($t:ident, $f:ident) => {
+        impl $crate::core::layout::LayoutTransformer for $t {
+            fn transformed_name(&self) -> String {
+                format!("{}<{}>", stringify!($name), self.0.name())
+            }
+
+            fn inner_mut(&mut self) -> &mut dyn $crate::core::layout::Layout {
+                &mut *self.0
+            }
+
+            fn swap_inner(
+                &mut self,
+                mut new: Box<dyn $crate::core::layout::Layout>
+            ) -> Box<dyn $crate::core::layout::Layout>{
+                std::mem::swap(&mut self.0, &mut new);
+                new
+            }
+
+            fn unwrap(self) -> Box<dyn $crate::core::layout::Layout> {
+                self.0
+            }
+
+            fn transform_positions(
+                r: $crate::geometry::Rect,
+                positions: Vec<($crate::core::Xid, $crate::geometry::Rect)>,
+            ) -> Vec<($crate::core::Xid, $crate::geometry::Rect)> {
+                $f(r, positions)
+            }
         }
-    }
-}
-
-impl Layout for MainAndStack {
-    fn name(&self) -> String {
-        match self.pos {
-            StackPosition::Side => "SideStack".to_owned(),
-            StackPosition::Bottom => "BottomStack".to_owned(),
-        }
-    }
-
-    fn layout(self: Box<Self>, s: &Stack<Xid>, r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
-        let positions = match self.pos {
-            StackPosition::Side => self.layout_side(s, r),
-            StackPosition::Bottom => self.layout_bottom(s, r),
-        };
-
-        (self, positions)
-    }
-
-    fn layout_empty(self: Box<Self>, _r: Rect) -> (Box<dyn Layout>, Vec<(Xid, Rect)>) {
-        (self, vec![])
-    }
-
-    fn handle_message(mut self: Box<Self>, m: &Message) -> Box<dyn Layout> {
-        self._handle_message(m);
-
-        self
-    }
+    };
 }
 
 /// Wrap an existing layout and reflect its window positions horizontally.
 pub struct ReflectHorizontal(pub Box<dyn Layout>);
+simple_transformer!(ReflectHorizontal, reflect_horizontal);
 
-impl LayoutTransformer for ReflectHorizontal {
-    fn transformed_name(&self) -> String {
-        format!("ReflectHorizontal<{}>", self.0.name())
-    }
+fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+    let mid = r.y + r.h / 2;
 
-    fn transform_positions(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-        let mid = r.y + r.h / 2;
+    positions
+        .into_iter()
+        .map(|(id, r)| {
+            let Rect { x, y, w, h } = r;
+            let x = 2 * mid - x;
 
-        positions
-            .into_iter()
-            .map(|(id, r)| {
-                let Rect { x, y, w, h } = r;
-                let x = 2 * mid - x;
-
-                (id, Rect { x, y, w, h })
-            })
-            .collect()
-    }
-
-    fn wrap(inner: Box<dyn Layout>) -> Self {
-        Self(inner)
-    }
-
-    fn unwrap(self) -> Box<dyn Layout> {
-        self.0
-    }
+            (id, Rect { x, y, w, h })
+        })
+        .collect()
 }
 
 /// Wrap an existing layout and reflect its window positions vertically.
 pub struct ReflectVertical(pub Box<dyn Layout>);
+simple_transformer!(ReflectVertical, reflect_vertical);
 
-impl LayoutTransformer for ReflectVertical {
-    fn transformed_name(&self) -> String {
-        format!("ReflectVertical<{}>", self.0.name())
-    }
+fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+    let mid = r.x + r.w / 2;
 
-    fn transform_positions(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-        let mid = r.x + r.w / 2;
+    positions
+        .into_iter()
+        .map(|(id, r)| {
+            let Rect { x, y, w, h } = r;
+            let y = 2 * mid - y;
 
-        positions
-            .into_iter()
-            .map(|(id, r)| {
-                let Rect { x, y, w, h } = r;
-                let y = 2 * mid - y;
-
-                (id, Rect { x, y, w, h })
-            })
-            .collect()
-    }
-
-    fn wrap(inner: Box<dyn Layout>) -> Self {
-        Self(inner)
-    }
-
-    fn unwrap(self) -> Box<dyn Layout> {
-        self.0
-    }
+            (id, Rect { x, y, w, h })
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -436,7 +488,7 @@ mod tests {
     fn message_handling() {
         let mut l = MainAndStack::side(1, 0.6, 0.1);
 
-        l._handle_message(&IncMain(2).as_message());
+        l.handle_message(&IncMain(2).as_message());
 
         assert_eq!(l.max_main, 3);
     }

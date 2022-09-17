@@ -19,44 +19,6 @@ pub trait AsMessage: Any {
     }
 }
 
-/// A convenience macro for writing message handling functions for [Layout] impls.
-// handle_message! {
-//     message: m;
-//     ExpandMain => {
-//         self.ratio += self.ratio_step;
-//         if self.ratio > 1.0 {
-//             self.ratio = 1.0;
-//         }
-//     },
-//     ShrinkMain => {
-//         self.ratio -= self.ratio_step;
-//         if self.ratio < 0.0 {
-//             self.ratio = 0.0;
-//         }
-//     },
-//     IncMain(n) => {
-//         if n < 0 {
-//             self.max_main = self.max_main.saturating_sub((-n) as u32);
-//         } else {
-//             self.max_main += n as u32;
-//         }
-//     }
-// }
-#[macro_export]
-macro_rules! handle_message {
-    (
-        message: $m:expr;
-        $($p:pat => $b:block),+
-    ) => {
-        $(
-            if let Some(&$p) = $m.downcast_ref() {
-                $b
-                return;
-            }
-        )+
-    }
-}
-
 macro_rules! msg {
     ($m:ident) => {
         impl $crate::core::layout::messages::AsMessage for $m {}
@@ -80,6 +42,10 @@ pub mod common {
     /// Rotate the [Layout] to a new orientation
     pub struct Rotate;
     msg!(Rotate);
+    
+    /// Unwrap a [LayoutTransformer] to return the underlying [Layout]
+    pub struct UnwrapTransformer;
+    msg!(UnwrapTransformer);
 }
 
 /// Control messages sent by Penrose itself during window manager operation. All layouts
