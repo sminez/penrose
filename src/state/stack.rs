@@ -54,9 +54,9 @@ impl Default for Position {
 /// return back a mutable reference so that they are able to be chained.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
-    up: LinkedList<T>,
+    pub(crate) up: LinkedList<T>,
     pub(crate) focus: T,
-    down: LinkedList<T>,
+    pub(crate) down: LinkedList<T>,
 }
 
 impl<T> Stack<T> {
