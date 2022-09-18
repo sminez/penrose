@@ -14,6 +14,55 @@ impl Point {
     pub fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
+
+    /// Whether or not this [Point] is on the given [Line]
+    pub fn on(&self, l: Line) -> bool {
+        let valid_x = self.x >= l.a.x && self.x <= l.b.x;
+        let valid_y = self.y >= l.a.y && self.y <= l.b.y;
+
+        valid_x && valid_y
+    }
+}
+
+impl From<(u32, u32)> for Point {
+    fn from(raw: (u32, u32)) -> Self {
+        let (x, y) = raw;
+
+        Self { x, y }
+    }
+}
+
+// A Rect converts to its top left corner
+impl From<Rect> for Point {
+    fn from(r: Rect) -> Self {
+        let Rect { x, y, .. } = r;
+
+        Self { x, y }
+    }
+}
+
+/// A directed line segment from `a` to `b`
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Line {
+    /// The start of the line
+    pub a: Point,
+    /// The end of the line
+    pub b: Point,
+}
+
+impl Line {
+    /// A horixontal line from `a` extending `length` to the right
+    pub fn horizontal(a: Point, length: u32) -> Self {
+        Self {
+            a,
+            b: Point {
+                x: a.x + length,
+                y: a.y,
+            },
+        }
+    }
+
+    // TODO: vertical. Confirm how the coordinate space looks before hooking this up...
 }
 
 /// An X window / screen position: top left corner + extent
@@ -68,7 +117,12 @@ impl Rect {
     }
 
     /// Check whether this Rect contains `p`
-    pub fn contains_point(&self, p: &Point) -> bool {
+    pub fn contains_point<P>(&self, p: P) -> bool
+    where
+        P: Into<Point>,
+    {
+        let p = p.into();
+
         (self.x..(self.x + self.w + 1)).contains(&p.x)
             && (self.y..(self.y + self.h + 1)).contains(&p.y)
     }
@@ -197,7 +251,7 @@ mod tests {
     fn contains_point(p: Point, expected: bool) {
         let r = Rect::new(10, 20, 30, 40);
 
-        assert_eq!(r.contains_point(&p), expected);
+        assert_eq!(r.contains_point(p), expected);
     }
 
     #[test_case(

@@ -9,17 +9,13 @@ use crate::{
     geometry::Rect,
     state::{Stack, Workspace},
 };
+use std::mem::swap;
 
 /// A wrapper round another [Layout] that is able to intercept and modify both the positions being
 /// returned by the inner layout and messages being sent to it.
 pub trait LayoutTransformer: Sized + 'static {
     /// The same as [Layout::name] but for [LayoutTransformer] itself.
     fn transformed_name(&self) -> String;
-
-    /// Optionally modify any of the positions returned by the inner [Layout] before they are
-    /// applied by the window manager. The dimensions of the screen being layed out are avaiable
-    /// as `r`.
-    fn transform_positions(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)>;
 
     /// Provide a mutable reference to the [Layout] wrapped by this transformer.
     fn inner_mut(&mut self) -> &mut dyn Layout;
@@ -30,13 +26,18 @@ pub trait LayoutTransformer: Sized + 'static {
     /// Remove the inner [Layout] from this [LayoutTransformer].
     fn unwrap(self) -> Box<dyn Layout>;
 
+    /// Optionally modify any of the positions returned by the inner [Layout] before they are
+    /// applied by the window manager. The dimensions of the screen being layed out are avaiable
+    /// as `r`.
+    fn transform_positions(&mut self, r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)>;
+
     /// Apply the [LayoutTransformer] to its wrapped inner [Layout].
     fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>)
     where
         F: FnOnce(&mut dyn Layout) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
         let (new, positions) = (f)(self.inner_mut());
-        let transformed = Self::transform_positions(r, positions);
+        let transformed = self.transform_positions(r, positions);
 
         if let Some(l) = new {
             self.swap_inner(l);
@@ -160,6 +161,7 @@ macro_rules! simple_transformer {
             }
 
             fn transform_positions(
+                &mut self,
                 r: $crate::geometry::Rect,
                 positions: Vec<($crate::core::Xid, $crate::geometry::Rect)>,
             ) -> Vec<($crate::core::Xid, $crate::geometry::Rect)> {
@@ -203,4 +205,44 @@ fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
             (id, Rect { x, y, w, h })
         })
         .collect()
+}
+
+pub struct Gaps {
+    pub layout: Box<dyn Layout>,
+    pub gpx: u32,
+}
+
+impl LayoutTransformer for Gaps {
+    fn transformed_name(&self) -> String {
+        self.layout.name()
+    }
+
+    fn inner_mut(&mut self) -> &mut dyn Layout {
+        &mut *self.layout
+    }
+
+    fn swap_inner(&mut self, mut new: Box<dyn Layout>) -> Box<dyn Layout> {
+        swap(&mut self.layout, &mut new);
+        new
+    }
+
+    fn unwrap(self) -> Box<dyn Layout> {
+        self.layout
+    }
+
+    // TODO: handle outer gaps so that all gaps are equal (requires finishing off and testing Line
+    //       and related logic in geometry.rs)
+    fn transform_positions(&mut self, _s: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+        positions
+            .into_iter()
+            .map(|(id, mut r)| {
+                r.x += self.gpx;
+                r.y += self.gpx;
+                r.w -= 2 * self.gpx;
+                r.h -= 2 * self.gpx;
+
+                (id, r)
+            })
+            .collect()
+    }
 }
