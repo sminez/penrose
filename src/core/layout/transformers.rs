@@ -207,6 +207,7 @@ fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
         .collect()
 }
 
+/// Simple gaps around the window placement of the enclosed [Layout]
 pub struct Gaps {
     pub layout: Box<dyn Layout>,
     pub gpx: u32,
