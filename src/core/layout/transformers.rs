@@ -18,10 +18,14 @@ pub trait LayoutTransformer: Sized + 'static {
     fn transformed_name(&self) -> String;
 
     /// Provide a mutable reference to the [Layout] wrapped by this transformer.
-    fn inner_mut(&mut self) -> &mut dyn Layout;
+    fn inner_mut(&mut self) -> &mut Box<dyn Layout>;
 
     /// Replace the currently wrapped [Layout] with a new one.
-    fn swap_inner(&mut self, new: Box<dyn Layout>) -> Box<dyn Layout>;
+    fn swap_inner(&mut self, mut new: Box<dyn Layout>) -> Box<dyn Layout> {
+        swap(self.inner_mut(), &mut new);
+
+        new
+    }
 
     /// Remove the inner [Layout] from this [LayoutTransformer].
     fn unwrap(self) -> Box<dyn Layout>;
@@ -34,7 +38,7 @@ pub trait LayoutTransformer: Sized + 'static {
     /// Apply the [LayoutTransformer] to its wrapped inner [Layout].
     fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>)
     where
-        F: FnOnce(&mut dyn Layout) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
+        F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
         let (new, positions) = (f)(self.inner_mut());
         let transformed = self.transform_positions(r, positions);
@@ -144,16 +148,8 @@ macro_rules! simple_transformer {
                 format!("{}<{}>", stringify!($name), self.0.name())
             }
 
-            fn inner_mut(&mut self) -> &mut dyn $crate::core::layout::Layout {
-                &mut *self.0
-            }
-
-            fn swap_inner(
-                &mut self,
-                mut new: Box<dyn $crate::core::layout::Layout>,
-            ) -> Box<dyn $crate::core::layout::Layout> {
-                std::mem::swap(&mut self.0, &mut new);
-                new
+            fn inner_mut(&mut self) -> &mut Box<dyn $crate::core::layout::Layout> {
+                &mut self.0
             }
 
             fn unwrap(self) -> Box<dyn $crate::core::layout::Layout> {
@@ -218,13 +214,8 @@ impl LayoutTransformer for Gaps {
         self.layout.name()
     }
 
-    fn inner_mut(&mut self) -> &mut dyn Layout {
-        &mut *self.layout
-    }
-
-    fn swap_inner(&mut self, mut new: Box<dyn Layout>) -> Box<dyn Layout> {
-        swap(&mut self.layout, &mut new);
-        new
+    fn inner_mut(&mut self) -> &mut Box<dyn Layout> {
+        &mut self.layout
     }
 
     fn unwrap(self) -> Box<dyn Layout> {
