@@ -30,17 +30,30 @@ pub trait LayoutTransformer: Sized + 'static {
     /// Remove the inner [Layout] from this [LayoutTransformer].
     fn unwrap(self) -> Box<dyn Layout>;
 
+    /// Modify the initial [Rect] that will be passed to the inner [Layout].
+    ///
+    /// The default implementation of this method leaves the initial Rect unchanged.
+    fn transform_initial(&self, r: Rect) -> Rect {
+        r
+    }
+
     /// Optionally modify any of the positions returned by the inner [Layout] before they are
     /// applied by the window manager. The dimensions of the screen being layed out are avaiable
     /// as `r`.
-    fn transform_positions(&mut self, r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)>;
+    ///
+    /// The default implementation of this method leaves the positions returned by the inner layout
+    /// unchanged.
+    fn transform_positions(&mut self, _r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+        positions
+    }
 
     /// Apply the [LayoutTransformer] to its wrapped inner [Layout].
     fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>)
     where
-        F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
+        F: FnOnce(Rect, &mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
-        let (new, positions) = (f)(self.inner_mut());
+        let r = self.transform_initial(r);
+        let (new, positions) = (f)(r.clone(), self.inner_mut());
         let transformed = self.transform_positions(r, positions);
 
         if let Some(l) = new {
@@ -55,10 +68,6 @@ pub trait LayoutTransformer: Sized + 'static {
     /// The default implementation of this method will return `Some(inner_layout)` if it
     /// receives an [UnwrapTransformer] [Message] using the `unwrap` method of this trait.
     fn passthrough_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
-        if let Some(&UnwrapTransformer) = m.downcast_ref() {
-            return Some(self.swap_inner(Box::new(NullLayout)));
-        }
-
         if let Some(new) = self.inner_mut().handle_message(m) {
             self.swap_inner(new);
         }
@@ -80,18 +89,23 @@ where
         w: &Workspace<Xid>,
         r: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|inner| inner.layout_workspace(w, r.clone()), r)
+        self.run_transform(|r, inner| inner.layout_workspace(w, r.clone()), r)
     }
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|inner| inner.layout(s, r.clone()), r)
+        self.run_transform(|r, inner| inner.layout(s, r.clone()), r)
     }
 
     fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|inner| inner.layout_empty(r.clone()), r)
+        self.run_transform(|r, inner| inner.layout_empty(r.clone()), r)
     }
 
     fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        // TODO: find a nicer way to do this
+        if let Some(&UnwrapTransformer) = m.downcast_ref() {
+            return Some(self.swap_inner(Box::new(NullLayout)));
+        }
+
         self.passthrough_message(m)
     }
 }
@@ -203,10 +217,24 @@ fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
         .collect()
 }
 
-/// Simple gaps around the window placement of the enclosed [Layout]
+/// Simple gaps around the window placement of the enclosed [Layout].
+///
+/// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`
+/// controls the gap around each individual window. Set both equal to one another to have
+/// a consistant gap size in all places.
 pub struct Gaps {
     pub layout: Box<dyn Layout>,
-    pub gpx: u32,
+    pub outer_px: u32,
+    pub inner_px: u32,
+}
+
+fn shrink(r: Rect, px: u32) -> Rect {
+    Rect {
+        x: r.x + px,
+        y: r.y + px,
+        w: r.w - 2 * px,
+        h: r.h - 2 * px,
+    }
 }
 
 impl LayoutTransformer for Gaps {
@@ -222,19 +250,14 @@ impl LayoutTransformer for Gaps {
         self.layout
     }
 
-    // TODO: handle outer gaps so that all gaps are equal (requires finishing off and testing Line
-    //       and related logic in geometry.rs)
-    fn transform_positions(&mut self, _s: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+    fn transform_initial(&self, r: Rect) -> Rect {
+        shrink(r, self.outer_px)
+    }
+
+    fn transform_positions(&mut self, _: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
         positions
             .into_iter()
-            .map(|(id, mut r)| {
-                r.x += self.gpx;
-                r.y += self.gpx;
-                r.w -= 2 * self.gpx;
-                r.h -= 2 * self.gpx;
-
-                (id, r)
-            })
+            .map(|(id, r)| (id, shrink(r, self.inner_px)))
             .collect()
     }
 }
