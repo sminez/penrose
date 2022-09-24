@@ -21,7 +21,7 @@ pub trait AsMessage: Any {
 
 macro_rules! msg {
     ($m:ident) => {
-        impl $crate::core::layout::messages::AsMessage for $m {}
+        impl $crate::layout::messages::AsMessage for $m {}
     };
 }
 
@@ -42,7 +42,7 @@ pub mod common {
     /// Rotate the [Layout] to a new orientation
     pub struct Rotate;
     msg!(Rotate);
-    
+
     /// Unwrap a [LayoutTransformer] to return the underlying [Layout]
     pub struct UnwrapTransformer;
     msg!(UnwrapTransformer);

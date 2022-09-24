@@ -1,12 +1,10 @@
 use crate::{
-    core::{
-        layout::{
-            messages::{common::UnwrapTransformer, Message},
-            Layout,
-        },
-        Xid,
-    },
+    core::Xid,
     geometry::Rect,
+    layout::{
+        messages::{common::UnwrapTransformer, Message},
+        Layout,
+    },
     stack_set::{Stack, Workspace},
 };
 use std::mem::swap;
@@ -157,16 +155,16 @@ impl Layout for NullLayout {
 #[macro_export]
 macro_rules! simple_transformer {
     ($t:ident, $f:ident) => {
-        impl $crate::core::layout::LayoutTransformer for $t {
+        impl $crate::layout::LayoutTransformer for $t {
             fn transformed_name(&self) -> String {
                 format!("{}<{}>", stringify!($name), self.0.name())
             }
 
-            fn inner_mut(&mut self) -> &mut Box<dyn $crate::core::layout::Layout> {
+            fn inner_mut(&mut self) -> &mut Box<dyn $crate::layout::Layout> {
                 &mut self.0
             }
 
-            fn unwrap(self) -> Box<dyn $crate::core::layout::Layout> {
+            fn unwrap(self) -> Box<dyn $crate::layout::Layout> {
                 self.0
             }
 
