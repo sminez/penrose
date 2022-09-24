@@ -13,24 +13,30 @@ use std::{
 
 /// An X11 ID for a given resource
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
-pub struct Xid(u64);
+pub struct Xid(pub(crate) u32);
+
+impl std::fmt::Display for Xid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl Deref for Xid {
-    type Target = u64;
+    type Target = u32;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<u64> for Xid {
-    fn from(id: u64) -> Self {
+impl From<u32> for Xid {
+    fn from(id: u32) -> Self {
         Self(id)
     }
 }
 
 /// The pure client state information for the window manager
-pub type ClientSet = StackSet<Xid, u8>;
+pub type ClientSet = StackSet<Xid>;
 
 /// The pure client state information for a single [Workspace]
 pub type ClientSpace = Workspace<Xid>;

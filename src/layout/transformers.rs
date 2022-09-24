@@ -143,7 +143,7 @@ impl Layout for NullLayout {
 ///
 /// # Example
 /// ```no_run
-/// # use penrose::{core::{layout::Layout, Xid}, geometry::Rect, simple_transformer};
+/// # use penrose::{layout::Layout, Xid, geometry::Rect, simple_transformer};
 /// pub struct MyTransformer(Box<dyn Layout>);
 ///
 /// fn my_transformation_function(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {

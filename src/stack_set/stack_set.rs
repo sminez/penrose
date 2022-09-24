@@ -38,17 +38,17 @@ macro_rules! pop_where {
 // TODO: Should current & visible be wrapped up as another Stack?
 /// The side-effect free internal state representation of the window manager.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StackSet<C, D>
+pub struct StackSet<C>
 where
     C: Clone + PartialEq + Eq + Hash,
 {
-    current: Screen<C, D>,             // Currently focused workspace
-    visible: LinkedList<Screen<C, D>>, // Non-focused workspaces, visible in xinerama
-    hidden: LinkedList<Workspace<C>>,  // Workspaces not currently on any screen
-    floating: HashMap<C, Rect>,        // Floating windows
+    current: Screen<C>,               // Currently focused workspace
+    visible: LinkedList<Screen<C>>,   // Non-focused workspaces, visible in xinerama
+    hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
+    floating: HashMap<C, Rect>,       // Floating windows
 }
 
-impl<C, D> StackSet<C, D>
+impl<C> StackSet<C>
 where
     C: Clone + PartialEq + Eq + Hash,
 {
@@ -61,19 +61,22 @@ where
     where
         T: Into<String>,
         I: IntoIterator<Item = T>,
-        J: IntoIterator<Item = D>,
+        J: IntoIterator<Item = Rect>,
     {
         let workspaces: Vec<Workspace<C>> = ws_tags
             .into_iter()
             .map(|tag| Workspace::new(tag, layout.clone(), None))
             .collect();
 
-        let screen_details: Vec<D> = screen_details.into_iter().collect();
+        let screen_details: Vec<Rect> = screen_details.into_iter().collect();
 
         Self::try_new_concrete(workspaces, screen_details)
     }
 
-    fn try_new_concrete(mut workspaces: Vec<Workspace<C>>, screen_details: Vec<D>) -> Result<Self> {
+    fn try_new_concrete(
+        mut workspaces: Vec<Workspace<C>>,
+        screen_details: Vec<Rect>,
+    ) -> Result<Self> {
         // TODO: Enforce unique
 
         match (workspaces.len(), screen_details.len()) {
@@ -89,7 +92,7 @@ where
             .into_iter()
             .collect();
 
-        let mut visible: LinkedList<Screen<C, D>> = workspaces
+        let mut visible: LinkedList<Screen<C>> = workspaces
             .into_iter()
             .zip(screen_details)
             .enumerate()
@@ -122,7 +125,7 @@ where
         }
 
         // If the tag is visible on another screen, focus moves to that screen
-        if let Some(mut s) = pop_where!(self, visible, |s: &Screen<C, D>| s.workspace.tag == tag) {
+        if let Some(mut s) = pop_where!(self, visible, |s: &Screen<C>| s.workspace.tag == tag) {
             swap(&mut s, &mut self.current);
             self.visible.push_back(s);
             return;
@@ -337,12 +340,12 @@ where
     }
 
     /// Iterate over each [Screen] in this [StackSet] in an arbitrary order.
-    pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C, D>> {
+    pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C>> {
         std::iter::once(&self.current).chain(self.visible.iter())
     }
 
     /// Mutably iterate over each [Screen] in this [StackSet] in an arbitrary order.
-    pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C, D>> {
+    pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C>> {
         std::iter::once(&mut self.current).chain(self.visible.iter_mut())
     }
 
@@ -378,7 +381,7 @@ macro_rules! defer_to_current_stack {
         $(#[$doc_str:meta])*
         $method:ident
     ),+) => {
-        impl<C, D> StackSet<C, D>
+        impl<C> StackSet<C>
         where
             C: Clone + PartialEq + Eq + Hash
         {
@@ -425,23 +428,20 @@ mod tests {
     use super::*;
     use simple_test_case::test_case;
 
-    pub fn test_stack_set(n_tags: usize, n: usize) -> StackSet<u8, u8> {
+    pub fn test_stack_set(n_tags: usize, n: usize) -> StackSet<u8> {
         let tags = (1..=n_tags).map(|n| n.to_string());
 
-        StackSet::try_new(Layout::default(), tags, vec![0; n]).unwrap()
+        StackSet::try_new(Layout::default(), tags, vec![Rect::default(); n]).unwrap()
     }
 
-    pub fn test_stack_set_with_stacks(
-        stacks: Vec<Option<Stack<u8>>>,
-        n: usize,
-    ) -> StackSet<u8, u8> {
+    pub fn test_stack_set_with_stacks(stacks: Vec<Option<Stack<u8>>>, n: usize) -> StackSet<u8> {
         let workspaces: Vec<Workspace<u8>> = stacks
             .into_iter()
             .enumerate()
             .map(|(i, s)| Workspace::new((i + 1).to_string(), Layout::default(), s))
             .collect();
 
-        match StackSet::try_new_concrete(workspaces, vec![0; n]) {
+        match StackSet::try_new_concrete(workspaces, vec![Rect::default(); n]) {
             Ok(s) => s,
             Err(e) => panic!("{e}"),
         }
@@ -505,7 +505,7 @@ mod tests {
         assert!(s.contains(&42))
     }
 
-    fn test_iter_stack_set() -> StackSet<u8, u8> {
+    fn test_iter_stack_set() -> StackSet<u8> {
         test_stack_set_with_stacks(
             vec![
                 Some(stack!(1)),
@@ -606,7 +606,7 @@ mod quickcheck_tests {
         }
     }
 
-    impl StackSet<u8, u8> {
+    impl StackSet<u8> {
         fn minimal_unknown_client(&self) -> u8 {
             let mut c = 0;
 
@@ -640,7 +640,7 @@ mod quickcheck_tests {
 
     // For the tests below we only care about the stack structure not the elements themselves, so
     // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
-    impl Arbitrary for StackSet<u8, u8> {
+    impl Arbitrary for StackSet<u8> {
         fn arbitrary(g: &mut Gen) -> Self {
             let n_stacks = usize::arbitrary(g) % 10;
             let mut stacks = Vec::with_capacity(n_stacks);
@@ -671,7 +671,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn insert_pushes_to_current_stack(mut s: StackSet<u8, u8>) -> bool {
+    fn insert_pushes_to_current_stack(mut s: StackSet<u8>) -> bool {
         let new_focus = s.minimal_unknown_client();
         s.insert(new_focus);
 
@@ -679,7 +679,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<u8, u8>) -> bool {
+    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<u8>) -> bool {
         let target = match s.iter_clients().max() {
             Some(target) => target.clone(),
             None => return true, // nothing to focus
@@ -696,7 +696,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_focused_to_tag(mut s: StackSet<u8, u8>) -> bool {
+    fn move_focused_to_tag(mut s: StackSet<u8>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.current_client() {
@@ -711,7 +711,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_client_to_tag(mut s: StackSet<u8, u8>) -> bool {
+    fn move_client_to_tag(mut s: StackSet<u8>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.last_visible_client() {

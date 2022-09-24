@@ -5,6 +5,7 @@ pub mod geometry;
 pub mod layout;
 pub mod stack_set;
 pub mod util;
+pub mod xconnection;
 
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
@@ -17,6 +18,9 @@ pub enum Error {
 
     #[error("Invalid Hex color code: '{hex_code}'")]
     InvalidHexColor { hex_code: String },
+
+    #[error("Invalid window hints message: {reason}")]
+    InvalidHints { reason: String },
 
     #[error(transparent)]
     Io(#[from] std::io::Error),
