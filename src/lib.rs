@@ -1,11 +1,11 @@
 //! # Penrose: a library for building your very own tiling window manager
 pub mod core;
 pub mod geometry;
-pub mod state;
+pub mod stack_set;
 
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
-pub use state::{Position, Screen, Stack, StackSet, Workspace};
+pub use stack_set::{Position, Screen, Stack, StackSet, Workspace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

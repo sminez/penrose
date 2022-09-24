@@ -2,7 +2,7 @@
 use crate::{
     core::Xid,
     geometry::Rect,
-    state::{Stack, Workspace},
+    stack_set::{Stack, Workspace},
 };
 
 pub mod messages;

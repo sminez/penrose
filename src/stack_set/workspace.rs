@@ -1,4 +1,4 @@
-use crate::state::{Layout, Stack};
+use crate::stack_set::{Layout, Stack};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Workspace<C> {

@@ -7,7 +7,7 @@ use crate::{
         Xid,
     },
     geometry::Rect,
-    state::{Stack, Workspace},
+    stack_set::{Stack, Workspace},
 };
 use std::mem::swap;
 
