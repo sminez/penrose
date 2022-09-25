@@ -5,13 +5,13 @@ use crate::{
         messages::{common::UnwrapTransformer, Message},
         Layout,
     },
-    stack_set::{Stack, Workspace},
+    stack_set::Stack,
 };
 use std::mem::swap;
 
 /// A wrapper round another [Layout] that is able to intercept and modify both the positions being
 /// returned by the inner layout and messages being sent to it.
-pub trait LayoutTransformer: Sized + 'static {
+pub trait LayoutTransformer: Clone + Sized + 'static {
     /// The same as [Layout::name] but for [LayoutTransformer] itself.
     fn transformed_name(&self) -> String;
 
@@ -82,12 +82,17 @@ where
         self.transformed_name()
     }
 
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Box::new(self.clone())
+    }
+
     fn layout_workspace(
         &mut self,
-        w: &Workspace<Xid>,
+        tag: &str,
+        stack: &Option<Stack<Xid>>,
         r: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|r, inner| inner.layout_workspace(w, r.clone()), r)
+        self.run_transform(|r, inner| inner.layout_workspace(tag, stack, r.clone()), r)
     }
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
@@ -115,9 +120,14 @@ impl Layout for NullLayout {
         panic!("Null layout")
     }
 
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        panic!("Null layout")
+    }
+
     fn layout_workspace(
         &mut self,
-        _: &Workspace<Xid>,
+        _: &str,
+        _: &Option<Stack<Xid>>,
         _: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         panic!("Null layout")
@@ -144,6 +154,7 @@ impl Layout for NullLayout {
 /// # Example
 /// ```no_run
 /// # use penrose::{layout::Layout, Xid, geometry::Rect, simple_transformer};
+/// #[derive(Clone)]
 /// pub struct MyTransformer(Box<dyn Layout>);
 ///
 /// fn my_transformation_function(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
@@ -180,6 +191,7 @@ macro_rules! simple_transformer {
 }
 
 /// Wrap an existing layout and reflect its window positions horizontally.
+#[derive(Clone)]
 pub struct ReflectHorizontal(pub Box<dyn Layout>);
 simple_transformer!(ReflectHorizontal, reflect_horizontal);
 
@@ -198,6 +210,7 @@ fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> 
 }
 
 /// Wrap an existing layout and reflect its window positions vertically.
+#[derive(Clone)]
 pub struct ReflectVertical(pub Box<dyn Layout>);
 simple_transformer!(ReflectVertical, reflect_vertical);
 
@@ -220,6 +233,7 @@ fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
 /// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`
 /// controls the gap around each individual window. Set both equal to one another to have
 /// a consistant gap size in all places.
+#[derive(Clone)]
 pub struct Gaps {
     pub layout: Box<dyn Layout>,
     pub outer_px: u32,

@@ -2,16 +2,17 @@
 use crate::{
     core::Xid,
     geometry::Rect,
-    stack_set::{Stack, Workspace},
+    layout::messages::common::{ExpandMain, IncMain, Rotate, ShrinkMain},
+    stack,
+    stack_set::Stack,
 };
+use std::{fmt, mem::swap};
 
 pub mod messages;
 pub mod transformers;
 
 pub use messages::{AsMessage, Message};
 pub use transformers::LayoutTransformer;
-
-use messages::common::{ExpandMain, IncMain, Rotate, ShrinkMain};
 
 // TODO: Do I also need versions of the layout methods that have access to the overall X state as well?
 //       That would allow for doing more involved layouts that were aware of things like the specific
@@ -31,6 +32,10 @@ pub trait Layout {
     /// A short display name for this Layout, appropriate for rendering in a status bar as an indicator
     /// of which layout is currently being used.
     fn name(&self) -> String;
+
+    /// Provide a clone of this [Layout] wrapped as a trait object. (Trait objects can not require
+    /// Clone directly)
+    fn boxed_clone(&self) -> Box<dyn Layout>;
 
     /// Generate screen positions for clients on a given [Workspace].
     ///
@@ -53,10 +58,11 @@ pub trait Layout {
     /// positions have been applied.
     fn layout_workspace(
         &mut self,
-        w: &Workspace<Xid>,
+        _tag: &str,
+        stack: &Option<Stack<Xid>>,
         r: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        match &w.stack {
+        match stack {
             Some(s) => self.layout(s, r),
             None => self.layout_empty(r),
         }
@@ -80,14 +86,34 @@ pub trait Layout {
     fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>>;
 }
 
+impl Clone for Box<dyn Layout> {
+    fn clone(&self) -> Self {
+        self.boxed_clone()
+    }
+}
+
+impl fmt::Debug for Box<dyn Layout> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Layout")
+            .field("name", &self.name())
+            .finish()
+    }
+}
+
 /// A stack of [Layout] options for use on a particular [Workspace].
 ///
 /// The [Stack] itself acts as a [Layout], deferring all operations to the
 /// currently focused Layout.
 pub type LayoutStack = Stack<Box<dyn Layout>>;
 
+impl Default for LayoutStack {
+    fn default() -> Self {
+        stack!(Box::new(MainAndStack::default()))
+    }
+}
+
 impl LayoutStack {
-    fn run_and_replace<F>(&mut self, f: F) -> Vec<(Xid, Rect)>
+    pub fn run_and_replace<F>(&mut self, f: F) -> Vec<(Xid, Rect)>
     where
         F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
@@ -102,14 +128,17 @@ impl LayoutStack {
 
     /// Send the given [Message] to every [Layout] in this stack rather that just the
     /// currently focused one.
-    pub fn broadcast_message(self, m: &Message) -> Self {
-        self.map(|mut l| {
-            if let Some(new) = l.handle_message(m) {
-                new
-            } else {
-                l
+    pub fn broadcast_message<M>(&mut self, m: M)
+    where
+        M: AsMessage,
+    {
+        let m = m.as_message();
+
+        for l in self.iter_mut() {
+            if let Some(mut new) = l.handle_message(&m) {
+                swap(l, &mut new);
             }
-        })
+        }
     }
 }
 
@@ -118,12 +147,20 @@ impl Layout for LayoutStack {
         self.focus.name()
     }
 
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Box::new(self.clone())
+    }
+
     fn layout_workspace(
         &mut self,
-        w: &Workspace<Xid>,
+        tag: &str,
+        stack: &Option<Stack<Xid>>,
         r: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        (None, self.run_and_replace(|l| l.layout_workspace(w, r)))
+        (
+            None,
+            self.run_and_replace(|l| l.layout_workspace(tag, stack, r)),
+        )
     }
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
@@ -247,6 +284,10 @@ impl Layout for MainAndStack {
             StackPosition::Side => "SideStack".to_owned(),
             StackPosition::Bottom => "BottomStack".to_owned(),
         }
+    }
+
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Box::new(self.clone())
     }
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {

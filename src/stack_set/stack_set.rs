@@ -1,7 +1,8 @@
 use crate::{
     geometry::Rect,
+    layout::LayoutStack,
     stack,
-    stack_set::{Layout, Position, Screen, Stack, Workspace},
+    stack_set::{Position, Screen, Stack, Workspace},
     Error, Result,
 };
 use std::{
@@ -37,15 +38,15 @@ macro_rules! pop_where {
 
 // TODO: Should current & visible be wrapped up as another Stack?
 /// The side-effect free internal state representation of the window manager.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct StackSet<C>
 where
     C: Clone + PartialEq + Eq + Hash,
 {
-    current: Screen<C>,               // Currently focused workspace
-    visible: LinkedList<Screen<C>>,   // Non-focused workspaces, visible in xinerama
-    hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
-    floating: HashMap<C, Rect>,       // Floating windows
+    pub(crate) current: Screen<C>, // Currently focused workspace
+    pub(crate) visible: LinkedList<Screen<C>>, // Non-focused workspaces, visible in xinerama
+    pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
+    pub(crate) floating: HashMap<C, Rect>, // Floating windows
 }
 
 impl<C> StackSet<C>
@@ -57,7 +58,7 @@ where
     /// # Errors
     /// This method will error if there are not enough workspaces to cover the
     /// attached screens or if no screens are attached.
-    pub fn try_new<I, J, T>(layout: Layout, ws_tags: I, screen_details: J) -> Result<Self>
+    pub fn try_new<I, J, T>(layouts: LayoutStack, ws_tags: I, screen_details: J) -> Result<Self>
     where
         T: Into<String>,
         I: IntoIterator<Item = T>,
@@ -65,7 +66,7 @@ where
     {
         let workspaces: Vec<Workspace<C>> = ws_tags
             .into_iter()
-            .map(|tag| Workspace::new(tag, layout.clone(), None))
+            .map(|tag| Workspace::new(tag, layouts.clone(), None))
             .collect();
 
         let screen_details: Vec<Rect> = screen_details.into_iter().collect();
@@ -96,10 +97,10 @@ where
             .into_iter()
             .zip(screen_details)
             .enumerate()
-            .map(|(index, (workspace, screen_detail))| Screen {
+            .map(|(index, (workspace, r))| Screen {
                 workspace,
                 index,
-                screen_detail,
+                r,
             })
             .collect();
 
@@ -197,7 +198,7 @@ where
         Ok(())
     }
 
-    fn float_unchecked(&mut self, client: C, r: Rect) {
+    pub(crate) fn float_unchecked(&mut self, client: C, r: Rect) {
         self.floating.insert(client, r);
     }
 
@@ -356,6 +357,21 @@ where
             .chain(self.hidden.iter())
     }
 
+    /// Iterate over the currently visible [Workspace] in this [StackSet] in an arbitrary order.
+    pub fn iter_visible_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+        std::iter::once(&self.current.workspace).chain(self.visible.iter().map(|s| &s.workspace))
+    }
+
+    /// Iterate over the currently hidden [Workspace] in this [StackSet] in an arbitrary order.
+    pub fn iter_hidden_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+        self.hidden.iter()
+    }
+
+    /// Iterate over the currently hidden [Workspace] in this [StackSet] in an arbitrary order.
+    pub fn iter_hidden_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
+        self.hidden.iter_mut()
+    }
+
     /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
     pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
         std::iter::once(&mut self.current.workspace)
@@ -366,6 +382,18 @@ where
     /// Iterate over each client in this [StackSet] in an arbitrary order.
     pub fn iter_clients(&self) -> impl Iterator<Item = &C> {
         self.iter_workspaces()
+            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+    }
+
+    /// Iterate over the currently visible clients in this [StackSet] in an arbitrary order.
+    pub fn iter_visible_clients(&self) -> impl Iterator<Item = &C> {
+        self.iter_visible_workspaces()
+            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+    }
+
+    /// Iterate over the currently hidden clients in this [StackSet] in an arbitrary order.
+    pub fn iter_hidden_clients(&self) -> impl Iterator<Item = &C> {
+        self.iter_hidden_workspaces()
             .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
     }
 
@@ -431,14 +459,14 @@ mod tests {
     pub fn test_stack_set(n_tags: usize, n: usize) -> StackSet<u8> {
         let tags = (1..=n_tags).map(|n| n.to_string());
 
-        StackSet::try_new(Layout::default(), tags, vec![Rect::default(); n]).unwrap()
+        StackSet::try_new(LayoutStack::default(), tags, vec![Rect::default(); n]).unwrap()
     }
 
     pub fn test_stack_set_with_stacks(stacks: Vec<Option<Stack<u8>>>, n: usize) -> StackSet<u8> {
         let workspaces: Vec<Workspace<u8>> = stacks
             .into_iter()
             .enumerate()
-            .map(|(i, s)| Workspace::new((i + 1).to_string(), Layout::default(), s))
+            .map(|(i, s)| Workspace::new((i + 1).to_string(), LayoutStack::default(), s))
             .collect();
 
         match StackSet::try_new_concrete(workspaces, vec![Rect::default(); n]) {

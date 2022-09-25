@@ -442,6 +442,17 @@ impl<T> Stack<T> {
     }
 }
 
+impl<T: Clone> Stack<T> {
+    pub fn from_filtered<F>(&self, f: F) -> Option<Self>
+    where
+        F: Fn(&T) -> bool,
+    {
+        let new = self.clone();
+
+        new.filter(f)
+    }
+}
+
 // Iteration
 
 #[derive(Debug)]

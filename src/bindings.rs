@@ -14,16 +14,16 @@ use strum::EnumIter;
 pub type CodeMap = HashMap<String, u8>;
 
 /// Some action to be run by a user key binding
-pub type KeyEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>) -> Result<()>>;
+pub type KeyEventHandler = Box<dyn FnMut(&mut WindowManager) -> Result<()>>;
 
 /// An action to be run in response to a mouse event
-pub type MouseEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>, &MouseEvent) -> Result<()>>;
+pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent) -> Result<()>>;
 
 /// User defined key bindings
-pub type KeyBindings<X> = HashMap<KeyCode, KeyEventHandler<X>>;
+pub type KeyBindings = HashMap<KeyCode, KeyEventHandler>;
 
 /// User defined mouse bindings
-pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;
+pub type MouseBindings = HashMap<(MouseEventKind, MouseState), MouseEventHandler>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]
