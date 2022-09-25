@@ -94,6 +94,57 @@ impl ClientSnapshot {
     }
 }
 
+pub(crate) struct ClientDiff {
+    pub(crate) old_focus: Option<Xid>,
+    pub(crate) new_focus: Xid,
+    pub(crate) new: Vec<Xid>,
+    pub(crate) hidden: Vec<Xid>,
+    pub(crate) visible: Vec<Xid>,
+    pub(crate) withdrawn: Vec<Xid>,
+    pub(crate) previous_visible_tags: HashSet<String>,
+}
+
+impl ClientDiff {
+    pub(crate) fn from_raw(
+        ss: ClientSnapshot,
+        root: Xid,
+        cs: &ClientSet,
+        positions: &[(Xid, Rect)],
+    ) -> Self {
+        let new: Vec<Xid> = cs
+            .iter_clients()
+            .filter(|&&c| !ss.all_clients().any(|&cc| cc == c))
+            .cloned()
+            .collect();
+
+        let visible: Vec<Xid> = positions.iter().map(|&(client, _)| client).collect();
+
+        let hidden = ss
+            .visible_clients
+            .iter()
+            .chain(new.iter())
+            .filter(|&c| !visible.contains(c))
+            .copied()
+            .collect();
+
+        let withdrawn = ss
+            .all_clients()
+            .filter(|&&c| cs.iter_clients().any(|&cc| cc == c))
+            .copied()
+            .collect();
+
+        Self {
+            old_focus: ss.focus,
+            new_focus: cs.current_client().copied().unwrap_or(root),
+            new,
+            hidden,
+            visible,
+            withdrawn,
+            previous_visible_tags: ss.visible_tags,
+        }
+    }
+}
+
 /// The pure client state information for a single [Workspace]
 pub type ClientSpace = Workspace<Xid>;
 

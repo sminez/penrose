@@ -1,5 +1,5 @@
 use crate::{
-    core::{ClientSet, Config, State},
+    core::{ClientDiff, ClientSet, Config, State},
     geometry::Rect,
     layout::messages::control::Hide,
     x::{
@@ -108,7 +108,7 @@ pub trait XConnExt: XConn {
     }
 
     /// Apply a pure function that modifies a [ClientSet] and then handle refreshing the
-    /// [WindowManager] state and associated X11 calls.
+    /// Window Manager state and associated X11 calls.
     fn modify_and_refresh<F>(&self, state: &mut State, mut f: F)
     where
         F: FnMut(&mut ClientSet) -> (),
@@ -124,52 +124,37 @@ pub trait XConnExt: XConn {
 
         f(client_set); // NOTE: mutating the existing state
 
-        let new_clients: Vec<Xid> = client_set
-            .iter_clients()
-            .filter(|&&c| !ss.all_clients().any(|&cc| cc == c))
-            .cloned()
-            .collect();
+        let positions = client_set.visible_client_positions();
+        let diff = ClientDiff::from_raw(ss, *root, &client_set, &positions);
 
-        for c in new_clients.iter() {
-            self.set_initial_properties(*c, &config);
-        }
+        diff.new
+            .into_iter()
+            .for_each(|c| self.set_initial_properties(c, &config));
 
-        if let Some(focused) = ss.focus {
+        if let Some(focused) = diff.old_focus {
             self.set_client_border_color(focused, config.normal_border);
         }
 
-        for ws in client_set.iter_hidden_workspaces_mut() {
-            if ss.visible_tags.contains(&ws.tag) {
-                ws.broadcast_message(Hide);
-            }
-        }
+        client_set
+            .iter_hidden_workspaces_mut()
+            .filter(|w| diff.previous_visible_tags.contains(&w.tag))
+            .for_each(|ws| ws.broadcast_message(Hide));
 
-        let positions = client_set.visible_client_positions();
         self.position_clients(&positions);
 
-        if let Some(&focused) = client_set.current_client() {
-            self.set_client_border_color(focused, config.focused_border);
+        if diff.new_focus != *root {
+            self.set_client_border_color(diff.new_focus, config.focused_border);
         }
 
-        let now_visible: Vec<Xid> = positions.into_iter().map(|(client, _)| client).collect();
-        for &client in now_visible.iter() {
-            self.reveal(client);
-        }
+        diff.visible.into_iter().for_each(|c| self.reveal(c));
 
-        // set x focus to the current focused client
-        self.focus(client_set.current_client().copied().unwrap_or(*root));
+        self.focus(diff.new_focus);
 
-        // hide clients that were not given a position
-        ss.visible_clients
-            .iter()
-            .chain(new_clients.iter())
-            .filter(|&c| !now_visible.contains(c))
-            .for_each(|&c| self.hide(c));
+        diff.hidden.into_iter().for_each(|c| self.hide(c));
 
-        // mark clients that are no longer in the stackset as withdrawn
-        ss.all_clients()
-            .filter(|&&c| client_set.iter_clients().any(|&cc| cc == c))
-            .for_each(|&c| self.set_wm_state(c, WmState::Withdrawn));
+        diff.withdrawn
+            .into_iter()
+            .for_each(|c| self.set_wm_state(c, WmState::Withdrawn));
 
         // TODO:
         // clear enterWindow events from the event queue if this was because of mouse focus (?)
