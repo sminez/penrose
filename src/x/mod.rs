@@ -1,7 +1,8 @@
 use crate::{
-    core::{ClientDiff, ClientSet, Config, State},
+    core::{ClientSet, Config, State},
     geometry::Rect,
     layout::messages::control::Hide,
+    stack_set::Diff,
     x::{
         atom::{Atom, AUTO_FLOAT_WINDOW_TYPES},
         property::{Prop, WmState},
@@ -125,7 +126,7 @@ pub trait XConnExt: XConn {
         f(client_set); // NOTE: mutating the existing state
 
         let positions = client_set.visible_client_positions();
-        let diff = ClientDiff::from_raw(ss, *root, &client_set, &positions);
+        let diff = Diff::from_raw(ss, &client_set, *root, &positions);
 
         diff.new
             .into_iter()

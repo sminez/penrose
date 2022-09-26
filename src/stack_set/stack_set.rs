@@ -6,7 +6,7 @@ use crate::{
     Error, Result,
 };
 use std::{
-    collections::{HashMap, LinkedList},
+    collections::{HashMap, HashSet, LinkedList},
     hash::Hash,
     mem::{swap, take},
 };
@@ -404,6 +404,23 @@ where
     }
 }
 
+impl<C> StackSet<C>
+where
+    C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    pub(crate) fn snapshot(&self) -> Snapshot<C> {
+        Snapshot {
+            focus: self.current_client().copied(),
+            visible_clients: self.iter_visible_clients().cloned().collect(),
+            hidden_clients: self.iter_hidden_clients().cloned().collect(),
+            visible_tags: self
+                .iter_visible_workspaces()
+                .map(|w| w.tag.clone())
+                .collect(),
+        }
+    }
+}
+
 macro_rules! defer_to_current_stack {
     ($(
         $(#[$doc_str:meta])*
@@ -450,6 +467,91 @@ defer_to_current_stack!(
     /// This is a no-op if the current stack is empty.
     rotate_down
 );
+
+pub(crate) struct Snapshot<C>
+where
+    C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    pub(crate) focus: Option<C>,
+    pub(crate) visible_clients: HashSet<C>,
+    pub(crate) hidden_clients: HashSet<C>,
+    pub(crate) visible_tags: HashSet<String>,
+}
+
+impl<C> Snapshot<C>
+where
+    C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    pub(crate) fn all_clients(&self) -> impl Iterator<Item = &C> {
+        self.visible_clients
+            .iter()
+            .chain(self.hidden_clients.iter())
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(crate) struct Diff<C>
+where
+    C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    pub(crate) old_focus: Option<C>,
+    pub(crate) new_focus: C,
+    pub(crate) new: Vec<C>,
+    pub(crate) hidden: Vec<C>,
+    pub(crate) visible: Vec<C>,
+    pub(crate) withdrawn: Vec<C>,
+    pub(crate) previous_visible_tags: HashSet<String>,
+}
+
+impl<C> Diff<C>
+where
+    C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    pub(crate) fn from_raw(
+        ss: Snapshot<C>,
+        s: &StackSet<C>,
+        root: C,
+        positions: &[(C, Rect)],
+    ) -> Self {
+        let new: Vec<C> = s
+            .iter_clients()
+            .filter(|&&c| !ss.all_clients().any(|&cc| cc == c))
+            .cloned()
+            .collect();
+
+        let visible: Vec<C> = positions.iter().map(|&(client, _)| client).collect();
+
+        let hidden = ss
+            .visible_clients
+            .iter()
+            .chain(new.iter())
+            .filter(|&c| !visible.contains(c))
+            .copied()
+            .collect();
+
+        let withdrawn = ss
+            .all_clients()
+            .filter(|&&c| !s.iter_clients().any(|&cc| cc == c))
+            .copied()
+            .collect();
+
+        let previous_visible_tags = s
+            .iter_hidden_workspaces()
+            .map(|ws| ws.tag.clone())
+            .filter(|t| ss.visible_tags.contains(t))
+            .collect();
+
+        Self {
+            old_focus: ss.focus,
+            new_focus: s.current_client().copied().unwrap_or(root),
+            new,
+            hidden,
+            visible,
+            withdrawn,
+            previous_visible_tags,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -751,5 +853,28 @@ mod quickcheck_tests {
         s.focus_tag(&tag);
 
         s.current_client() == Some(&c)
+    }
+
+    fn is_empty_diff(diff: &Diff<u8>) -> bool {
+        (diff.old_focus.is_some() && diff.old_focus == Some(diff.new_focus))
+            && diff.new.is_empty()
+            && diff.hidden.is_empty()
+            && diff.withdrawn.is_empty()
+            && diff.previous_visible_tags.is_empty()
+    }
+
+    #[quickcheck]
+    fn diff_of_unchanged_stackset_is_empty(s: StackSet<u8>) -> bool {
+        let ss = s.snapshot();
+        let same_positions: Vec<_> = ss
+            .visible_clients
+            .iter()
+            .map(|&c| (c, Rect::default()))
+            .collect();
+        let diff = Diff::from_raw(ss, &s, 42, &same_positions);
+
+        // assert_eq!(diff, Diff::default());
+
+        is_empty_diff(&diff)
     }
 }

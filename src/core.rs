@@ -40,18 +40,6 @@ impl From<u32> for Xid {
 pub type ClientSet = StackSet<Xid>;
 
 impl ClientSet {
-    pub(crate) fn snapshot(&self) -> ClientSnapshot {
-        ClientSnapshot {
-            focus: self.current_client().copied(),
-            visible_clients: self.iter_visible_clients().cloned().collect(),
-            hidden_clients: self.iter_hidden_clients().cloned().collect(),
-            visible_tags: self
-                .iter_visible_workspaces()
-                .map(|w| w.tag.clone())
-                .collect(),
-        }
-    }
-
     /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
     /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
     /// from the layout.
@@ -76,72 +64,6 @@ impl ClientSet {
         }
 
         positions
-    }
-}
-
-pub(crate) struct ClientSnapshot {
-    pub(crate) focus: Option<Xid>,
-    pub(crate) visible_clients: HashSet<Xid>,
-    pub(crate) hidden_clients: HashSet<Xid>,
-    pub(crate) visible_tags: HashSet<String>,
-}
-
-impl ClientSnapshot {
-    pub(crate) fn all_clients(&self) -> impl Iterator<Item = &Xid> {
-        self.visible_clients
-            .iter()
-            .chain(self.hidden_clients.iter())
-    }
-}
-
-pub(crate) struct ClientDiff {
-    pub(crate) old_focus: Option<Xid>,
-    pub(crate) new_focus: Xid,
-    pub(crate) new: Vec<Xid>,
-    pub(crate) hidden: Vec<Xid>,
-    pub(crate) visible: Vec<Xid>,
-    pub(crate) withdrawn: Vec<Xid>,
-    pub(crate) previous_visible_tags: HashSet<String>,
-}
-
-impl ClientDiff {
-    pub(crate) fn from_raw(
-        ss: ClientSnapshot,
-        root: Xid,
-        cs: &ClientSet,
-        positions: &[(Xid, Rect)],
-    ) -> Self {
-        let new: Vec<Xid> = cs
-            .iter_clients()
-            .filter(|&&c| !ss.all_clients().any(|&cc| cc == c))
-            .cloned()
-            .collect();
-
-        let visible: Vec<Xid> = positions.iter().map(|&(client, _)| client).collect();
-
-        let hidden = ss
-            .visible_clients
-            .iter()
-            .chain(new.iter())
-            .filter(|&c| !visible.contains(c))
-            .copied()
-            .collect();
-
-        let withdrawn = ss
-            .all_clients()
-            .filter(|&&c| cs.iter_clients().any(|&cc| cc == c))
-            .copied()
-            .collect();
-
-        Self {
-            old_focus: ss.focus,
-            new_focus: cs.current_client().copied().unwrap_or(root),
-            new,
-            hidden,
-            visible,
-            withdrawn,
-            previous_visible_tags: ss.visible_tags,
-        }
     }
 }
 
