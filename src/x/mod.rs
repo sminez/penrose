@@ -126,7 +126,7 @@ pub trait XConnExt: XConn {
         f(client_set); // NOTE: mutating the existing state
 
         let positions = client_set.visible_client_positions();
-        let diff = Diff::from_raw(ss, &client_set, *root, &positions);
+        let diff = Diff::from_raw(ss, &client_set, &positions);
 
         diff.new
             .into_iter()
@@ -143,13 +143,14 @@ pub trait XConnExt: XConn {
 
         self.position_clients(&positions);
 
-        if diff.new_focus != *root {
-            self.set_client_border_color(diff.new_focus, config.focused_border);
+        if let Some(&focused) = client_set.current_client() {
+            self.set_client_border_color(focused, config.focused_border);
         }
 
         diff.visible.into_iter().for_each(|c| self.reveal(c));
 
-        self.focus(diff.new_focus);
+        let x_focus = client_set.current_client().copied().unwrap_or(*root);
+        self.focus(x_focus);
 
         diff.hidden.into_iter().for_each(|c| self.hide(c));
 

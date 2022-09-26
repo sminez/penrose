@@ -495,7 +495,6 @@ where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
     pub(crate) old_focus: Option<C>,
-    pub(crate) new_focus: C,
     pub(crate) new: Vec<C>,
     pub(crate) hidden: Vec<C>,
     pub(crate) visible: Vec<C>,
@@ -507,12 +506,7 @@ impl<C> Diff<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    pub(crate) fn from_raw(
-        ss: Snapshot<C>,
-        s: &StackSet<C>,
-        root: C,
-        positions: &[(C, Rect)],
-    ) -> Self {
+    pub(crate) fn from_raw(ss: Snapshot<C>, s: &StackSet<C>, positions: &[(C, Rect)]) -> Self {
         let new: Vec<C> = s
             .iter_clients()
             .filter(|&&c| !ss.all_clients().any(|&cc| cc == c))
@@ -543,7 +537,6 @@ where
 
         Self {
             old_focus: ss.focus,
-            new_focus: s.current_client().copied().unwrap_or(root),
             new,
             hidden,
             visible,
@@ -856,8 +849,7 @@ mod quickcheck_tests {
     }
 
     fn is_empty_diff(diff: &Diff<u8>) -> bool {
-        (diff.old_focus.is_some() && diff.old_focus == Some(diff.new_focus))
-            && diff.new.is_empty()
+        diff.new.is_empty()
             && diff.hidden.is_empty()
             && diff.withdrawn.is_empty()
             && diff.previous_visible_tags.is_empty()
@@ -871,10 +863,25 @@ mod quickcheck_tests {
             .iter()
             .map(|&c| (c, Rect::default()))
             .collect();
-        let diff = Diff::from_raw(ss, &s, 42, &same_positions);
+        let diff = Diff::from_raw(ss, &s, &same_positions);
 
         // assert_eq!(diff, Diff::default());
 
         is_empty_diff(&diff)
+    }
+
+    #[quickcheck]
+    fn killing_focused_client_sets_withdrawn_and_hidden(mut s: StackSet<u8>) -> bool {
+        let ss = s.snapshot();
+
+        let prev_focus = match s.current_client() {
+            Some(&c) => c,
+            None => return true, // nothing to remove
+        };
+
+        s.remove_client(&prev_focus);
+        let diff = Diff::from_raw(ss, &s, &[]);
+
+        diff.withdrawn.contains(&prev_focus) && diff.hidden.contains(&prev_focus)
     }
 }
