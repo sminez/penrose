@@ -306,6 +306,16 @@ where
         &self.current.workspace.tag
     }
 
+    /// A reference to the [Workspace] with a tag of `tag` if there is one
+    pub fn workspace(&self, tag: &str) -> Option<&Workspace<C>> {
+        self.iter_workspaces().find(|w| w.tag == tag)
+    }
+
+    /// A mutable reference to the [Workspace] with a tag of `tag` if there is one
+    pub fn workspace_mut(&mut self, tag: &str) -> Option<&mut Workspace<C>> {
+        self.iter_workspaces_mut().find(|w| w.tag == tag)
+    }
+
     /// If the current [Stack] is [None], return `default` otherwise
     /// apply the function to it to generate a value
     pub fn with<T, F>(&self, default: T, f: F) -> T
@@ -740,6 +750,10 @@ mod quickcheck_tests {
             c
         }
 
+        fn first_hidden_tag(&self) -> Option<String> {
+            self.hidden.iter().map(|w| w.tag.clone()).next()
+        }
+
         fn last_tag(&self) -> String {
             self.iter_workspaces()
                 .last()
@@ -865,13 +879,47 @@ mod quickcheck_tests {
             .collect();
         let diff = Diff::from_raw(ss, &s, &same_positions);
 
-        // assert_eq!(diff, Diff::default());
-
         is_empty_diff(&diff)
     }
 
     #[quickcheck]
-    fn killing_focused_client_sets_withdrawn_and_hidden(mut s: StackSet<u8>) -> bool {
+    fn adding_a_client_is_new_in_diff(mut s: StackSet<u8>) -> bool {
+        let ss = s.snapshot();
+        let new = s.minimal_unknown_client();
+
+        s.insert(new);
+        let diff = Diff::from_raw(ss, &s, &[]);
+
+        diff.new.contains(&new)
+    }
+
+    // NOTE: Not checking that clients on the new workspace are visible as this is driven entirely by
+    //       the positions returned by the Layout. In these tests, those are being specified manually
+    //       so there is nothing to test.
+    #[quickcheck]
+    fn focusing_new_workspace_hides_old_clients_and_tag_in_diff(mut s: StackSet<u8>) -> bool {
+        let ss = s.snapshot();
+        let tag = match s.first_hidden_tag() {
+            Some(t) => t,
+            None => return true,
+        };
+        let prev_tag = s.current_tag().to_string();
+        let clients_on_active: Vec<u8> = match s.current_stack() {
+            Some(stack) => stack.iter().cloned().collect(),
+            None => vec![],
+        };
+
+        s.focus_tag(&tag);
+        let diff = Diff::from_raw(ss, &s, &[]);
+
+        let focused_clients_now_hidden = clients_on_active.iter().all(|c| diff.hidden.contains(&c));
+        let tag_now_hidden = diff.previous_visible_tags.contains(&prev_tag);
+
+        focused_clients_now_hidden && tag_now_hidden
+    }
+
+    #[quickcheck]
+    fn killing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<u8>) -> bool {
         let ss = s.snapshot();
 
         let prev_focus = match s.current_client() {
@@ -883,5 +931,23 @@ mod quickcheck_tests {
         let diff = Diff::from_raw(ss, &s, &[]);
 
         diff.withdrawn.contains(&prev_focus) && diff.hidden.contains(&prev_focus)
+    }
+
+    #[quickcheck]
+    fn moving_client_to_hidden_workspace_sets_hidden_in_diff(mut s: StackSet<u8>) -> bool {
+        let ss = s.snapshot();
+        let tag = s.first_hidden_tag();
+
+        let client = s.current_client().cloned();
+
+        match (client, tag) {
+            (Some(client), Some(tag)) => {
+                s.move_client_to_tag(&client, &tag);
+                let diff = Diff::from_raw(ss, &s, &[]);
+                diff.hidden.contains(&client)
+            }
+
+            _ => true, // No hidden tags or no clients
+        }
     }
 }
