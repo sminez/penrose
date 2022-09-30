@@ -5,7 +5,6 @@ pub mod geometry;
 pub mod layout;
 pub mod stack_set;
 pub mod util;
-pub mod xconnection;
 pub mod x;
 
 pub use crate::core::Xid;

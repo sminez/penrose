@@ -61,6 +61,7 @@ pub enum ClientAttr {
 pub trait XConn {
     fn get_screen_details(&self) -> Vec<Rect>;
     fn get_prop(&self, client: Xid, prop_name: &str) -> Option<Prop>;
+    fn atom_id(&self, atom: &str) -> Xid;
 
     fn float_location(&self, client: Xid) -> (ScreenId, Rect);
 
