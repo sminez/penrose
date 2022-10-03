@@ -36,7 +36,7 @@ pub enum XEvent {
     /// The mouse pointer has left the current client window
     Leave(PointerChange),
     /// A client window is requesting to be positioned and rendered on the screen.
-    MapRequest(Xid, bool),
+    MapRequest(Xid),
     /// The mouse has moved or a mouse button has been pressed
     MouseEvent(MouseEvent),
     /// A client property has changed in some way
@@ -61,7 +61,7 @@ impl std::fmt::Display for XEvent {
             XEvent::Destroy(_) => write!(f, "Destroy"),
             XEvent::KeyPress(_) => write!(f, "KeyPress"),
             XEvent::Leave(_) => write!(f, "Leave"),
-            XEvent::MapRequest(_, _) => write!(f, "MapRequest"),
+            XEvent::MapRequest(_) => write!(f, "MapRequest"),
             XEvent::MouseEvent(_) => write!(f, "MouseEvent"),
             XEvent::PropertyNotify(_) => write!(f, "PropertyNotify"),
             XEvent::RandrNotify => write!(f, "RandrNotify"),

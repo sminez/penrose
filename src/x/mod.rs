@@ -9,6 +9,7 @@ use crate::{
     },
     Color, Xid,
 };
+use std::collections::{HashMap, HashSet};
 use tracing::trace;
 
 pub mod atom;
@@ -16,6 +17,7 @@ pub mod event;
 pub mod property;
 
 pub use event::XEvent;
+pub use property::WindowAttributes;
 
 pub type ScreenId = usize;
 
@@ -61,12 +63,14 @@ pub enum ClientAttr {
 pub trait XConn {
     fn get_screen_details(&self) -> Vec<Rect>;
     fn get_prop(&self, client: Xid, prop_name: &str) -> Option<Prop>;
+    fn get_window_attributes(&self, client: Xid) -> WindowAttributes;
     fn atom_id(&self, atom: &str) -> Xid;
 
     fn float_location(&self, client: Xid) -> (ScreenId, Rect);
 
-    fn hide(&self, client: Xid);
-    fn reveal(&self, client: Xid);
+    fn map_client(&self, client: Xid);
+    fn unmap_client(&self, client: Xid);
+
     fn kill(&self, client: Xid);
     fn focus(&self, client: Xid);
 
@@ -105,6 +109,42 @@ pub trait XConnExt: XConn {
         })
     }
 
+    /// Display a client on the screen by mapping it and setting its WmState to Normal
+    /// This is idempotent if the client is already visible.
+    fn reveal(&self, client: Xid, cs: &ClientSet, mapped: &mut HashSet<Xid>) {
+        self.set_wm_state(client, WmState::Normal);
+        self.map_client(client);
+        if cs.contains(&client) {
+            mapped.insert(client);
+        }
+    }
+
+    /// Hide a client by unmapping it and setting its WmState to Iconic
+    fn hide(
+        &self,
+        client: Xid,
+        mapped: &mut HashSet<Xid>,
+        pending_unmap: &mut HashMap<Xid, usize>,
+    ) {
+        if !mapped.contains(&client) {
+            return;
+        }
+
+        // TODO: double check this swap-out around structureNotifyMask
+        // io $ do selectInput d w (cMask .&. complement structureNotifyMask)
+        //         unmapWindow d w
+        //         selectInput d w cMask
+
+        self.unmap_client(client);
+        self.set_wm_state(client, WmState::Normal);
+
+        mapped.remove(&client);
+        pending_unmap
+            .entry(client)
+            .and_modify(|count| *count += 1)
+            .or_insert(1);
+    }
+
     fn refresh(&self, state: &mut State) {
         self.modify_and_refresh(state, id)
     }
@@ -115,45 +155,48 @@ pub trait XConnExt: XConn {
     where
         F: FnMut(&mut ClientSet) -> (),
     {
-        let State {
-            config,
-            root,
-            client_set,
-            ..
-        } = state;
+        let ss = state.client_set.snapshot();
 
-        let ss = client_set.snapshot();
+        f(&mut state.client_set); // NOTE: mutating the existing state
 
-        f(client_set); // NOTE: mutating the existing state
-
-        let positions = client_set.visible_client_positions();
-        let diff = Diff::from_raw(ss, &client_set, &positions);
+        let positions = state.client_set.visible_client_positions();
+        let diff = Diff::from_raw(ss, &state.client_set, &positions);
 
         diff.new
             .into_iter()
-            .for_each(|c| self.set_initial_properties(c, &config));
+            .for_each(|c| self.set_initial_properties(c, &state.config));
 
         if let Some(focused) = diff.old_focus {
-            self.set_client_border_color(focused, config.normal_border);
+            self.set_client_border_color(focused, state.config.normal_border);
         }
 
-        client_set
+        state
+            .client_set
             .iter_hidden_workspaces_mut()
             .filter(|w| diff.previous_visible_tags.contains(&w.tag))
             .for_each(|ws| ws.broadcast_message(Hide));
 
         self.position_clients(&positions);
 
-        if let Some(&focused) = client_set.current_client() {
-            self.set_client_border_color(focused, config.focused_border);
+        if let Some(&focused) = state.client_set.current_client() {
+            self.set_client_border_color(focused, state.config.focused_border);
         }
 
-        diff.visible.into_iter().for_each(|c| self.reveal(c));
+        diff.visible
+            .into_iter()
+            .for_each(|c| self.reveal(c, &state.client_set, &mut state.mapped));
 
-        let x_focus = client_set.current_client().copied().unwrap_or(*root);
-        self.focus(x_focus);
+        self.focus(
+            state
+                .client_set
+                .current_client()
+                .copied()
+                .unwrap_or(state.root),
+        );
 
-        diff.hidden.into_iter().for_each(|c| self.hide(c));
+        diff.hidden
+            .into_iter()
+            .for_each(|c| self.hide(c, &mut state.mapped, &mut state.pending_unmap));
 
         diff.withdrawn
             .into_iter()

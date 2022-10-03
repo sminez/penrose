@@ -1,6 +1,6 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{WindowManager, Xid},
+    core::{State, Xid},
     geometry::Point,
     Result,
 };
@@ -14,10 +14,10 @@ use strum::EnumIter;
 pub type CodeMap = HashMap<String, u8>;
 
 /// Some action to be run by a user key binding
-pub type KeyEventHandler = Box<dyn FnMut(&mut WindowManager) -> Result<()>>;
+pub type KeyEventHandler = Box<dyn FnMut(&mut State) -> Result<()>>;
 
 /// An action to be run in response to a mouse event
-pub type MouseEventHandler = Box<dyn FnMut(&mut WindowManager, &MouseEvent) -> Result<()>>;
+pub type MouseEventHandler = Box<dyn FnMut(&mut State, &MouseEvent) -> Result<()>>;
 
 /// User defined key bindings
 pub type KeyBindings = HashMap<KeyCode, KeyEventHandler>;
