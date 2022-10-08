@@ -89,18 +89,18 @@ pub trait XConn {
 }
 
 // Derivable methods for XConn that should never be given a different implementation
-pub trait XConnExt: XConn {
+pub trait XConnExt: XConn + Sized {
     /// Kill the focused client if there is one
-    fn kill_focused(&self, state: &mut State) {
+    fn kill_focused(&self, state: &mut State<Self>) {
         if let Some(&id) = state.client_set.current_client() {
             self.kill(id)
         }
     }
 
-    fn manage(&self, client: Xid, state: &mut State) {
+    fn manage(&self, client: Xid, state: &mut State<Self>) {
         let should_float = self.client_should_float(client, &state.config.floating_classes);
         let (_, r) = self.float_location(client);
-        let hook = state.config.manage_hook;
+        let mut hook = state.config.manage_hook.take();
 
         self.modify_and_refresh(state, |cs| {
             cs.insert(client);
@@ -109,11 +109,16 @@ pub trait XConnExt: XConn {
             }
 
             // TODO: should this be called here? Or in a second refresh?
-            hook(client, cs);
-        })
+            if let Some(ref mut h) = hook {
+                trace!("running user manage hook");
+                h.call(client, cs, &self);
+            }
+        });
+
+        state.config.manage_hook = hook;
     }
 
-    fn unmanage(&self, client: Xid, state: &mut State) {
+    fn unmanage(&self, client: Xid, state: &mut State<Self>) {
         self.modify_and_refresh(state, |cs| {
             cs.remove_client(&client);
         })
@@ -155,13 +160,13 @@ pub trait XConnExt: XConn {
             .or_insert(1);
     }
 
-    fn refresh(&self, state: &mut State) {
+    fn refresh(&self, state: &mut State<Self>) {
         self.modify_and_refresh(state, id)
     }
 
     /// Apply a pure function that modifies a [ClientSet] and then handle refreshing the
     /// Window Manager state and associated X11 calls.
-    fn modify_and_refresh<F>(&self, state: &mut State, mut f: F)
+    fn modify_and_refresh<F>(&self, state: &mut State<Self>, mut f: F)
     where
         F: FnMut(&mut ClientSet) -> (),
     {
@@ -214,7 +219,13 @@ pub trait XConnExt: XConn {
 
         // TODO:
         // clear enterWindow events from the event queue if this was because of mouse focus (?)
-        // run the user's event hook (XMonad calls this 'logHook'. Need a better name)
+
+        let mut hook = state.config.refresh_hook.take();
+        if let Some(ref mut h) = hook {
+            trace!("running user refresh hook");
+            h.call(state, self);
+        }
+        state.config.refresh_hook = hook;
     }
 
     fn client_should_float(&self, client: Xid, floating_classes: &[String]) -> bool {
@@ -245,7 +256,7 @@ pub trait XConnExt: XConn {
         self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgba_u32())]);
     }
 
-    fn set_initial_properties(&self, client: Xid, config: &Config) {
+    fn set_initial_properties(&self, client: Xid, config: &Config<Self>) {
         let Config {
             normal_border,
             border_width,
@@ -269,10 +280,10 @@ pub trait XConnExt: XConn {
         }
     }
 
-    fn set_active_client(&self, client: Xid, state: &mut State) {
+    fn set_active_client(&self, client: Xid, state: &mut State<Self>) {
         self.modify_and_refresh(state, |cs| cs.focus_client(&client))
     }
 }
 
 // Auto impl XConnExt for all XConn impls
-impl<T: ?Sized> XConnExt for T where T: XConn {}
+impl<T> XConnExt for T where T: XConn {}

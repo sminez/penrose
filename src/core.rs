@@ -5,7 +5,7 @@ use crate::{
     handle,
     layout::{Layout, LayoutStack},
     stack_set::{StackSet, Workspace},
-    x::{XConnExt, XEvent},
+    x::{XConn, XEvent},
     Color,
 };
 use std::{
@@ -75,18 +75,24 @@ pub type ClientSpace = Workspace<Xid>;
 
 /// Mutable internal state for the window manager
 #[derive(Debug)]
-pub struct State {
-    pub(crate) config: Config,
+pub struct State<X>
+where
+    X: XConn,
+{
+    pub(crate) config: Config<X>,
     pub(crate) client_set: ClientSet,
     pub(crate) root: Xid,
+    pub(crate) mapped: HashSet<Xid>,
+    pub(crate) pending_unmap: HashMap<Xid, usize>,
     // pub(crate) mouse_focused: bool,
     // pub(crate) mouse_position: Option<(Point, Point)>,
     // pub(crate) current_event: Option<XEvent>,
-    pub(crate) mapped: HashSet<Xid>,
-    pub(crate) pending_unmap: HashMap<Xid, usize>,
 }
 
-pub struct Config {
+pub struct Config<X>
+where
+    X: XConn,
+{
     pub normal_border: Color,
     pub focused_border: Color,
     pub border_width: u32,
@@ -94,12 +100,16 @@ pub struct Config {
     pub default_layouts: LayoutStack,
     pub workspace_names: Vec<String>,
     pub floating_classes: Vec<String>,
-    pub manage_hook: fn(Xid, &mut ClientSet),
-    pub event_hook: fn(XEvent, &mut State),
-    pub startup_hook: fn(&mut State),
+    pub event_hook: Option<Box<dyn EventHook<X>>>,
+    pub manage_hook: Option<Box<dyn ManageHook<X>>>,
+    pub refresh_hook: Option<Box<dyn StateHook<X>>>,
+    pub startup_hook: Option<Box<dyn StateHook<X>>>,
 }
 
-impl fmt::Debug for Config {
+impl<X> fmt::Debug for Config<X>
+where
+    X: XConn,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
             .field("normal_border", &self.normal_border)
@@ -113,7 +123,10 @@ impl fmt::Debug for Config {
     }
 }
 
-impl Default for Config {
+impl<X> Default for Config<X>
+where
+    X: XConn,
+{
     fn default() -> Self {
         let strings = |slice: &[&str]| slice.iter().map(|s| s.to_string()).collect();
 
@@ -125,31 +138,96 @@ impl Default for Config {
             default_layouts: LayoutStack::default(),
             workspace_names: strings(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
             floating_classes: strings(&["dmenu", "dunst"]),
-            manage_hook: |_, _| (),
-            event_hook: |_, _| (),
-            startup_hook: |_| (),
+            event_hook: None,
+            manage_hook: None,
+            refresh_hook: None,
+            startup_hook: None,
         }
     }
 }
 
-pub struct WindowManager {
-    pub(crate) state: State,
-    pub(crate) key_bindings: KeyBindings,
-    pub(crate) mouse_bindings: MouseBindings,
+pub trait EventHook<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool;
 }
 
-impl WindowManager {
-    pub fn handle_xevent<X>(&mut self, x: &X, event: XEvent)
-    where
-        X: XConnExt,
-    {
+impl<F, X> EventHook<X> for F
+where
+    F: FnMut(&XEvent, &mut State<X>, &X) -> bool,
+    X: XConn,
+{
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool {
+        (self)(event, state, x)
+    }
+}
+
+pub trait ManageHook<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> bool;
+}
+
+impl<F, X> ManageHook<X> for F
+where
+    F: FnMut(Xid, &mut ClientSet, &X) -> bool,
+    X: XConn,
+{
+    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> bool {
+        (self)(client, cs, x)
+    }
+}
+
+pub trait StateHook<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> bool;
+}
+
+impl<F, X> StateHook<X> for F
+where
+    F: FnMut(&mut State<X>, &X) -> bool,
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> bool {
+        (self)(state, x)
+    }
+}
+
+pub struct WindowManager<X>
+where
+    X: XConn,
+{
+    pub(crate) state: State<X>,
+    pub(crate) key_bindings: KeyBindings<X>,
+    pub(crate) mouse_bindings: MouseBindings<X>,
+}
+
+impl<X> WindowManager<X>
+where
+    X: XConn,
+{
+    pub fn handle_xevent(&mut self, x: &X, event: XEvent) {
+        use XEvent::*;
+
         let WindowManager {
             state,
             key_bindings,
             mouse_bindings,
+            ..
         } = self;
 
-        use XEvent::*;
+        let mut hook = state.config.event_hook.take();
+        if let Some(ref mut h) = hook {
+            trace!("running user event hook");
+            if !h.call(&event, state, x) {
+                return;
+            }
+        }
+        state.config.event_hook = hook;
 
         match &event {
             ClientMessage(m) => handle::client_message(m.clone(), state, x),
@@ -170,11 +248,5 @@ impl WindowManager {
             ScreenChange => handle::screen_change(state, x),
             UnmapNotify(xid) => handle::unmap_notify(*xid, state, x),
         }
-
-        trace!("running user event hook");
-
-        let hook = state.config.event_hook;
-        hook(event, state);
-        x.refresh(state);
     }
 }
