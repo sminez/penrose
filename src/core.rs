@@ -1,17 +1,17 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
-    bindings::{KeyBindings, KeyCode, MouseBindings},
+    bindings::{KeyBindings, MouseBindings},
     geometry::{Point, Rect},
+    handle,
     layout::{Layout, LayoutStack},
     stack_set::{StackSet, Workspace},
-    x::{XConn, XConnExt, XEvent},
+    x::{XConnExt, XEvent},
     Color,
 };
 use std::{
     collections::{HashMap, HashSet},
     ops::Deref,
 };
-use tracing::error;
 
 /// An X11 ID for a given resource
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -105,9 +105,9 @@ pub struct WindowManager {
 }
 
 impl WindowManager {
-    pub(crate) fn handle_xevent<X>(&mut self, x: &X, event: XEvent)
+    pub fn handle_xevent<X>(&mut self, x: &X, event: XEvent)
     where
-        X: XConn,
+        X: XConnExt,
     {
         let WindowManager {
             state,
@@ -116,76 +116,22 @@ impl WindowManager {
         } = self;
 
         match event {
-            XEvent::ClientMessage(m) => todo!(),
+            XEvent::ClientMessage(m) => handle::client_message(m, state, x),
             XEvent::ConfigureNotify(e) => todo!(),
             XEvent::ConfigureRequest(e) => todo!(),
             XEvent::Enter(p) => todo!(),
             XEvent::Expose(e) => todo!(),
             XEvent::FocusIn(id) => todo!(),
-            XEvent::Destroy(xid) => handle_destroy(xid, state, x),
-            XEvent::KeyPress(code) => handle_keypress(code, state, key_bindings),
+            XEvent::Destroy(xid) => handle::destroy(xid, state, x),
+            XEvent::KeyPress(code) => handle::keypress(code, key_bindings, state, x),
             XEvent::Leave(p) => todo!(),
-            XEvent::MapRequest(xid) => handle_map_request(xid, state, x),
+            XEvent::MapRequest(xid) => handle::map_request(xid, state, x),
             XEvent::MouseEvent(e) => todo!(),
             XEvent::PropertyNotify(e) => todo!(),
             XEvent::RandrNotify => todo!(),
             XEvent::ScreenChange => todo!(),
-            XEvent::UnmapNotify(xid) => handle_unmap_notify(xid, state, x),
+            XEvent::UnmapNotify(xid) => handle::unmap_notify(xid, state, x),
             // MappingNotify for changes to keyboard mappings
         }
-    }
-}
-
-// TODO: should this also pass through the XConn?
-pub(crate) fn handle_keypress(key: KeyCode, state: &mut State, bindings: &mut KeyBindings) {
-    if let Some(action) = bindings.get_mut(&key) {
-        if let Err(error) = action(state) {
-            error!(%error, ?key, "error running user keybinding");
-        }
-    }
-}
-
-pub(crate) fn handle_map_request<X>(client: Xid, state: &mut State, x: &X)
-where
-    X: XConn,
-{
-    let attrs = x.get_window_attributes(client);
-
-    if !state.client_set.contains(&client) && !attrs.override_redirect {
-        x.manage(client, state);
-    }
-}
-
-pub(crate) fn handle_destroy<X>(client: Xid, state: &mut State, x: &X)
-where
-    X: XConn,
-{
-    if state.client_set.contains(&client) {
-        x.unmanage(client, state);
-        state.mapped.remove(&client);
-        state.pending_unmap.remove(&client);
-    }
-
-    // TODO: broadcast to layouts in case they need to know about this client being destroyed?
-}
-
-// Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
-// FIXME: unmap notify events have a synthetic field I'm not currently checking?
-//        that should be considered here as well apparently
-pub(crate) fn handle_unmap_notify<X>(client: Xid, state: &mut State, x: &X)
-where
-    X: XConn,
-{
-    let expected = *state.pending_unmap.get(&client).unwrap_or(&0);
-
-    if expected == 0 {
-        x.unmanage(client, state);
-    } else if expected == 1 {
-        state.pending_unmap.remove(&client);
-    } else {
-        state
-            .pending_unmap
-            .entry(client)
-            .and_modify(|count| *count -= 1);
     }
 }

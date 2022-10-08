@@ -5,17 +5,19 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Workspace<C> {
+    pub(crate) id: usize,
     pub(crate) tag: String,
     pub(crate) layouts: LayoutStack,
     pub(crate) stack: Option<Stack<C>>,
 }
 
 impl<C> Workspace<C> {
-    pub fn new<T>(tag: T, layouts: LayoutStack, stack: Option<Stack<C>>) -> Self
+    pub fn new<T>(id: usize, tag: T, layouts: LayoutStack, stack: Option<Stack<C>>) -> Self
     where
         T: Into<String>,
     {
         Self {
+            id,
             tag: tag.into(),
             layouts,
             stack,
@@ -66,7 +68,7 @@ mod tests {
     #[test_case(None, None, false; "empty stack")]
     #[test]
     fn remove_returns_as_expected(stack: Option<Stack<u8>>, maybe_c: Option<u8>, is_some: bool) {
-        let mut w = Workspace::new("test", LayoutStack::default(), stack);
+        let mut w = Workspace::new(0, "test", LayoutStack::default(), stack);
 
         assert_eq!(w.remove(&5), maybe_c);
         assert_eq!(w.stack.is_some(), is_some);

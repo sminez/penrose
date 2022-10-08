@@ -64,7 +64,9 @@ pub trait XConn {
     fn get_screen_details(&self) -> Vec<Rect>;
     fn get_prop(&self, client: Xid, prop_name: &str) -> Option<Prop>;
     fn get_window_attributes(&self, client: Xid) -> WindowAttributes;
+
     fn atom_id(&self, atom: &str) -> Xid;
+    fn atom_name(&self, xid: Xid) -> Option<String>;
 
     fn float_location(&self, client: Xid) -> (ScreenId, Rect);
 
@@ -257,6 +259,10 @@ pub trait XConnExt: XConn {
         for &(c, r) in positions {
             self.set_client_config(c, &[ClientConfig::Position(r), ClientConfig::StackAbove]);
         }
+    }
+
+    fn set_active_client(&self, client: Xid, state: &mut State) {
+        self.modify_and_refresh(state, |cs| cs.focus_client(&client))
     }
 }
 

@@ -66,7 +66,8 @@ where
     {
         let workspaces: Vec<Workspace<C>> = ws_tags
             .into_iter()
-            .map(|tag| Workspace::new(tag, layouts.clone(), None))
+            .enumerate()
+            .map(|(i, tag)| Workspace::new(i, tag, layouts.clone(), None))
             .collect();
 
         let screen_details: Vec<Rect> = screen_details.into_iter().collect();
@@ -284,6 +285,13 @@ where
                     .unwrap_or(false)
             })
             .map(|w| w.tag.as_str())
+    }
+
+    /// Find the tag of the [Workspace] with the given NetWmDesktop ID.
+    pub fn tag_for_workspace_id(&self, id: usize) -> Option<String> {
+        self.iter_workspaces()
+            .find(|w| w.id == id)
+            .map(|w| w.tag.clone())
     }
 
     /// Returns `true` if the [StackSet] contains an element equal to the given value.
@@ -571,7 +579,7 @@ mod tests {
         let workspaces: Vec<Workspace<u8>> = stacks
             .into_iter()
             .enumerate()
-            .map(|(i, s)| Workspace::new((i + 1).to_string(), LayoutStack::default(), s))
+            .map(|(i, s)| Workspace::new(i, (i + 1).to_string(), LayoutStack::default(), s))
             .collect();
 
         match StackSet::try_new_concrete(workspaces, vec![Rect::default(); n]) {
