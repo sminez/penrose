@@ -35,6 +35,8 @@ pub enum XEvent {
     KeyPress(KeyCode),
     /// The mouse pointer has left the current client window
     Leave(PointerChange),
+    /// Keybindings have changed
+    MappingNotify,
     /// A client window is requesting to be positioned and rendered on the screen.
     MapRequest(Xid),
     /// The mouse has moved or a mouse button has been pressed
@@ -51,22 +53,25 @@ pub enum XEvent {
 
 impl std::fmt::Display for XEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use XEvent::*;
+
         match self {
-            XEvent::ClientMessage(_) => write!(f, "ClientMessage"),
-            XEvent::ConfigureNotify(_) => write!(f, "ConfigureNotify"),
-            XEvent::ConfigureRequest(_) => write!(f, "ConfigureRequest"),
-            XEvent::Enter(_) => write!(f, "Enter"),
-            XEvent::Expose(_) => write!(f, "Expose"),
-            XEvent::FocusIn(_) => write!(f, "FocusIn"),
-            XEvent::Destroy(_) => write!(f, "Destroy"),
-            XEvent::KeyPress(_) => write!(f, "KeyPress"),
-            XEvent::Leave(_) => write!(f, "Leave"),
-            XEvent::MapRequest(_) => write!(f, "MapRequest"),
-            XEvent::MouseEvent(_) => write!(f, "MouseEvent"),
-            XEvent::PropertyNotify(_) => write!(f, "PropertyNotify"),
-            XEvent::RandrNotify => write!(f, "RandrNotify"),
-            XEvent::ScreenChange => write!(f, "ScreenChange"),
-            XEvent::UnmapNotify(_) => write!(f, "UnmapNotify"),
+            ClientMessage(_) => write!(f, "ClientMessage"),
+            ConfigureNotify(_) => write!(f, "ConfigureNotify"),
+            ConfigureRequest(_) => write!(f, "ConfigureRequest"),
+            Enter(_) => write!(f, "Enter"),
+            Expose(_) => write!(f, "Expose"),
+            FocusIn(_) => write!(f, "FocusIn"),
+            Destroy(_) => write!(f, "Destroy"),
+            KeyPress(_) => write!(f, "KeyPress"),
+            Leave(_) => write!(f, "Leave"),
+            MappingNotify => write!(f, "MappingNotify"),
+            MapRequest(_) => write!(f, "MapRequest"),
+            MouseEvent(_) => write!(f, "MouseEvent"),
+            PropertyNotify(_) => write!(f, "PropertyNotify"),
+            RandrNotify => write!(f, "RandrNotify"),
+            ScreenChange => write!(f, "ScreenChange"),
+            UnmapNotify(_) => write!(f, "UnmapNotify"),
         }
     }
 }

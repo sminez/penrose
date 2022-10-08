@@ -13,6 +13,7 @@ use std::{
     fmt,
     ops::Deref,
 };
+use tracing::trace;
 
 /// An X11 ID for a given resource
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -112,6 +113,25 @@ impl fmt::Debug for Config {
     }
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        let strings = |slice: &[&str]| slice.iter().map(|s| s.to_string()).collect();
+
+        Config {
+            normal_border: "#3c3836".try_into().expect("valid hex code"),
+            focused_border: "#cc241d".try_into().expect("valid hex code"),
+            border_width: 2,
+            focus_follow_mouse: true,
+            default_layouts: LayoutStack::default(),
+            workspace_names: strings(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
+            floating_classes: strings(&["dmenu", "dunst"]),
+            manage_hook: |_, _| (),
+            event_hook: |_, _| (),
+            startup_hook: |_| (),
+        }
+    }
+}
+
 pub struct WindowManager {
     pub(crate) state: State,
     pub(crate) key_bindings: KeyBindings,
@@ -119,7 +139,6 @@ pub struct WindowManager {
 }
 
 impl WindowManager {
-    // TODO: MappingNotify for changes to keyboard mappings
     pub fn handle_xevent<X>(&mut self, x: &X, event: XEvent)
     where
         X: XConnExt,
@@ -130,24 +149,29 @@ impl WindowManager {
             mouse_bindings,
         } = self;
 
+        use XEvent::*;
+
         match &event {
-            XEvent::ClientMessage(m) => handle::client_message(m.clone(), state, x),
-            XEvent::ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x),
-            XEvent::ConfigureNotify(_) => (), // Not currently handled
-            XEvent::ConfigureRequest(_) => (), // Not currently handled
-            XEvent::Enter(p) => handle::enter(p.id, p.abs, state, x),
-            XEvent::Expose(_) => (), // Not currently handled
-            XEvent::FocusIn(id) => handle::focus_in(*id, state, x),
-            XEvent::Destroy(xid) => handle::destroy(*xid, state, x),
-            XEvent::KeyPress(code) => handle::keypress(*code, key_bindings, state),
-            XEvent::Leave(p) => handle::leave(p.id, p.abs, state, x),
-            XEvent::MapRequest(xid) => handle::map_request(*xid, state, x),
-            XEvent::MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state),
-            XEvent::PropertyNotify(_) => (), // Not currently handled
-            XEvent::RandrNotify => handle::detect_screens(state, x),
-            XEvent::ScreenChange => handle::screen_change(state, x),
-            XEvent::UnmapNotify(xid) => handle::unmap_notify(*xid, state, x),
+            ClientMessage(m) => handle::client_message(m.clone(), state, x),
+            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x),
+            ConfigureNotify(_) => (),  // Not currently handled
+            ConfigureRequest(_) => (), // Not currently handled
+            Enter(p) => handle::enter(p.id, p.abs, state, x),
+            Expose(_) => (), // Not currently handled
+            FocusIn(id) => handle::focus_in(*id, state, x),
+            Destroy(xid) => handle::destroy(*xid, state, x),
+            KeyPress(code) => handle::keypress(*code, key_bindings, state),
+            Leave(p) => handle::leave(p.id, p.abs, state, x),
+            MappingNotify => (), // Not currently handled
+            MapRequest(xid) => handle::map_request(*xid, state, x),
+            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state),
+            PropertyNotify(_) => (), // Not currently handled
+            RandrNotify => handle::detect_screens(state, x),
+            ScreenChange => handle::screen_change(state, x),
+            UnmapNotify(xid) => handle::unmap_notify(*xid, state, x),
         }
+
+        trace!("running user event hook");
 
         let hook = state.config.event_hook;
         hook(event, state);
