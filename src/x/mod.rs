@@ -66,6 +66,8 @@ pub trait XConn {
     fn screen_details(&self) -> Vec<Rect>;
     fn cursor_position(&self) -> Point;
 
+    fn next_event(&self) -> Option<XEvent>;
+
     fn atom_id(&self, atom: &str) -> Xid;
     fn atom_name(&self, xid: Xid) -> Option<String>;
 
@@ -86,6 +88,7 @@ pub trait XConn {
     fn send_client_message(&self, msg: ClientMessage);
 
     fn tile_client(&self, client: Xid, r: Rect);
+    fn warp_cursor(&self, p: Point);
 }
 
 // Derivable methods for XConn that should never be given a different implementation

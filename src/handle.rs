@@ -60,23 +60,27 @@ where
     }
 }
 
-pub(crate) fn keypress<X>(key: KeyCode, bindings: &mut KeyBindings<X>, state: &mut State<X>)
+pub(crate) fn keypress<X>(key: KeyCode, bindings: &mut KeyBindings<X>, state: &mut State<X>, x: &X)
 where
     X: XConn,
 {
     if let Some(action) = bindings.get_mut(&key) {
-        if let Err(error) = action(state) {
+        if let Err(error) = action.call(state, x) {
             error!(%error, ?key, "error running user keybinding");
         }
     }
 }
 
-pub(crate) fn mouse_event<X>(e: MouseEvent, bindings: &mut MouseBindings<X>, state: &mut State<X>)
-where
+pub(crate) fn mouse_event<X>(
+    e: MouseEvent,
+    bindings: &mut MouseBindings<X>,
+    state: &mut State<X>,
+    x: &X,
+) where
     X: XConn,
 {
     if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
-        if let Err(error) = action(state, &e) {
+        if let Err(error) = action.call(&e, state, x) {
             error!(%error, ?e, "error running user mouse binding");
         }
     }

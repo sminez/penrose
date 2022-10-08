@@ -167,7 +167,6 @@ where
             state,
             key_bindings,
             mouse_bindings,
-            ..
         } = self;
 
         let mut hook = state.config.event_hook.take();
@@ -188,11 +187,11 @@ where
             Expose(_) => (), // Not currently handled
             FocusIn(id) => handle::focus_in(*id, state, x),
             Destroy(xid) => handle::destroy(*xid, state, x),
-            KeyPress(code) => handle::keypress(*code, key_bindings, state),
+            KeyPress(code) => handle::keypress(*code, key_bindings, state, x),
             Leave(p) => handle::leave(p.id, p.abs, state, x),
             MappingNotify => (), // Not currently handled
             MapRequest(xid) => handle::map_request(*xid, state, x),
-            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state),
+            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x),
             PropertyNotify(_) => (), // Not currently handled
             RandrNotify => handle::detect_screens(state, x),
             ScreenChange => handle::screen_change(state, x),

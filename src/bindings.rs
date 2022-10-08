@@ -1,7 +1,8 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{State, Xid},
+    core::{ClientSet, State, Xid},
     geometry::Point,
+    x::{XConn, XConnExt},
     Result,
 };
 #[cfg(feature = "keysyms")]
@@ -14,16 +15,71 @@ use strum::EnumIter;
 pub type CodeMap = HashMap<String, u8>;
 
 /// Some action to be run by a user key binding
-pub type KeyEventHandler<X> = Box<dyn FnMut(&mut State<X>) -> Result<()>>;
+pub trait KeyEventHandler<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
+}
 
-/// An action to be run in response to a mouse event
-pub type MouseEventHandler<X> = Box<dyn FnMut(&mut State<X>, &MouseEvent) -> Result<()>>;
+impl<F, X> KeyEventHandler<X> for F
+where
+    F: FnMut(&mut State<X>, &X) -> Result<()>,
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+        (self)(state, x)
+    }
+}
 
 /// User defined key bindings
-pub type KeyBindings<X> = HashMap<KeyCode, KeyEventHandler<X>>;
+pub type KeyBindings<X> = HashMap<KeyCode, Box<dyn KeyEventHandler<X>>>;
+
+/// An action to be run in response to a mouse event
+pub trait MouseEventHandler<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+}
+
+impl<F, X> MouseEventHandler<X> for F
+where
+    F: FnMut(&MouseEvent, &mut State<X>, &X) -> Result<()>,
+    X: XConn,
+{
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        (self)(evt, state, x)
+    }
+}
 
 /// User defined mouse bindings
-pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;
+pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X>>>;
+
+/// Mutate the [ClientSet] and refresh the onscreen state as a key or mouse binding
+pub struct Modify(fn(&mut ClientSet));
+
+impl<X> KeyEventHandler<X> for Modify
+where
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+        x.modify_and_refresh(state, self.0);
+
+        Ok(())
+    }
+}
+
+impl<X> MouseEventHandler<X> for Modify
+where
+    X: XConn,
+{
+    fn call(&mut self, _: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        x.modify_and_refresh(state, self.0);
+
+        Ok(())
+    }
+}
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]
