@@ -1,83 +1,18 @@
-//! XEvent handlers for use in the main event loop
+//! XEvent handlers for use in the main event loop;
 use crate::{
-    bindings::{KeyBindings, KeyCode},
+    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     core::{State, Xid},
-    x::{atom::Atom, event::ClientMessage, XConnExt},
+    geometry::Point,
+    x::{
+        atom::Atom,
+        event::{ClientMessage, ClientMessageKind},
+        property::{Prop, WmHints},
+        XConnExt,
+    },
+    StackSet,
 };
-use std::str::FromStr;
+use std::{mem::take, str::FromStr};
 use tracing::{error, trace};
-
-// match event {
-//     // Direct 1-n mappings of XEvents -> EventActions
-//     XEvent::Destroy(id) => vec![EventAction::DestroyClient(id)],
-//     XEvent::Expose(_) => vec![], // FIXME: work out if this needs handling in the WindowManager
-//     XEvent::FocusIn(id) => vec![EventAction::FocusIn(id)],
-//     XEvent::KeyPress(code) => vec![EventAction::RunKeyBinding(code)],
-//     XEvent::Leave(p) => vec![
-//         EventAction::ClientFocusLost(p.id),
-//         EventAction::SetScreenFromPoint(Some(p.abs)),
-//     ],
-//     XEvent::MouseEvent(evt) => vec![EventAction::RunMouseBinding(evt)],
-//     XEvent::RandrNotify => vec![EventAction::DetectScreens],
-//     XEvent::ScreenChange => vec![EventAction::SetScreenFromPoint(None)],
-//     XEvent::UnmapNotify(id) => vec![EventAction::Unmap(id)],
-
-//     // Require processing based on current WindowManager state
-//     XEvent::ClientMessage(msg) => process_client_message(state, conn, msg),
-//     XEvent::ConfigureNotify(evt) => process_configure_notify(evt),
-//     XEvent::ConfigureRequest(evt) => process_configure_request(evt),
-//     XEvent::Enter(p) => process_enter_notify(state, p),
-//     XEvent::MapRequest(id, override_redirect) => {
-//         process_map_request(state, id, override_redirect)
-//     }
-//     XEvent::PropertyNotify(evt) => process_property_notify(evt),
-// }
-
-// fn process_configure_notify(evt: ConfigureEvent) -> Vec<EventAction> {
-//     if evt.is_root {
-//         vec![EventAction::DetectScreens]
-//     } else {
-//         vec![]
-//     }
-// }
-
-// fn process_configure_request(evt: ConfigureEvent) -> Vec<EventAction> {
-//     if !evt.is_root {
-//         vec![EventAction::MoveClientIfFloating(evt.id, evt.r)]
-//     } else {
-//         vec![]
-//     }
-// }
-
-// fn process_enter_notify(state: &WmState, p: PointerChange) -> Vec<EventAction> {
-//     let mut actions = vec![
-//         EventAction::ClientFocusGained(p.id),
-//         EventAction::SetScreenFromPoint(Some(p.abs)),
-//     ];
-
-//     if let Some(current) = state.clients.focused_client_id() {
-//         if current != p.id {
-//             actions.insert(0, EventAction::ClientFocusLost(current));
-//         }
-//     }
-
-//     actions
-// }
-
-// fn process_property_notify(evt: PropertyEvent) -> Vec<EventAction> {
-//     match Atom::from_str(&evt.atom) {
-//         Ok(a) if a == Atom::WmName || a == Atom::NetWmName => {
-//             vec![EventAction::ClientNameChanged(evt.id, evt.is_root)]
-//         }
-//         // TODO: handle other property changes and possibly allow users to process
-//         //       unknown events?
-//         _ => vec![EventAction::UnknownPropertyChange(
-//             evt.id,
-//             evt.atom,
-//             evt.is_root,
-//         )],
-//     }
-// }
 
 // fn is_fullscreen<X>(data: &[u32], x: &X) -> bool
 // where
@@ -125,13 +60,18 @@ where
     }
 }
 
-pub(crate) fn keypress<X>(key: KeyCode, bindings: &mut KeyBindings, state: &mut State, _: &X)
-where
-    X: XConnExt,
-{
+pub(crate) fn keypress(key: KeyCode, bindings: &mut KeyBindings, state: &mut State) {
     if let Some(action) = bindings.get_mut(&key) {
         if let Err(error) = action(state) {
             error!(%error, ?key, "error running user keybinding");
+        }
+    }
+}
+
+pub(crate) fn mouse_event(e: MouseEvent, bindings: &mut MouseBindings, state: &mut State) {
+    if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
+        if let Err(error) = action(state, &e) {
+            error!(%error, ?e, "error running user mouse binding");
         }
     }
 }
@@ -179,4 +119,109 @@ where
             .entry(client)
             .and_modify(|count| *count -= 1);
     }
+}
+
+pub(crate) fn focus_in<X>(client: Xid, state: &mut State, x: &X)
+where
+    X: XConnExt,
+{
+    let accepts_focus = match x.get_prop(client, Atom::WmHints.as_ref()) {
+        Some(Prop::WmHints(WmHints { accepts_input, .. })) => accepts_input,
+        _ => true,
+    };
+
+    if accepts_focus {
+        x.focus(client);
+        x.set_prop(
+            x.root(),
+            Atom::NetActiveWindow.as_ref(),
+            Prop::Window(vec![client]),
+        );
+        x.set_active_client(client, state);
+    } else {
+        let msg = ClientMessageKind::TakeFocus(client).as_message(x);
+        x.send_client_message(msg);
+    }
+}
+
+pub(crate) fn enter<X>(client: Xid, p: Point, state: &mut State, x: &X)
+where
+    X: XConnExt,
+{
+    let focus_follow_mouse = state.config.focus_follow_mouse;
+
+    x.modify_and_refresh(state, |cs| {
+        if focus_follow_mouse {
+            cs.focus_client(&client);
+        }
+
+        let maybe_tag = cs
+            .iter_screens()
+            .find(|s| s.r.contains_point(p))
+            .map(|s| s.workspace.tag.clone());
+
+        if let Some(t) = maybe_tag {
+            cs.focus_tag(&t);
+        }
+    });
+}
+
+pub(crate) fn leave<X>(client: Xid, p: Point, state: &mut State, x: &X)
+where
+    X: XConnExt,
+{
+    if state.config.focus_follow_mouse {
+        x.set_client_border_color(client, state.config.normal_border);
+    }
+
+    x.modify_and_refresh(state, |cs| {
+        let maybe_tag = cs
+            .iter_screens()
+            .find(|s| s.r.contains_point(p))
+            .map(|s| s.workspace.tag.clone());
+
+        if let Some(t) = maybe_tag {
+            cs.focus_tag(&t);
+        }
+    });
+}
+
+pub(crate) fn detect_screens<X>(state: &mut State, x: &X)
+where
+    X: XConnExt,
+{
+    let rects = x.screen_details();
+
+    let StackSet {
+        current,
+        visible,
+        hidden,
+        floating,
+    } = take(&mut state.client_set);
+
+    let mut workspaces = vec![current.workspace];
+    workspaces.extend(visible.into_iter().map(|s| s.workspace));
+    workspaces.extend(hidden);
+
+    // FIXME: this needs to not hard error. Probably best to pad with some default workspaces
+    //        if there aren't enough already?
+    state.client_set = StackSet::try_new_concrete(workspaces, rects, floating).unwrap();
+}
+
+pub(crate) fn screen_change<X>(state: &mut State, x: &X)
+where
+    X: XConnExt,
+{
+    let p = x.cursor_position();
+
+    x.modify_and_refresh(state, |cs| {
+        let maybe_tag = cs
+            .iter_screens()
+            .find(|s| s.r.contains_point(p))
+            .map(|s| s.workspace.tag.clone());
+
+        if let Some(t) = maybe_tag {
+            cs.focus_tag(&t);
+        }
+    });
 }

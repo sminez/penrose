@@ -3,7 +3,7 @@ use crate::{
     stack_set::Stack,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Workspace<C> {
     pub(crate) id: usize,
     pub(crate) tag: String,

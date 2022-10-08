@@ -1,7 +1,7 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
     bindings::{KeyBindings, MouseBindings},
-    geometry::{Point, Rect},
+    geometry::Rect,
     handle,
     layout::{Layout, LayoutStack},
     stack_set::{StackSet, Workspace},
@@ -10,11 +10,12 @@ use crate::{
 };
 use std::{
     collections::{HashMap, HashSet},
+    fmt,
     ops::Deref,
 };
 
 /// An X11 ID for a given resource
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Xid(pub(crate) u32);
 
 impl std::fmt::Display for Xid {
@@ -77,14 +78,13 @@ pub struct State {
     pub(crate) config: Config,
     pub(crate) client_set: ClientSet,
     pub(crate) root: Xid,
-    pub(crate) mouse_focused: bool,
-    pub(crate) mouse_position: Option<(Point, Point)>,
-    pub(crate) current_event: Option<XEvent>,
+    // pub(crate) mouse_focused: bool,
+    // pub(crate) mouse_position: Option<(Point, Point)>,
+    // pub(crate) current_event: Option<XEvent>,
     pub(crate) mapped: HashSet<Xid>,
     pub(crate) pending_unmap: HashMap<Xid, usize>,
 }
 
-#[derive(Debug)]
 pub struct Config {
     pub normal_border: Color,
     pub focused_border: Color,
@@ -93,9 +93,23 @@ pub struct Config {
     pub default_layouts: LayoutStack,
     pub workspace_names: Vec<String>,
     pub floating_classes: Vec<String>,
-    // pub manage_hook: Box<dyn ManageHook>,
-    // pub event_hook: Box<dyn EventHook>,
-    // pub startup_hook: Box<dyn StartupHook>,
+    pub manage_hook: fn(Xid, &mut ClientSet),
+    pub event_hook: fn(XEvent, &mut State),
+    pub startup_hook: fn(&mut State),
+}
+
+impl fmt::Debug for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Config")
+            .field("normal_border", &self.normal_border)
+            .field("focused_border", &self.focused_border)
+            .field("border_width", &self.border_width)
+            .field("focus_follow_mouse", &self.focus_follow_mouse)
+            .field("default_layouts", &self.default_layouts)
+            .field("workspace_names", &self.workspace_names)
+            .field("floating_classes", &self.floating_classes)
+            .finish()
+    }
 }
 
 pub struct WindowManager {
@@ -105,6 +119,7 @@ pub struct WindowManager {
 }
 
 impl WindowManager {
+    // TODO: MappingNotify for changes to keyboard mappings
     pub fn handle_xevent<X>(&mut self, x: &X, event: XEvent)
     where
         X: XConnExt,
@@ -115,23 +130,27 @@ impl WindowManager {
             mouse_bindings,
         } = self;
 
-        match event {
-            XEvent::ClientMessage(m) => handle::client_message(m, state, x),
-            XEvent::ConfigureNotify(e) => todo!(),
-            XEvent::ConfigureRequest(e) => todo!(),
-            XEvent::Enter(p) => todo!(),
-            XEvent::Expose(e) => todo!(),
-            XEvent::FocusIn(id) => todo!(),
-            XEvent::Destroy(xid) => handle::destroy(xid, state, x),
-            XEvent::KeyPress(code) => handle::keypress(code, key_bindings, state, x),
-            XEvent::Leave(p) => todo!(),
-            XEvent::MapRequest(xid) => handle::map_request(xid, state, x),
-            XEvent::MouseEvent(e) => todo!(),
-            XEvent::PropertyNotify(e) => todo!(),
-            XEvent::RandrNotify => todo!(),
-            XEvent::ScreenChange => todo!(),
-            XEvent::UnmapNotify(xid) => handle::unmap_notify(xid, state, x),
-            // MappingNotify for changes to keyboard mappings
+        match &event {
+            XEvent::ClientMessage(m) => handle::client_message(m.clone(), state, x),
+            XEvent::ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x),
+            XEvent::ConfigureNotify(_) => (), // Not currently handled
+            XEvent::ConfigureRequest(_) => (), // Not currently handled
+            XEvent::Enter(p) => handle::enter(p.id, p.abs, state, x),
+            XEvent::Expose(_) => (), // Not currently handled
+            XEvent::FocusIn(id) => handle::focus_in(*id, state, x),
+            XEvent::Destroy(xid) => handle::destroy(*xid, state, x),
+            XEvent::KeyPress(code) => handle::keypress(*code, key_bindings, state),
+            XEvent::Leave(p) => handle::leave(p.id, p.abs, state, x),
+            XEvent::MapRequest(xid) => handle::map_request(*xid, state, x),
+            XEvent::MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state),
+            XEvent::PropertyNotify(_) => (), // Not currently handled
+            XEvent::RandrNotify => handle::detect_screens(state, x),
+            XEvent::ScreenChange => handle::screen_change(state, x),
+            XEvent::UnmapNotify(xid) => handle::unmap_notify(*xid, state, x),
         }
+
+        let hook = state.config.event_hook;
+        hook(event, state);
+        x.refresh(state);
     }
 }

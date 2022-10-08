@@ -38,7 +38,7 @@ macro_rules! pop_where {
 
 // TODO: Should current & visible be wrapped up as another Stack?
 /// The side-effect free internal state representation of the window manager.
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct StackSet<C>
 where
     C: Clone + PartialEq + Eq + Hash,
@@ -72,12 +72,13 @@ where
 
         let screen_details: Vec<Rect> = screen_details.into_iter().collect();
 
-        Self::try_new_concrete(workspaces, screen_details)
+        Self::try_new_concrete(workspaces, screen_details, HashMap::new())
     }
 
-    fn try_new_concrete(
+    pub(crate) fn try_new_concrete(
         mut workspaces: Vec<Workspace<C>>,
         screen_details: Vec<Rect>,
+        floating: HashMap<C, Rect>,
     ) -> Result<Self> {
         // TODO: Enforce unique
 
@@ -111,7 +112,7 @@ where
             current,
             visible,
             hidden,
-            floating: HashMap::new(),
+            floating,
         })
     }
 
@@ -582,7 +583,7 @@ mod tests {
             .map(|(i, s)| Workspace::new(i, (i + 1).to_string(), LayoutStack::default(), s))
             .collect();
 
-        match StackSet::try_new_concrete(workspaces, vec![Rect::default(); n]) {
+        match StackSet::try_new_concrete(workspaces, vec![Rect::default(); n], HashMap::new()) {
             Ok(s) => s,
             Err(e) => panic!("{e}"),
         }

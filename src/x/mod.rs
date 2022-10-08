@@ -1,10 +1,11 @@
 use crate::{
     core::{ClientSet, Config, State},
-    geometry::Rect,
+    geometry::{Point, Rect},
     layout::messages::control::Hide,
     stack_set::Diff,
     x::{
         atom::{Atom, AUTO_FLOAT_WINDOW_TYPES},
+        event::ClientMessage,
         property::{Prop, WmState},
     },
     Color, Xid,
@@ -61,24 +62,28 @@ pub enum ClientAttr {
 }
 
 pub trait XConn {
-    fn get_screen_details(&self) -> Vec<Rect>;
-    fn get_prop(&self, client: Xid, prop_name: &str) -> Option<Prop>;
-    fn get_window_attributes(&self, client: Xid) -> WindowAttributes;
+    fn root(&self) -> Xid;
+    fn screen_details(&self) -> Vec<Rect>;
+    fn cursor_position(&self) -> Point;
 
     fn atom_id(&self, atom: &str) -> Xid;
     fn atom_name(&self, xid: Xid) -> Option<String>;
 
     fn float_location(&self, client: Xid) -> (ScreenId, Rect);
 
-    fn map_client(&self, client: Xid);
-    fn unmap_client(&self, client: Xid);
-
+    fn map(&self, client: Xid);
+    fn unmap(&self, client: Xid);
     fn kill(&self, client: Xid);
     fn focus(&self, client: Xid);
 
+    fn get_prop(&self, client: Xid, prop_name: &str) -> Option<Prop>;
+    fn get_window_attributes(&self, client: Xid) -> WindowAttributes;
+
     fn set_wm_state(&self, client: Xid, wm_state: WmState);
+    fn set_prop(&self, client: Xid, name: &str, val: Prop);
     fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]);
     fn set_client_config(&self, client: Xid, data: &[ClientConfig]);
+    fn send_client_message(&self, msg: ClientMessage);
 
     fn tile_client(&self, client: Xid, r: Rect);
 }
@@ -95,13 +100,16 @@ pub trait XConnExt: XConn {
     fn manage(&self, client: Xid, state: &mut State) {
         let should_float = self.client_should_float(client, &state.config.floating_classes);
         let (_, r) = self.float_location(client);
+        let hook = state.config.manage_hook;
 
         self.modify_and_refresh(state, |cs| {
             cs.insert(client);
             if should_float {
                 cs.float_unchecked(client, r);
             }
-            // TODO: run manage hook
+
+            // TODO: should this be called here? Or in a second refresh?
+            hook(client, cs);
         })
     }
 
@@ -115,7 +123,7 @@ pub trait XConnExt: XConn {
     /// This is idempotent if the client is already visible.
     fn reveal(&self, client: Xid, cs: &ClientSet, mapped: &mut HashSet<Xid>) {
         self.set_wm_state(client, WmState::Normal);
-        self.map_client(client);
+        self.map(client);
         if cs.contains(&client) {
             mapped.insert(client);
         }
@@ -137,7 +145,7 @@ pub trait XConnExt: XConn {
         //         unmapWindow d w
         //         selectInput d w cMask
 
-        self.unmap_client(client);
+        self.unmap(client);
         self.set_wm_state(client, WmState::Normal);
 
         mapped.remove(&client);

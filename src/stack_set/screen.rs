@@ -1,6 +1,6 @@
 use crate::{geometry::Rect, stack_set::Workspace};
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Screen<C> {
     pub(crate) index: usize,
     pub(crate) workspace: Workspace<C>,
