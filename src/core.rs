@@ -3,6 +3,7 @@ use crate::{
     bindings::{KeyBindings, MouseBindings},
     geometry::Rect,
     handle,
+    hooks::{EventHook, ManageHook, StateHook},
     layout::{Layout, LayoutStack},
     stack_set::{StackSet, Workspace},
     x::{XConn, XEvent},
@@ -143,57 +144,6 @@ where
             refresh_hook: None,
             startup_hook: None,
         }
-    }
-}
-
-pub trait EventHook<X>
-where
-    X: XConn,
-{
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool;
-}
-
-impl<F, X> EventHook<X> for F
-where
-    F: FnMut(&XEvent, &mut State<X>, &X) -> bool,
-    X: XConn,
-{
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool {
-        (self)(event, state, x)
-    }
-}
-
-pub trait ManageHook<X>
-where
-    X: XConn,
-{
-    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> bool;
-}
-
-impl<F, X> ManageHook<X> for F
-where
-    F: FnMut(Xid, &mut ClientSet, &X) -> bool,
-    X: XConn,
-{
-    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> bool {
-        (self)(client, cs, x)
-    }
-}
-
-pub trait StateHook<X>
-where
-    X: XConn,
-{
-    fn call(&mut self, state: &mut State<X>, x: &X) -> bool;
-}
-
-impl<F, X> StateHook<X> for F
-where
-    F: FnMut(&mut State<X>, &X) -> bool,
-    X: XConn,
-{
-    fn call(&mut self, state: &mut State<X>, x: &X) -> bool {
-        (self)(state, x)
     }
 }
 

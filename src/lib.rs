@@ -3,6 +3,7 @@ pub mod bindings;
 pub mod core;
 pub mod geometry;
 pub mod handle;
+pub mod hooks;
 pub mod layout;
 pub mod stack_set;
 pub mod util;
