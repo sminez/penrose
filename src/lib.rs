@@ -5,6 +5,7 @@ pub mod geometry;
 pub mod handle;
 pub mod hooks;
 pub mod layout;
+pub mod macros;
 pub mod stack_set;
 pub mod util;
 pub mod x;

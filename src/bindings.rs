@@ -62,7 +62,7 @@ pub type MouseBindings<X, E> =
     HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X, E>>>;
 
 /// Mutate the [ClientSet] and refresh the onscreen state as a key or mouse binding
-pub struct Modify(fn(&mut ClientSet));
+pub struct Modify(pub fn(&mut ClientSet));
 
 impl<X, E> KeyEventHandler<X, E> for Modify
 where

@@ -219,6 +219,11 @@ where
             .find(|opt| opt.is_some())?
     }
 
+    /// Delete the currently focused client from this stack
+    pub fn remove_focused(&mut self) -> Option<C> {
+        self.current.workspace.remove_focused()
+    }
+
     /// Move the focused client of the current [Workspace] to the focused position
     /// of the workspace matching the provided `tag`.
     pub fn move_focused_to_tag(&mut self, tag: &str) {
@@ -303,6 +308,11 @@ where
     /// Extract a reference to the focused element of the current [Stack]
     pub fn current_client(&self) -> Option<&C> {
         self.current.workspace.stack.as_ref().map(|s| &s.focus)
+    }
+
+    /// Get a reference to the current [Stack] if there is one
+    pub fn current_workspace_mut(&mut self) -> &mut Workspace<C> {
+        &mut self.current.workspace
     }
 
     /// Get a reference to the current [Stack] if there is one
