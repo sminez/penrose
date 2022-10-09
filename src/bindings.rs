@@ -70,9 +70,7 @@ where
     E: Send + Sync + 'static,
 {
     fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
-        x.modify_and_refresh(state, self.0);
-
-        Ok(())
+        x.modify_and_refresh(state, self.0)
     }
 }
 
@@ -82,9 +80,7 @@ where
     E: Send + Sync + 'static,
 {
     fn call(&mut self, _: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()> {
-        x.modify_and_refresh(state, self.0);
-
-        Ok(())
+        x.modify_and_refresh(state, self.0)
     }
 }
 

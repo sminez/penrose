@@ -15,7 +15,7 @@ use std::{
     fmt,
     ops::Deref,
 };
-use tracing::{span, trace, Level};
+use tracing::{error, span, trace, Level};
 
 /// An X11 ID for a given resource
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -211,7 +211,7 @@ where
         let client_set = StackSet::try_new(
             config.default_layouts.clone(),
             config.workspace_names.iter(),
-            x.screen_details(),
+            x.screen_details()?,
         )?;
 
         let state = State {
@@ -232,7 +232,7 @@ where
         })
     }
 
-    pub fn handle_xevent(&mut self, event: XEvent) {
+    pub fn handle_xevent(&mut self, event: XEvent) -> Result<()> {
         use XEvent::*;
 
         let WindowManager {
@@ -246,30 +246,33 @@ where
         if let Some(ref mut h) = hook {
             trace!("running user event hook");
             if !h.call(&event, state, x) {
-                return;
+                trace!("User event hook returned false: skipping default handling");
+                return Ok(());
             }
         }
         state.config.event_hook = hook;
 
         match &event {
-            ClientMessage(m) => handle::client_message(m.clone(), state, x),
-            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x),
+            ClientMessage(m) => handle::client_message(m.clone(), state, x)?,
+            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x)?,
             ConfigureNotify(_) => (),  // Not currently handled
             ConfigureRequest(_) => (), // Not currently handled
-            Enter(p) => handle::enter(p.id, p.abs, state, x),
+            Enter(p) => handle::enter(p.id, p.abs, state, x)?,
             Expose(_) => (), // Not currently handled
-            FocusIn(id) => handle::focus_in(*id, state, x),
-            Destroy(xid) => handle::destroy(*xid, state, x),
-            KeyPress(code) => handle::keypress(*code, key_bindings, state, x),
-            Leave(p) => handle::leave(p.id, p.abs, state, x),
+            FocusIn(id) => handle::focus_in(*id, state, x)?,
+            Destroy(xid) => handle::destroy(*xid, state, x)?,
+            KeyPress(code) => handle::keypress(*code, key_bindings, state, x)?,
+            Leave(p) => handle::leave(p.id, p.abs, state, x)?,
             MappingNotify => (), // Not currently handled
-            MapRequest(xid) => handle::map_request(*xid, state, x),
-            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x),
+            MapRequest(xid) => handle::map_request(*xid, state, x)?,
+            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x)?,
             PropertyNotify(_) => (), // Not currently handled
-            RandrNotify => handle::detect_screens(state, x),
-            ScreenChange => handle::screen_change(state, x),
-            UnmapNotify(xid) => handle::unmap_notify(*xid, state, x),
+            RandrNotify => handle::detect_screens(state, x)?,
+            ScreenChange => handle::screen_change(state, x)?,
+            UnmapNotify(xid) => handle::unmap_notify(*xid, state, x)?,
         }
+
+        Ok(())
     }
 
     pub fn run(mut self) -> Result<()> {
@@ -278,36 +281,33 @@ where
             panic!("unable to set signal handler: {}", e);
         }
 
-        self.grab();
+        self.grab()?;
 
-        let mut hook = self.state.config.startup_hook.take();
-        if let Some(ref mut h) = hook {
+        if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
             h.call(&mut self.state, &self.x);
         }
 
         loop {
             match self.x.next_event() {
-                Some(event) => {
+                Ok(event) => {
                     let span = span!(target: "penrose", Level::DEBUG, "XEvent", %event);
                     let _enter = span.enter();
                     trace!(details = ?event, "event details");
                     self.state.current_event = Some(event.clone());
 
-                    self.handle_xevent(event);
-                    self.x.flush();
+                    self.handle_xevent(event)?;
+                    self.x.flush()?;
 
                     self.state.current_event = None;
                 }
 
-                None => break,
+                Err(e) => error!(%e, "Error pulling next x event"),
             }
         }
-
-        Ok(())
     }
 
-    fn grab(&self) {
+    fn grab(&self) -> Result<()> {
         trace!("grabbing key and mouse bindings");
         let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
         let mouse_states: Vec<_> = self
@@ -316,6 +316,6 @@ where
             .map(|(_, state)| state.clone())
             .collect();
 
-        self.x.grab_keys(&key_codes, &mouse_states);
+        self.x.grab_keys(&key_codes, &mouse_states)
     }
 }

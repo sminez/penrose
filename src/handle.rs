@@ -9,7 +9,7 @@ use crate::{
         property::{Prop, WmHints},
         XConn, XConnExt,
     },
-    StackSet,
+    Result, StackSet,
 };
 use std::{mem::take, str::FromStr};
 use tracing::{error, trace};
@@ -24,7 +24,7 @@ use tracing::{error, trace};
 //         .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
 // }
 
-pub(crate) fn client_message<X, E>(msg: ClientMessage, state: &mut State<X, E>, x: &X)
+pub(crate) fn client_message<X, E>(msg: ClientMessage, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
@@ -57,7 +57,7 @@ where
         // }
 
         // NOTE: all other client message types are ignored
-        _ => (),
+        _ => Ok(()),
     }
 }
 
@@ -66,15 +66,19 @@ pub(crate) fn keypress<X, E>(
     bindings: &mut KeyBindings<X, E>,
     state: &mut State<X, E>,
     x: &X,
-) where
+) -> Result<()>
+where
     X: XConn,
     E: Send + Sync + 'static,
 {
     if let Some(action) = bindings.get_mut(&key) {
         if let Err(error) = action.call(state, x) {
             error!(%error, ?key, "error running user keybinding");
+            return Err(error);
         }
     }
+
+    Ok(())
 }
 
 pub(crate) fn mouse_event<X, E>(
@@ -82,47 +86,55 @@ pub(crate) fn mouse_event<X, E>(
     bindings: &mut MouseBindings<X, E>,
     state: &mut State<X, E>,
     x: &X,
-) where
+) -> Result<()>
+where
     X: XConn,
     E: Send + Sync + 'static,
 {
     if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
         if let Err(error) = action.call(&e, state, x) {
             error!(%error, ?e, "error running user mouse binding");
+            return Err(error);
         }
     }
+
+    Ok(())
 }
 
-pub(crate) fn map_request<X, E>(client: Xid, state: &mut State<X, E>, x: &X)
+pub(crate) fn map_request<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
 {
-    let attrs = x.get_window_attributes(client);
+    let attrs = x.get_window_attributes(client)?;
 
     if !state.client_set.contains(&client) && !attrs.override_redirect {
-        x.manage(client, state);
+        x.manage(client, state)?;
     }
+
+    Ok(())
 }
 
-pub(crate) fn destroy<X, E>(client: Xid, state: &mut State<X, E>, x: &X)
+pub(crate) fn destroy<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
 {
     if state.client_set.contains(&client) {
-        x.unmanage(client, state);
+        x.unmanage(client, state)?;
         state.mapped.remove(&client);
         state.pending_unmap.remove(&client);
     }
 
     // TODO: broadcast to layouts in case they need to know about this client being destroyed?
+
+    Ok(())
 }
 
 // Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
 // FIXME: unmap notify events have a synthetic field I'm not currently checking?
 //        that should be considered here as well apparently
-pub(crate) fn unmap_notify<X, E>(client: Xid, state: &mut State<X, E>, x: &X)
+pub(crate) fn unmap_notify<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
@@ -130,7 +142,7 @@ where
     let expected = *state.pending_unmap.get(&client).unwrap_or(&0);
 
     if expected == 0 {
-        x.unmanage(client, state);
+        x.unmanage(client, state)?;
     } else if expected == 1 {
         state.pending_unmap.remove(&client);
     } else {
@@ -139,33 +151,37 @@ where
             .entry(client)
             .and_modify(|count| *count -= 1);
     }
+
+    Ok(())
 }
 
-pub(crate) fn focus_in<X, E>(client: Xid, state: &mut State<X, E>, x: &X)
+pub(crate) fn focus_in<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
 {
     let accepts_focus = match x.get_prop(client, Atom::WmHints.as_ref()) {
-        Some(Prop::WmHints(WmHints { accepts_input, .. })) => accepts_input,
+        Ok(Some(Prop::WmHints(WmHints { accepts_input, .. }))) => accepts_input,
         _ => true,
     };
 
     if accepts_focus {
-        x.focus(client);
+        x.focus(client)?;
         x.set_prop(
             x.root(),
             Atom::NetActiveWindow.as_ref(),
             Prop::Window(vec![client]),
-        );
-        x.set_active_client(client, state);
+        )?;
+        x.set_active_client(client, state)?;
     } else {
-        let msg = ClientMessageKind::TakeFocus(client).as_message(x);
-        x.send_client_message(msg);
+        let msg = ClientMessageKind::TakeFocus(client).as_message(x)?;
+        x.send_client_message(msg)?;
     }
+
+    Ok(())
 }
 
-pub(crate) fn enter<X, E>(client: Xid, p: Point, state: &mut State<X, E>, x: &X)
+pub(crate) fn enter<X, E>(client: Xid, p: Point, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
@@ -185,16 +201,16 @@ where
         if let Some(t) = maybe_tag {
             cs.focus_tag(&t);
         }
-    });
+    })
 }
 
-pub(crate) fn leave<X, E>(client: Xid, p: Point, state: &mut State<X, E>, x: &X)
+pub(crate) fn leave<X, E>(client: Xid, p: Point, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
 {
     if state.config.focus_follow_mouse {
-        x.set_client_border_color(client, state.config.normal_border);
+        x.set_client_border_color(client, state.config.normal_border)?;
     }
 
     x.modify_and_refresh(state, |cs| {
@@ -206,15 +222,15 @@ where
         if let Some(t) = maybe_tag {
             cs.focus_tag(&t);
         }
-    });
+    })
 }
 
-pub(crate) fn detect_screens<X, E>(state: &mut State<X, E>, x: &X)
+pub(crate) fn detect_screens<X, E>(state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
 {
-    let rects = x.screen_details();
+    let rects = x.screen_details()?;
 
     let StackSet {
         current,
@@ -229,15 +245,17 @@ where
 
     // FIXME: this needs to not hard error. Probably best to pad with some default workspaces
     //        if there aren't enough already?
-    state.client_set = StackSet::try_new_concrete(workspaces, rects, floating).unwrap();
+    state.client_set = StackSet::try_new_concrete(workspaces, rects, floating)?;
+
+    Ok(())
 }
 
-pub(crate) fn screen_change<X, E>(state: &mut State<X, E>, x: &X)
+pub(crate) fn screen_change<X, E>(state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,
     E: Send + Sync + 'static,
 {
-    let p = x.cursor_position();
+    let p = x.cursor_position()?;
 
     x.modify_and_refresh(state, |cs| {
         let maybe_tag = cs
@@ -248,5 +266,5 @@ where
         if let Some(t) = maybe_tag {
             cs.focus_tag(&t);
         }
-    });
+    })
 }
