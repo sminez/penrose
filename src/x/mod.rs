@@ -1,4 +1,5 @@
 use crate::{
+    bindings::{KeyCode, MouseState},
     core::{ClientSet, Config, State},
     geometry::{Point, Rect},
     layout::messages::control::Hide,
@@ -66,7 +67,9 @@ pub trait XConn {
     fn screen_details(&self) -> Vec<Rect>;
     fn cursor_position(&self) -> Point;
 
+    fn grab_keys(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]);
     fn next_event(&self) -> Option<XEvent>;
+    fn flush(&self);
 
     fn atom_id(&self, atom: &str) -> Xid;
     fn atom_name(&self, xid: Xid) -> Option<String>;
@@ -94,13 +97,19 @@ pub trait XConn {
 // Derivable methods for XConn that should never be given a different implementation
 pub trait XConnExt: XConn + Sized {
     /// Kill the focused client if there is one
-    fn kill_focused(&self, state: &mut State<Self>) {
+    fn kill_focused<E>(&self, state: &mut State<Self, E>)
+    where
+        E: Send + Sync + 'static,
+    {
         if let Some(&id) = state.client_set.current_client() {
             self.kill(id)
         }
     }
 
-    fn manage(&self, client: Xid, state: &mut State<Self>) {
+    fn manage<E>(&self, client: Xid, state: &mut State<Self, E>)
+    where
+        E: Send + Sync + 'static,
+    {
         let should_float = self.client_should_float(client, &state.config.floating_classes);
         let (_, r) = self.float_location(client);
         let mut hook = state.config.manage_hook.take();
@@ -121,7 +130,10 @@ pub trait XConnExt: XConn + Sized {
         state.config.manage_hook = hook;
     }
 
-    fn unmanage(&self, client: Xid, state: &mut State<Self>) {
+    fn unmanage<E>(&self, client: Xid, state: &mut State<Self, E>)
+    where
+        E: Send + Sync + 'static,
+    {
         self.modify_and_refresh(state, |cs| {
             cs.remove_client(&client);
         })
@@ -163,15 +175,19 @@ pub trait XConnExt: XConn + Sized {
             .or_insert(1);
     }
 
-    fn refresh(&self, state: &mut State<Self>) {
+    fn refresh<E>(&self, state: &mut State<Self, E>)
+    where
+        E: Send + Sync + 'static,
+    {
         self.modify_and_refresh(state, id)
     }
 
     /// Apply a pure function that modifies a [ClientSet] and then handle refreshing the
     /// Window Manager state and associated X11 calls.
-    fn modify_and_refresh<F>(&self, state: &mut State<Self>, mut f: F)
+    fn modify_and_refresh<F, E>(&self, state: &mut State<Self, E>, mut f: F)
     where
         F: FnMut(&mut ClientSet) -> (),
+        E: Send + Sync + 'static,
     {
         let ss = state.client_set.snapshot();
 
@@ -259,7 +275,10 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgba_u32())]);
     }
 
-    fn set_initial_properties(&self, client: Xid, config: &Config<Self>) {
+    fn set_initial_properties<E>(&self, client: Xid, config: &Config<Self, E>)
+    where
+        E: Send + Sync + 'static,
+    {
         let Config {
             normal_border,
             border_width,
@@ -283,7 +302,10 @@ pub trait XConnExt: XConn + Sized {
         }
     }
 
-    fn set_active_client(&self, client: Xid, state: &mut State<Self>) {
+    fn set_active_client<E>(&self, client: Xid, state: &mut State<Self, E>)
+    where
+        E: Send + Sync + 'static,
+    {
         self.modify_and_refresh(state, |cs| cs.focus_client(&client))
     }
 }

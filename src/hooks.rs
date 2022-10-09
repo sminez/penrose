@@ -6,18 +6,19 @@ use crate::{
 };
 
 /// Handle an [XEvent], return `true` if default event handling should be run afterwards.
-pub trait EventHook<X>
+pub trait EventHook<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
     /// Run this hook
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool;
+    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> bool;
 
     /// Compose this hook with another [EventHook]. The second hook will be skipped if this one
     /// returns `false`.
-    fn then<H>(self, next: H) -> ComposedEventHook<X>
+    fn then<H>(self, next: H) -> ComposedEventHook<X, E>
     where
-        H: EventHook<X> + 'static,
+        H: EventHook<X, E> + 'static,
         Self: Sized + 'static,
     {
         ComposedEventHook {
@@ -27,19 +28,21 @@ where
     }
 }
 
-pub struct ComposedEventHook<X>
+pub struct ComposedEventHook<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    first: Box<dyn EventHook<X>>,
-    second: Box<dyn EventHook<X>>,
+    first: Box<dyn EventHook<X, E>>,
+    second: Box<dyn EventHook<X, E>>,
 }
 
-impl<X> EventHook<X> for ComposedEventHook<X>
+impl<X, E> EventHook<X, E> for ComposedEventHook<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool {
+    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> bool {
         if self.first.call(event, state, x) {
             self.second.call(event, state, x)
         } else {
@@ -48,12 +51,13 @@ where
     }
 }
 
-impl<F, X> EventHook<X> for F
+impl<F, X, E> EventHook<X, E> for F
 where
-    F: FnMut(&XEvent, &mut State<X>, &X) -> bool,
+    F: FnMut(&XEvent, &mut State<X, E>, &X) -> bool,
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> bool {
+    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> bool {
         (self)(event, state, x)
     }
 }
@@ -108,17 +112,18 @@ where
 }
 
 /// An arbitrary action that can be run and modify [State]
-pub trait StateHook<X>
+pub trait StateHook<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
     /// Run this hook
-    fn call(&mut self, state: &mut State<X>, x: &X);
+    fn call(&mut self, state: &mut State<X, E>, x: &X);
 
     /// Compose this hook with another [StateHook].
-    fn then<H>(self, next: H) -> ComposedStateHook<X>
+    fn then<H>(self, next: H) -> ComposedStateHook<X, E>
     where
-        H: StateHook<X> + 'static,
+        H: StateHook<X, E> + 'static,
         Self: Sized + 'static,
     {
         ComposedStateHook {
@@ -128,30 +133,33 @@ where
     }
 }
 
-pub struct ComposedStateHook<X>
+pub struct ComposedStateHook<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    first: Box<dyn StateHook<X>>,
-    second: Box<dyn StateHook<X>>,
+    first: Box<dyn StateHook<X, E>>,
+    second: Box<dyn StateHook<X, E>>,
 }
 
-impl<X> StateHook<X> for ComposedStateHook<X>
+impl<X, E> StateHook<X, E> for ComposedStateHook<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) {
+    fn call(&mut self, state: &mut State<X, E>, x: &X) {
         self.first.call(state, x);
         self.second.call(state, x);
     }
 }
 
-impl<F, X> StateHook<X> for F
+impl<F, X, E> StateHook<X, E> for F
 where
-    F: FnMut(&mut State<X>, &X),
+    F: FnMut(&mut State<X, E>, &X),
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) {
+    fn call(&mut self, state: &mut State<X, E>, x: &X) {
         (self)(state, x)
     }
 }

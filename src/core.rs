@@ -7,14 +7,15 @@ use crate::{
     layout::{Layout, LayoutStack},
     stack_set::{StackSet, Workspace},
     x::{XConn, XEvent},
-    Color,
+    Color, Result,
 };
+use nix::sys::signal::{signal, SigHandler, Signal};
 use std::{
     collections::{HashMap, HashSet},
     fmt,
     ops::Deref,
 };
-use tracing::trace;
+use tracing::{span, trace, Level};
 
 /// An X11 ID for a given resource
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -76,23 +77,44 @@ pub type ClientSpace = Workspace<Xid>;
 
 /// Mutable internal state for the window manager
 #[derive(Debug)]
-pub struct State<X>
+pub struct State<X, E = ()>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    pub(crate) config: Config<X>,
-    pub(crate) client_set: ClientSet,
+    pub config: Config<X, E>,
+    pub client_set: ClientSet,
+    pub extension: E,
     pub(crate) root: Xid,
     pub(crate) mapped: HashSet<Xid>,
     pub(crate) pending_unmap: HashMap<Xid, usize>,
+    pub(crate) current_event: Option<XEvent>,
     // pub(crate) mouse_focused: bool,
     // pub(crate) mouse_position: Option<(Point, Point)>,
-    // pub(crate) current_event: Option<XEvent>,
 }
 
-pub struct Config<X>
+impl<X, E> State<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
+{
+    pub fn root(&self) -> Xid {
+        self.root
+    }
+
+    pub fn mapped_clients(&self) -> &HashSet<Xid> {
+        &self.mapped
+    }
+
+    pub fn current_event(&self) -> Option<&XEvent> {
+        self.current_event.as_ref()
+    }
+}
+
+pub struct Config<X, E>
+where
+    X: XConn,
+    E: Send + Sync + 'static,
 {
     pub normal_border: Color,
     pub focused_border: Color,
@@ -101,15 +123,16 @@ where
     pub default_layouts: LayoutStack,
     pub workspace_names: Vec<String>,
     pub floating_classes: Vec<String>,
-    pub event_hook: Option<Box<dyn EventHook<X>>>,
+    pub event_hook: Option<Box<dyn EventHook<X, E>>>,
     pub manage_hook: Option<Box<dyn ManageHook<X>>>,
-    pub refresh_hook: Option<Box<dyn StateHook<X>>>,
-    pub startup_hook: Option<Box<dyn StateHook<X>>>,
+    pub refresh_hook: Option<Box<dyn StateHook<X, E>>>,
+    pub startup_hook: Option<Box<dyn StateHook<X, E>>>,
 }
 
-impl<X> fmt::Debug for Config<X>
+impl<X, E> fmt::Debug for Config<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
@@ -124,9 +147,10 @@ where
     }
 }
 
-impl<X> Default for Config<X>
+impl<X, E> Default for Config<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
     fn default() -> Self {
         let strings = |slice: &[&str]| slice.iter().map(|s| s.to_string()).collect();
@@ -147,23 +171,72 @@ where
     }
 }
 
-pub struct WindowManager<X>
+pub struct WindowManager<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    pub(crate) state: State<X>,
-    pub(crate) key_bindings: KeyBindings<X>,
-    pub(crate) mouse_bindings: MouseBindings<X>,
+    x: X,
+    state: State<X, E>,
+    key_bindings: KeyBindings<X, E>,
+    mouse_bindings: MouseBindings<X, E>,
 }
 
-impl<X> WindowManager<X>
+impl<X> WindowManager<X, ()>
 where
     X: XConn,
 {
-    pub fn handle_xevent(&mut self, x: &X, event: XEvent) {
+    pub fn new(
+        config: Config<X, ()>,
+        key_bindings: KeyBindings<X, ()>,
+        mouse_bindings: MouseBindings<X, ()>,
+        x: X,
+    ) -> Result<Self> {
+        Self::new_with_state_extension(config, key_bindings, mouse_bindings, x, ())
+    }
+}
+
+impl<X, E> WindowManager<X, E>
+where
+    X: XConn,
+    E: Send + Sync + 'static,
+{
+    pub fn new_with_state_extension(
+        config: Config<X, E>,
+        key_bindings: KeyBindings<X, E>,
+        mouse_bindings: MouseBindings<X, E>,
+        x: X,
+        extension: E,
+    ) -> Result<Self> {
+        let client_set = StackSet::try_new(
+            config.default_layouts.clone(),
+            config.workspace_names.iter(),
+            x.screen_details(),
+        )?;
+
+        let state = State {
+            config,
+            client_set,
+            extension,
+            root: x.root(),
+            mapped: HashSet::new(),
+            pending_unmap: HashMap::new(),
+            current_event: None,
+        };
+
+        Ok(Self {
+            x,
+            state,
+            key_bindings,
+            mouse_bindings,
+        })
+    }
+
+    pub fn handle_xevent(&mut self, event: XEvent) {
         use XEvent::*;
 
         let WindowManager {
+            x,
             state,
             key_bindings,
             mouse_bindings,
@@ -197,5 +270,52 @@ where
             ScreenChange => handle::screen_change(state, x),
             UnmapNotify(xid) => handle::unmap_notify(*xid, state, x),
         }
+    }
+
+    pub fn run(mut self) -> Result<()> {
+        trace!("registering SIGCHILD signal handler");
+        if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
+            panic!("unable to set signal handler: {}", e);
+        }
+
+        self.grab();
+
+        let mut hook = self.state.config.startup_hook.take();
+        if let Some(ref mut h) = hook {
+            trace!("running user startup hook");
+            h.call(&mut self.state, &self.x);
+        }
+
+        loop {
+            match self.x.next_event() {
+                Some(event) => {
+                    let span = span!(target: "penrose", Level::DEBUG, "XEvent", %event);
+                    let _enter = span.enter();
+                    trace!(details = ?event, "event details");
+                    self.state.current_event = Some(event.clone());
+
+                    self.handle_xevent(event);
+                    self.x.flush();
+
+                    self.state.current_event = None;
+                }
+
+                None => break,
+            }
+        }
+
+        Ok(())
+    }
+
+    fn grab(&self) {
+        trace!("grabbing key and mouse bindings");
+        let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
+        let mouse_states: Vec<_> = self
+            .mouse_bindings
+            .keys()
+            .map(|(_, state)| state.clone())
+            .collect();
+
+        self.x.grab_keys(&key_codes, &mouse_states);
     }
 }

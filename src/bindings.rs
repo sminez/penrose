@@ -15,66 +15,73 @@ use strum::EnumIter;
 pub type CodeMap = HashMap<String, u8>;
 
 /// Some action to be run by a user key binding
-pub trait KeyEventHandler<X>
+pub trait KeyEventHandler<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
+    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()>;
 }
 
-impl<F, X> KeyEventHandler<X> for F
+impl<F, X, E> KeyEventHandler<X, E> for F
 where
-    F: FnMut(&mut State<X>, &X) -> Result<()>,
+    F: FnMut(&mut State<X, E>, &X) -> Result<()>,
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
         (self)(state, x)
     }
 }
 
 /// User defined key bindings
-pub type KeyBindings<X> = HashMap<KeyCode, Box<dyn KeyEventHandler<X>>>;
+pub type KeyBindings<X, E> = HashMap<KeyCode, Box<dyn KeyEventHandler<X, E>>>;
 
 /// An action to be run in response to a mouse event
-pub trait MouseEventHandler<X>
+pub trait MouseEventHandler<X, E>
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()>;
 }
 
-impl<F, X> MouseEventHandler<X> for F
+impl<F, X, E> MouseEventHandler<X, E> for F
 where
-    F: FnMut(&MouseEvent, &mut State<X>, &X) -> Result<()>,
+    F: FnMut(&MouseEvent, &mut State<X, E>, &X) -> Result<()>,
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()> {
         (self)(evt, state, x)
     }
 }
 
 /// User defined mouse bindings
-pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X>>>;
+pub type MouseBindings<X, E> =
+    HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X, E>>>;
 
 /// Mutate the [ClientSet] and refresh the onscreen state as a key or mouse binding
 pub struct Modify(fn(&mut ClientSet));
 
-impl<X> KeyEventHandler<X> for Modify
+impl<X, E> KeyEventHandler<X, E> for Modify
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
         x.modify_and_refresh(state, self.0);
 
         Ok(())
     }
 }
 
-impl<X> MouseEventHandler<X> for Modify
+impl<X, E> MouseEventHandler<X, E> for Modify
 where
     X: XConn,
+    E: Send + Sync + 'static,
 {
-    fn call(&mut self, _: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, _: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()> {
         x.modify_and_refresh(state, self.0);
 
         Ok(())
