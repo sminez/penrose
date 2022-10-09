@@ -297,7 +297,7 @@ where
                     self.state.current_event = Some(event.clone());
 
                     self.handle_xevent(event)?;
-                    self.x.flush()?;
+                    self.x.flush();
 
                     self.state.current_event = None;
                 }
@@ -316,6 +316,6 @@ where
             .map(|(_, state)| state.clone())
             .collect();
 
-        self.x.grab_keys(&key_codes, &mouse_states)
+        self.x.grab(&key_codes, &mouse_states)
     }
 }

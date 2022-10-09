@@ -67,14 +67,14 @@ pub trait XConn {
     fn screen_details(&self) -> Result<Vec<Rect>>;
     fn cursor_position(&self) -> Result<Point>;
 
-    fn grab_keys(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
     fn next_event(&self) -> Result<XEvent>;
-    fn flush(&self) -> Result<()>;
+    fn flush(&self);
 
     fn intern_atom(&self, atom: &str) -> Result<Xid>;
     fn atom_name(&self, xid: Xid) -> Result<String>;
 
-    fn float_location(&self, client: Xid) -> Result<(ScreenId, Rect)>;
+    fn float_location(&self, client: Xid) -> Result<Rect>;
 
     fn map(&self, client: Xid) -> Result<()>;
     fn unmap(&self, client: Xid) -> Result<()>;
@@ -86,11 +86,10 @@ pub trait XConn {
 
     fn set_wm_state(&self, client: Xid, wm_state: WmState) -> Result<()>;
     fn set_prop(&self, client: Xid, name: &str, val: Prop) -> Result<()>;
-    fn set_client_attributes(&self, id: Xid, data: &[ClientAttr]) -> Result<()>;
+    fn set_client_attributes(&self, client: Xid, attrs: &[ClientAttr]) -> Result<()>;
     fn set_client_config(&self, client: Xid, data: &[ClientConfig]) -> Result<()>;
     fn send_client_message(&self, msg: ClientMessage) -> Result<()>;
 
-    fn tile_client(&self, client: Xid, r: Rect) -> Result<()>;
     fn warp_cursor(&self, p: Point) -> Result<()>;
 }
 
@@ -113,7 +112,7 @@ pub trait XConnExt: XConn + Sized {
         E: Send + Sync + 'static,
     {
         let should_float = self.client_should_float(client, &state.config.floating_classes)?;
-        let (_, r) = self.float_location(client)?;
+        let r = self.float_location(client)?;
         let mut hook = state.config.manage_hook.take();
 
         let res = self.modify_and_refresh(state, |cs| {
@@ -219,7 +218,9 @@ pub trait XConnExt: XConn + Sized {
             .filter(|w| diff.previous_visible_tags.contains(&w.tag))
             .for_each(|ws| ws.broadcast_message(Hide));
 
-        self.position_clients(&positions)?;
+        for (c, r) in positions {
+            self.position_client(c, r)?;
+        }
 
         if let Some(&focused) = state.client_set.current_client() {
             self.set_client_border_color(focused, state.config.focused_border)?;
@@ -310,12 +311,11 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_config(client, conf)
     }
 
-    fn position_clients(&self, positions: &[(Xid, Rect)]) -> Result<()> {
-        for &(c, r) in positions {
-            self.set_client_config(c, &[ClientConfig::Position(r), ClientConfig::StackAbove])?;
-        }
-
-        Ok(())
+    fn position_client(&self, client: Xid, r: Rect) -> Result<()> {
+        self.set_client_config(
+            client,
+            &[ClientConfig::Position(r), ClientConfig::StackAbove],
+        )
     }
 
     fn set_active_client<E>(&self, client: Xid, state: &mut State<Self, E>) -> Result<()>

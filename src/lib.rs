@@ -8,6 +8,7 @@ pub mod layout;
 pub mod stack_set;
 pub mod util;
 pub mod x;
+pub mod xcb; // TODO: should be feature flagged
 
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
@@ -18,6 +19,9 @@ pub enum Error {
     #[error("Only {n_ws} workspaces were provided but at least {n_screens} are required")]
     InsufficientWorkspaces { n_ws: usize, n_screens: usize },
 
+    #[error("invalid client message data: format={format}")]
+    InvalidClientMessage { format: u8 },
+
     #[error("Invalid Hex color code: '{hex_code}'")]
     InvalidHexColor { hex_code: String },
 
@@ -27,14 +31,47 @@ pub enum Error {
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
+    #[error("Requested property was not valid UTF8")]
+    NonUtf8Prop(#[from] std::string::FromUtf8Error),
+
     #[error("There are no screens available")]
     NoScreens,
 
     #[error(transparent)]
     ParseInt(#[from] std::num::ParseIntError),
 
+    #[error("Error initialising randr: {0}")]
+    Randr(String),
+
     #[error("The given client is not in this State")]
     UnknownClient,
+
+    #[error("{button} is not a supported mouse button")]
+    UnknownMouseButton { button: u8 },
+
+    // FIXME: feature flag
+    #[error("Unable to connect to the X server via XCB")]
+    XcbConnection(#[from] ::xcb::ConnError),
+
+    // FIXME: feature flag
+    #[error(transparent)]
+    XcbErrorReply(#[from] ::xcb::base::ReplyError),
+
+    // FIXME: feature flag
+    #[error("X11 error: error seq={0}, code={1}, xid={2}, request: {3}:{4}")]
+    X11Error(u16, u8, u32, u8, u16),
+
+    // FIXME: feature flag
+    #[error("Error making xcb query: {0:?}")]
+    XcbKnown(crate::xcb::error::XErrorCode),
+
+    // FIXME: feature flag
+    #[error("Expected XCB response type to be one of {expected:?}, got {received}")]
+    XcbUnexpectedResponseType { expected: Vec<u8>, received: u8 },
+
+    // FIXME: feature flag
+    #[error("Unknown error making xcb query: error_code={0} response_type={1}")]
+    XcbUnknown(u8, u8),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
