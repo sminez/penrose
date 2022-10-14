@@ -32,8 +32,8 @@ pub enum Error {
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
-    #[error("Requested property was not valid UTF8")]
-    NonUtf8Prop(#[from] std::string::FromUtf8Error),
+    #[error(transparent)]
+    InvalidUtf8(#[from] std::string::FromUtf8Error),
 
     #[error("There are no screens available")]
     NoScreens,
@@ -46,6 +46,12 @@ pub enum Error {
 
     #[error("The given client is not in this State")]
     UnknownClient,
+
+    #[error("'{name}' is not a known key name")]
+    UnknownKeyName { name: String },
+
+    #[error("'{name}' is not a known modifier key")]
+    UnknownModifier { name: String },
 
     #[error("{button} is not a supported mouse button")]
     UnknownMouseButton { button: u8 },

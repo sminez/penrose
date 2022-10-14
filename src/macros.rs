@@ -14,7 +14,7 @@ macro_rules! map {
 
     { $($key:expr => $value:expr),+, } => {
         {
-            let mut _map = ::std::collections::HashMap::new();
+            let mut _map: ::std::collections::HashMap<_, _> = ::std::collections::HashMap::new();
             $(_map.insert($key, $value);)+
             _map
         }
@@ -38,8 +38,9 @@ macro_rules! spawn {
 #[macro_export]
 macro_rules! layout_message {
     ($m:expr) => {
-        Box::new(|s: $crate::core::State<_, _>, _| {
-            s.client_set.current_workspace_mut().broadcast_message($m)
+        Box::new(|s: &mut $crate::core::State<_, _>, _| {
+            s.client_set.current_workspace_mut().broadcast_message($m);
+            Ok(())
         }) as Box<dyn $crate::bindings::KeyEventHandler<_, _>>
     };
 }
