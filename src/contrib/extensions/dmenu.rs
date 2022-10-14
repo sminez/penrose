@@ -47,10 +47,15 @@ pub struct DMenuConfig {
     ///
     /// Default #458588
     pub selected_color: Color,
-    /// Number of lines to display at a time
+    /// Number of lines to display at a time. If set to zero,
+    /// the provided options will be displayed on a single line.
     ///
     /// Default: 10
     pub n_lines: usize,
+    /// Should dmenu match the menu items case insensitively?
+    ///
+    /// Default: false
+    pub ignore_case: bool,
 }
 
 impl Default for DMenuConfig {
@@ -62,6 +67,7 @@ impl Default for DMenuConfig {
             fg_color: 0xebdbb2ff.into(),
             selected_color: 0x458588ff.into(),
             n_lines: 10,
+            ignore_case: false,
         }
     }
 }
@@ -69,8 +75,7 @@ impl Default for DMenuConfig {
 impl DMenuConfig {
     fn flags(&self, prompt: &str, screen_index: usize) -> Vec<String> {
         let mut s = format!(
-            "-l {} -nb {} -nf {} -sb {} -m {}",
-            self.n_lines,
+            "-nb {} -nf {} -sb {} -m {}",
             self.bg_color.as_rgb_hex_string(),
             self.fg_color.as_rgb_hex_string(),
             self.selected_color.as_rgb_hex_string(),
@@ -88,6 +93,14 @@ impl DMenuConfig {
 
         if !prompt.is_empty() {
             flags.append(&mut vec!["-p".into(), prompt.into()]);
+        }
+
+        if self.n_lines > 0 {
+            flags.append(&mut vec!["-l".into(), format!("{}", self.n_lines)]);
+        }
+
+        if self.ignore_case {
+            flags.push("-i".into());
         }
 
         flags
