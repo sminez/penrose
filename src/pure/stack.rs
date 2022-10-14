@@ -101,10 +101,13 @@ impl<T> Stack<T> {
         })
     }
 
-    // A stack is never empty
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.up.len() + self.down.len() + 1
+    }
+
+    /// Always false: a Stack always has at least one focused element
+    pub fn is_empty(&self) -> bool {
+        false
     }
 
     /// Provide an iterator over this stack iterating over up,
