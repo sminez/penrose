@@ -5,7 +5,7 @@ use crate::{
     handle,
     hooks::{EventHook, ManageHook, StateHook},
     layout::{Layout, LayoutStack},
-    stack_set::{StackSet, Workspace},
+    pure::{StackSet, Workspace},
     x::{XConn, XEvent},
     Color, Result,
 };

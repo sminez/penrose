@@ -101,13 +101,15 @@ impl<T> Stack<T> {
         })
     }
 
+    // A stack is never empty
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.up.len() + self.down.len() + 1
     }
 
     /// Provide an iterator over this stack iterating over up,
     /// focus and then down.
-    pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+    pub fn iter(&self) -> Iter<T> {
         Iter {
             up: self.up.iter(),
             focus: Some(&self.focus),
@@ -117,7 +119,7 @@ impl<T> Stack<T> {
 
     /// Provide an iterator over this stack iterating over up,
     /// focus and then down with mutable references.
-    pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
+    pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
             up: self.up.iter_mut(),
             focus: Some(&mut self.focus),
@@ -243,14 +245,14 @@ impl<T> Stack<T> {
             None => return (self.focus, None),
         };
 
-        return (
+        (
             self.focus,
             Some(Self {
                 focus,
                 up: self.up,
                 down: self.down,
             }),
-        );
+        )
     }
 
     /// Remove an element from the stack.
@@ -595,7 +597,7 @@ mod tests {
     #[test]
     fn iter_yields_all_elements_in_order() {
         let s = stack!([1, 2], 3, [4, 5]);
-        let elems: Vec<u8> = s.iter().map(|c| *c).collect();
+        let elems: Vec<u8> = s.iter().copied().collect();
 
         assert_eq!(elems, vec![1, 2, 3, 4, 5])
     }
@@ -611,7 +613,7 @@ mod tests {
     #[test]
     fn into_iter_yields_all_elements_in_order() {
         let s = stack!([1, 2], 3, [4, 5]);
-        let elems: Vec<u8> = s.into_iter().map(|c| c).collect();
+        let elems: Vec<u8> = s.into_iter().collect();
 
         assert_eq!(elems, vec![1, 2, 3, 4, 5])
     }

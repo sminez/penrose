@@ -1,6 +1,6 @@
 use crate::{
-    layout::{AsMessage, LayoutStack},
-    stack_set::Stack,
+    layout::{IntoMessage, LayoutStack},
+    pure::Stack,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -50,7 +50,7 @@ impl<C> Workspace<C> {
 
     pub fn broadcast_message<M>(&mut self, m: M)
     where
-        M: AsMessage,
+        M: IntoMessage,
     {
         self.layouts.broadcast_message(m)
     }

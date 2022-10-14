@@ -131,7 +131,7 @@ impl XcbConn {
         };
         self.randr_base = self
             .conn
-            .get_extension_data(&mut xcb::randr::id())
+            .get_extension_data(xcb::randr::id())
             .ok_or_else(|| Error::Randr("unable to fetch extension data".into()))?
             .first_event();
 

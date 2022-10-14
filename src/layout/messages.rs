@@ -10,8 +10,8 @@ impl Message {
 }
 
 /// Marker trait for a type that can be sent as a [Message]
-pub trait AsMessage: Any {
-    fn as_message(self) -> Message
+pub trait IntoMessage: Any {
+    fn into_message(self) -> Message
     where
         Self: Sized,
     {
@@ -21,7 +21,7 @@ pub trait AsMessage: Any {
 
 macro_rules! msg {
     ($m:ident) => {
-        impl $crate::layout::messages::AsMessage for $m {}
+        impl $crate::layout::messages::IntoMessage for $m {}
     };
 }
 

@@ -3,7 +3,7 @@ use crate::{
     core::{ClientSet, Config, State},
     geometry::{Point, Rect},
     layout::messages::control::Hide,
-    stack_set::Diff,
+    pure::Diff,
     x::{
         atom::{Atom, AUTO_FLOAT_WINDOW_TYPES},
         event::ClientMessage,
@@ -124,7 +124,7 @@ pub trait XConnExt: XConn + Sized {
             // TODO: should this be called here? Or in a second refresh?
             if let Some(ref mut h) = hook {
                 trace!("running user manage hook");
-                h.call(client, cs, &self);
+                h.call(client, cs, self);
             }
         });
 
@@ -194,7 +194,7 @@ pub trait XConnExt: XConn + Sized {
     /// Window Manager state and associated X11 calls.
     fn modify_and_refresh<F, E>(&self, state: &mut State<Self, E>, mut f: F) -> Result<()>
     where
-        F: FnMut(&mut ClientSet) -> (),
+        F: FnMut(&mut ClientSet),
         E: Send + Sync + 'static,
     {
         let ss = state.client_set.snapshot();

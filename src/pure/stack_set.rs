@@ -1,9 +1,8 @@
 use crate::{
     geometry::Rect,
     layout::LayoutStack,
-    stack,
-    stack_set::{Position, Screen, Stack, Workspace},
-    Error, Result,
+    pure::{Position, Screen, Stack, Workspace},
+    stack, Error, Result,
 };
 use std::{
     collections::{HashMap, HashSet, LinkedList},
@@ -123,7 +122,7 @@ where
     /// otherwise the workspace replaces whatever was on the active screen.
     pub fn focus_tag(&mut self, tag: &str) {
         // If the tag is already focused then there's nothing to do
-        if tag == &self.current.workspace.tag {
+        if tag == self.current.workspace.tag {
             return;
         }
 
@@ -411,25 +410,25 @@ where
     /// Iterate over each client in this [StackSet] in an arbitrary order.
     pub fn iter_clients(&self) -> impl Iterator<Item = &C> {
         self.iter_workspaces()
-            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+            .flat_map(|w| w.stack.iter().flat_map(|s| s.iter()))
     }
 
     /// Iterate over the currently visible clients in this [StackSet] in an arbitrary order.
     pub fn iter_visible_clients(&self) -> impl Iterator<Item = &C> {
         self.iter_visible_workspaces()
-            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+            .flat_map(|w| w.stack.iter().flat_map(|s| s.iter()))
     }
 
     /// Iterate over the currently hidden clients in this [StackSet] in an arbitrary order.
     pub fn iter_hidden_clients(&self) -> impl Iterator<Item = &C> {
         self.iter_hidden_workspaces()
-            .flat_map(|w| w.stack.iter().map(|s| s.iter()).flatten())
+            .flat_map(|w| w.stack.iter().flat_map(|s| s.iter()))
     }
 
     /// Iterate over each client in this [StackSet] in an arbitrary order.
     pub fn iter_clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
         self.iter_workspaces_mut()
-            .flat_map(|w| w.stack.iter_mut().map(|s| s.iter_mut()).flatten())
+            .flat_map(|w| w.stack.iter_mut().flat_map(|s| s.iter_mut()))
     }
 }
 
@@ -709,7 +708,7 @@ mod tests {
     #[test]
     fn iter_clients_returns_all_clients() {
         let s = test_iter_stack_set();
-        let mut clients: Vec<u8> = s.iter_clients().map(|c| *c).collect();
+        let mut clients: Vec<u8> = s.iter_clients().copied().collect();
         clients.sort();
 
         assert_eq!(clients, vec![1, 2, 3, 4, 5, 6, 7, 8])
@@ -788,8 +787,7 @@ mod quickcheck_tests {
                 .workspace
                 .stack
                 .iter()
-                .map(|s| s.iter())
-                .flatten()
+                .flat_map(|s| s.iter())
                 .last()
         }
     }
@@ -837,7 +835,7 @@ mod quickcheck_tests {
     #[quickcheck]
     fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<u8>) -> bool {
         let target = match s.iter_clients().max() {
-            Some(target) => target.clone(),
+            Some(target) => *target,
             None => return true, // nothing to focus
         };
 
@@ -931,7 +929,7 @@ mod quickcheck_tests {
         s.focus_tag(&tag);
         let diff = Diff::from_raw(ss, &s, &[]);
 
-        let focused_clients_now_hidden = clients_on_active.iter().all(|c| diff.hidden.contains(&c));
+        let focused_clients_now_hidden = clients_on_active.iter().all(|c| diff.hidden.contains(c));
         let tag_now_hidden = diff.previous_visible_tags.contains(&prev_tag);
 
         focused_clients_now_hidden && tag_now_hidden

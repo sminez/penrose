@@ -6,14 +6,14 @@ pub mod handle;
 pub mod hooks;
 pub mod layout;
 pub mod macros;
-pub mod stack_set;
+pub mod pure;
 pub mod util;
 pub mod x;
 pub mod xcb; // TODO: should be feature flagged
 
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
-pub use stack_set::{Position, Screen, Stack, StackSet, Workspace};
+pub use pure::{Position, Screen, Stack, StackSet, Workspace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -169,7 +169,7 @@ impl TryFrom<&str> for Color {
     type Error = Error;
 
     fn try_from(s: &str) -> Result<Self> {
-        let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(&s), 16)?;
+        let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(s), 16)?;
 
         if s.len() == 7 {
             Ok(Self::new_from_hex((hex << 8) + 0xFF))

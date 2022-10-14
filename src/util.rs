@@ -67,12 +67,12 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
 
     let mut child = result?;
     let mut buff = String::new();
-    Ok(child
+    child
         .stdout
         .take()
         .expect("to have output")
         .read_to_string(&mut buff)
-        .map(|_| buff)?)
+        .map(|_| buff)
 }
 
 /// Run an external command with arguments and return its output.
@@ -94,12 +94,12 @@ pub fn spawn_for_output_with_args<S: Into<String>>(
 
     info!(?cmd, ?args, "reading output");
     let mut buff = String::new();
-    Ok(child
+    child
         .stdout
         .take()
         .unwrap()
         .read_to_string(&mut buff)
-        .map(|_| buff)?)
+        .map(|_| buff)
 }
 
 /// Run the xmodmap command to dump the system keymap table.

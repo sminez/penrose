@@ -141,6 +141,7 @@ pub struct WmHints {
 
 impl WmHints {
     /// Create a new instance from component parts
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         flags: WmHintsFlags,
         accepts_input: bool,

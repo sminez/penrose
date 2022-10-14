@@ -1,4 +1,4 @@
-use crate::{geometry::Rect, stack_set::Workspace};
+use crate::{geometry::Rect, pure::Workspace};
 
 #[derive(Default, Debug, Clone)]
 pub struct Screen<C> {

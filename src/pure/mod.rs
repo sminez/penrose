@@ -1,4 +1,4 @@
-//! Sie effect free management of internal window manager state
+//! Side effect free management of internal window manager state
 pub mod screen;
 pub mod stack;
 pub mod stack_set;

@@ -3,15 +3,15 @@ use crate::{
     core::Xid,
     geometry::Rect,
     layout::messages::common::{ExpandMain, IncMain, Rotate, ShrinkMain},
+    pure::Stack,
     stack,
-    stack_set::Stack,
 };
 use std::{fmt, mem::swap};
 
 pub mod messages;
 pub mod transformers;
 
-pub use messages::{AsMessage, Message};
+pub use messages::{IntoMessage, Message};
 pub use transformers::LayoutTransformer;
 
 // TODO: Do I also need versions of the layout methods that have access to the overall X state as well?
@@ -56,6 +56,7 @@ pub trait Layout {
     /// When a layout is run it may optionally replace itself with a new [Layout]. If `Some(layout)`
     /// is returned from this method, it will be swapped out for the current one after the provided
     /// positions have been applied.
+    #[allow(clippy::type_complexity)]
     fn layout_workspace(
         &mut self,
         _tag: &str,
@@ -71,11 +72,13 @@ pub trait Layout {
     /// Generate screen positions for clients from a given [Stack].
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
+    #[allow(clippy::type_complexity)]
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>);
 
     /// Generate screen positions for an empty [Stack].
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
+    #[allow(clippy::type_complexity)]
     fn layout_empty(&mut self, _r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         (None, vec![])
     }
@@ -130,9 +133,9 @@ impl LayoutStack {
     /// currently focused one.
     pub fn broadcast_message<M>(&mut self, m: M)
     where
-        M: AsMessage,
+        M: IntoMessage,
     {
-        let m = m.as_message();
+        let m = m.into_message();
 
         for l in self.iter_mut() {
             if let Some(mut new) = l.handle_message(&m) {
@@ -287,7 +290,7 @@ impl Layout for MainAndStack {
     }
 
     fn boxed_clone(&self) -> Box<dyn Layout> {
-        Box::new(self.clone())
+        Box::new(*self)
     }
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
@@ -330,7 +333,7 @@ impl Layout for MainAndStack {
 #[cfg(test)]
 mod tests {
     use super::{
-        messages::{common::IncMain, AsMessage},
+        messages::{common::IncMain, IntoMessage},
         *,
     };
 
@@ -338,7 +341,7 @@ mod tests {
     fn message_handling() {
         let mut l = MainAndStack::side(1, 0.6, 0.1);
 
-        l.handle_message(&IncMain(2).as_message());
+        l.handle_message(&IncMain(2).into_message());
 
         assert_eq!(l.max_main, 3);
     }

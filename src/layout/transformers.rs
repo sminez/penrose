@@ -5,7 +5,7 @@ use crate::{
         messages::{common::UnwrapTransformer, Message},
         Layout,
     },
-    stack_set::Stack,
+    pure::Stack,
 };
 use std::mem::swap;
 
@@ -46,12 +46,13 @@ pub trait LayoutTransformer: Clone + Sized + 'static {
     }
 
     /// Apply the [LayoutTransformer] to its wrapped inner [Layout].
+    #[allow(clippy::type_complexity)]
     fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>)
     where
         F: FnOnce(Rect, &mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
     {
         let r = self.transform_initial(r);
-        let (new, positions) = (f)(r.clone(), self.inner_mut());
+        let (new, positions) = (f)(r, self.inner_mut());
         let transformed = self.transform_positions(r, positions);
 
         if let Some(l) = new {
@@ -92,15 +93,15 @@ where
         stack: &Option<Stack<Xid>>,
         r: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|r, inner| inner.layout_workspace(tag, stack, r.clone()), r)
+        self.run_transform(|r, inner| inner.layout_workspace(tag, stack, r), r)
     }
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|r, inner| inner.layout(s, r.clone()), r)
+        self.run_transform(|r, inner| inner.layout(s, r), r)
     }
 
     fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        self.run_transform(|r, inner| inner.layout_empty(r.clone()), r)
+        self.run_transform(|r, inner| inner.layout_empty(r), r)
     }
 
     fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
