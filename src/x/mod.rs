@@ -111,10 +111,12 @@ pub trait XConnExt: XConn + Sized {
     where
         E: Send + Sync + 'static,
     {
+        trace!(%client, "managing new client");
         let should_float = self.client_should_float(client, &state.config.floating_classes)?;
         let r = self.float_location(client)?;
         let mut hook = state.config.manage_hook.take();
 
+        trace!("calling modify and refresh");
         let res = self.modify_and_refresh(state, |cs| {
             cs.insert(client);
             if should_float {
@@ -197,6 +199,7 @@ pub trait XConnExt: XConn + Sized {
         F: FnMut(&mut ClientSet),
         E: Send + Sync + 'static,
     {
+        trace!("taking state snapshot");
         let ss = state.client_set.snapshot();
 
         f(&mut state.client_set); // NOTE: mutating the existing state
@@ -219,14 +222,17 @@ pub trait XConnExt: XConn + Sized {
             .for_each(|ws| ws.broadcast_message(Hide));
 
         for (c, r) in positions {
+            trace!(?c, ?r, "positioning client");
             self.position_client(c, r)?;
         }
 
         if let Some(&focused) = state.client_set.current_client() {
+            trace!(?focused, "setting border for focused client");
             self.set_client_border_color(focused, state.config.focused_border)?;
         }
 
         for c in diff.visible.into_iter() {
+            trace!(?c, "revealing client");
             self.reveal(c, &state.client_set, &mut state.mapped)?;
         }
 
@@ -239,10 +245,12 @@ pub trait XConnExt: XConn + Sized {
         )?;
 
         for c in diff.hidden.into_iter() {
+            trace!(?c, "hiding client");
             self.hide(c, &mut state.mapped, &mut state.pending_unmap)?;
         }
 
         for c in diff.withdrawn.into_iter() {
+            trace!(?c, "setting withdrawn state for client");
             self.set_wm_state(c, WmState::Withdrawn)?;
         }
 

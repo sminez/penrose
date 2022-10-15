@@ -6,7 +6,7 @@ use crate::{
     hooks::{EventHook, ManageHook, StateHook},
     layout::{Layout, LayoutStack},
     pure::{StackSet, Workspace},
-    x::{XConn, XEvent},
+    x::{XConn, XConnExt, XEvent},
     Color, Result,
 };
 use nix::sys::signal::{signal, SigHandler, Signal};
@@ -282,6 +282,7 @@ where
         }
 
         self.grab()?;
+        self.x.refresh(&mut self.state)?;
 
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");

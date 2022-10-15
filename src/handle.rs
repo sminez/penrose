@@ -72,6 +72,7 @@ where
     E: Send + Sync + 'static,
 {
     if let Some(action) = bindings.get_mut(&key) {
+        trace!(?key, "running user keybinding");
         if let Err(error) = action.call(state, x) {
             error!(%error, ?key, "error running user keybinding");
             return Err(error);
@@ -106,9 +107,11 @@ where
     X: XConn,
     E: Send + Sync + 'static,
 {
+    trace!(?client, "handling new map request");
     let attrs = x.get_window_attributes(client)?;
 
     if !state.client_set.contains(&client) && !attrs.override_redirect {
+        trace!(?client, "managing client");
         x.manage(client, state)?;
     }
 
@@ -121,6 +124,7 @@ where
     E: Send + Sync + 'static,
 {
     if state.client_set.contains(&client) {
+        trace!(?client, "destroying client");
         x.unmanage(client, state)?;
         state.mapped.remove(&client);
         state.pending_unmap.remove(&client);

@@ -7,6 +7,7 @@ use crate::{
     x::{XConn, XConnExt},
     Result,
 };
+use tracing::info;
 
 // NOTE: this is here to force the correct lifetime requirements on closures being
 //       used as handlers. The generic impl in crate::bindings for functions of the
@@ -78,4 +79,15 @@ where
     E: Send + Sync + 'static,
 {
     key_handler(|_, _| std::process::exit(0))
+}
+
+pub fn log_current_state<X, E>() -> Box<dyn KeyEventHandler<X, E>>
+where
+    X: XConn + std::fmt::Debug,
+    E: std::fmt::Debug + Send + Sync + 'static,
+{
+    key_handler(|s: &mut State<X, E>, _| {
+        info!("{s:#?}");
+        Ok(())
+    })
 }
