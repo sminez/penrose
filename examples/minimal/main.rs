@@ -3,7 +3,7 @@
 //! This file will give you a functional if incredibly minimal window manager that has multiple
 //! workspaces and simple client/workspace movement.
 use penrose::{
-    actions::{exit, modify_with, send_layout_message, spawn, log_current_state},
+    actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
     bindings::KeyEventHandler,
     core::{Config, WindowManager},
     layout::messages::common::{ExpandMain, IncMain, ShrinkMain},
@@ -17,26 +17,26 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> 
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
 
-        "M-A-j" => modify_with(|cs| cs.focus_up()),
-        "M-A-k" => modify_with(|cs| cs.focus_down()),
-        "M-A-S-j" => modify_with(|cs| cs.swap_up()),
-        "M-A-S-k" => modify_with(|cs| cs.swap_down()),
-        "M-A-q" => modify_with(|cs| cs.kill_focused()),
+        "M-j" => modify_with(|cs| cs.focus_up()),
+        "M-k" => modify_with(|cs| cs.focus_down()),
+        "M-S-j" => modify_with(|cs| cs.swap_up()),
+        "M-S-k" => modify_with(|cs| cs.swap_down()),
+        "M-S-q" => modify_with(|cs| cs.kill_focused()),
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
         "M-bracketright" => modify_with(|cs| cs.next_screen()),
         "M-bracketleft" => modify_with(|cs| cs.previous_screen()),
         "M-S-bracketright" => modify_with(|cs| cs.drag_workspace_forward()),
         "M-S-bracketleft" => modify_with(|cs| cs.drag_workspace_backward()),
-        "M-A-grave" => modify_with(|cs| cs.next_layout()),
-        "M-A-S-grave" => modify_with(|cs| cs.previous_layout()),
-        "M-S-A-Up" => send_layout_message(|| IncMain(1)),
-        "M-S-A-Down" => send_layout_message(|| IncMain(-1)),
-        "M-S-A-Right" => send_layout_message(|| ExpandMain),
-        "M-S-A-Left" => send_layout_message(|| ShrinkMain),
-        // "M-S-semicolon" => spawn("dmenu_run"),
-        "M-S-semicolon" => log_current_state(),
-        "M-S-Return" => spawn("st"),
-        "M-S-Escape" => exit(),
+        "M-grave" => modify_with(|cs| cs.next_layout()),
+        "M-S-grave" => modify_with(|cs| cs.previous_layout()),
+        "M-S-Up" => send_layout_message(|| IncMain(1)),
+        "M-S-Down" => send_layout_message(|| IncMain(-1)),
+        "M-S-Right" => send_layout_message(|| ExpandMain),
+        "M-S-Left" => send_layout_message(|| ShrinkMain),
+        "M-semicolon" => spawn("dmenu_run"),
+        "M-S-s" => log_current_state(),
+        "M-Return" => spawn("st"),
+        "M-A-Escape" => exit(),
     };
 
     for tag in &["1", "2", "3", "4", "5", "6", "7", "8", "9"] {
