@@ -236,6 +236,7 @@ where
         screens,
         hidden,
         floating,
+        previous_tag,
     } = take(&mut state.client_set);
 
     let mut workspaces: Vec<_> = screens.into_iter().map(|s| s.workspace).collect();
@@ -244,6 +245,7 @@ where
     // FIXME: this needs to not hard error. Probably best to pad with some default workspaces
     //        if there aren't enough already?
     state.client_set = StackSet::try_new_concrete(workspaces, rects, floating)?;
+    state.client_set.previous_tag = previous_tag;
 
     Ok(())
 }

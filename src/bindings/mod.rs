@@ -12,8 +12,6 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};
 use strum::EnumIter;
 
-pub mod handlers;
-
 pub type CodeMap = HashMap<String, u8>;
 
 /// Some action to be run by a user key binding

@@ -3,10 +3,8 @@
 //! This file will give you a functional if incredibly minimal window manager that has multiple
 //! workspaces and simple client/workspace movement.
 use penrose::{
-    bindings::{
-        handlers::{exit, modify_with, send_layout_message, spawn},
-        KeyEventHandler,
-    },
+    actions::{exit, modify_with, send_layout_message, spawn},
+    bindings::KeyEventHandler,
     core::{Config, WindowManager},
     layout::messages::common::{ExpandMain, IncMain, ShrinkMain},
     map,
@@ -27,8 +25,8 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> 
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
         "M-bracketright" => modify_with(|cs| cs.next_screen()),
         "M-bracketleft" => modify_with(|cs| cs.previous_screen()),
-        // "M-S-bracketright" => run_internal!(drag_workspace, Forward);
-        // "M-S-bracketleft" => run_internal!(drag_workspace, Backward);
+        "M-S-bracketright" => modify_with(|cs| cs.drag_workspace_forward()),
+        "M-S-bracketleft" => modify_with(|cs| cs.drag_workspace_backward()),
         "M-grave" => modify_with(|cs| cs.next_layout()),
         "M-S-grave" => modify_with(|cs| cs.previous_layout()),
         "M-A-Up" => send_layout_message(|| IncMain(1)),
@@ -40,9 +38,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> 
         "M-A-Escape" => exit(),
     };
 
-    let workspace_tags = &["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-
-    for tag in workspace_tags.iter() {
+    for tag in &["1", "2", "3", "4", "5", "6", "7", "8", "9"] {
         raw_bindings.extend([
             (
                 format!("M-{tag}"),

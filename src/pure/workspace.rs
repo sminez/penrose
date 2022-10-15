@@ -3,12 +3,23 @@ use crate::{
     pure::Stack,
 };
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Workspace<C> {
     pub(crate) id: usize,
     pub(crate) tag: String,
     pub(crate) layouts: LayoutStack,
     pub(crate) stack: Option<Stack<C>>,
+}
+
+impl<C> Default for Workspace<C> {
+    fn default() -> Self {
+        Self {
+            id: Default::default(),
+            tag: Default::default(),
+            layouts: Default::default(),
+            stack: Default::default(),
+        }
+    }
 }
 
 impl<C> Workspace<C> {

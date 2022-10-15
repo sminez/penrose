@@ -44,7 +44,7 @@ where
     pub(crate) screens: Stack<Screen<C>>, // Workspaces visible on screens
     pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
     pub(crate) floating: HashMap<C, Rect>, // Floating windows
-    previous_tag: String,
+    pub(crate) previous_tag: String,
 }
 
 impl<C> StackSet<C>
@@ -157,9 +157,7 @@ where
 
     /// Toggle focus back to the previously focused [Workspace] based on its tag
     pub fn toggle_tag(&mut self) {
-        let current_tag = self.screens.focus.workspace.tag.clone();
-        self.focus_tag(self.previous_tag);
-        self.previous_tag = current_tag;
+        self.focus_tag(self.previous_tag.clone());
     }
 
     /// Focus the given client and set its [Workspace] as current (see
@@ -386,6 +384,32 @@ where
     /// Move focus to the previous [Screen]
     pub fn previous_screen(&mut self) {
         self.screens.focus_up();
+    }
+
+    fn swap_workspace_with_previous(&mut self) {
+        let tag = self.previous_tag.clone();
+        if self.screens.focus.workspace.tag == tag {
+            return;
+        }
+
+        let p = |s: &&mut Screen<C>| s.workspace.tag == tag;
+
+        let in_up = self.screens.up.iter_mut().find(p);
+        let in_down = self.screens.down.iter_mut().find(p);
+
+        if let Some(s) = in_up.or(in_down) {
+            swap(&mut self.screens.focus.workspace, &mut s.workspace);
+        }
+    }
+
+    pub fn drag_workspace_forward(&mut self) {
+        self.next_screen();
+        self.swap_workspace_with_previous();
+    }
+
+    pub fn drag_workspace_backward(&mut self) {
+        self.previous_screen();
+        self.swap_workspace_with_previous();
     }
 
     /// If the current [Stack] is [None], return `default` otherwise

@@ -1,4 +1,5 @@
 //! # Penrose: a library for building your very own tiling window manager
+pub mod actions;
 pub mod bindings;
 pub mod core;
 pub mod geometry;
