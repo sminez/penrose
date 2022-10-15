@@ -339,6 +339,14 @@ where
         self.iter_workspaces_mut().find(|w| w.tag == tag)
     }
 
+    pub fn next_layout(&mut self) {
+        self.current.workspace.next_layout()
+    }
+
+    pub fn previous_layout(&mut self) {
+        self.current.workspace.previous_layout()
+    }
+
     /// If the current [Stack] is [None], return `default` otherwise
     /// apply the function to it to generate a value
     pub fn with<T, F>(&self, default: T, f: F) -> T

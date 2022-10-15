@@ -61,6 +61,14 @@ impl<C> Workspace<C> {
     {
         self.layouts.broadcast_message(m)
     }
+
+    pub fn next_layout(&mut self) {
+        self.layouts.focus_down();
+    }
+
+    pub fn previous_layout(&mut self) {
+        self.layouts.focus_up();
+    }
 }
 
 #[cfg(test)]
