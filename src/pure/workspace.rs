@@ -48,6 +48,13 @@ impl<C> Workspace<C> {
         maybe_c
     }
 
+    pub fn handle_message<M>(&mut self, m: M)
+    where
+        M: IntoMessage,
+    {
+        self.layouts.handle_message(m)
+    }
+
     pub fn broadcast_message<M>(&mut self, m: M)
     where
         M: IntoMessage,

@@ -120,7 +120,9 @@ where
     /// If there is no matching workspace then the [StackSet] is unmodified.
     /// If the [Workspace] is currently visible it becomes the active [Screen],
     /// otherwise the workspace replaces whatever was on the active screen.
-    pub fn focus_tag(&mut self, tag: &str) {
+    pub fn focus_tag(&mut self, tag: impl AsRef<str>) {
+        let tag = tag.as_ref();
+
         // If the tag is already focused then there's nothing to do
         if tag == self.current.workspace.tag {
             return;
@@ -225,7 +227,8 @@ where
 
     /// Move the focused client of the current [Workspace] to the focused position
     /// of the workspace matching the provided `tag`.
-    pub fn move_focused_to_tag(&mut self, tag: &str) {
+    pub fn move_focused_to_tag(&mut self, tag: impl AsRef<str>) {
+        let tag = tag.as_ref();
         if self.current_tag() == tag || !self.contains_tag(tag) {
             return;
         }
@@ -241,7 +244,9 @@ where
     /// Move the given client to the focused position of the [Workspace] matching
     /// the provided `tag`. If the client is already on the target workspace it is
     /// moved to the focused position.
-    pub fn move_client_to_tag(&mut self, client: &C, tag: &str) {
+    pub fn move_client_to_tag(&mut self, client: &C, tag: impl AsRef<str>) {
+        let tag = tag.as_ref();
+
         if !self.contains_tag(tag) {
             return;
         }

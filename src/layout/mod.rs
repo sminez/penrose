@@ -129,8 +129,20 @@ impl LayoutStack {
         rs
     }
 
+    /// Send the given [Message] to the currently active [Layout].
+    pub fn handle_message<M>(&mut self, m: M)
+    where
+        M: IntoMessage,
+    {
+        let m = m.into_message();
+
+        if let Some(mut new) = self.focus.handle_message(&m) {
+            swap(&mut self.focus, &mut new);
+        }
+    }
+
     /// Send the given [Message] to every [Layout] in this stack rather that just the
-    /// currently focused one.
+    /// currently active one.
     pub fn broadcast_message<M>(&mut self, m: M)
     where
         M: IntoMessage,

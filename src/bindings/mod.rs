@@ -1,8 +1,8 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{ClientSet, State, Xid},
+    core::{State, Xid},
     geometry::Point,
-    x::{XConn, XConnExt},
+    x::XConn,
     Result,
 };
 #[cfg(feature = "keysyms")]
@@ -11,6 +11,8 @@ use penrose_keysyms::XKeySym;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, convert::TryFrom};
 use strum::EnumIter;
+
+pub mod handlers;
 
 pub type CodeMap = HashMap<String, u8>;
 
@@ -60,29 +62,6 @@ where
 /// User defined mouse bindings
 pub type MouseBindings<X, E> =
     HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X, E>>>;
-
-/// Mutate the [ClientSet] and refresh the onscreen state as a key or mouse binding
-pub struct Modify(pub fn(&mut ClientSet));
-
-impl<X, E> KeyEventHandler<X, E> for Modify
-where
-    X: XConn,
-    E: Send + Sync + 'static,
-{
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
-        x.modify_and_refresh(state, self.0)
-    }
-}
-
-impl<X, E> MouseEventHandler<X, E> for Modify
-where
-    X: XConn,
-    E: Send + Sync + 'static,
-{
-    fn call(&mut self, _: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()> {
-        x.modify_and_refresh(state, self.0)
-    }
-}
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]

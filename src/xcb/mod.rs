@@ -156,15 +156,18 @@ impl XcbConn {
         Ok(())
     }
 
-    pub fn parse_keybindings_with_xmodmap<E>(
+    pub fn parse_keybindings_with_xmodmap<S, E>(
         &self,
-        str_bindings: HashMap<&str, Box<dyn KeyEventHandler<Self, E>>>,
-    ) -> Result<KeyBindings<Self, E>> {
+        str_bindings: HashMap<S, Box<dyn KeyEventHandler<Self, E>>>,
+    ) -> Result<KeyBindings<Self, E>>
+    where
+        S: AsRef<str>,
+    {
         let m = keycodes_from_xmodmap()?;
 
         str_bindings
             .into_iter()
-            .map(|(s, v)| parse_binding(s, &m).map(|k| (k, v)))
+            .map(|(s, v)| parse_binding(s.as_ref(), &m).map(|k| (k, v)))
             .collect()
     }
 
