@@ -268,18 +268,23 @@ pub trait XConnExt: XConn + Sized {
     }
 
     fn client_should_float(&self, client: Xid, floating_classes: &[String]) -> Result<bool> {
+        trace!(%client, "fetching WmTransientFor prop");
         if let Some(prop) = self.get_prop(client, Atom::WmTransientFor.as_ref())? {
             trace!(?prop, "window is transient: setting to floating state");
             return Ok(true);
         }
 
+        trace!(%client, "fetching WmClass prop");
         if let Some(Prop::UTF8String(strs)) = self.get_prop(client, Atom::WmClass.as_ref())? {
             if strs.iter().any(|c| floating_classes.contains(c)) {
+                trace!(%client, ?floating_classes, "window has a floating class: setting to floating state");
                 return Ok(true);
             }
         }
 
         let float_types: Vec<&str> = AUTO_FLOAT_WINDOW_TYPES.iter().map(|a| a.as_ref()).collect();
+
+        trace!(%client, "fetching NetWmWindowType prop");
         let p = self.get_prop(client, Atom::NetWmWindowType.as_ref())?;
         let should_float = if let Some(Prop::Atom(atoms)) = p {
             atoms.iter().any(|a| float_types.contains(&a.as_ref()))

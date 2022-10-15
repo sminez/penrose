@@ -62,10 +62,6 @@ pub enum Error {
     XcbConnection(#[from] ::xcb::ConnError),
 
     // FIXME: feature flag
-    #[error(transparent)]
-    XcbErrorReply(#[from] ::xcb::base::ReplyError),
-
-    // FIXME: feature flag
     #[error("X11 error: error seq={0}, code={1}, xid={2}, request: {3}:{4}")]
     X11Error(u16, u8, u32, u8, u16),
 

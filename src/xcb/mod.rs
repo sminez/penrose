@@ -113,15 +113,15 @@ impl XcbConn {
     /// [2]: http://rtbo.github.io/rust-xcb/xcb/base/struct.Connection.html
     pub fn new() -> Result<Self> {
         let (conn, _) = xcb::Connection::connect(None)?;
-        let mut api = Self {
+        let mut xconn = Self {
             conn,
             root: Xid(0),
             randr_base: 0,
             atoms: RefCell::new(HashMap::new()),
         };
-        api.init()?;
+        xconn.init()?;
 
-        Ok(api)
+        Ok(xconn)
     }
 
     fn init(&mut self) -> Result<()> {
@@ -152,6 +152,15 @@ impl XcbConn {
         for a in Atom::iter() {
             self.intern_atom(a.as_ref())?;
         }
+
+        let mask = (xcb::randr::NOTIFY_MASK_OUTPUT_CHANGE
+            | xcb::randr::NOTIFY_MASK_CRTC_CHANGE
+            | xcb::randr::NOTIFY_MASK_SCREEN_CHANGE) as u16;
+
+        xcb::randr::select_input_checked(&self.conn, *self.root, mask).request_check()?;
+        self.flush();
+
+        self.set_client_attributes(self.root, &[ClientAttr::RootEventMask])?;
 
         Ok(())
     }
@@ -378,6 +387,7 @@ impl XConn for XcbConn {
 
     fn intern_atom(&self, name: &str) -> Result<Xid> {
         if let Some(atom) = self.atoms.borrow().get(name) {
+            trace!(name, %atom, "known atom");
             return Ok(*atom);
         }
 
@@ -392,6 +402,7 @@ impl XConn for XcbConn {
     }
 
     fn atom_name(&self, atom: Xid) -> Result<String> {
+        trace!(%atom, "fetching atom name");
         let name = xcb::get_atom_name(&self.conn, *atom)
             .get_reply()?
             .name()
@@ -549,10 +560,24 @@ impl XConn for XcbConn {
     }
 
     fn get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>> {
+        // NOTE: this is a way of dumping ALL of the properties for this client for debugging purposes
+        // let reply = xcb::list_properties(&self.conn, *client).get_reply()?;
+        // let all_props = reply.atoms();
+        // warn!(?all_props, %client, "all properties");
+
+        // let all_prop_strs = all_props
+        //     .iter()
+        //     .map(|a| self.atom_name(Xid(*a)))
+        //     .collect::<Result<Vec<String>>>();
+        // warn!(?all_prop_strs, %client, "all properties as strs");
+
         let atom = *self.intern_atom(prop_name)?;
         let cookie = xcb::get_property(&self.conn, false, *client, atom, xcb::ATOM_ANY, 0, 1024);
         let r = cookie.get_reply()?;
-        let prop_type = self.atom_name(Xid(r.type_()))?;
+        let prop_type = match r.type_() {
+            0 => return Ok(None), // Null response
+            id => self.atom_name(Xid(id))?,
+        };
 
         let p = match prop_type.as_ref() {
             "ATOM" => Prop::Atom(

@@ -19,9 +19,31 @@ impl From<&::xcb::GenericError> for Error {
     }
 }
 
+impl From<::xcb::base::ReplyError> for Error {
+    fn from(raw: ::xcb::base::ReplyError) -> Self {
+        use ::xcb::base::ReplyError::*;
+        match raw {
+            NullResponse => Error::XcbKnown(XErrorCode::NullResponse),
+            GenericError(e) => e.into(),
+        }
+    }
+}
+
+impl From<&::xcb::base::ReplyError> for Error {
+    fn from(raw: &::xcb::base::ReplyError) -> Self {
+        use ::xcb::base::ReplyError::*;
+        match raw {
+            NullResponse => Error::XcbKnown(XErrorCode::NullResponse),
+            GenericError(e) => e.into(),
+        }
+    }
+}
+
 /// Base X11 error codes taken from /usr/include/X11/X.h (line 347)
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Ord, PartialOrd)]
 pub enum XErrorCode {
+    /// Null response from the server
+    NullResponse = 0,
     /// bad request code
     BadRequest = 1,
     /// int parameter out of range
