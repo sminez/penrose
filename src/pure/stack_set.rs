@@ -35,15 +35,13 @@ macro_rules! pop_where {
     }};
 }
 
-// TODO: Should current & visible be wrapped up as another Stack?
 /// The side-effect free internal state representation of the window manager.
 #[derive(Default, Debug, Clone)]
 pub struct StackSet<C>
 where
     C: Clone + PartialEq + Eq + Hash,
 {
-    pub(crate) current: Screen<C>, // Currently focused workspace
-    pub(crate) visible: LinkedList<Screen<C>>, // Non-focused workspaces, visible in xinerama
+    pub(crate) screens: Stack<Screen<C>>, // Workspaces visible on screens
     pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
     pub(crate) floating: HashMap<C, Rect>, // Floating windows
 }
@@ -94,22 +92,17 @@ where
             .into_iter()
             .collect();
 
-        let mut visible: LinkedList<Screen<C>> = workspaces
-            .into_iter()
-            .zip(screen_details)
-            .enumerate()
-            .map(|(index, (workspace, r))| Screen {
-                workspace,
-                index,
-                r,
-            })
-            .collect();
-
-        let current = visible.pop_front().expect("to have at least one screen");
+        let screens =
+            Stack::from_iter_unchecked(workspaces.into_iter().zip(screen_details).enumerate().map(
+                |(index, (workspace, r))| Screen {
+                    workspace,
+                    index,
+                    r,
+                },
+            ));
 
         Ok(Self {
-            current,
-            visible,
+            screens,
             hidden,
             floating,
         })
@@ -122,22 +115,26 @@ where
     /// otherwise the workspace replaces whatever was on the active screen.
     pub fn focus_tag(&mut self, tag: impl AsRef<str>) {
         let tag = tag.as_ref();
+        let current_tag = self.screens.focus.workspace.tag.clone();
 
         // If the tag is already focused then there's nothing to do
-        if tag == self.current.workspace.tag {
+        if tag == current_tag {
             return;
         }
 
         // If the tag is visible on another screen, focus moves to that screen
-        if let Some(mut s) = pop_where!(self, visible, |s: &Screen<C>| s.workspace.tag == tag) {
-            swap(&mut s, &mut self.current);
-            self.visible.push_back(s);
-            return;
+        loop {
+            self.screens.focus_down();
+            match &self.screens.focus.workspace.tag {
+                t if t == tag => return,         // we've found and focused the tag
+                t if t == &current_tag => break, // we've looped so this tag isn't visible
+                _ => (),                         // try the next tag
+            }
         }
 
         // If the tag is hidden then it gets moved to the current screen
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
-            swap(&mut w, &mut self.current.workspace);
+            swap(&mut w, &mut self.screens.focus.workspace);
             self.hidden.push_back(w);
         }
 
@@ -222,7 +219,7 @@ where
 
     /// Delete the currently focused client from this stack
     pub fn remove_focused(&mut self) -> Option<C> {
-        self.current.workspace.remove_focused()
+        self.screens.focus.workspace.remove_focused()
     }
 
     /// Move the focused client of the current [Workspace] to the focused position
@@ -233,7 +230,7 @@ where
             return;
         }
 
-        let c = match self.current.workspace.remove_focused() {
+        let c = match self.screens.focus.workspace.remove_focused() {
             None => return,
             Some(c) => c,
         };
@@ -311,22 +308,27 @@ where
 
     /// Extract a reference to the focused element of the current [Stack]
     pub fn current_client(&self) -> Option<&C> {
-        self.current.workspace.stack.as_ref().map(|s| &s.focus)
+        self.screens
+            .focus
+            .workspace
+            .stack
+            .as_ref()
+            .map(|s| &s.focus)
     }
 
     /// Get a reference to the current [Stack] if there is one
     pub fn current_workspace_mut(&mut self) -> &mut Workspace<C> {
-        &mut self.current.workspace
+        &mut self.screens.focus.workspace
     }
 
     /// Get a reference to the current [Stack] if there is one
     pub fn current_stack(&self) -> Option<&Stack<C>> {
-        self.current.workspace.stack.as_ref()
+        self.screens.focus.workspace.stack.as_ref()
     }
 
     /// The `tag` of the current [Workspace]
     pub fn current_tag(&self) -> &str {
-        &self.current.workspace.tag
+        &self.screens.focus.workspace.tag
     }
 
     /// A reference to the [Workspace] with a tag of `tag` if there is one
@@ -340,11 +342,11 @@ where
     }
 
     pub fn next_layout(&mut self) {
-        self.current.workspace.next_layout()
+        self.screens.focus.workspace.next_layout()
     }
 
     pub fn previous_layout(&mut self) {
-        self.current.workspace.previous_layout()
+        self.screens.focus.workspace.previous_layout()
     }
 
     /// If the current [Stack] is [None], return `default` otherwise
@@ -362,7 +364,7 @@ where
     where
         F: FnOnce(Option<Stack<C>>) -> Option<Stack<C>>,
     {
-        self.current.workspace.stack = f(take(&mut self.current.workspace.stack));
+        self.screens.focus.workspace.stack = f(take(&mut self.screens.focus.workspace.stack));
     }
 
     /// Apply a function to modify the current [Stack] if it is non-empty
@@ -383,24 +385,33 @@ where
 
     /// Iterate over each [Screen] in this [StackSet] in an arbitrary order.
     pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C>> {
-        std::iter::once(&self.current).chain(self.visible.iter())
+        self.screens.iter()
     }
 
     /// Mutably iterate over each [Screen] in this [StackSet] in an arbitrary order.
     pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C>> {
-        std::iter::once(&mut self.current).chain(self.visible.iter_mut())
+        self.screens.iter_mut()
     }
 
     /// Iterate over each [Workspace] in this [StackSet] in an arbitrary order.
     pub fn iter_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
-        std::iter::once(&self.current.workspace)
-            .chain(self.visible.iter().map(|s| &s.workspace))
+        self.screens
+            .iter()
+            .map(|s| &s.workspace)
             .chain(self.hidden.iter())
+    }
+
+    /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
+    pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
+        self.screens
+            .iter_mut()
+            .map(|s| &mut s.workspace)
+            .chain(self.hidden.iter_mut())
     }
 
     /// Iterate over the currently visible [Workspace] in this [StackSet] in an arbitrary order.
     pub fn iter_visible_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
-        std::iter::once(&self.current.workspace).chain(self.visible.iter().map(|s| &s.workspace))
+        self.screens.iter().map(|s| &s.workspace)
     }
 
     /// Iterate over the currently hidden [Workspace] in this [StackSet] in an arbitrary order.
@@ -411,13 +422,6 @@ where
     /// Iterate over the currently hidden [Workspace] in this [StackSet] in an arbitrary order.
     pub fn iter_hidden_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
         self.hidden.iter_mut()
-    }
-
-    /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
-    pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
-        std::iter::once(&mut self.current.workspace)
-            .chain(self.visible.iter_mut().map(|s| &mut s.workspace))
-            .chain(self.hidden.iter_mut())
     }
 
     /// Iterate over each client in this [StackSet] in an arbitrary order.
@@ -473,7 +477,7 @@ macro_rules! defer_to_current_stack {
         {
             $(
                 pub fn $method(&mut self) {
-                    if let Some(ref mut stack) = self.current.workspace.stack {
+                    if let Some(ref mut stack) = self.screens.focus.workspace.stack {
                         stack.$method();
                     }
                 }
@@ -611,18 +615,18 @@ mod tests {
         }
     }
 
-    #[test_case("1", &["2", "3"]; "current focused workspace")]
-    #[test_case("2", &["3", "1"]; "visible on other screen")]
-    #[test_case("3", &["2", "1"]; "currently hidden")]
+    #[test_case("1", &["1", "2"]; "current focused workspace")]
+    #[test_case("2", &["1", "2"]; "visible on other screen")]
+    #[test_case("3", &["3", "2"]; "currently hidden")]
     #[test]
     fn focus_tag_sets_correct_visible_workspaces(target: &str, vis: &[&str]) {
-        let mut s = test_stack_set(5, 3);
+        let mut s = test_stack_set(5, 2);
 
         s.focus_tag(target);
 
-        let visible_tags: Vec<&str> = s.visible.iter().map(|s| s.workspace.tag.as_ref()).collect();
+        let visible_tags: Vec<&str> = s.iter_screens().map(|s| s.workspace.tag.as_ref()).collect();
 
-        assert_eq!(s.current.workspace.tag, target);
+        assert_eq!(s.screens.focus.workspace.tag, target);
         assert_eq!(visible_tags, vis);
     }
 
@@ -794,9 +798,10 @@ mod quickcheck_tests {
         }
 
         fn last_visible_client(&self) -> Option<&u8> {
-            self.visible
+            self.screens
+                .down
                 .back()
-                .unwrap_or(&self.current)
+                .unwrap_or(&self.screens.focus)
                 .workspace
                 .stack
                 .iter()

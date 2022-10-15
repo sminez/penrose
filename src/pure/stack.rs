@@ -52,7 +52,7 @@ impl Default for Position {
 /// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
 /// over a [LinkedList]. Many of the methods that mutate the structure of the Stack
 /// return back a mutable reference so that they are able to be chained.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
     pub(crate) up: LinkedList<T>,
     pub(crate) focus: T,
@@ -99,6 +99,20 @@ impl<T> Stack<T> {
             focus,
             down: it.collect(),
         })
+    }
+
+    pub(crate) fn from_iter_unchecked<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let mut it = iter.into_iter();
+        let focus = it.next().expect("at least one element");
+
+        Self {
+            up: LinkedList::default(),
+            focus,
+            down: it.collect(),
+        }
     }
 
     pub fn len(&self) -> usize {

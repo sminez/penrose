@@ -233,14 +233,12 @@ where
     let rects = x.screen_details()?;
 
     let StackSet {
-        current,
-        visible,
+        screens,
         hidden,
         floating,
     } = take(&mut state.client_set);
 
-    let mut workspaces = vec![current.workspace];
-    workspaces.extend(visible.into_iter().map(|s| s.workspace));
+    let mut workspaces: Vec<_> = screens.into_iter().map(|s| s.workspace).collect();
     workspaces.extend(hidden);
 
     // FIXME: this needs to not hard error. Probably best to pad with some default workspaces
