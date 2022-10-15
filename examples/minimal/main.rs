@@ -23,10 +23,10 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> 
         "M-k" => modify_with(|cs| cs.focus_down()),
         "M-S-j" => modify_with(|cs| cs.swap_up()),
         "M-S-k" => modify_with(|cs| cs.swap_down()),
-        "M-S-q" => modify_with(|cs| { cs.remove_focused(); }),
-        // "M-Tab" => run_internal!(toggle_workspace);
-        // "M-bracketright" => run_internal!(cycle_screen, Forward);
-        // "M-bracketleft" => run_internal!(cycle_screen, Backward);
+        "M-S-q" => modify_with(|cs| cs.kill_focused()),
+        "M-Tab" => modify_with(|cs| cs.toggle_tag()),
+        "M-bracketright" => modify_with(|cs| cs.next_screen()),
+        "M-bracketleft" => modify_with(|cs| cs.previous_screen()),
         // "M-S-bracketright" => run_internal!(drag_workspace, Forward);
         // "M-S-bracketleft" => run_internal!(drag_workspace, Backward);
         "M-grave" => modify_with(|cs| cs.next_layout()),

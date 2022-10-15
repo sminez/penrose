@@ -44,6 +44,7 @@ where
     pub(crate) screens: Stack<Screen<C>>, // Workspaces visible on screens
     pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
     pub(crate) floating: HashMap<C, Rect>, // Floating windows
+    previous_tag: String,
 }
 
 impl<C> StackSet<C>
@@ -101,10 +102,13 @@ where
                 },
             ));
 
+        let previous_tag = screens.focus.workspace.tag.clone();
+
         Ok(Self {
             screens,
             hidden,
             floating,
+            previous_tag,
         })
     }
 
@@ -126,9 +130,17 @@ where
         loop {
             self.screens.focus_down();
             match &self.screens.focus.workspace.tag {
-                t if t == tag => return,         // we've found and focused the tag
-                t if t == &current_tag => break, // we've looped so this tag isn't visible
-                _ => (),                         // try the next tag
+                // we've found and focused the tag
+                t if t == tag => {
+                    self.previous_tag = current_tag;
+                    return;
+                }
+
+                // we've looped so this tag isn't visible
+                t if t == &current_tag => break,
+
+                // try the next tag
+                _ => (),
             }
         }
 
@@ -136,10 +148,18 @@ where
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
             swap(&mut w, &mut self.screens.focus.workspace);
             self.hidden.push_back(w);
+            self.previous_tag = current_tag;
         }
 
         // If nothing matched by this point then the requested tag is unknown
         // so there is nothing for us to do
+    }
+
+    /// Toggle focus back to the previously focused [Workspace] based on its tag
+    pub fn toggle_tag(&mut self) {
+        let current_tag = self.screens.focus.workspace.tag.clone();
+        self.focus_tag(self.previous_tag);
+        self.previous_tag = current_tag;
     }
 
     /// Focus the given client and set its [Workspace] as current (see
@@ -217,9 +237,16 @@ where
             .find(|opt| opt.is_some())?
     }
 
-    /// Delete the currently focused client from this stack
+    /// Delete the currently focused client from this stack if there is one.
+    ///
+    /// The client is returned to the caller as `Some(C)` if there was one.
     pub fn remove_focused(&mut self) -> Option<C> {
         self.screens.focus.workspace.remove_focused()
+    }
+
+    /// Delete the currently focused client from this stack if there is one.
+    pub fn kill_focused(&mut self) {
+        self.remove_focused();
     }
 
     /// Move the focused client of the current [Workspace] to the focused position
@@ -341,12 +368,24 @@ where
         self.iter_workspaces_mut().find(|w| w.tag == tag)
     }
 
+    /// Switch to the next available [Layout] on the focused [Workspace]
     pub fn next_layout(&mut self) {
         self.screens.focus.workspace.next_layout()
     }
 
+    /// Switch to the previous available [Layout] on the focused [Workspace]
     pub fn previous_layout(&mut self) {
         self.screens.focus.workspace.previous_layout()
+    }
+
+    /// Move focus to the next [Screen]
+    pub fn next_screen(&mut self) {
+        self.screens.focus_down();
+    }
+
+    /// Move focus to the previous [Screen]
+    pub fn previous_screen(&mut self) {
+        self.screens.focus_up();
     }
 
     /// If the current [Stack] is [None], return `default` otherwise
