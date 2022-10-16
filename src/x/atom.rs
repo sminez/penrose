@@ -65,6 +65,9 @@ pub enum Atom {
     /// _NET_DESKTOP_NAMES
     #[strum(serialize = "_NET_DESKTOP_NAMES")]
     NetDesktopNames,
+    /// _NET_DESKTOP_VIEWPORT
+    #[strum(serialize = "_NET_DESKTOP_VIEWPORT")]
+    NetDesktopViewport,
     /// _NET_NUMBER_OF_DESKTOPS
     #[strum(serialize = "_NET_NUMBER_OF_DESKTOPS")]
     NetNumberOfDesktops,
@@ -95,9 +98,18 @@ pub enum Atom {
     /// _NET_WM_STATE
     #[strum(serialize = "_NET_WM_STATE")]
     NetWmState,
+    /// _NET_WM_STRUT
+    #[strum(serialize = "_NET_WM_STRUT")]
+    NetWmStrut,
+    /// _NET_WM_STATE_DEMANDS_ATTENTION
+    #[strum(serialize = "_NET_WM_STATE_DEMANDS_ATTENTION")]
+    NetWmStateDemandsAttention,
     /// _NET_WM_STATE_FULLSCREEN
     #[strum(serialize = "_NET_WM_STATE_FULLSCREEN")]
     NetWmStateFullscreen,
+    /// _NET_WM_STATE_HIDDEN
+    #[strum(serialize = "_NET_WM_STATE_HIDDEN")]
+    NetWmStateHidden,
     /// _NET_WM_WINDOW_TYPE
     #[strum(serialize = "_NET_WM_WINDOW_TYPE")]
     NetWmWindowType,

@@ -297,6 +297,17 @@ where
         self.iter_workspaces().any(|w| w.tag == tag)
     }
 
+    pub fn ordered_tags(&self) -> Vec<String> {
+        let mut indexed: Vec<_> = self
+            .iter_workspaces()
+            .map(|w| (w.id, w.tag.clone()))
+            .collect();
+
+        indexed.sort_by_key(|(id, _)| *id);
+
+        indexed.into_iter().map(|(_, tag)| tag).collect()
+    }
+
     /// Find the tag of the [Workspace] currently displayed on [Screen] `index`.
     ///
     /// Returns [None] if the index is out of bounds
@@ -341,7 +352,12 @@ where
             .map(|s| &s.focus)
     }
 
-    /// Get a reference to the current [Stack] if there is one
+    /// Get a reference to the current [Workspace]
+    pub fn current_workspace(&self) -> &Workspace<C> {
+        &self.screens.focus.workspace
+    }
+
+    /// Get a mutable reference to the current [Workspace]
     pub fn current_workspace_mut(&mut self) -> &mut Workspace<C> {
         &mut self.screens.focus.workspace
     }

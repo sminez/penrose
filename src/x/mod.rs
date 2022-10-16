@@ -12,7 +12,7 @@ use crate::{
     Color, Result, Xid,
 };
 use std::collections::{HashMap, HashSet};
-use tracing::trace;
+use tracing::{error, trace};
 
 pub mod atom;
 pub mod event;
@@ -126,7 +126,9 @@ pub trait XConnExt: XConn + Sized {
             // TODO: should this be called here? Or in a second refresh?
             if let Some(ref mut h) = hook {
                 trace!("running user manage hook");
-                h.call(client, cs, self);
+                if let Err(e) = h.call(client, cs, self) {
+                    error!(%e, "error returned from user manage hook");
+                }
             }
         });
 
@@ -260,7 +262,9 @@ pub trait XConnExt: XConn + Sized {
         let mut hook = state.config.refresh_hook.take();
         if let Some(ref mut h) = hook {
             trace!("running user refresh hook");
-            h.call(state, self);
+            if let Err(e) = h.call(state, self) {
+                error!(%e, "error returned from user refresh hook");
+            }
         }
         state.config.refresh_hook = hook;
 

@@ -242,7 +242,8 @@ pub struct ClientMessage {
     pub mask: ClientEventMask,
     /// The data type being set
     pub dtype: String,
-    data: ClientMessageData,
+    /// The raw data being sent in this message
+    pub data: ClientMessageData,
 }
 
 impl ClientMessage {
@@ -259,11 +260,6 @@ impl ClientMessage {
             dtype: dtype.into(),
             data,
         }
-    }
-
-    /// The raw data being sent in this message
-    pub fn data(&self) -> &ClientMessageData {
-        &self.data
     }
 }
 

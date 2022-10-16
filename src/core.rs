@@ -123,10 +123,10 @@ where
     pub default_layouts: LayoutStack,
     pub workspace_names: Vec<String>,
     pub floating_classes: Vec<String>,
+    pub startup_hook: Option<Box<dyn StateHook<X, E>>>,
     pub event_hook: Option<Box<dyn EventHook<X, E>>>,
     pub manage_hook: Option<Box<dyn ManageHook<X>>>,
     pub refresh_hook: Option<Box<dyn StateHook<X, E>>>,
-    pub startup_hook: Option<Box<dyn StateHook<X, E>>>,
 }
 
 impl<X, E> fmt::Debug for Config<X, E>
@@ -163,11 +163,61 @@ where
             default_layouts: LayoutStack::default(),
             workspace_names: strings(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
             floating_classes: strings(&["dmenu", "dunst"]),
+            startup_hook: None,
             event_hook: None,
             manage_hook: None,
             refresh_hook: None,
-            startup_hook: None,
         }
+    }
+}
+
+impl<X, E> Config<X, E>
+where
+    X: XConn,
+    E: Send + Sync + 'static,
+{
+    pub fn compose_or_set_startup_hook<H>(&mut self, hook: H)
+    where
+        H: StateHook<X, E> + 'static,
+        X: 'static,
+    {
+        self.startup_hook = match self.startup_hook.take() {
+            Some(h) => Some(hook.then_boxed(h)),
+            None => Some(hook.boxed()),
+        };
+    }
+
+    pub fn compose_or_set_event_hook<H>(&mut self, hook: H)
+    where
+        H: EventHook<X, E> + 'static,
+        X: 'static,
+    {
+        self.event_hook = match self.event_hook.take() {
+            Some(h) => Some(hook.then_boxed(h)),
+            None => Some(hook.boxed()),
+        };
+    }
+
+    pub fn compose_or_set_manage_hook<H>(&mut self, hook: H)
+    where
+        H: ManageHook<X> + 'static,
+        X: 'static,
+    {
+        self.manage_hook = match self.manage_hook.take() {
+            Some(h) => Some(hook.then_boxed(h)),
+            None => Some(hook.boxed()),
+        };
+    }
+
+    pub fn compose_or_set_refresh_hook<H>(&mut self, hook: H)
+    where
+        H: StateHook<X, E> + 'static,
+        X: 'static,
+    {
+        self.refresh_hook = match self.refresh_hook.take() {
+            Some(h) => Some(hook.then_boxed(h)),
+            None => Some(hook.boxed()),
+        };
     }
 }
 
@@ -245,7 +295,15 @@ where
         let mut hook = state.config.event_hook.take();
         if let Some(ref mut h) = hook {
             trace!("running user event hook");
-            if !h.call(&event, state, x) {
+            let should_run = match h.call(&event, state, x) {
+                Ok(should_run) => should_run,
+                Err(e) => {
+                    error!(%e, "error returned from user event hook");
+                    true
+                }
+            };
+
+            if !should_run {
                 trace!("User event hook returned false: skipping default handling");
                 return Ok(());
             }
@@ -286,7 +344,9 @@ where
 
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
-            h.call(&mut self.state, &self.x);
+            if let Err(e) = h.call(&mut self.state, &self.x) {
+                error!(%e, "error returned from user startup hook");
+            }
         }
 
         loop {

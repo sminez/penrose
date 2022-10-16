@@ -734,7 +734,7 @@ impl XConn for XcbConn {
     }
 
     fn send_client_message(&self, msg: ClientMessage) -> Result<()> {
-        let (dtype, d) = (*self.intern_atom(&msg.dtype)?, msg.data().as_u32());
+        let (dtype, d) = (*self.intern_atom(&msg.dtype)?, msg.data.as_u32());
         let data = xcb::ClientMessageData::from_data32([d[0], d[1], d[2], d[3], d[4]]);
         let event = xcb::ClientMessageEvent::new(32, *msg.id, dtype, data);
         let mask = match msg.mask {

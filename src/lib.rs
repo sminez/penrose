@@ -2,6 +2,7 @@
 pub mod actions;
 pub mod bindings;
 pub mod core;
+pub mod extensions;
 pub mod geometry;
 pub mod handle;
 pub mod hooks;

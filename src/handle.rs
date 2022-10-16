@@ -29,7 +29,7 @@ where
     X: XConn,
     E: Send + Sync + 'static,
 {
-    let data = msg.data();
+    let data = &msg.data;
     trace!(id = msg.id.0, dtype = ?msg.dtype, ?data, "got client message");
 
     match Atom::from_str(&msg.dtype) {
