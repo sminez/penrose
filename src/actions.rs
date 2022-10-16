@@ -41,10 +41,10 @@ where
     X: XConn,
     E: Send + Sync + 'static,
 {
-    key_handler(move |s: &mut State<X, E>, _| {
-        s.client_set.current_workspace_mut().handle_message(f());
-
-        Ok(())
+    key_handler(move |s: &mut State<X, E>, x: &X| {
+        x.modify_and_refresh(s, |cs| {
+            cs.current_workspace_mut().handle_message(f());
+        })
     })
 }
 
@@ -56,10 +56,10 @@ where
     X: XConn,
     E: Send + Sync + 'static,
 {
-    key_handler(move |s: &mut State<X, E>, _| {
-        s.client_set.current_workspace_mut().broadcast_message(f());
-
-        Ok(())
+    key_handler(move |s: &mut State<X, E>, x: &X| {
+        x.modify_and_refresh(s, |cs| {
+            cs.current_workspace_mut().broadcast_message(f());
+        })
     })
 }
 
@@ -87,7 +87,7 @@ where
     E: std::fmt::Debug + Send + Sync + 'static,
 {
     key_handler(|s: &mut State<X, E>, _| {
-        info!("{s:#?}");
+        info!("Current Window Manager State: {s:#?}");
         Ok(())
     })
 }
