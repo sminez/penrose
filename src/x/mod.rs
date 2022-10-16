@@ -300,7 +300,7 @@ pub trait XConnExt: XConn + Sized {
         C: Into<Color>,
     {
         let color = color.into();
-        self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgba_u32())])
+        self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgb_u32())])
     }
 
     fn set_initial_properties<E>(&self, client: Xid, config: &Config<Self, E>) -> Result<()>
