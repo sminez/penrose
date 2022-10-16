@@ -198,6 +198,12 @@ impl Rect {
         }
     }
 
+    /// Check whether this Rect is physically larger than `other` regardless
+    /// of position.
+    pub fn is_larger_than(&self, other: &Rect) -> bool {
+        self.w > other.w && self.h > other.h
+    }
+
     /// Check whether this Rect contains `p`
     pub fn contains_point<P>(&self, p: P) -> bool
     where

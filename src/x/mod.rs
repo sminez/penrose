@@ -316,7 +316,7 @@ pub trait XConnExt: XConn + Sized {
         let conf = &[ClientConfig::BorderPx(*border_width)];
         let attrs = &[
             ClientAttr::ClientEventMask,
-            ClientAttr::BorderColor(normal_border.rgba_u32()),
+            ClientAttr::BorderColor(normal_border.rgb_u32()),
         ];
 
         self.set_wm_state(client, WmState::Iconic)?;
@@ -324,7 +324,13 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_config(client, conf)
     }
 
-    fn position_client(&self, client: Xid, r: Rect) -> Result<()> {
+    fn position_client(&self, client: Xid, mut r: Rect) -> Result<()> {
+        let p = Atom::WmNormalHints.as_ref();
+        if let Ok(Some(Prop::WmNormalHints(hints))) = self.get_prop(client, p) {
+            trace!(%client, ?hints, "client has WmNormalHints: applying size hints");
+            r = hints.apply_to(r);
+        }
+
         self.set_client_config(
             client,
             &[ClientConfig::Position(r), ClientConfig::StackAbove],

@@ -21,10 +21,10 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> 
     let mut raw_bindings = map! {
         map_keys: |k: &str| format!("C-{k}");
 
-        "M-j" => modify_with(|cs| cs.focus_up()),
-        "M-k" => modify_with(|cs| cs.focus_down()),
-        "M-S-j" => modify_with(|cs| cs.swap_up()),
-        "M-S-k" => modify_with(|cs| cs.swap_down()),
+        "M-j" => modify_with(|cs| cs.focus_down()),
+        "M-k" => modify_with(|cs| cs.focus_up()),
+        "M-S-j" => modify_with(|cs| cs.swap_down()),
+        "M-S-k" => modify_with(|cs| cs.swap_up()),
         "M-S-q" => modify_with(|cs| cs.kill_focused()),
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
         "M-bracketright" => modify_with(|cs| cs.next_screen()),

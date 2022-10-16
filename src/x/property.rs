@@ -129,14 +129,14 @@ pub enum WindowClass {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct WmHints {
-    pub(crate) flags: WmHintsFlags,
-    pub(crate) accepts_input: bool,
-    pub(crate) initial_state: WmState,
-    pub(crate) icon_pixmap: u32,
-    pub(crate) icon_win: Xid,
-    pub(crate) icon_position: Point,
-    pub(crate) icon_mask: u32,
-    pub(crate) window_group: u32,
+    pub flags: WmHintsFlags,
+    pub accepts_input: bool,
+    pub initial_state: WmState,
+    pub icon_pixmap: u32,
+    pub icon_win: Xid,
+    pub icon_position: Point,
+    pub icon_mask: u32,
+    pub window_group: u32,
 }
 
 impl WmHints {
@@ -231,11 +231,11 @@ impl WmHints {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct WmNormalHints {
-    pub(crate) flags: WmNormalHintsFlags,
-    pub(crate) base: Option<Rect>,
-    pub(crate) min: Option<Rect>,
-    pub(crate) max: Option<Rect>,
-    pub(crate) user_specified: Option<Rect>,
+    pub flags: WmNormalHintsFlags,
+    pub base: Option<Rect>,
+    pub min: Option<Rect>,
+    pub max: Option<Rect>,
+    pub user_specified: Option<Rect>,
 }
 
 impl WmNormalHints {
@@ -254,6 +254,27 @@ impl WmNormalHints {
             max,
             user_specified,
         }
+    }
+
+    /// Apply these size hints to a given [Rect].
+    ///
+    /// NOTE: currently only the max size is respected
+    pub fn apply_to(&self, mut r: Rect) -> Rect {
+        if let Some(max) = self.max {
+            if r.is_larger_than(&max) {
+                r.w = max.w;
+                r.h = max.h
+            }
+        }
+
+        if let Some(min) = self.min {
+            if min.is_larger_than(&r) {
+                r.w = min.w;
+                r.h = min.h;
+            }
+        }
+
+        r
     }
 
     /// Try to construct a [WmNormalHints] instance from raw bytes.
