@@ -266,6 +266,10 @@ impl Gaps {
 }
 
 fn shrink(r: Rect, px: u32) -> Rect {
+    if r.w == 0 || r.h == 0 {
+        return r;
+    }
+
     Rect {
         x: r.x + px,
         y: r.y + px,
@@ -296,6 +300,46 @@ impl LayoutTransformer for Gaps {
             .into_iter()
             .map(|(id, r)| (id, shrink(r, self.inner_px)))
             .collect()
+    }
+}
+
+/// Reserve `px` pixels at the top of the screen.
+///
+/// Typically used for providing space for a status bar.
+#[derive(Clone)]
+pub struct ReserveTop {
+    pub layout: Box<dyn Layout>,
+    pub px: u32,
+}
+
+impl ReserveTop {
+    pub fn wrap(layout: Box<dyn Layout>, px: u32) -> Box<dyn Layout> {
+        Box::new(Self { layout, px })
+    }
+}
+
+impl LayoutTransformer for ReserveTop {
+    fn transformed_name(&self) -> String {
+        self.layout.name()
+    }
+
+    fn inner_mut(&mut self) -> &mut Box<dyn Layout> {
+        &mut self.layout
+    }
+
+    fn unwrap(self) -> Box<dyn Layout> {
+        self.layout
+    }
+
+    fn transform_initial(&self, mut r: Rect) -> Rect {
+        if r.w == 0 || r.h == 0 {
+            return r;
+        }
+
+        r.y += self.px;
+        r.h -= self.px;
+
+        r
     }
 }
 

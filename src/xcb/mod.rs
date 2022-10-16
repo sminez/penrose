@@ -429,6 +429,7 @@ impl XConn for XcbConn {
                 w: r.width() as u32,
                 h: r.height() as u32,
             })
+            .filter(|r| r.w > 0 && r.h > 0)
             .collect();
 
         self.destroy_client(check_win)?;
