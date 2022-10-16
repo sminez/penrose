@@ -221,7 +221,11 @@ pub struct MainAndStack {
 }
 
 impl MainAndStack {
-    pub fn side(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
+    pub fn side(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Self::side_unboxed(max_main, ratio, ratio_step))
+    }
+
+    pub fn side_unboxed(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
         Self {
             pos: StackPosition::Side,
             max_main,
@@ -230,7 +234,11 @@ impl MainAndStack {
         }
     }
 
-    pub fn bottom(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
+    pub fn bottom(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Self::bottom_unboxed(max_main, ratio, ratio_step))
+    }
+
+    pub fn bottom_unboxed(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
         Self {
             pos: StackPosition::Bottom,
             max_main,
@@ -351,7 +359,7 @@ mod tests {
 
     #[test]
     fn message_handling() {
-        let mut l = MainAndStack::side(1, 0.6, 0.1);
+        let mut l = MainAndStack::side_unboxed(1, 0.6, 0.1);
 
         l.handle_message(&IncMain(2).into_message());
 

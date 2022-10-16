@@ -12,6 +12,7 @@ use std::{
 /// let s = stack!([1, 2], 3, [4, 5]);
 /// let s = stack!([1, 2], 3);
 /// let s = stack!(1, [2, 3]);
+/// let s = stack!(1, 2, 3);
 /// let s = stack!(1);
 /// ```
 #[macro_export]
@@ -19,6 +20,7 @@ macro_rules! stack {
     ([$($up:expr),*], $focus:expr, [$($down:expr),*]) => { $crate::Stack::new([$($up),*], $focus, [$($down),*]) };
     ([$($up:expr),*], $focus:expr) => { $crate::Stack::new([$($up),*], $focus, []) };
     ($focus:expr, [$($down:expr),*]) => { $crate::Stack::new([], $focus, [$($down),*]) };
+    ($focus:expr, $($down:expr),+) => { $crate::Stack::new([], $focus, [$($down),*]) };
     ($focus:expr) => { $crate::Stack::new([], $focus, []) };
 }
 

@@ -167,6 +167,14 @@ impl Layout for NullLayout {
 #[macro_export]
 macro_rules! simple_transformer {
     ($t:ident, $f:ident) => {
+        impl $t {
+            pub fn wrap(
+                layout: Box<dyn $crate::layout::Layout>,
+            ) -> Box<dyn $crate::layout::Layout> {
+                Box::new(Self(layout))
+            }
+        }
+
         impl $crate::layout::LayoutTransformer for $t {
             fn transformed_name(&self) -> String {
                 format!("{}<{}>", stringify!($name), self.0.name())
@@ -197,15 +205,18 @@ pub struct ReflectHorizontal(pub Box<dyn Layout>);
 simple_transformer!(ReflectHorizontal, reflect_horizontal);
 
 fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-    let mid = r.y + r.h / 2;
+    let mid = r.x + r.w / 2;
 
     positions
         .into_iter()
-        .map(|(id, r)| {
-            let Rect { x, y, w, h } = r;
-            let x = 2 * mid - x;
+        .map(|(id, mut r)| {
+            r.x = if r.x <= mid {
+                2 * (mid - r.x) - r.w
+            } else {
+                2 * mid - r.x - r.w
+            };
 
-            (id, Rect { x, y, w, h })
+            (id, r)
         })
         .collect()
 }
@@ -216,15 +227,18 @@ pub struct ReflectVertical(pub Box<dyn Layout>);
 simple_transformer!(ReflectVertical, reflect_vertical);
 
 fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-    let mid = r.x + r.w / 2;
+    let mid = r.y + r.h / 2;
 
     positions
         .into_iter()
-        .map(|(id, r)| {
-            let Rect { x, y, w, h } = r;
-            let y = 2 * mid - y;
+        .map(|(id, mut r)| {
+            r.y = if r.y <= mid {
+                2 * (mid - r.y) - r.h
+            } else {
+                2 * mid - r.y - r.h
+            };
 
-            (id, Rect { x, y, w, h })
+            (id, r)
         })
         .collect()
 }
@@ -239,6 +253,16 @@ pub struct Gaps {
     pub layout: Box<dyn Layout>,
     pub outer_px: u32,
     pub inner_px: u32,
+}
+
+impl Gaps {
+    pub fn wrap(layout: Box<dyn Layout>, outer_px: u32, inner_px: u32) -> Box<dyn Layout> {
+        Box::new(Self {
+            layout,
+            outer_px,
+            inner_px,
+        })
+    }
 }
 
 fn shrink(r: Rect, px: u32) -> Rect {
@@ -272,5 +296,37 @@ impl LayoutTransformer for Gaps {
             .into_iter()
             .map(|(id, r)| (id, shrink(r, self.inner_px)))
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use simple_test_case::test_case;
+
+    #[test_case(Rect::new(0, 0, 100, 200), Rect::new(0, 0, 100, 200); "fullscreen is idempotent")]
+    #[test_case(Rect::new(0, 0, 40, 100), Rect::new(60, 0, 40, 100); "not crossing midpoint left")]
+    #[test_case(Rect::new(60, 0, 40, 100), Rect::new(0, 0, 40, 100); "not crossing midpoint right")]
+    #[test_case(Rect::new(0, 0, 60, 100), Rect::new(40, 0, 60, 100); "crossing midpoint")]
+    #[test_case(Rect::new(0, 0, 50, 100), Rect::new(50, 0, 50, 100); "on midpoint")]
+    #[test]
+    fn reflect_horizontal(original: Rect, expected: Rect) {
+        let r = Rect::new(0, 0, 100, 200);
+        let transformed = reflect_horizontal(r, vec![(Xid(1), original)]);
+
+        assert_eq!(transformed, vec![(Xid(1), expected)]);
+    }
+
+    #[test_case(Rect::new(0, 0, 100, 200), Rect::new(0, 0, 100, 200); "fullscreen is idempotent")]
+    #[test_case(Rect::new(0, 0, 50, 80), Rect::new(0, 120, 50, 80); "not crossing midpoint above")]
+    #[test_case(Rect::new(0, 120, 50, 80), Rect::new(0, 0, 50, 80); "not crossing midpoint below")]
+    #[test_case(Rect::new(0, 0, 50, 120), Rect::new(0, 80, 50, 120); "crossing midpoint")]
+    #[test_case(Rect::new(0, 0, 50, 100), Rect::new(0, 100, 50, 100); "on midpoint")]
+    #[test]
+    fn reflect_vertical(original: Rect, expected: Rect) {
+        let r = Rect::new(0, 0, 100, 200);
+        let transformed = reflect_vertical(r, vec![(Xid(1), original)]);
+
+        assert_eq!(transformed, vec![(Xid(1), expected)]);
     }
 }
