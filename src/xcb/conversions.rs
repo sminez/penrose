@@ -206,20 +206,25 @@ impl From<&ClientConfig> for Vec<(u16, u32)> {
 
 impl From<&ClientAttr> for Vec<(u32, u32)> {
     fn from(w: &ClientAttr) -> Vec<(u32, u32)> {
-        let client_event_mask = xcb::EVENT_MASK_ENTER_WINDOW
+        let client_mask = xcb::EVENT_MASK_ENTER_WINDOW
             | xcb::EVENT_MASK_LEAVE_WINDOW
             | xcb::EVENT_MASK_PROPERTY_CHANGE
             | xcb::EVENT_MASK_STRUCTURE_NOTIFY;
 
-        let root_event_mask = xcb::EVENT_MASK_PROPERTY_CHANGE
+        let client_unmap_mask = xcb::EVENT_MASK_ENTER_WINDOW
+            | xcb::EVENT_MASK_LEAVE_WINDOW
+            | xcb::EVENT_MASK_PROPERTY_CHANGE;
+
+        let root_mask = xcb::EVENT_MASK_PROPERTY_CHANGE
             | xcb::EVENT_MASK_SUBSTRUCTURE_REDIRECT
             | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
             | xcb::EVENT_MASK_BUTTON_MOTION;
 
         match w {
             ClientAttr::BorderColor(c) => vec![(xcb::CW_BORDER_PIXEL, *c)],
-            ClientAttr::ClientEventMask => vec![(xcb::CW_EVENT_MASK, client_event_mask)],
-            ClientAttr::RootEventMask => vec![(xcb::CW_EVENT_MASK, root_event_mask)],
+            ClientAttr::ClientEventMask => vec![(xcb::CW_EVENT_MASK, client_mask)],
+            ClientAttr::ClientUnmapMask => vec![(xcb::CW_EVENT_MASK, client_unmap_mask)],
+            ClientAttr::RootEventMask => vec![(xcb::CW_EVENT_MASK, root_mask)],
         }
     }
 }

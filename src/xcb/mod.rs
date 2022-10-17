@@ -740,6 +740,7 @@ impl XConn for XcbConn {
         let event = xcb::ClientMessageEvent::new(32, *msg.id, dtype, data);
         let mask = match msg.mask {
             ClientEventMask::NoEventMask => xcb::EVENT_MASK_NO_EVENT,
+            ClientEventMask::StructureNotify => xcb::EVENT_MASK_STRUCTURE_NOTIFY,
             ClientEventMask::SubstructureNotify => xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY,
         };
 

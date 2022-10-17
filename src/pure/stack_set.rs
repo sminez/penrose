@@ -592,6 +592,7 @@ defer_to_current_stack!(
     rotate_down
 );
 
+#[derive(Debug)]
 pub(crate) struct Snapshot<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
@@ -631,14 +632,18 @@ where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
     pub(crate) fn from_raw(ss: Snapshot<C>, s: &StackSet<C>, positions: &[(C, Rect)]) -> Self {
+        // New clients are those that are present in the StackSet but not the snapshot
         let new: Vec<C> = s
             .iter_clients()
             .filter(|&&c| !ss.all_clients().any(|&cc| cc == c))
             .cloned()
             .collect();
 
+        // Visible clients are those that have been assigned a position
         let visible: Vec<C> = positions.iter().map(|&(client, _)| client).collect();
 
+        // Hidden clients are those that were visible in the snapshot or new in the StackSet
+        // but _not_ assigned a position
         let hidden = ss
             .visible_clients
             .iter()
@@ -647,16 +652,20 @@ where
             .copied()
             .collect();
 
+        // Withdrawn clients are those that are no longer present in the StackSet but were
+        // present in the snapshot
         let withdrawn = ss
             .all_clients()
             .filter(|&&c| !s.iter_clients().any(|&cc| cc == c))
             .copied()
             .collect();
 
+        // Previously visible tags are any that are now hidden in the StackSet but were
+        // visible in the snapshot
         let previous_visible_tags = s
             .iter_hidden_workspaces()
+            .filter(|ws| ss.visible_tags.contains(&ws.tag))
             .map(|ws| ws.tag.clone())
-            .filter(|t| ss.visible_tags.contains(t))
             .collect();
 
         Self {
@@ -828,6 +837,22 @@ mod tests {
         let s = test_stack_set_with_stacks(vec![Some(stack)], 1);
 
         assert!(s.contains(&1))
+    }
+
+    #[test]
+    fn changing_workspace_retains_clients() {
+        let mut s = test_stack_set_with_stacks(vec![Some(stack!(1)), Some(stack!(2, 3)), None], 1);
+
+        let clients = |s: &StackSet<u8>| {
+            let mut cs: Vec<_> = s.iter_clients().copied().collect();
+            cs.sort();
+
+            cs
+        };
+
+        assert_eq!(clients(&s), vec![1, 2, 3]);
+        s.focus_tag("2");
+        assert_eq!(clients(&s), vec![1, 2, 3]);
     }
 }
 

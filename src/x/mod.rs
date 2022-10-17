@@ -12,7 +12,7 @@ use crate::{
     Color, Result, Xid,
 };
 use std::collections::{HashMap, HashSet};
-use tracing::{error, trace};
+use tracing::{debug, error, trace};
 
 pub mod atom;
 pub mod event;
@@ -58,6 +58,8 @@ pub enum ClientAttr {
     BorderColor(u32),
     /// Set the pre-defined client event mask
     ClientEventMask,
+    /// Set the pre-defined client event mask for sending unmap notify events
+    ClientUnmapMask,
     /// Set the pre-defined root event mask
     RootEventMask,
 }
@@ -116,7 +118,6 @@ pub trait XConnExt: XConn + Sized {
         let r = self.float_location(client)?;
         let mut hook = state.config.manage_hook.take();
 
-        trace!("calling modify and refresh");
         let res = self.modify_and_refresh(state, |cs| {
             cs.insert(client);
             if should_float {
@@ -170,13 +171,10 @@ pub trait XConnExt: XConn + Sized {
             return Ok(());
         }
 
-        // TODO: double check this swap-out around structureNotifyMask
-        // io $ do selectInput d w (cMask .&. complement structureNotifyMask)
-        //         unmapWindow d w
-        //         selectInput d w cMask
-
+        self.set_client_attributes(client, &[ClientAttr::ClientUnmapMask])?;
         self.unmap(client)?;
-        self.set_wm_state(client, WmState::Normal)?;
+        self.set_client_attributes(client, &[ClientAttr::ClientEventMask])?;
+        self.set_wm_state(client, WmState::Iconic)?;
 
         mapped.remove(&client);
         pending_unmap
@@ -196,18 +194,12 @@ pub trait XConnExt: XConn + Sized {
 
     /// Apply a pure function that modifies a [ClientSet] and then handle refreshing the
     /// Window Manager state and associated X11 calls.
-    fn modify_and_refresh<F, E>(&self, state: &mut State<Self, E>, mut f: F) -> Result<()>
+    fn modify_and_refresh<F, E>(&self, state: &mut State<Self, E>, f: F) -> Result<()>
     where
         F: FnMut(&mut ClientSet),
         E: Send + Sync + 'static,
     {
-        trace!("taking state snapshot");
-        let ss = state.client_set.snapshot();
-
-        f(&mut state.client_set); // NOTE: mutating the existing state
-
-        let positions = state.client_set.visible_client_positions();
-        let diff = Diff::from_raw(ss, &state.client_set, &positions);
+        let (positions, diff) = modify_and_diff(&mut state.client_set, f);
 
         for c in diff.new.into_iter() {
             self.set_initial_properties(c, &state.config)?;
@@ -335,6 +327,7 @@ pub trait XConnExt: XConn + Sized {
             r = hints.apply_to(r);
         }
 
+        trace!(%client, ?r, "positioning client");
         self.set_client_config(
             client,
             &[ClientConfig::Position(r), ClientConfig::StackAbove],
@@ -351,3 +344,21 @@ pub trait XConnExt: XConn + Sized {
 
 // Auto impl XConnExt for all XConn impls
 impl<T> XConnExt for T where T: XConn {}
+
+fn modify_and_diff<F>(cs: &mut ClientSet, mut f: F) -> (Vec<(Xid, Rect)>, Diff<Xid>)
+where
+    F: FnMut(&mut ClientSet),
+{
+    trace!("taking state snapshot");
+    let ss = cs.snapshot();
+    debug!(?ss, "pure state snapshot");
+
+    f(cs); // NOTE: mutating the existing state
+
+    let positions = cs.visible_client_positions();
+    let diff = Diff::from_raw(ss, cs, &positions);
+
+    debug!(?diff, "pure state diff");
+
+    (positions, diff)
+}

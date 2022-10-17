@@ -136,8 +136,6 @@ where
 }
 
 // Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
-// FIXME: unmap notify events have a synthetic field I'm not currently checking?
-//        that should be considered here as well apparently
 pub(crate) fn unmap_notify<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
 where
     X: XConn,

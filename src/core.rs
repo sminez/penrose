@@ -340,14 +340,14 @@ where
         }
 
         self.grab()?;
-        
+
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
             if let Err(e) = h.call(&mut self.state, &self.x) {
                 error!(%e, "error returned from user startup hook");
             }
         }
-        
+
         self.x.refresh(&mut self.state)?;
 
         loop {

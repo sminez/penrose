@@ -157,6 +157,8 @@ impl ClientMessageKind {
 pub enum ClientEventMask {
     /// Substructure Notify
     SubstructureNotify,
+    /// Structure Notify
+    StructureNotify,
     /// No Mask: all clients should accept
     NoEventMask,
 }

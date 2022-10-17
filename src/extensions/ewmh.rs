@@ -114,7 +114,7 @@ where
             "_NET_WM_DESKTOP" => {
                 let tag = state.client_set.tag_for_workspace_id(data.as_usize()[0]);
                 if let Some(tag) = tag {
-                    x.modify_and_refresh(state, |cs| cs.move_client_to_tag(&id, &tag))?;
+                    x.modify_and_refresh(state, |cs| cs.move_client_to_tag(id, &tag))?;
                 }
             }
 
@@ -126,13 +126,13 @@ where
             //       support that in future?
             "_NET_ACTIVE_WINDOW" => {
                 if data.as_u32()[0] == 2 {
-                    x.modify_and_refresh(state, |cs| cs.focus_client(&id))?;
+                    x.set_active_client(*id, state)?;
                 }
             }
 
             // Attempt to remove the requested client
             "_NET_CLOSE_WINDOW" => x.modify_and_refresh(state, |cs| {
-                cs.remove_client(&id);
+                cs.remove_client(id);
             })?,
 
             // Leave other client messages for the default event handling
