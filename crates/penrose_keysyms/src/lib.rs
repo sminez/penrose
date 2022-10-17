@@ -2047,6 +2047,9 @@ pub enum XKeySym {
     /// XF86XK_TouchpadToggle
     #[strum(serialize = "XF86TouchpadToggle")]
     XF86XK_TouchpadToggle,
+    /// XF86XK_Calculator
+    #[strum(serialize = "XF86Calculator")]
+    XF86XK_Calculator,
 }
 
 impl XKeySym {
@@ -2732,6 +2735,7 @@ impl XKeySym {
                 XKeySym::XF86XK_AudioMicMute => 0x1008FF18,
                 XKeySym::XF86XK_DisplayOff => 0x1008FF19,
                 XKeySym::XF86XK_TouchpadToggle => 0x1008FF1A,
+                XKeySym::XF86XK_Calculator => 0x1008FF1D,
             } as u32)
                 .to_le_bytes()
                 .to_vec()
