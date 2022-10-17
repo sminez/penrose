@@ -1,4 +1,4 @@
-//! EWHM compliance for Penrose
+//! EWMH compliance for Penrose
 //!
 //! The primary use of this extension is to provide support for external
 //! status bars and panels.
@@ -36,8 +36,11 @@ pub const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
 /// The WM_NAME that will be set for the X server
 pub const WM_NAME: &str = "penrose";
 
-/// Add the required hooks to manage EWHM compliance to an existing [Config].
-pub fn ewmh<X, E>(mut config: Config<X, E>) -> Config<X, E>
+/// Add the required hooks to manage EWMH compliance to an existing [Config].
+///
+/// See the module level docs for details of what functionality is provided by
+/// this extension.
+pub fn add_ewmh_hooks<X, E>(mut config: Config<X, E>) -> Config<X, E>
 where
     X: XConn + 'static,
     E: Send + Sync + 'static,

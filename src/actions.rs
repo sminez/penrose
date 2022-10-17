@@ -1,4 +1,7 @@
-//! Helpers and pre-defined actions for use in user defined key bindings
+//! Helpers for writing user defined key bindings.
+//!
+//! See `penrose::extensions::actions` for pre-defined actions that are ready
+//! for use.
 use crate::{
     bindings::KeyEventHandler,
     core::{ClientSet, State},
@@ -7,7 +10,6 @@ use crate::{
     x::{XConn, XConnExt},
     Result,
 };
-use tracing::info;
 
 // NOTE: this is here to force the correct lifetime requirements on closures being
 //       used as handlers. The generic impl in crate::bindings for functions of the
@@ -70,24 +72,4 @@ where
     E: Send + Sync + 'static,
 {
     key_handler(move |_, _| util::spawn(program))
-}
-
-/// Exit penrose
-pub fn exit<X, E>() -> Box<dyn KeyEventHandler<X, E>>
-where
-    X: XConn,
-    E: Send + Sync + 'static,
-{
-    key_handler(|_, _| std::process::exit(0))
-}
-
-pub fn log_current_state<X, E>() -> Box<dyn KeyEventHandler<X, E>>
-where
-    X: XConn + std::fmt::Debug,
-    E: std::fmt::Debug + Send + Sync + 'static,
-{
-    key_handler(|s: &mut State<X, E>, _| {
-        info!("Current Window Manager State: {s:#?}");
-        Ok(())
-    })
 }

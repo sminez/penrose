@@ -3,9 +3,10 @@
 //! This file will give you a functional if incredibly minimal window manager that has multiple
 //! workspaces and simple client/workspace movement.
 use penrose::{
-    actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
+    actions::{modify_with, send_layout_message, spawn},
     bindings::KeyEventHandler,
     core::{Config, WindowManager},
+    extensions::actions::{exit, log_current_state},
     layout::messages::common::{ExpandMain, IncMain, ShrinkMain},
     map,
     xcb::XcbConn,

@@ -1,14 +1,24 @@
-//! penrose :: layout transformers
+//! penrose :: EWMH support
 //!
-//! Layouts can be wrapped with transformers that modify their behaviour.
+//! It is possible to add EWMH support to penrose via an extension. This provides
+//! information to external utilities such as panels and statusbars so that they
+//! are able to interact with the window manager.
+//!
+//! `penrose::extensions::hooks::add_ewmh_hooks` can be used to compose the required
+//! hooks into your existing Config before starting the window manager. If you want
+//! to modify the support, each of the individual hooks can be found in
+//! `penrose::extensions::hooks::ewmh`.
 use penrose::{
     actions::{modify_with, send_layout_message, spawn},
     bindings::KeyEventHandler,
     core::{Config, WindowManager},
-    extensions::actions::{exit, log_current_state},
+    extensions::{
+        actions::{exit, log_current_state},
+        hooks::{add_ewmh_hooks, SpawnOnStartup},
+    },
     layout::{
         messages::common::{ExpandMain, IncMain, ShrinkMain},
-        transformers::{Gaps, ReflectHorizontal},
+        transformers::{Gaps, ReflectHorizontal, ReserveTop},
         LayoutStack, MainAndStack,
     },
     map, stack,
@@ -66,13 +76,14 @@ fn layouts() -> LayoutStack {
     let ratio_step = 0.1;
     let outer_px = 5;
     let inner_px = 5;
+    let top_px = 18;
 
     stack!(
         MainAndStack::side(max_main, ratio, ratio_step),
         ReflectHorizontal::wrap(MainAndStack::side(max_main, ratio, ratio_step)),
         MainAndStack::bottom(max_main, ratio, ratio_step)
     )
-    .map(|layout| Gaps::wrap(layout, outer_px, inner_px))
+    .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, outer_px, inner_px), top_px))
 }
 
 fn main() -> Result<()> {
@@ -81,10 +92,14 @@ fn main() -> Result<()> {
         .finish()
         .init();
 
-    let config = Config {
+    // This is all that is needed to add the required hooks to your config.
+    // SpawnOnStartup is being used here to start polybar so that the EWMH support
+    // can be demonstrated.
+    let config = add_ewmh_hooks(Config {
         default_layouts: layouts(),
+        startup_hook: Some(SpawnOnStartup::new("polybar")),
         ..Config::default()
-    };
+    });
 
     let conn = XcbConn::new()?;
     let key_bindings = conn.parse_keybindings_with_xmodmap(raw_key_bindings())?;

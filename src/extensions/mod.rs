@@ -1,3 +1,4 @@
 //! Extensions to the base behaviour of Penrose
 
-pub mod ewmh;
+pub mod actions;
+pub mod hooks;
