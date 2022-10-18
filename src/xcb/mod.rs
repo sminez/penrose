@@ -515,7 +515,7 @@ impl XConn for XcbConn {
         self.conn.flush();
     }
 
-    fn float_location(&self, client: Xid) -> Result<Rect> {
+    fn client_geometry(&self, client: Xid) -> Result<Rect> {
         let res = xcb::get_geometry(&self.conn, *client).get_reply()?;
 
         Ok(Rect {
@@ -749,9 +749,10 @@ impl XConn for XcbConn {
         Ok(())
     }
 
-    fn warp_cursor(&self, p: Point) -> Result<()> {
+    fn warp_cursor(&self, id: Xid) -> Result<()> {
+        let p = self.client_geometry(id)?.midpoint();
         // conn source target source(x y w h) dest(x y)
-        xcb::warp_pointer_checked(&self.conn, 0, 0, 0, 0, 0, 0, p.x as i16, p.y as i16)
+        xcb::warp_pointer_checked(&self.conn, 0, *id, 0, 0, 0, 0, p.x as i16, p.y as i16)
             .request_check()?;
 
         Ok(())

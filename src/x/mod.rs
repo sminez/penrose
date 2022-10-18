@@ -76,7 +76,7 @@ pub trait XConn {
     fn intern_atom(&self, atom: &str) -> Result<Xid>;
     fn atom_name(&self, xid: Xid) -> Result<String>;
 
-    fn float_location(&self, client: Xid) -> Result<Rect>;
+    fn client_geometry(&self, client: Xid) -> Result<Rect>;
 
     fn map(&self, client: Xid) -> Result<()>;
     fn unmap(&self, client: Xid) -> Result<()>;
@@ -92,7 +92,7 @@ pub trait XConn {
     fn set_client_config(&self, client: Xid, data: &[ClientConfig]) -> Result<()>;
     fn send_client_message(&self, msg: ClientMessage) -> Result<()>;
 
-    fn warp_cursor(&self, p: Point) -> Result<()>;
+    fn warp_cursor(&self, id: Xid) -> Result<()>;
 }
 
 // Derivable methods for XConn that should never be given a different implementation
@@ -115,7 +115,7 @@ pub trait XConnExt: XConn + Sized {
     {
         trace!(%client, "managing new client");
         let should_float = self.client_should_float(client, &state.config.floating_classes)?;
-        let r = self.float_location(client)?;
+        let r = self.client_geometry(client)?;
         let mut hook = state.config.manage_hook.take();
 
         let res = self.modify_and_refresh(state, |cs| {
@@ -230,13 +230,12 @@ pub trait XConnExt: XConn + Sized {
             self.reveal(c, &state.client_set, &mut state.mapped)?;
         }
 
-        self.focus(
-            state
-                .client_set
-                .current_client()
-                .copied()
-                .unwrap_or(state.root),
-        )?;
+        if let Some(&client) = state.client_set.current_client() {
+            self.focus(client)?;
+            // self.warp_cursor(client)?;
+        } else {
+            self.focus(state.root)?;
+        }
 
         for c in diff.hidden.into_iter() {
             trace!(?c, "hiding client");

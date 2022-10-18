@@ -30,7 +30,8 @@ use tracing_subscriber::{self, prelude::*};
 
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> {
     let mut raw_bindings = map! {
-        map_keys: |k: &str| format!("C-{k}");
+        // map_keys: |k: &str| format!("C-{k}");
+        map_keys: |k: &str| format!("{k}");
 
         "M-j" => modify_with(|cs| cs.focus_down()),
         "M-k" => modify_with(|cs| cs.focus_up()),
@@ -51,17 +52,17 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> 
         "M-semicolon" => spawn("dmenu_run"),
         "M-S-s" => log_current_state(),
         "M-Return" => spawn("st"),
-        "M-Escape" => exit(),
+        "M-A-Escape" => exit(),
     };
 
     for tag in &["1", "2", "3", "4", "5", "6", "7", "8", "9"] {
         raw_bindings.extend([
             (
-                format!("M-C-{tag}"),
+                format!("M-{tag}"),
                 modify_with(move |client_set| client_set.focus_tag(tag)),
             ),
             (
-                format!("M-C-S-{tag}"),
+                format!("M-S-{tag}"),
                 modify_with(move |client_set| client_set.move_focused_to_tag(tag)),
             ),
         ]);

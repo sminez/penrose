@@ -127,6 +127,14 @@ impl Rect {
         )
     }
 
+    /// The midpoint of this rectangle
+    pub fn midpoint(&self) -> Point {
+        Point {
+            x: self.x + self.w / 2,
+            y: self.y + self.h / 2,
+        }
+    }
+
     /// Create a new [Rect] with width equal to `factor` x `self.w`
     pub fn scale_w(&self, factor: f64) -> Self {
         Self {
