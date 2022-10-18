@@ -78,7 +78,7 @@ where
         screen_details: Vec<Rect>,
         floating: HashMap<C, Rect>,
     ) -> Result<Self> {
-        // TODO: Enforce unique
+        // FIXME: Enforce unique tags
 
         match (workspaces.len(), screen_details.len()) {
             (_, 0) => return Err(Error::NoScreens),
@@ -293,7 +293,7 @@ where
         });
     }
 
-    fn contains_tag(&self, tag: &str) -> bool {
+    pub fn contains_tag(&self, tag: &str) -> bool {
         self.iter_workspaces().any(|w| w.tag == tag)
     }
 
@@ -370,6 +370,19 @@ where
     /// The `tag` of the current [Workspace]
     pub fn current_tag(&self) -> &str {
         &self.screens.focus.workspace.tag
+    }
+
+    /// Add a new [Workspace] to this [StackSet].
+    ///
+    /// The id assigned to this workspace will be max(workspace ids) + 1.
+    pub fn add_workspace<T>(&mut self, tag: T, layouts: LayoutStack)
+    where
+        T: Into<String>,
+    {
+        // FIXME: Enforce unique tags
+        let id = self.iter_workspaces().map(|w| w.id).max().expect("at least one workspace") + 1;
+        let ws = Workspace::new(id, tag, layouts, None);
+        self.hidden.push_front(ws);
     }
 
     /// A reference to the [Workspace] with a tag of `tag` if there is one
