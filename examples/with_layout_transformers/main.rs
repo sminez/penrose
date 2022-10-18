@@ -3,7 +3,7 @@
 //! Layouts can be wrapped with transformers that modify their behaviour.
 use penrose::{
     actions::{modify_with, send_layout_message, spawn},
-    bindings::KeyEventHandler,
+    bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
     core::{Config, WindowManager},
     extensions::actions::{exit, log_current_state},
     layout::{
@@ -12,13 +12,13 @@ use penrose::{
         LayoutStack, MainAndStack,
     },
     map, stack,
-    xcb::XcbConn,
+    x11rb::X11rbRustConn,
     Result,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
-fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> {
+fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<X11rbRustConn, ()>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| format!("C-{k}");
 
@@ -86,8 +86,8 @@ fn main() -> Result<()> {
         ..Config::default()
     };
 
-    let conn = XcbConn::new()?;
-    let key_bindings = conn.parse_keybindings_with_xmodmap(raw_key_bindings())?;
+    let conn = X11rbRustConn::new()?;
+    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
     let wm = WindowManager::new(config, key_bindings, HashMap::new(), conn)?;
 
     wm.run()

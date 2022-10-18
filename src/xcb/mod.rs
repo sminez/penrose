@@ -1,6 +1,6 @@
 //! XCB implementations of the XConn trait and related helpers
 use crate::{
-    bindings::{CodeMap, KeyBindings, KeyCode, KeyEventHandler, MouseEvent, MouseState},
+    bindings::{KeyCode, MouseEvent, MouseState},
     geometry::{Point, Rect},
     x::{
         atom::Atom,
@@ -15,7 +15,7 @@ use crate::{
     },
     Error, Result, Xid,
 };
-use std::{cell::RefCell, collections::HashMap, fmt, process::Command};
+use std::{cell::RefCell, collections::HashMap, fmt};
 use strum::IntoEnumIterator;
 use tracing::{error, trace, warn};
 
@@ -29,56 +29,6 @@ pub type XcbGenericEvent = xcb::Event<xcb::ffi::base::xcb_generic_event_t>;
 
 const RANDR_MAJ: u32 = 1;
 const RANDR_MIN: u32 = 2;
-
-fn keycodes_from_xmodmap() -> Result<CodeMap> {
-    let output = Command::new("xmodmap").arg("-pke").output()?;
-    let m = String::from_utf8(output.stdout)?
-        .lines()
-        .flat_map(|l| {
-            let mut words = l.split_whitespace(); // keycode <code> = <names ...>
-            let key_code: u8 = match words.nth(1) {
-                Some(word) => match word.parse() {
-                    Ok(val) => val,
-                    Err(e) => panic!("{}", e),
-                },
-                None => panic!("unexpected output format from xmodmap -pke"),
-            };
-            words.skip(1).map(move |name| (name.into(), key_code))
-        })
-        .collect();
-
-    Ok(m)
-}
-
-fn parse_binding(pattern: &str, known_codes: &CodeMap) -> Result<KeyCode> {
-    let mut parts: Vec<&str> = pattern.split('-').collect();
-    let name = parts.remove(parts.len() - 1);
-
-    match known_codes.get(name) {
-        Some(code) => {
-            let mask = parts
-                .iter()
-                .map(|&s| match s {
-                    "A" => Ok(xcb::MOD_MASK_1),
-                    "M" => Ok(xcb::MOD_MASK_4),
-                    "S" => Ok(xcb::MOD_MASK_SHIFT),
-                    "C" => Ok(xcb::MOD_MASK_CONTROL),
-                    _ => Err(Error::UnknownModifier { name: s.to_owned() }),
-                })
-                .try_fold(0, |acc, v| v.map(|inner| acc | inner))?;
-
-            trace!(?pattern, mask, code, "parsed keybinding");
-            Ok(KeyCode {
-                mask: mask as u16,
-                code: *code,
-            })
-        }
-
-        None => Err(Error::UnknownKeyName {
-            name: name.to_owned(),
-        }),
-    }
-}
 
 /// A connection to the X server using the XCB C API
 pub struct XcbConn {
@@ -163,21 +113,6 @@ impl XcbConn {
         self.set_client_attributes(self.root, &[ClientAttr::RootEventMask])?;
 
         Ok(())
-    }
-
-    pub fn parse_keybindings_with_xmodmap<S, E>(
-        &self,
-        str_bindings: HashMap<S, Box<dyn KeyEventHandler<Self, E>>>,
-    ) -> Result<KeyBindings<Self, E>>
-    where
-        S: AsRef<str>,
-    {
-        let m = keycodes_from_xmodmap()?;
-
-        str_bindings
-            .into_iter()
-            .map(|(s, v)| parse_binding(s.as_ref(), &m).map(|k| (k, v)))
-            .collect()
     }
 
     /// Fetch the id value of a known [Atom] variant.

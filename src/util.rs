@@ -1,5 +1,5 @@
 //! Utility functions for use in other parts of penrose
-use crate::{bindings::CodeMap, Result};
+use crate::Result;
 use std::{
     io::Read,
     process::{Command, Stdio},
@@ -100,39 +100,6 @@ pub fn spawn_for_output_with_args<S: Into<String>>(
         .unwrap()
         .read_to_string(&mut buff)
         .map(|_| buff)
-}
-
-/// Run the xmodmap command to dump the system keymap table.
-///
-/// This is done in a form that we can load in and convert back to key
-/// codes. This lets the user define key bindings in the way that they
-/// would expect while also ensuring that it is east to debug any odd
-/// issues with bindings by referring the user to the xmodmap output.
-///
-/// # Panics
-/// This function will panic if it is unable to fetch keycodes using the xmodmap
-/// binary on your system or if the output of `xmodmap -pke` is not valid
-pub fn keycodes_from_xmodmap() -> CodeMap {
-    match Command::new("xmodmap").arg("-pke").output() {
-        Err(e) => panic!("unable to fetch keycodes via xmodmap: {}", e),
-        Ok(o) => match String::from_utf8(o.stdout) {
-            Err(e) => panic!("invalid utf8 from xmodmap: {}", e),
-            Ok(s) => s
-                .lines()
-                .flat_map(|l| {
-                    let mut words = l.split_whitespace(); // keycode <code> = <names ...>
-                    let key_code: u8 = match words.nth(1) {
-                        Some(word) => match word.parse() {
-                            Ok(val) => val,
-                            Err(e) => panic!("{}", e),
-                        },
-                        None => panic!("unexpected output format from xmodmap -pke"),
-                    };
-                    words.skip(1).map(move |name| (name.into(), key_code))
-                })
-                .collect::<CodeMap>(),
-        },
-    }
 }
 
 /// Use `notify-send` to display a message to the user

@@ -89,33 +89,37 @@ impl Atoms {
 
 /// Handles communication with an X server via the x11rb crate.
 #[derive(Debug)]
-pub struct X11rbConnection<C: Connection> {
+pub struct X11rbConn<C: Connection> {
     conn: C,
     root: u32,
     atoms: Atoms,
 }
 
-impl X11rbConnection<RustConnection> {
+pub type X11rbRustConn = X11rbConn<RustConnection>;
+
+impl X11rbConn<RustConnection> {
     /// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::rust_connection::RustConnection].
-    pub fn new_rust() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let (conn, _) = RustConnection::connect(None).map_err(Error::from)?;
 
         Self::new_for_connection(conn)
     }
 }
 
-impl X11rbConnection<XCBConnection> {
+pub type X11rbXcbConn = X11rbConn<XCBConnection>;
+
+impl X11rbConn<XCBConnection> {
     /// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::xcb_ffi::XCBConnection].
-    pub fn new_xcb() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let (conn, _) = XCBConnection::connect(None).map_err(Error::from)?;
 
         Self::new_for_connection(conn)
     }
 }
 
-impl<C> X11rbConnection<C>
+impl<C> X11rbConn<C>
 where
     C: Connection,
 {
@@ -158,7 +162,7 @@ where
     }
 }
 
-impl<C> XConn for X11rbConnection<C>
+impl<C> XConn for X11rbConn<C>
 where
     C: Connection,
 {
@@ -329,7 +333,10 @@ where
             .get_property(false, *id, atom, AtomEnum::ANY, 0, 1024)?
             .reply()?;
 
-        let prop_type = self.atom_name(Xid(r.type_))?;
+        let prop_type = match r.type_ {
+            0 => return Ok(None), // Null response
+            id => self.atom_name(Xid(id))?,
+        };
 
         let p = match prop_type.as_ref() {
             "ATOM" => Prop::Atom(

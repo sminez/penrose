@@ -16,31 +16,30 @@ include = [
 keywords = [ "windowmanager", "window", "manager", "x11" ]
 categories = [ "window manager" ]
 
-# [workspace]
-# members = [ "crates/*" ]
+[workspace]
+members = [ "crates/penrose_keysyms" ]
 
 [features]
-default = ["xcb", "xcb_draw", "keysyms"]
+default = ["x11rb-xcb", "keysyms"]
 keysyms = ["penrose_keysyms"]
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
-xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
+# xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 
 [dependencies]
 penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional = true }
-penrose_proc = { version = "0.1.3", path = "crates/penrose_proc" }
+# penrose_proc = { version = "0.1.3", path = "crates/penrose_proc" }
 
 bitflags = "1.3"
-crossbeam-channel = "0.5"
 nix = "0.23"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 thiserror = "1.0"
 tracing = { version = "0.1", features = ["attributes", "log"] }
 
-cairo-rs = { version = "0.15.6", features = ["xcb"], optional = true }
-cairo-sys-rs = { version = "0.15.1", optional = true }
-pangocairo = { version = "0.15.1", optional = true }
-pango = { version = "0.15.6", optional = true }
+# cairo-rs = { version = "0.15.6", features = ["xcb"], optional = true }
+# cairo-sys-rs = { version = "0.15.1", optional = true }
+# pangocairo = { version = "0.15.1", optional = true }
+# pango = { version = "0.15.6", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 xcb = { version = "0.10.1", features = ["randr"], optional = true }
 x11rb = { version = "0.9.0", features = ["randr"], optional = true }

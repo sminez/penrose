@@ -1,30 +1,12 @@
 //! Conversions to Penrose types from XCB types
 use crate::{
-    bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
+    bindings::{KeyCode, MouseEvent, MouseEventKind, MouseState},
     geometry::Rect,
     x::{ClientAttr, ClientConfig},
     xcb::{Error, Result, XcbGenericEvent},
     Xid,
 };
 use std::convert::TryFrom;
-use strum::IntoEnumIterator;
-
-impl ModifierKey {
-    fn was_held(&self, mask: u16) -> bool {
-        mask & u16::from(*self) > 0
-    }
-}
-
-impl From<ModifierKey> for u16 {
-    fn from(m: ModifierKey) -> u16 {
-        (match m {
-            ModifierKey::Ctrl => xcb::MOD_MASK_CONTROL,
-            ModifierKey::Alt => xcb::MOD_MASK_1,
-            ModifierKey::Shift => xcb::MOD_MASK_SHIFT,
-            ModifierKey::Meta => xcb::MOD_MASK_4,
-        }) as u16
-    }
-}
 
 impl From<xcb::KeyPressEvent> for KeyCode {
     fn from(e: xcb::KeyPressEvent) -> Self {
@@ -75,42 +57,6 @@ impl TryFrom<&XcbGenericEvent> for KeyCode {
                 received: r,
             })
         }
-    }
-}
-
-impl TryFrom<u8> for MouseButton {
-    type Error = Error;
-
-    fn try_from(n: u8) -> Result<Self> {
-        match n {
-            1 => Ok(Self::Left),
-            2 => Ok(Self::Middle),
-            3 => Ok(Self::Right),
-            4 => Ok(Self::ScrollUp),
-            5 => Ok(Self::ScrollDown),
-            _ => Err(Error::UnknownMouseButton { button: n }),
-        }
-    }
-}
-
-impl MouseState {
-    fn from_detail_and_state(detail: u8, state: u16) -> Result<Self> {
-        Ok(Self {
-            button: MouseButton::try_from(detail)?,
-            modifiers: ModifierKey::iter().filter(|m| m.was_held(state)).collect(),
-        })
-    }
-
-    /// The xcb bitmask for this [MouseState]
-    pub fn mask(&self) -> u16 {
-        self.modifiers
-            .iter()
-            .fold(0, |acc, &val| acc | u16::from(val))
-    }
-
-    /// The xcb button ID for this [MouseState]
-    pub fn button(&self) -> u8 {
-        self.button.into()
     }
 }
 

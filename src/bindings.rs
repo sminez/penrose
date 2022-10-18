@@ -3,16 +3,88 @@ use crate::{
     core::{State, Xid},
     geometry::Point,
     x::XConn,
-    Result,
+    Error, Result,
 };
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, convert::TryFrom};
-use strum::EnumIter;
+use std::{collections::HashMap, convert::TryFrom, process::Command};
+use strum::{EnumIter, IntoEnumIterator};
+use tracing::trace;
 
-pub type CodeMap = HashMap<String, u8>;
+/// Run the xmodmap command to dump the system keymap table.
+///
+/// This is done in a form that we can load in and convert back to key
+/// codes. This lets the user define key bindings in the way that they
+/// would expect while also ensuring that it is east to debug any odd
+/// issues with bindings by referring the user to the xmodmap output.
+///
+/// # Panics
+/// This function will panic if it is unable to fetch keycodes using the xmodmap
+/// binary on your system or if the output of `xmodmap -pke` is not valid
+pub fn keycodes_from_xmodmap() -> Result<HashMap<String, u8>> {
+    let output = Command::new("xmodmap").arg("-pke").output()?;
+    let m = String::from_utf8(output.stdout)?
+        .lines()
+        .flat_map(|l| {
+            let mut words = l.split_whitespace(); // keycode <code> = <names ...>
+            let key_code: u8 = match words.nth(1) {
+                Some(word) => match word.parse() {
+                    Ok(val) => val,
+                    Err(e) => panic!("{}", e),
+                },
+                None => panic!("unexpected output format from xmodmap -pke"),
+            };
+            words.skip(1).map(move |name| (name.into(), key_code))
+        })
+        .collect();
+
+    Ok(m)
+}
+
+fn parse_binding(pattern: &str, known_codes: &HashMap<String, u8>) -> Result<KeyCode> {
+    let mut parts: Vec<&str> = pattern.split('-').collect();
+    let name = parts.remove(parts.len() - 1);
+
+    match known_codes.get(name) {
+        Some(code) => {
+            let mask = parts
+                .iter()
+                .map(|&s| ModifierKey::try_from(s))
+                .try_fold(0, |acc, v| v.map(|inner| acc | u16::from(inner)))?;
+
+            trace!(?pattern, mask, code, "parsed keybinding");
+            Ok(KeyCode {
+                mask: mask as u16,
+                code: *code,
+            })
+        }
+
+        None => Err(Error::UnknownKeyName {
+            name: name.to_owned(),
+        }),
+    }
+}
+
+/// Parse string format key bindings into [KeyCode] based [KeyBindings] using
+/// the command line `xmodmap` utility.
+///
+/// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
+pub fn parse_keybindings_with_xmodmap<S, E, X>(
+    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X, E>>>,
+) -> Result<KeyBindings<X, E>>
+where
+    S: AsRef<str>,
+    X: XConn,
+{
+    let m = keycodes_from_xmodmap()?;
+
+    str_bindings
+        .into_iter()
+        .map(|(s, v)| parse_binding(s.as_ref(), &m).map(|k| (k, v)))
+        .collect()
+}
 
 /// Some action to be run by a user key binding
 pub trait KeyEventHandler<X, E>
@@ -166,6 +238,21 @@ impl From<MouseButton> for u8 {
     }
 }
 
+impl TryFrom<u8> for MouseButton {
+    type Error = Error;
+
+    fn try_from(n: u8) -> Result<Self> {
+        match n {
+            1 => Ok(Self::Left),
+            2 => Ok(Self::Middle),
+            3 => Ok(Self::Right),
+            4 => Ok(Self::ScrollUp),
+            5 => Ok(Self::ScrollDown),
+            _ => Err(Error::UnknownMouseButton { button: n }),
+        }
+    }
+}
+
 /// Known modifier keys for bindings
 #[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -180,8 +267,25 @@ pub enum ModifierKey {
     Meta,
 }
 
+impl ModifierKey {
+    fn was_held(&self, mask: u16) -> bool {
+        mask & u16::from(*self) > 0
+    }
+}
+
+impl From<ModifierKey> for u16 {
+    fn from(m: ModifierKey) -> u16 {
+        (match m {
+            ModifierKey::Shift => 1 << 0,
+            ModifierKey::Ctrl => 1 << 2,
+            ModifierKey::Alt => 1 << 3,
+            ModifierKey::Meta => 1 << 6,
+        }) as u16
+    }
+}
+
 impl TryFrom<&str> for ModifierKey {
-    type Error = String;
+    type Error = Error;
 
     fn try_from(s: &str) -> std::result::Result<Self, Self::Error> {
         match s {
@@ -189,7 +293,7 @@ impl TryFrom<&str> for ModifierKey {
             "A" => Ok(Self::Alt),
             "S" => Ok(Self::Shift),
             "M" => Ok(Self::Meta),
-            _ => Err(format!("unknown modifier key: {s}")),
+            _ => Err(Error::UnknownModifier { name: s.to_owned() }),
         }
     }
 }
@@ -209,6 +313,25 @@ impl MouseState {
     pub fn new(button: MouseButton, mut modifiers: Vec<ModifierKey>) -> Self {
         modifiers.sort();
         Self { button, modifiers }
+    }
+
+    pub fn from_detail_and_state(detail: u8, state: u16) -> Result<Self> {
+        Ok(Self {
+            button: MouseButton::try_from(detail)?,
+            modifiers: ModifierKey::iter().filter(|m| m.was_held(state)).collect(),
+        })
+    }
+
+    /// The xcb bitmask for this [MouseState]
+    pub fn mask(&self) -> u16 {
+        self.modifiers
+            .iter()
+            .fold(0, |acc, &val| acc | u16::from(val))
+    }
+
+    /// The xcb button ID for this [MouseState]
+    pub fn button(&self) -> u8 {
+        self.button.into()
     }
 }
 

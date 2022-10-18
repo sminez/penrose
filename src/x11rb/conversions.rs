@@ -9,7 +9,7 @@ use crate::{
         },
         XConn, XEvent,
     },
-    x11rb::X11rbConnection,
+    x11rb::X11rbConn,
     Error, Result, Xid,
 };
 use strum::IntoEnumIterator;
@@ -23,7 +23,7 @@ use x11rb::{
 };
 
 pub(crate) fn convert_event<C: Connection>(
-    conn: &X11rbConnection<C>,
+    conn: &X11rbConn<C>,
     event: Event,
 ) -> Result<Option<XEvent>> {
     match event {
@@ -165,7 +165,7 @@ fn to_mouse_state(detail: u8, state: u16) -> Option<MouseState> {
 }
 
 fn to_client_message<C: Connection>(
-    conn: &X11rbConnection<C>,
+    conn: &X11rbConn<C>,
     event: ClientMessageEvent,
 ) -> Result<XEvent> {
     let name = conn.atom_name(Xid(event.type_))?;
