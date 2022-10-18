@@ -30,7 +30,7 @@ penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional
 # penrose_proc = { version = "0.1.3", path = "crates/penrose_proc" }
 
 bitflags = "1.3"
-nix = "0.23"
+nix = "0.25"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 thiserror = "1.0"
@@ -41,13 +41,13 @@ tracing = { version = "0.1", features = ["attributes", "log"] }
 # pangocairo = { version = "0.15.1", optional = true }
 # pango = { version = "0.15.6", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
-xcb = { version = "0.10.1", features = ["randr"], optional = true }
-x11rb = { version = "0.9.0", features = ["randr"], optional = true }
+xcb = { version = "1.1", features = ["randr"], optional = true }
+x11rb = { version = "0.10", features = ["randr"], optional = true }
 
 [dev-dependencies]
-paste = "1.0.6"
-serde_json = "1.0.79"
-tracing-subscriber = "0.2"
+paste = "1.0.9"
+serde_json = "1.0.86"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 simple_test_case = "1.1.0"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
