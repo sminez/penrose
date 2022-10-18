@@ -588,7 +588,7 @@ impl XConn for XcbConn {
                     .collect::<Result<Vec<String>>>()?,
             ),
 
-            "CARDINAL" => Prop::Cardinal(r.value()[0]),
+            "CARDINAL" => Prop::Cardinal(r.value().to_vec()),
 
             "STRING" => Prop::UTF8String(
                 String::from_utf8_lossy(r.value())
@@ -688,7 +688,7 @@ impl XConn for XcbConn {
                     .collect::<Result<Vec<u32>>>()?,
             ),
 
-            Prop::Cardinal(val) => (xcb::xproto::ATOM_CARDINAL, vec![val]),
+            Prop::Cardinal(vals) => (xcb::xproto::ATOM_CARDINAL, vals),
 
             Prop::Window(ids) => (
                 xcb::xproto::ATOM_WINDOW,

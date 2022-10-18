@@ -10,6 +10,8 @@ use crate::{
     Color, Result,
 };
 use nix::sys::signal::{signal, SigHandler, Signal};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
     fmt,
@@ -18,6 +20,7 @@ use std::{
 use tracing::{error, span, trace, Level};
 
 /// An X11 ID for a given resource
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Xid(pub(crate) u32);
 

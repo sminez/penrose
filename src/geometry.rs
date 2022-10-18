@@ -1,6 +1,9 @@
 //! Geometry primitives
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// An x,y coordinate pair
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Point {
     /// An absolute x coordinate relative to the root window
@@ -96,6 +99,7 @@ impl Line {
 }
 
 /// An X window / screen position: top left corner + extent
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Rect {
     /// The x-coordinate of the top left corner of this rect

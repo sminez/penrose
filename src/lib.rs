@@ -11,11 +11,23 @@ pub mod macros;
 pub mod pure;
 pub mod util;
 pub mod x;
-pub mod xcb; // TODO: should be feature flagged
+#[cfg(feature = "x11rb-xcb")]
+pub mod x11rb;
+#[cfg(feature = "xcb")]
+pub mod xcb;
 
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
 pub use pure::{Position, Screen, Stack, StackSet, Workspace};
+
+#[cfg(feature = "x11rb-xcb")]
+use ::x11rb::{
+    errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
+    x11_utils::X11Error,
+};
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -36,6 +48,9 @@ pub enum Error {
 
     #[error(transparent)]
     InvalidUtf8(#[from] std::string::FromUtf8Error),
+
+    #[error("{ty} property '{prop}' for {id} contained invalid data")]
+    InvalidPropertyData { id: Xid, ty: String, prop: String },
 
     #[error("There are no screens available")]
     NoScreens,
@@ -58,25 +73,48 @@ pub enum Error {
     #[error("{button} is not a supported mouse button")]
     UnknownMouseButton { button: u8 },
 
-    // FIXME: feature flag
+    // TODO: These backend specific errors should be abstracted out to a
+    //       set of common error variants that they can be mapped to without
+    //       needing to extend the enum conditionally when flags are enabled
+    #[cfg(feature = "xcb")]
     #[error("Unable to connect to the X server via XCB")]
     XcbConnection(#[from] ::xcb::ConnError),
 
-    // FIXME: feature flag
+    #[cfg(feature = "xcb")]
     #[error("X11 error: error seq={0}, code={1}, xid={2}, request: {3}:{4}")]
     X11Error(u16, u8, u32, u8, u16),
 
-    // FIXME: feature flag
+    #[cfg(feature = "xcb")]
     #[error("Error making xcb query: {0:?}")]
     XcbKnown(crate::xcb::error::XErrorCode),
 
-    // FIXME: feature flag
+    #[cfg(feature = "xcb")]
     #[error("Expected XCB response type to be one of {expected:?}, got {received}")]
     XcbUnexpectedResponseType { expected: Vec<u8>, received: u8 },
 
-    // FIXME: feature flag
+    #[cfg(feature = "xcb")]
     #[error("Unknown error making xcb query: error_code={0} response_type={1}")]
     XcbUnknown(u8, u8),
+
+    #[cfg(feature = "x11rb-xcb")]
+    #[error(transparent)]
+    X11rbConnect(#[from] ConnectError),
+
+    #[cfg(feature = "x11rb-xcb")]
+    #[error(transparent)]
+    X11rbConnection(#[from] ConnectionError),
+
+    #[cfg(feature = "x11rb-xcb")]
+    #[error(transparent)]
+    X11rbReplyError(#[from] ReplyError),
+
+    #[cfg(feature = "x11rb-xcb")]
+    #[error(transparent)]
+    X11rbReplyOrIdError(#[from] ReplyOrIdError),
+
+    #[cfg(feature = "x11rb-xcb")]
+    #[error("X11 error: {0:?}")]
+    X11rbX11Error(X11Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

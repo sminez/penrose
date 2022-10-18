@@ -7,7 +7,7 @@ pub struct SpawnOnStartup {
 
 impl SpawnOnStartup {
     /// Create a new startup hook ready for adding to your Config
-    pub fn new<X, E>(prog: &'static str) -> Box<dyn StateHook<X, E>>
+    pub fn boxed<X, E>(prog: &'static str) -> Box<dyn StateHook<X, E>>
     where
         X: XConn,
         E: Send + Sync + 'static,

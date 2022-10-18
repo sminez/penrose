@@ -176,7 +176,7 @@ where
     x.set_prop(
         x.root(),
         Atom::NetNumberOfDesktops.as_ref(),
-        Prop::Cardinal(workspaces_names.len() as u32),
+        Prop::Cardinal(vec![workspaces_names.len() as u32]),
     )?;
 
     x.set_prop(
@@ -215,7 +215,7 @@ where
     x.set_prop(
         x.root(),
         Atom::NetCurrentDesktop.as_ref(),
-        Prop::Cardinal(current_desktop),
+        Prop::Cardinal(vec![current_desktop]),
     )
 }
 
@@ -230,7 +230,11 @@ where
     });
 
     for (desktop, client) in client_desktops {
-        x.set_prop(client, Atom::NetWmDesktop.as_ref(), Prop::Cardinal(desktop))?;
+        x.set_prop(
+            client,
+            Atom::NetWmDesktop.as_ref(),
+            Prop::Cardinal(vec![desktop]),
+        )?;
     }
 
     Ok(())

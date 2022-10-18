@@ -31,7 +31,7 @@ use tracing_subscriber::{self, prelude::*};
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<XcbConn, ()>>> {
     let mut raw_bindings = map! {
         // map_keys: |k: &str| format!("C-{k}");
-        map_keys: |k: &str| format!("{k}");
+        map_keys: |k: &str| k.to_owned();
 
         "M-j" => modify_with(|cs| cs.focus_down()),
         "M-k" => modify_with(|cs| cs.focus_up()),
@@ -98,7 +98,7 @@ fn main() -> Result<()> {
     // can be demonstrated.
     let config = add_ewmh_hooks(Config {
         default_layouts: layouts(),
-        startup_hook: Some(SpawnOnStartup::new("polybar")),
+        startup_hook: Some(SpawnOnStartup::boxed("polybar")),
         ..Config::default()
     });
 

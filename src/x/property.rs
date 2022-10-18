@@ -17,7 +17,7 @@ pub enum Prop {
     /// Raw bytes for when the prop type is non-standard
     Bytes(Vec<u32>),
     /// A cardinal number
-    Cardinal(u32),
+    Cardinal(Vec<u32>),
     /// UTF-8 encoded string data
     UTF8String(Vec<String>),
     /// An X window IDs
