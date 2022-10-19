@@ -14,7 +14,7 @@ use crate::{
 use std::{mem::take, str::FromStr};
 use tracing::{error, trace};
 
-// fn is_fullscreen<X, E>(data: &[u32], x: &X) -> bool
+// fn is_fullscreen<X>(data: &[u32], x: &X) -> bool
 // where
 //     X: XConnExt,
 // {
@@ -24,10 +24,9 @@ use tracing::{error, trace};
 //         .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
 // }
 
-pub(crate) fn client_message<X, E>(msg: ClientMessage, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn client_message<X>(msg: ClientMessage, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     let data = &msg.data;
     trace!(id = msg.id.0, dtype = ?msg.dtype, ?data, "got client message");
@@ -61,15 +60,14 @@ where
     }
 }
 
-pub(crate) fn keypress<X, E>(
+pub(crate) fn keypress<X>(
     key: KeyCode,
-    bindings: &mut KeyBindings<X, E>,
-    state: &mut State<X, E>,
+    bindings: &mut KeyBindings<X>,
+    state: &mut State<X>,
     x: &X,
 ) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     if let Some(action) = bindings.get_mut(&key) {
         trace!(?key, "running user keybinding");
@@ -82,15 +80,14 @@ where
     Ok(())
 }
 
-pub(crate) fn mouse_event<X, E>(
+pub(crate) fn mouse_event<X>(
     e: MouseEvent,
-    bindings: &mut MouseBindings<X, E>,
-    state: &mut State<X, E>,
+    bindings: &mut MouseBindings<X>,
+    state: &mut State<X>,
     x: &X,
 ) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
         if let Err(error) = action.call(&e, state, x) {
@@ -102,10 +99,9 @@ where
     Ok(())
 }
 
-pub(crate) fn map_request<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn map_request<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     trace!(?client, "handling new map request");
     let attrs = x.get_window_attributes(client)?;
@@ -118,10 +114,9 @@ where
     Ok(())
 }
 
-pub(crate) fn destroy<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn destroy<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     if state.client_set.contains(&client) {
         trace!(?client, "destroying client");
@@ -136,10 +131,9 @@ where
 }
 
 // Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
-pub(crate) fn unmap_notify<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn unmap_notify<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     let expected = *state.pending_unmap.get(&client).unwrap_or(&0);
 
@@ -157,10 +151,9 @@ where
     Ok(())
 }
 
-pub(crate) fn focus_in<X, E>(client: Xid, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn focus_in<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     let accepts_focus = match x.get_prop(client, Atom::WmHints.as_ref()) {
         Ok(Some(Prop::WmHints(WmHints { accepts_input, .. }))) => accepts_input,
@@ -183,10 +176,9 @@ where
     Ok(())
 }
 
-pub(crate) fn enter<X, E>(client: Xid, p: Point, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn enter<X>(client: Xid, p: Point, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     let focus_follow_mouse = state.config.focus_follow_mouse;
 
@@ -206,10 +198,9 @@ where
     })
 }
 
-pub(crate) fn leave<X, E>(client: Xid, p: Point, state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn leave<X>(client: Xid, p: Point, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     if state.config.focus_follow_mouse {
         x.set_client_border_color(client, state.config.normal_border)?;
@@ -227,10 +218,9 @@ where
     })
 }
 
-pub(crate) fn detect_screens<X, E>(state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn detect_screens<X>(state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     let rects = x.screen_details()?;
 
@@ -252,10 +242,9 @@ where
     Ok(())
 }
 
-pub(crate) fn screen_change<X, E>(state: &mut State<X, E>, x: &X) -> Result<()>
+pub(crate) fn screen_change<X>(state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     let p = x.cursor_position()?;
 

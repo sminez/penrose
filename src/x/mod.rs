@@ -100,10 +100,7 @@ pub trait XConn {
 // Derivable methods for XConn that should never be given a different implementation
 pub trait XConnExt: XConn + Sized {
     /// Kill the focused client if there is one
-    fn kill_focused<E>(&self, state: &mut State<Self, E>) -> Result<()>
-    where
-        E: Send + Sync + 'static,
-    {
+    fn kill_focused(&self, state: &mut State<Self>) -> Result<()> {
         if let Some(&id) = state.client_set.current_client() {
             self.kill(id)?;
         }
@@ -111,10 +108,7 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
-    fn manage<E>(&self, client: Xid, state: &mut State<Self, E>) -> Result<()>
-    where
-        E: Send + Sync + 'static,
-    {
+    fn manage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
         trace!(%client, "managing new client");
         let should_float = self.client_should_float(client, &state.config.floating_classes)?;
         let r = self.client_geometry(client)?;
@@ -141,10 +135,7 @@ pub trait XConnExt: XConn + Sized {
         res
     }
 
-    fn unmanage<E>(&self, client: Xid, state: &mut State<Self, E>) -> Result<()>
-    where
-        E: Send + Sync + 'static,
-    {
+    fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |cs| {
             cs.remove_client(&client);
         })
@@ -187,19 +178,15 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
-    fn refresh<E>(&self, state: &mut State<Self, E>) -> Result<()>
-    where
-        E: Send + Sync + 'static,
-    {
+    fn refresh(&self, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, id)
     }
 
     /// Apply a pure function that modifies a [ClientSet] and then handle refreshing the
     /// Window Manager state and associated X11 calls.
-    fn modify_and_refresh<F, E>(&self, state: &mut State<Self, E>, f: F) -> Result<()>
+    fn modify_and_refresh<F>(&self, state: &mut State<Self>, f: F) -> Result<()>
     where
         F: FnMut(&mut ClientSet),
-        E: Send + Sync + 'static,
     {
         let (positions, diff) = modify_and_diff(&mut state.client_set, f);
 
@@ -300,10 +287,7 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgb_u32())])
     }
 
-    fn set_initial_properties<E>(&self, client: Xid, config: &Config<Self, E>) -> Result<()>
-    where
-        E: Send + Sync + 'static,
-    {
+    fn set_initial_properties(&self, client: Xid, config: &Config<Self>) -> Result<()> {
         let Config {
             normal_border,
             border_width,
@@ -335,10 +319,7 @@ pub trait XConnExt: XConn + Sized {
         )
     }
 
-    fn set_active_client<E>(&self, client: Xid, state: &mut State<Self, E>) -> Result<()>
-    where
-        E: Send + Sync + 'static,
-    {
+    fn set_active_client(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |cs| cs.focus_client(&client))
     }
 }

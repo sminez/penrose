@@ -12,21 +12,19 @@ use tracing::{error, info};
 /// Exit penrose
 ///
 /// Immediately exit the window manager with exit code 0.
-pub fn exit<X, E>() -> Box<dyn KeyEventHandler<X, E>>
+pub fn exit<X>() -> Box<dyn KeyEventHandler<X>>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     key_handler(|_, _| std::process::exit(0))
 }
 
 /// Info log the current window manager [State].
-pub fn log_current_state<X, E>() -> Box<dyn KeyEventHandler<X, E>>
+pub fn log_current_state<X>() -> Box<dyn KeyEventHandler<X>>
 where
     X: XConn + std::fmt::Debug,
-    E: std::fmt::Debug + Send + Sync + 'static,
 {
-    key_handler(|s: &mut State<X, E>, _| {
+    key_handler(|s: &mut State<X>, _| {
         info!("Current Window Manager State: {s:#?}");
         Ok(())
     })
@@ -39,13 +37,12 @@ where
 /// given name, create it with the supplied available layouts. If a matching Workspace _does_
 /// already exist then simply switch focus to it. This action is most useful when combined with the
 /// DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.
-pub fn create_or_switch_to_workspace<X, E>(
+pub fn create_or_switch_to_workspace<X>(
     get_name: fn() -> Option<String>,
     layouts: LayoutStack,
-) -> Box<dyn KeyEventHandler<X, E>>
+) -> Box<dyn KeyEventHandler<X>>
 where
     X: XConn + std::fmt::Debug,
-    E: std::fmt::Debug + Send + Sync + 'static,
 {
     modify_with(move |cs| {
         if let Some(name) = get_name() {
@@ -63,15 +60,11 @@ where
 ///
 /// This is useful for key bindings that are based on the program you want to work with rather than
 /// having to remember where things are running.
-pub fn focus_or_spawn<X, E>(
-    class: &'static str,
-    command: &'static str,
-) -> Box<dyn KeyEventHandler<X, E>>
+pub fn focus_or_spawn<X>(class: &'static str, command: &'static str) -> Box<dyn KeyEventHandler<X>>
 where
     X: XConn + std::fmt::Debug,
-    E: std::fmt::Debug + Send + Sync + 'static,
 {
-    key_handler(move |s: &mut State<X, E>, x: &X| {
+    key_handler(move |s: &mut State<X>, x: &X| {
         let mut client = None;
 
         for &id in s.client_set.iter_clients() {

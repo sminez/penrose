@@ -9,6 +9,7 @@ use crate::{
     x::{XConn, XConnExt, XEvent},
     Color, Result,
 };
+use anymap::{any::Any, AnyMap};
 use nix::sys::signal::{signal, SigHandler, Signal};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -80,14 +81,13 @@ pub type ClientSpace = Workspace<Xid>;
 
 /// Mutable internal state for the window manager
 #[derive(Debug)]
-pub struct State<X, E = ()>
+pub struct State<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    pub config: Config<X, E>,
+    pub config: Config<X>,
     pub client_set: ClientSet,
-    pub extension: E,
+    pub(crate) extension: AnyMap,
     pub(crate) root: Xid,
     pub(crate) mapped: HashSet<Xid>,
     pub(crate) pending_unmap: HashMap<Xid, usize>,
@@ -96,28 +96,43 @@ where
     // pub(crate) mouse_position: Option<(Point, Point)>,
 }
 
-impl<X, E> State<X, E>
+impl<X> State<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
+    /// The Xid of the root window for the running [WindowManager].
     pub fn root(&self) -> Xid {
         self.root
     }
 
+    /// The set of all client windows currently mapped to a screen.
     pub fn mapped_clients(&self) -> &HashSet<Xid> {
         &self.mapped
     }
 
+    /// The event currently being processed.
     pub fn current_event(&self) -> Option<&XEvent> {
         self.current_event.as_ref()
     }
+
+    /// Get a read only reference to a shared state extension.
+    ///
+    /// To add an extension to [State], see the [WindowManager::add_extension].
+    pub fn extension<E: Any>(&self) -> Option<&E> {
+        self.extension.get()
+    }
+
+    /// Get a mutable reference to a shared state extension.
+    ///
+    /// To add an extension to [State], see the [WindowManager::add_extension].
+    pub fn extension_mut<E: Any>(&mut self) -> Option<&mut E> {
+        self.extension.get_mut()
+    }
 }
 
-pub struct Config<X, E>
+pub struct Config<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     pub normal_border: Color,
     pub focused_border: Color,
@@ -126,16 +141,15 @@ where
     pub default_layouts: LayoutStack,
     pub workspace_names: Vec<String>,
     pub floating_classes: Vec<String>,
-    pub startup_hook: Option<Box<dyn StateHook<X, E>>>,
-    pub event_hook: Option<Box<dyn EventHook<X, E>>>,
+    pub startup_hook: Option<Box<dyn StateHook<X>>>,
+    pub event_hook: Option<Box<dyn EventHook<X>>>,
     pub manage_hook: Option<Box<dyn ManageHook<X>>>,
-    pub refresh_hook: Option<Box<dyn StateHook<X, E>>>,
+    pub refresh_hook: Option<Box<dyn StateHook<X>>>,
 }
 
-impl<X, E> fmt::Debug for Config<X, E>
+impl<X> fmt::Debug for Config<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
@@ -150,10 +164,9 @@ where
     }
 }
 
-impl<X, E> Default for Config<X, E>
+impl<X> Default for Config<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     fn default() -> Self {
         let strings = |slice: &[&str]| slice.iter().map(|s| s.to_string()).collect();
@@ -174,14 +187,13 @@ where
     }
 }
 
-impl<X, E> Config<X, E>
+impl<X> Config<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     pub fn compose_or_set_startup_hook<H>(&mut self, hook: H)
     where
-        H: StateHook<X, E> + 'static,
+        H: StateHook<X> + 'static,
         X: 'static,
     {
         self.startup_hook = match self.startup_hook.take() {
@@ -192,7 +204,7 @@ where
 
     pub fn compose_or_set_event_hook<H>(&mut self, hook: H)
     where
-        H: EventHook<X, E> + 'static,
+        H: EventHook<X> + 'static,
         X: 'static,
     {
         self.event_hook = match self.event_hook.take() {
@@ -214,7 +226,7 @@ where
 
     pub fn compose_or_set_refresh_hook<H>(&mut self, hook: H)
     where
-        H: StateHook<X, E> + 'static,
+        H: StateHook<X> + 'static,
         X: 'static,
     {
         self.refresh_hook = match self.refresh_hook.take() {
@@ -224,42 +236,33 @@ where
     }
 }
 
-pub struct WindowManager<X, E>
+/// A top level struct holding all of the state required to run as an X11 window manager.
+///
+/// This allows for final configuration to be carried out before entering the main event
+/// loop.
+pub struct WindowManager<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     x: X,
-    state: State<X, E>,
-    key_bindings: KeyBindings<X, E>,
-    mouse_bindings: MouseBindings<X, E>,
+    state: State<X>,
+    key_bindings: KeyBindings<X>,
+    mouse_bindings: MouseBindings<X>,
 }
 
-impl<X> WindowManager<X, ()>
+impl<X> WindowManager<X>
 where
     X: XConn,
 {
+    /// Construct a new [WindowManager] with the provided config and X connection.
+    ///
+    /// If you need to set [State] extensions, call [WindowManager::add_extension] after
+    /// constructing your initial WindowManager.
     pub fn new(
-        config: Config<X, ()>,
-        key_bindings: KeyBindings<X, ()>,
-        mouse_bindings: MouseBindings<X, ()>,
+        config: Config<X>,
+        key_bindings: KeyBindings<X>,
+        mouse_bindings: MouseBindings<X>,
         x: X,
-    ) -> Result<Self> {
-        Self::new_with_state_extension(config, key_bindings, mouse_bindings, x, ())
-    }
-}
-
-impl<X, E> WindowManager<X, E>
-where
-    X: XConn,
-    E: Send + Sync + 'static,
-{
-    pub fn new_with_state_extension(
-        config: Config<X, E>,
-        key_bindings: KeyBindings<X, E>,
-        mouse_bindings: MouseBindings<X, E>,
-        x: X,
-        extension: E,
     ) -> Result<Self> {
         let client_set = StackSet::try_new(
             config.default_layouts.clone(),
@@ -270,7 +273,7 @@ where
         let state = State {
             config,
             client_set,
-            extension,
+            extension: AnyMap::new(),
             root: x.root(),
             mapped: HashSet::new(),
             pending_unmap: HashMap::new(),
@@ -285,7 +288,65 @@ where
         })
     }
 
-    pub fn handle_xevent(&mut self, event: XEvent) -> Result<()> {
+    /// Add a typed [State] extension to this WindowManager.
+    pub fn add_extension<E: Any>(&mut self, extension: E) {
+        self.state.extension.insert(extension);
+    }
+
+    /// Start the WindowManager and run it until told to exit.
+    ///
+    /// Any provided startup hooks will be run after setting signal handlers and grabbing
+    /// key / mouse bindings from the X server. Any set up you need to do should be run
+    /// explicitly before calling this method or as part of a startup hook.
+    pub fn run(mut self) -> Result<()> {
+        trace!("registering SIGCHILD signal handler");
+        if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
+            panic!("unable to set signal handler: {}", e);
+        }
+
+        self.grab()?;
+
+        if let Some(mut h) = self.state.config.startup_hook.take() {
+            trace!("running user startup hook");
+            if let Err(e) = h.call(&mut self.state, &self.x) {
+                error!(%e, "error returned from user startup hook");
+            }
+        }
+
+        self.x.refresh(&mut self.state)?;
+
+        loop {
+            match self.x.next_event() {
+                Ok(event) => {
+                    let span = span!(target: "penrose", Level::DEBUG, "XEvent", %event);
+                    let _enter = span.enter();
+                    trace!(details = ?event, "event details");
+                    self.state.current_event = Some(event.clone());
+
+                    self.handle_xevent(event)?;
+                    self.x.flush();
+
+                    self.state.current_event = None;
+                }
+
+                Err(e) => error!(%e, "Error pulling next x event"),
+            }
+        }
+    }
+
+    fn grab(&self) -> Result<()> {
+        trace!("grabbing key and mouse bindings");
+        let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
+        let mouse_states: Vec<_> = self
+            .mouse_bindings
+            .keys()
+            .map(|(_, state)| state.clone())
+            .collect();
+
+        self.x.grab(&key_codes, &mouse_states)
+    }
+
+    fn handle_xevent(&mut self, event: XEvent) -> Result<()> {
         use XEvent::*;
 
         let WindowManager {
@@ -334,53 +395,5 @@ where
         }
 
         Ok(())
-    }
-
-    pub fn run(mut self) -> Result<()> {
-        trace!("registering SIGCHILD signal handler");
-        if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
-            panic!("unable to set signal handler: {}", e);
-        }
-
-        self.grab()?;
-
-        if let Some(mut h) = self.state.config.startup_hook.take() {
-            trace!("running user startup hook");
-            if let Err(e) = h.call(&mut self.state, &self.x) {
-                error!(%e, "error returned from user startup hook");
-            }
-        }
-
-        self.x.refresh(&mut self.state)?;
-
-        loop {
-            match self.x.next_event() {
-                Ok(event) => {
-                    let span = span!(target: "penrose", Level::DEBUG, "XEvent", %event);
-                    let _enter = span.enter();
-                    trace!(details = ?event, "event details");
-                    self.state.current_event = Some(event.clone());
-
-                    self.handle_xevent(event)?;
-                    self.x.flush();
-
-                    self.state.current_event = None;
-                }
-
-                Err(e) => error!(%e, "Error pulling next x event"),
-            }
-        }
-    }
-
-    fn grab(&self) -> Result<()> {
-        trace!("grabbing key and mouse bindings");
-        let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
-        let mouse_states: Vec<_> = self
-            .mouse_bindings
-            .keys()
-            .map(|(_, state)| state.clone())
-            .collect();
-
-        self.x.grab(&key_codes, &mouse_states)
     }
 }

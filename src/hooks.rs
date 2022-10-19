@@ -6,16 +6,15 @@ use crate::{
 };
 
 /// Handle an [XEvent], return `true` if default event handling should be run afterwards.
-pub trait EventHook<X, E>
+pub trait EventHook<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     /// Run this hook
-    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> Result<bool>;
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool>;
 
     /// Convert to a trait object
-    fn boxed(self) -> Box<dyn EventHook<X, E>>
+    fn boxed(self) -> Box<dyn EventHook<X>>
     where
         Self: Sized + 'static,
     {
@@ -24,9 +23,9 @@ where
 
     /// Compose this hook with another [EventHook]. The second hook will be skipped if this one
     /// returns `false`.
-    fn then<H>(self, next: H) -> ComposedEventHook<X, E>
+    fn then<H>(self, next: H) -> ComposedEventHook<X>
     where
-        H: EventHook<X, E> + 'static,
+        H: EventHook<X> + 'static,
         Self: Sized + 'static,
     {
         ComposedEventHook {
@@ -37,7 +36,7 @@ where
 
     /// Compose this hook with a boxed [EventHook]. The second hook will be skipped if this one
     /// returns `false`.
-    fn then_boxed(self, next: Box<dyn EventHook<X, E>>) -> Box<dyn EventHook<X, E>>
+    fn then_boxed(self, next: Box<dyn EventHook<X>>) -> Box<dyn EventHook<X>>
     where
         Self: Sized + 'static,
         X: 'static,
@@ -49,21 +48,19 @@ where
     }
 }
 
-pub struct ComposedEventHook<X, E>
+pub struct ComposedEventHook<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    first: Box<dyn EventHook<X, E>>,
-    second: Box<dyn EventHook<X, E>>,
+    first: Box<dyn EventHook<X>>,
+    second: Box<dyn EventHook<X>>,
 }
 
-impl<X, E> EventHook<X, E> for ComposedEventHook<X, E>
+impl<X> EventHook<X> for ComposedEventHook<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> Result<bool> {
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
         if self.first.call(event, state, x)? {
             self.second.call(event, state, x)
         } else {
@@ -72,13 +69,12 @@ where
     }
 }
 
-impl<F, X, E> EventHook<X, E> for F
+impl<F, X> EventHook<X> for F
 where
-    F: FnMut(&XEvent, &mut State<X, E>, &X) -> Result<bool>,
+    F: FnMut(&XEvent, &mut State<X>, &X) -> Result<bool>,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> Result<bool> {
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
         (self)(event, state, x)
     }
 }
@@ -153,18 +149,17 @@ where
 }
 
 /// An arbitrary action that can be run and modify [State]
-pub trait StateHook<X, E>
+pub trait StateHook<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     /// Run this hook
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()>;
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
 
     /// Compose this hook with another [StateHook].
-    fn then<H>(self, next: H) -> ComposedStateHook<X, E>
+    fn then<H>(self, next: H) -> ComposedStateHook<X>
     where
-        H: StateHook<X, E> + 'static,
+        H: StateHook<X> + 'static,
         Self: Sized + 'static,
     {
         ComposedStateHook {
@@ -174,7 +169,7 @@ where
     }
 
     /// Convert to a trait object
-    fn boxed(self) -> Box<dyn StateHook<X, E>>
+    fn boxed(self) -> Box<dyn StateHook<X>>
     where
         Self: Sized + 'static,
     {
@@ -182,7 +177,7 @@ where
     }
 
     /// Compose this hook with a boxed [StateHook].
-    fn then_boxed(self, next: Box<dyn StateHook<X, E>>) -> Box<dyn StateHook<X, E>>
+    fn then_boxed(self, next: Box<dyn StateHook<X>>) -> Box<dyn StateHook<X>>
     where
         Self: Sized + 'static,
         X: 'static,
@@ -194,33 +189,30 @@ where
     }
 }
 
-pub struct ComposedStateHook<X, E>
+pub struct ComposedStateHook<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    first: Box<dyn StateHook<X, E>>,
-    second: Box<dyn StateHook<X, E>>,
+    first: Box<dyn StateHook<X>>,
+    second: Box<dyn StateHook<X>>,
 }
 
-impl<X, E> StateHook<X, E> for ComposedStateHook<X, E>
+impl<X> StateHook<X> for ComposedStateHook<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         self.first.call(state, x)?;
         self.second.call(state, x)
     }
 }
 
-impl<F, X, E> StateHook<X, E> for F
+impl<F, X> StateHook<X> for F
 where
-    F: FnMut(&mut State<X, E>, &X) -> Result<()>,
+    F: FnMut(&mut State<X>, &X) -> Result<()>,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         (self)(state, x)
     }
 }

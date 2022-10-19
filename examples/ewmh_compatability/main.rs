@@ -28,7 +28,7 @@ use penrose::{
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
-fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<X11rbRustConn, ()>>> {
+fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<X11rbRustConn>>> {
     let mut raw_bindings = map! {
         // map_keys: |k: &str| format!("C-{k}");
         map_keys: |k: &str| k.to_owned();

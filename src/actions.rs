@@ -16,34 +16,31 @@ use crate::{
 //       right signature isn't sufficient on its own.
 
 /// Construct a [KeyEventHandler] from a closure or free function
-pub fn key_handler<F, X, E>(f: F) -> Box<dyn KeyEventHandler<X, E>>
+pub fn key_handler<F, X>(f: F) -> Box<dyn KeyEventHandler<X>>
 where
-    F: FnMut(&mut State<X, E>, &X) -> Result<()> + 'static,
+    F: FnMut(&mut State<X>, &X) -> Result<()> + 'static,
     X: XConn,
-    E: Send + Sync + 'static,
 {
     Box::new(f)
 }
 
 /// Mutate the [ClientSet] and refresh the onscreen state
-pub fn modify_with<F, X, E>(f: F) -> Box<dyn KeyEventHandler<X, E>>
+pub fn modify_with<F, X>(f: F) -> Box<dyn KeyEventHandler<X>>
 where
     F: FnMut(&mut ClientSet) + Clone + 'static,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    Box::new(move |s: &mut State<X, E>, x: &X| x.modify_and_refresh(s, f.clone()))
+    Box::new(move |s: &mut State<X>, x: &X| x.modify_and_refresh(s, f.clone()))
 }
 
 /// Send a message to the currently active layout
-pub fn send_layout_message<F, M, X, E>(f: F) -> Box<dyn KeyEventHandler<X, E>>
+pub fn send_layout_message<F, M, X>(f: F) -> Box<dyn KeyEventHandler<X>>
 where
     F: Fn() -> M + 'static,
     M: IntoMessage,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    key_handler(move |s: &mut State<X, E>, x: &X| {
+    key_handler(move |s: &mut State<X>, x: &X| {
         x.modify_and_refresh(s, |cs| {
             cs.current_workspace_mut().handle_message(f());
         })
@@ -51,14 +48,13 @@ where
 }
 
 /// Send a message to all layouts available to the current workspace
-pub fn broadcast_layout_message<F, M, X, E>(f: F) -> Box<dyn KeyEventHandler<X, E>>
+pub fn broadcast_layout_message<F, M, X>(f: F) -> Box<dyn KeyEventHandler<X>>
 where
     F: Fn() -> M + 'static,
     M: IntoMessage,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    key_handler(move |s: &mut State<X, E>, x: &X| {
+    key_handler(move |s: &mut State<X>, x: &X| {
         x.modify_and_refresh(s, |cs| {
             cs.current_workspace_mut().broadcast_message(f());
         })
@@ -66,10 +62,9 @@ where
 }
 
 /// Spawn an external program as part of a key binding
-pub fn spawn<X, E>(program: &'static str) -> Box<dyn KeyEventHandler<X, E>>
+pub fn spawn<X>(program: &'static str) -> Box<dyn KeyEventHandler<X>>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
     key_handler(move |_, _| util::spawn(program))
 }

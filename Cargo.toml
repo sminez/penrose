@@ -43,6 +43,7 @@ tracing = { version = "0.1", features = ["attributes", "log"] }
 serde = { version = "1.0", features = ["derive"], optional = true }
 xcb = { version = "1.1", features = ["randr"], optional = true }
 x11rb = { version = "0.10", features = ["randr"], optional = true }
+anymap = "0.12.1"
 
 [dev-dependencies]
 paste = "1.0.9"

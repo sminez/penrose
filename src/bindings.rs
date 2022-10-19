@@ -71,9 +71,9 @@ fn parse_binding(pattern: &str, known_codes: &HashMap<String, u8>) -> Result<Key
 /// the command line `xmodmap` utility.
 ///
 /// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
-pub fn parse_keybindings_with_xmodmap<S, E, X>(
-    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X, E>>>,
-) -> Result<KeyBindings<X, E>>
+pub fn parse_keybindings_with_xmodmap<S, X>(
+    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X>>>,
+) -> Result<KeyBindings<X>>
 where
     S: AsRef<str>,
     X: XConn,
@@ -87,51 +87,46 @@ where
 }
 
 /// Some action to be run by a user key binding
-pub trait KeyEventHandler<X, E>
+pub trait KeyEventHandler<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()>;
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
 }
 
-impl<F, X, E> KeyEventHandler<X, E> for F
+impl<F, X> KeyEventHandler<X> for F
 where
-    F: FnMut(&mut State<X, E>, &X) -> Result<()>,
+    F: FnMut(&mut State<X>, &X) -> Result<()>,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         (self)(state, x)
     }
 }
 
 /// User defined key bindings
-pub type KeyBindings<X, E> = HashMap<KeyCode, Box<dyn KeyEventHandler<X, E>>>;
+pub type KeyBindings<X> = HashMap<KeyCode, Box<dyn KeyEventHandler<X>>>;
 
 /// An action to be run in response to a mouse event
-pub trait MouseEventHandler<X, E>
+pub trait MouseEventHandler<X>
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, evt: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()>;
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
 }
 
-impl<F, X, E> MouseEventHandler<X, E> for F
+impl<F, X> MouseEventHandler<X> for F
 where
-    F: FnMut(&MouseEvent, &mut State<X, E>, &X) -> Result<()>,
+    F: FnMut(&MouseEvent, &mut State<X>, &X) -> Result<()>,
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, evt: &MouseEvent, state: &mut State<X, E>, x: &X) -> Result<()> {
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
         (self)(evt, state, x)
     }
 }
 
 /// User defined mouse bindings
-pub type MouseBindings<X, E> =
-    HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X, E>>>;
+pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X>>>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]

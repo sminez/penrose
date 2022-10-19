@@ -40,10 +40,9 @@ pub const WM_NAME: &str = "penrose";
 ///
 /// See the module level docs for details of what functionality is provided by
 /// this extension.
-pub fn add_ewmh_hooks<X, E>(mut config: Config<X, E>) -> Config<X, E>
+pub fn add_ewmh_hooks<X>(mut config: Config<X>) -> Config<X>
 where
     X: XConn + 'static,
-    E: Send + Sync + 'static,
 {
     config.compose_or_set_startup_hook(EwhmStartupHook);
     config.compose_or_set_refresh_hook(EwhmRefreshHook);
@@ -55,12 +54,11 @@ where
 /// Advertise EWMH support to the X server
 pub struct EwhmStartupHook;
 
-impl<X, E> StateHook<X, E> for EwhmStartupHook
+impl<X> StateHook<X> for EwhmStartupHook
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, _state: &mut State<X, E>, x: &X) -> Result<()> {
+    fn call(&mut self, _state: &mut State<X>, x: &X) -> Result<()> {
         let root = x.root();
 
         x.set_prop(
@@ -91,12 +89,11 @@ where
 ///   - _NET_CLOSE_WINDOW    :: closing a client window
 pub struct EwhmEventHook;
 
-impl<X, E> EventHook<X, E> for EwhmEventHook
+impl<X> EventHook<X> for EwhmEventHook
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X, E>, x: &X) -> Result<bool> {
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
         let ClientMessage {
             id, dtype, data, ..
         } = match event {
@@ -149,12 +146,11 @@ where
 /// Notify external clients of the current status of workspaces and clients
 pub struct EwhmRefreshHook;
 
-impl<X, E> StateHook<X, E> for EwhmRefreshHook
+impl<X> StateHook<X> for EwhmRefreshHook
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, state: &mut State<X, E>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         set_known_desktops(&state.client_set, x)?;
         set_known_clients(&state.client_set, x)?;
         set_current_desktop(&state.client_set, x)?;

@@ -7,21 +7,19 @@ pub struct SpawnOnStartup {
 
 impl SpawnOnStartup {
     /// Create a new startup hook ready for adding to your Config
-    pub fn boxed<X, E>(prog: &'static str) -> Box<dyn StateHook<X, E>>
+    pub fn boxed<X>(prog: &'static str) -> Box<dyn StateHook<X>>
     where
         X: XConn,
-        E: Send + Sync + 'static,
     {
         Box::new(Self { prog })
     }
 }
 
-impl<X, E> StateHook<X, E> for SpawnOnStartup
+impl<X> StateHook<X> for SpawnOnStartup
 where
     X: XConn,
-    E: Send + Sync + 'static,
 {
-    fn call(&mut self, _state: &mut State<X, E>, _x: &X) -> Result<()> {
+    fn call(&mut self, _state: &mut State<X>, _x: &X) -> Result<()> {
         spawn(self.prog)
     }
 }
