@@ -4,11 +4,7 @@ use crate::{
     geometry::{Point, Rect},
     layout::messages::control::Hide,
     pure::Diff,
-    x::{
-        atom::{Atom, AUTO_FLOAT_WINDOW_TYPES},
-        event::ClientMessage,
-        property::{Prop, WmState},
-    },
+    x::{atom::AUTO_FLOAT_WINDOW_TYPES, event::ClientMessage, property::WmState},
     Color, Result, Xid,
 };
 #[cfg(feature = "serde")]
@@ -19,9 +15,12 @@ use tracing::{debug, error, trace};
 pub mod atom;
 pub mod event;
 pub mod property;
+pub mod query;
 
+pub use atom::Atom;
 pub use event::XEvent;
-pub use property::WindowAttributes;
+pub use property::{Prop, WindowAttributes};
+pub use query::Query;
 
 pub type ScreenId = usize;
 

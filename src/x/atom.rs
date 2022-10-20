@@ -184,22 +184,3 @@ pub const UNMANAGED_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeToolbar,
     Atom::NetWindowTypeUtility,
 ];
-
-/// Currently supported EWMH atoms
-pub const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
-    Atom::NetActiveWindow,
-    Atom::NetClientList,
-    Atom::NetClientListStacking,
-    Atom::NetCurrentDesktop,
-    Atom::NetDesktopNames,
-    Atom::NetNumberOfDesktops,
-    Atom::NetSupported,
-    Atom::NetSupportingWmCheck,
-    // Atom::NetSystemTrayS0,
-    // Atom::NetSystemTrayOpcode,
-    // Atom::NetSystemTrayOrientationHorz,
-    Atom::NetWmName,
-    Atom::NetWmState,
-    Atom::NetWmStateFullscreen,
-    Atom::NetWmWindowType,
-];
