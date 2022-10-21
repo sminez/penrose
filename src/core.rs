@@ -7,16 +7,19 @@ use crate::{
     layout::{Layout, LayoutStack},
     pure::{StackSet, Workspace},
     x::{XConn, XConnExt, XEvent},
-    Color, Result,
+    Color, Error, Result,
 };
 use anymap::{any::Any, AnyMap};
 use nix::sys::signal::{signal, SigHandler, Signal};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::{
+    any::TypeId,
+    cell::RefCell,
     collections::{HashMap, HashSet},
     fmt,
     ops::Deref,
+    sync::Arc,
 };
 use tracing::{error, span, trace, Level};
 
@@ -87,7 +90,7 @@ where
 {
     pub config: Config<X>,
     pub client_set: ClientSet,
-    pub(crate) extension: AnyMap,
+    pub(crate) extensions: AnyMap,
     pub(crate) root: Xid,
     pub(crate) mapped: HashSet<Xid>,
     pub(crate) pending_unmap: HashMap<Xid, usize>,
@@ -115,18 +118,45 @@ where
         self.current_event.as_ref()
     }
 
-    /// Get a read only reference to a shared state extension.
+    /// Get access to a shared state extension.
     ///
-    /// To add an extension to [State], see the [WindowManager::add_extension].
-    pub fn extension<E: Any>(&self) -> Option<&E> {
-        self.extension.get()
+    /// To add an extension to [State] before starting the Window Manager, see the
+    /// [WindowManager::add_extension] method. To add an extension dynamically
+    /// when you have access to [State], see [State::add_extension].
+    ///
+    /// # Errors
+    /// Returns `Error::UnknownStateExtension` if there is no extension of type `E`.
+    pub fn extension<E: Any>(&self) -> Result<Arc<RefCell<E>>> {
+        self.extensions
+            .get()
+            .map(Arc::clone)
+            .ok_or(Error::UnknownStateExtension {
+                type_id: TypeId::of::<E>(),
+            })
     }
 
-    /// Get a mutable reference to a shared state extension.
+    /// Remove a shared state extension entirely.
     ///
-    /// To add an extension to [State], see the [WindowManager::add_extension].
-    pub fn extension_mut<E: Any>(&mut self) -> Option<&mut E> {
-        self.extension.get_mut()
+    /// Returns `None` if there is no extension of type `E` or if that extension
+    /// is currently being held by another thread.
+    pub fn remove_extension<E: Any>(&mut self) -> Option<E> {
+        let arc: Arc<RefCell<E>> = self.extensions.remove()?;
+
+        // If there is only one strong reference to this state then we'll be able to
+        // try_unwrap it and return the underlying `E`. If not the this fails so we
+        // need to store it back in the extensions anymap.
+        match Arc::try_unwrap(arc) {
+            Ok(rc) => Some(rc.into_inner()),
+            Err(arc) => {
+                self.extensions.insert(arc);
+                None
+            }
+        }
+    }
+
+    /// Add a typed [State] extension to this State.
+    pub fn add_extension<E: Any>(&mut self, extension: E) {
+        self.extensions.insert(Arc::new(RefCell::new(extension)));
     }
 }
 
@@ -245,7 +275,7 @@ where
     X: XConn,
 {
     x: X,
-    state: State<X>,
+    pub state: State<X>,
     key_bindings: KeyBindings<X>,
     mouse_bindings: MouseBindings<X>,
 }
@@ -273,7 +303,7 @@ where
         let state = State {
             config,
             client_set,
-            extension: AnyMap::new(),
+            extensions: AnyMap::new(),
             root: x.root(),
             mapped: HashSet::new(),
             pending_unmap: HashMap::new(),
@@ -290,7 +320,7 @@ where
 
     /// Add a typed [State] extension to this WindowManager.
     pub fn add_extension<E: Any>(&mut self, extension: E) {
-        self.state.extension.insert(extension);
+        self.state.add_extension(extension);
     }
 
     /// Start the WindowManager and run it until told to exit.

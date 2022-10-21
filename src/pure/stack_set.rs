@@ -342,6 +342,11 @@ where
         self.iter_clients().any(|c| c == client)
     }
 
+    /// Returns `true` if the [StackSet] contains a visible element equal to the given value.
+    pub fn is_visible(&self, client: &C) -> bool {
+        self.iter_visible_clients().any(|c| c == client)
+    }
+
     /// Extract a reference to the focused element of the current [Stack]
     pub fn current_client(&self) -> Option<&C> {
         self.screens
@@ -380,7 +385,12 @@ where
         T: Into<String>,
     {
         // FIXME: Enforce unique tags
-        let id = self.iter_workspaces().map(|w| w.id).max().expect("at least one workspace") + 1;
+        let id = self
+            .iter_workspaces()
+            .map(|w| w.id)
+            .max()
+            .expect("at least one workspace")
+            + 1;
         let ws = Workspace::new(id, tag, layouts, None);
         self.hidden.push_front(ws);
     }

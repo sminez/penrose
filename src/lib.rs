@@ -1,4 +1,13 @@
 //! # Penrose: a library for building your very own tiling window manager
+#[cfg(feature = "x11rb-xcb")]
+use ::x11rb::{
+    errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
+    x11_utils::X11Error,
+};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+use std::any::TypeId;
+
 pub mod actions;
 pub mod bindings;
 pub mod core;
@@ -19,15 +28,6 @@ pub mod x11rb;
 pub use crate::core::Xid;
 pub use geometry::{Point, Rect};
 pub use pure::{Position, Screen, Stack, StackSet, Workspace};
-
-#[cfg(feature = "x11rb-xcb")]
-use ::x11rb::{
-    errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
-    x11_utils::X11Error,
-};
-
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -72,6 +72,9 @@ pub enum Error {
 
     #[error("{button} is not a supported mouse button")]
     UnknownMouseButton { button: u8 },
+
+    #[error("{type_id:?} was requested as a state extension but not found")]
+    UnknownStateExtension { type_id: TypeId },
 
     // TODO: These backend specific errors should be abstracted out to a
     //       set of common error variants that they can be mapped to without

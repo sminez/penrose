@@ -1,6 +1,6 @@
 //! Traits for writing and composing hooks
 use crate::{
-    core::{ClientSet, State},
+    core::State,
     x::{XConn, XEvent},
     Result, Xid,
 };
@@ -85,7 +85,7 @@ where
     X: XConn,
 {
     /// Run this hook
-    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> Result<()>;
+    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()>;
 
     /// Convert to a trait object
     fn boxed(self) -> Box<dyn ManageHook<X>>
@@ -132,19 +132,19 @@ impl<X> ManageHook<X> for ComposedManageHook<X>
 where
     X: XConn,
 {
-    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> Result<()> {
-        self.first.call(client, cs, x)?;
-        self.second.call(client, cs, x)
+    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+        self.first.call(client, state, x)?;
+        self.second.call(client, state, x)
     }
 }
 
 impl<F, X> ManageHook<X> for F
 where
-    F: FnMut(Xid, &mut ClientSet, &X) -> Result<()>,
+    F: FnMut(Xid, &mut State<X>, &X) -> Result<()>,
     X: XConn,
 {
-    fn call(&mut self, client: Xid, cs: &mut ClientSet, x: &X) -> Result<()> {
-        (self)(client, cs, x)
+    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+        (self)(client, state, x)
     }
 }
 

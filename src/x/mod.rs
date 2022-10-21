@@ -111,27 +111,22 @@ pub trait XConnExt: XConn + Sized {
         trace!(%client, "managing new client");
         let should_float = self.client_should_float(client, &state.config.floating_classes)?;
         let r = self.client_geometry(client)?;
+
+        state.client_set.insert(client);
+        if should_float {
+            state.client_set.float_unchecked(client, r);
+        }
+
         let mut hook = state.config.manage_hook.take();
-
-        let res = self.modify_and_refresh(state, |cs| {
-            cs.insert(client);
-            if should_float {
-                cs.float_unchecked(client, r);
+        if let Some(ref mut h) = hook {
+            trace!("running user manage hook");
+            if let Err(e) = h.call(client, state, self) {
+                error!(%e, "error returned from user manage hook");
             }
-
-            // TODO: should this be called here? Or in a second refresh?
-            if let Some(ref mut h) = hook {
-                trace!("running user manage hook");
-                if let Err(e) = h.call(client, cs, self) {
-                    error!(%e, "error returned from user manage hook");
-                }
-            }
-        });
-
-        // make sure we reset the manage hook before returning any errors
+        }
         state.config.manage_hook = hook;
 
-        res
+        self.refresh(state)
     }
 
     fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
