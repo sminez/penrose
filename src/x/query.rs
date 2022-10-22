@@ -21,7 +21,7 @@ where
 }
 
 /// A [Query] for fetching a window's title following ICCCM / EWMH standards.
-pub struct Title(pub String);
+pub struct Title(pub &'static str);
 
 impl<X> Query<X> for Title
 where
@@ -42,7 +42,7 @@ where
 
 /// A [Query] for fetching a window's application name (the first string returned
 /// under the WM_CLASS property).
-pub struct AppName(pub String);
+pub struct AppName(pub &'static str);
 
 impl<X> Query<X> for AppName
 where
@@ -58,7 +58,7 @@ where
 
 /// A [Query] for fetching a window's class name (the second string returned
 /// under the WM_CLASS property).
-pub struct ClassName(pub String);
+pub struct ClassName(pub &'static str);
 
 impl<X> Query<X> for ClassName
 where
@@ -73,7 +73,7 @@ where
 }
 
 /// A [Query] for fetching a string property from a client window.
-pub struct StringProperty(pub String, pub String);
+pub struct StringProperty(pub &'static str, pub &'static str);
 
 impl<X> Query<X> for StringProperty
 where

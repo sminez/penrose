@@ -234,7 +234,8 @@ where
 
         self.iter_workspaces_mut()
             .map(|w| w.remove(client))
-            .find(|opt| opt.is_some())?
+            .find(|opt| opt.is_some())
+            .flatten()
     }
 
     /// Delete the currently focused client from this stack if there is one.
@@ -275,7 +276,15 @@ where
             return;
         }
 
-        let c = match self.remove_client(client) {
+        // Not calling self.remove_client as that will also sink the client if it
+        // was floating
+        let maybe_removed = self
+            .iter_workspaces_mut()
+            .map(|w| w.remove(client))
+            .find(|opt| opt.is_some())
+            .flatten();
+
+        let c = match maybe_removed {
             None => return,
             Some(c) => c,
         };

@@ -56,17 +56,20 @@ impl ClientSet {
     /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
     /// from the layout.
     pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
-        let mut positions: Vec<(Xid, Rect)> = self
+        let float_positions: Vec<(Xid, Rect)> = self
             .iter_visible_clients()
             .flat_map(|c| self.floating.get(c).map(|r| (*c, *r)))
             .collect();
+
+        let mut positions: Vec<(Xid, Rect)> = Vec::new();
 
         for s in self.iter_screens_mut() {
             let r = s.visible_rect();
             let tag = &s.workspace.tag;
             let true_stack = s.workspace.stack.as_ref();
-            let tiling = true_stack
-                .and_then(|st| st.from_filtered(|c| !positions.iter().any(|(cc, _)| cc == c)));
+            let tiling = true_stack.and_then(|st| {
+                st.from_filtered(|c| !float_positions.iter().any(|(cc, _)| cc == c))
+            });
 
             // TODO: if this supports using X state for determining layout position in future then this
             //       will be fallible and needs to fall back to a default layout.
@@ -74,6 +77,8 @@ impl ClientSet {
 
             positions.extend(stack_positions.into_iter().rev());
         }
+
+        positions.extend(float_positions.into_iter());
 
         positions
     }
@@ -425,5 +430,28 @@ where
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn visible_client_positions_respects_floating_clients() {
+        let tags = (1..10).map(|n| n.to_string());
+        let screen = Rect::new(0, 0, 200, 100);
+        let mut cs = ClientSet::try_new(LayoutStack::default(), tags, vec![screen]).unwrap();
+
+        for n in 0..4 {
+            cs.insert(Xid(n));
+        }
+
+        let r = Rect::new(50, 50, 50, 50);
+        cs.float_unchecked(Xid(1), r);
+
+        let positions = cs.visible_client_positions();
+
+        assert!(positions.contains(&(Xid(1), r)))
     }
 }

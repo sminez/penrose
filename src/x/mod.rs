@@ -130,6 +130,7 @@ pub trait XConnExt: XConn + Sized {
     }
 
     fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
+        debug!(?client, "removing client");
         self.modify_and_refresh(state, |cs| {
             cs.remove_client(&client);
         })

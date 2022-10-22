@@ -6,11 +6,11 @@ use crate::{
     hooks::ManageHook,
     layout::LayoutStack,
     util::spawn,
-    x::{Query, XConn, XConnExt, XEvent},
+    x::{Query, XConn, XConnExt},
     Result, Xid,
 };
 use std::{collections::HashMap, fmt};
-use tracing::warn;
+use tracing::{debug, warn};
 
 /// The tag used for a placeholder Workspace that holds scratchpad windows when
 /// they are currently hidden.
@@ -31,9 +31,9 @@ where
 impl<X: XConn> fmt::Debug for NamedScratchPad<X> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NamedScratchpad")
-            .field("client", &self.client)
             .field("name", &self.name)
             .field("prog", &self.prog)
+            .field("client", &self.client)
             .finish()
     }
 }
@@ -86,7 +86,6 @@ where
         .add_invisible_workspace(NSP_TAG, LayoutStack::default());
 
     wm.state.config.compose_or_set_manage_hook(manage_hook);
-    wm.state.config.compose_or_set_event_hook(event_hook);
 
     wm
 }
@@ -96,37 +95,14 @@ pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> 
     let s = state.extension::<NamedScratchPadState<X>>()?;
 
     for sp in s.borrow_mut().0.values_mut() {
-        if sp.client.is_some() {
-            continue;
-        }
-
-        if sp.query.run(id, x)? {
+        if sp.client.is_none() && sp.query.run(id, x)? {
+            debug!(scratchpad=sp.name, %id, "matched query for named scratchpad");
             sp.client = Some(id);
             return sp.hook.call(id, state, x);
         }
     }
 
     Ok(())
-}
-
-/// Clear the internal state of NamedScratchPads when their client is being removed from State.
-pub fn event_hook<X: XConn + 'static>(event: &XEvent, state: &mut State<X>, _: &X) -> Result<bool> {
-    if let &XEvent::UnmapNotify(id) = event {
-        let s = state.extension::<NamedScratchPadState<X>>()?;
-
-        for sp in s.borrow_mut().0.values_mut() {
-            if Some(id) == sp.client {
-                let expected = *state.pending_unmap.get(&id).unwrap_or(&0);
-                if expected == 0 {
-                    sp.client = None;
-                }
-
-                break;
-            }
-        }
-    }
-
-    Ok(true)
 }
 
 /// Toggle the visibility of a NamedScratchPad.
@@ -138,21 +114,25 @@ pub struct ToggleNamedScratchPad(&'static str);
 
 impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
     fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        let _s = state.extension::<NamedScratchPadState<X>>()?;
-        let s = _s.borrow();
+        let s = state.extension::<NamedScratchPadState<X>>()?;
         let name = self.0;
 
-        let nsp = match s.0.get(&name) {
-            Some(nsp) => nsp,
+        let id = match s.borrow_mut().0.get_mut(&name) {
+            Some(nsp) => match nsp.client {
+                Some(id) if state.client_set.contains(&id) => id,
+
+                // No active client or client is no longer in state
+                _ => {
+                    debug!(%nsp.prog, %name, "spawning NamedScratchPad program");
+                    nsp.client = None;
+                    return spawn(nsp.prog);
+                }
+            },
+
             None => {
                 warn!(%name, "toggle called for unknown scratchpad");
                 return Ok(());
             }
-        };
-
-        let id = match nsp.client.as_ref() {
-            Some(&id) => id,
-            None => return spawn(nsp.prog),
         };
 
         x.modify_and_refresh(state, |cs| {
