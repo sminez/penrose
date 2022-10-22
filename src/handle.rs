@@ -229,6 +229,7 @@ where
         hidden,
         floating,
         previous_tag,
+        invisible_tags,
     } = take(&mut state.client_set);
 
     let mut workspaces: Vec<_> = screens.into_iter().map(|s| s.workspace).collect();
@@ -238,6 +239,7 @@ where
     //        if there aren't enough already?
     state.client_set = StackSet::try_new_concrete(workspaces, rects, floating)?;
     state.client_set.previous_tag = previous_tag;
+    state.client_set.invisible_tags = invisible_tags;
 
     Ok(())
 }

@@ -44,7 +44,8 @@ where
     pub(crate) screens: Stack<Screen<C>>, // Workspaces visible on screens
     pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
     pub(crate) floating: HashMap<C, Rect>, // Floating windows
-    pub(crate) previous_tag: String,
+    pub(crate) previous_tag: String,      // The last tag to be focused before the current one
+    pub(crate) invisible_tags: Vec<String>, // Tags that should never be focused
 }
 
 impl<C> StackSet<C>
@@ -109,6 +110,7 @@ where
             hidden,
             floating,
             previous_tag,
+            invisible_tags: vec![],
         })
     }
 
@@ -281,6 +283,12 @@ where
         self.insert_as_focus_for(tag, c)
     }
 
+    /// Move the given client to the focused position of the current [Workspace].
+    /// If the client is already on the target workspace it is moved to the focused position.
+    pub fn move_client_to_current_tag(&mut self, client: &C) {
+        self.move_client_to_tag(client, self.screens.focus.workspace.tag.clone());
+    }
+
     fn insert_as_focus_for(&mut self, tag: &str, c: C) {
         self.modify_workspace(tag, |w| {
             w.stack = Some(match take(&mut w.stack) {
@@ -297,10 +305,13 @@ where
         self.iter_workspaces().any(|w| w.tag == tag)
     }
 
+    /// All [Workspace] tags in this [StackSet] order by their id that have not been
+    /// marked as being invisible.
     pub fn ordered_tags(&self) -> Vec<String> {
         let mut indexed: Vec<_> = self
             .iter_workspaces()
             .map(|w| (w.id, w.tag.clone()))
+            .filter(|(_, t)| !self.invisible_tags.contains(t))
             .collect();
 
         indexed.sort_by_key(|(id, _)| *id);
@@ -393,6 +404,20 @@ where
             + 1;
         let ws = Workspace::new(id, tag, layouts, None);
         self.hidden.push_front(ws);
+    }
+
+    /// Add a new invisible [Workspace] to this [StackSet].
+    ///
+    /// It will not be possible to focus this workspace on a screen but its
+    /// state will be tracked and clients can be placed on it.
+    /// The id assigned to this workspace will be max(workspace ids) + 1.
+    pub fn add_invisible_workspace<T>(&mut self, tag: T, layouts: LayoutStack)
+    where
+        T: Into<String>,
+    {
+        let tag = tag.into();
+        self.add_workspace(tag.clone(), layouts);
+        self.invisible_tags.push(tag);
     }
 
     /// A reference to the [Workspace] with a tag of `tag` if there is one

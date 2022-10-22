@@ -474,6 +474,12 @@ impl<T: Clone> Stack<T> {
     }
 }
 
+impl<T: PartialEq> Stack<T> {
+    pub fn contains(&self, t: &T) -> bool {
+        &self.focus == t || self.up.contains(t) || self.down.contains(t)
+    }
+}
+
 // Iteration
 
 #[derive(Debug)]

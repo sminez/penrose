@@ -4,12 +4,19 @@ use crate::{
     bindings::KeyEventHandler,
     core::{State, WindowManager},
     hooks::ManageHook,
+    layout::LayoutStack,
     util::spawn,
-    x::{Query, XConn, XConnExt},
+    x::{Query, XConn, XConnExt, XEvent},
     Result, Xid,
 };
 use std::{collections::HashMap, fmt};
+use tracing::warn;
 
+/// The tag used for a placeholder Workspace that holds scratchpad windows when
+/// they are currently hidden.
+pub const NSP_TAG: &str = "NSP";
+
+/// A toggle-able client program that can be shown and hidden via a keybinding.
 pub struct NamedScratchPad<X>
 where
     X: XConn,
@@ -35,23 +42,25 @@ impl<X> NamedScratchPad<X>
 where
     X: XConn,
 {
-    pub fn new<Q, H>(name: &'static str, prog: &'static str, query: Q, manage_hook: H) -> Self
+    pub fn new<Q, H>(
+        name: &'static str,
+        prog: &'static str,
+        query: Q,
+        manage_hook: H,
+    ) -> (Self, ToggleNamedScratchPad)
     where
         Q: Query<X> + 'static,
         H: ManageHook<X> + 'static,
     {
-        Self {
+        let nsp = Self {
             name,
             prog,
             client: None,
             query: Box::new(query),
             hook: Box::new(manage_hook),
-        }
-    }
+        };
 
-    /// Get a [KeyEventHandler] for toggling the visibility of this NamedScratchPad.
-    pub fn toggle_action(&self) -> ToggleNamedScratchPad {
-        ToggleNamedScratchPad(self.name)
+        (nsp, ToggleNamedScratchPad(name))
     }
 }
 
@@ -72,13 +81,17 @@ where
     let state: HashMap<_, _> = scratchpads.into_iter().map(|nsp| (nsp.name, nsp)).collect();
     wm.state.add_extension(NamedScratchPadState(state));
 
-    // wm.state.config.compose_or_set_refresh_hook(EwhmRefreshHook);
-    // wm.state.config.compose_or_set_event_hook(EwhmEventHook);
+    wm.state
+        .client_set
+        .add_invisible_workspace(NSP_TAG, LayoutStack::default());
+
     wm.state.config.compose_or_set_manage_hook(manage_hook);
+    wm.state.config.compose_or_set_event_hook(event_hook);
 
     wm
 }
 
+/// Store clients matching NamedScratchPad queries and run the associated [ManageHook].
 pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
     let s = state.extension::<NamedScratchPadState<X>>()?;
 
@@ -96,32 +109,58 @@ pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> 
     Ok(())
 }
 
+/// Clear the internal state of NamedScratchPads when their client is being removed from State.
+pub fn event_hook<X: XConn + 'static>(event: &XEvent, state: &mut State<X>, _: &X) -> Result<bool> {
+    if let &XEvent::UnmapNotify(id) = event {
+        let s = state.extension::<NamedScratchPadState<X>>()?;
+
+        for sp in s.borrow_mut().0.values_mut() {
+            if Some(id) == sp.client {
+                let expected = *state.pending_unmap.get(&id).unwrap_or(&0);
+                if expected == 0 {
+                    sp.client = None;
+                }
+
+                break;
+            }
+        }
+    }
+
+    Ok(true)
+}
+
 /// Toggle the visibility of a NamedScratchPad.
 ///
-/// See [NamedScratchPad::toggle_action].
+/// This will spawn the requested client program if it isn't currently running or
+/// move it to the focused workspace. If the scratchpad is currently visible it
+/// will be hidden.
 pub struct ToggleNamedScratchPad(&'static str);
 
 impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
     fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         let _s = state.extension::<NamedScratchPadState<X>>()?;
-        let s = _s.borrow_mut();
+        let s = _s.borrow();
+        let name = self.0;
 
-        let nsp = s.0.get(&self.0).expect(
-            "to only be able to construct a ToggleNamedScratchPad for an existing NamedScratchPad",
-        );
+        let nsp = match s.0.get(&name) {
+            Some(nsp) => nsp,
+            None => {
+                warn!(%name, "toggle called for unknown scratchpad");
+                return Ok(());
+            }
+        };
 
-        match nsp.client.as_ref() {
-            Some(&id) => x.modify_and_refresh(state, |cs| {
-                if cs.is_visible(&id) {
-                    cs.remove_client(&id);
-                    // TODO: clear the id on unmap
-                } else {
-                    cs.insert(id);
-                }
-            }),
-            None => spawn(nsp.prog),
-        }
+        let id = match nsp.client.as_ref() {
+            Some(&id) => id,
+            None => return spawn(nsp.prog),
+        };
+
+        x.modify_and_refresh(state, |cs| {
+            if cs.current_workspace().contains(&id) {
+                cs.move_client_to_tag(&id, NSP_TAG);
+            } else {
+                cs.move_client_to_current_tag(&id);
+            }
+        })
     }
 }
-
-// TODO: event and refresh hooks for handling unmap and layout

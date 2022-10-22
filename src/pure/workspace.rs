@@ -40,6 +40,14 @@ impl<C> Workspace<C> {
         self.stack.is_none()
     }
 
+    pub fn clients(&self) -> impl Iterator<Item = &C> {
+        self.stack.iter().flat_map(|s| s.iter())
+    }
+
+    pub fn clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
+        self.stack.iter_mut().flat_map(|s| s.iter_mut())
+    }
+
     pub(crate) fn remove_focused(&mut self) -> Option<C> {
         let current = self.stack.take();
         let (focus, new_stack) = current?.remove_focused();
@@ -79,6 +87,15 @@ impl<C> Workspace<C> {
 
     pub fn previous_layout(&mut self) {
         self.layouts.focus_up();
+    }
+}
+
+impl<C: PartialEq> Workspace<C> {
+    pub fn contains(&self, c: &C) -> bool {
+        match &self.stack {
+            Some(s) => s.contains(c),
+            None => false,
+        }
     }
 }
 
