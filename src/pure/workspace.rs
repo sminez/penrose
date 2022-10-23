@@ -40,6 +40,10 @@ impl<C> Workspace<C> {
         self.stack.is_none()
     }
 
+    pub fn focus(&self) -> Option<&C> {
+        self.stack.as_ref().map(|s| &s.focus)
+    }
+
     pub fn clients(&self) -> impl Iterator<Item = &C> {
         self.stack.iter().flat_map(|s| s.iter())
     }

@@ -114,6 +114,23 @@ where
         })
     }
 
+    /// Set focus to the [Screen] with the specified index.
+    ///
+    /// If there is no matching screen then the [StackSet] is unmodified.
+    pub fn focus_screen(&mut self, screen_index: usize) {
+        let current = self.screens.focus.index;
+        if current == screen_index {
+            return;
+        }
+
+        loop {
+            self.screens.focus_down();
+            if [current, screen_index].contains(&self.screens.focus.index) {
+                break;
+            }
+        }
+    }
+
     /// Set focus to the [Workspace] with the specified tag.
     ///
     /// If there is no matching workspace then the [StackSet] is unmodified.
@@ -592,6 +609,7 @@ where
     pub(crate) fn snapshot(&self) -> Snapshot<C> {
         Snapshot {
             focus: self.current_client().copied(),
+            focused_screen: self.screens.focus.index,
             visible_clients: self.iter_visible_clients().cloned().collect(),
             hidden_clients: self.iter_hidden_clients().cloned().collect(),
             visible_tags: self
@@ -655,6 +673,7 @@ where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
     pub(crate) focus: Option<C>,
+    pub(crate) focused_screen: usize,
     pub(crate) visible_clients: HashSet<C>,
     pub(crate) hidden_clients: HashSet<C>,
     pub(crate) visible_tags: HashSet<String>,
@@ -677,6 +696,7 @@ where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
     pub(crate) old_focus: Option<C>,
+    pub(crate) newly_focused_screen: Option<usize>,
     pub(crate) new: Vec<C>,
     pub(crate) hidden: Vec<C>,
     pub(crate) visible: Vec<C>,
@@ -725,8 +745,15 @@ where
             .map(|ws| ws.tag.clone())
             .collect();
 
+        let newly_focused_screen = if ss.focused_screen != s.screens.focus.index {
+            Some(s.screens.focus.index)
+        } else {
+            None
+        };
+
         Self {
             old_focus: ss.focus,
+            newly_focused_screen,
             new,
             hidden,
             visible,

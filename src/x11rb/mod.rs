@@ -24,7 +24,7 @@ use crate::{
         atom::Atom,
         event::{ClientEventMask, ClientMessage},
         property::{Prop, WindowAttributes, WmHints, WmNormalHints, WmState},
-        ClientAttr, ClientConfig, XConn, XEvent,
+        ClientAttr, ClientConfig, WinType, XConn, XEvent,
     },
     Error, Result, Xid,
 };
@@ -37,8 +37,9 @@ use x11rb::{
         randr::{self, ConnectionExt as _},
         xproto::{
             AtomEnum, ChangeWindowAttributesAux, ClientMessageData, ClientMessageEvent,
-            ConfigureWindowAux, ConnectionExt as _, EventMask, GrabMode, InputFocus, MapState,
-            ModMask, PropMode, StackMode, WindowClass, CLIENT_MESSAGE_EVENT,
+            ColormapAlloc, ConfigureWindowAux, ConnectionExt as _, CreateWindowAux, EventMask,
+            GrabMode, InputFocus, MapState, ModMask, PropMode, StackMode, WindowClass,
+            CLIENT_MESSAGE_EVENT,
         },
     },
     rust_connection::RustConnection,
@@ -159,6 +160,67 @@ where
     /// Get a handle to the underlying connection.
     pub fn connection(&self) -> &C {
         &self.conn
+    }
+
+    pub fn create_window(&self, ty: WinType, r: Rect, managed: bool) -> Result<Xid> {
+        let (ty, mut win_aux, class) = match ty {
+            WinType::CheckWin => (None, CreateWindowAux::new(), WindowClass::INPUT_OUTPUT),
+
+            WinType::InputOnly => (None, CreateWindowAux::new(), WindowClass::INPUT_ONLY),
+
+            WinType::InputOutput(a) => {
+                let colormap = self.conn.generate_id()?;
+                let screen = &self.conn.setup().roots[0];
+
+                self.conn.create_colormap(
+                    ColormapAlloc::NONE,
+                    colormap,
+                    screen.root,
+                    screen.root_visual,
+                )?;
+
+                let win_aux = CreateWindowAux::new()
+                    .event_mask(EventMask::EXPOSURE | EventMask::STRUCTURE_NOTIFY)
+                    .background_pixel(x11rb::NONE)
+                    .border_pixel(screen.black_pixel)
+                    .colormap(colormap);
+
+                (Some(a), win_aux, WindowClass::INPUT_OUTPUT)
+            }
+        };
+
+        if !managed {
+            win_aux = win_aux.override_redirect(1);
+        }
+
+        let Rect { x, y, w, h } = r;
+        let id = Xid(self.conn.generate_id()?);
+        let border_width = 0;
+
+        self.conn.create_window(
+            x11rb::COPY_DEPTH_FROM_PARENT,
+            *id,
+            self.root,
+            x as i16,
+            y as i16,
+            w as u16,
+            h as u16,
+            border_width,
+            class,
+            x11rb::COPY_FROM_PARENT,
+            &win_aux,
+        )?;
+
+        // Input only windows don't need mapping
+        if let Some(atom) = ty {
+            let net_name = Atom::NetWmWindowType.as_ref();
+            self.set_prop(id, net_name, Prop::Atom(vec![atom.as_ref().into()]))?;
+            self.map(id)?;
+        }
+
+        self.flush();
+
+        Ok(id)
     }
 }
 
@@ -577,11 +639,8 @@ where
         Ok(())
     }
 
-    fn warp_cursor(&self, id: Xid) -> Result<()> {
-        let Point { x, y } = self.client_geometry(id)?.midpoint();
-
-        self.conn
-            .warp_pointer(x11rb::NONE, *id, 0, 0, 0, 0, x as i16, y as i16)?;
+    fn warp_pointer(&self, id: Xid, x: i16, y: i16) -> Result<()> {
+        self.conn.warp_pointer(x11rb::NONE, *id, 0, 0, 0, 0, x, y)?;
 
         Ok(())
     }

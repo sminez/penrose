@@ -348,7 +348,7 @@ where
             }
         }
 
-        self.x.refresh(&mut self.state)?;
+        self.x.modify_and_refresh(&mut self.state, |_| ())?;
 
         loop {
             match self.x.next_event() {

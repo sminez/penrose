@@ -8,8 +8,7 @@ use crate::{
 };
 
 fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, x: &X) -> Result<()> {
-    state.client_set.float(client, r)?;
-    x.refresh(state)
+    x.modify_and_refresh(state, |cs| cs.float_unchecked(client, r))
 }
 
 /// Perform no additional actions when managing a new client.
