@@ -345,6 +345,19 @@ where
         indexed.into_iter().map(|(_, tag)| tag).collect()
     }
 
+    /// All Workspaces in this [StackSet] order by their id that have not been
+    /// marked as being invisible.
+    pub fn ordered_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+        let mut wss: Vec<_> = self
+            .iter_workspaces()
+            .filter(|w| !self.invisible_tags.contains(&w.tag))
+            .collect();
+
+        wss.sort_by_key(|w| w.id());
+
+        wss.into_iter()
+    }
+
     /// Find the tag of the [Workspace] currently displayed on [Screen] `index`.
     ///
     /// Returns [None] if the index is out of bounds
@@ -392,6 +405,10 @@ where
             .stack
             .as_ref()
             .map(|s| &s.focus)
+    }
+
+    pub fn current_screen(&self) -> &Screen<C> {
+        &self.screens.focus
     }
 
     /// Get a reference to the current [Workspace]

@@ -216,6 +216,8 @@ pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
+    bar.active_screen = state.client_set.current_screen().index();
+
     for w in bar.widgets.iter_mut() {
         if let Err(e) = w.on_refresh(state, x) {
             error!(%e, "error running widget refresh hook");
@@ -237,6 +239,8 @@ pub fn event_hook<X: XConn + 'static>(
 ) -> penrose::Result<bool> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
+
+    bar.active_screen = state.client_set.current_screen().index();
 
     for w in bar.widgets.iter_mut() {
         if let Err(e) = w.on_event(event, state, x) {

@@ -166,7 +166,7 @@ impl Layout for NullLayout {
 /// ```
 #[macro_export]
 macro_rules! simple_transformer {
-    ($t:ident, $f:ident) => {
+    ($prefix:expr, $t:ident, $f:ident) => {
         impl $t {
             pub fn wrap(
                 layout: Box<dyn $crate::layout::Layout>,
@@ -177,7 +177,7 @@ macro_rules! simple_transformer {
 
         impl $crate::layout::LayoutTransformer for $t {
             fn transformed_name(&self) -> String {
-                format!("{}<{}>", stringify!($name), self.0.name())
+                format!("{}<{}>", $prefix, self.0.name())
             }
 
             fn inner_mut(&mut self) -> &mut Box<dyn $crate::layout::Layout> {
@@ -202,7 +202,7 @@ macro_rules! simple_transformer {
 /// Wrap an existing layout and reflect its window positions horizontally.
 #[derive(Clone)]
 pub struct ReflectHorizontal(pub Box<dyn Layout>);
-simple_transformer!(ReflectHorizontal, reflect_horizontal);
+simple_transformer!("Reflected", ReflectHorizontal, reflect_horizontal);
 
 fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
     let mid = r.x + r.w / 2;
@@ -224,7 +224,7 @@ fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> 
 /// Wrap an existing layout and reflect its window positions vertically.
 #[derive(Clone)]
 pub struct ReflectVertical(pub Box<dyn Layout>);
-simple_transformer!(ReflectVertical, reflect_vertical);
+simple_transformer!("Flipped", ReflectVertical, reflect_vertical);
 
 fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
     let mid = r.y + r.h / 2;

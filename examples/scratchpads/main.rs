@@ -19,10 +19,17 @@ use penrose::{
     map, stack,
     x::query::ClassName,
     x11rb::X11rbRustConn,
-    Result,
+    Color, Result,
 };
+use penrose_bar::{status_bar, Position, TextStyle};
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
+
+const FONT: &str = "ProFontIIx Nerd Font";
+const BLACK: &str = "#282828";
+const WHITE: &str = "#ebdbb2";
+const GREY: &str = "#3c3836";
+const BLUE: &str = "#458588";
 
 fn raw_key_bindings(
     toggle_scratch: ToggleNamedScratchPad,
@@ -76,14 +83,13 @@ fn layouts() -> LayoutStack {
     let ratio_step = 0.1;
     let outer_px = 5;
     let inner_px = 5;
-    let top_px = 18;
 
     stack!(
         MainAndStack::side(max_main, ratio, ratio_step),
         ReflectHorizontal::wrap(MainAndStack::side(max_main, ratio, ratio_step)),
         MainAndStack::bottom(max_main, ratio, ratio_step)
     )
-    .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, outer_px, inner_px), top_px))
+    .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, outer_px, inner_px), 18))
 }
 
 fn main() -> Result<()> {
@@ -94,7 +100,9 @@ fn main() -> Result<()> {
 
     let config = add_ewmh_hooks(Config {
         default_layouts: layouts(),
-        startup_hook: Some(SpawnOnStartup::boxed("polybar")),
+        startup_hook: Some(SpawnOnStartup::boxed(
+            "/usr/local/scripts/penrose-startup.sh",
+        )),
         ..Config::default()
     });
 
@@ -114,6 +122,23 @@ fn main() -> Result<()> {
         WindowManager::new(config, key_bindings, HashMap::new(), conn)?,
         vec![nsp],
     );
+
+    let bar = status_bar(
+        18,
+        &TextStyle {
+            font: FONT.to_string(),
+            point_size: 8,
+            fg: Color::try_from(WHITE)?,
+            bg: Some(Color::try_from(BLACK)?),
+            padding: (2.0, 2.0),
+        },
+        Color::try_from(BLUE)?, // highlight
+        Color::try_from(GREY)?, // empty_ws
+        Position::Top,
+    )
+    .unwrap();
+
+    let wm = bar.add_to(wm);
 
     wm.run()
 }

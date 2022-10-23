@@ -21,17 +21,10 @@ struct WsMeta {
 
 impl WsMeta {
     fn from_state<X: XConn>(state: &State<X>) -> Vec<Self> {
-        let mut indexed_workspaces: Vec<(usize, WsMeta)> = state
+        state
             .client_set
-            .iter_workspaces()
-            .map(|w| (w.id(), WsMeta::from(w)))
-            .collect();
-
-        indexed_workspaces.sort_by_key(|(id, _)| *id);
-
-        indexed_workspaces
-            .into_iter()
-            .map(|(_, meta)| meta)
+            .ordered_workspaces()
+            .map(WsMeta::from)
             .collect()
     }
 }
@@ -144,6 +137,7 @@ impl Workspaces {
 
         if focused_on_this_screen && screen_has_focus {
             let fg = if occupied { &self.fg_1 } else { &self.fg_2 };
+
             (fg, Some(&self.bg_1))
         } else if focused {
             let fg = if focused_other {
@@ -151,9 +145,11 @@ impl Workspaces {
             } else {
                 &self.fg_1
             };
+
             (fg, Some(&self.fg_2))
         } else {
             let fg = if occupied { &self.fg_1 } else { &self.fg_2 };
+
             (fg, None)
         }
     }

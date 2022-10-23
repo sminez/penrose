@@ -88,8 +88,12 @@ impl ActiveWindowName {
 }
 
 impl<X: XConn> Widget<X> for ActiveWindowName {
-    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
-        Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
+    fn draw(&mut self, ctx: &mut Context, s: usize, focused: bool, w: f64, h: f64) -> Result<()> {
+        if focused {
+            Widget::<X>::draw(&mut self.inner, ctx, s, focused, w, h)
+        } else {
+            Ok(())
+        }
     }
 
     fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
@@ -109,6 +113,24 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
             self.set_text(&x.window_title(*id)?)
         } else {
             self.set_text("")
+        }
+
+        Ok(())
+    }
+
+    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        let name_props = [Atom::NetWmName.as_ref(), Atom::WmName.as_ref()];
+
+        if let Some(focused) = state.client_set.current_client() {
+            match event {
+                XEvent::PropertyNotify(PropertyEvent { id, atom, .. })
+                    if id == focused && name_props.contains(&atom.as_ref()) =>
+                {
+                    self.inner.set_text(x.window_title(*id)?)
+                }
+
+                _ => (),
+            }
         }
 
         Ok(())
@@ -148,7 +170,7 @@ impl<X: XConn> Widget<X> for CurrentLayout {
 
     fn on_refresh(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
         let layout_name = state.client_set.current_workspace().layout_name();
-        self.inner.set_text(layout_name);
+        self.inner.set_text(format!("[{layout_name}]"));
 
         Ok(())
     }
