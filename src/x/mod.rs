@@ -254,6 +254,14 @@ pub trait XConnExt: XConn + Sized {
         )
     }
 
+    fn position_clients(&self, positions: Vec<(Xid, Rect)>) -> Result<()> {
+        for (c, r) in positions {
+            self.position_client(c, r)?;
+        }
+
+        Ok(())
+    }
+
     fn set_active_client(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |cs| cs.focus_client(&client))
     }
@@ -316,59 +324,12 @@ where
 
     debug!(?diff, "pure state diff");
 
-    for c in diff.new.into_iter() {
-        x.set_initial_properties(c, &state.config)?;
-    }
-
-    if let Some(focused) = diff.old_focus {
-        x.set_client_border_color(focused, state.config.normal_border)?;
-    }
-
-    state
-        .client_set
-        .iter_hidden_workspaces_mut()
-        .filter(|w| diff.previous_visible_tags.contains(&w.tag))
-        .for_each(|ws| ws.broadcast_message(Hide));
-
-    for (c, r) in positions {
-        trace!(?c, ?r, "positioning client");
-        x.position_client(c, r)?;
-    }
-
-    if let Some(&focused) = state.client_set.current_client() {
-        trace!(?focused, "setting border for focused client");
-        x.set_client_border_color(focused, state.config.focused_border)?;
-    }
-
-    for c in diff.visible.into_iter() {
-        trace!(?c, "revealing client");
-        x.reveal(c, &state.client_set, &mut state.mapped)?;
-    }
-
-    if let Some(&id) = state.client_set.current_client() {
-        // Warp the cursor if this diff resulted in a focus change
-        if state.config.focus_follow_mouse && diff.old_focus.map_or(true, |old| old != id) {
-            x.warp_pointer_to_window(id)?;
-        }
-
-        x.focus(id)?;
-    } else {
-        if let Some(index) = diff.newly_focused_screen {
-            x.warp_pointer_to_screen(state, index)?;
-        }
-
-        x.focus(state.root)?;
-    }
-
-    for c in diff.hidden.into_iter() {
-        trace!(?c, "hiding client");
-        x.hide(c, &mut state.mapped, &mut state.pending_unmap)?;
-    }
-
-    for c in diff.withdrawn.into_iter() {
-        trace!(?c, "setting withdrawn state for client");
-        x.set_wm_state(c, WmState::Withdrawn)?;
-    }
+    set_window_props(x, state, &diff)?;
+    notify_hidden_workspaces(state, &diff);
+    x.position_clients(positions)?;
+    handle_pointer_change(x, state, &diff)?;
+    set_window_visibility(x, state, &diff)?;
+    set_focus(x, state)?;
 
     // TODO:
     // clear enterWindow events from the event queue if this was because of mouse focus (?)
@@ -383,4 +344,71 @@ where
     state.config.refresh_hook = hook;
 
     Ok(())
+}
+
+fn set_window_props<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> Result<()> {
+    for &c in diff.new.iter() {
+        x.set_initial_properties(c, &state.config)?;
+    }
+
+    if let Some(focused) = diff.old_focus {
+        x.set_client_border_color(focused, state.config.normal_border)?;
+    }
+
+    if let Some(&focused) = state.client_set.current_client() {
+        trace!(?focused, "setting border for focused client");
+        x.set_client_border_color(focused, state.config.focused_border)?;
+    }
+
+    Ok(())
+}
+
+fn notify_hidden_workspaces<X: XConn>(state: &mut State<X>, diff: &Diff<Xid>) {
+    state
+        .client_set
+        .iter_hidden_workspaces_mut()
+        .filter(|w| diff.previous_visible_tags.contains(&w.tag))
+        .for_each(|ws| ws.broadcast_message(Hide));
+}
+
+fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> Result<()> {
+    if !matches!(state.current_event, Some(XEvent::Enter(_))) {
+        if let Some(&id) = state.client_set.current_client() {
+            // Warp the cursor if this diff resulted in a focus change
+            if state.config.focus_follow_mouse && diff.old_focus.map_or(true, |old| old != id) {
+                x.warp_pointer_to_window(id)?;
+            }
+        } else if let Some(index) = diff.newly_focused_screen {
+            x.warp_pointer_to_screen(state, index)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn set_window_visibility<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> Result<()> {
+    for &c in diff.visible.iter() {
+        trace!(?c, "revealing client");
+        x.reveal(c, &state.client_set, &mut state.mapped)?;
+    }
+
+    for &c in diff.hidden.iter() {
+        trace!(?c, "hiding client");
+        x.hide(c, &mut state.mapped, &mut state.pending_unmap)?;
+    }
+
+    for &c in diff.withdrawn.iter() {
+        trace!(?c, "setting withdrawn state for client");
+        x.set_wm_state(c, WmState::Withdrawn)?;
+    }
+
+    Ok(())
+}
+
+fn set_focus<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
+    if let Some(&id) = state.client_set.current_client() {
+        x.focus(id)
+    } else {
+        x.focus(state.root)
+    }
 }
