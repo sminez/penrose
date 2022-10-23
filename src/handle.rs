@@ -176,7 +176,7 @@ where
     Ok(())
 }
 
-pub(crate) fn enter<X>(client: Xid, p: Point, state: &mut State<X>, x: &X) -> Result<()>
+pub(crate) fn enter<X>(client: Xid, _p: Point, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {

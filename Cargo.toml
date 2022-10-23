@@ -26,7 +26,6 @@ members = [
 default = ["x11rb-xcb", "keysyms"]
 keysyms = ["penrose_keysyms"]
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
-# xcb_draw = ["cairo-rs", "cairo-sys-rs", "pango", "pangocairo"]
 
 [dependencies]
 penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional = true }
@@ -39,12 +38,7 @@ strum_macros = "0.24"
 thiserror = "1.0"
 tracing = { version = "0.1", features = ["attributes", "log"] }
 
-# cairo-rs = { version = "0.15.6", features = ["xcb"], optional = true }
-# cairo-sys-rs = { version = "0.15.1", optional = true }
-# pangocairo = { version = "0.15.1", optional = true }
-# pango = { version = "0.15.6", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
-xcb = { version = "1.1", features = ["randr"], optional = true }
 x11rb = { version = "0.10", features = ["randr", "render"], optional = true }
 anymap = "0.12.1"
 
