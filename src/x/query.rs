@@ -10,7 +10,7 @@ pub trait Query<X: XConn> {
     fn run(&self, id: Xid, x: &X) -> Result<bool>;
 }
 
-fn str_prop<X>(prop: impl AsRef<str>, id: Xid, x: &X) -> Result<Option<Vec<String>>>
+pub(super) fn str_prop<X>(prop: impl AsRef<str>, id: Xid, x: &X) -> Result<Option<Vec<String>>>
 where
     X: XConn,
 {

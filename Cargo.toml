@@ -17,7 +17,10 @@ keywords = [ "windowmanager", "window", "manager", "x11" ]
 categories = [ "window manager" ]
 
 [workspace]
-members = [ "crates/penrose_keysyms" ]
+members = [
+  "crates/penrose_bar",
+  "crates/penrose_keysyms"
+]
 
 [features]
 default = ["x11rb-xcb", "keysyms"]
@@ -42,13 +45,14 @@ tracing = { version = "0.1", features = ["attributes", "log"] }
 # pango = { version = "0.15.6", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 xcb = { version = "1.1", features = ["randr"], optional = true }
-x11rb = { version = "0.10", features = ["randr"], optional = true }
+x11rb = { version = "0.10", features = ["randr", "render"], optional = true }
 anymap = "0.12.1"
 
 [dev-dependencies]
 paste = "1.0.9"
+penrose_bar = { path = "crates/penrose_bar" }
 serde_json = "1.0.86"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 simple_test_case = "1.1.0"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }

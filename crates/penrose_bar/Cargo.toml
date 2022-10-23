@@ -1,0 +1,16 @@
+[package]
+name = "penrose_bar"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cairo-rs = { version = "0.15.6", features = ["xcb"] }
+cairo-sys-rs = { version = "0.15.1" }
+pangocairo = { version = "0.15.1" }
+pango = { version = "0.15.6" }
+penrose = { path = "../../" }
+tracing = { version = "0.1", features = ["attributes", "log"] }
+thiserror = "1.0.37"
+x11rb = { version = "0.10", features = ["randr", "render"] }

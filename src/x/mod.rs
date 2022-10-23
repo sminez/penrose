@@ -292,6 +292,16 @@ pub trait XConnExt: XConn + Sized {
 
         self.warp_pointer(self.root(), x, y)
     }
+
+    fn window_title(&self, id: Xid) -> Result<String> {
+        match query::str_prop(Atom::WmName, id, self) {
+            Ok(Some(mut strs)) => Ok(strs.remove(0)),
+            _ => match query::str_prop(Atom::NetWmName, id, self)? {
+                Some(mut strs) => Ok(strs.remove(0)),
+                None => Ok("".to_owned()),
+            },
+        }
+    }
 }
 
 // Auto impl XConnExt for all XConn impls

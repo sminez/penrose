@@ -35,6 +35,18 @@ impl<C> Workspace<C> {
         }
     }
 
+    pub fn id(&self) -> usize {
+        self.id
+    }
+
+    pub fn tag(&self) -> &str {
+        &self.tag
+    }
+
+    pub fn layout_name(&self) -> String {
+        self.layouts.focus.name()
+    }
+
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.stack.is_none()
