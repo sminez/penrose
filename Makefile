@@ -51,7 +51,7 @@ upgrade-check:
 
 .PHONY: todo
 todo:
-	rg 'TODO|FIXME|todo!' crates examples src tests
+	@rg 'TODO|FIXME|todo!' crates examples src
 
 
 # GitHub helpers using the official gh GitHub CLI

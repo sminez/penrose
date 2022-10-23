@@ -6,6 +6,7 @@ use penrose::{
     Color, Xid,
 };
 
+pub mod debug;
 mod simple;
 mod workspaces;
 

@@ -2,13 +2,13 @@ use penrose::{x::XConn, Color, Xid};
 
 mod bar;
 mod core;
-mod widgets;
+pub mod widgets;
 
 pub use crate::core::{Context, Draw, TextStyle};
 pub use bar::{Position, StatusBar};
 pub use widgets::{Text, Widget};
 
-use crate::widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces};
+use widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

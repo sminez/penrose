@@ -187,14 +187,15 @@ where
             cs.focus_client(&client);
         }
 
-        let maybe_tag = cs
-            .iter_screens()
-            .find(|s| s.r.contains_point(p))
-            .map(|s| s.workspace.tag.clone());
+        // FIXME: is this needed?
+        // let maybe_tag = cs
+        //     .iter_screens()
+        //     .find(|s| s.r.contains_point(p))
+        //     .map(|s| s.workspace.tag.clone());
 
-        if let Some(t) = maybe_tag {
-            cs.focus_tag(&t);
-        }
+        // if let Some(t) = maybe_tag {
+        //     cs.focus_tag(&t);
+        // }
     })
 }
 

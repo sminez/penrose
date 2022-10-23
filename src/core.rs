@@ -1,10 +1,9 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
     bindings::{KeyBindings, MouseBindings},
-    geometry::Rect,
     handle,
     hooks::{EventHook, ManageHook, StateHook},
-    layout::{Layout, LayoutStack},
+    layout::LayoutStack,
     pure::{StackSet, Workspace},
     x::{XConn, XConnExt, XEvent},
     Color, Error, Result,
@@ -50,39 +49,6 @@ impl From<u32> for Xid {
 
 /// The pure client state information for the window manager
 pub type ClientSet = StackSet<Xid>;
-
-impl ClientSet {
-    /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
-    /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
-    /// from the layout.
-    pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
-        let float_positions: Vec<(Xid, Rect)> = self
-            .iter_visible_clients()
-            .flat_map(|c| self.floating.get(c).map(|r| (*c, *r)))
-            .collect();
-
-        let mut positions: Vec<(Xid, Rect)> = Vec::new();
-
-        for s in self.iter_screens_mut() {
-            let r = s.visible_rect();
-            let tag = &s.workspace.tag;
-            let true_stack = s.workspace.stack.as_ref();
-            let tiling = true_stack.and_then(|st| {
-                st.from_filtered(|c| !float_positions.iter().any(|(cc, _)| cc == c))
-            });
-
-            // TODO: if this supports using X state for determining layout position in future then this
-            //       will be fallible and needs to fall back to a default layout.
-            let (_, stack_positions) = s.workspace.layouts.layout_workspace(tag, &tiling, r);
-
-            positions.extend(stack_positions.into_iter().rev());
-        }
-
-        positions.extend(float_positions.into_iter());
-
-        positions
-    }
-}
 
 /// The pure client state information for a single [Workspace]
 pub type ClientSpace = Workspace<Xid>;
@@ -436,6 +402,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::geometry::Rect;
 
     #[test]
     fn visible_client_positions_respects_floating_clients() {

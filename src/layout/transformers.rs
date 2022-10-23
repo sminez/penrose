@@ -162,7 +162,7 @@ impl Layout for NullLayout {
 ///     todo!("transformation implementation goes here")
 /// }
 ///
-/// simple_transformer!(MyTransformer, my_transformation_function);
+/// simple_transformer!("MyTransform", MyTransformer, my_transformation_function);
 /// ```
 #[macro_export]
 macro_rules! simple_transformer {

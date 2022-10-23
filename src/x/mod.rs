@@ -341,8 +341,7 @@ where
     set_window_visibility(x, state, &diff)?;
     set_focus(x, state)?;
 
-    // TODO:
-    // clear enterWindow events from the event queue if this was because of mouse focus (?)
+    // TODO: clear enterWindow events from the event queue if this was because of mouse focus (?)
 
     let mut hook = state.config.refresh_hook.take();
     if let Some(ref mut h) = hook {

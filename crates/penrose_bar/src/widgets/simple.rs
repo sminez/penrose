@@ -54,7 +54,7 @@ impl<X: XConn> Widget<X> for RootWindowName {
     }
 }
 
-/// A text widget that is set via updating the root window name a la dwm
+/// A text widget that shows the name of the currently focused window
 #[derive(Clone, Debug, PartialEq)]
 pub struct ActiveWindowName {
     inner: Text,
@@ -137,6 +137,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
     }
 }
 
+/// A text widget that shows the current layout name
 #[derive(Clone, Debug, PartialEq)]
 pub struct CurrentLayout {
     inner: Text,

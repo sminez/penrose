@@ -1,8 +1,8 @@
 use crate::{
     geometry::Rect,
-    layout::LayoutStack,
+    layout::{Layout, LayoutStack},
     pure::{Position, Screen, Stack, Workspace},
-    stack, Error, Result,
+    stack, Error, Result, Xid,
 };
 use std::{
     collections::{HashMap, HashSet, LinkedList},
@@ -619,6 +619,39 @@ where
     }
 }
 
+impl StackSet<Xid> {
+    /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
+    /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
+    /// from the layout.
+    pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
+        let float_positions: Vec<(Xid, Rect)> = self
+            .iter_visible_clients()
+            .flat_map(|c| self.floating.get(c).map(|r| (*c, *r)))
+            .collect();
+
+        let mut positions: Vec<(Xid, Rect)> = Vec::new();
+
+        for s in self.iter_screens_mut() {
+            let r = s.visible_rect();
+            let tag = &s.workspace.tag;
+            let true_stack = s.workspace.stack.as_ref();
+            let tiling = true_stack.and_then(|st| {
+                st.from_filtered(|c| !float_positions.iter().any(|(cc, _)| cc == c))
+            });
+
+            // TODO: if this supports using X state for determining layout position in future then this
+            //       will be fallible and needs to fall back to a default layout.
+            let (_, stack_positions) = s.workspace.layouts.layout_workspace(tag, &tiling, r);
+
+            positions.extend(stack_positions.into_iter().rev());
+        }
+
+        positions.extend(float_positions.into_iter());
+
+        positions
+    }
+}
+
 impl<C> StackSet<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
@@ -785,10 +818,22 @@ mod tests {
     use super::*;
     use simple_test_case::test_case;
 
-    pub fn test_stack_set(n_tags: usize, n: usize) -> StackSet<u8> {
+    fn _test_stack_set<C>(n_tags: usize, n_screens: usize) -> StackSet<C>
+    where
+        C: Copy + Clone + PartialEq + Eq + Hash,
+    {
         let tags = (1..=n_tags).map(|n| n.to_string());
+        let screens = vec![Rect::new(0, 0, 2000, 1000); n_screens];
 
-        StackSet::try_new(LayoutStack::default(), tags, vec![Rect::default(); n]).unwrap()
+        StackSet::try_new(LayoutStack::default(), tags, screens).unwrap()
+    }
+
+    pub fn test_stack_set(n_tags: usize, n_screens: usize) -> StackSet<u8> {
+        _test_stack_set(n_tags, n_screens)
+    }
+
+    fn test_xid_stack_set(n_tags: usize, n_screens: usize) -> StackSet<Xid> {
+        _test_stack_set(n_tags, n_screens)
     }
 
     pub fn test_stack_set_with_stacks(stacks: Vec<Option<Stack<u8>>>, n: usize) -> StackSet<u8> {
@@ -954,6 +999,55 @@ mod tests {
         assert_eq!(clients(&s), vec![1, 2, 3]);
         s.focus_tag("2");
         assert_eq!(clients(&s), vec![1, 2, 3]);
+    }
+
+    #[test_case(true, 1; "forward")]
+    #[test_case(false, 2; "backward")]
+    #[test]
+    fn drag_workspace_focuses_new_screen(forward: bool, expected_index: usize) {
+        let mut s = test_stack_set(5, 3);
+
+        assert_eq!(s.current_tag(), "1");
+        assert_eq!(s.current_screen().index(), 0);
+
+        if forward {
+            s.drag_workspace_forward();
+        } else {
+            s.drag_workspace_backward();
+        }
+
+        assert_eq!(s.current_tag(), "1");
+        assert_eq!(s.current_screen().index(), expected_index);
+    }
+
+    #[test]
+    fn floating_layer_clients_hold_focus() {
+        let mut s = test_stack_set(5, 3);
+
+        for n in 1..5 {
+            s.insert(n);
+        }
+
+        s.float_unchecked(4, Rect::default());
+
+        assert_eq!(s.current_client(), Some(&4));
+    }
+
+    #[test]
+    fn floating_windows_are_returned_last_from_visible_client_positions() {
+        let mut s = test_xid_stack_set(5, 2);
+
+        for n in 1..6 {
+            s.insert(Xid(n));
+        }
+
+        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
+        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+
+        let positions = s.visible_client_positions();
+        let ids: Vec<u32> = positions.iter().map(|&(id, _)| *id).collect();
+
+        assert_eq!(ids, vec![1, 4, 5, 3, 2]);
     }
 }
 
