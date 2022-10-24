@@ -134,40 +134,24 @@ where
     /// Set focus to the [Workspace] with the specified tag.
     ///
     /// If there is no matching workspace then the [StackSet] is unmodified.
-    /// If the [Workspace] is currently visible it becomes the active [Screen],
-    /// otherwise the workspace replaces whatever was on the active screen.
+    /// If the [Workspace] is currently visible it is swapped with the one
+    /// on the active [Screen], otherwise the workspace replaces whatever
+    /// was on the active screen.
     pub fn focus_tag(&mut self, tag: impl AsRef<str>) {
         let tag = tag.as_ref();
-        let current_tag = self.screens.focus.workspace.tag.clone();
 
-        // If the tag is already focused then there's nothing to do
-        if tag == current_tag {
+        // If the tag is visible on another screen, swap it with what is on
+        // this one. This also handles the case where the requested tag is
+        // already focused
+        if self.swap_focused_workspace_with_tag(tag) {
             return;
-        }
-
-        // If the tag is visible on another screen, focus moves to that screen
-        loop {
-            self.screens.focus_down();
-            match &self.screens.focus.workspace.tag {
-                // we've found and focused the tag
-                t if t == tag => {
-                    self.previous_tag = current_tag;
-                    return;
-                }
-
-                // we've looped so this tag isn't visible
-                t if t == &current_tag => break,
-
-                // try the next tag
-                _ => (),
-            }
         }
 
         // If the tag is hidden then it gets moved to the current screen
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
+            self.previous_tag = self.screens.focus.workspace.tag.clone();
             swap(&mut w, &mut self.screens.focus.workspace);
             self.hidden.push_back(w);
-            self.previous_tag = current_tag;
         }
 
         // If nothing matched by this point then the requested tag is unknown
@@ -493,10 +477,10 @@ where
         self.screens.focus_up();
     }
 
-    fn swap_workspace_with_previous(&mut self) {
-        let tag = self.previous_tag.clone();
+    // true if we swapped otherwise false
+    fn swap_focused_workspace_with_tag(&mut self, tag: &str) -> bool {
         if self.screens.focus.workspace.tag == tag {
-            return;
+            return false;
         }
 
         let p = |s: &&mut Screen<C>| s.workspace.tag == tag;
@@ -506,17 +490,20 @@ where
 
         if let Some(s) = in_up.or(in_down) {
             swap(&mut self.screens.focus.workspace, &mut s.workspace);
+            return true;
         }
+
+        false
     }
 
     pub fn drag_workspace_forward(&mut self) {
         self.next_screen();
-        self.swap_workspace_with_previous();
+        self.swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
     pub fn drag_workspace_backward(&mut self) {
         self.previous_screen();
-        self.swap_workspace_with_previous();
+        self.swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
     /// If the current [Stack] is [None], return `default` otherwise
@@ -850,7 +837,7 @@ mod tests {
     }
 
     #[test_case("1", &["1", "2"]; "current focused workspace")]
-    #[test_case("2", &["1", "2"]; "visible on other screen")]
+    #[test_case("2", &["2", "1"]; "visible on other screen")]
     #[test_case("3", &["3", "2"]; "currently hidden")]
     #[test]
     fn focus_tag_sets_correct_visible_workspaces(target: &str, vis: &[&str]) {
@@ -1034,7 +1021,7 @@ mod tests {
     }
 
     #[test]
-    fn floating_windows_are_returned_last_from_visible_client_positions() {
+    fn visible_client_positions_floating_windows_are_returned_last() {
         let mut s = test_xid_stack_set(5, 2);
 
         for n in 1..6 {
@@ -1048,6 +1035,25 @@ mod tests {
         let ids: Vec<u32> = positions.iter().map(|&(id, _)| *id).collect();
 
         assert_eq!(ids, vec![1, 4, 5, 3, 2]);
+    }
+
+    #[test]
+    fn visible_client_positions_newly_added_windows_are_below_floating() {
+        let mut s = test_xid_stack_set(5, 2);
+
+        for n in 1..6 {
+            s.insert(Xid(n));
+        }
+
+        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
+        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+
+        s.insert(Xid(6));
+
+        let positions = s.visible_client_positions();
+        let ids: Vec<u32> = positions.iter().map(|&(id, _)| *id).collect();
+
+        assert_eq!(ids, vec![1, 4, 5, 6, 3, 2]);
     }
 }
 
