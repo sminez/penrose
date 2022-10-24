@@ -1,6 +1,7 @@
 use crate::pop_where;
 use std::{
     collections::linked_list::{self, LinkedList},
+    fmt,
     iter::IntoIterator,
     mem::{swap, take},
 };
@@ -59,6 +60,21 @@ pub struct Stack<T> {
     pub(crate) up: LinkedList<T>,
     pub(crate) focus: T,
     pub(crate) down: LinkedList<T>,
+}
+
+impl<T: fmt::Display> fmt::Display for Stack<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let up: Vec<String> = self.up.iter().rev().map(|t| format!("{t}")).collect();
+        let down: Vec<String> = self.down.iter().map(|t| format!("{t}")).collect();
+
+        write!(
+            f,
+            "Stack([{}], {}, [{}])",
+            up.join(", "),
+            self.focus,
+            down.join(", ")
+        )
+    }
 }
 
 impl<T> Stack<T> {
@@ -239,13 +255,13 @@ impl<T> Stack<T> {
     /// See [Position] for the semantics of each case. For all cases, the
     /// existing elements in the [Stack] are pushed down to make room for
     /// the new one.
-    pub fn insert_at(&mut self, pos: Position, t: T) -> &mut Self {
+    pub fn insert_at(&mut self, pos: Position, mut t: T) -> &mut Self {
         use Position::*;
 
         match pos {
             Focus => {
-                self.up.push_front(t);
-                self.focus_up();
+                self.swap_focus(&mut t);
+                self.down.push_front(t);
             }
             Before => self.up.push_front(t),
             After => self.down.push_front(t),
@@ -732,6 +748,18 @@ mod tests {
         s.swap_up();
 
         assert_eq!(s, expected);
+    }
+
+    #[test]
+    fn swap_up_chained() {
+        let mut s = stack!([1, 2], 3, [4]);
+
+        s.swap_up();
+        assert_eq!(s, stack!([1], 3, [2, 4]));
+        s.swap_up();
+        assert_eq!(s, stack!(3, [1, 2, 4]));
+        s.swap_up();
+        assert_eq!(s, stack!([1, 2, 4], 3));
     }
 
     #[test_case(stack!([1, 2], 3, [4, 5]), stack!([1, 2, 4], 3, [5]); "items up and down")]
