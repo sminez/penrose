@@ -24,13 +24,13 @@ use penrose::{
         hooks::{add_ewmh_hooks, SpawnOnStartup},
     },
     map, stack,
-    x11rb::X11rbRustConn,
+    x11rb::RustConn,
     Result,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
-fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<X11rbRustConn>>> {
+fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         // map_keys: |k: &str| format!("C-{k}");
         map_keys: |k: &str| k.to_owned();
@@ -104,7 +104,7 @@ fn main() -> Result<()> {
         ..Config::default()
     });
 
-    let conn = X11rbRustConn::new()?;
+    let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
     let wm = WindowManager::new(config, key_bindings, HashMap::new(), conn)?;
 

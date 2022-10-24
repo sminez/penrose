@@ -11,13 +11,13 @@ use penrose::{
     },
     extensions::actions::{exit, log_current_state},
     map,
-    x11rb::X11rbRustConn,
+    x11rb::RustConn,
     Result,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
-fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<X11rbRustConn>>> {
+fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
 
@@ -65,7 +65,7 @@ fn main() -> Result<()> {
         .finish()
         .init();
 
-    let conn = X11rbRustConn::new()?;
+    let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
     let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
 

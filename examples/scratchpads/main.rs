@@ -20,7 +20,7 @@ use penrose::{
     },
     map, stack,
     x::query::ClassName,
-    x11rb::X11rbRustConn,
+    x11rb::RustConn,
     Color, Result,
 };
 use penrose_bar::{status_bar, Position, TextStyle};
@@ -35,7 +35,7 @@ const BLUE: &str = "#458588";
 
 fn raw_key_bindings(
     toggle_scratch: ToggleNamedScratchPad,
-) -> HashMap<String, Box<dyn KeyEventHandler<X11rbRustConn>>> {
+) -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         // map_keys: |k: &str| format!("C-{k}");
         map_keys: |k: &str| k.to_owned();
@@ -116,7 +116,7 @@ fn main() -> Result<()> {
         FloatingCentered::new(0.8, 0.8),
     );
 
-    let conn = X11rbRustConn::new()?;
+    let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_scratch))?;
 
     // Initialise the required state extension and hooks for handling the named scratchpad

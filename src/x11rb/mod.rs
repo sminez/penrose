@@ -90,15 +90,15 @@ impl Atoms {
 
 /// Handles communication with an X server via the x11rb crate.
 #[derive(Debug)]
-pub struct X11rbConn<C: Connection> {
+pub struct Conn<C: Connection> {
     conn: C,
     root: u32,
     atoms: Atoms,
 }
 
-pub type X11rbRustConn = X11rbConn<RustConnection>;
+pub type RustConn = Conn<RustConnection>;
 
-impl X11rbConn<RustConnection> {
+impl Conn<RustConnection> {
     /// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::rust_connection::RustConnection].
     pub fn new() -> Result<Self> {
@@ -108,9 +108,9 @@ impl X11rbConn<RustConnection> {
     }
 }
 
-pub type X11rbXcbConn = X11rbConn<XCBConnection>;
+pub type XcbConn = Conn<XCBConnection>;
 
-impl X11rbConn<XCBConnection> {
+impl Conn<XCBConnection> {
     /// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::xcb_ffi::XCBConnection].
     pub fn new() -> Result<Self> {
@@ -120,7 +120,7 @@ impl X11rbConn<XCBConnection> {
     }
 }
 
-impl<C> X11rbConn<C>
+impl<C> Conn<C>
 where
     C: Connection,
 {
@@ -223,7 +223,7 @@ where
     }
 }
 
-impl<C> XConn for X11rbConn<C>
+impl<C> XConn for Conn<C>
 where
     C: Connection,
 {

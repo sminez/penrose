@@ -5,7 +5,7 @@ use pangocairo::functions::{create_layout, show_layout};
 use penrose::{
     pure::geometry::Rect,
     x::{WinType, XConn},
-    x11rb::X11rbXcbConn,
+    x11rb::XcbConn,
     Color, Xid,
 };
 use std::collections::HashMap;
@@ -44,7 +44,7 @@ pub struct TextStyle {
 
 #[derive(Debug)]
 pub struct Draw {
-    pub conn: X11rbXcbConn,
+    pub conn: XcbConn,
     fonts: HashMap<String, FontDescription>,
     surfaces: HashMap<Xid, XCBSurface>,
 }
@@ -52,7 +52,7 @@ pub struct Draw {
 impl Draw {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            conn: X11rbXcbConn::new()?,
+            conn: XcbConn::new()?,
             fonts: HashMap::new(),
             surfaces: HashMap::new(),
         })
