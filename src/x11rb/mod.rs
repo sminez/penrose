@@ -34,7 +34,7 @@ use tracing::error;
 use x11rb::{
     connection::Connection,
     protocol::{
-        randr::{self, ConnectionExt as _},
+        randr::{self, ConnectionExt as _, NotifyMask},
         xproto::{
             AtomEnum, ChangeWindowAttributesAux, ClientMessageData, ClientMessageEvent,
             ColormapAlloc, ConfigureWindowAux, ConnectionExt as _, CreateWindowAux, EventMask,
@@ -146,7 +146,6 @@ where
             )));
         }
 
-        use randr::NotifyMask;
         let mask = NotifyMask::OUTPUT_CHANGE | NotifyMask::CRTC_CHANGE | NotifyMask::SCREEN_CHANGE;
         conn.randr_select_input(root, mask)?;
 
@@ -605,6 +604,7 @@ where
                 ClientConfig::Position(r) => {
                     aux = aux.x(r.x as i32).y(r.y as i32).width(r.w).height(r.h);
                 }
+                ClientConfig::StackBelow(s) => aux = aux.sibling(s.0).stack_mode(StackMode::BELOW),
                 ClientConfig::StackAbove => aux = aux.stack_mode(StackMode::ABOVE),
             }
         }

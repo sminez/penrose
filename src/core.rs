@@ -47,6 +47,12 @@ impl From<u32> for Xid {
     }
 }
 
+impl From<Xid> for u32 {
+    fn from(id: Xid) -> Self {
+        id.0
+    }
+}
+
 /// The pure client state information for the window manager
 pub type ClientSet = StackSet<Xid>;
 
@@ -385,7 +391,7 @@ where
             FocusIn(id) => handle::focus_in(*id, state, x)?,
             Destroy(xid) => handle::destroy(*xid, state, x)?,
             KeyPress(code) => handle::keypress(*code, key_bindings, state, x)?,
-            Leave(p) => handle::leave(p.id, state, x)?,
+            Leave(p) => handle::leave(p.id, p.abs, state, x)?,
             MappingNotify => (), // Not currently handled
             MapRequest(xid) => handle::map_request(*xid, state, x)?,
             MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x)?,

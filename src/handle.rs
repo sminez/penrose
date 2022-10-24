@@ -2,6 +2,7 @@
 use crate::{
     bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     core::{State, Xid},
+    geometry::Point,
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageKind},
@@ -188,12 +189,13 @@ where
     })
 }
 
-pub(crate) fn leave<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
+pub(crate) fn leave<X>(client: Xid, p: Point, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
     if state.config.focus_follow_mouse {
         x.set_client_border_color(client, state.config.normal_border)?;
+        set_screen_from_point(p, state, x)?;
     }
 
     Ok(())
@@ -229,16 +231,21 @@ pub(crate) fn screen_change<X>(state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
-    let p = x.cursor_position()?;
+    set_screen_from_point(x.cursor_position()?, state, x)
+}
 
+fn set_screen_from_point<X>(p: Point, state: &mut State<X>, x: &X) -> Result<()>
+where
+    X: XConn,
+{
     x.modify_and_refresh(state, |cs| {
-        let maybe_tag = cs
+        let index = cs
             .iter_screens()
             .find(|s| s.r.contains_point(p))
-            .map(|s| s.workspace.tag.clone());
+            .map(|s| s.index());
 
-        if let Some(t) = maybe_tag {
-            cs.focus_tag(&t);
+        if let Some(index) = index {
+            cs.focus_screen(index);
         }
     })
 }

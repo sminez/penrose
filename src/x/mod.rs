@@ -45,6 +45,8 @@ pub enum ClientConfig {
     BorderPx(u32),
     /// Absolute size and position on the screen as a [Rect]
     Position(Rect),
+    /// Mark this window as stacking below the given Xid
+    StackBelow(Xid),
     /// Mark this window as stacking on top of its peers
     StackAbove,
 }
@@ -249,13 +251,22 @@ pub trait XConnExt: XConn + Sized {
 
         trace!(%client, ?r, "positioning client");
         self.set_client_config(client, &[ClientConfig::Position(r)])
-        // FIXME: removing StackAbove fixes the crazy flickering but now floating windows don't position correctly?
-        // &[ClientConfig::Position(r), ClientConfig::StackAbove],
     }
 
     fn position_clients(&self, positions: Vec<(Xid, Rect)>) -> Result<()> {
+        let ids: Vec<Xid> = positions.iter().map(|&(id, _)| id).collect();
+        self.restack(&ids)?;
+
         for (c, r) in positions {
             self.position_client(c, r)?;
+        }
+
+        Ok(())
+    }
+
+    fn restack(&self, ids: &[Xid]) -> Result<()> {
+        for (&above, &below) in ids.iter().skip(1).zip(ids) {
+            self.set_client_config(below, &[ClientConfig::StackBelow(above)])?;
         }
 
         Ok(())
