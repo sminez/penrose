@@ -17,8 +17,8 @@
 //! [1]: https://www.x.org/releases/X11R7.6/doc/xproto/x11protocol.html
 //! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt
 use crate::{
-    bindings::{KeyCode, MouseState},
-    geometry::{Point, Rect},
+    core::bindings::{KeyCode, MouseState},
+    pure::geometry::{Point, Rect},
     x::{
         self,
         atom::Atom,

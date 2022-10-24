@@ -1,7 +1,7 @@
 //! Data types for working with X events
 use crate::{
-    bindings::{KeyCode, MouseEvent},
-    geometry::{Point, Rect},
+    core::bindings::{KeyCode, MouseEvent},
+    pure::geometry::{Point, Rect},
     x::{Atom, XConn},
     Result, Xid,
 };

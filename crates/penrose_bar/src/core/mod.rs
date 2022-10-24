@@ -3,7 +3,7 @@ use cairo::{Matrix, Operator, XCBConnection, XCBDrawable, XCBSurface, XCBVisualT
 use pango::{EllipsizeMode, FontDescription, SCALE};
 use pangocairo::functions::{create_layout, show_layout};
 use penrose::{
-    geometry::Rect,
+    pure::geometry::Rect,
     x::{WinType, XConn},
     x11rb::X11rbXcbConn,
     Color, Xid,

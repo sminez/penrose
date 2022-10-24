@@ -3,9 +3,7 @@
 //! See `penrose::extensions::actions` for pre-defined actions that are ready
 //! for use.
 use crate::{
-    bindings::KeyEventHandler,
-    core::{ClientSet, State},
-    layout::IntoMessage,
+    core::{bindings::KeyEventHandler, layout::IntoMessage, ClientSet, State},
     util,
     x::{XConn, XConnExt},
     Result,

@@ -1,8 +1,7 @@
 //! Manage hooks for common manage actions
 use crate::{
-    core::State,
-    geometry::Rect,
-    hooks::ManageHook,
+    core::{hooks::ManageHook, State},
+    pure::geometry::Rect,
     x::{XConn, XConnExt},
     Result, Xid,
 };

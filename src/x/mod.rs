@@ -1,9 +1,14 @@
 use crate::{
-    bindings::{KeyCode, MouseState},
-    core::{ClientSet, Config, State},
-    geometry::{Point, Rect},
-    layout::messages::control::Hide,
-    pure::{stack_set::Snapshot, Diff},
+    core::{
+        bindings::{KeyCode, MouseState},
+        layout::messages::control::Hide,
+        ClientSet, Config, State,
+    },
+    pure::{
+        geometry::{Point, Rect},
+        stack_set::Snapshot,
+        Diff,
+    },
     x::{atom::AUTO_FLOAT_WINDOW_TYPES, event::ClientMessage, property::WmState},
     Color, Result, Xid,
 };

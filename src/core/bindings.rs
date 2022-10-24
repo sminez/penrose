@@ -1,7 +1,7 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
     core::{State, Xid},
-    geometry::Point,
+    pure::geometry::Point,
     x::XConn,
     Error, Result,
 };

@@ -1,11 +1,10 @@
 use crate::{
-    core::Xid,
-    geometry::Rect,
-    layout::{
+    core::layout::{
         messages::{common::UnwrapTransformer, Message},
         Layout,
     },
-    pure::Stack,
+    pure::{geometry::Rect, Stack},
+    Xid,
 };
 use std::mem::swap;
 
@@ -154,7 +153,7 @@ impl Layout for NullLayout {
 ///
 /// # Example
 /// ```no_run
-/// # use penrose::{layout::Layout, Xid, geometry::Rect, simple_transformer};
+/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};
 /// #[derive(Clone)]
 /// pub struct MyTransformer(Box<dyn Layout>);
 ///
@@ -169,30 +168,30 @@ macro_rules! simple_transformer {
     ($prefix:expr, $t:ident, $f:ident) => {
         impl $t {
             pub fn wrap(
-                layout: Box<dyn $crate::layout::Layout>,
-            ) -> Box<dyn $crate::layout::Layout> {
+                layout: Box<dyn $crate::core::layout::Layout>,
+            ) -> Box<dyn $crate::core::layout::Layout> {
                 Box::new(Self(layout))
             }
         }
 
-        impl $crate::layout::LayoutTransformer for $t {
+        impl $crate::core::layout::LayoutTransformer for $t {
             fn transformed_name(&self) -> String {
                 format!("{}<{}>", $prefix, self.0.name())
             }
 
-            fn inner_mut(&mut self) -> &mut Box<dyn $crate::layout::Layout> {
+            fn inner_mut(&mut self) -> &mut Box<dyn $crate::core::layout::Layout> {
                 &mut self.0
             }
 
-            fn unwrap(self) -> Box<dyn $crate::layout::Layout> {
+            fn unwrap(self) -> Box<dyn $crate::core::layout::Layout> {
                 self.0
             }
 
             fn transform_positions(
                 &mut self,
-                r: $crate::geometry::Rect,
-                positions: Vec<($crate::core::Xid, $crate::geometry::Rect)>,
-            ) -> Vec<($crate::core::Xid, $crate::geometry::Rect)> {
+                r: $crate::pure::geometry::Rect,
+                positions: Vec<($crate::core::Xid, $crate::pure::geometry::Rect)>,
+            ) -> Vec<($crate::core::Xid, $crate::pure::geometry::Rect)> {
                 $f(r, positions)
             }
         }

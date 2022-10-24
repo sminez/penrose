@@ -1,5 +1,10 @@
 //! Startup hooks for direct adding to your penrose config.
-use crate::{core::State, hooks::StateHook, util::spawn, x::XConn, Result};
+use crate::{
+    core::{hooks::StateHook, State},
+    util::spawn,
+    x::XConn,
+    Result,
+};
 
 /// Spawn a client program on window manager startup
 pub struct SpawnOnStartup {

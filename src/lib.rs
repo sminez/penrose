@@ -8,14 +8,8 @@ use ::x11rb::{
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 
-pub mod actions;
-pub mod bindings;
 pub mod core;
 pub mod extensions;
-pub mod geometry;
-pub mod handle;
-pub mod hooks;
-pub mod layout;
 pub mod macros;
 pub mod pure;
 pub mod util;
@@ -24,8 +18,10 @@ pub mod x;
 pub mod x11rb;
 
 pub use crate::core::Xid;
-pub use geometry::{Point, Rect};
-pub use pure::{Position, Screen, Stack, StackSet, Workspace};
+pub use pure::{
+    geometry::{Point, Rect},
+    Position, Screen, Stack, StackSet, Workspace,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

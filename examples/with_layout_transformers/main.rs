@@ -2,15 +2,17 @@
 //!
 //! Layouts can be wrapped with transformers that modify their behaviour.
 use penrose::{
-    actions::{modify_with, send_layout_message, spawn},
-    bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-    core::{Config, WindowManager},
-    extensions::actions::{exit, log_current_state},
-    layout::{
-        messages::common::{ExpandMain, IncMain, ShrinkMain},
-        transformers::{Gaps, ReflectHorizontal},
-        LayoutStack, MainAndStack,
+    core::{
+        actions::{modify_with, send_layout_message, spawn},
+        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        layout::{
+            messages::common::{ExpandMain, IncMain, ShrinkMain},
+            transformers::{Gaps, ReflectHorizontal},
+            LayoutStack, MainAndStack,
+        },
+        Config, WindowManager,
     },
+    extensions::actions::{exit, log_current_state},
     map, stack,
     x11rb::X11rbRustConn,
     Result,

@@ -1,9 +1,11 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
-    actions::{key_handler, modify_with},
-    bindings::KeyEventHandler,
-    core::State,
-    layout::LayoutStack,
+    core::{
+        actions::{key_handler, modify_with},
+        bindings::KeyEventHandler,
+        layout::LayoutStack,
+        State,
+    },
     util::spawn,
     x::{atom::Atom, property::Prop, XConn, XConnExt},
 };

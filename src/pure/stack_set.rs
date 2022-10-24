@@ -1,7 +1,6 @@
 use crate::{
-    geometry::Rect,
-    layout::{Layout, LayoutStack},
-    pure::{Position, Screen, Stack, Workspace},
+    core::layout::{Layout, LayoutStack},
+    pure::{geometry::Rect, Position, Screen, Stack, Workspace},
     stack, Error, Result, Xid,
 };
 use std::{

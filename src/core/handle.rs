@@ -1,8 +1,10 @@
 //! XEvent handlers for use in the main event loop;
 use crate::{
-    bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
-    core::{State, Xid},
-    geometry::Point,
+    core::{
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
+        State, Xid,
+    },
+    pure::geometry::Point,
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageKind},

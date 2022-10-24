@@ -1,7 +1,7 @@
 //! Conversions to Penrose types from X11rb types
 use crate::{
-    bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
-    geometry::{Point, Rect},
+    core::bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
+    pure::geometry::{Point, Rect},
     x::{
         event::{
             ClientEventMask, ClientMessage, ClientMessageData, ConfigureEvent, ExposeEvent,

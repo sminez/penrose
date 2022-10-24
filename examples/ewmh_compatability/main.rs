@@ -9,17 +9,19 @@
 //! to modify the support, each of the individual hooks can be found in
 //! `penrose::extensions::hooks::ewmh`.
 use penrose::{
-    actions::{modify_with, send_layout_message, spawn},
-    bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-    core::{Config, WindowManager},
+    core::{
+        actions::{modify_with, send_layout_message, spawn},
+        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        layout::{
+            messages::common::{ExpandMain, IncMain, ShrinkMain},
+            transformers::{Gaps, ReflectHorizontal, ReserveTop},
+            LayoutStack, MainAndStack,
+        },
+        Config, WindowManager,
+    },
     extensions::{
         actions::{exit, log_current_state},
         hooks::{add_ewmh_hooks, SpawnOnStartup},
-    },
-    layout::{
-        messages::common::{ExpandMain, IncMain, ShrinkMain},
-        transformers::{Gaps, ReflectHorizontal, ReserveTop},
-        LayoutStack, MainAndStack,
     },
     map, stack,
     x11rb::X11rbRustConn,

@@ -1,10 +1,8 @@
 //! Layouts for positioning client windows on the screen within a given workspace.
 use crate::{
-    core::Xid,
-    geometry::Rect,
-    layout::messages::common::{ExpandMain, IncMain, Rotate, ShrinkMain},
-    pure::Stack,
-    stack,
+    core::layout::messages::common::{ExpandMain, IncMain, Rotate, ShrinkMain},
+    pure::{geometry::Rect, Stack},
+    stack, Xid,
 };
 use std::{fmt, mem::swap};
 

@@ -1,20 +1,22 @@
 //! penrose :: Scratchpads
 //!
 use penrose::{
-    actions::{modify_with, send_layout_message, spawn},
-    bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-    core::{Config, WindowManager},
+    core::{
+        actions::{modify_with, send_layout_message, spawn},
+        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        layout::{
+            messages::common::{ExpandMain, IncMain, ShrinkMain},
+            transformers::{Gaps, ReflectHorizontal, ReserveTop},
+            LayoutStack, MainAndStack,
+        },
+        Config, WindowManager,
+    },
     extensions::{
         actions::{exit, log_current_state},
         hooks::{
             add_ewmh_hooks, add_named_scratchpads, manage::FloatingCentered, NamedScratchPad,
             SpawnOnStartup, ToggleNamedScratchPad,
         },
-    },
-    layout::{
-        messages::common::{ExpandMain, IncMain, ShrinkMain},
-        transformers::{Gaps, ReflectHorizontal, ReserveTop},
-        LayoutStack, MainAndStack,
     },
     map, stack,
     x::query::ClassName,

@@ -1,4 +1,5 @@
 //! Side effect free management of internal window manager state
+pub mod geometry;
 pub mod screen;
 pub mod stack;
 pub mod stack_set;

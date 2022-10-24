@@ -6,8 +6,10 @@
 //! See details of the spec here:
 //!   https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html
 use crate::{
-    core::{ClientSet, Config, State},
-    hooks::{EventHook, StateHook},
+    core::{
+        hooks::{EventHook, StateHook},
+        ClientSet, Config, State,
+    },
     x::{atom::Atom, event::ClientMessage, property::Prop, XConn, XConnExt, XEvent},
     Result, Xid,
 };

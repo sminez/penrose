@@ -1,6 +1,6 @@
 //! Data types for working with X window properties
 use crate::{
-    geometry::{Point, Rect},
+    pure::geometry::{Point, Rect},
     Error, Result, Xid,
 };
 use bitflags::bitflags;

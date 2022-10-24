@@ -21,7 +21,7 @@ pub trait IntoMessage: Any {
 
 macro_rules! msg {
     ($m:ident) => {
-        impl $crate::layout::messages::IntoMessage for $m {}
+        impl $crate::core::layout::messages::IntoMessage for $m {}
     };
 }
 

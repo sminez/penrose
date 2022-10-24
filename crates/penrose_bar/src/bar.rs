@@ -6,7 +6,7 @@ use crate::{
 };
 use penrose::{
     core::{State, WindowManager},
-    geometry::Rect,
+    pure::geometry::Rect,
     x::{event::XEvent, Atom, Prop, WinType, XConn},
     Color, Xid,
 };

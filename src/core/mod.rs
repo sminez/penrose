@@ -1,9 +1,5 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
-    bindings::{KeyBindings, MouseBindings},
-    handle,
-    hooks::{EventHook, ManageHook, StateHook},
-    layout::LayoutStack,
     pure::{StackSet, Workspace},
     x::{XConn, XConnExt, XEvent},
     Color, Error, Result,
@@ -21,6 +17,16 @@ use std::{
     sync::Arc,
 };
 use tracing::{error, span, trace, Level};
+
+pub mod actions;
+pub mod bindings;
+pub mod handle;
+pub mod hooks;
+pub mod layout;
+
+use bindings::{KeyBindings, MouseBindings};
+use hooks::{EventHook, ManageHook, StateHook};
+use layout::LayoutStack;
 
 /// An X11 ID for a given resource
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -408,7 +414,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geometry::Rect;
+    use crate::pure::geometry::Rect;
 
     #[test]
     fn visible_client_positions_respects_floating_clients() {

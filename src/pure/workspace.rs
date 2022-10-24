@@ -1,5 +1,5 @@
 use crate::{
-    layout::{IntoMessage, LayoutStack},
+    core::layout::{IntoMessage, LayoutStack},
     pure::Stack,
 };
 

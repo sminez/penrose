@@ -1,10 +1,9 @@
 //! Support for managing multiple floating scratchpad programs that can be
 //! toggled on or off on the active workspace.
 use crate::{
-    bindings::KeyEventHandler,
-    core::{State, WindowManager},
-    hooks::ManageHook,
-    layout::LayoutStack,
+    core::{
+        bindings::KeyEventHandler, hooks::ManageHook, layout::LayoutStack, State, WindowManager,
+    },
     util::spawn,
     x::{Query, XConn, XConnExt},
     Result, Xid,
