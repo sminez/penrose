@@ -2,7 +2,6 @@
 use crate::{
     bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
     core::{State, Xid},
-    geometry::Point,
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageKind},
@@ -176,7 +175,7 @@ where
     Ok(())
 }
 
-pub(crate) fn enter<X>(client: Xid, _p: Point, state: &mut State<X>, x: &X) -> Result<()>
+pub(crate) fn enter<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
@@ -186,20 +185,10 @@ where
         if focus_follow_mouse {
             cs.focus_client(&client);
         }
-
-        // FIXME: is this needed?
-        // let maybe_tag = cs
-        //     .iter_screens()
-        //     .find(|s| s.r.contains_point(p))
-        //     .map(|s| s.workspace.tag.clone());
-
-        // if let Some(t) = maybe_tag {
-        //     cs.focus_tag(&t);
-        // }
     })
 }
 
-pub(crate) fn leave<X>(client: Xid, p: Point, state: &mut State<X>, x: &X) -> Result<()>
+pub(crate) fn leave<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
@@ -207,16 +196,7 @@ where
         x.set_client_border_color(client, state.config.normal_border)?;
     }
 
-    x.modify_and_refresh(state, |cs| {
-        let maybe_tag = cs
-            .iter_screens()
-            .find(|s| s.r.contains_point(p))
-            .map(|s| s.workspace.tag.clone());
-
-        if let Some(t) = maybe_tag {
-            cs.focus_tag(&t);
-        }
-    })
+    Ok(())
 }
 
 pub(crate) fn detect_screens<X>(state: &mut State<X>, x: &X) -> Result<()>

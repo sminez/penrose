@@ -11,7 +11,8 @@ use penrose::{
     Color, Xid,
 };
 use std::fmt;
-use tracing::{error, warn};
+use tracing::{debug, error, info};
+use x11rb::protocol::xproto::ConnectionExt as _;
 
 /// The position of a status bar
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -88,6 +89,7 @@ impl<X: XConn> StatusBar<X> {
     }
 
     fn init_for_screens(&mut self) -> Result<()> {
+        info!("initialising per screen status bar windows");
         let screen_details = self.draw.conn.screen_details()?;
 
         self.screens = screen_details
@@ -98,20 +100,20 @@ impl<X: XConn> StatusBar<X> {
                     Position::Bottom => h as u32 - self.hpx,
                 };
 
-                warn!("creating new window");
+                debug!("creating new window");
                 let id = self.draw.new_window(
                     WinType::InputOutput(Atom::NetWindowTypeDock),
-                    Rect::new(x, y as u32, w, self.hpx as u32),
+                    Rect::new(x, y, w, self.hpx),
                     false,
                 )?;
 
-                warn!("setting props");
+                debug!(%id, "setting props");
                 let p = Prop::UTF8String(vec!["penrose-statusbar".to_string()]);
                 for atom in &[Atom::NetWmName, Atom::WmName, Atom::WmClass] {
                     self.draw.conn.set_prop(id, atom.as_ref(), p.clone())?;
                 }
 
-                warn!("flushing");
+                debug!("flushing");
                 self.draw.flush(id)?;
 
                 Ok((id, w as f64))
@@ -187,17 +189,15 @@ impl<X: XConn> StatusBar<X> {
 
 /// Run any widget startup actions and then redraw
 pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose::Result<()> {
-    warn!("getting status bar state");
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
-    warn!("initialising windows per screen");
     if let Err(e) = bar.init_for_screens() {
         error!(%e, "unabled to initialise for screens");
-        panic!("we're dead");
+        return Err(penrose::Error::NoScreens);
     }
 
-    warn!("running startup widget hooks");
+    info!("running startup widget hooks");
     for w in bar.widgets.iter_mut() {
         if let Err(e) = w.on_startup(state, x) {
             error!(%e, "error running widget startup hook");
@@ -237,8 +237,24 @@ pub fn event_hook<X: XConn + 'static>(
     state: &mut State<X>,
     x: &X,
 ) -> penrose::Result<bool> {
+    use XEvent::{ConfigureNotify, RandrNotify};
+
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
+
+    if matches!(event, RandrNotify) || matches!(event, ConfigureNotify(e) if e.is_root) {
+        info!("screens have changed: recreating status bars");
+
+        for &(id, _) in bar.screens.iter() {
+            info!(%id, "removing previous status bar");
+            bar.draw.conn.connection().destroy_window(*id)?;
+        }
+
+        if let Err(e) = bar.init_for_screens() {
+            error!(%e, "unabled to initialise for screens");
+            return Err(penrose::Error::NoScreens);
+        }
+    }
 
     bar.active_screen = state.client_set.current_screen().index();
 

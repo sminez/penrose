@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 cairo-rs = { version = "0.15.6", features = ["xcb"] }
-cairo-sys-rs = { version = "0.15.1" }
 pangocairo = { version = "0.15.1" }
 pango = { version = "0.15.6" }
 penrose = { path = "../../" }

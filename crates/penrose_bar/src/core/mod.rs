@@ -12,11 +12,11 @@ use std::collections::HashMap;
 use tracing::{debug, info};
 use x11rb::{connection::Connection, protocol::xproto::Screen};
 
-/// A rust version of XCB's `xcb_visualtype_t` struct. This is used in a FFI-way.
-/// Taken from https://github.com/psychon/x11rb/blob/c3894c092101a16cedf4c45e487652946a3c4284/cairo-example/src/main.rs
+// A rust version of XCB's `xcb_visualtype_t` struct for FFI.
+// Taken from https://github.com/psychon/x11rb/blob/c3894c092101a16cedf4c45e487652946a3c4284/cairo-example/src/main.rs
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
-pub struct xcb_visualtype_t {
+struct XcbVisualtypeT {
     pub visual_id: u32,
     pub class: u8,
     pub bits_per_rgb_value: u8,
@@ -76,7 +76,7 @@ impl Draw {
         let mut visual = self.find_xcb_visualtype(screen.root_visual);
 
         let surface = unsafe {
-            debug!("calling cairo::XCBSurface::create");
+            debug!(%id, "calling cairo::XCBSurface::create");
             cairo::XCBSurface::create(
                 &XCBConnection::from_raw_none(self.conn.connection().get_raw_xcb_connection() as _),
                 &XCBDrawable(id),
@@ -86,18 +86,18 @@ impl Draw {
             )?
         };
 
-        debug!("setting surface size");
+        debug!(%id, "setting surface size");
         surface.set_size(w, h)?;
 
         Ok(surface)
     }
 
-    fn find_xcb_visualtype(&self, visual_id: u32) -> xcb_visualtype_t {
+    fn find_xcb_visualtype(&self, visual_id: u32) -> XcbVisualtypeT {
         for root in &self.conn.connection().setup().roots {
             for depth in &root.allowed_depths {
                 for visual in &depth.visuals {
                     if visual.visual_id == visual_id {
-                        return xcb_visualtype_t {
+                        return XcbVisualtypeT {
                             visual_id: visual.visual_id,
                             class: visual.class.into(),
                             bits_per_rgb_value: visual.bits_per_rgb_value,

@@ -248,10 +248,9 @@ pub trait XConnExt: XConn + Sized {
         }
 
         trace!(%client, ?r, "positioning client");
-        self.set_client_config(
-            client,
-            &[ClientConfig::Position(r), ClientConfig::StackAbove],
-        )
+        self.set_client_config(client, &[ClientConfig::Position(r)])
+        // FIXME: removing StackAbove fixes the crazy flickering but now floating windows don't position correctly?
+        // &[ClientConfig::Position(r), ClientConfig::StackAbove],
     }
 
     fn position_clients(&self, positions: Vec<(Xid, Rect)>) -> Result<()> {
@@ -337,8 +336,8 @@ where
     set_window_props(x, state, &diff)?;
     notify_hidden_workspaces(state, &diff);
     x.position_clients(positions)?;
-    handle_pointer_change(x, state, &diff)?;
     set_window_visibility(x, state, &diff)?;
+    handle_pointer_change(x, state, &diff)?;
     set_focus(x, state)?;
 
     // TODO: clear enterWindow events from the event queue if this was because of mouse focus (?)
