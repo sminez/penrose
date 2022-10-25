@@ -25,6 +25,10 @@ pub use pure::{
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// A custom error message from user code or extensions
+    #[error("{0}")]
+    Custom(String),
+
     #[error("Only {n_ws} workspaces were provided but at least {n_screens} are required")]
     InsufficientWorkspaces { n_ws: usize, n_screens: usize },
 

@@ -1,9 +1,7 @@
 //! Support for managing multiple floating scratchpad programs that can be
 //! toggled on or off on the active workspace.
 use crate::{
-    core::{
-        bindings::KeyEventHandler, hooks::ManageHook, layout::LayoutStack, State, WindowManager,
-    },
+    core::{bindings::KeyEventHandler, hooks::ManageHook, State, WindowManager},
     util::spawn,
     x::{Query, XConn, XConnExt},
     Result, Xid,
@@ -78,12 +76,9 @@ where
     X: XConn + 'static,
 {
     let state: HashMap<_, _> = scratchpads.into_iter().map(|nsp| (nsp.name, nsp)).collect();
+
     wm.state.add_extension(NamedScratchPadState(state));
-
-    wm.state
-        .client_set
-        .add_invisible_workspace(NSP_TAG, LayoutStack::default());
-
+    wm.state.client_set.add_invisible_workspace(NSP_TAG);
     wm.state.config.compose_or_set_manage_hook(manage_hook);
 
     wm
@@ -117,29 +112,46 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
         let name = self.0;
 
         let id = match s.borrow_mut().0.get_mut(&name) {
-            Some(nsp) => match nsp.client {
-                Some(id) if state.client_set.contains(&id) => id,
+            // Active client somewhere in the StackSet
+            Some(NamedScratchPad {
+                client: Some(id), ..
+            }) if state.client_set.contains(id) => *id,
 
-                // No active client or client is no longer in state
-                _ => {
-                    debug!(%nsp.prog, %name, "spawning NamedScratchPad program");
-                    nsp.client = None;
-                    return spawn(nsp.prog);
-                }
-            },
+            // No active client or client is no longer in state
+            Some(nsp) => {
+                debug!(%nsp.prog, %name, "spawning NamedScratchPad program");
+                nsp.client = None;
+                return spawn(nsp.prog);
+            }
 
+            // The user created a ToggleNamedScratchPad but didn't register the scratchpad
             None => {
-                warn!(%name, "toggle called for unknown scratchpad");
+                warn!(%name, "toggle called for unknown scratchpad: did you remember to call add_named_scratchpads?");
                 return Ok(());
             }
         };
 
-        x.modify_and_refresh(state, |cs| {
-            if cs.current_workspace().contains(&id) {
-                cs.move_client_to_tag(&id, NSP_TAG);
-            } else {
-                cs.move_client_to_current_tag(&id);
-            }
-        })
+        toggle(id, state, x)
     }
+}
+
+#[tracing::instrument(level = "debug", skip(state, x))]
+fn toggle<X: XConn>(id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+    debug!(
+        current_tag = state.client_set.current_tag(),
+        current_screen = state.client_set.current_screen().index(),
+        "Toggling nsp client"
+    );
+
+    x.modify_and_refresh(state, |cs| {
+        if cs.current_workspace().contains(&id) {
+            // Toggle off: hiding the client on our invisible workspace
+            debug!("current workspace contains target client: moving to NSP tag");
+            cs.move_client_to_tag(&id, NSP_TAG);
+        } else {
+            // Toggle on / bring to current workspace
+            debug!("current workspace does not contain target client: moving to tag");
+            cs.move_client_to_current_tag(&id);
+        }
+    })
 }
