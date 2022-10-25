@@ -191,7 +191,7 @@ pub trait XConnExt: XConn + Sized {
         let ss = state.client_set.snapshot(positions);
         state.diff.update(ss);
 
-        debug!(?state.diff, "pure state diff");
+        // trace!(?state.diff, "pure state diff");
 
         set_window_props(self, state)?;
         notify_hidden_workspaces(state);

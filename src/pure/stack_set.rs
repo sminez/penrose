@@ -141,18 +141,30 @@ where
     /// on the active [Screen], otherwise the workspace replaces whatever
     /// was on the active screen.
     pub fn focus_tag(&mut self, tag: impl AsRef<str>) {
+        let current_tag = self.screens.focus.workspace.tag.clone();
         let tag = tag.as_ref();
 
-        // If the tag is visible on another screen, swap it with what is on
-        // this one. This also handles the case where the requested tag is
-        // already focused
-        if self.swap_focused_workspace_with_tag(tag) {
-            return;
+        // If the tag is visible on another screen, focus moves to that screen
+        loop {
+            self.screens.focus_down();
+            match &self.screens.focus.workspace.tag {
+                // we've found and focused the tag
+                t if t == tag => {
+                    self.previous_tag = current_tag;
+                    return;
+                }
+
+                // we've looped so this tag isn't visible
+                t if t == &current_tag => break,
+
+                // try the next tag
+                _ => (),
+            }
         }
 
         // If the tag is hidden then it gets moved to the current screen
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
-            self.previous_tag = self.screens.focus.workspace.tag.clone();
+            self.previous_tag = current_tag;
             swap(&mut w, &mut self.screens.focus.workspace);
             self.hidden.push_back(w);
         }
@@ -307,7 +319,7 @@ where
             w.stack = Some(match take(&mut w.stack) {
                 None => stack!(c),
                 Some(mut s) => {
-                    s.insert(c);
+                    s.insert_at(Position::Focus, c);
                     s
                 }
             });
@@ -441,12 +453,12 @@ where
     /// It will not be possible to focus this workspace on a screen but its
     /// state will be tracked and clients can be placed on it.
     /// The id assigned to this workspace will be max(workspace ids) + 1.
-    pub fn add_invisible_workspace<T>(&mut self, tag: T, layouts: LayoutStack)
+    pub fn add_invisible_workspace<T>(&mut self, tag: T)
     where
         T: Into<String>,
     {
         let tag = tag.into();
-        self.add_workspace(tag.clone(), layouts);
+        self.add_workspace(tag.clone(), LayoutStack::default());
         self.invisible_tags.push(tag);
     }
 
@@ -748,7 +760,7 @@ pub mod tests {
     }
 
     #[test_case("1", &["1", "2"]; "current focused workspace")]
-    #[test_case("2", &["2", "1"]; "visible on other screen")]
+    #[test_case("2", &["1", "2"]; "visible on other screen")]
     #[test_case("3", &["3", "2"]; "currently hidden")]
     #[test]
     fn focus_tag_sets_correct_visible_workspaces(target: &str, vis: &[&str]) {
@@ -965,6 +977,30 @@ pub mod tests {
         let ids: Vec<u32> = positions.iter().map(|&(id, _)| *id).collect();
 
         assert_eq!(ids, vec![1, 4, 5, 6, 3, 2]);
+    }
+
+    #[test_case(1, "1"; "current focus to current tag")]
+    #[test_case(2, "1"; "from current tag to current tag")]
+    #[test_case(6, "1"; "from other tag to current tag")]
+    #[test_case(6, "2"; "from other tag to same tag")]
+    #[test_case(0, "2"; "from current tag to other tag")]
+    #[test_case(7, "3"; "from other tag to other tag")]
+    #[test_case(7, "4"; "from other tag to empty tag")]
+    #[test]
+    fn move_client_to_tag(client: u8, tag: &str) {
+        let mut s = test_stack_set_with_stacks(
+            vec![
+                Some(stack!([0], 1, [2, 3])),
+                Some(stack!([6, 7], 8)),
+                Some(stack!(4, [5])),
+                None,
+            ],
+            1,
+        );
+
+        s.move_client_to_tag(&client, tag);
+
+        assert_eq!(s.workspace(tag).unwrap().focus(), Some(&client));
     }
 }
 
