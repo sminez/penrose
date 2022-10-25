@@ -1,6 +1,6 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
-    pure::{StackSet, Workspace},
+    pure::{Diff, StackSet, Workspace},
     x::{XConn, XConnExt, XEvent},
     Color, Error, Result,
 };
@@ -78,6 +78,7 @@ where
     pub(crate) mapped: HashSet<Xid>,
     pub(crate) pending_unmap: HashMap<Xid, usize>,
     pub(crate) current_event: Option<XEvent>,
+    pub(crate) diff: Diff<Xid>,
     // pub(crate) mouse_focused: bool,
     // pub(crate) mouse_position: Option<(Point, Point)>,
 }
@@ -283,6 +284,9 @@ where
             x.screen_details()?,
         )?;
 
+        let ss = client_set.snapshot(vec![]);
+        let diff = Diff::new(ss.clone(), ss);
+
         let state = State {
             config,
             client_set,
@@ -291,6 +295,7 @@ where
             mapped: HashSet::new(),
             pending_unmap: HashMap::new(),
             current_event: None,
+            diff,
         };
 
         Ok(Self {

@@ -2,7 +2,7 @@ use crate::pop_where;
 use std::{
     collections::linked_list::{self, LinkedList},
     fmt,
-    iter::IntoIterator,
+    iter::{once, IntoIterator},
     mem::{swap, take},
 };
 
@@ -160,6 +160,21 @@ impl<T> Stack<T> {
             focus: Some(&mut self.focus),
             down: self.down.iter_mut(),
         }
+    }
+
+    /// Iterate over the clients in this stack from the the focused element
+    /// down through the stack.
+    ///
+    /// ```
+    /// # use penrose::stack;
+    ///
+    /// let unraveled: Vec<u8> = stack!([1, 2], 3, [4, 5]).unravel().copied().collect();
+    /// assert_eq!(unraveled, vec![3, 4, 5, 1, 2]);
+    /// ```
+    pub fn unravel(&self) -> impl Iterator<Item = &T> {
+        once(&self.focus)
+            .chain(self.down.iter())
+            .chain(self.up.iter().rev())
     }
 
     /// Flatten a Stack into a Vector, losing the information of which

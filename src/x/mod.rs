@@ -4,11 +4,7 @@ use crate::{
         layout::messages::control::Hide,
         ClientSet, Config, State,
     },
-    pure::{
-        geometry::{Point, Rect},
-        stack_set::Snapshot,
-        Diff,
-    },
+    pure::geometry::{Point, Rect},
     x::{atom::AUTO_FLOAT_WINDOW_TYPES, event::ClientMessage, property::WmState},
     Color, Result, Xid,
 };
@@ -117,8 +113,6 @@ pub trait XConnExt: XConn + Sized {
         let should_float = self.client_should_float(client, &state.config.floating_classes)?;
         let r = self.client_geometry(client)?;
 
-        let ss = state.client_set.snapshot();
-
         state.client_set.insert(client);
         if should_float {
             state.client_set.float_unchecked(client, r);
@@ -133,9 +127,7 @@ pub trait XConnExt: XConn + Sized {
         }
         state.config.manage_hook = hook;
 
-        // NOTE: See comment on refresh_from_snapshot for details on why we
-        //       don't just call modify_and_refresh here.
-        modify_from_snapshot(self, state, ss, |_| ())
+        self.modify_and_refresh(state, |_| ())
     }
 
     fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
@@ -184,13 +176,42 @@ pub trait XConnExt: XConn + Sized {
 
     /// Apply a pure function that modifies a [ClientSet] and then handle refreshing the
     /// WindowManager state and associated X11 calls.
-    fn modify_and_refresh<F>(&self, state: &mut State<Self>, f: F) -> Result<()>
+    ///
+    /// This is the main logic that drives what the user will see on the screen in terms
+    /// of window placement, focus and borders. Everything is driven from a diff of the
+    /// pure ClientSet state before and after some mutating operation that was carried out
+    /// by `f`.
+    fn modify_and_refresh<F>(&self, state: &mut State<Self>, mut f: F) -> Result<()>
     where
         F: FnMut(&mut ClientSet),
     {
-        let ss = state.client_set.snapshot();
+        f(&mut state.client_set); // NOTE: mutating the existing state
 
-        modify_from_snapshot(self, state, ss, f)
+        let positions = state.client_set.visible_client_positions();
+        let ss = state.client_set.snapshot(positions);
+        state.diff.update(ss);
+
+        debug!(?state.diff, "pure state diff");
+
+        set_window_props(self, state)?;
+        notify_hidden_workspaces(state);
+        self.position_clients(&state.diff.after.positions)?;
+        set_window_visibility(self, state)?;
+        handle_pointer_change(self, state)?;
+        set_focus(self, state)?;
+
+        // TODO: clear enterWindow events from the event queue if this was because of mouse focus (?)
+
+        let mut hook = state.config.refresh_hook.take();
+        if let Some(ref mut h) = hook {
+            trace!("running user refresh hook");
+            if let Err(e) = h.call(state, self) {
+                error!(%e, "error returned from user refresh hook");
+            }
+        }
+        state.config.refresh_hook = hook;
+
+        Ok(())
     }
 
     fn client_should_float(&self, client: Xid, floating_classes: &[String]) -> Result<bool> {
@@ -258,11 +279,11 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_config(client, &[ClientConfig::Position(r)])
     }
 
-    fn position_clients(&self, positions: Vec<(Xid, Rect)>) -> Result<()> {
+    fn position_clients(&self, positions: &[(Xid, Rect)]) -> Result<()> {
         let ids: Vec<Xid> = positions.iter().map(|&(id, _)| id).collect();
         self.restack(&ids)?;
 
-        for (c, r) in positions {
+        for &(c, r) in positions.iter() {
             self.position_client(c, r)?;
         }
 
@@ -322,60 +343,12 @@ pub trait XConnExt: XConn + Sized {
 // Auto impl XConnExt for all XConn impls
 impl<T> XConnExt for T where T: XConn {}
 
-// This is the main logic that drives what the user will see on the screen in terms
-// of window placement, focus and borders.
-//
-// Everything is driven from a diff of the purse ClientSet state before and after
-// some mutating operation that was carried out before calling this function. The
-// primary ways of calling this is via the `modify_and_refresh` method provided by
-// the XConnExt trait above. In almost all cases, modify_and_refresh is sufficent
-// but there are some ownership issues around the State itself in `manage` that
-// arise from needing to pass the state to manage hooks which leads to us needing
-// to call `modify_from_snapshot` directly.
-fn modify_from_snapshot<X, F>(
-    x: &X,
-    state: &mut State<X>,
-    ss: Snapshot<Xid>,
-    mut f: F,
-) -> Result<()>
-where
-    X: XConn,
-    F: FnMut(&mut ClientSet),
-{
-    f(&mut state.client_set); // NOTE: mutating the existing state
-
-    let positions = state.client_set.visible_client_positions();
-    let diff = Diff::from_raw(ss, &state.client_set, &positions);
-
-    debug!(?diff, "pure state diff");
-
-    set_window_props(x, state, &diff)?;
-    notify_hidden_workspaces(state, &diff);
-    x.position_clients(positions)?;
-    set_window_visibility(x, state, &diff)?;
-    handle_pointer_change(x, state, &diff)?;
-    set_focus(x, state)?;
-
-    // TODO: clear enterWindow events from the event queue if this was because of mouse focus (?)
-
-    let mut hook = state.config.refresh_hook.take();
-    if let Some(ref mut h) = hook {
-        trace!("running user refresh hook");
-        if let Err(e) = h.call(state, x) {
-            error!(%e, "error returned from user refresh hook");
-        }
-    }
-    state.config.refresh_hook = hook;
-
-    Ok(())
-}
-
-fn set_window_props<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> Result<()> {
-    for &c in diff.new.iter() {
+fn set_window_props<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
+    for &c in state.diff.new_clients() {
         x.set_initial_properties(c, &state.config)?;
     }
 
-    if let Some(focused) = diff.old_focus {
+    if let Some(focused) = state.diff.before.focused_client {
         x.set_client_border_color(focused, state.config.normal_border)?;
     }
 
@@ -387,22 +360,28 @@ fn set_window_props<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> 
     Ok(())
 }
 
-fn notify_hidden_workspaces<X: XConn>(state: &mut State<X>, diff: &Diff<Xid>) {
+fn notify_hidden_workspaces<X: XConn>(state: &mut State<X>) {
+    let previous_visible_tags = state.diff.previous_visible_tags();
+
     state
         .client_set
         .iter_hidden_workspaces_mut()
-        .filter(|w| diff.previous_visible_tags.contains(&w.tag))
+        .filter(|w| previous_visible_tags.contains(&w.tag.as_ref()))
         .for_each(|ws| ws.broadcast_message(Hide));
 }
 
-fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> Result<()> {
+// Warp the cursor if this diff resulted in a focus change
+fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
+    if !state.config.focus_follow_mouse {
+        return Ok(());
+    }
+
     if !matches!(state.current_event, Some(XEvent::Enter(_))) {
-        if let Some(&id) = state.client_set.current_client() {
-            // Warp the cursor if this diff resulted in a focus change
-            if state.config.focus_follow_mouse && diff.old_focus.map_or(true, |old| old != id) {
+        if let Some(&id) = state.diff.focused_client() {
+            if state.diff.focused_client_changed() {
                 x.warp_pointer_to_window(id)?;
             }
-        } else if let Some(index) = diff.newly_focused_screen {
+        } else if let Some(index) = state.diff.newly_focused_screen() {
             x.warp_pointer_to_screen(state, index)?;
         }
     }
@@ -410,18 +389,18 @@ fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>
     Ok(())
 }
 
-fn set_window_visibility<X: XConn>(x: &X, state: &mut State<X>, diff: &Diff<Xid>) -> Result<()> {
-    for &c in diff.visible.iter() {
+fn set_window_visibility<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
+    for &c in state.diff.visible_clients() {
         trace!(?c, "revealing client");
         x.reveal(c, &state.client_set, &mut state.mapped)?;
     }
 
-    for &c in diff.hidden.iter() {
+    for &c in state.diff.hidden_clients() {
         trace!(?c, "hiding client");
         x.hide(c, &mut state.mapped, &mut state.pending_unmap)?;
     }
 
-    for &c in diff.withdrawn.iter() {
+    for &c in state.diff.withdrawn_clients() {
         trace!(?c, "setting withdrawn state for client");
         x.set_wm_state(c, WmState::Withdrawn)?;
     }
