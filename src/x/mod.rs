@@ -214,6 +214,10 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
+    fn refresh(&self, state: &mut State<Self>) -> Result<()> {
+        self.modify_and_refresh(state, |_| ())
+    }
+
     fn client_should_float(&self, client: Xid, floating_classes: &[String]) -> Result<bool> {
         trace!(%client, "fetching WmTransientFor prop");
         if let Some(prop) = self.get_prop(client, Atom::WmTransientFor.as_ref())? {

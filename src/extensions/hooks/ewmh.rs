@@ -6,10 +6,7 @@
 //! See details of the spec here:
 //!   https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html
 use crate::{
-    core::{
-        hooks::{EventHook, StateHook},
-        ClientSet, Config, State,
-    },
+    core::{ClientSet, Config, State},
     x::{atom::Atom, event::ClientMessage, property::Prop, XConn, XConnExt, XEvent},
     Result, Xid,
 };
@@ -46,40 +43,33 @@ pub fn add_ewmh_hooks<X>(mut config: Config<X>) -> Config<X>
 where
     X: XConn + 'static,
 {
-    config.compose_or_set_startup_hook(EwhmStartupHook);
-    config.compose_or_set_refresh_hook(EwhmRefreshHook);
-    config.compose_or_set_event_hook(EwhmEventHook);
+    config.compose_or_set_startup_hook(startup_hook);
+    config.compose_or_set_refresh_hook(refresh_hook);
+    config.compose_or_set_event_hook(event_hook);
 
     config
 }
 
 /// Advertise EWMH support to the X server
-pub struct EwhmStartupHook;
+pub fn startup_hook<X: XConn>(_state: &mut State<X>, x: &X) -> Result<()> {
+    let root = x.root();
 
-impl<X> StateHook<X> for EwhmStartupHook
-where
-    X: XConn,
-{
-    fn call(&mut self, _state: &mut State<X>, x: &X) -> Result<()> {
-        let root = x.root();
+    x.set_prop(
+        root,
+        Atom::WmName.as_ref(),
+        Prop::UTF8String(vec![WM_NAME.to_owned()]),
+    )?;
 
-        x.set_prop(
-            root,
-            Atom::WmName.as_ref(),
-            Prop::UTF8String(vec![WM_NAME.to_owned()]),
-        )?;
-
-        x.set_prop(
-            root,
-            Atom::NetSupported.as_ref(),
-            Prop::Atom(
-                EWMH_SUPPORTED_ATOMS
-                    .iter()
-                    .map(|a| a.as_ref().to_owned())
-                    .collect(),
-            ),
-        )
-    }
+    x.set_prop(
+        root,
+        Atom::NetSupported.as_ref(),
+        Prop::Atom(
+            EWMH_SUPPORTED_ATOMS
+                .iter()
+                .map(|a| a.as_ref().to_owned())
+                .collect(),
+        ),
+    )
 }
 
 /// Intercept messages from external applications and handle them.
@@ -89,80 +79,66 @@ where
 ///   - _NET_WM_DESKTOP      :: moving clients between workspaces
 ///   - _NET_ACTIVE_WINDOW   :: focus a new client and handle workspace switching
 ///   - _NET_CLOSE_WINDOW    :: closing a client window
-pub struct EwhmEventHook;
+pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
+    let ClientMessage {
+        id, dtype, data, ..
+    } = match event {
+        XEvent::ClientMessage(m) => m,
+        _ => return Ok(true),
+    };
 
-impl<X> EventHook<X> for EwhmEventHook
-where
-    X: XConn,
-{
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
-        let ClientMessage {
-            id, dtype, data, ..
-        } = match event {
-            XEvent::ClientMessage(m) => m,
-            _ => return Ok(true),
-        };
-
-        match dtype.as_ref() {
-            // Focus the requested desktop
-            "_NET_CURRENT_DESKTOP" => {
-                let tag = state.client_set.tag_for_workspace_id(data.as_usize()[0]);
-                if let Some(tag) = tag {
-                    x.modify_and_refresh(state, |cs| cs.focus_tag(&tag))?;
-                }
+    match dtype.as_ref() {
+        // Focus the requested desktop
+        "_NET_CURRENT_DESKTOP" => {
+            let tag = state.client_set.tag_for_workspace_id(data.as_usize()[0]);
+            if let Some(tag) = tag {
+                x.modify_and_refresh(state, |cs| cs.focus_tag(&tag))?;
             }
-
-            // Move the client receiving the message to its desired workspace
-            "_NET_WM_DESKTOP" => {
-                let tag = state.client_set.tag_for_workspace_id(data.as_usize()[0]);
-                if let Some(tag) = tag {
-                    x.modify_and_refresh(state, |cs| cs.move_client_to_tag(id, &tag))?;
-                }
-            }
-
-            // If the request came from a pager, the first data element should be 2.
-            // For pager requests, set the active client (see docs linked at the top of
-            // this file for more details on the semantics of this message)
-            // TODO: XMonad allows for the user specifying what action should be taken
-            //       here (with the default being to focus like this). Might need to
-            //       support that in future?
-            "_NET_ACTIVE_WINDOW" => {
-                if data.as_u32()[0] == 2 {
-                    x.set_active_client(*id, state)?;
-                }
-            }
-
-            // Attempt to remove the requested client
-            "_NET_CLOSE_WINDOW" => x.modify_and_refresh(state, |cs| {
-                cs.remove_client(id);
-            })?,
-
-            // Leave other client messages for the default event handling
-            _ => (),
         }
 
-        Ok(true)
+        // Move the client receiving the message to its desired workspace
+        "_NET_WM_DESKTOP" => {
+            let tag = state.client_set.tag_for_workspace_id(data.as_usize()[0]);
+            if let Some(tag) = tag {
+                x.modify_and_refresh(state, |cs| cs.move_client_to_tag(id, &tag))?;
+            }
+        }
+
+        // If the request came from a pager, the first data element should be 2.
+        // For pager requests, set the active client (see docs linked at the top of
+        // this file for more details on the semantics of this message)
+        // TODO: XMonad allows for the user specifying what action should be taken
+        //       here (with the default being to focus like this). Might need to
+        //       support that in future?
+        "_NET_ACTIVE_WINDOW" => {
+            if data.as_u32()[0] == 2 {
+                x.set_active_client(*id, state)?;
+            }
+        }
+
+        // Attempt to remove the requested client
+        "_NET_CLOSE_WINDOW" => x.modify_and_refresh(state, |cs| {
+            cs.remove_client(id);
+        })?,
+
+        // Leave other client messages for the default event handling
+        _ => (),
     }
+
+    Ok(true)
 }
 
 /// Notify external clients of the current status of workspaces and clients
-pub struct EwhmRefreshHook;
+pub fn refresh_hook<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
+    set_known_desktops(&state.client_set, x)?;
+    set_known_clients(&state.client_set, x)?;
+    set_current_desktop(&state.client_set, x)?;
+    set_client_desktops(&state.client_set, x)?;
+    set_active_client(&state.client_set, x)?;
 
-impl<X> StateHook<X> for EwhmRefreshHook
-where
-    X: XConn,
-{
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        set_known_desktops(&state.client_set, x)?;
-        set_known_clients(&state.client_set, x)?;
-        set_current_desktop(&state.client_set, x)?;
-        set_client_desktops(&state.client_set, x)?;
-        set_active_client(&state.client_set, x)?;
+    // TODO: set desktop viewport
 
-        // TODO: set desktop viewport
-
-        Ok(())
-    }
+    Ok(())
 }
 
 fn set_known_desktops<X>(cs: &ClientSet, x: &X) -> Result<()>

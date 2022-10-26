@@ -7,7 +7,7 @@ use crate::{
     Result, Xid,
 };
 use std::{collections::HashMap, fmt};
-use tracing::{debug, warn};
+use tracing::{debug, error, warn};
 
 /// The tag used for a placeholder Workspace that holds scratchpad windows when
 /// they are currently hidden.
@@ -44,6 +44,7 @@ where
         prog: &'static str,
         query: Q,
         manage_hook: H,
+        run_hook_on_toggle: bool,
     ) -> (Self, ToggleNamedScratchPad)
     where
         Q: Query<X> + 'static,
@@ -57,7 +58,13 @@ where
             hook: Box::new(manage_hook),
         };
 
-        (nsp, ToggleNamedScratchPad(name))
+        (
+            nsp,
+            ToggleNamedScratchPad {
+                name,
+                run_hook_on_toggle,
+            },
+        )
     }
 }
 
@@ -104,18 +111,26 @@ pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> 
 /// This will spawn the requested client program if it isn't currently running or
 /// move it to the focused workspace. If the scratchpad is currently visible it
 /// will be hidden.
-pub struct ToggleNamedScratchPad(&'static str);
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct ToggleNamedScratchPad {
+    name: &'static str,
+    run_hook_on_toggle: bool,
+}
 
 impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
+    #[tracing::instrument(level = "debug", skip(state, x))]
     fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        let s = state.extension::<NamedScratchPadState<X>>()?;
-        let name = self.0;
+        let _s = state.extension::<NamedScratchPadState<X>>()?;
+        let mut s = _s.borrow_mut();
+        let name = self.name;
 
-        let id = match s.borrow_mut().0.get_mut(&name) {
+        let (id, hook) = match s.0.get_mut(&name) {
             // Active client somewhere in the StackSet
             Some(NamedScratchPad {
-                client: Some(id), ..
-            }) if state.client_set.contains(id) => *id,
+                client: Some(id),
+                hook,
+                ..
+            }) if state.client_set.contains(id) => (*id, hook),
 
             // No active client or client is no longer in state
             Some(nsp) => {
@@ -131,27 +146,28 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
             }
         };
 
-        toggle(id, state, x)
-    }
-}
+        debug!(
+            current_tag = state.client_set.current_tag(),
+            current_screen = state.client_set.current_screen().index(),
+            "Toggling nsp client"
+        );
 
-#[tracing::instrument(level = "debug", skip(state, x))]
-fn toggle<X: XConn>(id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-    debug!(
-        current_tag = state.client_set.current_tag(),
-        current_screen = state.client_set.current_screen().index(),
-        "Toggling nsp client"
-    );
-
-    x.modify_and_refresh(state, |cs| {
-        if cs.current_workspace().contains(&id) {
+        if state.client_set.current_workspace().contains(&id) {
             // Toggle off: hiding the client on our invisible workspace
             debug!("current workspace contains target client: moving to NSP tag");
-            cs.move_client_to_tag(&id, NSP_TAG);
+            state.client_set.move_client_to_tag(&id, NSP_TAG);
         } else {
             // Toggle on / bring to current workspace
             debug!("current workspace does not contain target client: moving to tag");
-            cs.move_client_to_current_tag(&id);
+            state.client_set.move_client_to_current_tag(&id);
+
+            if self.run_hook_on_toggle {
+                if let Err(e) = hook.call(id, state, x) {
+                    error!(%e, %name, "unable to run NSP manage hook during toggle");
+                }
+            }
         }
-    })
+
+        x.refresh(state)
+    }
 }
