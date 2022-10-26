@@ -9,14 +9,15 @@
 //! to modify the support, each of the individual hooks can be found in
 //! `penrose::extensions::hooks::ewmh`.
 use penrose::{
+    builtin::layout::{
+        messages::common::{ExpandMain, IncMain, ShrinkMain},
+        transformers::{Gaps, ReflectHorizontal, ReserveTop},
+        MainAndStack,
+    },
     core::{
         actions::{modify_with, send_layout_message, spawn},
         bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-        layout::{
-            messages::common::{ExpandMain, IncMain, ShrinkMain},
-            transformers::{Gaps, ReflectHorizontal, ReserveTop},
-            LayoutStack, MainAndStack,
-        },
+        layout::LayoutStack,
         Config, WindowManager,
     },
     extensions::{

@@ -244,6 +244,7 @@ impl<T> Stack<T> {
         self
     }
 
+    /// Move focus to the element in the head position
     pub fn focus_head(&mut self) -> &mut Self {
         let mut head = match self.up.pop_back() {
             None => return self, // focus is already head

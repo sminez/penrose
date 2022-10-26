@@ -220,6 +220,15 @@ where
         self.floating.remove(client)
     }
 
+    /// Check whether a given tag currently has any floating windows present.
+    ///
+    /// Returns false if the tag given is unknown to this StackSet.
+    pub fn has_floating_windows(&self, tag: impl AsRef<str>) -> bool {
+        self.workspace(tag.as_ref())
+            .map(|w| w.clients().any(|c| self.floating.contains_key(c)))
+            .unwrap_or(false)
+    }
+
     /// Delete a client from this [StackSet].
     pub fn remove_client(&mut self, client: &C) -> Option<C> {
         self.sink(client); // Clear any floating information we might have
@@ -662,6 +671,7 @@ macro_rules! defer_to_current_stack {
             C: Clone + PartialEq + Eq + Hash
         {
             $(
+                $(#[$doc_str])*
                 pub fn $method(&mut self) {
                     if let Some(ref mut stack) = self.screens.focus.workspace.stack {
                         stack.$method();
@@ -696,7 +706,17 @@ defer_to_current_stack!(
     /// Rotate all elements of the stack back, wrapping from bottom to top.
     /// The currently focused position in the stack is maintained by this operation.
     /// This is a no-op if the current stack is empty.
-    rotate_down
+    rotate_down,
+    /// Rotate the Stack until the current focused element is in the head position.
+    /// This is a no-op if the current stack is empty.
+    rotate_focus_to_head,
+    /// Move focus to the element in the head position.
+    /// This is a no-op if the current stack is empty.
+    focus_head,
+    /// Swap the current head element with the focused element in the
+    /// stack order. Focus stays with the original focused element.
+    /// This is a no-op if the current stack is empty.
+    swap_focus_and_head
 );
 
 #[cfg(test)]
@@ -919,42 +939,6 @@ pub mod tests {
         assert_eq!(s.current_client(), Some(&4));
     }
 
-    #[test]
-    fn visible_client_positions_floating_windows_are_returned_last() {
-        let mut s = test_xid_stack_set(5, 2);
-
-        for n in 1..6 {
-            s.insert(Xid(n));
-        }
-
-        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
-        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
-
-        let positions = s.visible_client_positions();
-        let ids: Vec<u32> = positions.iter().map(|&(id, _)| *id).collect();
-
-        assert_eq!(ids, vec![1, 4, 5, 3, 2]);
-    }
-
-    #[test]
-    fn visible_client_positions_newly_added_windows_are_below_floating() {
-        let mut s = test_xid_stack_set(5, 2);
-
-        for n in 1..6 {
-            s.insert(Xid(n));
-        }
-
-        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
-        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
-
-        s.insert(Xid(6));
-
-        let positions = s.visible_client_positions();
-        let ids: Vec<u32> = positions.iter().map(|&(id, _)| *id).collect();
-
-        assert_eq!(ids, vec![1, 4, 5, 6, 3, 2]);
-    }
-
     #[test_case(1, "1"; "current focus to current tag")]
     #[test_case(2, "1"; "from current tag to current tag")]
     #[test_case(6, "1"; "from other tag to current tag")]
@@ -977,6 +961,71 @@ pub mod tests {
         s.move_client_to_tag(&client, tag);
 
         assert_eq!(s.workspace(tag).unwrap().focus(), Some(&client));
+    }
+
+    mod visible_client_positions {
+        use super::*;
+
+        fn stack_order(s: &mut StackSet<Xid>) -> Vec<u32> {
+            let positions = s.visible_client_positions();
+            positions.iter().map(|&(id, _)| *id).collect()
+        }
+
+        #[test]
+        fn floating_windows_are_returned_last() {
+            let mut s = test_xid_stack_set(5, 2);
+
+            for n in 1..6 {
+                s.insert(Xid(n));
+            }
+
+            s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
+            s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+
+            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 3, 2]);
+        }
+
+        #[test]
+        fn newly_added_windows_are_below_floating() {
+            let mut s = test_xid_stack_set(5, 2);
+
+            for n in 1..6 {
+                s.insert(Xid(n));
+            }
+
+            s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
+            s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+
+            s.insert(Xid(6));
+
+            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 6, 3, 2]);
+        }
+
+        #[test]
+        fn floating_clients_dont_break_insert_focus() {
+            let mut s = test_xid_stack_set(1, 1);
+
+            s.insert_at(Position::Focus, Xid(0));
+            s.float_unchecked(Xid(0), Rect::new(0, 0, 42, 42));
+
+            assert_eq!(s.current_client(), Some(&Xid(0)));
+
+            // Each time we add a client it should be the focus
+            // and the floating window should be stacked above
+            // all others.
+            let mut expected = vec![0];
+            for n in 1..=5 {
+                s.insert_at(Position::Focus, Xid(n));
+                assert_eq!(s.current_client(), Some(&Xid(n)));
+
+                // Tiled position ordering is reversed in visible_client_positions
+                // in order to ensure that when we restack, the order returned
+                // is from bottom -> top of the stack to make `restack` simpler to
+                // implement.
+                expected.insert(expected.len() - 1, n);
+                assert_eq!(stack_order(&mut s), expected, "{:?}", s.current_stack());
+            }
+        }
     }
 }
 

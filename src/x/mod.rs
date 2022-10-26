@@ -1,7 +1,7 @@
 use crate::{
+    builtin::layout::messages::control::Hide,
     core::{
         bindings::{KeyCode, MouseState},
-        layout::messages::control::Hide,
         ClientSet, Config, State,
     },
     pure::geometry::{Point, Rect},
@@ -382,7 +382,19 @@ fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
 
     if !matches!(state.current_event, Some(XEvent::Enter(_))) {
         if let Some(&id) = state.diff.focused_client() {
-            if state.diff.focused_client_changed() {
+            // If the current workspace has any floating windows then warping the
+            // cursor is not guaranteed to land us in the target window, which in
+            // turn can lead to unexpected focus issues.
+            // We _could_ attempt to be a lot smarter here and re-examine the floating
+            // positions looking for any overlap of free screen space to move the
+            // cursor to but that then leads to a lot of additional complexity while
+            // still not providing any guaranteed behaviour. The simplest thing to
+            // do (that is also the easiest to reason about) is to just not move the
+            // cursor at all if there are any floating windows present.
+            let tag = state.client_set.current_tag();
+            let has_floating = state.client_set.has_floating_windows(tag);
+
+            if state.diff.focused_client_changed() && !has_floating {
                 x.warp_pointer_to_window(id)?;
             }
         } else if let Some(index) = state.diff.newly_focused_screen() {

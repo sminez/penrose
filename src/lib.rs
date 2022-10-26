@@ -8,6 +8,7 @@ use ::x11rb::{
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 
+pub mod builtin;
 pub mod core;
 pub mod extensions;
 pub mod macros;

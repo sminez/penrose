@@ -1,9 +1,28 @@
-//! Macros primarily intended for shared internal use within penrose.
+//! Utility macros
 
-/// Make creating a HashMap a little less verbose
+/// Quickly create a [penrose::Error::Custom]
+/// ```
+/// # use penrose::custom_error;
+/// let err = custom_error!("a simple error message");
+///
+/// let s = "templated";
+/// let err = custom_error!("a {} error message", s);
+/// ```
+#[macro_export]
+macro_rules! custom_error {
+    ($msg:expr) => {
+        $crate::Error::Custom($msg.to_string())
+    };
+
+    ($template:expr, $($arg:expr),+) => {
+        $crate::Error::Custom(format!($template, $($arg),+))
+    };
+}
+
+/// Make creating a pre-defined HashMap a little less verbose
 ///
 /// ```
-/// # #[macro_use] extern crate penrose;
+/// # use penrose::map;
 /// map! {
 ///     1 => "one",
 ///     2 => "two",
@@ -39,9 +58,9 @@ macro_rules! map {
 #[macro_export]
 macro_rules! pop_where {
     ($self:ident, $lst:ident, $($pred:tt)+) => {{
-        let placeholder = std::mem::take(&mut $self.$lst);
+        let placeholder = ::std::mem::take(&mut $self.$lst);
 
-        let mut remaining = std::collections::LinkedList::default();
+        let mut remaining = ::std::collections::LinkedList::default();
         let mut popped = None;
         let pred = $($pred)+;
 
@@ -53,7 +72,7 @@ macro_rules! pop_where {
             }
         }
 
-        std::mem::swap(&mut $self.$lst, &mut remaining);
+        ::std::mem::swap(&mut $self.$lst, &mut remaining);
 
         popped
     }};
