@@ -1,3 +1,5 @@
+//! Macros primarily intended for shared internal use within penrose.
+
 /// Make creating a HashMap a little less verbose
 ///
 /// ```
@@ -30,4 +32,29 @@ macro_rules! map {
             _map
         }
     };
+}
+
+// Helper for popping from the middle of a linked list
+#[doc(hidden)]
+#[macro_export]
+macro_rules! pop_where {
+    ($self:ident, $lst:ident, $($pred:tt)+) => {{
+        let placeholder = std::mem::take(&mut $self.$lst);
+
+        let mut remaining = std::collections::LinkedList::default();
+        let mut popped = None;
+        let pred = $($pred)+;
+
+        for item in placeholder.into_iter() {
+            if pred(&item) {
+                popped = Some(item);
+            } else {
+                remaining.push_back(item);
+            }
+        }
+
+        std::mem::swap(&mut $self.$lst, &mut remaining);
+
+        popped
+    }};
 }

@@ -1,5 +1,6 @@
 use crate::{
     core::layout::{Layout, LayoutStack},
+    pop_where,
     pure::{
         diff::{ScreenState, Snapshot},
         geometry::Rect,
@@ -12,31 +13,6 @@ use std::{
     hash::Hash,
     mem::{swap, take},
 };
-
-// Helper for popping from the middle of a linked list
-#[doc(hidden)]
-#[macro_export]
-macro_rules! pop_where {
-    ($self:ident, $lst:ident, $($pred:tt)+) => {{
-        let placeholder = take(&mut $self.$lst);
-
-        let mut remaining = LinkedList::default();
-        let mut popped = None;
-        let pred = $($pred)+;
-
-        for item in placeholder.into_iter() {
-            if pred(&item) {
-                popped = Some(item);
-            } else {
-                remaining.push_back(item);
-            }
-        }
-
-        swap(&mut $self.$lst, &mut remaining);
-
-        popped
-    }};
-}
 
 /// The side-effect free internal state representation of the window manager.
 #[derive(Default, Debug, Clone)]
