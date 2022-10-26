@@ -162,6 +162,35 @@ impl Layout for MainAndStack {
     }
 }
 
+/// A simple monolce layout that gives the maximum available space to the currently
+/// focused client and unmaps all other windows.
+#[derive(Debug, Clone, Copy)]
+pub struct Monocle;
+
+impl Monocle {
+    pub fn boxed() -> Box<dyn Layout> {
+        Box::new(Monocle)
+    }
+}
+
+impl Layout for Monocle {
+    fn name(&self) -> String {
+        "mono".to_owned()
+    }
+
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Self::boxed()
+    }
+
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        (None, vec![(s.focus, r)])
+    }
+
+    fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
