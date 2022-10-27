@@ -6,9 +6,13 @@ use crate::{
         layout::LayoutStack,
         State,
     },
+    custom_error,
+    extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch},
     util::spawn,
     x::{atom::Atom, property::Prop, XConn, XConnExt},
+    Xid,
 };
+use std::collections::HashMap;
 use tracing::{error, info};
 
 /// Exit penrose
@@ -44,7 +48,7 @@ pub fn create_or_switch_to_workspace<X>(
     layouts: LayoutStack,
 ) -> Box<dyn KeyEventHandler<X>>
 where
-    X: XConn + std::fmt::Debug,
+    X: XConn,
 {
     modify_with(move |cs| {
         if let Some(name) = get_name() {
@@ -64,7 +68,7 @@ where
 /// having to remember where things are running.
 pub fn focus_or_spawn<X>(class: &'static str, command: &'static str) -> Box<dyn KeyEventHandler<X>>
 where
-    X: XConn + std::fmt::Debug,
+    X: XConn,
 {
     key_handler(move |s: &mut State<X>, x: &X| {
         let mut client = None;
@@ -85,5 +89,36 @@ where
                 error!(%e, %command, "unable to spawn program")
             }
         })
+    })
+}
+
+/// Use [DMenu] to dynamically select and focus a client window.
+pub fn dmenu_focus_client<X: XConn>(config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
+    key_handler(move |state: &mut State<X>, x: &X| {
+        let choices: HashMap<String, Xid> = state
+            .client_set
+            .iter_workspaces()
+            .filter(|w| !state.client_set.invisible_tags.iter().any(|t| t == w.tag()))
+            .flat_map(|w| {
+                w.clients().map(|&c| {
+                    let title = x.window_title(c).unwrap_or_else(|_| (*c).to_string());
+
+                    (format!("{}: {}", w.tag(), title), c)
+                })
+            })
+            .collect();
+
+        let menu = DMenu::new("Window:", choices.keys().collect(), config);
+        let screen = state.client_set.current_screen().index();
+
+        if let MenuMatch::Line(_, s) = menu.run(screen)? {
+            let id = choices
+                .get(&s)
+                .ok_or_else(|| custom_error!("unexpected dmenu output: {}", s))?;
+
+            x.modify_and_refresh(state, |cs| cs.focus_client(id))?;
+        }
+
+        Ok(())
     })
 }

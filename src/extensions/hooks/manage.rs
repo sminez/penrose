@@ -2,9 +2,26 @@
 use crate::{
     core::{hooks::ManageHook, State},
     pure::geometry::Rect,
-    x::{XConn, XConnExt},
+    x::{Query, XConn, XConnExt},
     Result, Xid,
 };
+
+// A tuple of (query, manage hook) runs conditionally if the query holds
+// for the window being managed.
+impl<X, Q, H> ManageHook<X> for (Q, H)
+where
+    X: XConn,
+    Q: Query<X>,
+    H: ManageHook<X>,
+{
+    fn call(&mut self, id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+        if self.0.run(id, x)? {
+            self.1.call(id, state, x)?;
+        }
+
+        Ok(())
+    }
+}
 
 fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, x: &X) -> Result<()> {
     x.modify_and_refresh(state, |cs| cs.float_unchecked(client, r))

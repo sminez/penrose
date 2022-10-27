@@ -19,7 +19,7 @@ pub enum MenuMatch {
 }
 
 /// Config for running a [DMenu] selection
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct DMenuConfig {
     /// Should line numbers be displayed to the user?
     ///
