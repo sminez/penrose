@@ -391,10 +391,17 @@ fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
             // still not providing any guaranteed behaviour. The simplest thing to
             // do (that is also the easiest to reason about) is to just not move the
             // cursor at all if there are any floating windows present.
+            //
+            // NOTE: Some of the behaviour here is based on looking at whether or
+            //       not the focused client has changed position as part of this
+            //       diff. That is going to cause issues if and when mouse based
+            //       window movement is implemented.
             let tag = state.client_set.current_tag();
             let has_floating = state.client_set.has_floating_windows(tag);
+            let focus_changed = state.diff.focused_client_changed();
+            let focused_client_moved = state.diff.client_changed_position(&id);
 
-            if state.diff.focused_client_changed() && !has_floating {
+            if !has_floating && (focus_changed || focused_client_moved) {
                 x.warp_pointer_to_window(id)?;
             }
         } else if let Some(index) = state.diff.newly_focused_screen() {

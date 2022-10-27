@@ -83,6 +83,15 @@ where
         self.before.focused_client != self.after.focused_client
     }
 
+    pub fn client_changed_position(&self, id: &C) -> bool {
+        let mut it = self.before.positions.iter();
+        let before = it.find(|&(c, _)| c == id).map(|(_, r)| *r);
+        let mut it = self.after.positions.iter();
+        let after = it.find(|&(c, _)| c == id).map(|(_, r)| *r);
+
+        before != after
+    }
+
     pub fn newly_focused_screen(&self) -> Option<usize> {
         if self.before.focused.screen != self.after.focused.screen {
             Some(self.after.focused.screen)
@@ -147,6 +156,7 @@ where
 mod tests {
     use super::*;
     use crate::pure::stack_set::tests::test_stack_set;
+    use simple_test_case::test_case;
 
     #[test]
     fn diff_of_unchanged_stackset_is_empty() {
@@ -157,6 +167,20 @@ mod tests {
         let diff = Diff::new(ss.clone(), ss);
 
         assert!(diff.is_empty())
+    }
+
+    #[test_case(Rect::new(0, 0, 10, 20), false; "unchanged")]
+    #[test_case(Rect::new(0, 0, 20, 30), true; "changed")]
+    #[test]
+    fn client_changed_position_works(r: Rect, expected: bool) {
+        let mut s = test_stack_set(1, 1);
+        s.insert(1);
+        let before = s.snapshot(vec![(1, Rect::new(0, 0, 10, 20))]);
+        let after = s.snapshot(vec![(1, r)]);
+
+        let diff = Diff::new(before, after);
+
+        assert_eq!(diff.client_changed_position(&1), expected)
     }
 }
 
