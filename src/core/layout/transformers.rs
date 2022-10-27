@@ -1,5 +1,5 @@
 use crate::{
-    builtin::layout::messages::common::UnwrapTransformer,
+    builtin::layout::messages::UnwrapTransformer,
     core::layout::{messages::Message, Layout},
     pure::{geometry::Rect, Stack},
     Xid,

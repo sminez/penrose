@@ -3,7 +3,7 @@
 //! Layouts can be wrapped with transformers that modify their behaviour.
 use penrose::{
     builtin::layout::{
-        messages::common::{ExpandMain, IncMain, ShrinkMain},
+        messages::{ExpandMain, IncMain, ShrinkMain},
         transformers::{Gaps, ReflectHorizontal},
         MainAndStack,
     },

@@ -1,5 +1,5 @@
 use crate::{
-    builtin::layout::messages::control::Hide,
+    builtin::layout::messages::Hide,
     core::{
         bindings::{KeyCode, MouseState},
         ClientSet, Config, State,

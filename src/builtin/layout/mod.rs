@@ -1,6 +1,6 @@
 //! Built-in layouts.
 use crate::{
-    builtin::layout::messages::common::{ExpandMain, IncMain, Rotate, ShrinkMain},
+    builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
     core::layout::{messages::Message, Layout},
     pure::{geometry::Rect, Stack},
     Xid,
@@ -30,33 +30,54 @@ pub struct MainAndStack {
     max_main: u32,
     ratio: f32,
     ratio_step: f32,
+    mirrored: bool,
 }
 
 impl MainAndStack {
     pub fn side(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
-        Box::new(Self::side_unboxed(max_main, ratio, ratio_step))
+        Box::new(Self::side_unboxed(max_main, ratio, ratio_step, false))
     }
 
-    pub fn side_unboxed(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
+    pub fn side_mirrored(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Self::side_unboxed(max_main, ratio, ratio_step, true))
+    }
+
+    pub fn side_unboxed(max_main: u32, ratio: f32, ratio_step: f32, mirrored: bool) -> Self {
         Self {
             pos: StackPosition::Side,
             max_main,
             ratio,
             ratio_step,
+            mirrored,
         }
     }
 
     pub fn bottom(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
-        Box::new(Self::bottom_unboxed(max_main, ratio, ratio_step))
+        Box::new(Self::bottom_unboxed(max_main, ratio, ratio_step, false))
     }
 
-    pub fn bottom_unboxed(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
+    pub fn bottom_mirrored(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Self::bottom_unboxed(max_main, ratio, ratio_step, true))
+    }
+
+    pub fn bottom_unboxed(max_main: u32, ratio: f32, ratio_step: f32, mirrored: bool) -> Self {
         Self {
             pos: StackPosition::Bottom,
             max_main,
             ratio,
             ratio_step,
+            mirrored,
         }
+    }
+
+    fn split(&self, d: u32) -> u32 {
+        let ratio = if self.mirrored {
+            1.0 - self.ratio
+        } else {
+            self.ratio
+        };
+
+        ((d as f32) * ratio) as u32
     }
 
     fn layout_side(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
@@ -66,9 +87,12 @@ impl MainAndStack {
             // In both cases we have all windows in a single stack (all main or all secondary)
             r.as_rows(n).iter().zip(s).map(|(r, c)| (*c, *r)).collect()
         } else {
-            // We have two stacks so split the secreen in two and then build a stack for each
-            let split = ((r.w as f32) * self.ratio) as u32;
-            let (main, stack) = r.split_at_width(split).unwrap();
+            // We have two stacks so split the screen in two and then build a stack for each
+            let split = self.split(r.w);
+            let (mut main, mut stack) = r.split_at_width(split).expect("split point to be valid");
+            if self.mirrored {
+                (main, stack) = (stack, main);
+            }
 
             main.as_rows(self.max_main)
                 .into_iter()
@@ -89,8 +113,11 @@ impl MainAndStack {
                 .map(|(r, c)| (*c, *r))
                 .collect()
         } else {
-            let split = ((r.h as f32) * self.ratio) as u32;
-            let (main, stack) = r.split_at_height(split).unwrap();
+            let split = self.split(r.h);
+            let (mut main, mut stack) = r.split_at_height(split).expect("split point to be valid");
+            if self.mirrored {
+                (main, stack) = (stack, main);
+            }
 
             main.as_columns(self.max_main)
                 .into_iter()
@@ -109,15 +136,18 @@ impl Default for MainAndStack {
             max_main: 1,
             ratio: 0.6,
             ratio_step: 0.1,
+            mirrored: false,
         }
     }
 }
 
 impl Layout for MainAndStack {
     fn name(&self) -> String {
-        match self.pos {
-            StackPosition::Side => "SideStack".to_owned(),
-            StackPosition::Bottom => "BottomStack".to_owned(),
+        match (self.pos, self.mirrored) {
+            (StackPosition::Side, false) => "Side".to_owned(),
+            (StackPosition::Side, true) => "Mirror".to_owned(),
+            (StackPosition::Bottom, false) => "Bottom".to_owned(),
+            (StackPosition::Bottom, true) => "Top".to_owned(),
         }
     }
 
@@ -151,6 +181,8 @@ impl Layout for MainAndStack {
             } else {
                 self.max_main += n as u32;
             }
+        } else if let Some(&Mirror) = m.downcast_ref() {
+            self.mirrored = !self.mirrored;
         } else if let Some(&Rotate) = m.downcast_ref() {
             self.pos = match self.pos {
                 StackPosition::Side => StackPosition::Bottom,
@@ -194,13 +226,13 @@ impl Layout for Monocle {
 #[cfg(test)]
 mod tests {
     use crate::{
-        builtin::layout::{messages::common::IncMain, *},
+        builtin::layout::{messages::IncMain, *},
         core::layout::messages::IntoMessage,
     };
 
     #[test]
     fn message_handling() {
-        let mut l = MainAndStack::side_unboxed(1, 0.6, 0.1);
+        let mut l = MainAndStack::side_unboxed(1, 0.6, 0.1, false);
 
         l.handle_message(&IncMain(2).into_message());
 

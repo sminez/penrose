@@ -1,4 +1,9 @@
-//! Built-in layout messages
+//! Built-in layout messages.
+//!
+//! It is not a hard requirement for [Layout] implementations to handle each
+//! of the messages provided by this module but wherever possible you should
+//! attempt to do so if the semantics of the message make sense for the
+//! layout you are writing.
 
 macro_rules! msg {
     ($m:ident) => {
@@ -6,38 +11,38 @@ macro_rules! msg {
     };
 }
 
-/// Messages for common [Layout] operations.
-pub mod common {
-    /// Alter the number of clients contained in the main area of the [Layout]
-    pub struct IncMain(pub i8);
-    msg!(IncMain);
+/// Alter the number of clients contained in the main area of the [Layout].
+pub struct IncMain(pub i8);
+msg!(IncMain);
 
-    /// Expand the size of the main area of the [Layout]
-    pub struct ExpandMain;
-    msg!(ExpandMain);
+/// Expand the size of the main area of the [Layout].
+pub struct ExpandMain;
+msg!(ExpandMain);
 
-    /// Shrink the size of the main area of the [Layout]
-    pub struct ShrinkMain;
-    msg!(ShrinkMain);
+/// Shrink the size of the main area of the [Layout]
+pub struct ShrinkMain;
+msg!(ShrinkMain);
 
-    /// Rotate the [Layout] to a new orientation
-    pub struct Rotate;
-    msg!(Rotate);
+/// Rotate the [Layout] to a new orientation
+pub struct Rotate;
+msg!(Rotate);
 
-    /// Unwrap a [LayoutTransformer] to return the underlying [Layout]
-    pub struct UnwrapTransformer;
-    msg!(UnwrapTransformer);
-}
+/// Mirror the [Layout] over either the horizontal or vertical axis.
+pub struct Mirror;
+msg!(Mirror);
 
-/// Control messages sent by Penrose itself during window manager operation. All layouts
-/// (particularly those that are maintaing additional state) should consider handling these.
-pub mod control {
-    /// A [Message] sent when a [Layout] is no longer visible (e.g. Layout changed on a visible
-    /// [Workspace] or the workspace itself becoming hidden).
-    pub struct Hide;
-    msg!(Hide);
+/// Unwrap a [LayoutTransformer] to return the underlying [Layout].
+///
+/// Handling of this message is provided automatically by the [LayoutTransformer]
+/// trait.
+pub struct UnwrapTransformer;
+msg!(UnwrapTransformer);
 
-    /// A [Message] sent when Penrose is shutting down or restarting.
-    pub struct ShutDown;
-    msg!(ShutDown);
-}
+/// A [Message] sent when a [Layout] is no longer visible (e.g. Layout changed on a visible
+/// [Workspace] or the workspace itself becoming hidden).
+pub struct Hide;
+msg!(Hide);
+
+/// A [Message] sent when Penrose is shutting down or restarting.
+pub struct ShutDown;
+msg!(ShutDown);

@@ -10,7 +10,7 @@
 //! `penrose::extensions::hooks::ewmh`.
 use penrose::{
     builtin::layout::{
-        messages::common::{ExpandMain, IncMain, ShrinkMain},
+        messages::{ExpandMain, IncMain, ShrinkMain},
         transformers::{Gaps, ReflectHorizontal, ReserveTop},
         MainAndStack,
     },
