@@ -380,8 +380,10 @@ fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
         return Ok(());
     }
 
+    debug!("checking if focus should change");
     if !matches!(state.current_event, Some(XEvent::Enter(_))) {
         if let Some(&id) = state.diff.focused_client() {
+            debug!("focused client changed");
             // If the current workspace has any floating windows then warping the
             // cursor is not guaranteed to land us in the target window, which in
             // turn can lead to unexpected focus issues.
@@ -402,9 +404,14 @@ fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
             let focused_client_moved = state.diff.client_changed_position(&id);
 
             if !has_floating && (focus_changed || focused_client_moved) {
+                debug!(
+                    focus_changed,
+                    focused_client_moved, "warping to focused client"
+                );
                 x.warp_pointer_to_window(id)?;
             }
         } else if let Some(index) = state.diff.newly_focused_screen() {
+            debug!(index, "screen changed: warping to screen");
             x.warp_pointer_to_screen(state, index)?;
         }
     }

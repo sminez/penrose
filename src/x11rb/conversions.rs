@@ -84,12 +84,14 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
             id: Xid(event.event),
             abs: Point::new(event.root_x as u32, event.root_y as u32),
             relative: Point::new(event.event_x as u32, event.event_y as u32),
+            same_screen: event.same_screen_focus == 0,
         }))),
 
         Event::LeaveNotify(event) => Ok(Some(XEvent::Leave(PointerChange {
             id: Xid(event.event),
             abs: Point::new(event.root_x as u32, event.root_y as u32),
             relative: Point::new(event.event_x as u32, event.event_y as u32),
+            same_screen: event.same_screen_focus == 0,
         }))),
 
         Event::DestroyNotify(event) => Ok(Some(XEvent::Destroy(Xid(event.window)))),

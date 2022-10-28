@@ -7,7 +7,7 @@ use crate::{
     pure::{geometry::Point, Workspace},
     x::{
         atom::Atom,
-        event::{ClientMessage, ClientMessageKind},
+        event::{ClientMessage, ClientMessageKind, PointerChange},
         property::{Prop, WmHints},
         XConn, XConnExt,
     },
@@ -176,26 +176,35 @@ where
     Ok(())
 }
 
-pub(crate) fn enter<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
-    let focus_follow_mouse = state.config.focus_follow_mouse;
-
-    x.modify_and_refresh(state, |cs| {
-        if focus_follow_mouse {
-            cs.focus_client(&client);
-        }
-    })
-}
-
-pub(crate) fn leave<X>(client: Xid, p: Point, state: &mut State<X>, x: &X) -> Result<()>
+pub(crate) fn enter<X>(
+    PointerChange { id, .. }: PointerChange,
+    state: &mut State<X>,
+    x: &X,
+) -> Result<()>
 where
     X: XConn,
 {
     if state.config.focus_follow_mouse {
-        x.set_client_border_color(client, state.config.normal_border)?;
-        set_screen_from_point(p, state, x)?;
+        x.modify_and_refresh(state, |cs| {
+            cs.focus_client(&id);
+        })
+    } else {
+        Ok(())
+    }
+}
+
+pub(crate) fn leave<X>(
+    PointerChange {
+        id, same_screen, ..
+    }: PointerChange,
+    state: &mut State<X>,
+    x: &X,
+) -> Result<()>
+where
+    X: XConn,
+{
+    if id == state.root() && !same_screen {
+        x.focus(id)?;
     }
 
     Ok(())

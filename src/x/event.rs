@@ -291,7 +291,7 @@ pub struct ExposeEvent {
 
 /// A notification that the mouse pointer has entered or left a window
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointerChange {
     /// The ID of the window that was entered
     pub id: Xid,
@@ -299,6 +299,8 @@ pub struct PointerChange {
     pub abs: Point,
     /// Coordinate of the event relative to top-left of the window itself
     pub relative: Point,
+    /// Whether or not the event window is on the same screen as the root window
+    pub same_screen: bool,
 }
 
 /// A property change on a known client
