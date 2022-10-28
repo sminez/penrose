@@ -121,6 +121,10 @@ where
         let current_tag = self.screens.focus.workspace.tag.clone();
         let tag = tag.as_ref();
 
+        if current_tag == tag {
+            return; // already focused
+        }
+
         // If the tag is visible on another screen, focus moves to that screen
         loop {
             self.screens.focus_down();

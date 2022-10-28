@@ -13,7 +13,7 @@ use crate::{
     },
     Result, StackSet,
 };
-use std::{mem::take, str::FromStr};
+use std::mem::take;
 use tracing::{error, trace};
 
 // fn is_fullscreen<X>(data: &[u32], x: &X) -> bool
@@ -26,40 +26,14 @@ use tracing::{error, trace};
 //         .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
 // }
 
-pub(crate) fn client_message<X>(msg: ClientMessage, state: &mut State<X>, x: &X) -> Result<()>
+pub(crate) fn client_message<X>(msg: ClientMessage, _: &mut State<X>, _: &X) -> Result<()>
 where
     X: XConn,
 {
     let data = &msg.data;
     trace!(id = msg.id.0, dtype = ?msg.dtype, ?data, "got client message");
 
-    match Atom::from_str(&msg.dtype) {
-        // Focus the requested window
-        Ok(Atom::NetActiveWindow) => x.set_active_client(msg.id, state),
-
-        // Focus the requested workspace by ID
-        Ok(Atom::NetCurrentDesktop) => x.modify_and_refresh(state, |cs| {
-            if let Some(t) = cs.tag_for_workspace_id(data.as_usize()[0]) {
-                cs.focus_tag(&t);
-            }
-        }),
-
-        // Move the target client to the requested workspace by ID
-        Ok(Atom::NetWmDesktop) => x.modify_and_refresh(state, |cs| {
-            if let Some(t) = cs.tag_for_workspace_id(data.as_usize()[0]) {
-                cs.move_client_to_tag(&msg.id, &t);
-            }
-        }),
-
-        // Toggle the requested client fullscreen
-        // Ok(Atom::NetWmState) if is_fullscreen(&data.as_u32()[1..3], x) => {
-        //     // _NET_WM_STATE_ADD == 1, _NET_WM_STATE_TOGGLE == 2
-        //     x.set_fullscreen(msg.id, [1, 2].contains(&data.as_u32()[0]), state);
-        // }
-
-        // NOTE: all other client message types are ignored
-        _ => Ok(()),
-    }
+    Ok(())
 }
 
 pub(crate) fn keypress<X>(
