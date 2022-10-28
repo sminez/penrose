@@ -12,8 +12,7 @@ impl<C> Screen<C> {
         self.index
     }
 
-    // TODO: add logic for reserving space for a bar etc
-    pub fn visible_rect(&self) -> Rect {
+    pub fn geometry(&self) -> Rect {
         self.r
     }
 }

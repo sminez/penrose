@@ -93,10 +93,6 @@ impl LayoutTransformer for Gaps {
         &mut self.layout
     }
 
-    fn unwrap(self) -> Box<dyn Layout> {
-        self.layout
-    }
-
     fn transform_initial(&self, r: Rect) -> Rect {
         shrink(r, self.outer_px)
     }
@@ -131,10 +127,6 @@ impl LayoutTransformer for ReserveTop {
 
     fn inner_mut(&mut self) -> &mut Box<dyn Layout> {
         &mut self.layout
-    }
-
-    fn unwrap(self) -> Box<dyn Layout> {
-        self.layout
     }
 
     fn transform_initial(&self, mut r: Rect) -> Rect {

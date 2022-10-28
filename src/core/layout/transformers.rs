@@ -1,5 +1,5 @@
 use crate::{
-    builtin::layout::messages::UnwrapTransformer,
+    builtin::layout::{messages::UnwrapTransformer, Monocle},
     core::layout::{messages::Message, Layout},
     pure::{geometry::Rect, Stack},
     Xid,
@@ -23,7 +23,15 @@ pub trait LayoutTransformer: Clone + Sized + 'static {
     }
 
     /// Remove the inner [Layout] from this [LayoutTransformer].
-    fn unwrap(self) -> Box<dyn Layout>;
+    ///
+    /// The default implementation of this method simply swaps the built-in [Monocle]
+    /// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better
+    /// implementation is possible then it should be implemented but this default will
+    /// give the correct behaviour when [LayoutTransformer::handle_message] receives
+    /// an [UnwrapTransformer] message.
+    fn unwrap(&mut self) -> Box<dyn Layout> {
+        self.swap_inner(Box::new(Monocle))
+    }
 
     /// Modify the initial [Rect] that will be passed to the inner [Layout].
     ///
@@ -102,45 +110,11 @@ where
     }
 
     fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
-        // TODO: find a nicer way to do this
         if let Some(&UnwrapTransformer) = m.downcast_ref() {
-            return Some(self.swap_inner(Box::new(NullLayout)));
+            return Some(self.unwrap());
         }
 
         self.passthrough_message(m)
-    }
-}
-
-/// A valid impl of Layout that can be used as a placeholder but will panic if used.
-struct NullLayout;
-impl Layout for NullLayout {
-    fn name(&self) -> String {
-        panic!("Null layout")
-    }
-
-    fn boxed_clone(&self) -> Box<dyn Layout> {
-        panic!("Null layout")
-    }
-
-    fn layout_workspace(
-        &mut self,
-        _: &str,
-        _: &Option<Stack<Xid>>,
-        _: Rect,
-    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        panic!("Null layout")
-    }
-
-    fn layout(&mut self, _: &Stack<Xid>, _: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        panic!("Null layout")
-    }
-
-    fn layout_empty(&mut self, _: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
-        panic!("Null layout")
-    }
-
-    fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
-        panic!("Null layout")
     }
 }
 
@@ -156,7 +130,8 @@ impl Layout for NullLayout {
 /// pub struct MyTransformer(Box<dyn Layout>);
 ///
 /// fn my_transformation_function(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-///     todo!("transformation implementation goes here")
+///     // transformation implementation goes here
+///     positions
 /// }
 ///
 /// simple_transformer!("MyTransform", MyTransformer, my_transformation_function);
@@ -179,10 +154,6 @@ macro_rules! simple_transformer {
 
             fn inner_mut(&mut self) -> &mut Box<dyn $crate::core::layout::Layout> {
                 &mut self.0
-            }
-
-            fn unwrap(self) -> Box<dyn $crate::core::layout::Layout> {
-                self.0
             }
 
             fn transform_positions(

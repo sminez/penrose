@@ -4,7 +4,7 @@ use crate::{
         bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
         State, Xid,
     },
-    pure::geometry::Point,
+    pure::{geometry::Point, Workspace},
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageKind},
@@ -127,8 +127,6 @@ where
         state.pending_unmap.remove(&client);
     }
 
-    // TODO: broadcast to layouts in case they need to know about this client being destroyed?
-
     Ok(())
 }
 
@@ -220,11 +218,21 @@ where
     let mut workspaces: Vec<_> = screens.into_iter().map(|s| s.workspace).collect();
     workspaces.extend(hidden);
 
-    // FIXME: this needs to not hard error. Probably best to pad with some default workspaces
-    //        if there aren't enough already?
-    state.client_set = StackSet::try_new_concrete(workspaces, rects, floating)?;
-    state.client_set.previous_tag = previous_tag;
-    state.client_set.invisible_tags = invisible_tags;
+    // Pad out the workspace list with default workspaces if there aren't enough available
+    // to cover the attached screens.
+    // NOTE: This can still error if we end up with a tag collision because the user has
+    //       named one of there tags with the one we generate based on ID.
+    if workspaces.len() < rects.len() {
+        let n_short = rects.len() - workspaces.len();
+        let next_id = workspaces.iter().map(|w| w.id).max().unwrap_or(0) + 1;
+        workspaces.extend((0..n_short).map(|n| Workspace::new_default(n + next_id)))
+    }
+
+    state.client_set = StackSet {
+        previous_tag,
+        invisible_tags,
+        ..StackSet::try_new_concrete(workspaces, rects, floating)?
+    };
 
     Ok(())
 }

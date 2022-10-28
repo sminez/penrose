@@ -4,6 +4,7 @@ use crate::{
     pure::{
         diff::{ScreenState, Snapshot},
         geometry::Rect,
+        workspace::check_workspace_invariants,
         Position, Screen, Stack, Workspace,
     },
     stack, Error, Result, Xid,
@@ -58,7 +59,7 @@ where
         screen_details: Vec<Rect>,
         floating: HashMap<C, Rect>,
     ) -> Result<Self> {
-        // FIXME: Enforce unique tags
+        check_workspace_invariants(&workspaces)?;
 
         match (workspaces.len(), screen_details.len()) {
             (_, 0) => return Err(Error::NoScreens),
@@ -619,7 +620,7 @@ impl StackSet<Xid> {
         let mut positions: Vec<(Xid, Rect)> = Vec::new();
 
         for s in self.iter_screens_mut() {
-            let r = s.visible_rect();
+            let r = s.geometry();
             let tag = &s.workspace.tag;
             let true_stack = s.workspace.stack.as_ref();
             let tiling = true_stack.and_then(|st| {

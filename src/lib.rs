@@ -51,6 +51,9 @@ pub enum Error {
     #[error("{ty} property '{prop}' for {id} contained invalid data")]
     InvalidPropertyData { id: Xid, ty: String, prop: String },
 
+    #[error("The following tags have been used multiple times for different workspaces: {tags:?}")]
+    NonUniqueTags { tags: Vec<String> },
+
     #[error("There are no screens available")]
     NoScreens,
 

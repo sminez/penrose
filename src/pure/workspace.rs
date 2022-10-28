@@ -1,6 +1,7 @@
 use crate::{
     core::layout::{IntoMessage, LayoutStack},
     pure::Stack,
+    Error, Result,
 };
 
 #[derive(Debug, Clone)]
@@ -32,6 +33,15 @@ impl<C> Workspace<C> {
             tag: tag.into(),
             layouts,
             stack,
+        }
+    }
+
+    // Used for padding workspaces when needed in a rescreen event (see detect_screens in src/core/handle.rs)
+    pub(crate) fn new_default(id: usize) -> Self {
+        Self {
+            id,
+            tag: id.to_string(),
+            ..Self::default()
         }
     }
 
@@ -115,6 +125,28 @@ impl<C: PartialEq> Workspace<C> {
     }
 }
 
+pub(crate) fn check_workspace_invariants<C>(workspaces: &[Workspace<C>]) -> Result<()> {
+    let tags = workspaces.iter().map(|w| &w.tag);
+    let mut seen = vec![];
+    let mut duplicates = vec![];
+
+    for tag in tags {
+        if seen.contains(&tag) {
+            duplicates.push(tag.to_owned());
+        }
+        seen.push(tag);
+    }
+
+    if !duplicates.is_empty() {
+        duplicates.sort();
+        duplicates.dedup();
+
+        return Err(Error::NonUniqueTags { tags: duplicates });
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -131,5 +163,28 @@ mod tests {
 
         assert_eq!(w.remove(&5), maybe_c);
         assert_eq!(w.stack.is_some(), is_some);
+    }
+
+    #[test_case(&["1", "2", "3"], None; "no duplicate tags")]
+    #[test_case(&["1", "2", "3", "2"], Some(&["2"]); "single duplicate")]
+    #[test_case(&["1", "2", "3", "2", "3"], Some(&["2", "3"]); "multiple duplicates")]
+    #[test_case(&["3", "2", "1", "2", "3"], Some(&["2", "3"]); "multiple duplicates sorted")]
+    #[test]
+    fn check_workspace_invariants(tags: &[&str], duplicates: Option<&[&str]>) {
+        let workspaces: Vec<Workspace<u8>> = tags
+            .iter()
+            .enumerate()
+            .map(|(i, tag)| Workspace::new(i, *tag, Default::default(), None))
+            .collect();
+
+        let res = check_workspace_invariants(&workspaces);
+
+        match duplicates {
+            None => assert!(res.is_ok()),
+            Some(expected_tags) => match res {
+                Err(Error::NonUniqueTags { tags }) => assert_eq!(tags, expected_tags),
+                _ => panic!("expected NonUniqueTags, got {res:?}"),
+            },
+        }
     }
 }
