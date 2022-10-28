@@ -17,11 +17,6 @@ impl Point {
     pub fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
-
-    /// Whether or not this [Point] is on the given [Line]
-    pub fn on(&self, l: Line) -> bool {
-        self.x >= l.a.x && self.x <= l.b.x && self.y >= l.a.y && self.y <= l.b.y
-    }
 }
 
 impl From<(u32, u32)> for Point {
@@ -54,47 +49,6 @@ impl From<&Rect> for Point {
         let &Rect { x, y, .. } = r;
 
         Self { x, y }
-    }
-}
-
-/// A directed line segment from `a` to `b`
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct Line {
-    /// The start of the line
-    pub a: Point,
-    /// The end of the line
-    pub b: Point,
-}
-
-impl Line {
-    /// A horizontal line from `a` extending `length` to the right
-    pub fn horizontal<P>(a: P, length: u32) -> Self
-    where
-        P: Into<Point>,
-    {
-        let a = a.into();
-        Self {
-            a,
-            b: Point {
-                x: a.x + length,
-                y: a.y,
-            },
-        }
-    }
-
-    /// A vertical line from `a` extending `length` down
-    pub fn vertical<P>(a: P, length: u32) -> Self
-    where
-        P: Into<Point>,
-    {
-        let a = a.into();
-        Self {
-            a,
-            b: Point {
-                x: a.x,
-                y: a.y + length,
-            },
-        }
     }
 }
 
@@ -153,50 +107,6 @@ impl Rect {
             h: (self.h as f64 * factor).floor() as u32,
             ..*self
         }
-    }
-
-    fn top_and_bottom(&self) -> (Line, Line) {
-        let &Self { x, y, w, h } = self;
-
-        (Line::horizontal((x, y), w), Line::horizontal((x, y + h), w))
-    }
-
-    fn left_and_right(&self) -> (Line, Line) {
-        let &Self { x, y, w, h } = self;
-
-        (Line::vertical((x, y), h), Line::vertical((x + w, y), h))
-    }
-
-    /// Check whether the given point is on the top or bottom edge of this [Rect].
-    pub fn is_on_horizontal_edge<P>(&self, p: P) -> bool
-    where
-        P: Into<Point>,
-    {
-        let (top, bottom) = self.top_and_bottom();
-        let p = p.into();
-
-        p.on(top) || p.on(bottom)
-    }
-
-    /// Check whether the given point is on the left or right edge of this [Rect].
-    pub fn is_on_vertical_edge<P>(&self, p: P) -> bool
-    where
-        P: Into<Point>,
-    {
-        let (left, right) = self.left_and_right();
-        let p = p.into();
-
-        p.on(left) || p.on(right)
-    }
-
-    /// Check whether the given point is on one of the edges of this [Rect].
-    pub fn is_on_edge<P>(&self, p: P) -> bool
-    where
-        P: Into<Point>,
-    {
-        let p = p.into();
-
-        self.is_on_horizontal_edge(p) || self.is_on_vertical_edge(p)
     }
 
     /// Check whether this Rect contains `other` as a sub-Rect
