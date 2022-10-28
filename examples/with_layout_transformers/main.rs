@@ -33,8 +33,6 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
         "M-Tab" => modify_with(|cs| cs.toggle_tag()),
         "M-bracketright" => modify_with(|cs| cs.next_screen()),
         "M-bracketleft" => modify_with(|cs| cs.previous_screen()),
-        "M-S-bracketright" => modify_with(|cs| cs.drag_workspace_forward()),
-        "M-S-bracketleft" => modify_with(|cs| cs.drag_workspace_backward()),
         "M-grave" => modify_with(|cs| cs.next_layout()),
         "M-S-grave" => modify_with(|cs| cs.previous_layout()),
         "M-Up" => send_layout_message(|| IncMain(1)),
