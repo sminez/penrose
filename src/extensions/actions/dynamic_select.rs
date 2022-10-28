@@ -43,7 +43,7 @@ pub fn dmenu_focus_client<X: XConn>(config: DMenuConfig) -> Box<dyn KeyEventHand
 pub fn dmenu_focus_tag<X: XConn>(config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state: &mut State<X>, x: &X| {
         let choices = state.client_set.ordered_tags();
-        let menu = DMenu::new("Window:", choices, config);
+        let menu = DMenu::new("Workspace:", choices, config);
         let screen = state.client_set.current_screen().index();
 
         if let MenuMatch::Line(_, tag) = menu.run(screen)? {
