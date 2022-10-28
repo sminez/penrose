@@ -184,7 +184,6 @@ mod tests {
     }
 }
 
-// FIXME: a lot of the setup of these can be simplified now with the richer diff structure
 #[cfg(test)]
 mod quickcheck_tests {
     use super::*;

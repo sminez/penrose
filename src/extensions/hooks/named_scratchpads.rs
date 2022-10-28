@@ -85,7 +85,10 @@ where
     let state: HashMap<_, _> = scratchpads.into_iter().map(|nsp| (nsp.name, nsp)).collect();
 
     wm.state.add_extension(NamedScratchPadState(state));
-    wm.state.client_set.add_invisible_workspace(NSP_TAG);
+    wm.state
+        .client_set
+        .add_invisible_workspace(NSP_TAG)
+        .expect("named scratchpad tag to be unique");
     wm.state.config.compose_or_set_manage_hook(manage_hook);
 
     wm

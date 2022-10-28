@@ -53,9 +53,9 @@ where
 {
     modify_with(move |cs| {
         if let Some(name) = get_name() {
-            if !cs.contains_tag(&name) {
-                cs.add_workspace(&name, layouts.clone());
-            }
+            // if this errors it's because the tag is already present in the stackset
+            // so we can just focus it.
+            _ = cs.add_workspace(&name, layouts.clone());
 
             cs.focus_tag(&name);
         }

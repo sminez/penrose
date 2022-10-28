@@ -419,11 +419,18 @@ where
     /// Add a new [Workspace] to this [StackSet].
     ///
     /// The id assigned to this workspace will be max(workspace ids) + 1.
-    pub fn add_workspace<T>(&mut self, tag: T, layouts: LayoutStack)
+    ///
+    /// # Errors
+    /// This function will error with `NonUniqueTags` if the given tag is already present.
+    pub fn add_workspace<T>(&mut self, tag: T, layouts: LayoutStack) -> Result<()>
     where
         T: Into<String>,
     {
-        // FIXME: Enforce unique tags
+        let tag = tag.into();
+        if self.contains_tag(&tag) {
+            return Err(Error::NonUniqueTags { tags: vec![tag] });
+        }
+
         let id = self
             .iter_workspaces()
             .map(|w| w.id)
@@ -432,6 +439,8 @@ where
             + 1;
         let ws = Workspace::new(id, tag, layouts, None);
         self.hidden.push_front(ws);
+
+        Ok(())
     }
 
     /// Add a new invisible [Workspace] to this [StackSet].
@@ -439,13 +448,18 @@ where
     /// It will not be possible to focus this workspace on a screen but its
     /// state will be tracked and clients can be placed on it.
     /// The id assigned to this workspace will be max(workspace ids) + 1.
-    pub fn add_invisible_workspace<T>(&mut self, tag: T)
+    ///
+    /// # Errors
+    /// This function will error with `NonUniqueTags` if the given tag is already present.
+    pub fn add_invisible_workspace<T>(&mut self, tag: T) -> Result<()>
     where
         T: Into<String>,
     {
         let tag = tag.into();
-        self.add_workspace(tag.clone(), LayoutStack::default());
+        self.add_workspace(tag.clone(), LayoutStack::default())?;
         self.invisible_tags.push(tag);
+
+        Ok(())
     }
 
     /// A reference to the [Workspace] with a tag of `tag` if there is one
