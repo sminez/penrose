@@ -626,20 +626,21 @@ impl StackSet<Xid> {
     /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
     /// from the layout.
     pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
-        let float_positions: Vec<(Xid, Rect)> = self
+        let mut float_positions: Vec<(Xid, Rect)> = self
             .iter_visible_clients()
             .flat_map(|c| self.floating.get(c).map(|r| (*c, *r)))
             .collect();
 
+        float_positions.reverse();
+
         let mut positions: Vec<(Xid, Rect)> = Vec::new();
 
-        for s in self.iter_screens_mut() {
+        for s in self.screens.iter_mut() {
             let r = s.geometry();
             let tag = &s.workspace.tag;
             let true_stack = s.workspace.stack.as_ref();
-            let tiling = true_stack.and_then(|st| {
-                st.from_filtered(|c| !float_positions.iter().any(|(cc, _)| cc == c))
-            });
+            let tiling =
+                true_stack.and_then(|st| st.from_filtered(|c| self.floating.get(c).is_none()));
 
             // TODO: if this supports using X state for determining layout position in future then this
             //       will be fallible and needs to fall back to a default layout.
@@ -648,7 +649,7 @@ impl StackSet<Xid> {
             positions.extend(stack_positions.into_iter().rev());
         }
 
-        positions.extend(float_positions.into_iter());
+        positions.extend(float_positions);
 
         positions
     }
@@ -997,7 +998,7 @@ pub mod tests {
             s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
             s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
 
-            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 3, 2]);
+            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 2, 3]);
         }
 
         #[test]
@@ -1013,7 +1014,7 @@ pub mod tests {
 
             s.insert(Xid(6));
 
-            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 6, 3, 2]);
+            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 6, 2, 3]);
         }
 
         #[test]
