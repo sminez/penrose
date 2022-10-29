@@ -1,29 +1,132 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{data_types::Point, manager::WindowManager, xconnection::Xid},
-    PenroseError, Result,
+    core::{State, Xid},
+    pure::geometry::Point,
+    x::XConn,
+    Error, Result,
 };
-
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, convert::TryFrom, process::Command};
+use strum::{EnumIter, IntoEnumIterator};
+use tracing::trace;
 
-use std::{collections::HashMap, convert::TryFrom};
+/// Run the xmodmap command to dump the system keymap table.
+///
+/// This is done in a form that we can load in and convert back to key
+/// codes. This lets the user define key bindings in the way that they
+/// would expect while also ensuring that it is east to debug any odd
+/// issues with bindings by referring the user to the xmodmap output.
+///
+/// # Panics
+/// This function will panic if it is unable to fetch keycodes using the xmodmap
+/// binary on your system or if the output of `xmodmap -pke` is not valid
+pub fn keycodes_from_xmodmap() -> Result<HashMap<String, u8>> {
+    let output = Command::new("xmodmap").arg("-pke").output()?;
+    let m = String::from_utf8(output.stdout)?
+        .lines()
+        .flat_map(|l| {
+            let mut words = l.split_whitespace(); // keycode <code> = <names ...>
+            let key_code: u8 = match words.nth(1) {
+                Some(word) => match word.parse() {
+                    Ok(val) => val,
+                    Err(e) => panic!("{}", e),
+                },
+                None => panic!("unexpected output format from xmodmap -pke"),
+            };
+            words.skip(1).map(move |name| (name.into(), key_code))
+        })
+        .collect();
 
-use strum::EnumIter;
+    Ok(m)
+}
+
+fn parse_binding(pattern: &str, known_codes: &HashMap<String, u8>) -> Result<KeyCode> {
+    let mut parts: Vec<&str> = pattern.split('-').collect();
+    let name = parts.remove(parts.len() - 1);
+
+    match known_codes.get(name) {
+        Some(code) => {
+            let mask = parts
+                .iter()
+                .map(|&s| ModifierKey::try_from(s))
+                .try_fold(0, |acc, v| v.map(|inner| acc | u16::from(inner)))?;
+
+            trace!(?pattern, mask, code, "parsed keybinding");
+            Ok(KeyCode {
+                mask: mask as u16,
+                code: *code,
+            })
+        }
+
+        None => Err(Error::UnknownKeyName {
+            name: name.to_owned(),
+        }),
+    }
+}
+
+/// Parse string format key bindings into [KeyCode] based [KeyBindings] using
+/// the command line `xmodmap` utility.
+///
+/// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
+pub fn parse_keybindings_with_xmodmap<S, X>(
+    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X>>>,
+) -> Result<KeyBindings<X>>
+where
+    S: AsRef<str>,
+    X: XConn,
+{
+    let m = keycodes_from_xmodmap()?;
+
+    str_bindings
+        .into_iter()
+        .map(|(s, v)| parse_binding(s.as_ref(), &m).map(|k| (k, v)))
+        .collect()
+}
 
 /// Some action to be run by a user key binding
-pub type KeyEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>) -> Result<()>>;
+pub trait KeyEventHandler<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
+}
 
-/// An action to be run in response to a mouse event
-pub type MouseEventHandler<X> = Box<dyn FnMut(&mut WindowManager<X>, &MouseEvent) -> Result<()>>;
+impl<F, X> KeyEventHandler<X> for F
+where
+    F: FnMut(&mut State<X>, &X) -> Result<()>,
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+        (self)(state, x)
+    }
+}
 
 /// User defined key bindings
-pub type KeyBindings<X> = HashMap<KeyCode, KeyEventHandler<X>>;
+pub type KeyBindings<X> = HashMap<KeyCode, Box<dyn KeyEventHandler<X>>>;
+
+/// An action to be run in response to a mouse event
+pub trait MouseEventHandler<X>
+where
+    X: XConn,
+{
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+}
+
+impl<F, X> MouseEventHandler<X> for F
+where
+    F: FnMut(&MouseEvent, &mut State<X>, &X) -> Result<()>,
+    X: XConn,
+{
+    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        (self)(evt, state, x)
+    }
+}
 
 /// User defined mouse bindings
-pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), MouseEventHandler<X>>;
-
-pub(crate) type CodeMap = HashMap<String, u8>;
+pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X>>>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,9 +159,9 @@ pub enum KeyPress {
 
 #[cfg(feature = "keysyms")]
 impl TryFrom<XKeySym> for KeyPress {
-    type Error = PenroseError;
+    type Error = std::string::FromUtf8Error;
 
-    fn try_from(s: XKeySym) -> std::result::Result<KeyPress, PenroseError> {
+    fn try_from(s: XKeySym) -> std::result::Result<KeyPress, Self::Error> {
         Ok(match s {
             XKeySym::XK_Return | XKeySym::XK_KP_Enter | XKeySym::XK_ISO_Enter => KeyPress::Return,
             XKeySym::XK_Escape => KeyPress::Escape,
@@ -130,6 +233,21 @@ impl From<MouseButton> for u8 {
     }
 }
 
+impl TryFrom<u8> for MouseButton {
+    type Error = Error;
+
+    fn try_from(n: u8) -> Result<Self> {
+        match n {
+            1 => Ok(Self::Left),
+            2 => Ok(Self::Middle),
+            3 => Ok(Self::Right),
+            4 => Ok(Self::ScrollUp),
+            5 => Ok(Self::ScrollDown),
+            _ => Err(Error::UnknownMouseButton { button: n }),
+        }
+    }
+}
+
 /// Known modifier keys for bindings
 #[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -144,16 +262,33 @@ pub enum ModifierKey {
     Meta,
 }
 
-impl TryFrom<&str> for ModifierKey {
-    type Error = PenroseError;
+impl ModifierKey {
+    fn was_held(&self, mask: u16) -> bool {
+        mask & u16::from(*self) > 0
+    }
+}
 
-    fn try_from(s: &str) -> Result<Self> {
+impl From<ModifierKey> for u16 {
+    fn from(m: ModifierKey) -> u16 {
+        (match m {
+            ModifierKey::Shift => 1 << 0,
+            ModifierKey::Ctrl => 1 << 2,
+            ModifierKey::Alt => 1 << 3,
+            ModifierKey::Meta => 1 << 6,
+        }) as u16
+    }
+}
+
+impl TryFrom<&str> for ModifierKey {
+    type Error = Error;
+
+    fn try_from(s: &str) -> std::result::Result<Self, Self::Error> {
         match s {
             "C" => Ok(Self::Ctrl),
             "A" => Ok(Self::Alt),
             "S" => Ok(Self::Shift),
             "M" => Ok(Self::Meta),
-            _ => Err(PenroseError::UnknownModifier(s.into())),
+            _ => Err(Error::UnknownModifier { name: s.to_owned() }),
         }
     }
 }
@@ -173,6 +308,25 @@ impl MouseState {
     pub fn new(button: MouseButton, mut modifiers: Vec<ModifierKey>) -> Self {
         modifiers.sort();
         Self { button, modifiers }
+    }
+
+    pub fn from_detail_and_state(detail: u8, state: u16) -> Result<Self> {
+        Ok(Self {
+            button: MouseButton::try_from(detail)?,
+            modifiers: ModifierKey::iter().filter(|m| m.was_held(state)).collect(),
+        })
+    }
+
+    /// The xcb bitmask for this [MouseState]
+    pub fn mask(&self) -> u16 {
+        self.modifiers
+            .iter()
+            .fold(0, |acc, &val| acc | u16::from(val))
+    }
+
+    /// The xcb button ID for this [MouseState]
+    pub fn button(&self) -> u8 {
+        self.button.into()
     }
 }
 

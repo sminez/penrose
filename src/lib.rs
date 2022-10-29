@@ -1,266 +1,204 @@
 //! # Penrose: a library for building your very own tiling window manager
-//!
-//! Penrose is inspired by similar projects such as [dwm][1], [xmonad][2] and [qtile][3] which
-//! allow you to configure your window manager in code and compile it for your system. It is most
-//! similar to `xmonad` in that it is more of a library for building a window manager (with low
-//! level details taken care of for you) rather than a minimal window manager that you edit and
-//! patch directly (such as `dwm`). Penrose strives to be as simple as possible in its
-//! implementation in order to make the guts of the window manager easier to understand. Given the
-//! nature of what this involves, this is not always possible but effort has been made to make the
-//! source readable and with relatively little magic.
-//!
-//! # Using Penrose
-//!
-//! Penrose itself is not a binary application that you can build, install and run. You need to
-//! write your own **main.rs** as a rust binary crate that uses Penrose to set up, configure and
-//! run your very own window manager exactly how you want it. In short, you *will* need to write
-//! some code and you *will* need to know rust to some degree.
-//!
-//! For learning rust itself, there are some fantastic official [guides][4] available on
-//! [rust-lang.org][15] and if you are sticking to using the out of the box
-//! functionality provided by the penrose crate, working through [the book][5] before diving into
-//! Penrose should be more than enough to get you started.
-//!
-//! On GitHub you can find up to date [examples][6] of how to set up and configure penrose as your
-//! window manager, ranging from bare bones minimal to custom extensions and hooks.
-//!
-//!
-//! # Getting started
-//!
-//! At it's simplest you will need to create a new binary crate to build your window manager and
-//! add penrose as a project dependency:
-//!
-//! > $ cargo new --bin my_penrose_config
-//!
-//! As a bare minimum, you will need to the following in your **main.rs**:
-//!   - keybindings (typically set up using the [gen_keybindings][7] macro)
-//!   - A [XConn][8] instance to handle communication with the X server
-//!   - A [Config][9] instance which contains the rest of your top level configuration for Penrose.
-//!     Things like workspace names, layout functions and settings for gaps and borders.
-//!
-//! With that, you will be able to create a [WindowManager][10] and start running Penrose after
-//! building and installing your binary. (It is also suggested that you set up a logging handler so
-//! that debugging any issues with your config is easier. [simplelog][13] is a good choice if you
-//! are unsure where to start with this.)
-//!
-//!
-//! # Example
-//!
-//!```no_run
-//! #[macro_use]
-//! extern crate penrose;
-//!
-//! use penrose::{
-//!     core::helpers::index_selectors,
-//!     logging_error_handler,
-//!     xcb::new_xcb_backed_window_manager,
-//!     Backward, Config, Forward, Less, More, WindowManager
-//! };
-//!
-//! fn main() -> penrose::Result<()> {
-//!     let key_bindings = gen_keybindings! {
-//!         "M-j" => run_internal!(cycle_client, Forward);
-//!         "M-k" => run_internal!(cycle_client, Backward);
-//!         "M-S-j" => run_internal!(drag_client, Forward);
-//!         "M-S-k" => run_internal!(drag_client, Backward);
-//!         "M-S-q" => run_internal!(kill_client);
-//!         "M-Tab" => run_internal!(toggle_workspace);
-//!         "M-grave" => run_internal!(cycle_layout, Forward);
-//!         "M-S-grave" => run_internal!(cycle_layout, Backward);
-//!         "M-A-Up" => run_internal!(update_max_main, More);
-//!         "M-A-Down" => run_internal!(update_max_main, Less);
-//!         "M-A-Right" => run_internal!(update_main_ratio, More);
-//!         "M-A-Left" => run_internal!(update_main_ratio, Less);
-//!         "M-semicolon" => run_external!("dmenu_run");
-//!         "M-Return" => run_external!("alacritty");
-//!         "M-A-Escape" => run_internal!(exit);
-//!
-//!         map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
-//!             "M-{}" => focus_workspace (REF);
-//!             "M-S-{}" => client_to_workspace (REF);
-//!         };
-//!     };
-//!
-//!     let mut wm = new_xcb_backed_window_manager(
-//!         Config::default(),
-//!         vec![],
-//!         logging_error_handler()
-//!     )?;
-//!     wm.grab_keys_and_run(key_bindings, map!{})
-//! }
-//!```
-//!
-//! # Digging into the API
-//!
-//! To add more functionality and flexability, you can start to add things like [Hooks][11], a
-//! [status bar][12] and custom actions for running as part of key bindings. You will want to read
-//! the documentation of the `core` module which contains all of the core functionality of Penrose
-//! as a window manager. After that, the `draw` module contains utilities for rendering things like
-//! status bars and widgets, the `contrib` module has examples of simple hooks, extensions and key
-//! binding actions and the `xcb` module contains the referencing trait implementations for
-//! interacting with the X server via the [XCB][14] api.
-//!
-//! **NOTE**: in order to use the xcb implementation of penrose, you will need to install the C
-//! libraries that are dependencies (namely xcb, Cairo and Pango).
-//!
-//! [1]: https://dwm.suckless.org/
-//! [2]: https://xmonad.org/
-//! [3]: http://www.qtile.org/
-//! [4]: https://www.rust-lang.org/learn
-//! [5]: https://doc.rust-lang.org/book/
-//! [6]: https://github.com/sminez/penrose/tree/develop/examples
-//! [7]: crate::gen_keybindings
-//! [8]: crate::core::xconnection::XConn
-//! [9]: crate::core::config::Config
-//! [10]: crate::core::manager::WindowManager
-//! [11]: crate::core::hooks
-//! [12]: crate::draw::bar
-//! [13]: https://crates.io/crates/simplelog
-//! [14]: https://xcb.freedesktop.org/
-//! [15]: https://www.rust-lang.org
-#![warn(
-    clippy::complexity,
-    clippy::correctness,
-    clippy::style,
-    future_incompatible,
-    missing_debug_implementations,
-    missing_docs,
-    rust_2018_idioms
-)]
-#![allow(clippy::too_many_arguments, clippy::borrowed_box, clippy::or_fun_call)]
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
-    issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
-)]
-
-#[macro_use]
-extern crate bitflags;
-
-#[macro_use]
-extern crate tracing;
-
+#[cfg(feature = "x11rb-xcb")]
+use ::x11rb::{
+    errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
+    x11_utils::X11Error,
+};
 #[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
+use serde::{Deserialize, Serialize};
+use std::any::TypeId;
 
-#[macro_use]
+pub mod builtin;
 pub mod core;
-
-pub mod contrib;
-pub mod draw;
-
-#[cfg(feature = "xcb")]
-pub mod xcb;
-
-#[cfg(feature = "x11rb")]
+pub mod extensions;
+pub mod macros;
+pub mod pure;
+pub mod util;
+pub mod x;
+#[cfg(feature = "x11rb-xcb")]
 pub mod x11rb;
 
-#[doc(hidden)]
-pub mod __test_helpers;
-
-#[doc(hidden)]
-pub use penrose_proc::validate_user_bindings;
-
-// top level re-exports
-#[doc(inline)]
-pub use crate::core::{
-    config::Config,
-    data_types::Change::*,
-    helpers::logging_error_handler,
-    manager::WindowManager,
-    ring::{Direction::*, InsertPoint, Selector},
-    xconnection::Xid,
+pub use crate::core::Xid;
+pub use pure::{
+    geometry::{Point, Rect},
+    Position, Screen, Stack, StackSet, Workspace,
 };
 
-#[cfg(feature = "xcb")]
-#[doc(inline)]
-pub use crate::xcb::{new_xcb_backed_window_manager, XcbConnection};
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    /// A custom error message from user code or extensions
+    #[error("{0}")]
+    Custom(String),
 
-/// Enum to store the various ways that operations can fail in Penrose
-#[derive(thiserror::Error, Debug)]
-pub enum PenroseError {
-    /// Something went wrong using the [draw] module.
-    ///
-    /// See [DrawError][crate::draw::DrawError] for variants.
-    #[error(transparent)]
-    Draw(#[from] crate::draw::DrawError),
+    #[error("Only {n_ws} workspaces were provided but at least {n_screens} are required")]
+    InsufficientWorkspaces { n_ws: usize, n_screens: usize },
 
-    /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
-    #[error("unable to rehydrate from serialized state: {0}")]
-    HydrationState(String),
+    #[error("invalid client message data: format={format}")]
+    InvalidClientMessage { format: u8 },
 
-    /// Something was inconsistant when attempting to re-create a serialised [WindowManager]
-    #[error("the following serialized client IDs were not known to the X server: {0:?}")]
-    MissingClientIds(Vec<Xid>),
+    #[error("Invalid Hex color code: '{hex_code}'")]
+    InvalidHexColor { hex_code: String },
 
-    /// A conversion to utf-8 failed
-    #[error("UTF-8 error")]
-    NonUtf8Prop(#[from] std::string::FromUtf8Error),
+    #[error("Invalid window hints message: {reason}")]
+    InvalidHints { reason: String },
 
-    #[doc(hidden)]
-    #[error(transparent)]
-    Infallible(#[from] std::convert::Infallible),
-
-    /// An [IO Error][std::io::Error] was encountered
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
-    /// Wm(Normal)Hints received from the X server were invalid
-    #[error("Invalid window hints property: {0}")]
-    InvalidHints(String),
+    #[error(transparent)]
+    InvalidUtf8(#[from] std::string::FromUtf8Error),
 
-    /// No elements match the given selector
-    #[error("No elements match the given selector")]
-    NoMatchingElement,
+    #[error("{ty} property '{prop}' for {id} contained invalid data")]
+    InvalidPropertyData { id: Xid, ty: String, prop: String },
 
-    /// Attempting to construct a penrose data type from an int failed.
+    #[error("The following tags have been used multiple times for different workspaces: {tags:?}")]
+    NonUniqueTags { tags: Vec<String> },
+
+    #[error("There are no screens available")]
+    NoScreens,
+
     #[error(transparent)]
     ParseInt(#[from] std::num::ParseIntError),
 
-    /// A generic error type for use in user code when needing to construct
-    /// a simple [PenroseError].
-    #[error("Unhandled error: {0}")]
-    Raw(String),
+    #[error("Error initialising randr: {0}")]
+    Randr(String),
 
-    /// An attempt to spawn an external process failed
-    #[error("unable to get stdout handle for child process: {0}")]
-    SpawnProc(String),
+    #[error("The given client is not in this State")]
+    UnknownClient,
 
-    /// Parsing an [Atom][core::xconnection::Atom] from a str failed.
-    ///
-    /// This happens when the atom name being requested is not a known atom.
+    #[error("'{name}' is not a known key name")]
+    UnknownKeyName { name: String },
+
+    #[error("'{name}' is not a known modifier key")]
+    UnknownModifier { name: String },
+
+    #[error("{button} is not a supported mouse button")]
+    UnknownMouseButton { button: u8 },
+
+    #[error("{type_id:?} was requested as a state extension but not found")]
+    UnknownStateExtension { type_id: TypeId },
+
+    // TODO: These backend specific errors should be abstracted out to a
+    //       set of common error variants that they can be mapped to without
+    //       needing to extend the enum conditionally when flags are enabled
+    //
+    #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
-    Strum(#[from] strum::ParseError),
+    X11rbConnect(#[from] ConnectError),
 
-    /// An attempt was made to reference a client that is not known to penrose
-    #[error("{0} is not a known client")]
-    UnknownClient(Xid),
-
-    /// A user specified key binding contained an invalid modifier key
-    #[error("Unknown modifier key: {0}")]
-    UnknownModifier(String),
-
-    /// Something went wrong using the [xcb] module.
-    ///
-    /// See [XcbError][crate::xcb::XcbError] for variants.
-    #[cfg(feature = "xcb")]
+    #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
-    Xcb(#[from] crate::xcb::XcbError),
+    X11rbConnection(#[from] ConnectionError),
 
-    /// Something went wrong using the [x11rb] module.
-    ///
-    /// See [X11rbError][crate::x11rb::X11rbError] for variants.
-    #[cfg(feature = "x11rb")]
+    #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
-    X11rb(#[from] crate::x11rb::X11rbError),
+    X11rbReplyError(#[from] ReplyError),
 
-    /// Something went wrong when communicating with the X server
+    #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
-    X(#[from] crate::core::xconnection::XError),
+    X11rbReplyOrIdError(#[from] ReplyOrIdError),
+
+    #[cfg(feature = "x11rb-xcb")]
+    #[error("X11 error: {0:?}")]
+    X11rbX11Error(X11Error),
 }
 
-/// Top level penrose Result type
-pub type Result<T> = std::result::Result<T, PenroseError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-/// A function that can be registered to handle errors that occur during [WindowManager] operation
-pub type ErrorHandler = Box<dyn FnMut(PenroseError)>;
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug, PartialEq)]
+/// A simple RGBA based color
+pub struct Color {
+    r: f64,
+    g: f64,
+    b: f64,
+    a: f64,
+}
+
+// helper for methods in Color
+macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
+
+impl Color {
+    /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
+    pub fn new_from_hex(hex: u32) -> Self {
+        let floats: Vec<f64> = hex
+            .to_be_bytes()
+            .iter()
+            .map(|n| *n as f64 / 255.0)
+            .collect();
+
+        let (r, g, b, a) = (floats[0], floats[1], floats[2], floats[3]);
+        Self { r, g, b, a }
+    }
+
+    /// The RGB information of this color as 0.0-1.0 range floats representing
+    /// proportions of 255 for each of R, G, B
+    pub fn rgb(&self) -> (f64, f64, f64) {
+        (self.r, self.g, self.b)
+    }
+
+    /// The RGBA information of this color as 0.0-1.0 range floats representing
+    /// proportions of 255 for each of R, G, B, A
+    pub fn rgba(&self) -> (f64, f64, f64, f64) {
+        (self.r, self.g, self.b, self.a)
+    }
+
+    /// Render this color as a #RRGGBB hew color string
+    pub fn as_rgb_hex_string(&self) -> String {
+        format!("#{:x}", self.rgb_u32())
+    }
+
+    /// 0xRRGGBB representation of this Color (no alpha information)
+    pub fn rgb_u32(&self) -> u32 {
+        _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
+    }
+
+    /// 0xRRGGBBAA representation of this Color
+    pub fn rgba_u32(&self) -> u32 {
+        _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 0)
+    }
+}
+
+impl From<u32> for Color {
+    fn from(hex: u32) -> Self {
+        Self::new_from_hex(hex)
+    }
+}
+
+impl From<(f64, f64, f64)> for Color {
+    fn from(rgb: (f64, f64, f64)) -> Self {
+        let (r, g, b) = rgb;
+        Self { r, g, b, a: 1.0 }
+    }
+}
+
+impl From<(f64, f64, f64, f64)> for Color {
+    fn from(rgba: (f64, f64, f64, f64)) -> Self {
+        let (r, g, b, a) = rgba;
+        Self { r, g, b, a }
+    }
+}
+
+impl TryFrom<String> for Color {
+    type Error = Error;
+
+    fn try_from(s: String) -> Result<Self> {
+        (&s[..]).try_into()
+    }
+}
+
+impl TryFrom<&str> for Color {
+    type Error = Error;
+
+    fn try_from(s: &str) -> Result<Self> {
+        let hex = u32::from_str_radix(s.strip_prefix('#').unwrap_or(s), 16)?;
+
+        if s.len() == 7 {
+            Ok(Self::new_from_hex((hex << 8) + 0xFF))
+        } else if s.len() == 9 {
+            Ok(Self::new_from_hex(hex))
+        } else {
+            Err(Error::InvalidHexColor { hex_code: s.into() })
+        }
+    }
+}

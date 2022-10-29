@@ -2738,8 +2738,8 @@ impl XKeySym {
                 XKeySym::XF86XK_Calculator => 0x1008FF1D,
             } as u32)
                 .to_le_bytes()
-                .to_vec()
-                .into_iter()
+                .iter()
+                .copied()
                 .filter(|&b| b > 0)
                 .collect(),
         )

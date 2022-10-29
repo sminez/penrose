@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         rust: [stable, beta, nightly]
-        features: ["xcb,xcb_draw", "xcb,xcb_draw,serde"]
+        features: ["default", "default,serde"]
 
     steps:
     - uses: actions/checkout@v2
