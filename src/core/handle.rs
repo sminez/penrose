@@ -26,25 +26,21 @@ use tracing::{error, info, trace};
 //         .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
 // }
 
-pub(crate) fn client_message<X>(msg: ClientMessage, _: &mut State<X>, _: &X) -> Result<()>
-where
-    X: XConn,
-{
+// Currently no client messages are handled by default (see the ewmh extension for some examples of messages
+// that are handled when that is enabled)
+pub(crate) fn client_message<X: XConn>(msg: ClientMessage, _: &mut State<X>, _: &X) -> Result<()> {
     let data = &msg.data;
     trace!(id = msg.id.0, dtype = ?msg.dtype, ?data, "got client message");
 
     Ok(())
 }
 
-pub(crate) fn keypress<X>(
+pub(crate) fn keypress<X: XConn>(
     key: KeyCode,
     bindings: &mut KeyBindings<X>,
     state: &mut State<X>,
     x: &X,
-) -> Result<()>
-where
-    X: XConn,
-{
+) -> Result<()> {
     if let Some(action) = bindings.get_mut(&key) {
         trace!(?key, "running user keybinding");
         if let Err(error) = action.call(state, x) {
@@ -56,15 +52,12 @@ where
     Ok(())
 }
 
-pub(crate) fn mouse_event<X>(
+pub(crate) fn mouse_event<X: XConn>(
     e: MouseEvent,
     bindings: &mut MouseBindings<X>,
     state: &mut State<X>,
     x: &X,
-) -> Result<()>
-where
-    X: XConn,
-{
+) -> Result<()> {
     if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
         if let Err(error) = action.call(&e, state, x) {
             error!(%error, ?e, "error running user mouse binding");
@@ -75,10 +68,7 @@ where
     Ok(())
 }
 
-pub(crate) fn map_request<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn map_request<X: XConn>(client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
     trace!(?client, "handling new map request");
     let attrs = x.get_window_attributes(client)?;
 
@@ -90,10 +80,7 @@ where
     Ok(())
 }
 
-pub(crate) fn destroy<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn destroy<X: XConn>(client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
     if state.client_set.contains(&client) {
         trace!(?client, "destroying client");
         x.unmanage(client, state)?;
@@ -105,10 +92,7 @@ where
 }
 
 // Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
-pub(crate) fn unmap_notify<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn unmap_notify<X: XConn>(client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
     let expected = *state.pending_unmap.get(&client).unwrap_or(&0);
 
     if expected == 0 {
@@ -125,10 +109,7 @@ where
     Ok(())
 }
 
-pub(crate) fn focus_in<X>(client: Xid, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn focus_in<X: XConn>(client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
     let accepts_focus = match x.get_prop(client, Atom::WmHints.as_ref()) {
         Ok(Some(Prop::WmHints(WmHints { accepts_input, .. }))) => accepts_input,
         _ => true,
@@ -150,27 +131,17 @@ where
     Ok(())
 }
 
-pub(crate) fn enter<X>(
-    PointerChange { id, .. }: PointerChange,
-    state: &mut State<X>,
-    x: &X,
-) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn enter<X: XConn>(p: PointerChange, state: &mut State<X>, x: &X) -> Result<()> {
     if state.config.focus_follow_mouse {
         x.modify_and_refresh(state, |cs| {
-            cs.focus_client(&id);
+            cs.focus_client(&p.id);
         })
     } else {
         Ok(())
     }
 }
 
-pub(crate) fn leave<X>(p: PointerChange, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn leave<X: XConn>(p: PointerChange, state: &mut State<X>, x: &X) -> Result<()> {
     if p.id == state.root() && !p.same_screen {
         x.focus(p.id)?;
         set_screen_from_point(p.abs, state, x)?;
@@ -179,10 +150,7 @@ where
     Ok(())
 }
 
-pub(crate) fn detect_screens<X>(state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn detect_screens<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
     info!("re-detecting screens");
     let rects = x.screen_details()?;
     info!(?rects, "found screens");
@@ -217,18 +185,12 @@ where
     Ok(())
 }
 
-pub(crate) fn screen_change<X>(state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+pub(crate) fn screen_change<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
     trace!("screen changed");
     set_screen_from_point(x.cursor_position()?, state, x)
 }
 
-fn set_screen_from_point<X>(p: Point, state: &mut State<X>, x: &X) -> Result<()>
-where
-    X: XConn,
-{
+fn set_screen_from_point<X: XConn>(p: Point, state: &mut State<X>, x: &X) -> Result<()> {
     x.modify_and_refresh(state, |cs| {
         let index = cs
             .screens()
