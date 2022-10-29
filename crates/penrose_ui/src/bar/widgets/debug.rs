@@ -1,5 +1,5 @@
 //! Widgets for showing debug information about the current state of penrose
-use crate::widgets::{Context, Result, Text, TextStyle, Widget};
+use crate::bar::widgets::{Context, Result, Text, TextStyle, Widget};
 use penrose::{
     core::State,
     extensions::util::debug::{summarise_state, CurrentStateConfig},

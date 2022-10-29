@@ -1,7 +1,7 @@
 //! Widgets for the penrose status bar
 use crate::{
+    bar::widgets::Widget,
     core::{Context, TextStyle},
-    widgets::Widget,
     Result,
 };
 use penrose::{

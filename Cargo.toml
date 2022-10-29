@@ -18,7 +18,7 @@ categories = [ "window manager" ]
 
 [workspace]
 members = [
-  "crates/penrose_bar",
+  "crates/penrose_ui",
   "crates/penrose_keysyms"
 ]
 
@@ -44,7 +44,7 @@ anymap = "0.12.1"
 
 [dev-dependencies]
 paste = "1.0.9"
-penrose_bar = { path = "crates/penrose_bar" }
+penrose_ui = { path = "crates/penrose_ui" }
 serde_json = "1.0.86"
 simple_test_case = "1.1.0"
 quickcheck = "1.0.3"

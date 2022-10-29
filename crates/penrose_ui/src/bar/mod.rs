@@ -1,7 +1,6 @@
 //! A lightweight and configurable status bar for penrose
 use crate::{
     core::{Context, Draw},
-    widgets::Widget,
     Result,
 };
 use penrose::{
@@ -13,6 +12,10 @@ use penrose::{
 use std::fmt;
 use tracing::{debug, error, info};
 use x11rb::protocol::xproto::ConnectionExt as _;
+
+pub mod widgets;
+
+use widgets::Widget;
 
 /// The position of a status bar
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]

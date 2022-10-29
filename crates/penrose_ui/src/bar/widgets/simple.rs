@@ -1,5 +1,9 @@
 //! Simple text based widgets built on top of Text
-use crate::widgets::{Context, Result, Text, TextStyle, Widget};
+use crate::{
+    bar::widgets::{Text, TextStyle, Widget},
+    core::Context,
+    Result,
+};
 use penrose::{
     core::State,
     x::{event::PropertyEvent, Atom, XConn, XConnExt, XEvent},
