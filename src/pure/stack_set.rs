@@ -629,6 +629,7 @@ impl StackSet<Xid> {
     /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
     /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
     /// from the layout.
+    /// NOTE: we require Xid as the client type here as we need that when running layouts
     pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
         let mut float_positions: Vec<(Xid, Rect)> = self
             .iter_visible_clients()
@@ -762,14 +763,23 @@ pub mod tests {
         _test_stack_set(n_tags, n_screens)
     }
 
-    pub fn test_stack_set_with_stacks(stacks: Vec<Option<Stack<u8>>>, n: usize) -> StackSet<u8> {
-        let workspaces: Vec<Workspace<u8>> = stacks
+    pub fn test_stack_set_with_stacks<C>(stacks: Vec<Option<Stack<C>>>, n: usize) -> StackSet<C>
+    where
+        C: Copy + Clone + PartialEq + Eq + Hash,
+    {
+        let workspaces: Vec<Workspace<C>> = stacks
             .into_iter()
             .enumerate()
             .map(|(i, s)| Workspace::new(i, (i + 1).to_string(), LayoutStack::default(), s))
             .collect();
 
-        match StackSet::try_new_concrete(workspaces, vec![Rect::default(); n], HashMap::new()) {
+        match StackSet::try_new_concrete(
+            workspaces,
+            (0..(n as u32))
+                .map(|k| Rect::new(k * 1000, k * 2000, 1000, 2000))
+                .collect(),
+            HashMap::new(),
+        ) {
             Ok(s) => s,
             Err(e) => panic!("{e}"),
         }
@@ -1056,8 +1066,11 @@ mod quickcheck_tests {
     use quickcheck_macros::quickcheck;
     use std::collections::HashSet;
 
-    impl Stack<u8> {
-        pub fn try_from_arbitrary_vec(mut up: Vec<u8>, g: &mut Gen) -> Option<Self> {
+    impl<C> Stack<C>
+    where
+        C: Copy + Clone + PartialEq + Eq + Hash,
+    {
+        pub fn try_from_arbitrary_vec(mut up: Vec<C>, g: &mut Gen) -> Option<Self> {
             let focus = match up.len() {
                 0 => return None,
                 1 => return Some(stack!(up.remove(0))),
@@ -1071,15 +1084,15 @@ mod quickcheck_tests {
         }
     }
 
-    impl StackSet<u8> {
-        pub fn minimal_unknown_client(&self) -> u8 {
+    impl StackSet<Xid> {
+        pub fn minimal_unknown_client(&self) -> Xid {
             let mut c = 0;
 
-            while self.contains(&c) {
+            while self.contains(&Xid(c)) {
                 c += 1;
             }
 
-            c
+            Xid(c)
         }
 
         pub fn first_hidden_tag(&self) -> Option<String> {
@@ -1094,7 +1107,7 @@ mod quickcheck_tests {
                 .clone()
         }
 
-        pub fn last_visible_client(&self) -> Option<&u8> {
+        pub fn last_visible_client(&self) -> Option<&Xid> {
             self.screens
                 .down
                 .back()
@@ -1107,14 +1120,20 @@ mod quickcheck_tests {
         }
     }
 
+    impl Arbitrary for Xid {
+        fn arbitrary(g: &mut Gen) -> Self {
+            Xid(u32::arbitrary(g))
+        }
+    }
+
     // For the tests below we only care about the stack structure not the elements themselves, so
     // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
-    impl Arbitrary for StackSet<u8> {
+    impl Arbitrary for StackSet<Xid> {
         fn arbitrary(g: &mut Gen) -> Self {
             let n_stacks = usize::arbitrary(g) % 10;
             let mut stacks = Vec::with_capacity(n_stacks);
 
-            let mut clients: Vec<u8> = HashSet::<u8>::arbitrary(g).into_iter().collect();
+            let mut clients: Vec<Xid> = HashSet::<Xid>::arbitrary(g).into_iter().collect();
 
             for _ in 0..n_stacks {
                 if clients.is_empty() {
@@ -1140,7 +1159,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn insert_pushes_to_current_stack(mut s: StackSet<u8>) -> bool {
+    fn insert_pushes_to_current_stack(mut s: StackSet<Xid>) -> bool {
         let new_focus = s.minimal_unknown_client();
         s.insert(new_focus);
 
@@ -1148,7 +1167,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<u8>) -> bool {
+    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<Xid>) -> bool {
         let target = match s.iter_clients().max() {
             Some(target) => *target,
             None => return true, // nothing to focus
@@ -1165,7 +1184,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_focused_to_tag(mut s: StackSet<u8>) -> bool {
+    fn move_focused_to_tag(mut s: StackSet<Xid>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.current_client() {
@@ -1180,7 +1199,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_client_to_tag(mut s: StackSet<u8>) -> bool {
+    fn move_client_to_tag(mut s: StackSet<Xid>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.last_visible_client() {

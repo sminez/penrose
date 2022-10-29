@@ -191,14 +191,12 @@ pub trait XConnExt: XConn + Sized {
         let ss = state.client_set.snapshot(positions);
         state.diff.update(ss);
 
-        // trace!(?state.diff, "pure state diff");
-
         set_window_props(self, state)?;
         notify_hidden_workspaces(state);
         self.position_clients(&state.diff.after.positions)?;
         set_window_visibility(self, state)?;
-        handle_pointer_change(self, state)?;
         set_focus(self, state)?;
+        handle_pointer_change(self, state)?;
 
         // TODO: clear enterWindow events from the event queue if this was because of mouse focus (?)
 
