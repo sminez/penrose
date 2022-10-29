@@ -605,7 +605,7 @@ where
                     aux = aux.x(r.x as i32).y(r.y as i32).width(r.w).height(r.h);
                 }
                 ClientConfig::StackBelow(s) => aux = aux.sibling(s.0).stack_mode(StackMode::BELOW),
-                ClientConfig::StackAbove => aux = aux.stack_mode(StackMode::ABOVE),
+                ClientConfig::StackAbove(s) => aux = aux.sibling(s.0).stack_mode(StackMode::ABOVE),
             }
         }
         self.conn.configure_window(*id, &aux)?;

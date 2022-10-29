@@ -49,7 +49,7 @@ pub enum ClientConfig {
     /// Mark this window as stacking below the given Xid
     StackBelow(Xid),
     /// Mark this window as stacking on top of its peers
-    StackAbove,
+    StackAbove(Xid),
 }
 
 /// Attributes for an X11 client window (not all are curently implemented)
@@ -282,8 +282,7 @@ pub trait XConnExt: XConn + Sized {
     }
 
     fn position_clients(&self, positions: &[(Xid, Rect)]) -> Result<()> {
-        let ids: Vec<Xid> = positions.iter().map(|&(id, _)| id).collect();
-        self.restack(&ids)?;
+        self.restack(positions.iter().map(|(id, _)| id))?;
 
         for &(c, r) in positions.iter() {
             self.position_client(c, r)?;
@@ -292,9 +291,19 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
-    fn restack(&self, ids: &[Xid]) -> Result<()> {
-        for (&above, &below) in ids.iter().skip(1).zip(ids) {
-            self.set_client_config(below, &[ClientConfig::StackBelow(above)])?;
+    /// Restack the given windows in, each one above the last.
+    fn restack<'a, I>(&self, mut ids: I) -> Result<()>
+    where
+        I: Iterator<Item = &'a Xid>,
+    {
+        let mut previous = match ids.next() {
+            Some(id) => *id,
+            None => return Ok(()), // nothing to stack
+        };
+
+        for &id in ids {
+            self.set_client_config(id, &[ClientConfig::StackAbove(previous)])?;
+            previous = id;
         }
 
         Ok(())
