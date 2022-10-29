@@ -129,12 +129,11 @@ where
         conn.prefetch_extension_information(randr::X11_EXTENSION_NAME)?;
         let atoms = Atoms::new(&conn)?;
 
-        if conn
-            .extension_information(randr::X11_EXTENSION_NAME)?
-            .is_none()
-        {
+        let extension_info = conn.extension_information(randr::X11_EXTENSION_NAME)?;
+        if extension_info.is_none() {
             return Err(Error::Randr("RandR not supported".to_string()));
         }
+
         let randr_ver = conn
             .randr_query_version(RANDR_VER.0, RANDR_VER.1)?
             .reply()?;

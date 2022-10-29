@@ -76,8 +76,8 @@ where
         self.after = after;
     }
 
-    pub fn focused_client(&self) -> Option<&C> {
-        self.after.focused_client.as_ref()
+    pub fn focused_client(&self) -> Option<C> {
+        self.after.focused_client
     }
 
     pub fn focused_client_changed(&self) -> bool {

@@ -14,7 +14,7 @@ use crate::{
     Result, StackSet,
 };
 use std::mem::take;
-use tracing::{error, trace};
+use tracing::{error, info, trace};
 
 // fn is_fullscreen<X>(data: &[u32], x: &X) -> bool
 // where
@@ -167,18 +167,13 @@ where
     }
 }
 
-pub(crate) fn leave<X>(
-    PointerChange {
-        id, same_screen, ..
-    }: PointerChange,
-    state: &mut State<X>,
-    x: &X,
-) -> Result<()>
+pub(crate) fn leave<X>(p: PointerChange, state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
-    if id == state.root() && !same_screen {
-        x.focus(id)?;
+    if p.id == state.root() && !p.same_screen {
+        x.focus(p.id)?;
+        set_screen_from_point(p.abs, state, x)?;
     }
 
     Ok(())
@@ -188,7 +183,9 @@ pub(crate) fn detect_screens<X>(state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
+    info!("re-detecting screens");
     let rects = x.screen_details()?;
+    info!(?rects, "found screens");
 
     let StackSet {
         screens,
@@ -224,6 +221,7 @@ pub(crate) fn screen_change<X>(state: &mut State<X>, x: &X) -> Result<()>
 where
     X: XConn,
 {
+    trace!("screen changed");
     set_screen_from_point(x.cursor_position()?, state, x)
 }
 
