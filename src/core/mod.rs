@@ -415,27 +415,3 @@ where
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::pure::geometry::Rect;
-
-    #[test]
-    fn visible_client_positions_respects_floating_clients() {
-        let tags = (1..10).map(|n| n.to_string());
-        let screen = Rect::new(0, 0, 200, 100);
-        let mut cs = ClientSet::try_new(LayoutStack::default(), tags, vec![screen]).unwrap();
-
-        for n in 0..4 {
-            cs.insert(Xid(n));
-        }
-
-        let r = Rect::new(50, 50, 50, 50);
-        cs.float_unchecked(Xid(1), r);
-
-        let positions = cs.visible_client_positions();
-
-        assert!(positions.contains(&(Xid(1), r)))
-    }
-}

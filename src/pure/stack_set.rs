@@ -230,7 +230,7 @@ where
     /// Returns false if the tag given is unknown to this StackSet.
     pub fn has_floating_windows(&self, tag: impl AsRef<str>) -> bool {
         self.workspace(tag.as_ref())
-            .map(|w| w.clients().any(|c| self.floating.contains_key(c)))
+            .map(|w| w.clients().any(|id| self.floating.contains_key(id)))
             .unwrap_or(false)
     }
 
@@ -238,7 +238,7 @@ where
     pub fn remove_client(&mut self, client: &C) -> Option<C> {
         self.sink(client); // Clear any floating information we might have
 
-        self.iter_workspaces_mut()
+        self.workspaces_mut()
             .map(|w| w.remove(client))
             .find(|opt| opt.is_some())
             .flatten()
@@ -285,7 +285,7 @@ where
         // Not calling self.remove_client as that will also sink the client if it
         // was floating
         let maybe_removed = self
-            .iter_workspaces_mut()
+            .workspaces_mut()
             .map(|w| w.remove(client))
             .find(|opt| opt.is_some())
             .flatten();
@@ -317,14 +317,14 @@ where
     }
 
     pub fn contains_tag(&self, tag: &str) -> bool {
-        self.iter_workspaces().any(|w| w.tag == tag)
+        self.workspaces().any(|w| w.tag == tag)
     }
 
     /// All [Workspace] tags in this [StackSet] order by their id that have not been
     /// marked as being invisible.
     pub fn ordered_tags(&self) -> Vec<String> {
         let mut indexed: Vec<_> = self
-            .iter_workspaces()
+            .workspaces()
             .map(|w| (w.id, w.tag.clone()))
             .filter(|(_, t)| !self.invisible_tags.contains(t))
             .collect();
@@ -338,7 +338,7 @@ where
     /// marked as being invisible.
     pub fn ordered_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
         let mut wss: Vec<_> = self
-            .iter_workspaces()
+            .workspaces()
             .filter(|w| !self.invisible_tags.contains(&w.tag))
             .collect();
 
@@ -351,7 +351,7 @@ where
     ///
     /// Returns [None] if the index is out of bounds
     pub fn tag_for_screen(&self, index: usize) -> Option<&str> {
-        self.iter_screens()
+        self.screens()
             .find(|s| s.index == index)
             .map(|s| s.workspace.tag.as_str())
     }
@@ -359,7 +359,7 @@ where
     /// Find the tag of the [Workspace] containing a given client.
     /// Returns Some(tag) if the client is known otherwise None.
     pub fn tag_for_client(&self, client: &C) -> Option<&str> {
-        self.iter_workspaces()
+        self.workspaces()
             .find(|w| {
                 w.stack
                     .as_ref()
@@ -371,19 +371,14 @@ where
 
     /// Find the tag of the [Workspace] with the given NetWmDesktop ID.
     pub fn tag_for_workspace_id(&self, id: usize) -> Option<String> {
-        self.iter_workspaces()
+        self.workspaces()
             .find(|w| w.id == id)
             .map(|w| w.tag.clone())
     }
 
     /// Returns `true` if the [StackSet] contains an element equal to the given value.
     pub fn contains(&self, client: &C) -> bool {
-        self.iter_clients().any(|c| c == client)
-    }
-
-    /// Returns `true` if the [StackSet] contains a visible element equal to the given value.
-    pub fn is_visible(&self, client: &C) -> bool {
-        self.iter_visible_clients().any(|c| c == client)
+        self.clients().any(|c| c == client)
     }
 
     /// Extract a reference to the focused element of the current [Stack]
@@ -436,7 +431,7 @@ where
         }
 
         let id = self
-            .iter_workspaces()
+            .workspaces()
             .map(|w| w.id)
             .max()
             .expect("at least one workspace")
@@ -468,12 +463,12 @@ where
 
     /// A reference to the [Workspace] with a tag of `tag` if there is one
     pub fn workspace(&self, tag: &str) -> Option<&Workspace<C>> {
-        self.iter_workspaces().find(|w| w.tag == tag)
+        self.workspaces().find(|w| w.tag == tag)
     }
 
     /// A mutable reference to the [Workspace] with a tag of `tag` if there is one
     pub fn workspace_mut(&mut self, tag: &str) -> Option<&mut Workspace<C>> {
-        self.iter_workspaces_mut().find(|w| w.tag == tag)
+        self.workspaces_mut().find(|w| w.tag == tag)
     }
 
     /// Switch to the next available [Layout] on the focused [Workspace]
@@ -556,21 +551,21 @@ where
     where
         F: FnOnce(&mut Workspace<C>),
     {
-        self.iter_workspaces_mut().find(|w| w.tag == tag).map(f);
+        self.workspaces_mut().find(|w| w.tag == tag).map(f);
     }
 
     /// Iterate over each [Screen] in this [StackSet] in an arbitrary order.
-    pub fn iter_screens(&self) -> impl Iterator<Item = &Screen<C>> {
+    pub fn screens(&self) -> impl Iterator<Item = &Screen<C>> {
         self.screens.iter()
     }
 
     /// Mutably iterate over each [Screen] in this [StackSet] in an arbitrary order.
-    pub fn iter_screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C>> {
+    pub fn screens_mut(&mut self) -> impl Iterator<Item = &mut Screen<C>> {
         self.screens.iter_mut()
     }
 
     /// Iterate over each [Workspace] in this [StackSet] in an arbitrary order.
-    pub fn iter_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+    pub fn workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
         self.screens
             .iter()
             .map(|s| &s.workspace)
@@ -578,50 +573,45 @@ where
     }
 
     /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
-    pub fn iter_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
+    pub fn workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
         self.screens
             .iter_mut()
             .map(|s| &mut s.workspace)
             .chain(self.hidden.iter_mut())
     }
 
-    /// Iterate over the currently visible [Workspace] in this [StackSet] in an arbitrary order.
-    pub fn iter_visible_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+    /// Iterate over the [Workspace] currently displayed on a screen in an arbitrary order.
+    pub fn on_screen_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
         self.screens.iter().map(|s| &s.workspace)
     }
 
     /// Iterate over the currently hidden [Workspace] in this [StackSet] in an arbitrary order.
-    pub fn iter_hidden_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+    pub fn hidden_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
         self.hidden.iter()
     }
 
     /// Iterate over the currently hidden [Workspace] in this [StackSet] in an arbitrary order.
-    pub fn iter_hidden_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
+    pub fn hidden_workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
         self.hidden.iter_mut()
     }
 
     /// Iterate over each client in this [StackSet] in an arbitrary order.
-    pub fn iter_clients(&self) -> impl Iterator<Item = &C> {
-        self.iter_workspaces()
-            .flat_map(|w| w.stack.iter().flat_map(|s| s.iter()))
+    pub fn clients(&self) -> impl Iterator<Item = &C> {
+        self.workspaces().flat_map(|w| w.clients())
     }
 
-    /// Iterate over the currently visible clients in this [StackSet] in an arbitrary order.
-    pub fn iter_visible_clients(&self) -> impl Iterator<Item = &C> {
-        self.iter_visible_workspaces()
-            .flat_map(|w| w.stack.iter().flat_map(|s| s.iter()))
+    /// Iterate over clients present in on-screen Workspaces.
+    ///
+    /// *NOTE*: this does _not_ mean that every client returned by this iterator
+    /// is visible on the screen: only that it is currently assigned to a workspace
+    /// that is displayed on a screen.
+    pub fn on_screen_workspace_clients(&self) -> impl Iterator<Item = &C> {
+        self.on_screen_workspaces().flat_map(|w| w.clients())
     }
 
-    /// Iterate over the currently hidden clients in this [StackSet] in an arbitrary order.
-    pub fn iter_hidden_clients(&self) -> impl Iterator<Item = &C> {
-        self.iter_hidden_workspaces()
-            .flat_map(|w| w.stack.iter().flat_map(|s| s.iter()))
-    }
-
-    /// Iterate over each client in this [StackSet] in an arbitrary order.
-    pub fn iter_clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
-        self.iter_workspaces_mut()
-            .flat_map(|w| w.stack.iter_mut().flat_map(|s| s.iter_mut()))
+    /// Iterate over clients from workspaces not currently mapped to a screen.
+    pub fn hidden_workspace_clients(&self) -> impl Iterator<Item = &C> {
+        self.hidden_workspaces().flat_map(|w| w.clients())
     }
 }
 
@@ -632,7 +622,7 @@ impl StackSet<Xid> {
     /// NOTE: we require Xid as the client type here as we need that when running layouts
     pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
         let mut float_positions: Vec<(Xid, Rect)> = self
-            .iter_visible_clients()
+            .on_screen_workspace_clients()
             .flat_map(|c| self.floating.get(c).map(|r| (*c, *r)))
             .collect();
 
@@ -658,6 +648,11 @@ impl StackSet<Xid> {
 
         positions
     }
+
+    pub(crate) fn position_and_snapshot(&mut self) -> Snapshot<Xid> {
+        let positions = self.visible_client_positions();
+        self.snapshot(positions)
+    }
 }
 
 impl<C> StackSet<C>
@@ -677,7 +672,7 @@ where
             focused: ScreenState::from(&self.screens.focus),
             visible,
             positions,
-            hidden_clients: self.iter_hidden_clients().copied().collect(),
+            hidden_clients: self.hidden_workspace_clients().copied().collect(),
         }
     }
 }
@@ -794,7 +789,7 @@ pub mod tests {
 
         s.focus_tag(target);
 
-        let visible_tags: Vec<&str> = s.iter_screens().map(|s| s.workspace.tag.as_ref()).collect();
+        let visible_tags: Vec<&str> = s.screens().map(|s| s.workspace.tag.as_ref()).collect();
 
         assert_eq!(s.screens.focus.workspace.tag, target);
         assert_eq!(visible_tags, vis);
@@ -859,7 +854,7 @@ pub mod tests {
     #[test]
     fn iter_screens_returns_all_screens() {
         let s = test_iter_stack_set();
-        let mut screen_indices: Vec<usize> = s.iter_screens().map(|s| s.index).collect();
+        let mut screen_indices: Vec<usize> = s.screens().map(|s| s.index).collect();
         screen_indices.sort();
 
         assert_eq!(screen_indices, vec![0, 1, 2])
@@ -868,7 +863,7 @@ pub mod tests {
     #[test]
     fn iter_screens_mut_returns_all_screens() {
         let mut s = test_iter_stack_set();
-        let mut screen_indices: Vec<usize> = s.iter_screens_mut().map(|s| s.index).collect();
+        let mut screen_indices: Vec<usize> = s.screens_mut().map(|s| s.index).collect();
         screen_indices.sort();
 
         assert_eq!(screen_indices, vec![0, 1, 2])
@@ -877,7 +872,7 @@ pub mod tests {
     #[test]
     fn iter_workspaces_returns_all_workspaces() {
         let s = test_iter_stack_set();
-        let mut tags: Vec<&str> = s.iter_workspaces().map(|w| w.tag.as_str()).collect();
+        let mut tags: Vec<&str> = s.workspaces().map(|w| w.tag.as_str()).collect();
         tags.sort();
 
         assert_eq!(tags, vec!["1", "2", "3", "4", "5"])
@@ -886,7 +881,7 @@ pub mod tests {
     #[test]
     fn iter_workspaces_mut_returns_all_workspaces() {
         let mut s = test_iter_stack_set();
-        let mut tags: Vec<&str> = s.iter_workspaces_mut().map(|w| w.tag.as_str()).collect();
+        let mut tags: Vec<&str> = s.workspaces_mut().map(|w| w.tag.as_str()).collect();
         tags.sort();
 
         assert_eq!(tags, vec!["1", "2", "3", "4", "5"])
@@ -895,16 +890,7 @@ pub mod tests {
     #[test]
     fn iter_clients_returns_all_clients() {
         let s = test_iter_stack_set();
-        let mut clients: Vec<u8> = s.iter_clients().copied().collect();
-        clients.sort();
-
-        assert_eq!(clients, vec![1, 2, 3, 4, 5, 6, 7, 8])
-    }
-
-    #[test]
-    fn iter_clients_mut_returns_all_clients() {
-        let mut s = test_iter_stack_set();
-        let mut clients: Vec<u8> = s.iter_clients_mut().map(|c| *c).collect();
+        let mut clients: Vec<u8> = s.clients().copied().collect();
         clients.sort();
 
         assert_eq!(clients, vec![1, 2, 3, 4, 5, 6, 7, 8])
@@ -926,7 +912,7 @@ pub mod tests {
         let mut s = test_stack_set_with_stacks(vec![Some(stack!(1)), Some(stack!(2, 3)), None], 1);
 
         let clients = |s: &StackSet<u8>| {
-            let mut cs: Vec<_> = s.iter_clients().copied().collect();
+            let mut cs: Vec<_> = s.clients().copied().collect();
             cs.sort();
 
             cs
@@ -999,6 +985,22 @@ pub mod tests {
         fn stack_order(s: &mut StackSet<Xid>) -> Vec<u32> {
             let positions = s.visible_client_positions();
             positions.iter().map(|&(id, _)| *id).collect()
+        }
+
+        #[test]
+        fn floating_client_positions_are_respected() {
+            let mut s = test_xid_stack_set(5, 2);
+
+            for n in 0..4 {
+                s.insert(Xid(n));
+            }
+
+            let r = Rect::new(50, 50, 50, 50);
+            s.float_unchecked(Xid(1), r);
+
+            let positions = s.visible_client_positions();
+
+            assert!(positions.contains(&(Xid(1), r)))
         }
 
         #[test]
@@ -1100,7 +1102,7 @@ mod quickcheck_tests {
         }
 
         pub fn last_tag(&self) -> String {
-            self.iter_workspaces()
+            self.workspaces()
                 .last()
                 .expect("at least one workspace")
                 .tag
@@ -1168,7 +1170,7 @@ mod quickcheck_tests {
 
     #[quickcheck]
     fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<Xid>) -> bool {
-        let target = match s.iter_clients().max() {
+        let target = match s.clients().max() {
             Some(target) => *target,
             None => return true, // nothing to focus
         };

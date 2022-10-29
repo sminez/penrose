@@ -66,10 +66,7 @@ pub fn summarise_state<X: XConn>(state: &State<X>, cfg: &CurrentStateConfig) -> 
     }
 
     if cfg.n_clients {
-        fields.push(format!(
-            "n_clients={}",
-            state.client_set.iter_clients().count()
-        ));
+        fields.push(format!("n_clients={}", state.client_set.clients().count()));
     }
 
     if cfg.n_mapped_clients {

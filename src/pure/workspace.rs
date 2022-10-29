@@ -5,14 +5,14 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Workspace<C> {
+pub struct Workspace<T> {
     pub(crate) id: usize,
     pub(crate) tag: String,
     pub(crate) layouts: LayoutStack,
-    pub(crate) stack: Option<Stack<C>>,
+    pub(crate) stack: Option<Stack<T>>,
 }
 
-impl<C> Default for Workspace<C> {
+impl<T> Default for Workspace<T> {
     fn default() -> Self {
         Self {
             id: Default::default(),
@@ -23,10 +23,11 @@ impl<C> Default for Workspace<C> {
     }
 }
 
-impl<C> Workspace<C> {
-    pub fn new<T>(id: usize, tag: T, layouts: LayoutStack, stack: Option<Stack<C>>) -> Self
+impl<T> Workspace<T> {
+    /// Create a new Workspace with the given layouts and stack.
+    pub fn new<S>(id: usize, tag: S, layouts: LayoutStack, stack: Option<Stack<T>>) -> Self
     where
-        T: Into<String>,
+        S: Into<String>,
     {
         Self {
             id,
@@ -45,52 +46,41 @@ impl<C> Workspace<C> {
         }
     }
 
+    /// A fixed integer ID for this workspace.
     pub fn id(&self) -> usize {
         self.id
     }
 
+    /// The string tag for this workspace.
     pub fn tag(&self) -> &str {
         &self.tag
     }
 
+    /// The name of the currently active layout being used by this workspace
     pub fn layout_name(&self) -> String {
         self.layouts.focus.name()
     }
 
+    /// Whether or not this workspace currently holds any windows
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.stack.is_none()
     }
 
-    pub fn focus(&self) -> Option<&C> {
+    pub fn focus(&self) -> Option<&T> {
         self.stack.as_ref().map(|s| &s.focus)
     }
 
-    pub fn clients(&self) -> impl Iterator<Item = &C> {
+    pub fn clients(&self) -> impl Iterator<Item = &T> {
         self.stack.iter().flat_map(|s| s.iter())
     }
 
-    pub fn clients_mut(&mut self) -> impl Iterator<Item = &mut C> {
-        self.stack.iter_mut().flat_map(|s| s.iter_mut())
-    }
-
-    pub(crate) fn remove_focused(&mut self) -> Option<C> {
+    pub(crate) fn remove_focused(&mut self) -> Option<T> {
         let current = self.stack.take();
         let (focus, new_stack) = current?.remove_focused();
         self.stack = new_stack;
 
         Some(focus)
-    }
-
-    pub(crate) fn remove(&mut self, c: &C) -> Option<C>
-    where
-        C: PartialEq,
-    {
-        let current = self.stack.take();
-        let (maybe_c, new_stack) = current?.remove(c);
-        self.stack = new_stack;
-
-        maybe_c
     }
 
     pub fn handle_message<M>(&mut self, m: M)
@@ -116,16 +106,24 @@ impl<C> Workspace<C> {
     }
 }
 
-impl<C: PartialEq> Workspace<C> {
-    pub fn contains(&self, c: &C) -> bool {
+impl<T: PartialEq> Workspace<T> {
+    pub fn contains(&self, t: &T) -> bool {
         match &self.stack {
-            Some(s) => s.contains(c),
+            Some(s) => s.contains(t),
             None => false,
         }
     }
+
+    pub(crate) fn remove(&mut self, t: &T) -> Option<T> {
+        let current = self.stack.take();
+        let (maybe_t, new_stack) = current?.remove(t);
+        self.stack = new_stack;
+
+        maybe_t
+    }
 }
 
-pub(crate) fn check_workspace_invariants<C>(workspaces: &[Workspace<C>]) -> Result<()> {
+pub(crate) fn check_workspace_invariants<T>(workspaces: &[Workspace<T>]) -> Result<()> {
     let tags = workspaces.iter().map(|w| &w.tag);
     let mut seen = vec![];
     let mut duplicates = vec![];
@@ -158,10 +156,10 @@ mod tests {
     #[test_case(Some(stack!([1, 2], 3, [4])), None, true; "unknown")]
     #[test_case(None, None, false; "empty stack")]
     #[test]
-    fn remove_returns_as_expected(stack: Option<Stack<u8>>, maybe_c: Option<u8>, is_some: bool) {
+    fn remove_returns_as_expected(stack: Option<Stack<u8>>, maybe_t: Option<u8>, is_some: bool) {
         let mut w = Workspace::new(0, "test", LayoutStack::default(), stack);
 
-        assert_eq!(w.remove(&5), maybe_c);
+        assert_eq!(w.remove(&5), maybe_t);
         assert_eq!(w.stack.is_some(), is_some);
     }
 

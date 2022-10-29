@@ -133,11 +133,12 @@ impl<T> Stack<T> {
         }
     }
 
+    /// The number of elements in this Stack.
     pub fn len(&self) -> usize {
         self.up.len() + self.down.len() + 1
     }
 
-    /// Always false: a Stack always has at least one focused element
+    /// Always false: a Stack always has at least one focused element.
     pub fn is_empty(&self) -> bool {
         false
     }
@@ -181,23 +182,6 @@ impl<T> Stack<T> {
     /// element is focused.
     pub fn flatten(self) -> Vec<T> {
         self.into_iter().collect()
-    }
-
-    /// Flatten a Stack into a Vector, losing the information of which
-    /// element is focused.
-    /// (Alias of `flatten`)
-    pub fn integrate(self) -> Vec<T> {
-        self.into_iter().collect()
-    }
-
-    /// Turn an iterable into a possibly empty Stack with the first
-    /// element focused and remaining elements placed after it.
-    /// (Alias of `try_from_iter`)
-    pub fn differentiate<I>(iter: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = T>,
-    {
-        Self::try_from_iter(iter)
     }
 
     /// Return a reference to the first element in this [Stack]
@@ -496,6 +480,9 @@ impl<T> Stack<T> {
 }
 
 impl<T: Clone> Stack<T> {
+    /// Attempt to create a new Stack from this one by filtering the existing
+    /// elements using a predicate function. This will return `None` if no
+    /// elements match the predicate.
     pub fn from_filtered<F>(&self, f: F) -> Option<Self>
     where
         F: Fn(&T) -> bool,
@@ -507,6 +494,7 @@ impl<T: Clone> Stack<T> {
 }
 
 impl<T: PartialEq> Stack<T> {
+    /// Check whether a given element is in this Stack
     pub fn contains(&self, t: &T) -> bool {
         &self.focus == t || self.up.contains(t) || self.down.contains(t)
     }
@@ -697,30 +685,30 @@ mod tests {
     }
 
     #[test]
-    fn integrate_is_correctly_ordered() {
-        let res = stack!([1, 2], 3, [4, 5]).integrate();
+    fn flatten_is_correctly_ordered() {
+        let res = stack!([1, 2], 3, [4, 5]).flatten();
 
         assert_eq!(res, vec![1, 2, 3, 4, 5]);
     }
 
     #[test]
-    fn differentiate_is_correctly_ordered() {
-        let res = Stack::differentiate(vec![1, 2, 3, 4, 5]);
+    fn try_from_iter_is_correctly_ordered() {
+        let res = Stack::try_from_iter(vec![1, 2, 3, 4, 5]);
 
         assert_eq!(res, Some(stack!(1, [2, 3, 4, 5])));
     }
 
     #[test]
-    fn differentiate_of_empty_iterable_is_none() {
+    fn try_from_iter_of_empty_iterable_is_none() {
         let empty: Vec<()> = vec![];
 
-        assert_eq!(Stack::differentiate(empty), None);
+        assert_eq!(Stack::try_from_iter(empty), None);
     }
 
     #[test]
-    fn int_diff_with_empty_up_is_inverse() {
+    fn try_from_iter_after_flatten_with_empty_up_is_inverse() {
         let s = stack!(1, [2, 3, 4]);
-        let res = Stack::differentiate(s.clone().integrate());
+        let res = Stack::try_from_iter(s.clone().flatten());
 
         assert_eq!(res, Some(s));
     }

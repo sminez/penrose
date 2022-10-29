@@ -13,13 +13,13 @@ pub fn dmenu_focus_client<X: XConn>(config: DMenuConfig) -> Box<dyn KeyEventHand
     key_handler(move |state: &mut State<X>, x: &X| {
         let choices: HashMap<String, Xid> = state
             .client_set
-            .iter_workspaces()
+            .workspaces()
             .filter(|w| !state.client_set.invisible_tags.iter().any(|t| t == w.tag()))
             .flat_map(|w| {
-                w.clients().map(|&c| {
-                    let title = x.window_title(c).unwrap_or_else(|_| (*c).to_string());
+                w.clients().map(|&id| {
+                    let title = x.window_title(id).unwrap_or_else(|_| (*id).to_string());
 
-                    (format!("{}: {}", w.tag(), title), c)
+                    (format!("{}: {}", w.tag(), title), id)
                 })
             })
             .collect();

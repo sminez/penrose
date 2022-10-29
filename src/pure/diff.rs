@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn diff_of_unchanged_stackset_is_empty() {
         let s = test_stack_set(5, 2);
-        let positions: Vec<_> = s.iter_clients().map(|&c| (c, Rect::default())).collect();
+        let positions: Vec<_> = s.clients().map(|&c| (c, Rect::default())).collect();
         let ss = s.snapshot(positions);
 
         let diff = Diff::new(ss.clone(), ss);
@@ -193,8 +193,7 @@ mod quickcheck_tests {
 
     #[quickcheck]
     fn diff_of_unchanged_stackset_is_empty(mut s: StackSet<Xid>) -> bool {
-        let positions = s.visible_client_positions();
-        let ss = s.snapshot(positions);
+        let ss = s.position_and_snapshot();
         let diff = Diff::new(ss.clone(), ss);
 
         diff.is_empty()
@@ -202,14 +201,12 @@ mod quickcheck_tests {
 
     #[quickcheck]
     fn adding_a_client_is_new_in_diff(mut s: StackSet<Xid>) -> bool {
-        let positions = s.visible_client_positions();
-        let ss = s.snapshot(positions);
+        let ss = s.position_and_snapshot();
         let new = s.minimal_unknown_client();
 
         s.insert(new);
 
-        let positions = s.visible_client_positions();
-        let diff = Diff::new(ss, s.snapshot(positions));
+        let diff = Diff::new(ss, s.position_and_snapshot());
         let res = diff.new_clients().any(|&c| c == new);
 
         res
@@ -230,13 +227,11 @@ mod quickcheck_tests {
             None => vec![],
         };
 
-        let positions = s.visible_client_positions();
-        let ss = s.snapshot(positions);
+        let ss = s.position_and_snapshot();
 
         s.focus_tag(&tag);
 
-        let positions = s.visible_client_positions();
-        let diff = Diff::new(ss, s.snapshot(positions));
+        let diff = Diff::new(ss, s.position_and_snapshot());
         let hidden: HashSet<_> = diff.hidden_clients().collect();
 
         let focused_clients_now_hidden = clients_on_active.iter().all(|c| hidden.contains(c));
@@ -252,12 +247,10 @@ mod quickcheck_tests {
             None => return true, // nothing to remove
         };
 
-        let positions = s.visible_client_positions();
-        let ss = s.snapshot(positions);
+        let ss = s.position_and_snapshot();
         s.remove_client(&focus);
 
-        let positions = s.visible_client_positions();
-        let diff = Diff::new(ss, s.snapshot(positions));
+        let diff = Diff::new(ss, s.position_and_snapshot());
         let res = diff.withdrawn_clients().any(|&c| c == focus)
             && diff.hidden_clients().any(|&c| c == focus);
 
@@ -271,13 +264,11 @@ mod quickcheck_tests {
 
         match (client, tag) {
             (Some(client), Some(tag)) => {
-                let positions = s.visible_client_positions();
-                let ss = s.snapshot(positions);
+                let ss = s.position_and_snapshot();
 
                 s.move_client_to_tag(&client, &tag);
 
-                let positions = s.visible_client_positions();
-                let diff = Diff::new(ss, s.snapshot(positions));
+                let diff = Diff::new(ss, s.position_and_snapshot());
                 let res = diff.hidden_clients().any(|&c| c == client);
 
                 res

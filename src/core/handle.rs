@@ -233,7 +233,7 @@ where
 {
     x.modify_and_refresh(state, |cs| {
         let index = cs
-            .iter_screens()
+            .screens()
             .find(|s| s.r.contains_point(p))
             .map(|s| s.index());
 

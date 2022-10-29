@@ -74,7 +74,7 @@ where
     key_handler(move |s: &mut State<X>, x: &X| {
         let mut client = None;
 
-        for &id in s.client_set.iter_clients() {
+        for &id in s.client_set.clients() {
             if let Some(Prop::UTF8String(classes)) = x.get_prop(id, Atom::WmClass.as_ref())? {
                 if classes.iter().any(|s| s == class) {
                     client = Some(id);

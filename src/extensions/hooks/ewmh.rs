@@ -165,7 +165,7 @@ where
     X: XConn,
 {
     // FIXME: this currently isn't in stacking order
-    let ordered_clients: Vec<Xid> = cs.iter_clients().copied().collect();
+    let ordered_clients: Vec<Xid> = cs.clients().copied().collect();
 
     x.set_prop(
         x.root(),
@@ -197,7 +197,7 @@ fn set_client_desktops<X>(cs: &ClientSet, x: &X) -> Result<()>
 where
     X: XConn,
 {
-    let client_desktops = cs.iter_workspaces().flat_map(|w| {
+    let client_desktops = cs.workspaces().flat_map(|w| {
         w.stack
             .iter()
             .flat_map(|s| s.iter().map(|&c| (w.id as u32, c)))

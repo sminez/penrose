@@ -42,7 +42,7 @@ impl From<&ClientSpace> for WsMeta {
 fn focused_workspaces<X: XConn>(state: &State<X>) -> Vec<String> {
     let mut indexed_screens: Vec<(usize, String)> = state
         .client_set
-        .iter_screens()
+        .screens()
         .map(|s| (s.index(), s.workspace.tag().to_owned()))
         .collect();
 

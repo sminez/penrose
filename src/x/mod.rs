@@ -187,8 +187,7 @@ pub trait XConnExt: XConn + Sized {
     {
         f(&mut state.client_set); // NOTE: mutating the existing state
 
-        let positions = state.client_set.visible_client_positions();
-        let ss = state.client_set.snapshot(positions);
+        let ss = state.client_set.position_and_snapshot();
         state.diff.update(ss);
 
         set_window_props(self, state)?;
@@ -320,10 +319,7 @@ pub trait XConnExt: XConn + Sized {
     }
 
     fn warp_pointer_to_screen(&self, state: &mut State<Self>, screen_index: usize) -> Result<()> {
-        let maybe_screen = state
-            .client_set
-            .iter_screens()
-            .find(|s| s.index == screen_index);
+        let maybe_screen = state.client_set.screens().find(|s| s.index == screen_index);
 
         let screen = match maybe_screen {
             Some(s) => s,
@@ -376,7 +372,7 @@ fn notify_hidden_workspaces<X: XConn>(state: &mut State<X>) {
 
     state
         .client_set
-        .iter_hidden_workspaces_mut()
+        .hidden_workspaces_mut()
         .filter(|w| previous_visible_tags.contains(&w.tag.as_ref()))
         .for_each(|ws| ws.broadcast_message(Hide));
 }
