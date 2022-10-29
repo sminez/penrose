@@ -6,6 +6,9 @@ use crate::{
 };
 
 /// Handle an [XEvent], return `true` if default event handling should be run afterwards.
+///
+/// This hook is called before incoming XEvents are processed by the default event handling
+/// logic.
 pub trait EventHook<X>
 where
     X: XConn,
@@ -79,7 +82,10 @@ where
     }
 }
 
-/// Action to run when a new client becomes managed
+/// Action to run when a new client becomes managed.
+///
+/// Manage hooks should _not_ trigger refreshes of state directly: they are called
+/// immediately before a refresh is run by main window manager logic.
 pub trait ManageHook<X>
 where
     X: XConn,

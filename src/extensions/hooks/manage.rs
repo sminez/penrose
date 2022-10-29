@@ -1,8 +1,11 @@
 //! Manage hooks for common manage actions
+//!
+//! Manage hooks should _not_ trigger a refresh directly: that is handled by penrose
+//! itself when the manage hook is called.
 use crate::{
     core::{hooks::ManageHook, State},
     pure::geometry::Rect,
-    x::{Query, XConn, XConnExt},
+    x::{Query, XConn},
     Result, Xid,
 };
 
@@ -23,8 +26,10 @@ where
     }
 }
 
-fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, x: &X) -> Result<()> {
-    x.modify_and_refresh(state, |cs| cs.float_unchecked(client, r))
+fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, _: &X) -> Result<()> {
+    state.client_set.float_unchecked(client, r);
+
+    Ok(())
 }
 
 /// Perform no additional actions when managing a new client.

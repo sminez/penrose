@@ -171,6 +171,7 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
             }
         }
 
+        debug!("running refresh");
         x.refresh(state)
     }
 }
