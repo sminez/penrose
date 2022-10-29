@@ -207,7 +207,7 @@ impl Monocle {
 
 impl Layout for Monocle {
     fn name(&self) -> String {
-        "mono".to_owned()
+        "Mono".to_owned()
     }
 
     fn boxed_clone(&self) -> Box<dyn Layout> {
