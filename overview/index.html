@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../overview/index.html" class="active"><strong aria-hidden="true">3.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">3.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html"><strong aria-hidden="true">3.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="../overview/hooks.html"><strong aria-hidden="true">3.3.</strong> Hooks</a></li><li class="chapter-item expanded "><a href="../overview/layouts.html"><strong aria-hidden="true">3.4.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../overview/actions.html"><strong aria-hidden="true">3.5.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="../ui/index.html"><strong aria-hidden="true">4.</strong> Built in UI elements</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ui/draw-and-context.html"><strong aria-hidden="true">4.1.</strong> Draw and Context</a></li><li class="chapter-item expanded "><a href="../ui/status-bar.html"><strong aria-hidden="true">4.2.</strong> Status Bar</a></li></ol></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">5.</strong> FAQs</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../overview/index.html" class="active"><strong aria-hidden="true">3.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">3.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html"><strong aria-hidden="true">3.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="../overview/layouts.html"><strong aria-hidden="true">3.3.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../overview/actions.html"><strong aria-hidden="true">3.4.</strong> Actions</a></li><li class="chapter-item expanded "><a href="../overview/hooks.html"><strong aria-hidden="true">3.5.</strong> Hooks</a></li></ol></li><li class="chapter-item expanded "><a href="../ui/index.html"><strong aria-hidden="true">4.</strong> Built in UI elements</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ui/draw-and-context.html"><strong aria-hidden="true">4.1.</strong> Draw and Context</a></li><li class="chapter-item expanded "><a href="../ui/status-bar.html"><strong aria-hidden="true">4.2.</strong> Status Bar</a></li></ol></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">5.</strong> FAQs</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -136,7 +136,26 @@
                     <main>
                         <p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
 <h1 id="overview-of-concepts"><a class="header" href="#overview-of-concepts">Overview of Concepts</a></h1>
-<h2 id="coming-soon"><a class="header" href="#coming-soon">Coming soon...</a></h2>
+<p>Penrose is a <a href="https://wiki.archlinux.org/title/Window_manager">dynamic tiling window manager</a> for <a href="https://wiki.archlinux.org/title/Xorg">Xorg</a> in the spirit of <a href="https://xmonad.org/">Xmonad</a>. Most of the
+concepts and APIs you'll find for penrose are nothing new, but if you plan on digging into writing your
+own window manager then it's worthwhile taking a bit of time to learn what all the moving parts are.</p>
+<p>At its core, the main operation of penrose is an event loop that reacts to events received from the X
+server. In simplified rust code, it looks something like this:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>loop {
+    let event = get_next_xevent();
+    match event {
+        // for each event type run the appropriate handler
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>There's obviously more to it than that, but this is a pretty good starting point for how to think about
+your window manager. Penrose provides a number of different ways to modify how the default handling
+of events behaves and for running custom code in response to key presses. The pages in this section of
+the book each cover (at a relatively high level) what the moving parts that make this work all look like.</p>
+<p>First up: pure code vs X code.</p>
 
                     </main>
 

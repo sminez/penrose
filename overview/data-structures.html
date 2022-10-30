@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../overview/index.html"><strong aria-hidden="true">3.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">3.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html" class="active"><strong aria-hidden="true">3.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="../overview/hooks.html"><strong aria-hidden="true">3.3.</strong> Hooks</a></li><li class="chapter-item expanded "><a href="../overview/layouts.html"><strong aria-hidden="true">3.4.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../overview/actions.html"><strong aria-hidden="true">3.5.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="../ui/index.html"><strong aria-hidden="true">4.</strong> Built in UI elements</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ui/draw-and-context.html"><strong aria-hidden="true">4.1.</strong> Draw and Context</a></li><li class="chapter-item expanded "><a href="../ui/status-bar.html"><strong aria-hidden="true">4.2.</strong> Status Bar</a></li></ol></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">5.</strong> FAQs</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../overview/index.html"><strong aria-hidden="true">3.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">3.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html" class="active"><strong aria-hidden="true">3.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="../overview/layouts.html"><strong aria-hidden="true">3.3.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../overview/actions.html"><strong aria-hidden="true">3.4.</strong> Actions</a></li><li class="chapter-item expanded "><a href="../overview/hooks.html"><strong aria-hidden="true">3.5.</strong> Hooks</a></li></ol></li><li class="chapter-item expanded "><a href="../ui/index.html"><strong aria-hidden="true">4.</strong> Built in UI elements</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ui/draw-and-context.html"><strong aria-hidden="true">4.1.</strong> Draw and Context</a></li><li class="chapter-item expanded "><a href="../ui/status-bar.html"><strong aria-hidden="true">4.2.</strong> Status Bar</a></li></ol></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">5.</strong> FAQs</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -136,7 +136,133 @@
                     <main>
                         <p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
 <h1 id="data-structures"><a class="header" href="#data-structures">Data Structures</a></h1>
-<h2 id="coming-soon"><a class="header" href="#coming-soon">Coming soon...</a></h2>
+<p>As mentioned in <a href="./pure-vs-x.html">Pure Code vs X Code</a>, there are a number of <code>pure</code> data structures that penrose makes use of
+in order to manage the internal state of the window manager. We wont get too much into the details of all of the
+various methods associated with each data structure: for that it's best to read the docs on docs.rs. Instead,
+we'll take a quick look at what each data structure does and how you can make use of it when writing your own
+penrose based window manager.</p>
+<p>Most of the data structures outlines below are some form of <a href="https://en.wikipedia.org/wiki/Zipper_(data_structure)">zipper</a> (or some meta-data wrapped around a zipper).
+If the Wikipedia page all looks a bit &quot;computer science-y&quot; to you then you can get by pretty well by thinking of
+a zipper as collection type (like a list or a tree) that has an added concept of &quot;focus&quot; (that is, &quot;the element
+of the collection we are currently looking at&quot;). There is a really nice article about <a href="https://donsbot.com/2007/05/17/roll-your-own-window-manager-tracking-focus-with-a-zipper/">the use of zippers in Xmonad</a>
+which is worth a read if you have the time. It covers the starting point for the use of zippers in penrose and
+also shows where all of the names come from(!) Penrose takes the idea a little further than what is seen in
+Xmonad in order to provide what I think is a nicer API to work with (but I'll let you be the judge of that).</p>
+<p>First up, the arguably incorrectly named &quot;Stack&quot;.</p>
+<h3 id="stacks"><a class="header" href="#stacks">Stacks</a></h3>
+<p>So called because it (primarily) represents the X &quot;window stack&quot; for the current screen you are looking at. Getting
+technical for a minute, a <code>Stack</code> is a zipper over a <a href="https://doc.rust-lang.org/std/collections/struct.LinkedList.html">doubly-linked list</a> that has a couple of nice properties
+that help to simplify how a lot of the rest of the code in penrose is written:</p>
+<ol>
+<li>A Stack is <em>never</em> empty (there is always at least the focused element)</li>
+<li>Operations that manipulate which element is focused do not alter the <em>order</em> of the elements themselves.</li>
+<li>Operations that work with the focused element are <code>O(1)</code></li>
+</ol>
+<p>You can think of a <code>Stack</code> as simply being a normal linked list with a flag on one of the elements to indicate
+where the focus point currently sits. (The actual implementation is a little different in order to make things
+nicer to work with but the idea itself is fine).</p>
+<p>Penrose makes use of <code>Stacks</code> for anything that we want to track focus for. Specifically, we use them for tracking:</p>
+<ul>
+<li>windows assigned to each workspace</li>
+<li>the layouts in use on each workspace</li>
+<li>workspaces assigned to a each screen</li>
+</ul>
+<p>The operations available on <code>Stacks</code> are pretty much what you'd expect: you can treat them like collections (map,
+filter, re-order the elements, iterate, etc) and you can move the focus point around.</p>
+<h3 id="workspaces"><a class="header" href="#workspaces">Workspaces</a></h3>
+<p>Up next after <code>Stacks</code> is <code>Workspaces</code>. You can think of a workspace as a wrapper around a given window stack that
+helps penrose know how to locate the given stack of clients and how (and when) to position them on the screen.
+Rust type wise, a workspace look like this (the fields on a real <code>Workspace</code> aren't public but we can ignore that for now):</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Workspace {
+    id: usize,
+    tag: String,
+    layouts: Stack&lt;Layout&gt;,
+    stack: Option&lt;Stack&lt;Xid&gt;&gt;,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The <code>id</code> and <code>tag</code> fields are used to identify workspaces within the larger pure state: useful, but not particularly
+interesting. The client <code>Stack</code> itself is wrapped in an Option because (like we mentioned above) there is no such
+thing as an empty <code>Stack</code>, so a <code>Workspace</code> with no windows has <code>None</code>. Running operations on the stack contained in
+a given workspace is possible from the top level of the pure state (which we'll cover in a bit).</p>
+<p>The <code>layouts</code> field contains all of the possible <a href="./layouts.html">Layout</a> algorithms available for positioning windows on this
+workspace. There must be at least one layout available (so no <code>Option&lt;Stack&gt;</code> here) and the currently focused layout
+in the stack is the one that will be used to position windows when this workspace is placed on a given screen.</p>
+<p>Speaking of which...</p>
+<h3 id="screens"><a class="header" href="#screens">Screens</a></h3>
+<p>If you thought a <code>Workspace</code> was pretty much &quot;a window Stack with a fancy hat&quot;, then a <code>Screen</code> is &quot;a Workspace in a
+box&quot;.</p>
+<p>A 2D box to be precise.</p>
+<p>For the purposes of our pure state, all we care about when it comes to the physical screens we have to play with are:</p>
+<ul>
+<li>which screen we're talking about</li>
+<li>the dimensions of the screen</li>
+<li>the workspace that is currently active</li>
+</ul>
+<p>Each screen pairs a <code>Workspace</code> with an ID (<code>0..n</code> in the order that they are returned to us by the X server) and a
+<code>Rect</code> to denote the size and relative position of each screen in pixels. Workspaces can be moved between screens,
+clients can be moved between workspaces.</p>
+<p>Lovely.</p>
+<h4 id="rectangles"><a class="header" href="#rectangles">Rect(angles)</a></h4>
+<p>Both screens and the windows that sit within them are described using rectangles. Each <code>Rect</code> is simply the <code>(x, y)</code>
+coordinates of its top left corner along with its width and height. Not <em>massively</em> exciting on its own but it's
+worth taking a look at the docs on the <code>Rect</code> struct to see what methods are available for slicing, dicing, positioning
+and comparing Rects while you write your custom Layout algorithms and extensions.</p>
+<h3 id="the-stackset"><a class="header" href="#the-stackset">The StackSet</a></h3>
+<p>And last but by no means least, we have the <code>StackSet</code>. It's a <em>little</em> &quot;set-y&quot; when you break it down so that's what
+we're going for name wise until someone gives me something better (it's definitely a lot <em>more</em> like a set than the
+original from Xmonad in my opinion but we'll get to that in a second).</p>
+<p>Ignoring several book-keeping fields which we maintain for quality of life purposes, the Rust type looks something like
+this:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct StackSet {
+    screens: Stack&lt;Screen&gt;,
+    hidden: LinkedList&lt;Workspace&gt;,
+    // and some book-keeping...
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>I'm not quite sure how best to describe what's going on here in terms of Zippers as it's a <em>little</em> bit of an abuse of
+the concept but, if you squint hard enough, what you're looking at is pretty much a &quot;Stack of Stacks&quot;. Albeit with a
+healthy sprinkling of meta-data throughout and the fact that for the unfocused elements we don't care about their order
+(hence the <a href="https://en.wikipedia.org/wiki/Set_(mathematics)">set</a> based name).</p>
+<p>If you think back to what we said a <code>Zipper</code> was, we said we had some collection of elements along with the idea of there
+being a &quot;focus point&quot; that picks out an element from that collection. For the <code>StackSet</code>, the collection is a set of
+<code>Workpsaces</code>, and the &quot;focus&quot; is actually a <code>Stack</code> of <code>Screens</code> and their <em>associated</em> <code>Workspaces</code>.</p>
+<p>...still with me?</p>
+<p>If you think about what we care about when managing windows, we can break things down into the following:</p>
+<ul>
+<li>The windows we are managing (<code>Stacks</code>)</li>
+<li>The workspaces those windows are assigned to (<code>Workspaces</code>)</li>
+<li>The screens those workspaces are shown on (<code>Screens</code>)</li>
+<li>The workspaces that are currently hidden from view (more <code>Workspaces</code>)</li>
+</ul>
+<p>For the workspaces that are visible, we move them in and out of the available screens as needed and we maintain the
+currently focused screen which is where the X input focus currently lies. For the hidden workspaces we don't really care
+about what order they are in (we can't see them) so we use a LinkedList to store anything not currently allocated to a
+screen.</p>
+<blockquote>
+<p>We <em>could</em> use a <code>HashSet</code> but then we'd need Workspaces to be hashable and it doesn't actually buy us much in terms
+of the API we end up with.</p>
+</blockquote>
+<p>Having the focused &quot;element&quot; be another level of wrapping around <em>multiple</em> element from the collection really pushes
+the definiton of a Zipper I suspect but it works pretty nicely all things considered. We can then fully manage the
+on screen position and stack position of each window and manipulate groups of windows based on the workspace they are
+part of.</p>
+<p>Nice.</p>
+<h3 id="and-thats-it"><a class="header" href="#and-thats-it">And that's it!</a></h3>
+<p>Admittedly, &quot;it&quot; is a rather large set of methods on a <code>StackSet</code> but it gives you a rich, zipper based API for manipulating
+your windows which handles all of the focus book-keeping for you. To really understand everything that is possible with
+the API it is best to dive into the docs.rs docs and try things out for yourself. The <em>real</em> structs are generic rather
+than having to contain <code>Xids</code> as shown in the pseudo-code above so feel free to pull in penrose as a dependency and start
+having a play with them to see what is possible!</p>
+<p>The tests suites are another good place to take a look at how things work without getting too tied up in the specific use
+cases penrose has for things.</p>
+<p>Speaking of specifics, lets take a look at how to actually do useful things with your window manager: up next we're covering
+layouts.</p>
 
                     </main>
 
@@ -145,7 +271,7 @@
                             <a rel="prev" href="../overview/pure-vs-x.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="../overview/hooks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../overview/layouts.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -157,7 +283,7 @@
                     <a rel="prev" href="../overview/pure-vs-x.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="../overview/hooks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../overview/layouts.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
