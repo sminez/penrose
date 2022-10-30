@@ -1,10 +1,10 @@
 //! penrose :: minimal configuration
 //!
-//! This file will give you a functional if incredibly minimal window manager that has multiple
-//! workspaces and simple client/workspace movement.
+//! This file will give you a functional if incredibly minimal window manager that
+//! has multiple workspaces and simple client / workspace movement.
 use penrose::{
     builtin::{
-        actions::{exit, log_current_state},
+        actions::exit,
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
@@ -38,7 +38,6 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
         "M-S-Right" => send_layout_message(|| ExpandMain),
         "M-S-Left" => send_layout_message(|| ShrinkMain),
         "M-semicolon" => spawn("dmenu_run"),
-        "M-S-s" => log_current_state(),
         "M-Return" => spawn("st"),
         "M-A-Escape" => exit(),
     };
@@ -61,7 +60,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter("trace")
+        .with_env_filter("info")
         .finish()
         .init();
 
