@@ -9,33 +9,12 @@ use crate::{
     util::spawn,
     x::{atom::Atom, property::Prop, XConn, XConnExt},
 };
-use tracing::{error, info};
+use tracing::error;
 
 mod dynamic_select;
 
 #[doc(inline)]
 pub use dynamic_select::*;
-
-/// Exit penrose
-///
-/// Immediately exit the window manager with exit code 0.
-pub fn exit<X>() -> Box<dyn KeyEventHandler<X>>
-where
-    X: XConn,
-{
-    key_handler(|_, _| std::process::exit(0))
-}
-
-/// Info log the current window manager [State].
-pub fn log_current_state<X>() -> Box<dyn KeyEventHandler<X>>
-where
-    X: XConn + std::fmt::Debug,
-{
-    key_handler(|s: &mut State<X>, _| {
-        info!("Current Window Manager State: {s:#?}");
-        Ok(())
-    })
-}
 
 /// Jump to, or create, a [Workspace]
 ///

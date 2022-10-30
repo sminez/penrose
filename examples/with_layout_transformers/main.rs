@@ -2,10 +2,13 @@
 //!
 //! Layouts can be wrapped with transformers that modify their behaviour.
 use penrose::{
-    builtin::layout::{
-        messages::{ExpandMain, IncMain, ShrinkMain},
-        transformers::{Gaps, ReflectHorizontal},
-        MainAndStack,
+    builtin::{
+        actions::{exit, log_current_state},
+        layout::{
+            messages::{ExpandMain, IncMain, ShrinkMain},
+            transformers::{Gaps, ReflectHorizontal},
+            MainAndStack,
+        },
     },
     core::{
         actions::{modify_with, send_layout_message, spawn},
@@ -13,7 +16,6 @@ use penrose::{
         layout::LayoutStack,
         Config, WindowManager,
     },
-    extensions::actions::{exit, log_current_state},
     map, stack,
     x11rb::RustConn,
     Result,

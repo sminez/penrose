@@ -8,10 +8,13 @@
 //! For more customisation options, see the `bar` module of the `penrose_ui` crate in
 //! the `/crates` directory.
 use penrose::{
-    builtin::layout::{
-        messages::{ExpandMain, IncMain, ShrinkMain},
-        transformers::{Gaps, ReserveTop},
-        MainAndStack, Monocle,
+    builtin::{
+        actions::{exit, log_current_state},
+        layout::{
+            messages::{ExpandMain, IncMain, ShrinkMain},
+            transformers::{Gaps, ReserveTop},
+            MainAndStack, Monocle,
+        },
     },
     core::{
         actions::{modify_with, send_layout_message, spawn},
@@ -19,10 +22,7 @@ use penrose::{
         layout::LayoutStack,
         Config, WindowManager,
     },
-    extensions::{
-        actions::{exit, log_current_state},
-        hooks::add_ewmh_hooks,
-    },
+    extensions::hooks::add_ewmh_hooks,
     map, stack,
     x11rb::RustConn,
     Result,
