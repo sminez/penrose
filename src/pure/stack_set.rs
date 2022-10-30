@@ -114,44 +114,89 @@ where
     /// Set focus to the [Workspace] with the specified tag.
     ///
     /// If there is no matching workspace then the [StackSet] is unmodified.
-    /// If the [Workspace] is currently visible it is swapped with the one
-    /// on the active [Screen], otherwise the workspace replaces whatever
+    /// If the [Workspace] is currently visible then focus moves to the screen
+    /// containing that workspace, otherwise the workspace replaces whatever
     /// was on the active screen.
+    ///
+    /// If you always want to focus the given tag on the active screen, see
+    /// [StackSet::pull_tag_to_screen] instead.
     pub fn focus_tag(&mut self, tag: impl AsRef<str>) {
-        let current_tag = self.screens.focus.workspace.tag.clone();
         let tag = tag.as_ref();
 
-        if current_tag == tag {
+        if self.screens.focus.workspace.tag == tag {
             return; // already focused
         }
 
         // If the tag is visible on another screen, focus moves to that screen
+        if !self.try_cycle_screen_to_tag(tag) {
+            // If the tag is hidden then it gets moved to the current screen
+            self.try_swap_on_screen_workspace_with_hidden(tag);
+        }
+
+        // If nothing matched by this point then the requested tag is unknown
+        // so there is nothing for us to do
+    }
+
+    fn try_cycle_screen_to_tag(&mut self, tag: &str) -> bool {
+        let current_tag = self.screens.focus.workspace.tag.clone();
+
         loop {
             self.screens.focus_down();
             match &self.screens.focus.workspace.tag {
                 // we've found and focused the tag
                 t if t == tag => {
                     self.previous_tag = current_tag;
-                    return;
+                    return true;
                 }
 
                 // we've looped so this tag isn't visible
-                t if t == &current_tag => break,
+                t if t == &current_tag => return false,
 
                 // try the next tag
                 _ => (),
             }
         }
+    }
 
-        // If the tag is hidden then it gets moved to the current screen
+    fn try_swap_on_screen_workspace_with_hidden(&mut self, tag: &str) {
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
-            self.previous_tag = current_tag;
+            self.previous_tag = self.screens.focus.workspace.tag.clone();
             swap(&mut w, &mut self.screens.focus.workspace);
             self.hidden.push_back(w);
         }
+    }
 
-        // If nothing matched by this point then the requested tag is unknown
-        // so there is nothing for us to do
+    // true if we swapped otherwise false
+    fn try_swap_focused_workspace_with_tag(&mut self, tag: &str) -> bool {
+        if self.screens.focus.workspace.tag == tag {
+            return false;
+        }
+
+        let p = |s: &&mut Screen<C>| s.workspace.tag == tag;
+
+        let in_up = self.screens.up.iter_mut().find(p);
+        let in_down = self.screens.down.iter_mut().find(p);
+
+        if let Some(s) = in_up.or(in_down) {
+            swap(&mut self.screens.focus.workspace, &mut s.workspace);
+            return true;
+        }
+
+        false
+    }
+
+    /// Focus the requested tag on the current screen, swapping the current
+    /// tag with it.
+    pub fn pull_tag_to_screen(&mut self, tag: impl AsRef<str>) {
+        let tag = tag.as_ref();
+
+        if self.screens.focus.workspace.tag == tag {
+            return;
+        }
+
+        if !self.try_swap_focused_workspace_with_tag(tag) {
+            self.try_swap_on_screen_workspace_with_hidden(tag);
+        }
     }
 
     /// Toggle focus back to the previously focused [Workspace] based on its tag
@@ -495,33 +540,14 @@ where
         self.screens.focus_up();
     }
 
-    // true if we swapped otherwise false
-    fn swap_focused_workspace_with_tag(&mut self, tag: &str) -> bool {
-        if self.screens.focus.workspace.tag == tag {
-            return false;
-        }
-
-        let p = |s: &&mut Screen<C>| s.workspace.tag == tag;
-
-        let in_up = self.screens.up.iter_mut().find(p);
-        let in_down = self.screens.down.iter_mut().find(p);
-
-        if let Some(s) = in_up.or(in_down) {
-            swap(&mut self.screens.focus.workspace, &mut s.workspace);
-            return true;
-        }
-
-        false
-    }
-
     pub fn drag_workspace_forward(&mut self) {
         self.next_screen();
-        self.swap_focused_workspace_with_tag(&self.previous_tag.clone());
+        self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
     pub fn drag_workspace_backward(&mut self) {
         self.previous_screen();
-        self.swap_focused_workspace_with_tag(&self.previous_tag.clone());
+        self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
     /// If the current [Stack] is [None], return `default` otherwise

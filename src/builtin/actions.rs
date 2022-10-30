@@ -8,18 +8,12 @@ use tracing::info;
 /// Exit penrose
 ///
 /// Immediately exit the window manager with exit code 0.
-pub fn exit<X>() -> Box<dyn KeyEventHandler<X>>
-where
-    X: XConn,
-{
+pub fn exit<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     key_handler(|_, _| std::process::exit(0))
 }
 
 /// Info log the current window manager [State] for debugging purposes.
-pub fn log_current_state<X>() -> Box<dyn KeyEventHandler<X>>
-where
-    X: XConn + std::fmt::Debug,
-{
+pub fn log_current_state<X: XConn + std::fmt::Debug>() -> Box<dyn KeyEventHandler<X>> {
     key_handler(|s: &mut State<X>, _| {
         info!("Current Window Manager State: {s:#?}");
         Ok(())
