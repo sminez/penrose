@@ -2,7 +2,12 @@
 penrose - a tiling window manager library
 =========================================
 
-[![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=develop)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose) [![docs.rs](https://img.shields.io/docsrs/penrose?logo=rust)](https://docs.rs/penrose)
+[![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=develop)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose) [![docs.rs](https://img.shields.io/docsrs/penrose?logo=rust)](https://docs.rs/penrose) [![Book Build](https://github.com/sminez/penrose/actions/workflows/book.yml/badge.svg)](https://github.com/sminez/penrose/actions/workflows/book.yml)
+
+### Read the book
+
+The docs for penrose are published to GitHub Pages [here](https://sminez.github.io/penrose).
+
 
 # :warning: The `rewrite` branch has been merged to the `develop` :warning:
 **Users pulling this repo directly from the mainline branch will see this as a breaking change**
@@ -63,27 +68,6 @@ customise things to your liking.
 
 <br>
 
-### FAQs
-
-The [faqs][0] should always be up to date with current develop and actual
-frequently asked questions. Please read through them and check the issues on
-GitHub before opening a new issue to see if your question has already been
-answered previously.
-
-<br>
-
-### Getting Started
-
-If you are new to Rust it is worthwhile reading the penrose [getting started][1]
-guide for details on how to get Rust set up on your system and how to get a
-minimal config in place. Once you've managed that, you might want to take a
-look at some of the configurations in the [examples][2] directory or my
-[personal config][3] which has several custom extensions.
-
-After that, it's a good idea to read the documentation on [docs.rs][4] or the
-tutorial and overview videos on [youtube][5].
-
-<br>
 
 ### Project Goals
 
