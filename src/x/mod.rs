@@ -112,7 +112,7 @@ pub trait XConnExt: XConn + Sized {
     fn manage(&self, id: Xid, state: &mut State<Self>) -> Result<()> {
         trace!(%id, "managing new client");
         manage_without_refresh(id, None, state, self)?;
-        self.modify_and_refresh(state, |_| ())
+        self.refresh(state)
     }
 
     fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
