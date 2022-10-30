@@ -1,0 +1,409 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Getting Started - Penrose Book</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="getting-started.html" class="active"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="overview/index.html"><strong aria-hidden="true">3.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="overview/pure-vs-x.html"><strong aria-hidden="true">3.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="overview/data-structures.html"><strong aria-hidden="true">3.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="overview/hooks.html"><strong aria-hidden="true">3.3.</strong> Hooks</a></li><li class="chapter-item expanded "><a href="overview/layouts.html"><strong aria-hidden="true">3.4.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="overview/actions.html"><strong aria-hidden="true">3.5.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="ui/index.html"><strong aria-hidden="true">4.</strong> Built in UI elements</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ui/draw-and-context.html"><strong aria-hidden="true">4.1.</strong> Draw and Context</a></li><li class="chapter-item expanded "><a href="ui/status-bar.html"><strong aria-hidden="true">4.2.</strong> Status Bar</a></li></ol></li><li class="chapter-item expanded "><a href="faq.html"><strong aria-hidden="true">5.</strong> FAQs</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Penrose Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
+<h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
+<p>So you'd like to manage your windows, maybe even tile them?</p>
+<p>Well aren't you in luck!</p>
+<p>The following is a quick guide for how to get your system set up for building a penrose based
+window manager and getting it running. By the end of this guide you will have a <em>very</em> minimal
+window manager that you can use as a starting point.</p>
+<p>If you've ever tried out <a href="https://xmonad.org/">xmonad</a> before then the overall design and feel of how penrose works
+should feel (somewhat) familiar. The key thing is this: penrose is a library for writing a window
+manager. It's not a pre-built window manager that you then configure via a config file. In practical
+terms what that means is that it's time to get our hands dirty with writing some code!</p>
+<h2 id="step-0-getting-set-up-with-rust"><a class="header" href="#step-0-getting-set-up-with-rust">Step 0: Getting set up with Rust</a></h2>
+<p>If you have Rust on your system already, congrats! You can skip this section.</p>
+<p>For everyone else, head on over to <a href="https://www.rust-lang.org/">rust-lang.org</a> and click on the big &quot;Get Started button&quot;
+which will advise you to curl a setup script straight into <strong>sh</strong>. If you'd prefer to see what
+you are about to run, the following should do the trick:</p>
+<pre><code class="language-bash">$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs &gt; rustup.sh
+
+# Open and peruse in your editor of choice
+$ $EDITOR rustup.sh
+
+# Then, to carry out the actual install
+$ chmod +x rustup.sh
+$ ./rustup.sh
+</code></pre>
+<p>Now simply sit back and wait for while Rust is installed on your system.</p>
+<h2 id="initialising-your-window-manager-crate"><a class="header" href="#initialising-your-window-manager-crate">Initialising your window manager crate</a></h2>
+<p>&quot;Crates&quot; are Rust's term for what you might be more used to calling a package or project.
+Either way, for your window manager you are going to want to make a new <em>binary</em> crate like so:</p>
+<pre><code class="language-bash">$ cargo new --bin my_penrose_config
+$ cd my_penrose_config
+$ exa -T  # or just plain old 'ls' if you prefer
+.
+├── Cargo.toml
+└── src
+   └── main.rs
+</code></pre>
+<p>If you open up <code>main.rs</code> you should see a simple hello world program:</p>
+<pre><pre class="playground"><code class="language-rust">fn main() {
+    println!(&quot;Hello, world!&quot;);
+}
+</code></pre></pre>
+<p>We can run this using <code>cargo run</code> to check everything is good to go:</p>
+<pre><code class="language-bash">$ cargo run
+   Compiling example v0.1.0 (/home/roger/my_penrose_config)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.43s
+     Running `target/debug/example`
+Hello, world!
+</code></pre>
+<p>Nice! Time to write a window manager.</p>
+<h2 id="writing-your-mainrs"><a class="header" href="#writing-your-mainrs">Writing your main.rs</a></h2>
+<p>You should now have a new git repo with the content shown above. At the moment,
+your <strong>main.rs</strong> is just a simple Hello World program (we'll be fixing that soon)
+but first we need to add some dependencies. Most importantly, we need to add
+penrose itself but we're also going to add another crate as well to make our lives
+a little easier: <a href="https://crates.io/crates/tracing-subscriber">tracing-subscriber</a> can be used to collect and process the logs
+that penrose generates as it runs. It's by no means <em>required</em> to collect the logs
+but it definitely helps track down issues with your window manager if you can see
+what's going on inside as it runs!</p>
+<p>Thankfully, adding new dependencies is also something cargo can handle for us! It
+even handles enabling optional features for us (which is handy, because we need to
+do just that with <code>tracing-subscriber</code>):</p>
+<pre><code class="language-bash">$ cargo add tracing-subscriber --features env-filter
+</code></pre>
+<blockquote>
+<p><strong>NOTE</strong>: For now, you will need to add penrose as a git dependency. Once <code>v0.3.0</code> is stable
+you will be able to add it in the same way as shown above for tracing-subscriber.</p>
+</blockquote>
+<pre><code class="language-bash">$ cargo add penrose --git https://github.com/sminez/penrose
+</code></pre>
+<p>With that done, we're going to copy the <a href="https://github.com/sminez/penrose/blob/develop/examples/minimal/main.rs">minimal example</a> from the penrose repository in
+GitHub as our window manager. Either copy and paste the contents of the example into your
+<code>main.rs</code> or (my prefered choice) use wget to pull it directly from GitHub:</p>
+<pre><code class="language-bash">$ cd src
+$ rm main.rs
+$ wget https://raw.githubusercontent.com/sminez/penrose/develop/examples/minimal/main.rs
+</code></pre>
+<p>For reference, your <code>main.rs</code> should now look like this:</p>
+<pre><pre class="playground"><code class="language-rust">//! penrose :: minimal configuration
+//!
+//! This file will give you a functional if incredibly minimal window manager that
+//! has multiple workspaces and simple client / workspace movement.
+use penrose::{
+    builtin::{
+        actions::exit,
+        layout::messages::{ExpandMain, IncMain, ShrinkMain},
+    },
+    core::{
+        actions::{modify_with, send_layout_message, spawn},
+        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        Config, WindowManager,
+    },
+    map,
+    x11rb::RustConn,
+    Result,
+};
+use std::collections::HashMap;
+use tracing_subscriber::{self, prelude::*};
+
+fn raw_key_bindings() -&gt; HashMap&lt;String, Box&lt;dyn KeyEventHandler&lt;RustConn&gt;&gt;&gt; {
+    let mut raw_bindings = map! {
+        map_keys: |k: &amp;str| k.to_string();
+
+        &quot;M-j&quot; =&gt; modify_with(|cs| cs.focus_down()),
+        &quot;M-k&quot; =&gt; modify_with(|cs| cs.focus_up()),
+        &quot;M-S-j&quot; =&gt; modify_with(|cs| cs.swap_down()),
+        &quot;M-S-k&quot; =&gt; modify_with(|cs| cs.swap_up()),
+        &quot;M-S-q&quot; =&gt; modify_with(|cs| cs.kill_focused()),
+        &quot;M-Tab&quot; =&gt; modify_with(|cs| cs.toggle_tag()),
+        &quot;M-bracketright&quot; =&gt; modify_with(|cs| cs.next_screen()),
+        &quot;M-bracketleft&quot; =&gt; modify_with(|cs| cs.previous_screen()),
+        &quot;M-grave&quot; =&gt; modify_with(|cs| cs.next_layout()),
+        &quot;M-S-grave&quot; =&gt; modify_with(|cs| cs.previous_layout()),
+        &quot;M-S-Up&quot; =&gt; send_layout_message(|| IncMain(1)),
+        &quot;M-S-Down&quot; =&gt; send_layout_message(|| IncMain(-1)),
+        &quot;M-S-Right&quot; =&gt; send_layout_message(|| ExpandMain),
+        &quot;M-S-Left&quot; =&gt; send_layout_message(|| ShrinkMain),
+        &quot;M-semicolon&quot; =&gt; spawn(&quot;dmenu_run&quot;),
+        &quot;M-Return&quot; =&gt; spawn(&quot;st&quot;),
+        &quot;M-A-Escape&quot; =&gt; exit(),
+    };
+
+    for tag in &amp;[&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;] {
+        raw_bindings.extend([
+            (
+                format!(&quot;M-{tag}&quot;),
+                modify_with(move |client_set| client_set.focus_tag(tag)),
+            ),
+            (
+                format!(&quot;M-S-{tag}&quot;),
+                modify_with(move |client_set| client_set.move_focused_to_tag(tag)),
+            ),
+        ]);
+    }
+
+    raw_bindings
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    tracing_subscriber::fmt()
+        .with_env_filter(&quot;info&quot;)
+        .finish()
+        .init();
+
+    let conn = RustConn::new()?;
+    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
+    let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
+
+    wm.run()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bindings_parse_correctly_with_xmodmap() {
+        let res = parse_keybindings_with_xmodmap(raw_key_bindings());
+
+        if let Err(e) = res {
+            panic!(&quot;{e}&quot;);
+        }
+    }
+}
+</code></pre></pre>
+<h3 id="checking-were-good-to-go"><a class="header" href="#checking-were-good-to-go">Checking we're good to go</a></h3>
+<p>Hopefully you've spotted that the end of the example includes a test. Now, it's entirely up
+to you whether or not you keep (and run) the test but it's highly recommended that you do.
+It's actually recommended that you write <em>more</em> tests for your window manager as you extend
+the features you want and write your own custom code!</p>
+<p>Penrose itself has a pretty comprehensive test suite of the main logic and provides a variety
+of ways for you to check and confirm that things are behaving in the way that you expect.
+To run our test (and any others that you have added yourself) we simply need to run <code>cargo test</code>:</p>
+<blockquote>
+<p><strong>NOTE</strong>: This test (and the example itself) require you to have the <a href="https://wiki.archlinux.org/title/Xmodmap">xmodmap</a> utility
+installed on your system in order to parse our keybindings.</p>
+<p>Make sure you have it installed before going further!</p>
+</blockquote>
+<pre><code class="language-bash">$ cargo test
+    Finished test [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/main.rs (target/debug/deps/example-1562870d47d380ed)
+
+running 1 test
+test tests::bindings_parse_correctly_with_xmodmap ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+</code></pre>
+<p>You'll see a lot more output the first time you run the test as things are compiled, but so long
+as you see the test passing we should be good to take things for a spin!</p>
+<h2 id="making-use-of-our-new-window-manager"><a class="header" href="#making-use-of-our-new-window-manager">Making use of our new window manager</a></h2>
+<p>So far we've been building things in <code>debug</code> mode, which is exactly what we want when we're testing
+things out and running any test suites we have. For actually making use of our new window manager
+though, we want to switch to <code>release</code> mode:</p>
+<pre><code class="language-bash">$ cargo build --release
+</code></pre>
+<p>You'll see a lot of output the first time round as the dependencies of Penrose itself are compiled,
+but after that your re-compile should be pretty quick following any changes that you make. Once the
+binary is compiled you should see it as a new executable in the <code>target/release</code> directory.</p>
+<p>The simplest way of running your new window manager is to login via a TTY and place the following
+in your <code>~/.xinitrc</code>:</p>
+<pre><code class="language-bash">/home/roger/my_penrose_config/target/release/my_penrose_config &amp;&gt; ~/.penrose.log
+</code></pre>
+<p>Then, you can simply type <code>startx</code> after logging in and your window manager will start up, with the
+log output available in my your home directory as <code>.penrose.log</code>!</p>
+<p>If logging in and starting your graphical session from a TTY is &quot;too hipster&quot; for you (which, lets be
+honest, it is), you might want to look at installing and running a <a href="https://wiki.archlinux.org/title/Display_manager#Run_%7E/.xinitrc_as_a_session">display manager</a> and using
+something like <a href="https://wiki.archlinux.org/title/Display_manager#Run_%7E/.xinitrc_as_a_session">xinit-session</a> to make this a little nicer. Alternatively, dropping something like
+the following into <code>/usr/share/xsessions</code> should also do the trick. The <a href="https://wiki.archlinux.org/title/Display_manager#Session_configuration">arch wiki</a> is a fantastic
+place to read up on how to do these sorts of things whether you use Arch Linux or not.</p>
+<pre><code class="language-desktop">[Desktop Entry]
+Version=1.0
+Name=Penrose Session
+Comment=Use this session to run penrose as your desktop environment
+Exec=/home/roger/my_penrose_config/target/release/my_penrose_config &amp;&gt; ~/.penrose.log
+Icon=
+Type=Application
+DesktopNames=Penrose
+</code></pre>
+<h2 id="profit"><a class="header" href="#profit">Profit</a></h2>
+<p>And that's it!</p>
+<p>You are now the proud owner of a shiny new window manager. From this point on you can start tinkering
+to your heart's content and setting things up exactly how you want. Speaking from personal experience,
+I would advise that you commit your changes to your window manager <em>regularly</em> and that you make sure
+you know how to revert to your last good state in case you manage to introduce any particularly nasty
+bugs into your setup. If that happens, simply rebuild your previous good state and get to work on
+fixing your bug.</p>
+<p>The <a href="https://github.com/sminez/penrose/blob/develop/scripts/xephyr.sh">xephyr.sh</a> script in the GitHub repository can be used to run a given example in an embedded
+X session if you want a little bit of safety while you sanity check changes that you are making.
+Details of how it works are in a comment at the top of the script and <code>examples/local_test</code> is git
+ignored for you to be able to have a place to try things out.</p>
+<p>The rest of this book goes on to cover some of the inner workings of the main library, how to write
+and work with extensions and generally have fun tinkering with your window manager.</p>
+<p>Happy window managing!</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="overview/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="overview/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>
