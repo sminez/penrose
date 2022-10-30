@@ -4,58 +4,22 @@ penrose - a tiling window manager library
 
 [![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=develop)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose) [![docs.rs](https://img.shields.io/docsrs/penrose?logo=rust)](https://docs.rs/penrose) [![Book Build](https://github.com/sminez/penrose/actions/workflows/book.yml/badge.svg)](https://github.com/sminez/penrose/actions/workflows/book.yml)
 
-### Read the book
-
-The docs for penrose are published to GitHub Pages [here](https://sminez.github.io/penrose).
-
-
-# :warning: The `rewrite` branch has been merged to the `develop` :warning:
+### :warning: The `rewrite` branch has been merged to the `develop` :warning:
 **Users pulling this repo directly from the mainline branch will see this as a breaking change**
 
-The original API of penrose was written fairly quickly(!) and has a number of issues that make future development difficult:
-- Basing the original design on the `dwm` code base lead to a very C like API
-- State management is overly complicated
-- Hooks are overly complicated
-- Testing core window manager operations is a lot harder than it should be
-- Far too many macros (I wrote penrose originally in part to learn how to write proc-macros...)
-- Default impls used the rust-XCB crate rather than the wonderful x11rb from @psychon
-
-A near total rewrite for `v0.3` is reaching a usable state which moves over to an API that is more suited for ongoing
-development and extension by users of the crate. In particular the APIs are now designed with composition in mind as
-a rich set of primatives and a clear split between "pure" logical operations on the internal state and code that then
-updates things on the X side based on diffs of that pure state.
-
-# What does this mean for me?
-
-## I like things the way they are!
-:label: Please pin your usage of penrose to the [v0.2-end-of-life](https://github.com/sminez/penrose/tree/v0.2-end-of-life)
-tag if you are intending on making use of the original penrose API but be aware that there will be no more development
-taking place on this version of the code.
-
-## How do I start making use of the new APIs?
-The `rewrite` branch is being merged to mainline following the creation of this EOL release and is now in a usable
-state. I've been using it as my daily driver for a few weeks now and it is relatively stable to live in so long as
-you are only making use of the top level APIs shown in the examples directory.
-
-:bug: That said, there are bugs. There are some issues around tracking mouse based focus changes in a multi-monitor
-set up and I suspect that it will be easier than it should be to shoot yourself in the foot if you try something
-clever beyond what is shown in the current examples.
-
-I am planning on writing up the docs and more examples for the API now that it is stablising but for now please be
-aware that I am making frequent changes to APIs in order to address issues as they crop up. If you are interested
-in taking things for a spin and providing feedback then please do! Just be aware that I am not yet aiming for
-stability.
-
-## When will the new APIs be stable?
-There are a couple of final high profile bugs / behaviours that I want to correct before pushing this live to
-crates.io. Once those are addressed I'll be publishing a `0.3.0` version to crates which will mark the new
-stable API.
-
+See [here](https://github.com/sminez/penrose/releases/tag/v0.2-end-of-life) for details.
 
 ------
 
+### tl;dr - further reading
 
-# `Penrose` is a modular library for configuring your own X11 window manager in Rust.
+The docs for penrose are written using mdBook and published to GitHub Pages
+[here](https://sminez.github.io/penrose). They cover some more general concepts about how
+to get up and running as opposed to the crate docs on docs.rs which are more aimed at
+covering the APIs themselves.
+
+
+### `Penrose` is a modular library for configuring your own X11 window manager in Rust.
 
 This means that, unlike most other tiling window managers, `Penrose` is not a
 binary that you install on your system. Instead, you use it like a normal
