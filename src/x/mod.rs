@@ -79,6 +79,7 @@ pub trait XConn {
     fn atom_name(&self, xid: Xid) -> Result<String>;
 
     fn client_geometry(&self, client: Xid) -> Result<Rect>;
+    fn existing_clients(&self) -> Result<Vec<Xid>>;
 
     fn map(&self, client: Xid) -> Result<()>;
     fn unmap(&self, client: Xid) -> Result<()>;
@@ -108,25 +109,9 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
-    fn manage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
-        trace!(%client, "managing new client");
-        let should_float = self.client_should_float(client, &state.config.floating_classes)?;
-        let r = self.client_geometry(client)?;
-
-        state.client_set.insert(client);
-        if should_float {
-            state.client_set.float_unchecked(client, r);
-        }
-
-        let mut hook = state.config.manage_hook.take();
-        if let Some(ref mut h) = hook {
-            trace!("running user manage hook");
-            if let Err(e) = h.call(client, state, self) {
-                error!(%e, "error returned from user manage hook");
-            }
-        }
-        state.config.manage_hook = hook;
-
+    fn manage(&self, id: Xid, state: &mut State<Self>) -> Result<()> {
+        trace!(%id, "managing new client");
+        manage_without_refresh(id, None, state, self)?;
         self.modify_and_refresh(state, |_| ())
     }
 
@@ -349,6 +334,40 @@ pub trait XConnExt: XConn + Sized {
 
 // Auto impl XConnExt for all XConn impls
 impl<T> XConnExt for T where T: XConn {}
+
+// The main logic for inserting a new client into the StackSet without any refresh
+// of the X state. In normal window manager operation, the `manage` method on XConnExt
+// is always used: this is provided independently to support managing existing clients
+// on startup.
+pub(crate) fn manage_without_refresh<X: XConn>(
+    id: Xid,
+    tag: Option<&str>,
+    state: &mut State<X>,
+    x: &X,
+) -> Result<()> {
+    let should_float = x.client_should_float(id, &state.config.floating_classes)?;
+    let r = x.client_geometry(id)?;
+
+    match tag {
+        Some(tag) => state.client_set.insert_as_focus_for(tag, id),
+        None => state.client_set.insert(id),
+    }
+
+    if should_float {
+        state.client_set.float_unchecked(id, r);
+    }
+
+    let mut hook = state.config.manage_hook.take();
+    if let Some(ref mut h) = hook {
+        trace!("running user manage hook");
+        if let Err(e) = h.call(id, state, x) {
+            error!(%e, "error returned from user manage hook");
+        }
+    }
+    state.config.manage_hook = hook;
+
+    Ok(())
+}
 
 fn set_window_props<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
     for &c in state.diff.new_clients() {

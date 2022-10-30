@@ -357,6 +357,13 @@ where
         ))
     }
 
+    fn existing_clients(&self) -> Result<Vec<Xid>> {
+        let raw_ids = self.conn.query_tree(self.root)?.reply()?.children;
+        let ids = raw_ids.into_iter().map(Xid).collect();
+
+        Ok(ids)
+    }
+
     fn map(&self, client: Xid) -> Result<()> {
         self.conn.map_window(*client)?;
 
@@ -379,11 +386,7 @@ where
         self.conn
             .set_input_focus(InputFocus::PARENT, *id, CURRENT_TIME)?;
 
-        self.set_prop(
-            self.root.into(),
-            Atom::NetActiveWindow.as_ref(),
-            Prop::Window(vec![id]),
-        )
+        Ok(())
     }
 
     fn get_prop(&self, id: Xid, prop_name: &str) -> Result<Option<Prop>> {

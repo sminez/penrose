@@ -304,7 +304,11 @@ where
         self.move_client_to_tag(client, self.screens.focus.workspace.tag.clone());
     }
 
-    fn insert_as_focus_for(&mut self, tag: &str, c: C) {
+    /// Insert a client as the current focus for the given tag.
+    ///
+    /// NOTE: This will silently fail if the tag is not in the StackSet which
+    ///       is why the method is not in the public API
+    pub(crate) fn insert_as_focus_for(&mut self, tag: &str, c: C) {
         self.modify_workspace(tag, |w| {
             w.stack = Some(match take(&mut w.stack) {
                 None => stack!(c),

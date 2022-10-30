@@ -1,7 +1,7 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
     pure::{Diff, StackSet, Workspace},
-    x::{XConn, XConnExt, XEvent},
+    x::{manage_without_refresh, Atom, Prop, XConn, XConnExt, XEvent},
     Color, Error, Result,
 };
 use anymap::{any::Any, AnyMap};
@@ -16,7 +16,7 @@ use std::{
     ops::Deref,
     sync::Arc,
 };
-use tracing::{error, span, trace, Level};
+use tracing::{error, info, span, trace, Level};
 
 pub mod actions;
 pub mod bindings;
@@ -317,7 +317,7 @@ where
     /// key / mouse bindings from the X server. Any set up you need to do should be run
     /// explicitly before calling this method or as part of a startup hook.
     pub fn run(mut self) -> Result<()> {
-        trace!("registering SIGCHILD signal handler");
+        info!("registering SIGCHILD signal handler");
         if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
             panic!("unable to set signal handler: {}", e);
         }
@@ -331,12 +331,12 @@ where
             }
         }
 
-        self.x.modify_and_refresh(&mut self.state, |_| ())?;
+        self.manage_existing_clients()?;
 
         loop {
             match self.x.next_event() {
                 Ok(event) => {
-                    let span = span!(target: "penrose", Level::DEBUG, "XEvent", %event);
+                    let span = span!(target: "penrose", Level::INFO, "XEvent", %event);
                     let _enter = span.enter();
                     trace!(details = ?event, "event details");
                     self.state.current_event = Some(event.clone());
@@ -413,5 +413,48 @@ where
         }
 
         Ok(())
+    }
+
+    // A "best effort" attempt to manage existing clients on the workspaces they were present
+    // on previously. This is not guaranteed to preserve the stack order or correctly handle
+    // any clients that were on invisible workspaces / workspaces that no longer exist.
+    //
+    // NOTE: the check for if each client is already in state is in case a startup hook has
+    //       pre-managed clients for us. In that case we want to avoid stomping on
+    //       anything that they have set up.
+    #[tracing::instrument(level = "info", skip(self))]
+    fn manage_existing_clients(&mut self) -> Result<()> {
+        info!("managing existing clients");
+
+        // We're not guaranteed that workspace indices are _always_ continuous from 0..n
+        // so we explicitly map tags to indices instead.
+        let ws_map: HashMap<usize, String> = self
+            .state
+            .client_set
+            .workspaces()
+            .map(|w| (w.id, w.tag.clone()))
+            .collect();
+
+        let first_tag = self.state.client_set.ordered_tags()[0].clone();
+
+        for id in self.x.existing_clients()? {
+            if self.state.client_set.contains(&id)
+                || self.x.get_window_attributes(id)?.override_redirect
+            {
+                continue;
+            }
+
+            info!(%id, "attempting to manage existing client");
+            let workspace_id = match self.x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
+                Ok(Some(Prop::Cardinal(ids))) => ids[0] as usize,
+                _ => 0, // we know that we always have at least one workspace
+            };
+
+            let tag = ws_map.get(&workspace_id).unwrap_or(&first_tag);
+            manage_without_refresh(id, Some(tag), &mut self.state, &self.x)?;
+        }
+
+        info!("triggering refresh");
+        self.x.refresh(&mut self.state)
     }
 }
