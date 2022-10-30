@@ -532,21 +532,39 @@ where
 
     /// Move focus to the next [Screen]
     pub fn next_screen(&mut self) {
+        if self.screens.len() == 1 {
+            return;
+        }
+
+        self.previous_tag = self.screens.focus.workspace.tag.clone();
         self.screens.focus_down();
     }
 
     /// Move focus to the previous [Screen]
     pub fn previous_screen(&mut self) {
+        if self.screens.len() == 1 {
+            return;
+        }
+
+        self.previous_tag = self.screens.focus.workspace.tag.clone();
         self.screens.focus_up();
     }
 
     pub fn drag_workspace_forward(&mut self) {
-        self.next_screen();
+        if self.screens.len() == 1 {
+            return;
+        }
+
+        self.screens.focus_down();
         self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
     pub fn drag_workspace_backward(&mut self) {
-        self.previous_screen();
+        if self.screens.len() == 1 {
+            return;
+        }
+
+        self.screens.focus_up();
         self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
@@ -956,6 +974,45 @@ pub mod tests {
     #[test_case(true, 1; "forward")]
     #[test_case(false, 2; "backward")]
     #[test]
+    fn screen_change_focuses_new_screen(forward: bool, expected_index: usize) {
+        let mut s = test_stack_set(5, 3);
+
+        assert_eq!(s.current_screen().index(), 0);
+
+        if forward {
+            s.next_screen();
+        } else {
+            s.previous_screen();
+        }
+
+        assert_eq!(s.current_screen().index(), expected_index);
+    }
+
+    #[test_case(1, true, "1"; "single screen forward")]
+    #[test_case(1, false, "1"; "single screen backward")]
+    #[test_case(2, true, "3"; "two screens forward")]
+    #[test_case(2, false, "3"; "two screens backward")]
+    #[test]
+    fn screen_change_sets_expected_previous_tag(n_screens: usize, forward: bool, tag: &str) {
+        let mut s = test_stack_set(5, n_screens);
+
+        s.focus_tag("3");
+
+        assert_eq!(s.current_tag(), "3");
+        assert_eq!(s.previous_tag, "1");
+
+        if forward {
+            s.next_screen();
+        } else {
+            s.previous_screen();
+        }
+
+        assert_eq!(s.previous_tag, tag);
+    }
+
+    #[test_case(true, 1; "forward")]
+    #[test_case(false, 2; "backward")]
+    #[test]
     fn drag_workspace_focuses_new_screen(forward: bool, expected_index: usize) {
         let mut s = test_stack_set(5, 3);
 
@@ -970,6 +1027,30 @@ pub mod tests {
 
         assert_eq!(s.current_tag(), "1");
         assert_eq!(s.current_screen().index(), expected_index);
+    }
+
+    #[test_case(1, true; "single screen forward")]
+    #[test_case(1, false; "single screen backward")]
+    #[test_case(2, true; "two screens forward")]
+    #[test_case(2, false; "two screens backward")]
+    #[test]
+    fn drag_workspace_sets_expected_previous_tag(n_screens: usize, forward: bool) {
+        let mut s = test_stack_set(5, n_screens);
+
+        s.focus_tag("3");
+
+        assert_eq!(s.current_tag(), "3");
+        assert_eq!(s.previous_tag, "1");
+
+        if forward {
+            s.drag_workspace_forward();
+        } else {
+            s.drag_workspace_backward();
+        }
+
+        // We're keeping the same tag focused so we shouldn't have modified the
+        // previous tag state at all regardless of screen count.
+        assert_eq!(s.previous_tag, "1");
     }
 
     #[test]
