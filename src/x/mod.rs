@@ -11,7 +11,7 @@ use crate::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use tracing::{debug, error, trace};
+use tracing::{error, trace};
 
 pub mod atom;
 pub mod event;

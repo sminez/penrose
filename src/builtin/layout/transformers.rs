@@ -5,9 +5,8 @@ use crate::{
     simple_transformer, Xid,
 };
 
-/// Wrap an existing layout and reflect its window positions horizontally.
-#[derive(Clone)]
-pub struct ReflectHorizontal(pub Box<dyn Layout>);
+// TODO: update the macro to add doc comments
+// Wrap an existing layout and reflect its window positions horizontally.
 simple_transformer!("Reflected", ReflectHorizontal, reflect_horizontal);
 
 fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
@@ -27,9 +26,7 @@ fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> 
         .collect()
 }
 
-/// Wrap an existing layout and reflect its window positions vertically.
-#[derive(Clone)]
-pub struct ReflectVertical(pub Box<dyn Layout>);
+// Wrap an existing layout and reflect its window positions vertically.
 simple_transformer!("Flipped", ReflectVertical, reflect_vertical);
 
 fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
