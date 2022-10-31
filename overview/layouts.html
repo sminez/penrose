@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Layouts - Penrose Book</title>
+        <title>Layouts - The Penrose Book</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
@@ -104,7 +104,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">Penrose Book</h1>
+                    <h1 class="menu-title">The Penrose Book</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
@@ -136,7 +136,232 @@
                     <main>
                         <p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
 <h1 id="layouts"><a class="header" href="#layouts">Layouts</a></h1>
-<h2 id="coming-soon"><a class="header" href="#coming-soon">Coming soon...</a></h2>
+<p>Layouts are (lets face it) a large part of why people use a dynamic tiling window manager in the first place.
+You want to automatically manage your windows in a way that either lets you get on with what you're doing, or
+looks fun and interesting!</p>
+<p>For penrose, layouts are implemented using a trait that lets you specify how the layout should be applied and
+manage any additional state you might need. They also support custom messages being sent to modify their
+behaviour and update that state: another shamelessly re-used idea from Xmonad. You may be starting to spot a
+pattern here...</p>
+<h3 id="taking-a-look-at-the-layout-trait"><a class="header" href="#taking-a-look-at-the-layout-trait">Taking a look at the Layout trait</a></h3>
+<p>Other than a few pieces of housekeeping (providing a string name to be used to identify the layout and some
+plumbing to help with dynamic typing) the <code>Layout</code> trait is primarily several methods that give you (the
+implementer) some flexability in how you want to approach positioning your windows and how what level of
+customisation you want to give the user while the window manager is running:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Layout {
+    fn name(&amp;self) -&gt; String;
+    fn boxed_clone(&amp;self) -&gt; Box&lt;dyn Layout&gt;;
+
+    fn layout_workspace(
+        &amp;mut self,
+        tag: &amp;str,
+        stack: &amp;Option&lt;Stack&lt;Xid&gt;&gt;,
+        r: Rect
+    ) -&gt; (Option&lt;Box&lt;dyn Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;);
+
+    fn layout(
+        &amp;mut self,
+        s: &amp;Stack&lt;Xid&gt;,
+        r: Rect
+    ) -&gt; (Option&lt;Box&lt;dyn Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;);
+    
+    fn layout_empty(
+        &amp;mut self,
+        r: Rect
+    ) -&gt; (Option&lt;Box&lt;dyn Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;);
+
+    fn handle_message(&amp;mut self, m: &amp;Message) -&gt; Option&lt;Box&lt;dyn Layout&gt;&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>On the &quot;laying out windows&quot; front (you know, the main one) you have three choices:</p>
+<ul>
+<li>Specify how to layout a possibly empty workspace based on the specific tag being laid out</li>
+<li>Specify how to layout a given (non-empty) stack of clients for any workspace</li>
+<li>Specify what to do when there are no clients present on the given workspace</li>
+</ul>
+<p>Both <code>layout_workspace</code> and <code>layout_empty</code> have default implementations that should work in 99% of cases,
+leaving you the job of writing <code>layout</code>: how a given screen <code>Rect</code> should be split up between a given
+<code>Stack</code> of client windows. That said, if you <em>do</em> want to specify how to layout particular workspaces or
+give some custom logic that should run when a workspace is empty, both default implementations are of course
+overridable.</p>
+<blockquote>
+<p>If you haven't read it already, it's worthwhile taking a look at the <a href="./data-structures.html">data structures</a> section of this
+book to familiarise yourself with the types being discussed here!</p>
+</blockquote>
+<h3 id="writing-a-layout-function"><a class="header" href="#writing-a-layout-function">Writing a layout function</a></h3>
+<p>At it's core, a layout function is pretty simple: for a given region of screen real estate, assign sub-regions
+to any number of the clients present on the workspace. There are no requirements to position <em>every</em> client
+and there are no requirements that clients do not overlap. There's just one key piece of information to bear
+in mind:</p>
+<blockquote>
+<p><em>The order that you return your positions in is the order that the windows will be stacked from top to bottom</em>.</p>
+</blockquote>
+<p>If none of the <code>Rects</code> you return overlap then this doesn't matter all that much, but if you <em>do</em> care about
+stacking order, make sure to return your positions in order of top to bottom. Positions themselves are simply a
+tuple of <code>(Xid, Rect)</code>. Any client window present in the provided <code>Stack</code> that you do not assign a position will
+be unmapped from the screen.</p>
+<p>As a simple example, here is the definition (in full) of the <code>Monocle</code> layout from the <code>builtin</code> module:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Debug, Clone, Copy)]
+pub struct Monocle;
+
+impl Layout for Monocle {
+    fn name(&amp;self) -&gt; String {
+        &quot;Mono&quot;.to_owned()
+    }
+
+    fn boxed_clone(&amp;self) -&gt; Box&lt;dyn Layout&gt; {
+        Box::new(Monocle)
+    }
+
+    fn layout(&amp;mut self, s: &amp;Stack&lt;Xid&gt;, r: Rect) -&gt; (Option&lt;Box&lt;dyn Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        (None, vec![(s.focus, r)])
+    }
+
+    fn handle_message(&amp;mut self, _: &amp;Message) -&gt; Option&lt;Box&lt;dyn Layout&gt;&gt; {
+        None
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Pretty simple right? Admittedly, this is about as simple as you can make it (the focused window gets the
+full screen and everything else gets unmapped) but the overall boilerplate is kept to a minimum, which
+is nice.</p>
+<blockquote>
+<p><strong>NOTE</strong>: The <code>builtin</code> module has some good examples of what a &quot;real&quot; layout looks like (not to dunk
+on <code>Monocle</code> but...come on). Why not take a look at <code>MainAndStack</code> as a starting point for how to write
+something a little more interesting?</p>
+</blockquote>
+<p>But, I hear you cry (silently, through the internet) those <code>layout_*</code> methods don't just return a
+<code>Vec&lt;(Xid, Rect)&gt;</code> do they? They also return an <code>Option&lt;Box&lt;dyn Layout&gt;&gt;</code>. What's up with that?</p>
+<p>I'm so glad you asked.</p>
+<h4 id="swapping-things-out-for-a-new-layout"><a class="header" href="#swapping-things-out-for-a-new-layout">Swapping things out for a new layout</a></h4>
+<p>Depending on how fancy you want to get with your layout behaviour, you might find yourself wanting to switch
+things out to a new <code>Layout</code> implementation after you've positioned a stack of client windows for a particular
+screen. Maybe you want to swap things out for a different layout depending on the number of clients, or the
+screen size, or whether the width of the screen is a multiple of 7, or maybe you want the layout to change each
+time it gets applied. Who knows! The point is, if you <em>do</em> find yourself needing to swap things out this is a
+way for you to do it.</p>
+<p>In most cases you'll simply want to return <code>None</code> as the first value in the tuple being returned from layout
+methods, but if you instead return <code>Some(new layout)</code>, penrose will swap out your current layout for the new
+one.</p>
+<p>If instead you just want to update some internal state in response to an explicit trigger, that's where <code>Messages</code>
+come in.</p>
+<h3 id="handling-messages"><a class="header" href="#handling-messages">Handling messages</a></h3>
+<p><code>Messages</code> are a way of sending dynamically typed data to your layouts in order to update their state. A message
+can be <a href="https://doc.rust-lang.org/std/any/trait.Any.html">literally anything</a> so long as it implements the <code>IntoMessage</code> trait, which is as simple as:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl IntoMessage for MyMessage {}
+<span class="boring">}
+</span></code></pre></pre>
+<p>What any given message actually <em>does</em> is entirely at the discression of the <code>Layout</code> that handles it. So far,
+so vague...lets take a look at an example:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use penrose::core::layout::{IntoMessage, Layout, Message};
+
+// First we define our message and implement the marker trait
+struct SetFrobs(pub usize);
+impl IntoMessage for SetFrobs {}
+
+// Next we write our layout
+struct MyLayout {
+    frobs: usize,
+}
+
+impl Layout for MyLayout {
+    // TODO: actually write the layout(!)
+
+    fn handle_message(&amp;mut self, m: &amp;Message) -&gt; Option&lt;Box&lt;dyn Layout&gt;&gt; {
+        // If the Message is a 'SetFrobs' we'll do what it says on the tin...
+        if let Some(&amp;SetFrobs(frobs)) = m.downcast_ref() {
+            self.frobs = frobs;
+        }
+
+        // ...and anything else we can just ignore
+
+        None
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The <code>downcast_ref</code> method is the thing to pay attention to here: this is how we go from a <code>Message</code> (really just
+a wrapper around the standard library <code>Any</code> trait) to a concrete type. Anything that implements <code>IntoMessage</code>
+can be sent to our Layout so we do our own type checking to see if the message is something we care about. Messages
+that we don't handle can safely be dropped on the floor (so don't worry about needing to exhaustively check all
+possible message types).</p>
+<p>The <code>Option&lt;Box dyn Layout&gt;</code> return type is the same idea as with the <code>layout_*</code> methods covered above: in response
+to a message you can swap out to a new layout. Say hypothetically, there was a frob threshold above which things
+got really awesome...</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// A more AWESOME layout
+struct MyAwesomeLayout {
+    frobs: usize,
+}
+
+// Which has its own Layout implementation
+impl Layout for MyAwesomeLayout {
+    // ...
+}
+
+const AWESOMENESS_THRESHOLD: usize = 42;
+
+// Now, we modify our impl for MyLayout to &quot;level up&quot; once we hit the threshold
+impl Layout for MyLayout {
+    // TODO: still need to write the layout at some point...
+
+    fn handle_message(&amp;mut self, m: &amp;Message) -&gt; Option&lt;Box&lt;dyn Layout&gt;&gt; {
+        if let Some(&amp;SetFrobs(frobs)) = m.downcast_ref() {
+            if frobs &gt; AWESOMENESS_THRESHOLD {
+                // Things are getting awesome!
+                return Some(Box::new(MyAwesomeLayout { frobs }));
+            }
+
+            // Still pretty cool, but not awesome yet...
+            self.frobs = frobs;
+        }
+
+        None
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Nice!</p>
+<p>That's all well and good if we have a bunch of our own layouts that we can write and swap between, but what if we
+just want to <em>tweak</em> an existing layout a bit? Well that's where we move over to the wonderful world of
+<code>LayoutTransformers</code>.</p>
+<h3 id="layout-transformers"><a class="header" href="#layout-transformers">Layout transformers</a></h3>
+<p>This one is a bit of a rabbit hole...for now we'll cover the basics of what you can do with a transformer and leave
+the details to the module docs themselves as there's quite a bit to cover!</p>
+<p><code>LayoutTransformer</code> is (surprise, surprise) another trait you can implement. It represents a wrapper around an inner
+<code>Layout</code> which you (the author of the transformer) get to <del>lie to</del> help reach its full potential. The two main
+things that a transformer can do are:</p>
+<ul>
+<li>Modify the dimensions of the initial <code>Rect</code> being passed to the inner layout</li>
+<li>Modify the positions returned by the inner layout before they are handed off for processing</li>
+</ul>
+<p>So what does that let you do? Well for one thing, this is how gaps are implemented for any layout in penrose. The
+<code>Gaps</code> transformer from the <code>builtin</code> module shrinks the size of the initial screen seen by the inner layout (to
+give you an outer gap) and then shrinks the size of each window once the layout has run (to give you an inner gap).</p>
+<p>For simple cases where you just want to modify the positions returned by an inner layout, there's a handy builtin
+macro to generate a <code>LayoutTransformer</code> from a function:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use penrose::{pure::geometry::Rect, simple_transformer, Xid};
+
+fn my_transformer(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+    // Write your transformation implementation here
+}
+
+simple_transformer!(&quot;MyTransform&quot;, MyTransformer, my_transformer);
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
