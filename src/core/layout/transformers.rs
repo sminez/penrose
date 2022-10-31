@@ -126,9 +126,6 @@ where
 /// # Example
 /// ```no_run
 /// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};
-/// #[derive(Clone)]
-/// pub struct MyTransformer(Box<dyn Layout>);
-///
 /// fn my_transformation_function(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
 ///     // transformation implementation goes here
 ///     positions
