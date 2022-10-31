@@ -160,7 +160,7 @@ binary is compiled you should see it as a new executable in the `target/release`
 The simplest way of running your new window manager is to login via a TTY and place the following
 in your `~/.xinitrc`:
 ```bash
-/home/roger/my_penrose_config/target/release/my_penrose_config &> ~/.penrose.log
+exec /home/roger/my_penrose_config/target/release/my_penrose_config &> ~/.penrose.log
 ```
 
 Then, you can simply type `startx` after logging in and your window manager will start up, with the
