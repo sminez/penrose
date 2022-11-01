@@ -375,22 +375,26 @@ where
         } = self;
 
         let mut hook = state.config.event_hook.take();
-        if let Some(ref mut h) = hook {
-            trace!("running user event hook");
-            let should_run = match h.call(&event, state, x) {
-                Ok(should_run) => should_run,
-                Err(e) => {
-                    error!(%e, "error returned from user event hook");
-                    true
+        let should_run = match hook {
+            Some(ref mut h) => {
+                trace!("running user event hook");
+                match h.call(&event, state, x) {
+                    Ok(should_run) => should_run,
+                    Err(e) => {
+                        error!(%e, "error returned from user event hook");
+                        true
+                    }
                 }
-            };
-
-            if !should_run {
-                trace!("User event hook returned false: skipping default handling");
-                return Ok(());
             }
-        }
+
+            None => true,
+        };
         state.config.event_hook = hook;
+
+        if !should_run {
+            trace!("User event hook returned false: skipping default handling");
+            return Ok(());
+        }
 
         match &event {
             ClientMessage(m) => handle::client_message(m.clone(), state, x)?,
