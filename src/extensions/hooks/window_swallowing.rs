@@ -10,9 +10,10 @@ use crate::{
     Result, Xid,
 };
 use std::collections::HashMap;
+use tracing::{info, warn};
 
 // Private internal state for managing swallowed windows
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct WindowSwallowingState {
     swallowed: HashMap<Xid, Xid>, // map of child windows to their swallowed parent
     stack_before_close: Option<Stack<Xid>>,
@@ -38,11 +39,13 @@ impl WindowSwallowingState {
         state: &mut State<X>,
         x: &X,
     ) -> Result<bool> {
+        warn!(%child, ?self, "checking if we need to restore");
         let parent = match self.swallowed.get(&child) {
             Some(&parent) => parent,
             None => return Ok(true),
         };
 
+        info!(%parent, %child, "destroyed window has a swallowed parent: restoring");
         let len = state.client_set.current_workspace().clients().count();
 
         let mut old_stack = match self.stack_before_close.take() {
@@ -52,21 +55,23 @@ impl WindowSwallowingState {
             // stash the state we need to restore the parent in the correct position. Just
             // re-insert it into the stack and clear our internal state.
             _ => {
+                warn!(%parent, %child, "stashed state was invalid: inserting parent directly");
                 state.client_set.insert(parent);
-                self.clear_state_for(parent);
+                self.clear_state_for(child);
 
                 return Ok(true);
             }
         };
 
+        info!(%parent, %child, "restoring swallowed parent in place of child");
         transfer_floating_state(child, parent, &mut self.floating_before_close);
         state.client_set.floating = self.floating_before_close.clone();
         old_stack.focus = parent;
         state.client_set.modify_occupied(|_| old_stack);
         x.refresh(state)?;
-        self.clear_state_for(parent);
+        self.clear_state_for(child);
 
-        Ok(true)
+        Ok(false)
     }
 }
 
@@ -112,6 +117,8 @@ impl<X: XConn> WindowSwallowing<X> {
         if !self.queries_hold(child, parent, x) || !is_child_of(child, parent, x) {
             return Ok(true);
         }
+
+        info!(%parent, %child, "matched queries for window swallowing");
 
         // Set the new window as focus, replacing the parent window.
         wss.swallowed.insert(child, parent);

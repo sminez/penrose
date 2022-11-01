@@ -123,7 +123,7 @@ where
 
     /// Get access to a shared state extension or set it using Default.
     pub fn extension_or_default<E: Default + Any>(&mut self) -> Arc<RefCell<E>> {
-        if !self.extensions.contains::<E>() {
+        if !self.extensions.contains::<Arc<RefCell<E>>>() {
             self.add_extension(E::default());
         }
 
