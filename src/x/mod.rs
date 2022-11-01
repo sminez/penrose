@@ -379,6 +379,14 @@ pub trait XConnExt: XConn + Sized {
             },
         }
     }
+
+    fn query(&self, query: &dyn Query<Self>, id: Xid) -> Result<bool> {
+        query.run(id, self)
+    }
+
+    fn query_or(&self, default: bool, query: &dyn Query<Self>, id: Xid) -> bool {
+        query.run(id, self).unwrap_or(default)
+    }
 }
 
 // Auto impl XConnExt for all XConn impls

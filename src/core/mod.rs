@@ -121,6 +121,15 @@ where
             })
     }
 
+    /// Get access to a shared state extension or set it using Default.
+    pub fn extension_or_default<E: Default + Any>(&mut self) -> Arc<RefCell<E>> {
+        if !self.extensions.contains::<E>() {
+            self.add_extension(E::default());
+        }
+
+        self.extension().expect("to have defaulted if missing")
+    }
+
     /// Remove a shared state extension entirely.
     ///
     /// Returns `None` if there is no extension of type `E` or if that extension
