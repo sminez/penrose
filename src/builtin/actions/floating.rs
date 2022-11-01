@@ -65,6 +65,19 @@ pub fn sink_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     })
 }
 
+/// Float all windows in their current tiled position
+pub fn float_all<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
+    key_handler(|state, x: &X| {
+        let positions = state.client_set.visible_client_positions();
+
+        x.modify_and_refresh(state, |cs| {
+            for &(c, r) in positions.iter() {
+                cs.float_unchecked(c, r);
+            }
+        })
+    })
+}
+
 /// Sink all floating windows back into their tiled positions
 pub fn sink_all<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     modify_with(|cs| cs.floating.clear())
