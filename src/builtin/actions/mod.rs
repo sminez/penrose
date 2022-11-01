@@ -5,6 +5,8 @@ use crate::{
 };
 use tracing::info;
 
+pub mod floating;
+
 /// Exit penrose
 ///
 /// Immediately exit the window manager with exit code 0.

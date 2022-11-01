@@ -1,6 +1,7 @@
 //! Geometry primitives
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use std::cmp::max;
 
 /// An x,y coordinate pair
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -107,6 +108,22 @@ impl Rect {
             h: (self.h as f64 * factor).floor() as u32,
             ..*self
         }
+    }
+
+    // Update the width and height of this [Rect] by specified deltas.
+    //
+    // Minimum size is clamped at 0x0
+    pub fn resize(&mut self, dw: i32, dh: i32) {
+        self.w = max(0, (self.w as i32) + dw) as u32;
+        self.h = max(0, (self.h as i32) + dh) as u32;
+    }
+
+    // Update the position of this [Rect] by specified deltas.
+    //
+    // Minimum (x, y) coordinates are clamped at (0, 0)
+    pub fn reposition(&mut self, dx: i32, dy: i32) {
+        self.x = max(0, (self.x as i32) + dx) as u32;
+        self.y = max(0, (self.y as i32) + dy) as u32;
     }
 
     /// Check whether this Rect contains `other` as a sub-Rect
