@@ -380,6 +380,14 @@ pub trait XConnExt: XConn + Sized {
         }
     }
 
+    fn window_pid(&self, id: Xid) -> Option<u32> {
+        if let Ok(Some(Prop::Cardinal(vals))) = self.get_prop(id, "_NET_WM_PID") {
+            Some(vals[0])
+        } else {
+            None
+        }
+    }
+
     fn query(&self, query: &dyn Query<Self>, id: Xid) -> Result<bool> {
         query.run(id, self)
     }

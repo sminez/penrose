@@ -70,12 +70,10 @@ pub(crate) fn map_request<X: XConn>(client: Xid, state: &mut State<X>, x: &X) ->
 }
 
 pub(crate) fn destroy<X: XConn>(client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-    if state.client_set.contains(&client) {
-        trace!(?client, "destroying client");
-        x.unmanage(client, state)?;
-        state.mapped.remove(&client);
-        state.pending_unmap.remove(&client);
-    }
+    trace!(?client, "destroying client");
+    x.unmanage(client, state)?;
+    state.mapped.remove(&client);
+    state.pending_unmap.remove(&client);
 
     Ok(())
 }

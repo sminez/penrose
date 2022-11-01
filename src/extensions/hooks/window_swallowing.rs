@@ -1,15 +1,17 @@
 //! Window swallowing in the style of XMonad.Hooks.WindowSwallowing
 //!
-//! See https://hackage.haskell.org/package/xmonad-contrib-0.17.0/docs/XMonad-Hooks-WindowSwallowing.html
-//! for details of what the original Haskell implementation is doing.
+//! When a client window is opened from a parent that matches a given query, its takes
+//! over the parent window's position in the Stack. When the child window closes, the
+//! parent is restored in its place.
 use crate::{
     core::{hooks::EventHook, State},
     pure::{geometry::Rect, Stack},
-    x::{property::Prop, Query, XConn, XConnExt, XEvent},
+    x::{Query, XConn, XConnExt, XEvent},
     Result, Xid,
 };
 use std::collections::HashMap;
 
+// Private internal state for managing swallowed windows
 #[derive(Default)]
 struct WindowSwallowingState {
     swallowed: HashMap<Xid, Xid>, // map of child windows to their swallowed parent
@@ -18,9 +20,6 @@ struct WindowSwallowingState {
 }
 
 impl WindowSwallowingState {
-    // Stash state in case this is before a window closing. If the closed window
-    // is one we care about then the stack ordering and any floating position will
-    // have been trashed and we need to restore it in handle_destroy.
     fn stash_state<X: XConn>(&mut self, state: &mut State<X>) -> Result<bool> {
         self.stack_before_close = state.client_set.current_stack().cloned();
         self.floating_before_close = state.client_set.floating.clone();
@@ -77,6 +76,17 @@ pub struct WindowSwallowing<X: XConn> {
 }
 
 impl<X: XConn> WindowSwallowing<X> {
+    pub fn boxed<Q>(parent: Q) -> Box<dyn EventHook<X>>
+    where
+        X: 'static,
+        Q: Query<X> + 'static,
+    {
+        Box::new(Self {
+            parent: Box::new(parent),
+            child: None,
+        })
+    }
+
     fn queries_hold(&self, id: Xid, parent: Xid, x: &X) -> bool {
         let parent_matches = x.query_or(false, &*self.parent, parent);
         let child_matches = match &self.child {
@@ -87,9 +97,6 @@ impl<X: XConn> WindowSwallowing<X> {
         parent_matches && child_matches
     }
 
-    // We intercept map requests for windows matching our child query if the currently focused window
-    // matches the parent query. If we're unable to pull the _NET_WM_PID property for either window
-    // we bail on trying to handle the new window and let the default handling deal with it.
     fn handle_map_request(
         &mut self,
         child: Xid,
@@ -126,9 +133,23 @@ impl<X: XConn> EventHook<X> for WindowSwallowing<X> {
         let mut wss = _wss.borrow_mut();
 
         match *event {
+            // We intercept map requests for windows matching our child query if the
+            // currently focused window matches the parent query. If we're unable to
+            // pull the _NET_WM_PID property for either window we bail on trying to
+            // handle the new window and let the default handling deal with it.
+            // NOTE: This does _not_ trigger any user specified manage hooks.
             XEvent::MapRequest(id) => self.handle_map_request(id, &mut wss, state, x),
+
+            // Stash state in case this is before a window closing. If the closed window
+            // is one we care about then the stack ordering and any floating position will
+            // have been trashed and we need to restore it in try_restore_parent.
             XEvent::ConfigureRequest(_) => wss.stash_state(state),
+
+            // If the destroyed window is a child of one we swallowed then we restore the
+            // parent in its place.
             XEvent::Destroy(id) => wss.try_restore_parent(id, state, x),
+
+            // Anything else just gets the default handling from core
             _ => Ok(true),
         }
     }
@@ -140,16 +161,8 @@ fn transfer_floating_state(from: Xid, to: Xid, floating: &mut HashMap<Xid, Rect>
     }
 }
 
-fn pid<X: XConn>(id: Xid, x: &X) -> Option<u32> {
-    if let Ok(Some(Prop::Cardinal(vals))) = x.get_prop(id, "_NET_WM_PID") {
-        Some(vals[0])
-    } else {
-        None
-    }
-}
-
 fn is_child_of<X: XConn>(id: Xid, parent: Xid, x: &X) -> bool {
-    match (pid(parent, x), pid(id, x)) {
+    match (x.window_pid(parent), x.window_pid(id)) {
         (Some(p_pid), Some(c_pid)) => parent_pid_chain(c_pid).contains(&p_pid),
         _ => false,
     }
