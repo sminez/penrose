@@ -248,7 +248,7 @@
 <span class="comment">// Private wrapper type to ensure that only this module can access this state extension</span>
 <span class="kw">struct</span> <span class="ident">NamedScratchPadState</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">NamedScratchPad</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>);
 
-<span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [Config].</span>
+<span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// See the module level docs for details of what functionality is provided by</span>
 <span class="doccomment">/// this extension.</span>

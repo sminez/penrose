@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["Message","A dynamically typed message to be sent to a [Layout] for processing"]],"trait":[["IntoMessage","Marker trait for a type that can be sent as a [Message]"]]};

@@ -275,7 +275,7 @@
 <span class="doccomment">//! status bars / panels and fullscreen windows.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! See details of the spec here:</span>
-<span class="doccomment">//!   https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html</span>
+<span class="doccomment">//!   &lt;https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html&gt;</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">core</span>::{<span class="ident">ClientSet</span>, <span class="ident">Config</span>, <span class="ident">State</span>},
     <span class="ident">extensions::actions</span>::{<span class="ident">set_fullscreen_state</span>, <span class="ident">FullScreenAction</span>},
@@ -291,7 +291,7 @@
 
 <span class="doccomment">/// The set of Atoms this extension adds support for.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// _NET_SUPPORTED is set to this as part of [EwhmStartupHook]</span>
+<span class="doccomment">/// _NET_SUPPORTED is set to this as part of [startup_hook]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EWMH_SUPPORTED_ATOMS</span>: <span class="kw-2">&amp;</span>[<span class="ident">Atom</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
     <span class="ident">Atom::NetWmStateHidden</span>,
     <span class="ident">Atom::NetWmStateFullscreen</span>,
@@ -313,7 +313,7 @@
 <span class="doccomment">/// The WM_NAME that will be set for the X server</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WM_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;penrose&quot;</span>;
 
-<span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [Config].</span>
+<span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// See the module level docs for details of what functionality is provided by</span>
 <span class="doccomment">/// this extension.</span>

@@ -42,57 +42,49 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Built-in layout messages.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! It is not a hard requirement for [Layout] implementations to handle each</span>
+<span class="doccomment">//! It is not a hard requirement for [crate::core::layout::Layout] implementations to handle each</span>
 <span class="doccomment">//! of the messages provided by this module but wherever possible you should</span>
 <span class="doccomment">//! attempt to do so if the semantics of the message make sense for the</span>
 <span class="doccomment">//! layout you are writing.</span>
 
 <span class="macro">macro_rules!</span> <span class="ident">msg</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">m</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::messages::IntoMessage</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">m</span> {}
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::IntoMessage</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">m</span> {}
     };
 }
 
-<span class="doccomment">/// Alter the number of clients contained in the main area of the [Layout].</span>
+<span class="doccomment">/// Alter the number of clients contained in the main area of the [crate::core::layout::Layout].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IncMain</span>(<span class="kw">pub</span> <span class="ident">i8</span>);
 <span class="macro">msg!</span>(<span class="ident">IncMain</span>);
 
-<span class="doccomment">/// Expand the size of the main area of the [Layout].</span>
+<span class="doccomment">/// Expand the size of the main area of the [crate::core::layout::Layout].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExpandMain</span>;
 <span class="macro">msg!</span>(<span class="ident">ExpandMain</span>);
 
-<span class="doccomment">/// Shrink the size of the main area of the [Layout]</span>
+<span class="doccomment">/// Shrink the size of the main area of the [crate::core::layout::Layout]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShrinkMain</span>;
 <span class="macro">msg!</span>(<span class="ident">ShrinkMain</span>);
 
-<span class="doccomment">/// Rotate the [Layout] to a new orientation</span>
+<span class="doccomment">/// Rotate the [crate::core::layout::Layout] to a new orientation</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Rotate</span>;
 <span class="macro">msg!</span>(<span class="ident">Rotate</span>);
 
-<span class="doccomment">/// Mirror the [Layout] over either the horizontal or vertical axis.</span>
+<span class="doccomment">/// Mirror the [crate::core::layout::Layout] over either the horizontal or vertical axis.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Mirror</span>;
 <span class="macro">msg!</span>(<span class="ident">Mirror</span>);
 
-<span class="doccomment">/// Unwrap a [LayoutTransformer] to return the underlying [Layout].</span>
+<span class="doccomment">/// Unwrap a [crate::core::layout::LayoutTransformer] to return the underlying [crate::core::layout::Layout].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Handling of this message is provided automatically by the [LayoutTransformer]</span>
+<span class="doccomment">/// Handling of this message is provided automatically by the [crate::core::layout::LayoutTransformer]</span>
 <span class="doccomment">/// trait.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnwrapTransformer</span>;
 <span class="macro">msg!</span>(<span class="ident">UnwrapTransformer</span>);
 
-<span class="doccomment">/// A [Message] sent when a [Layout] is no longer visible (e.g. Layout changed on a visible</span>
-<span class="doccomment">/// [Workspace] or the workspace itself becoming hidden).</span>
+<span class="doccomment">/// A [crate::core::layout::Message] sent when a [crate::core::layout::Layout] is no longer visible (e.g.</span>
+<span class="doccomment">/// Layout changed on a visible [crate::pure::Workspace] or the workspace itself becoming hidden).</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Hide</span>;
 <span class="macro">msg!</span>(<span class="ident">Hide</span>);
-
-<span class="doccomment">/// A [Message] sent when Penrose is shutting down or restarting.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShutDown</span>;
-<span class="macro">msg!</span>(<span class="ident">ShutDown</span>);
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

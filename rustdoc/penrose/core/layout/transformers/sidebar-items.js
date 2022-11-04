@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"trait":[["LayoutTransformer","A wrapper round another [Layout] that is able to intercept and modify both the positions being returned by the inner layout and messages being sent to it."]]};

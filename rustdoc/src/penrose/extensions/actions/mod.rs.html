@@ -193,7 +193,7 @@
 <span class="doccomment">/// **NOTE**: You will need to make use of [add_ewmh_hooks][0] for this action to</span>
 <span class="doccomment">///           work correctly.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">///   [0]: crate::extension::hooks::add_ewmh_hooks</span>
+<span class="doccomment">///   [0]: crate::extensions::hooks::add_ewmh_hooks</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">toggle_fullscreen</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>() -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="ident">key_handler</span>(<span class="op">|</span><span class="ident">state</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">current_client</span>() {
@@ -205,7 +205,7 @@
     })
 }
 
-<span class="doccomment">/// Jump to, or create, a [Workspace]</span>
+<span class="doccomment">/// Jump to, or create, a [crate::pure::Workspace]</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Call &#39;get_name&#39; to obtain a Workspace name and check to see if there is currently a Workspace</span>
 <span class="doccomment">/// with that name being managed by the WindowManager. If there is no existing workspace with the</span>

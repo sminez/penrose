@@ -462,6 +462,7 @@
 <span id="462">462</span>
 <span id="463">463</span>
 <span id="464">464</span>
+<span id="465">465</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">pure</span>::{<span class="ident">Diff</span>, <span class="ident">StackSet</span>, <span class="ident">Workspace</span>},
@@ -484,7 +485,7 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">actions</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bindings</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">handle</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">handle</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hooks</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">layout</span>;
 
@@ -608,6 +609,7 @@
     }
 }
 
+<span class="doccomment">/// The user specified config options for how the window manager should run</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">X</span>: <span class="ident">XConn</span>,

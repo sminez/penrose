@@ -468,7 +468,16 @@
 <span id="468">468</span>
 <span id="469">469</span>
 <span id="470">470</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server</span>
+<span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">builtin::layout::messages::Hide</span>,
     <span class="ident">core</span>::{
         <span class="ident">bindings</span>::{<span class="ident">KeyCode</span>, <span class="ident">MouseState</span>},
@@ -536,6 +545,13 @@
     <span class="ident">RootEventMask</span>,
 }
 
+<span class="doccomment">/// A handle on a running X11 connection that we can use for issuing X requests.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// XConn is intended as an abstraction layer to allow for communication with the underlying</span>
+<span class="doccomment">/// display system (assumed to be X) using whatever mechanism the implementer wishes. In theory, it</span>
+<span class="doccomment">/// should be possible to write an implementation that allows penrose to run on systems not using X</span>
+<span class="doccomment">/// as the windowing system but X idioms and high level event types / client interations are</span>
+<span class="doccomment">/// assumed.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">XConn</span> {
     <span class="kw">fn</span> <span class="ident">root</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Xid</span>;
     <span class="kw">fn</span> <span class="ident">screen_details</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span><span class="op">&gt;</span>;
@@ -568,7 +584,7 @@
     <span class="kw">fn</span> <span class="ident">warp_pointer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">x</span>: <span class="ident">i16</span>, <span class="ident">y</span>: <span class="ident">i16</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 
-<span class="comment">// Derivable methods for XConn that should never be given a different implementation</span>
+<span class="doccomment">/// Extended functionality for [XConn] impls in order to run the window manager.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">XConnExt</span>: <span class="ident">XConn</span> <span class="op">+</span> <span class="ident">Sized</span> {
     <span class="doccomment">/// Kill the focused client if there is one</span>
     <span class="kw">fn</span> <span class="ident">kill_focused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {

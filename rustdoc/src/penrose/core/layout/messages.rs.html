@@ -20,7 +20,7 @@
 <span id="20">20</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::any::Any</span>;
 
-<span class="doccomment">/// A dynamically typed message to be sent to a [Layout] for processing</span>
+<span class="doccomment">/// A dynamically typed message to be sent to a [crate::core::layout::Layout] for processing</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Message</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">Message</span> {
@@ -29,7 +29,7 @@
     }
 }
 
-<span class="doccomment">/// Marker trait for a type that can be sent as a [Message]</span>
+<span class="doccomment">/// Marker trait for a type that can be sent as a [crate::core::layout::Message]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IntoMessage</span>: <span class="ident">Any</span> {
     <span class="kw">fn</span> <span class="ident">into_message</span>(<span class="self">self</span>) -&gt; <span class="ident">Message</span>
     <span class="kw">where</span>

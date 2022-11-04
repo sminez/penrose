@@ -198,14 +198,14 @@
         <span class="ident">bindings</span>::{<span class="ident">KeyBindings</span>, <span class="ident">KeyCode</span>, <span class="ident">MouseBindings</span>, <span class="ident">MouseEvent</span>},
         <span class="ident">State</span>, <span class="ident">Xid</span>,
     },
-    <span class="ident">pure</span>::{<span class="ident">geometry::Point</span>, <span class="ident">Workspace</span>},
+    <span class="ident">pure</span>::{<span class="ident">geometry::Point</span>, <span class="ident">StackSet</span>, <span class="ident">Workspace</span>},
     <span class="ident">x</span>::{
         <span class="ident">atom::Atom</span>,
         <span class="ident">event</span>::{<span class="ident">ClientMessage</span>, <span class="ident">ClientMessageKind</span>, <span class="ident">PointerChange</span>},
         <span class="ident">property</span>::{<span class="ident">Prop</span>, <span class="ident">WmHints</span>},
         <span class="ident">XConn</span>, <span class="ident">XConnExt</span>,
     },
-    <span class="prelude-ty">Result</span>, <span class="ident">StackSet</span>,
+    <span class="prelude-ty">Result</span>,
 };
 <span class="kw">use</span> <span class="ident">std::mem::take</span>;
 <span class="kw">use</span> <span class="ident">tracing</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">trace</span>};

@@ -242,7 +242,7 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Built-in layouts.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">builtin::layout::messages</span>::{<span class="ident">ExpandMain</span>, <span class="ident">IncMain</span>, <span class="ident">Mirror</span>, <span class="ident">Rotate</span>, <span class="ident">ShrinkMain</span>},
-    <span class="ident">core::layout</span>::{<span class="ident">messages::Message</span>, <span class="ident">Layout</span>},
+    <span class="ident">core::layout</span>::{<span class="ident">Layout</span>, <span class="ident">Message</span>},
     <span class="ident">pure</span>::{<span class="ident">geometry::Rect</span>, <span class="ident">Stack</span>},
     <span class="ident">Xid</span>,
 };
@@ -468,7 +468,7 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::{
         <span class="ident">builtin::layout</span>::{<span class="ident">messages::IncMain</span>, <span class="kw-2">*</span>},
-        <span class="ident">core::layout::messages::IntoMessage</span>,
+        <span class="ident">core::layout::IntoMessage</span>,
     };
 
     <span class="attribute">#[<span class="ident">test</span>]</span>

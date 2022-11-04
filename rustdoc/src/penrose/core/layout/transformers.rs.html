@@ -195,7 +195,7 @@
     <span class="doccomment">/// The default implementation of this method simply swaps the built-in [Monocle]</span>
     <span class="doccomment">/// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better</span>
     <span class="doccomment">/// implementation is possible then it should be implemented but this default will</span>
-    <span class="doccomment">/// give the correct behaviour when [LayoutTransformer::handle_message] receives</span>
+    <span class="doccomment">/// give the correct behaviour when [LayoutTransformer::passthrough_message] receives</span>
     <span class="doccomment">/// an [UnwrapTransformer] message.</span>
     <span class="kw">fn</span> <span class="ident">unwrap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">swap_inner</span>(<span class="ident">Box::new</span>(<span class="ident">Monocle</span>))
