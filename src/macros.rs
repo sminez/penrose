@@ -1,6 +1,6 @@
 //! Utility macros
 
-/// Quickly create a [penrose::Error::Custom]
+/// Quickly create a [crate::Error::Custom]
 /// ```
 /// # use penrose::custom_error;
 /// let err = custom_error!("a simple error message");

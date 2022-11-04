@@ -1,3 +1,4 @@
+//! Logic for interacting with the X server
 use crate::{
     builtin::layout::messages::Hide,
     core::{
@@ -66,6 +67,13 @@ pub enum ClientAttr {
     RootEventMask,
 }
 
+/// A handle on a running X11 connection that we can use for issuing X requests.
+///
+/// XConn is intended as an abstraction layer to allow for communication with the underlying
+/// display system (assumed to be X) using whatever mechanism the implementer wishes. In theory, it
+/// should be possible to write an implementation that allows penrose to run on systems not using X
+/// as the windowing system but X idioms and high level event types / client interations are
+/// assumed.
 pub trait XConn {
     fn root(&self) -> Xid;
     fn screen_details(&self) -> Result<Vec<Rect>>;
@@ -98,7 +106,7 @@ pub trait XConn {
     fn warp_pointer(&self, id: Xid, x: i16, y: i16) -> Result<()>;
 }
 
-// Derivable methods for XConn that should never be given a different implementation
+/// Extended functionality for [XConn] impls in order to run the window manager.
 pub trait XConnExt: XConn + Sized {
     /// Kill the focused client if there is one
     fn kill_focused(&self, state: &mut State<Self>) -> Result<()> {

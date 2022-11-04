@@ -17,10 +17,16 @@ customise things to your liking.
 
 ### tl;dr - getting started
 
-The docs for penrose are written using mdBook and published to GitHub Pages
-[here](https://sminez.github.io/penrose). They cover some more general concepts about how
-to get up and running as opposed to the crate docs on docs.rs which are more aimed at
-covering the APIs themselves.
+The docs for penrose are written using mdBook and published to GitHub Pages [here][0].
+They cover some more general concepts about how to get up and running as opposed to the
+[crate docs][1] on docs.rs which are more aimed at covering the APIs themselves.
+
+> The current development version of the docs can be found [here][2].
+
+If you want to have a look at how it all comes together then the [examples][3] directory
+of this repo has several different starting points for you to begin with and my personal
+set up can be found [here][4]. (You almost certainly _don't_ want to use my set up in
+full but it should serve as a good reference for what a real use case looks like!)
 
 <br>
 
@@ -29,25 +35,24 @@ covering the APIs themselves.
 
 #### Understandable code
 
-`Penrose` was born out of my failed attempts to refactor the [dwm][6] codebase into
+`Penrose` was born out of my failed attempts to refactor the [dwm][5] codebase into
 something that I could more easily understand and hack on. While I very much
-admire and aim for minimalism in code, it becomes a problem when your complex
-code base starts playing code golf to keep things under an arbitrary line limit.
+admire and aim for minimalism in code, I personally feel that it becomes a problem
+when your code base starts playing code golf to keep things short for the sake of it.
 
-I won't claim that `Penrose` has the cleanest code base you've ever seen, but it
-_should_ be readible in addition to being fast. If something is confusing or
-unclear, then I count that as a bug (and please raise it as such!)
+I certainly won't claim that `Penrose` has the cleanest code base you've ever seen,
+but it should be readible in addition to being fast.
 
 
 #### Simple to configure
 
-I've also tried my hand at [Xmonad][7] in the past. I love the set-ups people can
-achive with it ([this one][8] is a personal favourite) but doing everything in
+I've also tried my hand at [Xmonad][6] in the past. I love the set-ups people can
+achive with it ([this one][7] is a personal favourite) but doing everything in
 Haskell was a deal breaker for me. I'm sure many people will say the same thing
 about Rust but then at least I'm giving you some more options!
 
-With `Penrose`, a simple config can be written in about 5 minutes and roughly 50
-lines of code. It will be pretty minimal but each additional feature (such as a
+With `Penrose`, a simple window manager can be written in about 5 minutes and under
+100 lines of code. It will be pretty minimal but each additional feature (such as a
 status bar, scratch-pads, custom layouts, dynamic menus...) can be added in as
 little as a single line. If the functionality you want isn't available however
 then that leads us on to...
@@ -55,27 +60,18 @@ then that leads us on to...
 
 #### Easy to extend
 
-[dwm][6] patches, [qtile][9] lazy APIs, [i3][10] IPC configuration; all of these
+[dwm][5] patches, [qtile][8] lazy APIs, [i3][9] IPC configuration; all of these
 definitely work but they are not what I'm after. Again, the [Xmonad][7] model of
 companion libraries that you bring in and use as part of writing your own window
 manager has always felt like the right model for me for extending the window
-manager. (Though, again, while Haskell is great fun for tinkering I've never
-felt productive in it)
+manager.
 
-`Penrose` provides a set of Rust traits for defining the various ways you can
-interact with the main `WindowManager` struct. You are free to write your own
-implementations, write code that manipulates them and extend them however you
-see fit. If you want to check out some examples of what is possible, take a look
-in the [contrib][11] directory.
-
-Want to run some particular logic every time you connect external monitors?
-Write a [hook][12] that listens for randr triggers.
-
-Want to scatter your windows at random over the screen? Write a custom
-[layout][13] and make use of all of the helper methods on [regions][14].
-
-Have an idea that you can't currently implement? Raise an issue and suggest an
-extension to the API!
+`Penrose` provides a set of traits and APIs for extending the minimal core library
+that is provided out of the box. By default you essentially get an event loop and
+a nice clean split between the "pure" state manipulation APIs for managing your
+windows and a "diff and render" layer that interacts with the X server. There are
+enough built-in pieces to show how everything works and then some more interesting
+/ useful code available in the [extensions][10] module.
 
 <br>
 
@@ -84,45 +80,41 @@ extension to the API!
 #### An external config file
 
 Parsing a config file and dynamically switching behaviour on the contents adds a
-huge amount of complexity to the code: not to mention the need for _validating_
-the config file! By default, `Penrose` is configured statically in your
-**main.rs** and compiled each time you want to make changes (similar to
-[Xmonad][7] and [dwm][6]).
+large amount of complexity to the code: not to mention the need for _validating_
+the config file! By default, `Penrose` is configured statically in your **main.rs**
+and compiled each time you want to make changes (similar to [Xmonad][7] and [dwm][6]).
+There is no built-in support for hot reloading of changes or wrappers around the
+main window manager process.
 
-That said, the extensibility of `Penrose` means that
-you are free to define your own config file format and parse that as part of
-your startup, if that is something you want. You could read from `xresources`,
-or a stand alone file of your design.
+That said, the extensibility of `Penrose` means that you are definately able to define
+your own config file format and parse that as part of your startup, if that is something
+you want.
 
 The choice is yours!
 
 
-#### IPC / relying on external programs
+#### IPC / relying on external programs for core functionality
 
 There are several places where `Penrose` makes use of external programs for
 utility functionality (reading the user's key-map or spawning a program launcher
-for example), but core window manager functionality is always going to stay
-internal.
+for example), but core window manager functionality is contained in the pure state
+data structures. This makes it a lot simpler to maintain the codebase and (importantly)
+provide a nice API to work with for extending the behaviour of your window manager.
 
 As you might expect, you can definitely write your own extensions that provide
 some sort of IPC or client/server style mechanism if you want to mirror the
 kinds of things possible in other window managers such as `i3` or `bspwm`, but
-that is not going to be included at the expense of statically defined control in
-your binary as a default.
+that is not going to be supported in the core of the library itself.
 
 
-  [0]: https://github.com/sminez/penrose/tree/develop/docs/faq.md
-  [1]: https://github.com/sminez/penrose/tree/develop/docs/getting_started.md
-  [2]: https://github.com/sminez/penrose/tree/develop/examples
-  [3]: https://github.com/sminez/my-penrose-config
-  [4]: https://docs.rs/penrose
-  [5]: https://www.youtube.com/channel/UC04N-5DxEWH4ioK0bvZmF_Q
-  [6]: https://dwm.suckless.org/
-  [7]: https://xmonad.org/
-  [8]: https://www.youtube.com/watch?v=70IxjLEmomg
-  [9]: http://www.qtile.org/
-  [10]: https://i3wm.org/
-  [11]: https://github.com/sminez/penrose/tree/develop/src/contrib
-  [12]: https://docs.rs/penrose/0.2.0/penrose/core/hooks/index.html
-  [13]: https://docs.rs/penrose/0.2.0/penrose/core/layout/index.html
-  [14]: https://docs.rs/penrose/0.2.0/penrose/core/data_types/struct.Region.html
+  [0]: https://sminez.github.io/penrose
+  [1]: https://docs.rs/penrose
+  [2]: https://sminez.github.io/penrose/rustdoc/penrose
+  [3]: https://github.com/sminez/penrose/tree/develop/examples
+  [4]: https://github.com/sminez/my-penrose-config
+  [5]: https://dwm.suckless.org/
+  [6]: https://xmonad.org/
+  [7]: https://www.youtube.com/watch?v=70IxjLEmomg
+  [8]: http://www.qtile.org/
+  [9]: https://i3wm.org/
+  [10]: src/extensions/

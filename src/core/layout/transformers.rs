@@ -27,7 +27,7 @@ pub trait LayoutTransformer: Clone + Sized + 'static {
     /// The default implementation of this method simply swaps the built-in [Monocle]
     /// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better
     /// implementation is possible then it should be implemented but this default will
-    /// give the correct behaviour when [LayoutTransformer::handle_message] receives
+    /// give the correct behaviour when [LayoutTransformer::passthrough_message] receives
     /// an [UnwrapTransformer] message.
     fn unwrap(&mut self) -> Box<dyn Layout> {
         self.swap_inner(Box::new(Monocle))

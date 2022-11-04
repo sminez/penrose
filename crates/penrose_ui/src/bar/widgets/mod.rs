@@ -13,7 +13,7 @@ mod workspaces;
 pub use simple::{ActiveWindowName, CurrentLayout, RootWindowName};
 pub use workspaces::Workspaces;
 
-/// A status bar widget that can be rendered using a [DrawContext]
+/// A status bar widget that can be rendered using a [Context]
 pub trait Widget<X>
 where
     X: XConn,

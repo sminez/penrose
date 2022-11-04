@@ -9,9 +9,13 @@ pub mod stack;
 pub mod stack_set;
 pub mod workspace;
 
+#[doc(inline)]
 pub use screen::Screen;
+#[doc(inline)]
 pub use stack::{Position, Stack};
+#[doc(inline)]
 pub use stack_set::StackSet;
+#[doc(inline)]
 pub use workspace::Workspace;
 
 pub(crate) use diff::Diff;

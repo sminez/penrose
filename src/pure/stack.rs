@@ -18,11 +18,11 @@ use std::{
 /// ```
 #[macro_export]
 macro_rules! stack {
-    ([$($up:expr),*], $focus:expr, [$($down:expr),*]) => { $crate::Stack::new([$($up),*], $focus, [$($down),*]) };
-    ([$($up:expr),*], $focus:expr) => { $crate::Stack::new([$($up),*], $focus, []) };
-    ($focus:expr, [$($down:expr),*]) => { $crate::Stack::new([], $focus, [$($down),*]) };
-    ($focus:expr, $($down:expr),+) => { $crate::Stack::new([], $focus, [$($down),*]) };
-    ($focus:expr) => { $crate::Stack::new([], $focus, []) };
+    ([$($up:expr),*], $focus:expr, [$($down:expr),*]) => { $crate::pure::Stack::new([$($up),*], $focus, [$($down),*]) };
+    ([$($up:expr),*], $focus:expr) => { $crate::pure::Stack::new([$($up),*], $focus, []) };
+    ($focus:expr, [$($down:expr),*]) => { $crate::pure::Stack::new([], $focus, [$($down),*]) };
+    ($focus:expr, $($down:expr),+) => { $crate::pure::Stack::new([], $focus, [$($down),*]) };
+    ($focus:expr) => { $crate::pure::Stack::new([], $focus, []) };
 }
 
 /// A position within a [Stack].

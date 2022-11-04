@@ -18,11 +18,8 @@ pub mod x;
 #[cfg(feature = "x11rb-xcb")]
 pub mod x11rb;
 
+#[doc(inline)]
 pub use crate::core::Xid;
-pub use pure::{
-    geometry::{Point, Rect},
-    Position, Screen, Stack, StackSet, Workspace,
-};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

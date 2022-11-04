@@ -71,7 +71,7 @@ where
 // Private wrapper type to ensure that only this module can access this state extension
 struct NamedScratchPadState<X: XConn>(HashMap<&'static str, NamedScratchPad<X>>);
 
-/// Add the required hooks to manage EWMH compliance to an existing [Config].
+/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].
 ///
 /// See the module level docs for details of what functionality is provided by
 /// this extension.

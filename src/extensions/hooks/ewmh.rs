@@ -4,7 +4,7 @@
 //! status bars / panels and fullscreen windows.
 //!
 //! See details of the spec here:
-//!   https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html
+//!   <https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html>
 use crate::{
     core::{ClientSet, Config, State},
     extensions::actions::{set_fullscreen_state, FullScreenAction},
@@ -20,7 +20,7 @@ use tracing::warn;
 
 /// The set of Atoms this extension adds support for.
 ///
-/// _NET_SUPPORTED is set to this as part of [EwhmStartupHook]
+/// _NET_SUPPORTED is set to this as part of [startup_hook]
 pub const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
     Atom::NetWmStateHidden,
     Atom::NetWmStateFullscreen,
@@ -42,7 +42,7 @@ pub const EWMH_SUPPORTED_ATOMS: &[Atom] = &[
 /// The WM_NAME that will be set for the X server
 pub const WM_NAME: &str = "penrose";
 
-/// Add the required hooks to manage EWMH compliance to an existing [Config].
+/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].
 ///
 /// See the module level docs for details of what functionality is provided by
 /// this extension.

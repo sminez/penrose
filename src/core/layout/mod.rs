@@ -5,10 +5,12 @@ use crate::{
 };
 use std::{fmt, mem::swap};
 
-pub mod messages;
-pub mod transformers;
+mod messages;
+mod transformers;
 
+#[doc(inline)]
 pub use messages::{IntoMessage, Message};
+#[doc(inline)]
 pub use transformers::LayoutTransformer;
 
 // TODO: Do I also need versions of the layout methods that have access to the overall X state as well?
@@ -34,7 +36,7 @@ pub trait Layout {
     /// Clone directly)
     fn boxed_clone(&self) -> Box<dyn Layout>;
 
-    /// Generate screen positions for clients on a given [Workspace].
+    /// Generate screen positions for clients on a given [crate::pure::Workspace].
     ///
     /// If you do not need to know the details of the workspace being laid out, you should can use the
     /// default implementation of this methods which calls [Layout::layout] if there are any clients
@@ -43,11 +45,11 @@ pub trait Layout {
     /// # Positioning clients
     /// For each client that should be shown on the screen a pair of its [Xid] and a [Rect] should be
     /// provided, indicating the screen position the client should be placed at. To hide a client that
-    /// was present in the [Workspace] simply do not provide a position for it. (You may also provide
+    /// was present in the [crate::pure::Workspace] simply do not provide a position for it. (You may also provide
     /// positions for clients that were not present in the input if you have the [Xid] available.)
     ///
     /// The order in which the ([Xid], [Rect]) pairs are returned determines the stacking order on the
-    /// screen. It does not have to match the stack order of the clients within the [Workspace].
+    /// screen. It does not have to match the stack order of the clients within the [crate::pure::Workspace].
     ///
     /// # Returning a new layout
     /// When a layout is run it may optionally replace itself with a new [Layout]. If `Some(layout)`
@@ -100,7 +102,7 @@ impl fmt::Debug for Box<dyn Layout> {
     }
 }
 
-/// A stack of [Layout] options for use on a particular [Workspace].
+/// A stack of [Layout] options for use on a particular [crate::pure::Workspace].
 ///
 /// The [Stack] itself acts as a [Layout], deferring all operations to the
 /// currently focused Layout.

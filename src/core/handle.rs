@@ -4,14 +4,14 @@ use crate::{
         bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
         State, Xid,
     },
-    pure::{geometry::Point, Workspace},
+    pure::{geometry::Point, StackSet, Workspace},
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageKind, PointerChange},
         property::{Prop, WmHints},
         XConn, XConnExt,
     },
-    Result, StackSet,
+    Result,
 };
 use std::mem::take;
 use tracing::{error, info, trace};

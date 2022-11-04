@@ -62,7 +62,7 @@ pub fn set_fullscreen_state<X: XConn>(
 /// **NOTE**: You will need to make use of [add_ewmh_hooks][0] for this action to
 ///           work correctly.
 ///
-///   [0]: crate::extension::hooks::add_ewmh_hooks
+///   [0]: crate::extensions::hooks::add_ewmh_hooks
 pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     key_handler(|state, x: &X| {
         let id = match state.client_set.current_client() {
@@ -74,7 +74,7 @@ pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     })
 }
 
-/// Jump to, or create, a [Workspace]
+/// Jump to, or create, a [crate::pure::Workspace]
 ///
 /// Call 'get_name' to obtain a Workspace name and check to see if there is currently a Workspace
 /// with that name being managed by the WindowManager. If there is no existing workspace with the

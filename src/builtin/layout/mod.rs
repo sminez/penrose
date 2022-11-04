@@ -1,7 +1,7 @@
 //! Built-in layouts.
 use crate::{
     builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
-    core::layout::{messages::Message, Layout},
+    core::layout::{Layout, Message},
     pure::{geometry::Rect, Stack},
     Xid,
 };
@@ -227,7 +227,7 @@ impl Layout for Monocle {
 mod tests {
     use crate::{
         builtin::layout::{messages::IncMain, *},
-        core::layout::messages::IntoMessage,
+        core::layout::IntoMessage,
     };
 
     #[test]

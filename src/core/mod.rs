@@ -20,7 +20,7 @@ use tracing::{error, info, span, trace, Level};
 
 pub mod actions;
 pub mod bindings;
-pub mod handle;
+pub(crate) mod handle;
 pub mod hooks;
 pub mod layout;
 
@@ -144,6 +144,7 @@ where
     }
 }
 
+/// The user specified config options for how the window manager should run
 pub struct Config<X>
 where
     X: XConn,
