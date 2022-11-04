@@ -115,11 +115,15 @@ impl RelativeTo for RelativeRect {
     }
 }
 
+// TODO: the current implemention will produce essentially garbage results if the
+//       child Rect is not a subregion of the parent. This needs bounds checking
+//       and some sensible default behaviour when those checks fail (such as translating
+//       the Rect to fit or scaling it down)
 impl RelativeTo for Rect {
     fn relative_to(&self, r: &Rect) -> RelativeRect {
         RelativeRect::new(
-            self.x as f64 / r.x as f64,
-            self.y as f64 / r.y as f64,
+            (self.x - r.x) as f64 / r.w as f64,
+            (self.y - r.y) as f64 / r.h as f64,
             self.w as f64 / r.w as f64,
             self.h as f64 / r.h as f64,
         )
@@ -447,5 +451,26 @@ mod tests {
         } else {
             assert!(res.is_none());
         }
+    }
+
+    // Helpers to make it easier to read the cases for the relative_to_rect tests below
+
+    fn r(x: u32, y: u32, w: u32, h: u32) -> Rect {
+        Rect::new(x, y, w, h)
+    }
+
+    fn rr(x: f64, y: f64, w: f64, h: f64) -> RelativeRect {
+        RelativeRect::new(x, y, w, h)
+    }
+
+    #[test_case(r(0, 0, 200, 100), r(0, 0, 200, 100), rr(0.0, 0.0, 1.0, 1.0); "fullscreen")]
+    #[test_case(r(0, 0, 50, 50), r(0, 0, 200, 100), rr(0.0, 0.0, 0.25, 0.5); "subregion with same xy")]
+    #[test_case(r(10, 10, 50, 50), r(0, 0, 200, 100), rr(0.05, 0.1, 0.25, 0.5); "subregion with different xy")]
+    #[test_case(r(110, 110, 50, 50), r(100, 100, 200, 100), rr(0.05, 0.1, 0.25, 0.5); "subregion with different xy and parent not at origin")]
+    #[test]
+    fn relative_to_rect(child: Rect, parent: Rect, expected: RelativeRect) {
+        let relative = child.relative_to(&parent);
+
+        assert_eq!(relative, expected);
     }
 }

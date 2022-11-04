@@ -1118,7 +1118,7 @@ pub mod tests {
 
             let positions = s.visible_client_positions();
 
-            assert!(positions.contains(&(Xid(1), r)))
+            assert!(positions.contains(&(Xid(1), r)), "{positions:?}")
         }
 
         #[test]
