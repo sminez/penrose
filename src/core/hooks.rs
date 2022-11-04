@@ -58,6 +58,7 @@ impl<X: XConn> fmt::Debug for Box<dyn EventHook<X>> {
     }
 }
 
+/// The result of composing two event hooks using `then`
 #[derive(Debug)]
 pub struct ComposedEventHook<X>
 where
@@ -140,6 +141,7 @@ impl<X: XConn> fmt::Debug for Box<dyn ManageHook<X>> {
     }
 }
 
+/// The result of composing two manage hooks using `then`
 #[derive(Debug)]
 pub struct ComposedManageHook<X>
 where
@@ -216,6 +218,7 @@ impl<X: XConn> fmt::Debug for Box<dyn StateHook<X>> {
     }
 }
 
+/// The result of composing two state hooks using `then`
 #[derive(Debug)]
 pub struct ComposedStateHook<X>
 where

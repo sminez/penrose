@@ -18,10 +18,14 @@ mod dynamic_select;
 #[doc(inline)]
 pub use dynamic_select::*;
 
+/// The possible valid actions to use when manipulating full screen state
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FullScreenAction {
+    /// Force the window out of fullscreen state
     Remove,
+    /// Force the window into fullscreen state
     Add,
+    /// Toggle the fullscreen state of the window
     Toggle,
 }
 

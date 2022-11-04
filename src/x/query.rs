@@ -7,6 +7,7 @@ use crate::{
 /// A query to be run against client windows for identifying specific windows
 /// or programs.
 pub trait Query<X: XConn> {
+    /// Run this query for a given window ID.
     fn run(&self, id: Xid, x: &X) -> Result<bool>;
 }
 

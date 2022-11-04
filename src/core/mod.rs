@@ -71,7 +71,9 @@ pub struct State<X>
 where
     X: XConn,
 {
+    /// The user defined configuration options for running the main window manager logic
     pub config: Config<X>,
+    /// The pure window manager state
     pub client_set: ClientSet,
     pub(crate) extensions: AnyMap,
     pub(crate) root: Xid,
@@ -149,16 +151,27 @@ pub struct Config<X>
 where
     X: XConn,
 {
+    /// The RGBA color to use for normal (unfocused) window borders
     pub normal_border: Color,
+    /// The RGBA color to use for the focused window border
     pub focused_border: Color,
+    /// The width in pixels to use for drawing window borders
     pub border_width: u32,
+    /// Whether or not the mouse entering a new window should set focus
     pub focus_follow_mouse: bool,
+    /// The stack of layouts to use for each workspace
     pub default_layouts: LayoutStack,
-    pub workspace_names: Vec<String>,
+    /// The ordered set of workspace tags to use on window manager startup
+    pub tags: Vec<String>,
+    /// Window classes that should always be assigned floating positions rather than tiled
     pub floating_classes: Vec<String>,
+    /// A [StateHook] to run before entering the main event loop
     pub startup_hook: Option<Box<dyn StateHook<X>>>,
+    /// A [StateHook] to run before processing each [XEvent]
     pub event_hook: Option<Box<dyn EventHook<X>>>,
+    /// A [ManageHook] to run after each new window becomes managed by the window manager
     pub manage_hook: Option<Box<dyn ManageHook<X>>>,
+    /// A [StateHook] to run every time the on screen X state is refreshed
     pub refresh_hook: Option<Box<dyn StateHook<X>>>,
 }
 
@@ -173,7 +186,7 @@ where
             .field("border_width", &self.border_width)
             .field("focus_follow_mouse", &self.focus_follow_mouse)
             .field("default_layouts", &self.default_layouts)
-            .field("workspace_names", &self.workspace_names)
+            .field("tags", &self.tags)
             .field("floating_classes", &self.floating_classes)
             .finish()
     }
@@ -192,7 +205,7 @@ where
             border_width: 2,
             focus_follow_mouse: true,
             default_layouts: LayoutStack::default(),
-            workspace_names: strings(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
+            tags: strings(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
             floating_classes: strings(&["dmenu", "dunst"]),
             startup_hook: None,
             event_hook: None,
@@ -206,6 +219,9 @@ impl<X> Config<X>
 where
     X: XConn,
 {
+    /// Set the startup_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
     pub fn compose_or_set_startup_hook<H>(&mut self, hook: H)
     where
         H: StateHook<X> + 'static,
@@ -217,6 +233,9 @@ where
         };
     }
 
+    /// Set the event_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
     pub fn compose_or_set_event_hook<H>(&mut self, hook: H)
     where
         H: EventHook<X> + 'static,
@@ -228,6 +247,9 @@ where
         };
     }
 
+    /// Set the manage_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
     pub fn compose_or_set_manage_hook<H>(&mut self, hook: H)
     where
         H: ManageHook<X> + 'static,
@@ -239,6 +261,9 @@ where
         };
     }
 
+    /// Set the refresh_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
     pub fn compose_or_set_refresh_hook<H>(&mut self, hook: H)
     where
         H: StateHook<X> + 'static,
@@ -261,6 +286,7 @@ where
     X: XConn,
 {
     x: X,
+    /// The mutable [State] of the window manager
     pub state: State<X>,
     key_bindings: KeyBindings<X>,
     mouse_bindings: MouseBindings<X>,
@@ -282,7 +308,7 @@ where
     ) -> Result<Self> {
         let client_set = StackSet::try_new(
             config.default_layouts.clone(),
-            config.workspace_names.iter(),
+            config.tags.iter(),
             x.screen_details()?,
         )?;
 

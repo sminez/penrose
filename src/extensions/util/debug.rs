@@ -19,15 +19,22 @@ impl<X: XConn> StateHook<X> for NotfyState {
     }
 }
 
+/// Flag based configuration of debug printing of the current window manager state
 /// All fields default to true
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CurrentStateConfig {
+    /// Should the current screen index be shown?
     pub focused_screen: bool,
+    /// Should the focused client id (if there is one) be shown?
     pub focused_client: bool,
+    /// Should the focused workspace tag be shown?
     pub focused_tag: bool,
+    /// Should the total number of managed clients be shown?
     pub n_clients: bool,
+    /// Should the number of clients expected to be mapped to the screen be shown?
     pub n_mapped_clients: bool,
 
+    /// Should each stat be displayed on its own line?
     pub line_per_stat: bool,
 }
 

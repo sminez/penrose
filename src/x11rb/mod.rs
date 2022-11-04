@@ -96,6 +96,7 @@ pub struct Conn<C: Connection> {
     atoms: Atoms,
 }
 
+/// A pure rust based connection to the X server using a [RustConnection].
 pub type RustConn = Conn<RustConnection>;
 
 impl Conn<RustConnection> {
@@ -108,6 +109,7 @@ impl Conn<RustConnection> {
     }
 }
 
+/// An C based connection to the X server using an [XCBConnection].
 pub type XcbConn = Conn<XCBConnection>;
 
 impl Conn<XCBConnection> {
@@ -160,6 +162,7 @@ where
         &self.conn
     }
 
+    /// Create and map a new window to the screen with the specified [WinType].
     pub fn create_window(&self, ty: WinType, r: Rect, managed: bool) -> Result<Xid> {
         let (ty, mut win_aux, class) = match ty {
             WinType::CheckWin => (None, CreateWindowAux::new(), WindowClass::INPUT_OUTPUT),

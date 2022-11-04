@@ -4,6 +4,9 @@ use crate::{
     Error, Result,
 };
 
+/// A wrapper around a [Stack] of windows belonging to a single "workspace" or virtual
+/// desktop. When this workspace is active on a given screen, the windows contained in
+/// its stack will be positioned using the active layout of its [LayoutStack].
 #[derive(Debug, Clone)]
 pub struct Workspace<T> {
     pub(crate) id: usize,
@@ -67,10 +70,12 @@ impl<T> Workspace<T> {
         self.stack.is_none()
     }
 
+    /// An immutable reference to the focused window for this workspace if there is one
     pub fn focus(&self) -> Option<&T> {
         self.stack.as_ref().map(|s| &s.focus)
     }
 
+    /// An iterator over all windows in this workspace.
     pub fn clients(&self) -> impl Iterator<Item = &T> {
         self.stack.iter().flat_map(|s| s.iter())
     }
@@ -83,6 +88,7 @@ impl<T> Workspace<T> {
         Some(focus)
     }
 
+    /// Pass the given message on to the currently focused layout.
     pub fn handle_message<M>(&mut self, m: M)
     where
         M: IntoMessage,
@@ -90,6 +96,7 @@ impl<T> Workspace<T> {
         self.layouts.handle_message(m)
     }
 
+    /// Pass the given message on to _all_ layouts available to this workspace.
     pub fn broadcast_message<M>(&mut self, m: M)
     where
         M: IntoMessage,
@@ -97,16 +104,19 @@ impl<T> Workspace<T> {
         self.layouts.broadcast_message(m)
     }
 
+    /// Switch to the next available layout for this workspace.
     pub fn next_layout(&mut self) {
         self.layouts.focus_down();
     }
 
+    /// Switch to the previous available layout for this workspace.
     pub fn previous_layout(&mut self) {
         self.layouts.focus_up();
     }
 }
 
 impl<T: PartialEq> Workspace<T> {
+    /// Check if a given window is currently part of this workspace
     pub fn contains(&self, t: &T) -> bool {
         match &self.stack {
             Some(s) => s.contains(t),

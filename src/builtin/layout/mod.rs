@@ -34,14 +34,20 @@ pub struct MainAndStack {
 }
 
 impl MainAndStack {
+    /// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows
+    /// stacked to the right.
     pub fn side(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
         Box::new(Self::side_unboxed(max_main, ratio, ratio_step, false))
     }
 
+    /// Create a new [MainAndStack] [Layout] with the main area on the right and remaining windows
+    /// stacked to the left.
     pub fn side_mirrored(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
         Box::new(Self::side_unboxed(max_main, ratio, ratio_step, true))
     }
 
+    /// Create a new [MainAndStack] [Layout] with the main area and remaining windows
+    /// stacked to the side.
     pub fn side_unboxed(max_main: u32, ratio: f32, ratio_step: f32, mirrored: bool) -> Self {
         Self {
             pos: StackPosition::Side,
@@ -52,14 +58,20 @@ impl MainAndStack {
         }
     }
 
+    /// Create a new [MainAndStack] [Layout] with the main area on the top and remaining windows
+    /// stacked on the bottom.
     pub fn bottom(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
         Box::new(Self::bottom_unboxed(max_main, ratio, ratio_step, false))
     }
 
-    pub fn bottom_mirrored(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+    /// Create a new [MainAndStack] [Layout] with the main area on the bottom and remaining windows
+    /// stacked on the top.
+    pub fn top(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
         Box::new(Self::bottom_unboxed(max_main, ratio, ratio_step, true))
     }
 
+    /// Create a new [MainAndStack] [Layout] with a main area and the remaining windows
+    /// stacked either on the top or the bottom.
     pub fn bottom_unboxed(max_main: u32, ratio: f32, ratio_step: f32, mirrored: bool) -> Self {
         Self {
             pos: StackPosition::Bottom,
@@ -200,6 +212,7 @@ impl Layout for MainAndStack {
 pub struct Monocle;
 
 impl Monocle {
+    /// Create a new [Monocle] [Layout] as a boxed trait object
     pub fn boxed() -> Box<dyn Layout> {
         Box::new(Monocle)
     }

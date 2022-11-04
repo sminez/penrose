@@ -131,15 +131,22 @@ where
 ///     positions
 /// }
 ///
-/// simple_transformer!("MyTransform", MyTransformer, my_transformation_function);
+/// simple_transformer!(MyTransformer, my_transformation_function, "MyTransform");
 /// ```
 #[macro_export]
 macro_rules! simple_transformer {
-    ($prefix:expr, $t:ident, $f:ident) => {
+    (
+        $(#[$struct_docs:meta])*
+        $t:ident,
+        $f:ident,
+        $prefix:expr
+    ) => {
+        $(#[$struct_docs])*
         #[derive(Debug, Clone)]
         pub struct $t(Box<dyn $crate::core::layout::Layout>);
 
         impl $t {
+            /// Wrap an existing layout with this transformer
             pub fn wrap(
                 layout: Box<dyn $crate::core::layout::Layout>,
             ) -> Box<dyn $crate::core::layout::Layout> {

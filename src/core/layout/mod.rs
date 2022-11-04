@@ -115,6 +115,10 @@ impl Default for LayoutStack {
 }
 
 impl LayoutStack {
+    /// Run the currently focused [Layout] and return the positions it generates.
+    ///
+    /// If the layout being run wants to be replaced with a new layout, swap it
+    /// out for the new one in its current position in the [Stack].
     pub fn run_and_replace<F>(&mut self, f: F) -> Vec<(Xid, Rect)>
     where
         F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),

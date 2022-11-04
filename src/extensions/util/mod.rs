@@ -60,8 +60,11 @@ pub fn update_monitors_via_xrandr(
 /// daemon that you are using.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum NotifyLevel {
+    /// Low priority
     Low,
+    /// Normal priority
     Normal,
+    /// Critical priority
     Critical,
 }
 

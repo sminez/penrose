@@ -368,6 +368,7 @@ where
         });
     }
 
+    /// Is the given tag present in the [StackSet]?
     pub fn contains_tag(&self, tag: &str) -> bool {
         self.workspaces().any(|w| w.tag == tag)
     }
@@ -443,21 +444,22 @@ where
             .map(|s| &s.focus)
     }
 
+    /// An immutable reference to the currently focused [Screen]
     pub fn current_screen(&self) -> &Screen<C> {
         &self.screens.focus
     }
 
-    /// Get a reference to the current [Workspace]
+    /// An immutable reference to the current [Workspace]
     pub fn current_workspace(&self) -> &Workspace<C> {
         &self.screens.focus.workspace
     }
 
-    /// Get a mutable reference to the current [Workspace]
+    /// A mutable reference to the current [Workspace]
     pub fn current_workspace_mut(&mut self) -> &mut Workspace<C> {
         &mut self.screens.focus.workspace
     }
 
-    /// Get a reference to the current [Stack] if there is one
+    /// An immutable reference to the current [Stack] if there is one
     pub fn current_stack(&self) -> Option<&Stack<C>> {
         self.screens.focus.workspace.stack.as_ref()
     }
@@ -553,6 +555,7 @@ where
         self.screens.focus_up();
     }
 
+    /// Drag the focused workspace onto the next [Screen], holding focus
     pub fn drag_workspace_forward(&mut self) {
         if self.screens.len() == 1 {
             return;
@@ -562,6 +565,7 @@ where
         self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
     }
 
+    /// Drag the focused workspace onto the previous [Screen], holding focus
     pub fn drag_workspace_backward(&mut self) {
         if self.screens.len() == 1 {
             return;

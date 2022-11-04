@@ -39,6 +39,7 @@ impl<X> NamedScratchPad<X>
 where
     X: XConn,
 {
+    /// Create a new named scratchpad.
     pub fn new<Q, H>(
         name: &'static str,
         prog: &'static str,

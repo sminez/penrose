@@ -91,6 +91,7 @@ pub trait KeyEventHandler<X>
 where
     X: XConn,
 {
+    /// Call this handler with the current window manager state
     fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
 }
 
@@ -118,6 +119,7 @@ pub trait MouseEventHandler<X>
 where
     X: XConn,
 {
+    /// Call this handler with the current window manager state and mouse state
     fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
 }
 
@@ -322,6 +324,7 @@ impl MouseState {
         Self { button, modifiers }
     }
 
+    /// Parse raw mouse state values into a [MouseState]
     pub fn from_detail_and_state(detail: u8, state: u16) -> Result<Self> {
         Ok(Self {
             button: MouseButton::try_from(detail)?,

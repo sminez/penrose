@@ -502,6 +502,7 @@ impl<T: PartialEq> Stack<T> {
 
 // Iteration
 
+/// An owned iterator over a [Stack].
 #[derive(Debug)]
 pub struct IntoIter<T> {
     focus: Option<T>,
@@ -533,6 +534,7 @@ impl<T> IntoIterator for Stack<T> {
     }
 }
 
+/// An iterator over a [Stack].
 #[derive(Debug)]
 pub struct Iter<'a, T> {
     up: linked_list::Iter<'a, T>,
@@ -560,6 +562,7 @@ impl<'a, T> IntoIterator for &'a Stack<T> {
     }
 }
 
+/// A mutable iterator over a [Stack].
 #[derive(Debug)]
 pub struct IterMut<'a, T> {
     focus: Option<&'a mut T>,

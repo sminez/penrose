@@ -11,6 +11,7 @@ impl fmt::Debug for Message {
 }
 
 impl Message {
+    /// Check to see whether this [Message] is a particular type
     pub fn downcast_ref<T: 'static>(&self) -> Option<&T> {
         self.0.downcast_ref()
     }
@@ -18,6 +19,7 @@ impl Message {
 
 /// Marker trait for a type that can be sent as a [crate::core::layout::Message]
 pub trait IntoMessage: Any {
+    /// Wrap this value as a dynamically typed message for sending to a layout
     fn into_message(self) -> Message
     where
         Self: Sized,

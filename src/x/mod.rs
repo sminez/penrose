@@ -24,8 +24,6 @@ pub use event::XEvent;
 pub use property::{Prop, WindowAttributes};
 pub use query::Query;
 
-pub type ScreenId = usize;
-
 /// A window type to be specified when creating a new window in the X server
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -75,34 +73,59 @@ pub enum ClientAttr {
 /// as the windowing system but X idioms and high level event types / client interations are
 /// assumed.
 pub trait XConn {
+    /// The ID of the window manager root window.
     fn root(&self) -> Xid;
+    /// Ask the X server for the dimensions of each currently available screen.
     fn screen_details(&self) -> Result<Vec<Rect>>;
+    /// Ask the X server for the current (x, y) coordinate of the mouse cursor.
     fn cursor_position(&self) -> Result<Point>;
 
+    /// Grab the specified key and mouse states, intercepting them for processing within
+    /// the window manager itself.
     fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    /// Block and wait for the next event from the X server so it can be processed.
     fn next_event(&self) -> Result<XEvent>;
+    /// Flush any pending events to the X server.
     fn flush(&self);
 
+    /// Look up the [Xid] of a given [Atom] name. If it is not currently interned, intern it.
     fn intern_atom(&self, atom: &str) -> Result<Xid>;
+    /// Look up the string name of a given [Atom] by its [Xid].
     fn atom_name(&self, xid: Xid) -> Result<String>;
 
+    /// Look up the current dimensions and position of a given client window.
     fn client_geometry(&self, client: Xid) -> Result<Rect>;
+    /// Ask the X server for the IDs of all currently known client windows
     fn existing_clients(&self) -> Result<Vec<Xid>>;
 
+    /// Map the given client window to the screen with its current geometry, making it visible.
     fn map(&self, client: Xid) -> Result<()>;
+    /// Unmap the given client window from the screen, hiding it.
     fn unmap(&self, client: Xid) -> Result<()>;
+    /// Kill the given client window, closing it.
     fn kill(&self, client: Xid) -> Result<()>;
+    /// Set X input focus to be held by the given client window.
     fn focus(&self, client: Xid) -> Result<()>;
 
+    /// Look up a specific property on a given client window.
     fn get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>>;
+    /// Request the [WindowAttributes] for a given client window from the X server.
     fn get_window_attributes(&self, client: Xid) -> Result<WindowAttributes>;
 
+    /// Set the current [WmState] for a given client window.
     fn set_wm_state(&self, client: Xid, wm_state: WmState) -> Result<()>;
+    /// Set a specific property on a given client window.
     fn set_prop(&self, client: Xid, name: &str, val: Prop) -> Result<()>;
+    /// Set one or more [ClientAttr] for a given client window.
     fn set_client_attributes(&self, client: Xid, attrs: &[ClientAttr]) -> Result<()>;
+    /// Set the [ClientConfig] for a given client window.
     fn set_client_config(&self, client: Xid, data: &[ClientConfig]) -> Result<()>;
+    /// Send a [ClientMessage] to a given client.
     fn send_client_message(&self, msg: ClientMessage) -> Result<()>;
 
+    /// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.
+    /// This method should not be called directly: use `warp_pointer_to_window` or `warp_pointer_to_screen`
+    /// instead.
     fn warp_pointer(&self, id: Xid, x: i16, y: i16) -> Result<()>;
 }
 
@@ -117,12 +140,16 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
+    /// Establish the window manager state for the given client window and refresh the
+    /// current X state.
     fn manage(&self, id: Xid, state: &mut State<Self>) -> Result<()> {
         trace!(%id, "managing new client");
         manage_without_refresh(id, None, state, self)?;
         self.refresh(state)
     }
 
+    /// Remove the window manager state for the given client window and refresh the
+    /// current X state.
     fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
         trace!(?client, "removing client");
         self.modify_and_refresh(state, |cs| {
@@ -204,10 +231,13 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
+    /// Refresh the current X server state based on a diff of the current state against the state
+    /// when we last refreshed.
     fn refresh(&self, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |_| ())
     }
 
+    /// Check whether or not the given client should be assigned floating status or not.
     fn client_should_float(&self, client: Xid, floating_classes: &[String]) -> Result<bool> {
         trace!(%client, "fetching WmTransientFor prop");
         if let Some(prop) = self.get_prop(client, Atom::WmTransientFor.as_ref())? {
@@ -236,6 +266,7 @@ pub trait XConnExt: XConn + Sized {
         Ok(should_float)
     }
 
+    /// Update the border color of the given client window.
     fn set_client_border_color<C>(&self, id: Xid, color: C) -> Result<()>
     where
         C: Into<Color>,
@@ -244,6 +275,7 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgb_u32())])
     }
 
+    /// Set the initial window properties for a newly managed window.
     fn set_initial_properties(&self, client: Xid, config: &Config<Self>) -> Result<()> {
         let Config {
             normal_border,
@@ -262,6 +294,7 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_config(client, conf)
     }
 
+    /// Update the geometry of a given client based on the given [Rect].
     fn position_client(&self, client: Xid, mut r: Rect) -> Result<()> {
         let p = Atom::WmNormalHints.as_ref();
         if let Ok(Some(Prop::WmNormalHints(hints))) = self.get_prop(client, p) {
@@ -273,6 +306,10 @@ pub trait XConnExt: XConn + Sized {
         self.set_client_config(client, &[ClientConfig::Position(r)])
     }
 
+    /// Restack and set the geometry for an ordered list of client windows and their
+    /// associated positions.
+    ///
+    /// See `restack` for details of stacking order is determined.
     fn position_clients(&self, positions: &[(Xid, Rect)]) -> Result<()> {
         self.restack(positions.iter().map(|(id, _)| id))?;
 
@@ -301,16 +338,19 @@ pub trait XConnExt: XConn + Sized {
         Ok(())
     }
 
+    /// Update the currently focused client and refresh the X state.
     fn set_active_client(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |cs| cs.focus_client(&client))
     }
 
+    /// Warp the mouse cursor to the center of the given client window.
     fn warp_pointer_to_window(&self, id: Xid) -> Result<()> {
         let r = self.client_geometry(id)?;
 
         self.warp_pointer(id, r.w as i16 / 2, r.h as i16 / 2)
     }
 
+    /// Warp the mouse cursor to the center of the given screen.
     fn warp_pointer_to_screen(&self, state: &mut State<Self>, screen_index: usize) -> Result<()> {
         let maybe_screen = state.client_set.screens().find(|s| s.index == screen_index);
 
@@ -329,6 +369,7 @@ pub trait XConnExt: XConn + Sized {
         self.warp_pointer(self.root(), x, y)
     }
 
+    /// Request the title of a given client window following ICCCM/EWMH standards.
     fn window_title(&self, id: Xid) -> Result<String> {
         match query::str_prop(Atom::WmName, id, self) {
             Ok(Some(mut strs)) => Ok(strs.remove(0)),

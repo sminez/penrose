@@ -97,6 +97,8 @@ impl RelativeRect {
         }
     }
 
+    /// Apply some [Rect] based operation to this [RelativeRect] by applying it
+    /// to a given reference [Rect].
     pub fn apply_as_rect<F>(self, r: &Rect, f: F) -> Self
     where
         F: Fn(Rect) -> Rect,
@@ -105,7 +107,10 @@ impl RelativeRect {
     }
 }
 
+/// Something that can be converted into a [RelativeRect] by comparing to
+/// some reference [Rect].
 pub trait RelativeTo {
+    /// Convert to a [RelativeRect] using the reference [Rect]
     fn relative_to(&self, r: &Rect) -> RelativeRect;
 }
 
@@ -187,17 +192,17 @@ impl Rect {
         }
     }
 
-    // Update the width and height of this [Rect] by specified deltas.
-    //
-    // Minimum size is clamped at 0x0
+    /// Update the width and height of this [Rect] by specified deltas.
+    ///
+    /// Minimum size is clamped at 0x0
     pub fn resize(&mut self, dw: i32, dh: i32) {
         self.w = max(0, (self.w as i32) + dw) as u32;
         self.h = max(0, (self.h as i32) + dh) as u32;
     }
 
-    // Update the position of this [Rect] by specified deltas.
-    //
-    // Minimum (x, y) coordinates are clamped at (0, 0)
+    /// Update the position of this [Rect] by specified deltas.
+    ///
+    /// Minimum (x, y) coordinates are clamped at (0, 0)
     pub fn reposition(&mut self, dx: i32, dy: i32) {
         self.x = max(0, (self.x as i32) + dx) as u32;
         self.y = max(0, (self.y as i32) + dy) as u32;

@@ -56,6 +56,7 @@
     clippy::style,
     future_incompatible,
     missing_debug_implementations,
+    missing_docs,
     rust_2018_idioms
 )]
 #![doc(
@@ -85,85 +86,143 @@ pub mod x11rb;
 #[doc(inline)]
 pub use crate::core::Xid;
 
+/// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// A custom error message from user code or extensions
     #[error("{0}")]
     Custom(String),
 
+    /// There were not enough workspaces to cover the number of connected screens
     #[error("Only {n_ws} workspaces were provided but at least {n_screens} are required")]
-    InsufficientWorkspaces { n_ws: usize, n_screens: usize },
+    InsufficientWorkspaces {
+        /// Number of provided workspaces
+        n_ws: usize,
+        /// Number of connected screens
+        n_screens: usize,
+    },
 
+    /// Data received as part of a client message had an invalid format
     #[error("invalid client message data: format={format}")]
-    InvalidClientMessage { format: u8 },
+    InvalidClientMessage {
+        /// The format received
+        format: u8,
+    },
 
+    /// Attempt to create a `Color` from an invalid hex string
     #[error("Invalid Hex color code: '{hex_code}'")]
-    InvalidHexColor { hex_code: String },
+    InvalidHexColor {
+        /// The string that was used
+        hex_code: String,
+    },
 
+    /// A window hints message was received but unable to be parsed
     #[error("Invalid window hints message: {reason}")]
-    InvalidHints { reason: String },
+    InvalidHints {
+        /// Why parsing failed
+        reason: String,
+    },
 
+    /// IO error
     #[error(transparent)]
     Io(#[from] std::io::Error),
 
+    /// Invalid UTF8 encoded string
     #[error(transparent)]
     InvalidUtf8(#[from] std::string::FromUtf8Error),
 
+    /// Data received from the X server when requesting a window property was invalid
     #[error("{ty} property '{prop}' for {id} contained invalid data")]
-    InvalidPropertyData { id: Xid, ty: String, prop: String },
+    InvalidPropertyData {
+        /// The window that was queried
+        id: Xid,
+        /// The type of property that was queried
+        ty: String,
+        /// The name of the property that was queried
+        prop: String,
+    },
 
+    /// Duplicate tags were provided for one or more workspaces
     #[error("The following tags have been used multiple times for different workspaces: {tags:?}")]
-    NonUniqueTags { tags: Vec<String> },
+    NonUniqueTags {
+        /// The set of non-unique tags
+        tags: Vec<String>,
+    },
 
+    /// Penrose is running without any screens to connect to
     #[error("There are no screens available")]
     NoScreens,
 
+    /// ParseIntError
     #[error(transparent)]
     ParseInt(#[from] std::num::ParseIntError),
 
+    /// There was a problem initialising randr
     #[error("Error initialising randr: {0}")]
     Randr(String),
 
+    /// An operation was requested on a client window that is unknown
     #[error("The given client is not in this State")]
     UnknownClient,
 
+    /// A keybinding has been specified for an unknown key name for this machine.
     #[error("'{name}' is not a known key name")]
-    UnknownKeyName { name: String },
+    UnknownKeyName {
+        /// The name of the unknown key
+        name: String,
+    },
 
+    /// An unknown character has been used to specify a modifier key
     #[error("'{name}' is not a known modifier key")]
-    UnknownModifier { name: String },
+    UnknownModifier {
+        /// The unrecognised modifier name
+        name: String,
+    },
 
+    /// An unknown mouse button was pressed
     #[error("{button} is not a supported mouse button")]
-    UnknownMouseButton { button: u8 },
+    UnknownMouseButton {
+        /// The button ID that was pressed
+        button: u8,
+    },
 
+    /// An attempt was made to fetch a state extension for a type that has not been stored
     #[error("{type_id:?} was requested as a state extension but not found")]
-    UnknownStateExtension { type_id: TypeId },
+    UnknownStateExtension {
+        /// The type ID of the type that was requested
+        type_id: TypeId,
+    },
 
     // TODO: These backend specific errors should be abstracted out to a
     //       set of common error variants that they can be mapped to without
     //       needing to extend the enum conditionally when flags are enabled
-    //
+    /// An error that occurred while connecting to an X11 server
     #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
     X11rbConnect(#[from] ConnectError),
 
+    /// An error that occurred on an already established X11 connection
     #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
     X11rbConnection(#[from] ConnectionError),
 
+    /// An error that occurred with some request.
     #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
     X11rbReplyError(#[from] ReplyError),
 
+    /// An error caused by some request or by the exhaustion of IDs.
     #[cfg(feature = "x11rb-xcb")]
     #[error(transparent)]
     X11rbReplyOrIdError(#[from] ReplyOrIdError),
 
+    /// Representation of an X11 error packet that was sent by the server.
     #[cfg(feature = "x11rb-xcb")]
     #[error("X11 error: {0:?}")]
     X11rbX11Error(X11Error),
 }
 
+/// A Result where the error type is a penrose [Error]
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

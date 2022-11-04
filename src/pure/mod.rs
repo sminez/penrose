@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 
 mod diff;
 pub mod geometry;
-pub mod screen;
-pub mod stack;
-pub mod stack_set;
-pub mod workspace;
+mod screen;
+mod stack;
+mod stack_set;
+mod workspace;
 
 #[doc(inline)]
 pub use screen::Screen;
