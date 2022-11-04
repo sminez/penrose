@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["StackSet","The side-effect free internal state representation of the window manager."]]};

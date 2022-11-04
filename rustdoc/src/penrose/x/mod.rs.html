@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+                    <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
+                        <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -476,6 +478,47 @@
 <span id="476">476</span>
 <span id="477">477</span>
 <span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">builtin::layout::messages::Hide</span>,
@@ -501,8 +544,6 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">event::XEvent</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">property</span>::{<span class="ident">Prop</span>, <span class="ident">WindowAttributes</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">query::Query</span>;
-
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ScreenId</span> <span class="op">=</span> <span class="ident">usize</span>;
 
 <span class="doccomment">/// A window type to be specified when creating a new window in the X server</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
@@ -553,34 +594,59 @@
 <span class="doccomment">/// as the windowing system but X idioms and high level event types / client interations are</span>
 <span class="doccomment">/// assumed.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">XConn</span> {
+    <span class="doccomment">/// The ID of the window manager root window.</span>
     <span class="kw">fn</span> <span class="ident">root</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Xid</span>;
+    <span class="doccomment">/// Ask the X server for the dimensions of each currently available screen.</span>
     <span class="kw">fn</span> <span class="ident">screen_details</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Ask the X server for the current (x, y) coordinate of the mouse cursor.</span>
     <span class="kw">fn</span> <span class="ident">cursor_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Grab the specified key and mouse states, intercepting them for processing within</span>
+    <span class="doccomment">/// the window manager itself.</span>
     <span class="kw">fn</span> <span class="ident">grab</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key_codes</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyCode</span>], <span class="ident">mouse_states</span>: <span class="kw-2">&amp;</span>[<span class="ident">MouseState</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Block and wait for the next event from the X server so it can be processed.</span>
     <span class="kw">fn</span> <span class="ident">next_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">XEvent</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Flush any pending events to the X server.</span>
     <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
+    <span class="doccomment">/// Look up the [Xid] of a given [Atom] name. If it is not currently interned, intern it.</span>
     <span class="kw">fn</span> <span class="ident">intern_atom</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">atom</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Look up the string name of a given [Atom] by its [Xid].</span>
     <span class="kw">fn</span> <span class="ident">atom_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">xid</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Look up the current dimensions and position of a given client window.</span>
     <span class="kw">fn</span> <span class="ident">client_geometry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Ask the X server for the IDs of all currently known client windows</span>
     <span class="kw">fn</span> <span class="ident">existing_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Map the given client window to the screen with its current geometry, making it visible.</span>
     <span class="kw">fn</span> <span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Unmap the given client window from the screen, hiding it.</span>
     <span class="kw">fn</span> <span class="ident">unmap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Kill the given client window, closing it.</span>
     <span class="kw">fn</span> <span class="ident">kill</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Set X input focus to be held by the given client window.</span>
     <span class="kw">fn</span> <span class="ident">focus</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Look up a specific property on a given client window.</span>
     <span class="kw">fn</span> <span class="ident">get_prop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">prop_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Prop</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Request the [WindowAttributes] for a given client window from the X server.</span>
     <span class="kw">fn</span> <span class="ident">get_window_attributes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">WindowAttributes</span><span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Set the current [WmState] for a given client window.</span>
     <span class="kw">fn</span> <span class="ident">set_wm_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">wm_state</span>: <span class="ident">WmState</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Set a specific property on a given client window.</span>
     <span class="kw">fn</span> <span class="ident">set_prop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">val</span>: <span class="ident">Prop</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Set one or more [ClientAttr] for a given client window.</span>
     <span class="kw">fn</span> <span class="ident">set_client_attributes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span>[<span class="ident">ClientAttr</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Set the [ClientConfig] for a given client window.</span>
     <span class="kw">fn</span> <span class="ident">set_client_config</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">ClientConfig</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Send a [ClientMessage] to a given client.</span>
     <span class="kw">fn</span> <span class="ident">send_client_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="ident">ClientMessage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
+    <span class="doccomment">/// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.</span>
+    <span class="doccomment">/// This method should not be called directly: use `warp_pointer_to_window` or `warp_pointer_to_screen`</span>
+    <span class="doccomment">/// instead.</span>
     <span class="kw">fn</span> <span class="ident">warp_pointer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">x</span>: <span class="ident">i16</span>, <span class="ident">y</span>: <span class="ident">i16</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 
@@ -595,12 +661,16 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Establish the window manager state for the given client window and refresh the</span>
+    <span class="doccomment">/// current X state.</span>
     <span class="kw">fn</span> <span class="ident">manage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="macro">trace!</span>(<span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;managing new client&quot;</span>);
         <span class="ident">manage_without_refresh</span>(<span class="ident">id</span>, <span class="prelude-val">None</span>, <span class="ident">state</span>, <span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">refresh</span>(<span class="ident">state</span>)
     }
 
+    <span class="doccomment">/// Remove the window manager state for the given client window and refresh the</span>
+    <span class="doccomment">/// current X state.</span>
     <span class="kw">fn</span> <span class="ident">unmanage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="macro">trace!</span>(<span class="question-mark">?</span><span class="ident">client</span>, <span class="string">&quot;removing client&quot;</span>);
         <span class="self">self</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">state</span>, <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> {
@@ -682,10 +752,13 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Refresh the current X server state based on a diff of the current state against the state</span>
+    <span class="doccomment">/// when we last refreshed.</span>
     <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">state</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
     }
 
+    <span class="doccomment">/// Check whether or not the given client should be assigned floating status or not.</span>
     <span class="kw">fn</span> <span class="ident">client_should_float</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">floating_classes</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="macro">trace!</span>(<span class="op">%</span><span class="ident">client</span>, <span class="string">&quot;fetching WmTransientFor prop&quot;</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">prop</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_prop</span>(<span class="ident">client</span>, <span class="ident">Atom::WmTransientFor</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span> {
@@ -714,6 +787,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">should_float</span>)
     }
 
+    <span class="doccomment">/// Update the border color of the given client window.</span>
     <span class="kw">fn</span> <span class="ident">set_client_border_color</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">color</span>: <span class="ident">C</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">C</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Color</span><span class="op">&gt;</span>,
@@ -722,6 +796,7 @@
         <span class="self">self</span>.<span class="ident">set_client_attributes</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span>[<span class="ident">ClientAttr::BorderColor</span>(<span class="ident">color</span>.<span class="ident">rgb_u32</span>())])
     }
 
+    <span class="doccomment">/// Set the initial window properties for a newly managed window.</span>
     <span class="kw">fn</span> <span class="ident">set_initial_properties</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">Config</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">Config</span> {
             <span class="ident">normal_border</span>,
@@ -740,6 +815,7 @@
         <span class="self">self</span>.<span class="ident">set_client_config</span>(<span class="ident">client</span>, <span class="ident">conf</span>)
     }
 
+    <span class="doccomment">/// Update the geometry of a given client based on the given [Rect].</span>
     <span class="kw">fn</span> <span class="ident">position_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="kw-2">mut</span> <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">Atom::WmNormalHints</span>.<span class="ident">as_ref</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">Prop::WmNormalHints</span>(<span class="ident">hints</span>))) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_prop</span>(<span class="ident">client</span>, <span class="ident">p</span>) {
@@ -751,6 +827,10 @@
         <span class="self">self</span>.<span class="ident">set_client_config</span>(<span class="ident">client</span>, <span class="kw-2">&amp;</span>[<span class="ident">ClientConfig::Position</span>(<span class="ident">r</span>)])
     }
 
+    <span class="doccomment">/// Restack and set the geometry for an ordered list of client windows and their</span>
+    <span class="doccomment">/// associated positions.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See `restack` for details of stacking order is determined.</span>
     <span class="kw">fn</span> <span class="ident">position_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">positions</span>: <span class="kw-2">&amp;</span>[(<span class="ident">Xid</span>, <span class="ident">Rect</span>)]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">restack</span>(<span class="ident">positions</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">id</span>))<span class="question-mark">?</span>;
 
@@ -779,16 +859,19 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Update the currently focused client and refresh the X state.</span>
     <span class="kw">fn</span> <span class="ident">set_active_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">state</span>, <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> <span class="ident">cs</span>.<span class="ident">focus_client</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>))
     }
 
+    <span class="doccomment">/// Warp the mouse cursor to the center of the given client window.</span>
     <span class="kw">fn</span> <span class="ident">warp_pointer_to_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_geometry</span>(<span class="ident">id</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.<span class="ident">warp_pointer</span>(<span class="ident">id</span>, <span class="ident">r</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">i16</span> <span class="op">/</span> <span class="number">2</span>, <span class="ident">r</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">i16</span> <span class="op">/</span> <span class="number">2</span>)
     }
 
+    <span class="doccomment">/// Warp the mouse cursor to the center of the given screen.</span>
     <span class="kw">fn</span> <span class="ident">warp_pointer_to_screen</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">screen_index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">maybe_screen</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">screens</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">index</span> <span class="op">==</span> <span class="ident">screen_index</span>);
 
@@ -807,6 +890,7 @@
         <span class="self">self</span>.<span class="ident">warp_pointer</span>(<span class="self">self</span>.<span class="ident">root</span>(), <span class="ident">x</span>, <span class="ident">y</span>)
     }
 
+    <span class="doccomment">/// Request the title of a given client window following ICCCM/EWMH standards.</span>
     <span class="kw">fn</span> <span class="ident">window_title</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">query::str_prop</span>(<span class="ident">Atom::WmName</span>, <span class="ident">id</span>, <span class="self">self</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">strs</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">strs</span>.<span class="ident">remove</span>(<span class="number">0</span>)),

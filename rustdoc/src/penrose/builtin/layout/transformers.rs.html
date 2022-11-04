@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/transformers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transformers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/transformers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transformers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+                    <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
+                        <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -169,6 +171,20 @@
 <span id="169">169</span>
 <span id="170">170</span>
 <span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Built-in layout transformers.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">core::layout</span>::{<span class="ident">Layout</span>, <span class="ident">LayoutTransformer</span>},
@@ -176,9 +192,12 @@
     <span class="ident">simple_transformer</span>, <span class="ident">Xid</span>,
 };
 
-<span class="comment">// TODO: update the macro to add doc comments</span>
-<span class="comment">// Wrap an existing layout and reflect its window positions horizontally.</span>
-<span class="macro">simple_transformer!</span>(<span class="string">&quot;Reflected&quot;</span>, <span class="ident">ReflectHorizontal</span>, <span class="ident">reflect_horizontal</span>);
+<span class="macro">simple_transformer!</span>(
+    <span class="doccomment">/// Wrap an existing layout and reflect its window positions horizontally.</span>
+    <span class="ident">ReflectHorizontal</span>,
+    <span class="ident">reflect_horizontal</span>,
+    <span class="string">&quot;Reflected&quot;</span>
+);
 
 <span class="kw">fn</span> <span class="ident">reflect_horizontal</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">mid</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="op">/</span> <span class="number">2</span>;
@@ -197,8 +216,12 @@
         .<span class="ident">collect</span>()
 }
 
-<span class="comment">// Wrap an existing layout and reflect its window positions vertically.</span>
-<span class="macro">simple_transformer!</span>(<span class="string">&quot;Flipped&quot;</span>, <span class="ident">ReflectVertical</span>, <span class="ident">reflect_vertical</span>);
+<span class="macro">simple_transformer!</span>(
+    <span class="doccomment">/// Wrap an existing layout and reflect its window positions vertically.</span>
+    <span class="ident">ReflectVertical</span>,
+    <span class="ident">reflect_vertical</span>,
+    <span class="string">&quot;Flipped&quot;</span>
+);
 
 <span class="kw">fn</span> <span class="ident">reflect_vertical</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">mid</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">y</span> <span class="op">+</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="op">/</span> <span class="number">2</span>;
@@ -222,14 +245,18 @@
 <span class="doccomment">/// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`</span>
 <span class="doccomment">/// controls the gap around each individual window. Set both equal to one another to have</span>
 <span class="doccomment">/// a consistant gap size in all places.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Gaps</span> {
+    <span class="doccomment">/// The inner [Layout] having gaps applied to it.</span>
     <span class="kw">pub</span> <span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The desired outer gap size in pixels</span>
     <span class="kw">pub</span> <span class="ident">outer_px</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// The desired inner gap size in pixels</span>
     <span class="kw">pub</span> <span class="ident">inner_px</span>: <span class="ident">u32</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Gaps</span> {
+    <span class="doccomment">/// Wrap an existing [Layout] with the given gap sizes.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wrap</span>(<span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>, <span class="ident">outer_px</span>: <span class="ident">u32</span>, <span class="ident">inner_px</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
         <span class="ident">Box::new</span>(<span class="self">Self</span> {
             <span class="ident">layout</span>,
@@ -276,13 +303,16 @@
 <span class="doccomment">/// Reserve `px` pixels at the top of the screen.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Typically used for providing space for a status bar.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReserveTop</span> {
+    <span class="doccomment">/// The wrapped inner layout</span>
     <span class="kw">pub</span> <span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The number of pixels to reserve at the top of the screen</span>
     <span class="kw">pub</span> <span class="ident">px</span>: <span class="ident">u32</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">ReserveTop</span> {
+    <span class="doccomment">/// Wrap an existing [Layout] with the given reserved area.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wrap</span>(<span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>, <span class="ident">px</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
         <span class="ident">Box::new</span>(<span class="self">Self</span> { <span class="ident">layout</span>, <span class="ident">px</span> })
     }

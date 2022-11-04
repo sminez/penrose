@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../penrose/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container">
+                    <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../penrose/index.html">
+                        <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -199,7 +201,195 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
 </pre><pre class="rust"><code><span class="doccomment">//! # Penrose: a library for building your very own tiling window manager</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Penrose is inspired by similar projects such as [dwm][1], [xmonad][2] and [qtile][3] which</span>
+<span class="doccomment">//! allow you to configure your window manager in code and compile it for your system. It is most</span>
+<span class="doccomment">//! similar to `xmonad` in that it is more of a library for building a window manager (with low</span>
+<span class="doccomment">//! level details taken care of for you) rather than a minimal window manager that you edit and</span>
+<span class="doccomment">//! patch directly (such as `dwm`). Penrose strives to be as simple as possible in its</span>
+<span class="doccomment">//! implementation in order to make the guts of the window manager easier to understand. Given the</span>
+<span class="doccomment">//! nature of what this involves, this is not always possible but effort has been made to keep the</span>
+<span class="doccomment">//! source readable and with relatively free of magic.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Using Penrose</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Penrose itself is not a binary application that you can build, install and run. You need to</span>
+<span class="doccomment">//! write your own **main.rs** as a rust binary crate that uses Penrose as a dependency to set up,</span>
+<span class="doccomment">//! configure and run your very own window manager exactly how you want it. In short, you *will*</span>
+<span class="doccomment">//! need to write some code and you *will* need to know Rust to some degree.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! For learning rust itself, there are some fantastic official [guides][4] available on</span>
+<span class="doccomment">//! [rust-lang.org][15] and if you are sticking to using the out of the box functionality provided</span>
+<span class="doccomment">//! by the penrose crate, working through [The Rust Book][5] before diving into penrose should be more</span>
+<span class="doccomment">//! than enough to get you started.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! On GitHub you can find up to date [examples][6] of how to set up and configure a window manager</span>
+<span class="doccomment">//! using penrose, ranging from bare bones minimal to custom extensions and hooks.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! &gt; **NOTE**: in order to use the xcb implementation of penrose, you will need to install the C</span>
+<span class="doccomment">//! &gt; libraries that are dependencies (namely xcb, Cairo and Pango).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Digging into the API</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The suggested reading order for getting to grips with the penrose API is to first look at the</span>
+<span class="doccomment">//! [pure][7] data structures that represent the logical state of your window manager before digging</span>
+<span class="doccomment">//! in to the [core][8] module which contains the majority of the functionality you are likely to</span>
+<span class="doccomment">//! want to work with. If you are interested in the lower level X11 interactions (or need to make</span>
+<span class="doccomment">//! requests to the X server directly) you should check out the [x][9] module and its associated</span>
+<span class="doccomment">//! traits. To add functionality and flexability to your window manager, there are the [builtin][10]</span>
+<span class="doccomment">//! and [extensions][11] modules which offer capabilities built on top of the rest of penrose.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [1]: https://dwm.suckless.org/</span>
+<span class="doccomment">//! [2]: https://xmonad.org/</span>
+<span class="doccomment">//! [3]: http://www.qtile.org/</span>
+<span class="doccomment">//! [4]: https://www.rust-lang.org/learn</span>
+<span class="doccomment">//! [5]: https://doc.rust-lang.org/book/</span>
+<span class="doccomment">//! [6]: https://github.com/sminez/penrose/tree/develop/examples</span>
+<span class="doccomment">//! [7]: crate::pure</span>
+<span class="doccomment">//! [8]: crate::core</span>
+<span class="doccomment">//! [9]: crate::x</span>
+<span class="doccomment">//! [10]: crate::builtin</span>
+<span class="doccomment">//! [11]: crate::extensions</span>
+<span class="attribute">#![<span class="ident">warn</span>(
+    <span class="ident">clippy::complexity</span>,
+    <span class="ident">clippy::correctness</span>,
+    <span class="ident">clippy::style</span>,
+    <span class="ident">future_incompatible</span>,
+    <span class="ident">missing_debug_implementations</span>,
+    <span class="ident">missing_docs</span>,
+    <span class="ident">rust_2018_idioms</span>
+)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(
+    <span class="ident">html_logo_url</span> <span class="op">=</span> <span class="string">&quot;https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg&quot;</span>,
+    <span class="ident">issue_tracker_base_url</span> <span class="op">=</span> <span class="string">&quot;https://github.com/sminez/penrose/issues/&quot;</span>
+)]</span>
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;x11rb-xcb&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">::x11rb</span>::{
     <span class="ident">errors</span>::{<span class="ident">ConnectError</span>, <span class="ident">ConnectionError</span>, <span class="ident">ReplyError</span>, <span class="ident">ReplyOrIdError</span>},
@@ -212,7 +402,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">builtin</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">core</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">extensions</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">macros</span>;
+<span class="kw">mod</span> <span class="ident">macros</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pure</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">util</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">x</span>;
@@ -222,85 +412,143 @@
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::Xid</span>;
 
+<span class="doccomment">/// Error variants from the core penrose library.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="doccomment">/// A custom error message from user code or extensions</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
     <span class="ident">Custom</span>(<span class="ident">String</span>),
 
+    <span class="doccomment">/// There were not enough workspaces to cover the number of connected screens</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Only {n_ws} workspaces were provided but at least {n_screens} are required&quot;</span>)]</span>
-    <span class="ident">InsufficientWorkspaces</span> { <span class="ident">n_ws</span>: <span class="ident">usize</span>, <span class="ident">n_screens</span>: <span class="ident">usize</span> },
+    <span class="ident">InsufficientWorkspaces</span> {
+        <span class="doccomment">/// Number of provided workspaces</span>
+        <span class="ident">n_ws</span>: <span class="ident">usize</span>,
+        <span class="doccomment">/// Number of connected screens</span>
+        <span class="ident">n_screens</span>: <span class="ident">usize</span>,
+    },
 
+    <span class="doccomment">/// Data received as part of a client message had an invalid format</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid client message data: format={format}&quot;</span>)]</span>
-    <span class="ident">InvalidClientMessage</span> { <span class="ident">format</span>: <span class="ident">u8</span> },
+    <span class="ident">InvalidClientMessage</span> {
+        <span class="doccomment">/// The format received</span>
+        <span class="ident">format</span>: <span class="ident">u8</span>,
+    },
 
+    <span class="doccomment">/// Attempt to create a `Color` from an invalid hex string</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid Hex color code: &#39;{hex_code}&#39;&quot;</span>)]</span>
-    <span class="ident">InvalidHexColor</span> { <span class="ident">hex_code</span>: <span class="ident">String</span> },
+    <span class="ident">InvalidHexColor</span> {
+        <span class="doccomment">/// The string that was used</span>
+        <span class="ident">hex_code</span>: <span class="ident">String</span>,
+    },
 
+    <span class="doccomment">/// A window hints message was received but unable to be parsed</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid window hints message: {reason}&quot;</span>)]</span>
-    <span class="ident">InvalidHints</span> { <span class="ident">reason</span>: <span class="ident">String</span> },
+    <span class="ident">InvalidHints</span> {
+        <span class="doccomment">/// Why parsing failed</span>
+        <span class="ident">reason</span>: <span class="ident">String</span>,
+    },
 
+    <span class="doccomment">/// IO error</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Io</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std::io::Error</span>),
 
+    <span class="doccomment">/// Invalid UTF8 encoded string</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">InvalidUtf8</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std::string::FromUtf8Error</span>),
 
+    <span class="doccomment">/// Data received from the X server when requesting a window property was invalid</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{ty} property &#39;{prop}&#39; for {id} contained invalid data&quot;</span>)]</span>
-    <span class="ident">InvalidPropertyData</span> { <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">ty</span>: <span class="ident">String</span>, <span class="ident">prop</span>: <span class="ident">String</span> },
+    <span class="ident">InvalidPropertyData</span> {
+        <span class="doccomment">/// The window that was queried</span>
+        <span class="ident">id</span>: <span class="ident">Xid</span>,
+        <span class="doccomment">/// The type of property that was queried</span>
+        <span class="ident">ty</span>: <span class="ident">String</span>,
+        <span class="doccomment">/// The name of the property that was queried</span>
+        <span class="ident">prop</span>: <span class="ident">String</span>,
+    },
 
+    <span class="doccomment">/// Duplicate tags were provided for one or more workspaces</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The following tags have been used multiple times for different workspaces: {tags:?}&quot;</span>)]</span>
-    <span class="ident">NonUniqueTags</span> { <span class="ident">tags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> },
+    <span class="ident">NonUniqueTags</span> {
+        <span class="doccomment">/// The set of non-unique tags</span>
+        <span class="ident">tags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    },
 
+    <span class="doccomment">/// Penrose is running without any screens to connect to</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;There are no screens available&quot;</span>)]</span>
     <span class="ident">NoScreens</span>,
 
+    <span class="doccomment">/// ParseIntError</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">ParseInt</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">std::num::ParseIntError</span>),
 
+    <span class="doccomment">/// There was a problem initialising randr</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error initialising randr: {0}&quot;</span>)]</span>
     <span class="ident">Randr</span>(<span class="ident">String</span>),
 
+    <span class="doccomment">/// An operation was requested on a client window that is unknown</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The given client is not in this State&quot;</span>)]</span>
     <span class="ident">UnknownClient</span>,
 
+    <span class="doccomment">/// A keybinding has been specified for an unknown key name for this machine.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;&#39;{name}&#39; is not a known key name&quot;</span>)]</span>
-    <span class="ident">UnknownKeyName</span> { <span class="ident">name</span>: <span class="ident">String</span> },
+    <span class="ident">UnknownKeyName</span> {
+        <span class="doccomment">/// The name of the unknown key</span>
+        <span class="ident">name</span>: <span class="ident">String</span>,
+    },
 
+    <span class="doccomment">/// An unknown character has been used to specify a modifier key</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;&#39;{name}&#39; is not a known modifier key&quot;</span>)]</span>
-    <span class="ident">UnknownModifier</span> { <span class="ident">name</span>: <span class="ident">String</span> },
+    <span class="ident">UnknownModifier</span> {
+        <span class="doccomment">/// The unrecognised modifier name</span>
+        <span class="ident">name</span>: <span class="ident">String</span>,
+    },
 
+    <span class="doccomment">/// An unknown mouse button was pressed</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{button} is not a supported mouse button&quot;</span>)]</span>
-    <span class="ident">UnknownMouseButton</span> { <span class="ident">button</span>: <span class="ident">u8</span> },
+    <span class="ident">UnknownMouseButton</span> {
+        <span class="doccomment">/// The button ID that was pressed</span>
+        <span class="ident">button</span>: <span class="ident">u8</span>,
+    },
 
+    <span class="doccomment">/// An attempt was made to fetch a state extension for a type that has not been stored</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{type_id:?} was requested as a state extension but not found&quot;</span>)]</span>
-    <span class="ident">UnknownStateExtension</span> { <span class="ident">type_id</span>: <span class="ident">TypeId</span> },
+    <span class="ident">UnknownStateExtension</span> {
+        <span class="doccomment">/// The type ID of the type that was requested</span>
+        <span class="ident">type_id</span>: <span class="ident">TypeId</span>,
+    },
 
     <span class="comment">// TODO: These backend specific errors should be abstracted out to a</span>
     <span class="comment">//       set of common error variants that they can be mapped to without</span>
     <span class="comment">//       needing to extend the enum conditionally when flags are enabled</span>
-    <span class="comment">//</span>
+    <span class="doccomment">/// An error that occurred while connecting to an X11 server</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;x11rb-xcb&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">X11rbConnect</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ConnectError</span>),
 
+    <span class="doccomment">/// An error that occurred on an already established X11 connection</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;x11rb-xcb&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">X11rbConnection</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ConnectionError</span>),
 
+    <span class="doccomment">/// An error that occurred with some request.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;x11rb-xcb&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">X11rbReplyError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ReplyError</span>),
 
+    <span class="doccomment">/// An error caused by some request or by the exhaustion of IDs.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;x11rb-xcb&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">X11rbReplyOrIdError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ReplyOrIdError</span>),
 
+    <span class="doccomment">/// Representation of an X11 error packet that was sent by the server.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;x11rb-xcb&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;X11 error: {0:?}&quot;</span>)]</span>
     <span class="ident">X11rbX11Error</span>(<span class="ident">X11Error</span>),
 }
 
+<span class="doccomment">/// A Result where the error type is a penrose [Error]</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
