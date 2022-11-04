@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["MenuMatch","The result of attempting to match against user input in a [DMenu]"]],"struct":[["DMenu","A wrapper around the suckless dmenu program for creating dynamic menus in penrose."],["DMenuConfig","Config for running a [DMenu] selection"]]};

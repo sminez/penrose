@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["actions","Helpers and pre-defined actions for use in user defined key bindings"],["hooks","Hook implementations and helpers for adding to your Penrose window manager"],["util","Utility extensions for use in the penrose window manager"]]};

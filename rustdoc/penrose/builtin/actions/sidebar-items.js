@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["exit","Exit penrose"],["log_current_state","Info log the current window manager [State] for debugging purposes."]],"mod":[["floating","Actions for manipulating floating windows."]]};

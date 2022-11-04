@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["penrose"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.64.0/std/error/trait.Error.html\" title=\"trait std::error::Error\">Error</a> for <a class=\"enum\" href=\"penrose/enum.Error.html\" title=\"enum penrose::Error\">Error</a>","synthetic":false,"types":["penrose::Error"]}];
+implementors["penrose_ui"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.64.0/std/error/trait.Error.html\" title=\"trait std::error::Error\">Error</a> for <a class=\"enum\" href=\"penrose_ui/enum.Error.html\" title=\"enum penrose_ui::Error\">Error</a>","synthetic":false,"types":["penrose_ui::Error"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

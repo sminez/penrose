@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["messages",""],["transformers",""]],"trait":[["Layout","A [Layout] is responsible for positioning a [Stack] of clients in a given coordinate space denoting the dimensions of users display."]],"type":[["LayoutStack","A stack of [Layout] options for use on a particular [Workspace]."]]};

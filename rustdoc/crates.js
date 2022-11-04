@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["penrose","penrose_keysyms","penrose_ui"];

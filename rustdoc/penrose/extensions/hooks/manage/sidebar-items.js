@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["DefaultTiled","Perform no additional actions when managing a new client."],["FloatingCentered","Float clients in the center of the screen."],["FloatingFixed","Float clients at a fixed position on the screen."]]};

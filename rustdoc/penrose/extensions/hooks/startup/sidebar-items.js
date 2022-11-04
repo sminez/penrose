@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["SpawnOnStartup","Spawn a client program on window manager startup"]]};

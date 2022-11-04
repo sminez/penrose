@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["ComposedEventHook",""],["ComposedManageHook",""],["ComposedStateHook",""]],"trait":[["EventHook","Handle an [XEvent], return `true` if default event handling should be run afterwards."],["ManageHook","Action to run when a new client becomes managed."],["StateHook","An arbitrary action that can be run and modify [State]"]]};

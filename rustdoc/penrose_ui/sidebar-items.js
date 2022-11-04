@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Error",""]],"fn":[["status_bar","Create a default dwm style status bar that displays content pulled from the WM_NAME property of the root window."]],"mod":[["bar","A lightweight and configurable status bar for penrose"],["core",""]],"type":[["Result",""]]};

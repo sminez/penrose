@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["RelativePosition","A relative position along the horizontal and vertical axes"]],"mod":[["geometry","Geometry primitives"],["screen",""],["stack",""],["stack_set",""],["workspace",""]]};

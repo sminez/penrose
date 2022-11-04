@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Gaps","Simple gaps around the window placement of the enclosed [Layout]."],["ReflectHorizontal",""],["ReflectVertical",""],["ReserveTop","Reserve `px` pixels at the top of the screen."]]};
