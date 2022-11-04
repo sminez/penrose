@@ -80,7 +80,7 @@ where
     X: XConn,
 {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
-        match str_prop(&self.0, id, x)? {
+        match str_prop(self.0, id, x)? {
             Some(strs) if !strs.is_empty() => Ok(strs[0] == self.1),
             _ => Ok(false),
         }

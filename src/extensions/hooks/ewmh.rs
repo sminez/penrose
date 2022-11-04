@@ -1,15 +1,22 @@
 //! EWMH compliance for Penrose
 //!
 //! The primary use of this extension is to provide support for external
-//! status bars and panels.
+//! status bars / panels and fullscreen windows.
 //!
 //! See details of the spec here:
 //!   https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html
 use crate::{
     core::{ClientSet, Config, State},
-    x::{atom::Atom, event::ClientMessage, property::Prop, XConn, XConnExt, XEvent},
+    extensions::actions::{set_fullscreen_state, FullScreenAction},
+    x::{
+        atom::Atom,
+        event::{ClientMessage, ClientMessageData},
+        property::Prop,
+        XConn, XConnExt, XEvent,
+    },
     Result, Xid,
 };
+use tracing::warn;
 
 /// The set of Atoms this extension adds support for.
 ///
@@ -79,6 +86,7 @@ pub fn startup_hook<X: XConn>(_state: &mut State<X>, x: &X) -> Result<()> {
 ///   - _NET_WM_DESKTOP      :: moving clients between workspaces
 ///   - _NET_ACTIVE_WINDOW   :: focus a new client and handle workspace switching
 ///   - _NET_CLOSE_WINDOW    :: closing a client window
+///   - _NET_WM_STATE        :: support for fullscreen windows
 pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
     let ClientMessage {
         id, dtype, data, ..
@@ -107,9 +115,6 @@ pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Resu
         // If the request came from a pager, the first data element should be 2.
         // For pager requests, set the active client (see docs linked at the top of
         // this file for more details on the semantics of this message)
-        // TODO: XMonad allows for the user specifying what action should be taken
-        //       here (with the default being to focus like this). Might need to
-        //       support that in future?
         "_NET_ACTIVE_WINDOW" => {
             if data.as_u32()[0] == 2 {
                 x.set_active_client(*id, state)?;
@@ -121,11 +126,47 @@ pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Resu
             cs.remove_client(id);
         })?,
 
+        // Handle clients that want fullscreen behaviour
+        "_NET_WM_STATE" => handle_fullscreen_message(*id, data, state, x)?,
+
         // Leave other client messages for the default event handling
         _ => (),
     }
 
     Ok(true)
+}
+
+fn handle_fullscreen_message<X: XConn>(
+    id: Xid,
+    data: &ClientMessageData,
+    state: &mut State<X>,
+    x: &X,
+) -> Result<()> {
+    let mut data32 = data.as_u32();
+    if data32.is_empty() {
+        warn!(?data, "malformed data in _NET_WM_STATE message");
+        return Ok(());
+    }
+
+    let full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())?;
+    let raw_action = data32.remove(0);
+
+    // Only handling fullscreen messages and only for known clients
+    if !(data32.contains(&full_screen) && state.client_set.contains(&id)) {
+        return Ok(());
+    }
+
+    let action = match raw_action {
+        0 => FullScreenAction::Remove,
+        1 => FullScreenAction::Add,
+        2 => FullScreenAction::Toggle,
+        action => {
+            warn!(%action, "invalid fullscreen action: expected 0, 1 or 2");
+            return Ok(());
+        }
+    };
+
+    set_fullscreen_state(id, action, state, x)
 }
 
 /// Notify external clients of the current status of workspaces and clients

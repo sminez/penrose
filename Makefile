@@ -53,6 +53,9 @@ upgrade-check:
 todo:
 	@rg 'TODO|FIXME|todo!' crates examples src
 
+.PHONY: docs
+docs:
+	@mdbook build docs && cargo doc --workspace --no-deps && cp -r target/doc docs/book/rustdoc
 
 # GitHub helpers using the official gh GitHub CLI
 .PHONY: list-issues

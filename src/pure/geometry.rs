@@ -53,6 +53,79 @@ impl From<&Rect> for Point {
     }
 }
 
+/// An X window / screen position: top left corner + extent as percentages
+/// of the current screen containing the window.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Default, Debug, PartialEq, Clone, Copy)]
+pub struct RelativeRect {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+}
+
+impl RelativeRect {
+    /// Create a new RelativeRect from the provided values.
+    ///
+    /// Values are clamped to be in the range 0.0 to 1.0.
+    pub fn new(x: f64, y: f64, w: f64, h: f64) -> Self {
+        Self {
+            x: x.clamp(0.0, 1.0),
+            y: y.clamp(0.0, 1.0),
+            w: w.clamp(0.0, 1.0),
+            h: h.clamp(0.0, 1.0),
+        }
+    }
+
+    /// All available space within a given Rect
+    pub fn fullscreen() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            w: 1.0,
+            h: 1.0,
+        }
+    }
+
+    /// Apply the proportions of this RelativeRect to a given Rect.
+    pub fn applied_to(&self, r: &Rect) -> Rect {
+        Rect {
+            x: r.x + (r.w as f64 * self.x).floor() as u32,
+            y: r.y + (r.h as f64 * self.y).floor() as u32,
+            w: (r.w as f64 * self.w).floor() as u32,
+            h: (r.h as f64 * self.h).floor() as u32,
+        }
+    }
+
+    pub fn apply_as_rect<F>(self, r: &Rect, f: F) -> Self
+    where
+        F: Fn(Rect) -> Rect,
+    {
+        f(self.applied_to(r)).relative_to(r)
+    }
+}
+
+pub trait RelativeTo {
+    fn relative_to(&self, r: &Rect) -> RelativeRect;
+}
+
+impl RelativeTo for RelativeRect {
+    fn relative_to(&self, _r: &Rect) -> RelativeRect {
+        *self
+    }
+}
+
+impl RelativeTo for Rect {
+    fn relative_to(&self, r: &Rect) -> RelativeRect {
+        RelativeRect::new(
+            self.x as f64 / r.x as f64,
+            self.y as f64 / r.y as f64,
+            self.w as f64 / r.w as f64,
+            self.h as f64 / r.h as f64,
+        )
+    }
+}
+
 /// An X window / screen position: top left corner + extent
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, Clone, Copy, Hash)]

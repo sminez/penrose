@@ -18,7 +18,10 @@ pub fn resize<X: XConn>(dw: i32, dh: i32) -> Box<dyn KeyEventHandler<X>> {
         };
 
         if let Some(r) = cs.floating.get_mut(&id) {
-            r.resize(dw, dh);
+            r.apply_as_rect(&cs.screens.focus.r, |mut r| {
+                r.resize(dw, dh);
+                r
+            });
         }
     })
 }
@@ -34,7 +37,10 @@ pub fn reposition<X: XConn>(dx: i32, dy: i32) -> Box<dyn KeyEventHandler<X>> {
         };
 
         if let Some(r) = cs.floating.get_mut(&id) {
-            r.reposition(dx, dy);
+            r.apply_as_rect(&cs.screens.focus.r, |mut r| {
+                r.reposition(dx, dy);
+                r
+            });
         }
     })
 }

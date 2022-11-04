@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - "docs/**"
     pull_request:
 
 jobs:
@@ -20,7 +18,7 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
 
       - name: Build
-        run: mdbook build docs
+        run: mdbook build docs && cargo doc --workspace --no-deps && mv target/doc docs/book/rustdoc
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

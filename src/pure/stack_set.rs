@@ -3,7 +3,7 @@ use crate::{
     pop_where,
     pure::{
         diff::{ScreenState, Snapshot},
-        geometry::Rect,
+        geometry::{Rect, RelativeRect, RelativeTo},
         workspace::check_workspace_invariants,
         Position, Screen, Stack, Workspace,
     },
@@ -23,7 +23,7 @@ where
 {
     pub(crate) screens: Stack<Screen<C>>, // Workspaces visible on screens
     pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
-    pub(crate) floating: HashMap<C, Rect>, // Floating windows
+    pub(crate) floating: HashMap<C, RelativeRect>, // Floating windows
     pub(crate) previous_tag: String,      // The last tag to be focused before the current one
     pub(crate) invisible_tags: Vec<String>, // Tags that should never be focused
 }
@@ -57,7 +57,7 @@ where
     pub(crate) fn try_new_concrete(
         mut workspaces: Vec<Workspace<C>>,
         screen_details: Vec<Rect>,
-        floating: HashMap<C, Rect>,
+        floating: HashMap<C, RelativeRect>,
     ) -> Result<Self> {
         check_workspace_invariants(&workspaces)?;
 
@@ -260,14 +260,17 @@ where
         Ok(())
     }
 
-    pub(crate) fn float_unchecked(&mut self, client: C, r: Rect) {
+    pub(crate) fn float_unchecked<R: RelativeTo>(&mut self, client: C, r: R) {
+        let r = r.relative_to(&self.screens.focus.r);
         self.floating.insert(client, r);
     }
 
     /// Clear the floating status of a client, returning its previous preferred
     /// screen position if the client was known, otherwise `None`.
     pub fn sink(&mut self, client: &C) -> Option<Rect> {
-        self.floating.remove(client)
+        self.floating
+            .remove(client)
+            .map(|rr| rr.applied_to(&self.screens.focus.r))
     }
 
     /// Check whether a given tag currently has any floating windows present.
@@ -671,7 +674,11 @@ impl StackSet<Xid> {
     pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
         let mut float_positions: Vec<(Xid, Rect)> = self
             .on_screen_workspace_clients()
-            .flat_map(|c| self.floating.get(c).map(|r| (*c, *r)))
+            .flat_map(|c| {
+                self.floating
+                    .get(c)
+                    .map(|rr| (*c, rr.applied_to(&self.screens.focus.r)))
+            })
             .collect();
 
         float_positions.reverse();

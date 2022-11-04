@@ -16,16 +16,6 @@ use crate::{
 use std::mem::take;
 use tracing::{error, info, trace};
 
-// fn is_fullscreen<X>(data: &[u32], x: &X) -> bool
-// where
-//     X: XConnExt,
-// {
-//     data.iter()
-//         .map(|&a| x.atom_name(Xid(a)))
-//         .flatten()
-//         .any(|s| s == Atom::NetWmStateFullscreen.as_ref())
-// }
-
 // Currently no client messages are handled by default (see the ewmh extension for some examples of messages
 // that are handled when that is enabled)
 pub(crate) fn client_message<X: XConn>(msg: ClientMessage, _: &mut State<X>, _: &X) -> Result<()> {

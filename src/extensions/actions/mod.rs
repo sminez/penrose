@@ -6,8 +6,10 @@ use crate::{
         layout::LayoutStack,
         State,
     },
+    pure::geometry::RelativeRect,
     util::spawn,
     x::{atom::Atom, property::Prop, XConn, XConnExt},
+    Result, Xid,
 };
 use tracing::error;
 
@@ -15,6 +17,62 @@ mod dynamic_select;
 
 #[doc(inline)]
 pub use dynamic_select::*;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FullScreenAction {
+    Remove,
+    Add,
+    Toggle,
+}
+
+/// Set the fullscreen state of a particular client
+pub fn set_fullscreen_state<X: XConn>(
+    id: Xid,
+    action: FullScreenAction,
+    state: &mut State<X>,
+    x: &X,
+) -> Result<()> {
+    use FullScreenAction::*;
+
+    let net_wm_state = Atom::NetWmState.as_ref();
+    let full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())?;
+
+    let mut wstate = match x.get_prop(id, net_wm_state) {
+        Ok(Some(Prop::Cardinal(vals))) => vals,
+        _ => vec![],
+    };
+
+    let currently_fullscreen = wstate.contains(&full_screen);
+
+    if action == Add || (action == Toggle && !currently_fullscreen) {
+        let r = RelativeRect::fullscreen();
+        state.client_set.float_unchecked(id, r);
+        wstate.push(*full_screen);
+    } else if action == Remove || (action == Toggle && currently_fullscreen) {
+        state.client_set.sink(&id);
+        wstate.retain(|&val| val != *full_screen);
+    }
+
+    x.set_prop(id, net_wm_state, Prop::Cardinal(wstate))?;
+    x.refresh(state)
+}
+
+/// Toggle the fullscreen state of the currently focused window.
+///
+/// **NOTE**: You will need to make use of [add_ewmh_hooks][0] for this action to
+///           work correctly.
+///
+///   [0]: crate::extension::hooks::add_ewmh_hooks
+pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
+    key_handler(|state, x: &X| {
+        let id = match state.client_set.current_client() {
+            Some(&id) => id,
+            None => return Ok(()),
+        };
+
+        set_fullscreen_state(id, FullScreenAction::Toggle, state, x)
+    })
+}
 
 /// Jump to, or create, a [Workspace]
 ///
