@@ -255,6 +255,7 @@ where
 ///
 /// This allows for final configuration to be carried out before entering the main event
 /// loop.
+#[derive(Debug)]
 pub struct WindowManager<X>
 where
     X: XConn,

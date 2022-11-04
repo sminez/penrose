@@ -1,4 +1,68 @@
 //! # Penrose: a library for building your very own tiling window manager
+//!
+//! Penrose is inspired by similar projects such as [dwm][1], [xmonad][2] and [qtile][3] which
+//! allow you to configure your window manager in code and compile it for your system. It is most
+//! similar to `xmonad` in that it is more of a library for building a window manager (with low
+//! level details taken care of for you) rather than a minimal window manager that you edit and
+//! patch directly (such as `dwm`). Penrose strives to be as simple as possible in its
+//! implementation in order to make the guts of the window manager easier to understand. Given the
+//! nature of what this involves, this is not always possible but effort has been made to keep the
+//! source readable and with relatively free of magic.
+//!
+//!
+//! ## Using Penrose
+//!
+//! Penrose itself is not a binary application that you can build, install and run. You need to
+//! write your own **main.rs** as a rust binary crate that uses Penrose as a dependency to set up,
+//! configure and run your very own window manager exactly how you want it. In short, you *will*
+//! need to write some code and you *will* need to know Rust to some degree.
+//!
+//! For learning rust itself, there are some fantastic official [guides][4] available on
+//! [rust-lang.org][15] and if you are sticking to using the out of the box functionality provided
+//! by the penrose crate, working through [The Rust Book][5] before diving into penrose should be more
+//! than enough to get you started.
+//!
+//! On GitHub you can find up to date [examples][6] of how to set up and configure a window manager
+//! using penrose, ranging from bare bones minimal to custom extensions and hooks.
+//!
+//! > **NOTE**: in order to use the xcb implementation of penrose, you will need to install the C
+//! > libraries that are dependencies (namely xcb, Cairo and Pango).
+//!
+//!
+//! ## Digging into the API
+//!
+//! The suggested reading order for getting to grips with the penrose API is to first look at the
+//! [pure][7] data structures that represent the logical state of your window manager before digging
+//! in to the [core][8] module which contains the majority of the functionality you are likely to
+//! want to work with. If you are interested in the lower level X11 interactions (or need to make
+//! requests to the X server directly) you should check out the [x][9] module and its associated
+//! traits. To add functionality and flexability to your window manager, there are the [builtin][10]
+//! and [extensions][11] modules which offer capabilities built on top of the rest of penrose.
+//!
+//! [1]: https://dwm.suckless.org/
+//! [2]: https://xmonad.org/
+//! [3]: http://www.qtile.org/
+//! [4]: https://www.rust-lang.org/learn
+//! [5]: https://doc.rust-lang.org/book/
+//! [6]: https://github.com/sminez/penrose/tree/develop/examples
+//! [7]: crate::pure
+//! [8]: crate::core
+//! [9]: crate::x
+//! [10]: crate::builtin
+//! [11]: crate::extensions
+#![warn(
+    clippy::complexity,
+    clippy::correctness,
+    clippy::style,
+    future_incompatible,
+    missing_debug_implementations,
+    rust_2018_idioms
+)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
+    issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
+)]
+
 #[cfg(feature = "x11rb-xcb")]
 use ::x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
@@ -11,7 +75,7 @@ use std::any::TypeId;
 pub mod builtin;
 pub mod core;
 pub mod extensions;
-pub mod macros;
+mod macros;
 pub mod pure;
 pub mod util;
 pub mod x;

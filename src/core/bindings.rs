@@ -9,7 +9,7 @@ use crate::{
 use penrose_keysyms::XKeySym;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, convert::TryFrom, process::Command};
+use std::{collections::HashMap, convert::TryFrom, fmt, process::Command};
 use strum::{EnumIter, IntoEnumIterator};
 use tracing::trace;
 
@@ -94,6 +94,12 @@ where
     fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
 }
 
+impl<X: XConn> fmt::Debug for Box<dyn KeyEventHandler<X>> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("KeyEventHandler").finish()
+    }
+}
+
 impl<F, X> KeyEventHandler<X> for F
 where
     F: FnMut(&mut State<X>, &X) -> Result<()>,
@@ -113,6 +119,12 @@ where
     X: XConn,
 {
     fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+}
+
+impl<X: XConn> fmt::Debug for Box<dyn MouseEventHandler<X>> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("KeyEventHandler").finish()
+    }
 }
 
 impl<F, X> MouseEventHandler<X> for F

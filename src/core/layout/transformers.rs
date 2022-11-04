@@ -136,7 +136,7 @@ where
 #[macro_export]
 macro_rules! simple_transformer {
     ($prefix:expr, $t:ident, $f:ident) => {
-        #[derive(Clone)]
+        #[derive(Debug, Clone)]
         pub struct $t(Box<dyn $crate::core::layout::Layout>);
 
         impl $t {

@@ -21,6 +21,7 @@ where
 }
 
 /// A [Query] for fetching a window's title following ICCCM / EWMH standards.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Title(pub &'static str);
 
 impl<X> Query<X> for Title
@@ -42,6 +43,7 @@ where
 
 /// A [Query] for fetching a window's application name (the first string returned
 /// under the WM_CLASS property).
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct AppName(pub &'static str);
 
 impl<X> Query<X> for AppName
@@ -58,6 +60,7 @@ where
 
 /// A [Query] for fetching a window's class name (the second string returned
 /// under the WM_CLASS property).
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct ClassName(pub &'static str);
 
 impl<X> Query<X> for ClassName
@@ -73,6 +76,7 @@ where
 }
 
 /// A [Query] for fetching a string property from a client window.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct StringProperty(pub &'static str, pub &'static str);
 
 impl<X> Query<X> for StringProperty

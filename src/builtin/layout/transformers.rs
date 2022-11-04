@@ -51,7 +51,7 @@ fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
 /// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`
 /// controls the gap around each individual window. Set both equal to one another to have
 /// a consistant gap size in all places.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Gaps {
     pub layout: Box<dyn Layout>,
     pub outer_px: u32,
@@ -105,7 +105,7 @@ impl LayoutTransformer for Gaps {
 /// Reserve `px` pixels at the top of the screen.
 ///
 /// Typically used for providing space for a status bar.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ReserveTop {
     pub layout: Box<dyn Layout>,
     pub px: u32,

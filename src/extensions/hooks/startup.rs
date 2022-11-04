@@ -7,6 +7,7 @@ use crate::{
 };
 
 /// Spawn a client program on window manager startup
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SpawnOnStartup {
     prog: &'static str,
 }

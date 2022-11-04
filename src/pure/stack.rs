@@ -145,7 +145,7 @@ impl<T> Stack<T> {
 
     /// Provide an iterator over this stack iterating over up,
     /// focus and then down.
-    pub fn iter(&self) -> Iter<T> {
+    pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             up: self.up.iter(),
             focus: Some(&self.focus),
@@ -155,7 +155,7 @@ impl<T> Stack<T> {
 
     /// Provide an iterator over this stack iterating over up,
     /// focus and then down with mutable references.
-    pub fn iter_mut(&mut self) -> IterMut<T> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut {
             up: self.up.iter_mut(),
             focus: Some(&mut self.focus),

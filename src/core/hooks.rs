@@ -4,6 +4,7 @@ use crate::{
     x::{XConn, XEvent},
     Result, Xid,
 };
+use std::fmt;
 
 /// Handle an [XEvent], return `true` if default event handling should be run afterwards.
 ///
@@ -51,6 +52,13 @@ where
     }
 }
 
+impl<X: XConn> fmt::Debug for Box<dyn EventHook<X>> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EventHook").finish()
+    }
+}
+
+#[derive(Debug)]
 pub struct ComposedEventHook<X>
 where
     X: XConn,
@@ -126,6 +134,13 @@ where
     }
 }
 
+impl<X: XConn> fmt::Debug for Box<dyn ManageHook<X>> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ManageHook").finish()
+    }
+}
+
+#[derive(Debug)]
 pub struct ComposedManageHook<X>
 where
     X: XConn,
@@ -195,6 +210,13 @@ where
     }
 }
 
+impl<X: XConn> fmt::Debug for Box<dyn StateHook<X>> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("StateHook").finish()
+    }
+}
+
+#[derive(Debug)]
 pub struct ComposedStateHook<X>
 where
     X: XConn,
