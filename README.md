@@ -4,21 +4,6 @@ penrose - a tiling window manager library
 
 [![Build](https://github.com/sminez/penrose/workflows/Build/badge.svg?branch=develop)](https://github.com/sminez/penrose/actions?query=workflow%3ABuild) [![crates.io version](https://img.shields.io/crates/v/penrose)](https://crates.io/crates/penrose) [![docs.rs](https://img.shields.io/docsrs/penrose?logo=rust)](https://docs.rs/penrose) [![Book Build](https://github.com/sminez/penrose/actions/workflows/book.yml/badge.svg)](https://github.com/sminez/penrose/actions/workflows/book.yml)
 
-### :warning: The `rewrite` branch has been merged to the `develop` :warning:
-**Users pulling this repo directly from the mainline branch will see this as a breaking change**
-
-See [here](https://github.com/sminez/penrose/releases/tag/v0.2-end-of-life) for details.
-
-------
-
-### tl;dr - further reading
-
-The docs for penrose are written using mdBook and published to GitHub Pages
-[here](https://sminez.github.io/penrose). They cover some more general concepts about how
-to get up and running as opposed to the crate docs on docs.rs which are more aimed at
-covering the APIs themselves.
-
-
 ### `Penrose` is a modular library for configuring your own X11 window manager in Rust.
 
 This means that, unlike most other tiling window managers, `Penrose` is not a
@@ -29,6 +14,13 @@ box, and if you fancy digging deeper you'll find lots of opportunities to
 customise things to your liking.
 
 ![screenshot](https://raw.githubusercontent.com/sminez/penrose/develop/screenshot.png)
+
+### tl;dr - getting started
+
+The docs for penrose are written using mdBook and published to GitHub Pages
+[here](https://sminez.github.io/penrose). They cover some more general concepts about how
+to get up and running as opposed to the crate docs on docs.rs which are more aimed at
+covering the APIs themselves.
 
 <br>
 
