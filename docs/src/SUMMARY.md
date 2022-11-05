@@ -5,10 +5,10 @@
 # User Guide
 - [Getting Started](./getting-started.md)
 
-- [Built In Functionality]()
-  - [Layouts]()
-  - [Actions]()
-  - [UI]()
+- [Built In Functionality](./builtin/index.md)
+  - [Layouts](./builtin/layouts.md)
+  - [Actions](./builtin/actions.md)
+  - [UI](./builtin/ui.md)
 
 - [Extensions]()
   - [Startup Hooks]()
