@@ -22,7 +22,7 @@ where
     Box::new(f)
 }
 
-/// Mutate the [ClientSet] and refresh the onscreen state
+/// Mutate the [ClientSet] and refresh the on screen state
 pub fn modify_with<F, X>(f: F) -> Box<dyn KeyEventHandler<X>>
 where
     F: FnMut(&mut ClientSet) + Clone + 'static,
