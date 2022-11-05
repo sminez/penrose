@@ -569,8 +569,12 @@ where
             return;
         }
 
-        self.screens.focus_down();
+        // We stash the previous tag so that we can restore it after we've
+        // cycled the screens and pulled over tag we were on before.
+        let true_previous_tag = self.previous_tag.clone();
+        self.next_screen();
         self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
+        self.previous_tag = true_previous_tag;
     }
 
     /// Drag the focused workspace onto the previous [Screen], holding focus
@@ -579,8 +583,12 @@ where
             return;
         }
 
-        self.screens.focus_up();
+        // We stash the previous tag so that we can restore it after we've
+        // cycled the screens and pulled over tag we were on before.
+        let true_previous_tag = self.previous_tag.clone();
+        self.previous_screen();
         self.try_swap_focused_workspace_with_tag(&self.previous_tag.clone());
+        self.previous_tag = true_previous_tag;
     }
 
     /// If the current [Stack] is [None], return `default` otherwise
@@ -1122,8 +1130,8 @@ pub mod tests {
     fn drag_workspace_focuses_new_screen(forward: bool, expected_index: usize) {
         let mut s = test_stack_set(5, 3);
 
-        assert_eq!(s.current_tag(), "1");
-        assert_eq!(s.current_screen().index(), 0);
+        assert_eq!(s.screens.focus.workspace.tag, "1");
+        assert_eq!(s.screens.focus.index, 0);
 
         if forward {
             s.drag_workspace_forward();
@@ -1131,8 +1139,8 @@ pub mod tests {
             s.drag_workspace_backward();
         }
 
-        assert_eq!(s.current_tag(), "1");
-        assert_eq!(s.current_screen().index(), expected_index);
+        assert_eq!(s.screens.focus.workspace.tag, "1");
+        assert_eq!(s.screens.focus.index, expected_index);
     }
 
     #[test_case(1, true; "single screen forward")]
@@ -1140,13 +1148,17 @@ pub mod tests {
     #[test_case(2, true; "two screens forward")]
     #[test_case(2, false; "two screens backward")]
     #[test]
-    fn drag_workspace_sets_expected_previous_tag(n_screens: usize, forward: bool) {
+    fn drag_workspace_maintains_previous_tag(n_screens: usize, forward: bool) {
         let mut s = test_stack_set(5, n_screens);
-
         s.focus_tag("3");
 
-        assert_eq!(s.current_tag(), "3");
-        assert_eq!(s.previous_tag, "1");
+        // This state is technically invalid for us to get in to but the point is
+        // to check that we definitely leave the previous tag alone during this
+        // operation and don't end up with it anywhere it shouldn't be.
+        s.previous_tag = "PREVIOUS".to_owned();
+
+        assert_eq!(s.screens.focus.workspace.tag, "3");
+        assert_eq!(s.previous_tag, "PREVIOUS");
 
         if forward {
             s.drag_workspace_forward();
@@ -1156,7 +1168,8 @@ pub mod tests {
 
         // We're keeping the same tag focused so we shouldn't have modified the
         // previous tag state at all regardless of screen count.
-        assert_eq!(s.previous_tag, "1");
+        assert_eq!(s.screens.focus.workspace.tag, "3");
+        assert_eq!(s.previous_tag, "PREVIOUS");
     }
 
     #[test]

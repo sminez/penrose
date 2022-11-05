@@ -156,7 +156,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pure::stack_set::tests::test_stack_set;
+    use crate::{
+        pure::stack_set::tests::{test_stack_set, test_stack_set_with_stacks},
+        stack, Xid,
+    };
     use simple_test_case::test_case;
 
     #[test]
@@ -182,6 +185,27 @@ mod tests {
         let diff = Diff::new(before, after);
 
         assert_eq!(diff.client_changed_position(&1), expected)
+    }
+
+    #[test]
+    fn drag_workspace_generates_correct_diff() {
+        let mut s = test_stack_set_with_stacks(
+            vec![
+                Some(stack!([Xid(1), Xid(2)], Xid(3), [Xid(4), Xid(5)])),
+                Some(stack!(Xid(6), [Xid(7), Xid(8)])),
+                None,
+            ],
+            2,
+        );
+
+        let before = s.position_and_snapshot();
+        s.drag_workspace_forward();
+        let after = s.position_and_snapshot();
+
+        let diff = Diff::new(before, after);
+
+        assert_eq!(diff.newly_focused_screen(), Some(1));
+        assert_eq!(diff.focused_client(), Some(Xid(3)));
     }
 }
 
