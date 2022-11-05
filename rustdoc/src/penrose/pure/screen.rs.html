@@ -26,7 +26,19 @@
 <span id="24">24</span>
 <span id="25">25</span>
 <span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pure</span>::{<span class="ident">geometry::Rect</span>, <span class="ident">Workspace</span>};
+<span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="doccomment">/// A wrapper around a single [Workspace] that includes the physical screen</span>
 <span class="doccomment">/// size as a [Rect].</span>
@@ -36,6 +48,16 @@
     <span class="doccomment">/// The [Workspace] current visible on this screen</span>
     <span class="kw">pub</span> <span class="ident">workspace</span>: <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">r</span>: <span class="ident">Rect</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Screen</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;Screen({}: {:?}):\n  - workspace: {}&quot;</span>,
+            <span class="self">self</span>.<span class="ident">index</span>, <span class="self">self</span>.<span class="ident">r</span>, <span class="self">self</span>.<span class="ident">workspace</span>
+        )
+    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">Screen</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {

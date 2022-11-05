@@ -198,11 +198,29 @@
 <span id="196">196</span>
 <span id="197">197</span>
 <span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">core::layout</span>::{<span class="ident">IntoMessage</span>, <span class="ident">LayoutStack</span>},
     <span class="ident">pure::Stack</span>,
     <span class="ident">Error</span>, <span class="prelude-ty">Result</span>,
 };
+<span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="doccomment">/// A wrapper around a [Stack] of windows belonging to a single &quot;workspace&quot; or virtual</span>
 <span class="doccomment">/// desktop. When this workspace is active on a given screen, the windows contained in</span>
@@ -226,6 +244,22 @@
     }
 }
 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">stack</span>
+            .<span class="ident">as_ref</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
+            .<span class="ident">unwrap_or_default</span>();
+
+        <span class="macro">write!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;Workspace({}, {}):\n  - layouts: {}\n  - stack: {}&quot;</span>,
+            <span class="self">self</span>.<span class="ident">id</span>, <span class="self">self</span>.<span class="ident">tag</span>, <span class="self">self</span>.<span class="ident">layouts</span>, <span class="ident">stack</span>
+        )
+    }
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Create a new Workspace with the given layouts and stack.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">usize</span>, <span class="ident">tag</span>: <span class="ident">S</span>, <span class="ident">layouts</span>: <span class="ident">LayoutStack</span>, <span class="ident">stack</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span>
@@ -244,7 +278,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new_default</span>(<span class="ident">id</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">id</span>,
-            <span class="ident">tag</span>: <span class="ident">id</span>.<span class="ident">to_string</span>(),
+            <span class="ident">tag</span>: <span class="macro">format!</span>(<span class="string">&quot;WS-{id}&quot;</span>),
             ..<span class="ident"><span class="self">Self</span>::default</span>()
         }
     }
