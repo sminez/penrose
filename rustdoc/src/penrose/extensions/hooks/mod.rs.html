@@ -9,14 +9,18 @@
 <span id="7">7</span>
 <span id="8">8</span>
 <span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Hook implementations and helpers for adding to your Penrose window manager</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ewmh</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">manage</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">named_scratchpads</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">startup</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">window_swallowing</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ewmh::add_ewmh_hooks</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">named_scratchpads</span>::{<span class="ident">add_named_scratchpads</span>, <span class="ident">NamedScratchPad</span>, <span class="ident">ToggleNamedScratchPad</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">startup::SpawnOnStartup</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">window_swallowing::WindowSwallowing</span>;
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

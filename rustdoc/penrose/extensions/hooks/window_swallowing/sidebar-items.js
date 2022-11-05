@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["WindowSwallowing","Replace windows matching the parent [Query] when they spawn a child process."]]};

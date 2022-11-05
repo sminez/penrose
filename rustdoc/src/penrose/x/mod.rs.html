@@ -519,6 +519,28 @@
 <span id="517">517</span>
 <span id="518">518</span>
 <span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">builtin::layout::messages::Hide</span>,
@@ -899,6 +921,28 @@
                 <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_owned</span>()),
             },
         }
+    }
+
+    <span class="doccomment">/// Request a window&#39;s PID via the _NET_WM_PID property.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// **NOTE**: Not all programs set this property.</span>
+    <span class="kw">fn</span> <span class="ident">window_pid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">Prop::Cardinal</span>(<span class="ident">vals</span>))) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_prop</span>(<span class="ident">id</span>, <span class="string">&quot;_NET_WM_PID&quot;</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">vals</span>[<span class="number">0</span>])
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        }
+    }
+
+    <span class="doccomment">/// Run the provided [Query], returning the result.</span>
+    <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Query</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="ident">query</span>.<span class="ident">run</span>(<span class="ident">id</span>, <span class="self">self</span>)
+    }
+
+    <span class="doccomment">/// Run the provided [Query], returning the result or a default value if there</span>
+    <span class="doccomment">/// were any errors encountered when communicating with the X server.</span>
+    <span class="kw">fn</span> <span class="ident">query_or</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">default</span>: <span class="ident">bool</span>, <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Query</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="ident">bool</span> {
+        <span class="ident">query</span>.<span class="ident">run</span>(<span class="ident">id</span>, <span class="self">self</span>).<span class="ident">unwrap_or</span>(<span class="ident">default</span>)
     }
 }
 

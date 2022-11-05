@@ -164,8 +164,6 @@
 <span id="162">162</span>
 <span id="163">163</span>
 <span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
 </pre><pre class="rust"><code><span class="doccomment">//! XEvent handlers for use in the main event loop;</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">core</span>::{
@@ -238,12 +236,10 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">destroy</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">client</span>: <span class="ident">Xid</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>) {
-        <span class="macro">trace!</span>(<span class="question-mark">?</span><span class="ident">client</span>, <span class="string">&quot;destroying client&quot;</span>);
-        <span class="ident">x</span>.<span class="ident">unmanage</span>(<span class="ident">client</span>, <span class="ident">state</span>)<span class="question-mark">?</span>;
-        <span class="ident">state</span>.<span class="ident">mapped</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>);
-        <span class="ident">state</span>.<span class="ident">pending_unmap</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>);
-    }
+    <span class="macro">trace!</span>(<span class="question-mark">?</span><span class="ident">client</span>, <span class="string">&quot;destroying client&quot;</span>);
+    <span class="ident">x</span>.<span class="ident">unmanage</span>(<span class="ident">client</span>, <span class="ident">state</span>)<span class="question-mark">?</span>;
+    <span class="ident">state</span>.<span class="ident">mapped</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>);
+    <span class="ident">state</span>.<span class="ident">pending_unmap</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>);
 
     <span class="prelude-val">Ok</span>(())
 }
