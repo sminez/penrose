@@ -107,7 +107,7 @@
     <span class="ident">Box::new</span>(<span class="ident">f</span>)
 }
 
-<span class="doccomment">/// Mutate the [ClientSet] and refresh the onscreen state</span>
+<span class="doccomment">/// Mutate the [ClientSet] and refresh the on screen state</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modify_with</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ClientSet</span>) <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,

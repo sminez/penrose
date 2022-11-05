@@ -135,6 +135,39 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="actions"><a class="header" href="#actions">Actions</a></h1>
+<p>When it comes to extending the behaviour of you window manager, the first and most
+obvious thing to look at is running some custom code in response to a key binding
+being pressed. In penrose, this is refered to as an <code>action</code>.</p>
+<p>Actions can be anything from focusing a new window, to changing the layout algorithm
+being used, to opening a terminal or running fully custom logic to find and display
+amusing pictures of squirrels.</p>
+<p>The choice is yours.</p>
+<p>To help with some of the boilerplate and common cases, there are a couple of helper
+functions that will generate a <code>KeyEventHandler</code> for you in a relatively simple
+way. There are also a couple of built in actions for working with floating windows
+and exiting penrose to get you started.</p>
+<h2 id="writing-actions-using-helpers"><a class="header" href="#writing-actions-using-helpers">Writing actions using helpers</a></h2>
+<p>There are five helper functions for writing common actions:</p>
+<ul>
+<li><code>key_handler</code>: this one is the most general. It wraps a function that takes a
+mutable reference to the current window manager state and a reference to the
+<code>XConn</code> used by your window manager and runs whatever custom code you care to
+write.</li>
+<li><code>modify_with</code>: for calling <code>pure</code> state methods this helper handles the diff
+and refresh cycle for you. Simply update the <code>StackSet</code> with whatever changes
+you want to make and a refresh will be triggered for you to reflect you changes
+to the X server.</li>
+<li><code>send_layout_message</code>: this does pretty much what you'd expect. It calls the
+given function to construct a <code>Message</code> and sends it to the active layout.
+(Useful for updating your layout behaviour on the fly).</li>
+<li><code>broadcast_layout_message</code>: does the same thing as <code>send_layout_message</code> only
+in this case the message is copied and sent to <em>all</em> layouts available to the
+current workspace rather than just the active one.</li>
+<li><code>spawn</code>: as the name implies, this spawns a given program as a subprocess.
+You probably want at least one key binding for spawning either a terminal or
+a program launcher such as <code>dmenu</code> or <code>rofi</code>. For the programs you use the
+most, this lets you get to them with a single key press!</li>
+</ul>
 
                     </main>
 
