@@ -131,18 +131,10 @@
 <span id="129">129</span>
 <span id="130">130</span>
 <span id="131">131</span>
-<span id="132">132</span>
-<span id="133">133</span>
-<span id="134">134</span>
-<span id="135">135</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core</span>::{
-        <span class="ident">actions</span>::{<span class="ident">key_handler</span>, <span class="ident">modify_with</span>},
-        <span class="ident">bindings::KeyEventHandler</span>,
-        <span class="ident">layout::LayoutStack</span>,
-        <span class="ident">State</span>,
-    },
+    <span class="ident">builtin::actions</span>::{<span class="ident">key_handler</span>, <span class="ident">modify_with</span>},
+    <span class="ident">core</span>::{<span class="ident">bindings::KeyEventHandler</span>, <span class="ident">layout::LayoutStack</span>, <span class="ident">State</span>},
     <span class="ident">pure::geometry::RelativeRect</span>,
     <span class="ident">util::spawn</span>,
     <span class="ident">x</span>::{<span class="ident">atom::Atom</span>, <span class="ident">property::Prop</span>, <span class="ident">XConn</span>, <span class="ident">XConnExt</span>},

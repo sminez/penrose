@@ -55,9 +55,11 @@
 <span id="53">53</span>
 <span id="54">54</span>
 <span id="55">55</span>
+<span id="56">56</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Dynamic selection based actions using Dmenu.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core</span>::{<span class="ident">actions::key_handler</span>, <span class="ident">bindings::KeyEventHandler</span>, <span class="ident">State</span>},
+    <span class="ident">builtin::actions::key_handler</span>,
+    <span class="ident">core</span>::{<span class="ident">bindings::KeyEventHandler</span>, <span class="ident">State</span>},
     <span class="ident">custom_error</span>,
     <span class="ident">extensions::util::dmenu</span>::{<span class="ident">DMenu</span>, <span class="ident">DMenuConfig</span>, <span class="ident">MenuMatch</span>},
     <span class="ident">x</span>::{<span class="ident">XConn</span>, <span class="ident">XConnExt</span>},
