@@ -5,7 +5,7 @@
 //! parent is restored in its place.
 use crate::{
     core::{hooks::EventHook, State},
-    pure::{geometry::Rect, Stack},
+    pure::{geometry::RelativeRect, Stack},
     x::{Query, XConn, XConnExt, XEvent},
     Result, Xid,
 };
@@ -17,7 +17,7 @@ use tracing::{info, warn};
 struct WindowSwallowingState {
     swallowed: HashMap<Xid, Xid>, // map of child windows to their swallowed parent
     stack_before_close: Option<Stack<Xid>>,
-    floating_before_close: HashMap<Xid, Rect>,
+    floating_before_close: HashMap<Xid, RelativeRect>,
 }
 
 impl WindowSwallowingState {
@@ -75,12 +75,15 @@ impl WindowSwallowingState {
     }
 }
 
+/// Replace windows matching the parent [Query] when they spawn a child process.
+#[derive(Debug)]
 pub struct WindowSwallowing<X: XConn> {
     parent: Box<dyn Query<X>>,
     child: Option<Box<dyn Query<X>>>,
 }
 
 impl<X: XConn> WindowSwallowing<X> {
+    /// Create a new window swallowing rule based on the provided query.
     pub fn boxed<Q>(parent: Q) -> Box<dyn EventHook<X>>
     where
         X: 'static,
@@ -162,7 +165,7 @@ impl<X: XConn> EventHook<X> for WindowSwallowing<X> {
     }
 }
 
-fn transfer_floating_state(from: Xid, to: Xid, floating: &mut HashMap<Xid, Rect>) {
+fn transfer_floating_state(from: Xid, to: Xid, floating: &mut HashMap<Xid, RelativeRect>) {
     if let Some(r) = floating.remove(&from) {
         floating.insert(to, r);
     }

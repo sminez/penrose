@@ -380,6 +380,9 @@ pub trait XConnExt: XConn + Sized {
         }
     }
 
+    /// Request a window's PID via the _NET_WM_PID property.
+    ///
+    /// **NOTE**: Not all programs set this property.
     fn window_pid(&self, id: Xid) -> Option<u32> {
         if let Ok(Some(Prop::Cardinal(vals))) = self.get_prop(id, "_NET_WM_PID") {
             Some(vals[0])
@@ -388,10 +391,13 @@ pub trait XConnExt: XConn + Sized {
         }
     }
 
+    /// Run the provided [Query], returning the result.
     fn query(&self, query: &dyn Query<Self>, id: Xid) -> Result<bool> {
         query.run(id, self)
     }
 
+    /// Run the provided [Query], returning the result or a default value if there
+    /// were any errors encountered when communicating with the X server.
     fn query_or(&self, default: bool, query: &dyn Query<Self>, id: Xid) -> bool {
         query.run(id, self).unwrap_or(default)
     }

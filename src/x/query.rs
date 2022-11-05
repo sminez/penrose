@@ -3,12 +3,19 @@ use crate::{
     x::{atom::Atom, property::Prop, XConn},
     Result, Xid,
 };
+use std::fmt;
 
 /// A query to be run against client windows for identifying specific windows
 /// or programs.
 pub trait Query<X: XConn> {
     /// Run this query for a given window ID.
     fn run(&self, id: Xid, x: &X) -> Result<bool>;
+}
+
+impl<X: XConn> fmt::Debug for Box<dyn Query<X>> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Query").finish()
+    }
 }
 
 pub(super) fn str_prop<X>(prop: impl AsRef<str>, id: Xid, x: &X) -> Result<Option<Vec<String>>>
