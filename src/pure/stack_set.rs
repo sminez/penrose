@@ -10,6 +10,7 @@ use crate::{
     stack, Error, Result, Xid,
 };
 use std::{
+    cmp::Ordering,
     collections::{HashMap, LinkedList},
     hash::Hash,
     mem::{swap, take},
@@ -111,6 +112,13 @@ where
         }
     }
 
+    fn update_previous_tag(&mut self, new: String) {
+        if self.invisible_tags.contains(&new) {
+            return;
+        }
+        self.previous_tag = new;
+    }
+
     /// Set focus to the [Workspace] with the specified tag.
     ///
     /// If there is no matching workspace then the [StackSet] is unmodified.
@@ -145,7 +153,7 @@ where
             match &self.screens.focus.workspace.tag {
                 // we've found and focused the tag
                 t if t == tag => {
-                    self.previous_tag = current_tag;
+                    self.update_previous_tag(current_tag);
                     return true;
                 }
 
@@ -160,7 +168,7 @@ where
 
     fn try_swap_on_screen_workspace_with_hidden(&mut self, tag: &str) {
         if let Some(mut w) = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag) {
-            self.previous_tag = self.screens.focus.workspace.tag.clone();
+            self.update_previous_tag(self.screens.focus.workspace.tag.clone());
             swap(&mut w, &mut self.screens.focus.workspace);
             self.hidden.push_back(w);
         }
@@ -541,7 +549,7 @@ where
             return;
         }
 
-        self.previous_tag = self.screens.focus.workspace.tag.clone();
+        self.update_previous_tag(self.screens.focus.workspace.tag.clone());
         self.screens.focus_down();
     }
 
@@ -551,7 +559,7 @@ where
             return;
         }
 
-        self.previous_tag = self.screens.focus.workspace.tag.clone();
+        self.update_previous_tag(self.screens.focus.workspace.tag.clone());
         self.screens.focus_up();
     }
 
@@ -711,6 +719,93 @@ impl StackSet<Xid> {
     pub(crate) fn position_and_snapshot(&mut self) -> Snapshot<Xid> {
         let positions = self.visible_client_positions();
         self.snapshot(positions)
+    }
+
+    pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
+        let n_old = self.screens.len();
+        let n_new = rects.len();
+
+        if n_new == 0 {
+            return Err(Error::NoScreens);
+        }
+
+        match n_new.cmp(&n_old) {
+            // Just a change in dimensions
+            Ordering::Equal => (),
+
+            // We have more screens now: pull in hidden workspaces to fill them
+            // If we run out of workspaces we backfill using generated defaults
+            Ordering::Greater => {
+                let padding = self.take_from_hidden(n_new - n_old);
+                for (n, w) in padding.into_iter().enumerate() {
+                    self.screens.insert_at(
+                        Position::Tail,
+                        Screen {
+                            workspace: w,
+                            index: n_old + n,
+                            r: Rect::default(),
+                        },
+                    );
+                }
+            }
+
+            // We have fewer screens now: focus moves to the first screen and
+            // we drop from the back of the stack
+            Ordering::Less => {
+                let mut raw = take(&mut self.screens).flatten();
+                let removed = raw.split_off(n_new);
+                self.hidden.extend(removed.into_iter().map(|s| s.workspace));
+                self.screens = Stack::from_iter_unchecked(raw);
+            }
+        }
+
+        // self.screens.len() is now correct so update the screen dimensions
+        for (s, r) in self.screens.iter_mut().zip(rects) {
+            s.r = r;
+        }
+
+        Ok(())
+    }
+
+    // This is a little fiddly...
+    // Rather than hard erroring if we end up with new screens being detected that
+    // push us over the number of available workspaces, we pad the workspace set
+    // with ones we generate with default values. In doing this we need to make sure
+    // that any _invisible_ workspaces are kept to one side so that they do not end
+    // up focused on a screen by mistake.
+    fn take_from_hidden(&mut self, n: usize) -> Vec<Workspace<Xid>> {
+        let next_id = self.workspaces().map(|w| w.id).max().unwrap_or(0) + 1;
+        let mut tmp = Vec::with_capacity(self.hidden.len());
+        let mut hidden = LinkedList::new();
+
+        // Filter out any hidden tags first
+        for w in take(&mut self.hidden) {
+            if self.invisible_tags.contains(&w.tag) {
+                hidden.push_front(w);
+            } else {
+                tmp.push(w);
+            }
+        }
+
+        // Sort so that we populate the new screens with workspaces in order of ID.
+        // Without this we are basing things off of the order we ended up with after
+        // whatever workspace focus changes the user has made while we are running.
+        tmp.sort_by_key(|w| w.id);
+
+        // Pad the remaining workspace count with empty default workspaces if we are
+        // below the number we need.
+        if tmp.len() < n {
+            for m in 0..(n - tmp.len()) {
+                tmp.push(Workspace::new_default(next_id + m));
+            }
+        } else {
+            let extra = tmp.split_off(n);
+            hidden.extend(extra);
+        }
+
+        self.hidden = hidden;
+
+        tmp
     }
 }
 
@@ -1180,6 +1275,66 @@ pub mod tests {
                 assert_eq!(stack_order(&mut s), expected, "{:?}", s.current_stack());
             }
         }
+    }
+
+    fn focused_tags(ss: &StackSet<Xid>) -> Vec<&String> {
+        ss.screens.iter().map(|s| &s.workspace.tag).collect()
+    }
+
+    #[test_case(1, 1, 0, vec!["1"], vec!["1"]; "single to single")]
+    #[test_case(1, 2, 0, vec!["1"], vec!["1", "2"]; "single to multiple no padding")]
+    #[test_case(1, 3, 0, vec!["1"], vec!["1", "2", "WS-3"]; "single to multiple with padding")]
+    #[test_case(2, 1, 0, vec!["1", "2"], vec!["1"]; "multiple to single")]
+    #[test_case(2, 2, 1, vec!["1", "2"], vec!["1", "2"]; "multiple to same count")]
+    #[test_case(2, 3, 1, vec!["1", "2"], vec!["1", "2", "WS-3"]; "multiple to more with padding")]
+    #[test]
+    fn update_screens(
+        n_before: usize,
+        n_after: usize,
+        focus_after: usize,
+        tags_before: Vec<&str>,
+        tags_after: Vec<&str>,
+    ) {
+        let mut ss: StackSet<Xid> = StackSet::try_new(
+            LayoutStack::default(),
+            ["1", "2"],
+            vec![Rect::default(); n_before],
+        )
+        .expect("enough workspaces to cover the number of initial screens");
+
+        // Invisible workspaces should never have focus: backfilling from the currently
+        // hidden workspaces needs to not put this on a screen.
+        ss.add_invisible_workspace("INVISIBLE")
+            .expect("no tag collisions");
+
+        // Focus the last screen so that if we truncate we should fall back to
+        // the first screen now that we are out of bounds
+        ss.focus_screen(n_before - 1);
+
+        assert_eq!(ss.screens.len(), n_before);
+        assert_eq!(focused_tags(&ss), tags_before);
+
+        ss.update_screens(vec![Rect::default(); n_after]).unwrap();
+
+        assert_eq!(ss.screens.len(), n_after);
+        assert_eq!(ss.screens.focus.index, focus_after);
+        assert_eq!(focused_tags(&ss), tags_after);
+
+        // Shouldn't have dropped any workspaces, only padded if needed.
+        // The +1 here is for the invisible workspace
+        let expected = std::cmp::max(2, n_after) + 1;
+        assert_eq!(ss.workspaces().count(), expected);
+    }
+
+    #[test]
+    fn update_screens_with_empty_vec_is_an_error() {
+        let mut ss: StackSet<Xid> =
+            StackSet::try_new(LayoutStack::default(), ["1", "2"], vec![Rect::default(); 2])
+                .expect("enough workspaces to cover the number of screens");
+
+        let res = ss.update_screens(vec![]);
+
+        assert!(matches!(res, Err(Error::NoScreens)));
     }
 }
 

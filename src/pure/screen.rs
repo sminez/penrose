@@ -1,4 +1,5 @@
 use crate::pure::{geometry::Rect, Workspace};
+use std::fmt;
 
 /// A wrapper around a single [Workspace] that includes the physical screen
 /// size as a [Rect].
@@ -8,6 +9,16 @@ pub struct Screen<C> {
     /// The [Workspace] current visible on this screen
     pub workspace: Workspace<C>,
     pub(crate) r: Rect,
+}
+
+impl<C: fmt::Display> fmt::Display for Screen<C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Screen({}: {:?}):\n  - workspace: {}",
+            self.index, self.r, self.workspace
+        )
+    }
 }
 
 impl<C> Screen<C> {

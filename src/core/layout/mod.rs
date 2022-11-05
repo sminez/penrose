@@ -102,6 +102,12 @@ impl fmt::Debug for Box<dyn Layout> {
     }
 }
 
+impl fmt::Display for Box<dyn Layout> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Layout({})", self.name())
+    }
+}
+
 /// A stack of [Layout] options for use on a particular [crate::pure::Workspace].
 ///
 /// The [Stack] itself acts as a [Layout], deferring all operations to the

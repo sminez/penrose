@@ -3,6 +3,7 @@ use crate::{
     pure::Stack,
     Error, Result,
 };
+use std::fmt;
 
 /// A wrapper around a [Stack] of windows belonging to a single "workspace" or virtual
 /// desktop. When this workspace is active on a given screen, the windows contained in
@@ -26,6 +27,22 @@ impl<T> Default for Workspace<T> {
     }
 }
 
+impl<T: fmt::Display> fmt::Display for Workspace<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let stack = self
+            .stack
+            .as_ref()
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+
+        write!(
+            f,
+            "Workspace({}, {}):\n  - layouts: {}\n  - stack: {}",
+            self.id, self.tag, self.layouts, stack
+        )
+    }
+}
+
 impl<T> Workspace<T> {
     /// Create a new Workspace with the given layouts and stack.
     pub fn new<S>(id: usize, tag: S, layouts: LayoutStack, stack: Option<Stack<T>>) -> Self
@@ -44,7 +61,7 @@ impl<T> Workspace<T> {
     pub(crate) fn new_default(id: usize) -> Self {
         Self {
             id,
-            tag: id.to_string(),
+            tag: format!("WS-{id}"),
             ..Self::default()
         }
     }

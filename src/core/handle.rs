@@ -4,7 +4,7 @@ use crate::{
         bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
         State, Xid,
     },
-    pure::{geometry::Point, StackSet, Workspace},
+    pure::geometry::Point,
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageKind, PointerChange},
@@ -13,7 +13,6 @@ use crate::{
     },
     Result,
 };
-use std::mem::take;
 use tracing::{error, info, trace};
 
 // Currently no client messages are handled by default (see the ewmh extension for some examples of messages
@@ -145,34 +144,7 @@ pub(crate) fn detect_screens<X: XConn>(state: &mut State<X>, x: &X) -> Result<()
     let rects = x.screen_details()?;
     info!(?rects, "found screens");
 
-    let StackSet {
-        screens,
-        hidden,
-        floating,
-        previous_tag,
-        invisible_tags,
-    } = take(&mut state.client_set);
-
-    let mut workspaces: Vec<_> = screens.into_iter().map(|s| s.workspace).collect();
-    workspaces.extend(hidden);
-
-    // Pad out the workspace list with default workspaces if there aren't enough available
-    // to cover the attached screens.
-    // NOTE: This can still error if we end up with a tag collision because the user has
-    //       named one of there tags with the one we generate based on ID.
-    if workspaces.len() < rects.len() {
-        let n_short = rects.len() - workspaces.len();
-        let next_id = workspaces.iter().map(|w| w.id).max().unwrap_or(0) + 1;
-        workspaces.extend((0..n_short).map(|n| Workspace::new_default(n + next_id)))
-    }
-
-    state.client_set = StackSet {
-        previous_tag,
-        invisible_tags,
-        ..StackSet::try_new_concrete(workspaces, rects, floating)?
-    };
-
-    Ok(())
+    state.client_set.update_screens(rects)
 }
 
 pub(crate) fn screen_change<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
