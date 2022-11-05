@@ -10,7 +10,7 @@
 //! `penrose::extensions::hooks::ewmh`.
 use penrose::{
     builtin::{
-        actions::{exit, log_current_state},
+        actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
         layout::{
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReflectHorizontal, ReserveTop},
@@ -18,7 +18,6 @@ use penrose::{
         },
     },
     core::{
-        actions::{modify_with, send_layout_message, spawn},
         bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
         layout::LayoutStack,
         Config, WindowManager,

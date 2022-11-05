@@ -18,7 +18,6 @@ use std::{
 };
 use tracing::{error, info, span, trace, Level};
 
-pub mod actions;
 pub mod bindings;
 pub(crate) mod handle;
 pub mod hooks;

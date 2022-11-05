@@ -1,6 +1,7 @@
 //! Dynamic selection based actions using Dmenu.
 use crate::{
-    core::{actions::key_handler, bindings::KeyEventHandler, State},
+    builtin::actions::key_handler,
+    core::{bindings::KeyEventHandler, State},
     custom_error,
     extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch},
     x::{XConn, XConnExt},

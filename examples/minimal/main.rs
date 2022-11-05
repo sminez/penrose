@@ -4,11 +4,10 @@
 //! has multiple workspaces and simple client / workspace movement.
 use penrose::{
     builtin::{
-        actions::exit,
+        actions::{exit, modify_with, send_layout_message, spawn},
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
-        actions::{modify_with, send_layout_message, spawn},
         bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
         Config, WindowManager,
     },

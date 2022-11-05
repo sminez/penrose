@@ -1,9 +1,7 @@
 //! Actions for manipulating floating windows.
 use crate::{
-    core::{
-        actions::{key_handler, modify_with},
-        bindings::KeyEventHandler,
-    },
+    builtin::actions::{key_handler, modify_with},
+    core::bindings::KeyEventHandler,
     x::{XConn, XConnExt},
 };
 
