@@ -1,5 +1,6 @@
 //! System monitor widgets
 use crate::bar::widgets::{RefreshText, TextStyle};
+use penrose::util::{spawn_for_output, spawn_for_output_with_args};
 use std::fs;
 
 /// Display the current charge level and status of a named battery.
@@ -38,4 +39,60 @@ fn read_sys_file(bat: &str, fname: &str) -> Option<String> {
     fs::read_to_string(format!("/sys/class/power_supply/{bat}/{fname}"))
         .ok()
         .map(|s| s.trim().to_string())
+}
+
+/// Display the current date and time in YYYY-MM-DD HH:MM format
+///
+/// This widget shells out to the `date` tool to generate its output
+pub fn current_date_and_time(style: &TextStyle) -> RefreshText {
+    RefreshText::new(style, || {
+        spawn_for_output_with_args("date", &["+%F %R"])
+            .unwrap_or_default()
+            .trim()
+            .to_string()
+    })
+}
+
+/// Display the ESSID currently connected to and the signal quality as
+/// a percentage.
+pub fn wifi_network(style: &TextStyle) -> RefreshText {
+    RefreshText::new(style, move || get_wifi_text().unwrap_or_default())
+}
+
+fn get_wifi_text() -> Option<String> {
+    let (interface, essid) = get_interface_and_essid()?;
+    let signal = get_signal_quality(&interface)?;
+
+    Some(format!("{essid} {signal}%"))
+}
+
+// Read the interface name and essid via iwgetid.
+//   Output format is '$interface    ESSID:"$essid"'
+fn get_interface_and_essid() -> Option<(String, String)> {
+    let raw = spawn_for_output("iwgetid").ok()?;
+    let mut iter = raw.split(':');
+
+    // Not using split_whitespace here as the essid may contain whitespace
+    let interface = iter.next()?.split_whitespace().next()?.to_owned();
+    let essid = iter.next()?.split('"').nth(1)?.to_string();
+
+    Some((interface, essid))
+}
+
+// Parsing the format described here: https://hewlettpackard.github.io/wireless-tools/Linux.Wireless.Extensions.html
+fn get_signal_quality(interface: &str) -> Option<String> {
+    let raw = fs::read_to_string("/proc/net/wireless").ok()?;
+
+    for line in raw.lines() {
+        if line.starts_with(interface) {
+            return Some(
+                line.split_whitespace()
+                    .nth(2)?
+                    .strip_suffix('.')?
+                    .to_owned(),
+            );
+        }
+    }
+
+    None
 }

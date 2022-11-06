@@ -12,7 +12,7 @@ mod sys;
 mod workspaces;
 
 pub use simple::{ActiveWindowName, CurrentLayout, RootWindowName};
-pub use sys::battery_summary;
+pub use sys::{battery_summary, current_date_and_time, wifi_network};
 pub use workspaces::Workspaces;
 
 /// A status bar widget that can be rendered using a [Context]
