@@ -8,9 +8,11 @@ use penrose::{
 
 pub mod debug;
 mod simple;
+mod sys;
 mod workspaces;
 
 pub use simple::{ActiveWindowName, CurrentLayout, RootWindowName};
+pub use sys::battery_summary;
 pub use workspaces::Workspaces;
 
 /// A status bar widget that can be rendered using a [Context]
@@ -171,5 +173,53 @@ impl<X: XConn> Widget<X> for Text {
 
     fn is_greedy(&self) -> bool {
         self.is_greedy
+    }
+}
+
+/// A simple widget that does not care about window manager state.
+///
+/// On each refresh, the provided `get_text` function is called and the output is
+/// stored in a [Text] widget. Whenever the output changes, this widget will trigger
+/// a re-render of the status bar.
+pub struct RefreshText {
+    inner: Text,
+    get_text: Box<dyn Fn() -> String>,
+}
+
+impl RefreshText {
+    pub fn new<F>(style: &TextStyle, get_text: F) -> Self
+    where
+        F: Fn() -> String + 'static,
+    {
+        Self {
+            inner: Text::new("", style, false, false),
+            get_text: Box::new(get_text),
+        }
+    }
+}
+
+impl<X: XConn> Widget<X> for RefreshText {
+    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+        Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
+    }
+
+    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+        Widget::<X>::current_extent(&mut self.inner, ctx, h)
+    }
+
+    fn is_greedy(&self) -> bool {
+        Widget::<X>::is_greedy(&self.inner)
+    }
+
+    fn require_draw(&self) -> bool {
+        Widget::<X>::require_draw(&self.inner)
+    }
+
+    fn on_refresh(&mut self, _: &mut State<X>, _: &X) -> Result<()> {
+        let txt = (self.get_text)();
+
+        self.inner.set_text(txt);
+
+        Ok(())
     }
 }
