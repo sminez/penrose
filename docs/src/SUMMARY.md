@@ -21,12 +21,12 @@
   - [Pure Code vs X Code](./overview/pure-vs-x.md)
   - [Data Structures](./overview/data-structures.md)
   - [Layouts](./overview/layouts.md)
-  - [Actions](./overview/actions.md)
-  - [Hooks](./overview/hooks.md)
+  - [Actions]()
+  - [Hooks]()
 
-- [Built in UI elements](./ui/index.md)
-  - [Draw and Context](./ui/draw-and-context.md)
-  - [Status Bar](./ui/status-bar.md)
+- [Built in UI elements]()
+  - [Draw and Context]()
+  - [Status Bar]()
 
 - [Building on top of penrose]()
   - [Hooks]()
