@@ -96,6 +96,33 @@
 <span id="96">96</span>
 <span id="97">97</span>
 <span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><pre class="rust"><code><span class="doccomment">//! System monitor widgets</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::bar::widgets</span>::{<span class="ident">RefreshText</span>, <span class="ident">TextStyle</span>};
 <span class="kw">use</span> <span class="ident">penrose::util</span>::{<span class="ident">spawn_for_output</span>, <span class="ident">spawn_for_output_with_args</span>};
@@ -106,10 +133,10 @@
 <span class="doccomment">/// If the given battery name is not found on this system, this widget will</span>
 <span class="doccomment">/// render as an empty string.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">battery_summary</span>(<span class="ident">bat</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">TextStyle</span>) -&gt; <span class="ident">RefreshText</span> {
-    <span class="ident">RefreshText::new</span>(<span class="ident">style</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">get_battery_text</span>(<span class="ident">bat</span>).<span class="ident">unwrap_or_default</span>())
+    <span class="ident">RefreshText::new</span>(<span class="ident">style</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">battery_text</span>(<span class="ident">bat</span>).<span class="ident">unwrap_or_default</span>())
 }
 
-<span class="kw">fn</span> <span class="ident">get_battery_text</span>(<span class="ident">bat</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">battery_text</span>(<span class="ident">bat</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">read_sys_file</span>(<span class="ident">bat</span>, <span class="string">&quot;status&quot;</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">energy_now</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">read_sys_file</span>(<span class="ident">bat</span>, <span class="string">&quot;energy_now&quot;</span>)<span class="question-mark">?</span>.<span class="ident">parse</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">energy_full</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">read_sys_file</span>(<span class="ident">bat</span>, <span class="string">&quot;energy_full&quot;</span>)<span class="question-mark">?</span>.<span class="ident">parse</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
@@ -154,19 +181,19 @@
 <span class="doccomment">/// Display the ESSID currently connected to and the signal quality as</span>
 <span class="doccomment">/// a percentage.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wifi_network</span>(<span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">TextStyle</span>) -&gt; <span class="ident">RefreshText</span> {
-    <span class="ident">RefreshText::new</span>(<span class="ident">style</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">get_wifi_text</span>().<span class="ident">unwrap_or_default</span>())
+    <span class="ident">RefreshText::new</span>(<span class="ident">style</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">wifi_text</span>().<span class="ident">unwrap_or_default</span>())
 }
 
-<span class="kw">fn</span> <span class="ident">get_wifi_text</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> (<span class="ident">interface</span>, <span class="ident">essid</span>) <span class="op">=</span> <span class="ident">get_interface_and_essid</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">signal</span> <span class="op">=</span> <span class="ident">get_signal_quality</span>(<span class="kw-2">&amp;</span><span class="ident">interface</span>)<span class="question-mark">?</span>;
+<span class="kw">fn</span> <span class="ident">wifi_text</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> (<span class="ident">interface</span>, <span class="ident">essid</span>) <span class="op">=</span> <span class="ident">interface_and_essid</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">signal</span> <span class="op">=</span> <span class="ident">signal_quality</span>(<span class="kw-2">&amp;</span><span class="ident">interface</span>)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;{essid} {signal}%&quot;</span>))
+    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;&lt;{essid} {signal}%&gt;&quot;</span>))
 }
 
 <span class="comment">// Read the interface name and essid via iwgetid.</span>
 <span class="comment">//   Output format is &#39;$interface    ESSID:&quot;$essid&quot;&#39;</span>
-<span class="kw">fn</span> <span class="ident">get_interface_and_essid</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">interface_and_essid</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">spawn_for_output</span>(<span class="string">&quot;iwgetid&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">split</span>(<span class="string">&#39;:&#39;</span>);
 
@@ -178,7 +205,7 @@
 }
 
 <span class="comment">// Parsing the format described here: https://hewlettpackard.github.io/wireless-tools/Linux.Wireless.Extensions.html</span>
-<span class="kw">fn</span> <span class="ident">get_signal_quality</span>(<span class="ident">interface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">signal_quality</span>(<span class="ident">interface</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">fs::read_to_string</span>(<span class="string">&quot;/proc/net/wireless&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
 
     <span class="kw">for</span> <span class="ident">line</span> <span class="kw">in</span> <span class="ident">raw</span>.<span class="ident">lines</span>() {
@@ -193,6 +220,33 @@
     }
 
     <span class="prelude-val">None</span>
+}
+
+<span class="doccomment">/// Display the current volume level as reported by `amixer`</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">amixer_volume</span>(<span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">TextStyle</span>) -&gt; <span class="ident">RefreshText</span> {
+    <span class="ident">RefreshText::new</span>(<span class="ident">style</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">amixer_text</span>(<span class="ident">channel</span>).<span class="ident">unwrap_or_default</span>())
+}
+
+<span class="comment">// Parse the current volume as a percentage from amixer.</span>
+<span class="comment">//</span>
+<span class="comment">// Expected output format:</span>
+<span class="comment">//   $ amixer sget Master</span>
+<span class="comment">//     Simple mixer control &#39;Master&#39;,0</span>
+<span class="comment">//       Capabilities: pvolume pvolume-joined pswitch pswitch-joined</span>
+<span class="comment">//       Playback channels: Mono</span>
+<span class="comment">//       Limits: Playback 0 - 127</span>
+<span class="comment">//       Mono: Playback 0 [0%] [-63.50dB] [on]</span>
+<span class="kw">fn</span> <span class="ident">amixer_text</span>(<span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">spawn_for_output</span>(<span class="macro">format!</span>(<span class="string">&quot;amixer sget {channel}&quot;</span>)).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+
+    <span class="kw">let</span> <span class="ident">vol</span> <span class="op">=</span> <span class="ident">raw</span>
+        .<span class="ident">lines</span>()
+        .<span class="ident">last</span>()<span class="question-mark">?</span>
+        .<span class="ident">split_whitespace</span>()
+        .<span class="ident">nth</span>(<span class="number">3</span>)<span class="question-mark">?</span>
+        .<span class="ident">replace</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="string">&quot;[]%&quot;</span>.<span class="ident">contains</span>(<span class="ident">c</span>), <span class="string">&quot;&quot;</span>);
+
+    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; {vol}%&quot;</span>))
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose_ui" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
