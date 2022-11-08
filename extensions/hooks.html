@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Extensions - The Penrose Book</title>
+        <title>Hooks - The Penrose Book</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../builtin/index.html"><strong aria-hidden="true">2.</strong> Built In Functionality</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../builtin/layouts.html"><strong aria-hidden="true">2.1.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../builtin/actions.html"><strong aria-hidden="true">2.2.</strong> Actions</a></li><li class="chapter-item expanded "><a href="../builtin/ui.html"><strong aria-hidden="true">2.3.</strong> UI</a></li></ol></li><li class="chapter-item expanded "><a href="../extensions/index.html" class="active"><strong aria-hidden="true">3.</strong> Extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../extensions/hooks.html"><strong aria-hidden="true">3.1.</strong> Hooks</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../extensions/startup-hooks.html"><strong aria-hidden="true">3.1.1.</strong> Startup Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/event-hooks.html"><strong aria-hidden="true">3.1.2.</strong> Event Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/manage-hooks.html"><strong aria-hidden="true">3.1.3.</strong> Manage Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/refresh-hooks.html"><strong aria-hidden="true">3.1.4.</strong> Refresh Hooks</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.2.</strong> EWMH</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.</strong> Scratchpads</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Dynamic menus</div></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="../overview/index.html"><strong aria-hidden="true">4.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">4.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html"><strong aria-hidden="true">4.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="../overview/layouts.html"><strong aria-hidden="true">4.3.</strong> Layouts</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.4.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.5.</strong> Hooks</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Built in UI elements</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> Draw and Context</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> Status Bar</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Building on top of penrose</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">6.1.</strong> Hooks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.2.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.3.</strong> State Extensions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.4.</strong> Example: Named Scratchpads</div></li></ol></li><li class="chapter-item expanded "><a href="../faq.html">FAQs</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../builtin/index.html"><strong aria-hidden="true">2.</strong> Built In Functionality</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../builtin/layouts.html"><strong aria-hidden="true">2.1.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../builtin/actions.html"><strong aria-hidden="true">2.2.</strong> Actions</a></li><li class="chapter-item expanded "><a href="../builtin/ui.html"><strong aria-hidden="true">2.3.</strong> UI</a></li></ol></li><li class="chapter-item expanded "><a href="../extensions/index.html"><strong aria-hidden="true">3.</strong> Extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../extensions/hooks.html" class="active"><strong aria-hidden="true">3.1.</strong> Hooks</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../extensions/startup-hooks.html"><strong aria-hidden="true">3.1.1.</strong> Startup Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/event-hooks.html"><strong aria-hidden="true">3.1.2.</strong> Event Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/manage-hooks.html"><strong aria-hidden="true">3.1.3.</strong> Manage Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/refresh-hooks.html"><strong aria-hidden="true">3.1.4.</strong> Refresh Hooks</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.2.</strong> EWMH</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.</strong> Scratchpads</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Dynamic menus</div></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="../overview/index.html"><strong aria-hidden="true">4.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">4.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html"><strong aria-hidden="true">4.2.</strong> Data Structures</a></li><li class="chapter-item expanded "><a href="../overview/layouts.html"><strong aria-hidden="true">4.3.</strong> Layouts</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.4.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.5.</strong> Hooks</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Built in UI elements</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> Draw and Context</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> Status Bar</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Building on top of penrose</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">6.1.</strong> Hooks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.2.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.3.</strong> State Extensions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.4.</strong> Example: Named Scratchpads</div></li></ol></li><li class="chapter-item expanded "><a href="../faq.html">FAQs</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -134,24 +134,20 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="extensions"><a class="header" href="#extensions">Extensions</a></h1>
-<p>An extension is some piece of user written code that works with the penrose APIs to provide some
-additional functionality. For specific, common use cases there are a number of traits and helper
-functions that are available to do most of the heavy lifting (see the <a href="../builtin/index.html">builtin</a> section of this
-book for examples of what is on offer). For things that are a little more custom, you'll want to
-make use of the lower level <code>Hook</code> and <code>State Extension</code> APIs.</p>
-<p>This section of the book gives an overview of the different APIs that are on offer and goes into
-a little bit of detail around a couple of the commonly requested pieces of functionality that
-penrose implements using them.</p>
+                        <h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
+<p>Penrose offers several <code>Hooks</code> for you to add custom logic into the existing window manager
+logic in order to customise its behaviour. Each type of hook is covered in the following
+pages and further details of how new hooks can be written are discussed in the Reference
+Guide section later in the book.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../builtin/ui.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../extensions/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
-                            <a rel="next" href="../extensions/hooks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../extensions/startup-hooks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -160,10 +156,10 @@ penrose implements using them.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../builtin/ui.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../extensions/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
-                    <a rel="next" href="../extensions/hooks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../extensions/startup-hooks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
