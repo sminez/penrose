@@ -212,7 +212,7 @@ pub trait XConnExt: XConn + Sized {
 
         set_window_props(self, state)?;
         notify_hidden_workspaces(state);
-        self.position_clients(&state.diff.after.positions)?;
+        self.position_clients(state.config.border_width, &state.diff.after.positions)?;
         set_window_visibility(self, state)?;
         set_focus(self, state)?;
         handle_pointer_change(self, state)?;
@@ -307,13 +307,16 @@ pub trait XConnExt: XConn + Sized {
     }
 
     /// Restack and set the geometry for an ordered list of client windows and their
-    /// associated positions.
+    /// associated positions. The provided positions are shrunk by the current border
+    /// size in order to position the windows correctly within the frame given by the
+    /// border.
     ///
     /// See `restack` for details of stacking order is determined.
-    fn position_clients(&self, positions: &[(Xid, Rect)]) -> Result<()> {
+    fn position_clients(&self, border: u32, positions: &[(Xid, Rect)]) -> Result<()> {
         self.restack(positions.iter().map(|(id, _)| id))?;
 
         for &(c, r) in positions.iter() {
+            let r = r.shrink_in(border);
             self.position_client(c, r)?;
         }
 

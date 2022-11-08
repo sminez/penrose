@@ -176,6 +176,23 @@ impl Rect {
         }
     }
 
+    /// Shrink width and height by the given pixel border, maintaining the current x and y
+    /// coordinates.
+    pub fn shrink_in(&self, border: u32) -> Self {
+        let w = if self.w < 2 * border {
+            1
+        } else {
+            self.w - 2 * border
+        };
+        let h = if self.h < 2 * border {
+            1
+        } else {
+            self.h - 2 * border
+        };
+
+        Self { w, h, ..*self }
+    }
+
     /// Create a new [Rect] with width equal to `factor` x `self.w`
     pub fn scale_w(&self, factor: f64) -> Self {
         Self {
