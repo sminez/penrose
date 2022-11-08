@@ -10,11 +10,14 @@
   - [Actions](./builtin/actions.md)
   - [UI](./builtin/ui.md)
 
-- [Extensions]()
-  - [Startup Hooks]()
+- [Extensions](./extensions/index.md)
+  - [Startup Hooks](./extensions/startup-hooks.md)
+  - [Event Hooks](./extensions/event-hooks.md)
   - [Manage Hooks]()
+  - [Refresh Hooks]()
   - [EWMH]()
-  - [Dmenu]()
+  - [Scratchpads]()
+  - [Dynamic menus]()
 
 # Reference Guide
 - [Overview of Concepts](./overview/index.md)

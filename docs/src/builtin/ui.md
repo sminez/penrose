@@ -24,6 +24,31 @@ it to take up any available left over space once all other widgets have finished
 out their contents. Personally I use this with the `ActiveWindowName` widget to take up
 the middle of the status bar and act as a sort of active screen indicator .
 
+## The RefreshText widget
+
+If you want to render something that doesn't depend on the internal state of the window
+manager (such as the current time, volume, connected wifi network etc) then you can set up
+a very minimal widget quickly using `RefreshText`. All you need is a function that returns
+the string to be rendered when it is called and the styling you'd like to use when rendering.
+From that you get a widget that will check if it needs to re-render every time the internal
+window manager state is refreshed and re-render any time the output of your function changes.
+
+The `sys` module has a number of simple widgets of this nature that you can use as a reference
+to get you started. For example, this is all you need to display the current date and time:
+```rust
+use penrose::util::spawn_for_output_with_args;
+use penrose_ui::bar::widgets::{RefreshText, TextStyle};
+
+pub fn current_date_and_time(style: &TextStyle) -> RefreshText {
+    RefreshText::new(style, || {
+        spawn_for_output_with_args("date", &["+%F %R"])
+            .unwrap_or_default()
+            .trim()
+            .to_string()
+    })
+}
+```
+
 
 ## Built in widgets
 
