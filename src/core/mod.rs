@@ -377,7 +377,9 @@ where
                     trace!(details = ?event, "event details");
                     self.state.current_event = Some(event.clone());
 
-                    self.handle_xevent(event)?;
+                    if let Err(e) = self.handle_xevent(event) {
+                        error!(%e, "Error handling XEvent");
+                    }
                     self.x.flush();
 
                     self.state.current_event = None;
