@@ -16,9 +16,7 @@
     - [Event Hooks](./extensions/event-hooks.md)
     - [Manage Hooks](./extensions/manage-hooks.md)
     - [Refresh Hooks](./extensions/refresh-hooks.md)
-  - [EWMH]()
-  - [Scratchpads]()
-  - [Dynamic menus]()
+  - [EWMH](./extensions/ewmh.md)
 
 # Reference Guide
 - [Overview of Concepts](./overview/index.md)
