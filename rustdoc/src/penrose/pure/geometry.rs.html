@@ -498,6 +498,32 @@
 <span id="496">496</span>
 <span id="497">497</span>
 <span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Geometry primitives</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -994,6 +1020,32 @@
         <span class="kw">let</span> <span class="ident">relative</span> <span class="op">=</span> <span class="ident">child</span>.<span class="ident">relative_to</span>(<span class="kw-2">&amp;</span><span class="ident">parent</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">relative</span>, <span class="ident">expected</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">apply_as_rect_resize</span>() {
+        <span class="kw">let</span> <span class="ident">relative</span> <span class="op">=</span> <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>);
+        <span class="kw">let</span> <span class="ident">reference</span> <span class="op">=</span> <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>);
+
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">relative</span>.<span class="ident">apply_as_rect</span>(<span class="kw-2">&amp;</span><span class="ident">reference</span>, <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">r</span><span class="op">|</span> {
+            <span class="ident">r</span>.<span class="ident">resize</span>(<span class="op">-</span><span class="number">10</span>, <span class="number">0</span>);
+            <span class="ident">r</span>
+        });
+
+        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.795</span>, <span class="number">0.8</span>));
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">apply_as_rect_reposition</span>() {
+        <span class="kw">let</span> <span class="ident">relative</span> <span class="op">=</span> <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>);
+        <span class="kw">let</span> <span class="ident">reference</span> <span class="op">=</span> <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>);
+
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">relative</span>.<span class="ident">apply_as_rect</span>(<span class="kw-2">&amp;</span><span class="ident">reference</span>, <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">r</span><span class="op">|</span> {
+            <span class="ident">r</span>.<span class="ident">reposition</span>(<span class="number">10</span>, <span class="number">0</span>);
+            <span class="ident">r</span>
+        });
+
+        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="ident">rr</span>(<span class="number">0.005</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>));
     }
 }
 </code></pre></div>
