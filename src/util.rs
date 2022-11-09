@@ -4,7 +4,7 @@ use std::{
     io::Read,
     process::{Command, Stdio},
 };
-use tracing::info;
+use tracing::debug;
 
 /// Run an external command
 ///
@@ -54,7 +54,7 @@ pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
 /// output of a process that you spawn.
 pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
     let cmd = cmd.into();
-    info!(?cmd, "spawning subprocess for output");
+    debug!(?cmd, "spawning subprocess for output");
     let parts: Vec<&str> = cmd.split_whitespace().collect();
     let result = if parts.len() > 1 {
         Command::new(parts[0])
@@ -65,6 +65,7 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
         Command::new(parts[0]).stdout(Stdio::piped()).spawn()
     };
 
+    debug!(?cmd, "reading output");
     let mut child = result?;
     let mut buff = String::new();
     child
@@ -86,13 +87,13 @@ pub fn spawn_for_output_with_args<S: Into<String>>(
 ) -> std::io::Result<String> {
     let cmd = cmd.into();
 
-    info!(?cmd, ?args, "spawning subprocess for output");
+    debug!(?cmd, ?args, "spawning subprocess for output");
     let mut child = Command::new(&cmd)
         .stdout(Stdio::piped())
         .args(args)
         .spawn()?;
 
-    info!(?cmd, ?args, "reading output");
+    debug!(?cmd, ?args, "reading output");
     let mut buff = String::new();
     child
         .stdout
