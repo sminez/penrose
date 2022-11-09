@@ -611,6 +611,8 @@ where
                 }
                 ClientConfig::StackBelow(s) => aux = aux.sibling(s.0).stack_mode(StackMode::BELOW),
                 ClientConfig::StackAbove(s) => aux = aux.sibling(s.0).stack_mode(StackMode::ABOVE),
+                ClientConfig::StackBottom => aux = aux.stack_mode(StackMode::BELOW),
+                ClientConfig::StackTop => aux = aux.stack_mode(StackMode::ABOVE),
             }
         }
         self.conn.configure_window(*id, &aux)?;

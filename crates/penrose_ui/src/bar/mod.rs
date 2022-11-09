@@ -6,7 +6,7 @@ use crate::{
 use penrose::{
     core::{State, WindowManager},
     pure::geometry::Rect,
-    x::{event::XEvent, Atom, Prop, WinType, XConn},
+    x::{event::XEvent, Atom, ClientConfig, Prop, WinType, XConn},
     Color, Xid,
 };
 use std::fmt;
@@ -109,6 +109,9 @@ impl<X: XConn> StatusBar<X> {
                     Rect::new(x, y, w, self.hpx),
                     false,
                 )?;
+
+                let data = &[ClientConfig::StackBottom];
+                self.draw.conn.set_client_config(id, data)?;
 
                 debug!(%id, "setting props");
                 let p = Prop::UTF8String(vec!["penrose-statusbar".to_string()]);

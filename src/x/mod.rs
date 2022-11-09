@@ -47,8 +47,12 @@ pub enum ClientConfig {
     Position(Rect),
     /// Mark this window as stacking below the given Xid
     StackBelow(Xid),
-    /// Mark this window as stacking on top of its peers
+    /// Mark this window as stacking on top of its peer
     StackAbove(Xid),
+    /// Mark this window as stacking above all other windows
+    StackTop,
+    /// Mark this window as stacking below all other windows
+    StackBottom,
 }
 
 /// Attributes for an X11 client window (not all are curently implemented)
