@@ -108,13 +108,14 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
+<span id="109">109</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility functions for use in other parts of penrose</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Result</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">io::Read</span>,
     <span class="ident">process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>},
 };
-<span class="kw">use</span> <span class="ident">tracing::info</span>;
+<span class="kw">use</span> <span class="ident">tracing::debug</span>;
 
 <span class="doccomment">/// Run an external command</span>
 <span class="doccomment">///</span>
@@ -164,7 +165,7 @@
 <span class="doccomment">/// output of a process that you spawn.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn_for_output</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">cmd</span>: <span class="ident">S</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">into</span>();
-    <span class="macro">info!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="string">&quot;spawning subprocess for output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="string">&quot;spawning subprocess for output&quot;</span>);
     <span class="kw">let</span> <span class="ident">parts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">split_whitespace</span>().<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">parts</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
         <span class="ident">Command::new</span>(<span class="ident">parts</span>[<span class="number">0</span>])
@@ -175,6 +176,7 @@
         <span class="ident">Command::new</span>(<span class="ident">parts</span>[<span class="number">0</span>]).<span class="ident">stdout</span>(<span class="ident">Stdio::piped</span>()).<span class="ident">spawn</span>()
     };
 
+    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="string">&quot;reading output&quot;</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">result</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buff</span> <span class="op">=</span> <span class="ident">String::new</span>();
     <span class="ident">child</span>
@@ -196,13 +198,13 @@
 ) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">into</span>();
 
-    <span class="macro">info!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="question-mark">?</span><span class="ident">args</span>, <span class="string">&quot;spawning subprocess for output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="question-mark">?</span><span class="ident">args</span>, <span class="string">&quot;spawning subprocess for output&quot;</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="kw-2">&amp;</span><span class="ident">cmd</span>)
         .<span class="ident">stdout</span>(<span class="ident">Stdio::piped</span>())
         .<span class="ident">args</span>(<span class="ident">args</span>)
         .<span class="ident">spawn</span>()<span class="question-mark">?</span>;
 
-    <span class="macro">info!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="question-mark">?</span><span class="ident">args</span>, <span class="string">&quot;reading output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="question-mark">?</span><span class="ident">args</span>, <span class="string">&quot;reading output&quot;</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buff</span> <span class="op">=</span> <span class="ident">String::new</span>();
     <span class="ident">child</span>
         .<span class="ident">stdout</span>
