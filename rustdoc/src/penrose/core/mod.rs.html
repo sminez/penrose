@@ -500,6 +500,8 @@
 <span id="498">498</span>
 <span id="499">499</span>
 <span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">pure</span>::{<span class="ident">Diff</span>, <span class="ident">StackSet</span>, <span class="ident">Workspace</span>},
@@ -879,7 +881,9 @@
                     <span class="macro">trace!</span>(<span class="ident">details</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">event</span>, <span class="string">&quot;event details&quot;</span>);
                     <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">current_event</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">event</span>.<span class="ident">clone</span>());
 
-                    <span class="self">self</span>.<span class="ident">handle_xevent</span>(<span class="ident">event</span>)<span class="question-mark">?</span>;
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">handle_xevent</span>(<span class="ident">event</span>) {
+                        <span class="macro">error!</span>(<span class="op">%</span><span class="ident">e</span>, <span class="string">&quot;Error handling XEvent&quot;</span>);
+                    }
                     <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">flush</span>();
 
                     <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">current_event</span> <span class="op">=</span> <span class="prelude-val">None</span>;
