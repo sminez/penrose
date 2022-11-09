@@ -495,4 +495,30 @@ mod tests {
 
         assert_eq!(relative, expected);
     }
+
+    #[test]
+    fn apply_as_rect_resize() {
+        let relative = rr(0.0, 0.0, 0.8, 0.8);
+        let reference = r(0, 0, 2000, 1000);
+
+        let res = relative.apply_as_rect(&reference, |mut r| {
+            r.resize(-10, 0);
+            r
+        });
+
+        assert_eq!(res, rr(0.0, 0.0, 0.795, 0.8));
+    }
+
+    #[test]
+    fn apply_as_rect_reposition() {
+        let relative = rr(0.0, 0.0, 0.8, 0.8);
+        let reference = r(0, 0, 2000, 1000);
+
+        let res = relative.apply_as_rect(&reference, |mut r| {
+            r.reposition(10, 0);
+            r
+        });
+
+        assert_eq!(res, rr(0.005, 0.0, 0.8, 0.8));
+    }
 }
