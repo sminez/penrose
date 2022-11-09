@@ -544,6 +544,10 @@
 <span id="542">542</span>
 <span id="543">543</span>
 <span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">builtin::layout::messages::Hide</span>,
@@ -593,8 +597,12 @@
     <span class="ident">Position</span>(<span class="ident">Rect</span>),
     <span class="doccomment">/// Mark this window as stacking below the given Xid</span>
     <span class="ident">StackBelow</span>(<span class="ident">Xid</span>),
-    <span class="doccomment">/// Mark this window as stacking on top of its peers</span>
+    <span class="doccomment">/// Mark this window as stacking on top of its peer</span>
     <span class="ident">StackAbove</span>(<span class="ident">Xid</span>),
+    <span class="doccomment">/// Mark this window as stacking above all other windows</span>
+    <span class="ident">StackTop</span>,
+    <span class="doccomment">/// Mark this window as stacking below all other windows</span>
+    <span class="ident">StackBottom</span>,
 }
 
 <span class="doccomment">/// Attributes for an X11 client window (not all are curently implemented)</span>

@@ -652,6 +652,8 @@
 <span id="650">650</span>
 <span id="651">651</span>
 <span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For</span>
@@ -1265,6 +1267,8 @@
                 }
                 <span class="ident">ClientConfig::StackBelow</span>(<span class="ident">s</span>) =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">sibling</span>(<span class="ident">s</span>.<span class="number">0</span>).<span class="ident">stack_mode</span>(<span class="ident">StackMode::BELOW</span>),
                 <span class="ident">ClientConfig::StackAbove</span>(<span class="ident">s</span>) =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">sibling</span>(<span class="ident">s</span>.<span class="number">0</span>).<span class="ident">stack_mode</span>(<span class="ident">StackMode::ABOVE</span>),
+                <span class="ident">ClientConfig::StackBottom</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">stack_mode</span>(<span class="ident">StackMode::BELOW</span>),
+                <span class="ident">ClientConfig::StackTop</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">stack_mode</span>(<span class="ident">StackMode::ABOVE</span>),
             }
         }
         <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">configure_window</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">aux</span>)<span class="question-mark">?</span>;

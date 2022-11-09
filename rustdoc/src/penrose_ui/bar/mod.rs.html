@@ -295,6 +295,9 @@
 <span id="295">295</span>
 <span id="296">296</span>
 <span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">core</span>::{<span class="ident">Context</span>, <span class="ident">Draw</span>},
@@ -303,7 +306,7 @@
 <span class="kw">use</span> <span class="ident">penrose</span>::{
     <span class="ident">core</span>::{<span class="ident">State</span>, <span class="ident">WindowManager</span>},
     <span class="ident">pure::geometry::Rect</span>,
-    <span class="ident">x</span>::{<span class="ident">event::XEvent</span>, <span class="ident">Atom</span>, <span class="ident">Prop</span>, <span class="ident">WinType</span>, <span class="ident">XConn</span>},
+    <span class="ident">x</span>::{<span class="ident">event::XEvent</span>, <span class="ident">Atom</span>, <span class="ident">ClientConfig</span>, <span class="ident">Prop</span>, <span class="ident">WinType</span>, <span class="ident">XConn</span>},
     <span class="ident">Color</span>, <span class="ident">Xid</span>,
 };
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
@@ -406,6 +409,9 @@
                     <span class="ident">Rect::new</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="self">self</span>.<span class="ident">hpx</span>),
                     <span class="bool-val">false</span>,
                 )<span class="question-mark">?</span>;
+
+                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="ident">ClientConfig::StackBottom</span>];
+                <span class="self">self</span>.<span class="ident">draw</span>.<span class="ident">conn</span>.<span class="ident">set_client_config</span>(<span class="ident">id</span>, <span class="ident">data</span>)<span class="question-mark">?</span>;
 
                 <span class="macro">debug!</span>(<span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;setting props&quot;</span>);
                 <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">Prop::UTF8String</span>(<span class="macro">vec!</span>[<span class="string">&quot;penrose-statusbar&quot;</span>.<span class="ident">to_string</span>()]);
