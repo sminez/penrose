@@ -2,6 +2,12 @@
 name = "penrose_ui"
 version = "0.1.0"
 edition = "2021"
+authors = ["sminez <innes.andersonmorrison@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/sminez/penrose/crates/penrose_ui"
+documentation = "https://docs.rs/penrose_ui"
+readme = "README.md"
+description = "UI elements for the penrose window manager library"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
