@@ -9,7 +9,7 @@ edition = "2021"
 cairo-rs = { version = "0.15.6", features = ["xcb"] }
 pangocairo = { version = "0.15.1" }
 pango = { version = "0.15.6" }
-penrose = { path = "../../" }
+penrose = { version = "0.3.0", path = "../../" }
 tracing = { version = "0.1", features = ["attributes", "log"] }
 thiserror = "1.0.37"
 x11rb = { version = "0.10", features = ["randr", "render"] }
