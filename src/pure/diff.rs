@@ -278,7 +278,7 @@ mod quickcheck_tests {
         };
 
         let ss = s.position_and_snapshot();
-        s.kill_focused();
+        s.remove_focused();
 
         let diff = Diff::new(ss, s.position_and_snapshot());
         let res = diff.withdrawn_clients().any(|&c| c == focus)
