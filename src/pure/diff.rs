@@ -35,6 +35,7 @@ where
     pub visible: Vec<ScreenState<C>>,
     pub positions: Vec<(C, Rect)>,
     pub hidden_clients: Vec<C>,
+    pub killed_clients: Vec<C>,
 }
 
 impl<C> Snapshot<C>
@@ -129,6 +130,10 @@ where
             .filter(move |c| !after.contains(c))
     }
 
+    pub fn killed_clients(&self) -> impl Iterator<Item = &C> {
+        self.after.killed_clients.iter()
+    }
+
     pub fn previous_visible_tags(&self) -> HashSet<&str> {
         once(self.before.focused.tag.as_ref())
             .chain(self.before.visible.iter().map(|s| s.tag.as_ref()))
@@ -149,7 +154,8 @@ where
             || self.new_clients().count() > 0
             || self.withdrawn_clients().count() > 0
             || self.previous_visible_tags() != self.current_visible_tags()
-            || self.before.positions != self.after.positions)
+            || self.before.positions != self.after.positions
+            || self.after.killed_clients.len() > 0)
     }
 }
 
@@ -164,7 +170,7 @@ mod tests {
 
     #[test]
     fn diff_of_unchanged_stackset_is_empty() {
-        let s = test_stack_set(5, 2);
+        let mut s = test_stack_set(5, 2);
         let positions: Vec<_> = s.clients().map(|&c| (c, Rect::default())).collect();
         let ss = s.snapshot(positions);
 
@@ -265,18 +271,38 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn killing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn removing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<Xid>) -> bool {
         let focus = match s.current_client() {
             Some(&c) => c,
             None => return true, // nothing to remove
         };
 
         let ss = s.position_and_snapshot();
-        s.remove_client(&focus);
+        s.kill_focused();
 
         let diff = Diff::new(ss, s.position_and_snapshot());
         let res = diff.withdrawn_clients().any(|&c| c == focus)
             && diff.hidden_clients().any(|&c| c == focus);
+
+        res
+    }
+
+    #[quickcheck]
+    fn killing_focused_client_sets_killed_withdrawn_and_hidden_in_diff(
+        mut s: StackSet<Xid>,
+    ) -> bool {
+        let focus = match s.current_client() {
+            Some(&c) => c,
+            None => return true, // nothing to remove
+        };
+
+        let ss = s.position_and_snapshot();
+        s.kill_focused();
+
+        let diff = Diff::new(ss, s.position_and_snapshot());
+        let res = diff.withdrawn_clients().any(|&c| c == focus)
+            && diff.hidden_clients().any(|&c| c == focus)
+            && diff.killed_clients().any(|&c| c == focus);
 
         res
     }

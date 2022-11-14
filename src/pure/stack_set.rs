@@ -27,6 +27,7 @@ where
     pub(crate) floating: HashMap<C, RelativeRect>, // Floating windows
     pub(crate) previous_tag: String,      // The last tag to be focused before the current one
     pub(crate) invisible_tags: Vec<String>, // Tags that should never be focused
+    pub(crate) killed_clients: Vec<C>, // clients that have been removed and need processing on the X side
 }
 
 impl<C> StackSet<C>
@@ -92,6 +93,7 @@ where
             floating,
             previous_tag,
             invisible_tags: vec![],
+            killed_clients: vec![],
         })
     }
 
@@ -300,16 +302,22 @@ where
             .flatten()
     }
 
-    /// Delete the currently focused client from this stack if there is one.
+    /// Remove the currently focused client from this stack if there is one.
     ///
     /// The client is returned to the caller as `Some(C)` if there was one.
     pub fn remove_focused(&mut self) -> Option<C> {
-        self.screens.focus.workspace.remove_focused()
+        let client = self.current_client()?.clone();
+        self.remove_client(&client)
     }
 
     /// Delete the currently focused client from this stack if there is one.
+    ///
+    /// The following diff will send a kill client message to this client on
+    /// refresh.
     pub fn kill_focused(&mut self) {
-        self.remove_focused();
+        if let Some(client) = self.remove_focused() {
+            self.killed_clients.push(client);
+        }
     }
 
     /// Move the focused client of the current [Workspace] to the focused position
@@ -821,7 +829,7 @@ impl<C> StackSet<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    pub(crate) fn snapshot(&self, positions: Vec<(C, Rect)>) -> Snapshot<C> {
+    pub(crate) fn snapshot(&mut self, positions: Vec<(C, Rect)>) -> Snapshot<C> {
         let visible = self
             .screens
             .unravel()
@@ -835,6 +843,7 @@ where
             visible,
             positions,
             hidden_clients: self.hidden_workspace_clients().copied().collect(),
+            killed_clients: take(&mut self.killed_clients),
         }
     }
 }

@@ -314,7 +314,7 @@ where
         mouse_bindings: MouseBindings<X>,
         x: X,
     ) -> Result<Self> {
-        let client_set = StackSet::try_new(
+        let mut client_set = StackSet::try_new(
             config.default_layouts.clone(),
             config.tags.iter(),
             x.screen_details()?,
