@@ -143,7 +143,6 @@ pub trait XConnExt: XConn + Sized {
 
         Ok(())
     }
-
     /// Establish the window manager state for the given client window and refresh the
     /// current X state.
     fn manage(&self, id: Xid, state: &mut State<Self>) -> Result<()> {
@@ -214,6 +213,7 @@ pub trait XConnExt: XConn + Sized {
         let ss = state.client_set.position_and_snapshot();
         state.diff.update(ss);
 
+        notify_killed(self, state)?;
         set_window_props(self, state)?;
         notify_hidden_workspaces(state);
         self.position_clients(state.config.border_width, &state.diff.after.positions)?;
@@ -387,6 +387,15 @@ pub trait XConnExt: XConn + Sized {
         }
     }
 
+    /// Check to see if a given client window supports a particular protocol or not
+    fn client_supports_protocol(&self, id: Xid, proto: &str) -> Result<bool> {
+        if let Some(Prop::Atom(protocols)) = self.get_prop(id, Atom::WmProtocols.as_ref())? {
+            Ok(protocols.iter().any(|p| p == proto))
+        } else {
+            Ok(false)
+        }
+    }
+
     /// Request a window's PID via the _NET_WM_PID property.
     ///
     /// **NOTE**: Not all programs set this property.
@@ -443,6 +452,14 @@ pub(crate) fn manage_without_refresh<X: XConn>(
         }
     }
     state.config.manage_hook = hook;
+
+    Ok(())
+}
+
+fn notify_killed<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
+    for &c in state.diff.killed_clients() {
+        x.kill(c)?;
+    }
 
     Ok(())
 }

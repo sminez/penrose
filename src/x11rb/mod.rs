@@ -22,9 +22,9 @@ use crate::{
     x::{
         self,
         atom::Atom,
-        event::{ClientEventMask, ClientMessage},
+        event::{ClientEventMask, ClientMessage, ClientMessageKind},
         property::{Prop, WindowAttributes, WmHints, WmNormalHints, WmState},
-        ClientAttr, ClientConfig, WinType, XConn, XEvent,
+        ClientAttr, ClientConfig, WinType, XConn, XConnExt, XEvent,
     },
     Error, Result, Xid,
 };
@@ -380,7 +380,17 @@ where
     }
 
     fn kill(&self, client: Xid) -> Result<()> {
-        self.conn.kill_client(*client)?;
+        let supports_delete = self
+            .client_supports_protocol(client, Atom::WmDeleteWindow.as_ref())
+            .unwrap_or(false);
+
+        if supports_delete {
+            let msg = ClientMessageKind::DeleteWindow(client).as_message(self)?;
+            self.send_client_message(msg)?;
+            self.flush();
+        } else {
+            self.conn.kill_client(*client)?;
+        }
 
         Ok(())
     }
