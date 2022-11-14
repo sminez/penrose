@@ -818,7 +818,7 @@
         <span class="ident">mouse_bindings</span>: <span class="ident">MouseBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
         <span class="ident">x</span>: <span class="ident">X</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client_set</span> <span class="op">=</span> <span class="ident">StackSet::try_new</span>(
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client_set</span> <span class="op">=</span> <span class="ident">StackSet::try_new</span>(
             <span class="ident">config</span>.<span class="ident">default_layouts</span>.<span class="ident">clone</span>(),
             <span class="ident">config</span>.<span class="ident">tags</span>.<span class="ident">iter</span>(),
             <span class="ident">x</span>.<span class="ident">screen_details</span>()<span class="question-mark">?</span>,

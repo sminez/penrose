@@ -654,6 +654,16 @@
 <span id="652">652</span>
 <span id="653">653</span>
 <span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For</span>
@@ -678,9 +688,9 @@
     <span class="ident">x</span>::{
         <span class="self">self</span>,
         <span class="ident">atom::Atom</span>,
-        <span class="ident">event</span>::{<span class="ident">ClientEventMask</span>, <span class="ident">ClientMessage</span>},
+        <span class="ident">event</span>::{<span class="ident">ClientEventMask</span>, <span class="ident">ClientMessage</span>, <span class="ident">ClientMessageKind</span>},
         <span class="ident">property</span>::{<span class="ident">Prop</span>, <span class="ident">WindowAttributes</span>, <span class="ident">WmHints</span>, <span class="ident">WmNormalHints</span>, <span class="ident">WmState</span>},
-        <span class="ident">ClientAttr</span>, <span class="ident">ClientConfig</span>, <span class="ident">WinType</span>, <span class="ident">XConn</span>, <span class="ident">XEvent</span>,
+        <span class="ident">ClientAttr</span>, <span class="ident">ClientConfig</span>, <span class="ident">WinType</span>, <span class="ident">XConn</span>, <span class="ident">XConnExt</span>, <span class="ident">XEvent</span>,
     },
     <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
 };
@@ -1036,7 +1046,17 @@
     }
 
     <span class="kw">fn</span> <span class="ident">kill</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">kill_client</span>(<span class="kw-2">*</span><span class="ident">client</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">supports_delete</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">client_supports_protocol</span>(<span class="ident">client</span>, <span class="ident">Atom::WmDeleteWindow</span>.<span class="ident">as_ref</span>())
+            .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>);
+
+        <span class="kw">if</span> <span class="ident">supports_delete</span> {
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ClientMessageKind::DeleteWindow</span>(<span class="ident">client</span>).<span class="ident">as_message</span>(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">send_client_message</span>(<span class="ident">msg</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">flush</span>();
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">kill_client</span>(<span class="kw-2">*</span><span class="ident">client</span>)<span class="question-mark">?</span>;
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
