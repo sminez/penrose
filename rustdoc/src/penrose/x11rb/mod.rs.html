@@ -663,7 +663,6 @@
 <span id="661">661</span>
 <span id="662">662</span>
 <span id="663">663</span>
-<span id="664">664</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For</span>
@@ -694,7 +693,7 @@
     },
     <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
 };
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryFrom</span>, <span class="ident">str::FromStr</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">str::FromStr</span>};
 <span class="kw">use</span> <span class="ident">strum::IntoEnumIterator</span>;
 <span class="kw">use</span> <span class="ident">tracing::error</span>;
 <span class="kw">use</span> <span class="ident">x11rb</span>::{
@@ -943,17 +942,16 @@
         <span class="kw">let</span> <span class="ident">modifiers</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="ident">u16::from</span>(<span class="ident">ModMask::M2</span>)];
         <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">GrabMode::ASYNC</span>;
         <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">EventMask::BUTTON_PRESS</span> <span class="op">|</span> <span class="ident">EventMask::BUTTON_RELEASE</span> <span class="op">|</span> <span class="ident">EventMask::BUTTON_MOTION</span>;
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">u16::try_from</span>(<span class="ident">u32::from</span>(<span class="ident">mask</span>)).<span class="ident">unwrap</span>();
 
         <span class="kw">for</span> <span class="ident">m</span> <span class="kw">in</span> <span class="ident">modifiers</span>.<span class="ident">iter</span>() {
             <span class="kw">for</span> <span class="ident">k</span> <span class="kw">in</span> <span class="ident">key_codes</span>.<span class="ident">iter</span>() {
                 <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">grab_key</span>(
-                    <span class="bool-val">false</span>,      <span class="comment">// don&#39;t pass grabbed events through to the client</span>
-                    <span class="self">self</span>.<span class="ident">root</span>,  <span class="comment">// the window to grab: in this case the root window</span>
-                    <span class="ident">k</span>.<span class="ident">mask</span> <span class="op">|</span> <span class="ident">m</span>, <span class="comment">// modifiers to grab</span>
-                    <span class="ident">k</span>.<span class="ident">code</span>,     <span class="comment">// keycode to grab</span>
-                    <span class="ident">mode</span>,       <span class="comment">// don&#39;t lock pointer input while grabbing</span>
-                    <span class="ident">mode</span>,       <span class="comment">// don&#39;t lock keyboard input while grabbing</span>
+                    <span class="bool-val">false</span>,               <span class="comment">// don&#39;t pass grabbed events through to the client</span>
+                    <span class="self">self</span>.<span class="ident">root</span>,           <span class="comment">// the window to grab: in this case the root window</span>
+                    (<span class="ident">k</span>.<span class="ident">mask</span> <span class="op">|</span> <span class="ident">m</span>).<span class="ident">into</span>(), <span class="comment">// modifiers to grab</span>
+                    <span class="ident">k</span>.<span class="ident">code</span>,              <span class="comment">// keycode to grab</span>
+                    <span class="ident">mode</span>,                <span class="comment">// don&#39;t lock pointer input while grabbing</span>
+                    <span class="ident">mode</span>,                <span class="comment">// don&#39;t lock keyboard input while grabbing</span>
                 )<span class="question-mark">?</span>;
             }
         }
@@ -962,15 +960,15 @@
             <span class="kw">for</span> <span class="ident">state</span> <span class="kw">in</span> <span class="ident">mouse_states</span>.<span class="ident">iter</span>() {
                 <span class="kw">let</span> <span class="ident">button</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">button</span>().<span class="ident">into</span>();
                 <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">grab_button</span>(
-                    <span class="bool-val">false</span>,            <span class="comment">// don&#39;t pass grabbed events through to the client</span>
-                    <span class="self">self</span>.<span class="ident">root</span>,        <span class="comment">// the window to grab: in this case the root window</span>
-                    <span class="ident">mask</span>,             <span class="comment">// which events are reported to the client</span>
-                    <span class="ident">mode</span>,             <span class="comment">// don&#39;t lock pointer input while grabbing</span>
-                    <span class="ident">mode</span>,             <span class="comment">// don&#39;t lock keyboard input while grabbing</span>
-                    <span class="ident">x11rb::NONE</span>,      <span class="comment">// don&#39;t confine the cursor to a specific window</span>
-                    <span class="ident">x11rb::NONE</span>,      <span class="comment">// don&#39;t change the cursor type</span>
-                    <span class="ident">button</span>,           <span class="comment">// the button to grab</span>
-                    <span class="ident">state</span>.<span class="ident">mask</span>() <span class="op">|</span> <span class="ident">m</span>, <span class="comment">// modifiers to grab</span>
+                    <span class="bool-val">false</span>,                     <span class="comment">// don&#39;t pass grabbed events through to the client</span>
+                    <span class="self">self</span>.<span class="ident">root</span>,                 <span class="comment">// the window to grab: in this case the root window</span>
+                    <span class="ident">mask</span>,                      <span class="comment">// which events are reported to the client</span>
+                    <span class="ident">mode</span>,                      <span class="comment">// don&#39;t lock pointer input while grabbing</span>
+                    <span class="ident">mode</span>,                      <span class="comment">// don&#39;t lock keyboard input while grabbing</span>
+                    <span class="ident">x11rb::NONE</span>,               <span class="comment">// don&#39;t confine the cursor to a specific window</span>
+                    <span class="ident">x11rb::NONE</span>,               <span class="comment">// don&#39;t change the cursor type</span>
+                    <span class="ident">button</span>,                    <span class="comment">// the button to grab</span>
+                    (<span class="ident">state</span>.<span class="ident">mask</span>() <span class="op">|</span> <span class="ident">m</span>).<span class="ident">into</span>(), <span class="comment">// modifiers to grab</span>
                 )<span class="question-mark">?</span>;
             }
         }
