@@ -17,7 +17,7 @@ use tracing::warn;
 use x11rb::{
     connection::Connection,
     protocol::{
-        xproto::{ClientMessageEvent, ModMask},
+        xproto::{ClientMessageEvent, KeyButMask, ModMask},
         Event,
     },
 };
@@ -67,7 +67,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
 
         Event::KeyPress(event) => {
             let code = KeyCode {
-                mask: event.state,
+                mask: event.state.into(),
                 code: event.detail,
             };
             let numlock = ModMask::M2;
@@ -144,7 +144,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
     }
 }
 
-fn to_mouse_state(detail: u8, state: u16) -> Option<MouseState> {
+fn to_mouse_state(detail: u8, state: KeyButMask) -> Option<MouseState> {
     fn is_held(key: &ModifierKey, mask: u16) -> bool {
         mask & u16::from(*key) > 0
     }
@@ -159,6 +159,7 @@ fn to_mouse_state(detail: u8, state: u16) -> Option<MouseState> {
             return None;
         }
     };
+    let state = u16::from(state);
     let modifiers = ModifierKey::iter().filter(|m| is_held(m, state)).collect();
     Some(MouseState { button, modifiers })
 }

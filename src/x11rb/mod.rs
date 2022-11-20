@@ -28,7 +28,7 @@ use crate::{
     },
     Error, Result, Xid,
 };
-use std::{collections::HashMap, convert::TryFrom, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 use strum::IntoEnumIterator;
 use tracing::error;
 use x11rb::{
@@ -277,17 +277,16 @@ where
         let modifiers = &[0, u16::from(ModMask::M2)];
         let mode = GrabMode::ASYNC;
         let mask = EventMask::BUTTON_PRESS | EventMask::BUTTON_RELEASE | EventMask::BUTTON_MOTION;
-        let mask = u16::try_from(u32::from(mask)).unwrap();
 
         for m in modifiers.iter() {
             for k in key_codes.iter() {
                 self.conn.grab_key(
-                    false,      // don't pass grabbed events through to the client
-                    self.root,  // the window to grab: in this case the root window
-                    k.mask | m, // modifiers to grab
-                    k.code,     // keycode to grab
-                    mode,       // don't lock pointer input while grabbing
-                    mode,       // don't lock keyboard input while grabbing
+                    false,               // don't pass grabbed events through to the client
+                    self.root,           // the window to grab: in this case the root window
+                    (k.mask | m).into(), // modifiers to grab
+                    k.code,              // keycode to grab
+                    mode,                // don't lock pointer input while grabbing
+                    mode,                // don't lock keyboard input while grabbing
                 )?;
             }
         }
@@ -296,15 +295,15 @@ where
             for state in mouse_states.iter() {
                 let button = state.button().into();
                 self.conn.grab_button(
-                    false,            // don't pass grabbed events through to the client
-                    self.root,        // the window to grab: in this case the root window
-                    mask,             // which events are reported to the client
-                    mode,             // don't lock pointer input while grabbing
-                    mode,             // don't lock keyboard input while grabbing
-                    x11rb::NONE,      // don't confine the cursor to a specific window
-                    x11rb::NONE,      // don't change the cursor type
-                    button,           // the button to grab
-                    state.mask() | m, // modifiers to grab
+                    false,                     // don't pass grabbed events through to the client
+                    self.root,                 // the window to grab: in this case the root window
+                    mask,                      // which events are reported to the client
+                    mode,                      // don't lock pointer input while grabbing
+                    mode,                      // don't lock keyboard input while grabbing
+                    x11rb::NONE,               // don't confine the cursor to a specific window
+                    x11rb::NONE,               // don't change the cursor type
+                    button,                    // the button to grab
+                    (state.mask() | m).into(), // modifiers to grab
                 )?;
             }
         }
