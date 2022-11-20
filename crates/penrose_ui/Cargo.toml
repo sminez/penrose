@@ -18,4 +18,4 @@ pango = { version = "0.15.6" }
 penrose = { version = "0.3", path = "../../" }
 tracing = { version = "0.1", features = ["attributes", "log"] }
 thiserror = "1.0.37"
-x11rb = { version = "0.10", features = ["randr", "render"] }
+x11rb = { version = "0.11", features = ["randr", "render"] }
