@@ -5,20 +5,21 @@ use crate::{
     x::XConn,
     Result,
 };
+use std::borrow::Cow;
 
 /// Spawn a client program on window manager startup
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SpawnOnStartup {
-    prog: &'static str,
+    prog: Cow<'static, str>,
 }
 
 impl SpawnOnStartup {
     /// Create a new startup hook ready for adding to your Config
-    pub fn boxed<X>(prog: &'static str) -> Box<dyn StateHook<X>>
+    pub fn boxed<X>(prog: impl Into<Cow<'static, str>>) -> Box<dyn StateHook<X>>
     where
         X: XConn,
     {
-        Box::new(Self { prog })
+        Box::new(Self { prog: prog.into() })
     }
 }
 
@@ -27,6 +28,6 @@ where
     X: XConn,
 {
     fn call(&mut self, _state: &mut State<X>, _x: &X) -> Result<()> {
-        spawn(self.prog)
+        spawn(self.prog.as_ref())
     }
 }

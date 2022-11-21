@@ -6,7 +6,7 @@ use crate::{
     x::{Query, XConn, XConnExt},
     Result, Xid,
 };
-use std::{collections::HashMap, fmt};
+use std::{borrow::Cow, collections::HashMap, fmt};
 use tracing::{debug, error, warn};
 
 /// The tag used for a placeholder Workspace that holds scratchpad windows when
@@ -18,8 +18,8 @@ pub struct NamedScratchPad<X>
 where
     X: XConn,
 {
-    name: &'static str,
-    prog: &'static str,
+    name: Cow<'static, str>,
+    prog: Cow<'static, str>,
     client: Option<Xid>,
     query: Box<dyn Query<X>>,
     hook: Box<dyn ManageHook<X>>,
@@ -41,8 +41,8 @@ where
 {
     /// Create a new named scratchpad.
     pub fn new<Q, H>(
-        name: &'static str,
-        prog: &'static str,
+        name: impl Into<Cow<'static, str>>,
+        prog: impl Into<Cow<'static, str>>,
         query: Q,
         manage_hook: H,
         run_hook_on_toggle: bool,
@@ -51,9 +51,10 @@ where
         Q: Query<X> + 'static,
         H: ManageHook<X> + 'static,
     {
+        let name = name.into();
         let nsp = Self {
-            name,
-            prog,
+            name: name.clone(),
+            prog: prog.into(),
             client: None,
             query: Box::new(query),
             hook: Box::new(manage_hook),
@@ -70,7 +71,7 @@ where
 }
 
 // Private wrapper type to ensure that only this module can access this state extension
-struct NamedScratchPadState<X: XConn>(HashMap<&'static str, NamedScratchPad<X>>);
+struct NamedScratchPadState<X: XConn>(HashMap<Cow<'static, str>, NamedScratchPad<X>>);
 
 /// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].
 ///
@@ -83,7 +84,10 @@ pub fn add_named_scratchpads<X>(
 where
     X: XConn + 'static,
 {
-    let state: HashMap<_, _> = scratchpads.into_iter().map(|nsp| (nsp.name, nsp)).collect();
+    let state: HashMap<_, _> = scratchpads
+        .into_iter()
+        .map(|nsp| (nsp.name.clone(), nsp))
+        .collect();
 
     wm.state.add_extension(NamedScratchPadState(state));
     wm.state
@@ -101,7 +105,7 @@ pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> 
 
     for sp in s.borrow_mut().0.values_mut() {
         if sp.client.is_none() && sp.query.run(id, x)? {
-            debug!(scratchpad=sp.name, %id, "matched query for named scratchpad");
+            debug!(scratchpad=sp.name.as_ref(), %id, "matched query for named scratchpad");
             sp.client = Some(id);
             return sp.hook.call(id, state, x);
         }
@@ -115,9 +119,9 @@ pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> 
 /// This will spawn the requested client program if it isn't currently running or
 /// move it to the focused workspace. If the scratchpad is currently visible it
 /// will be hidden.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ToggleNamedScratchPad {
-    name: &'static str,
+    name: Cow<'static, str>,
     run_hook_on_toggle: bool,
 }
 
@@ -126,9 +130,9 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
     fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         let _s = state.extension::<NamedScratchPadState<X>>()?;
         let mut s = _s.borrow_mut();
-        let name = self.name;
+        let name = self.name.as_ref();
 
-        let (id, hook) = match s.0.get_mut(&name) {
+        let (id, hook) = match s.0.get_mut(&self.name) {
             // Active client somewhere in the StackSet
             Some(NamedScratchPad {
                 client: Some(id),
@@ -140,7 +144,7 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
             Some(nsp) => {
                 debug!(%nsp.prog, %name, "spawning NamedScratchPad program");
                 nsp.client = None;
-                return spawn(nsp.prog);
+                return spawn(nsp.prog.as_ref());
             }
 
             // The user created a ToggleNamedScratchPad but didn't register the scratchpad
