@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js ayu">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Actions - The Penrose Book</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="../getting-started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../builtin/index.html"><strong aria-hidden="true">2.</strong> Built In Functionality</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../builtin/layouts.html"><strong aria-hidden="true">2.1.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="../builtin/actions.html"><strong aria-hidden="true">2.2.</strong> Actions</a></li><li class="chapter-item expanded "><a href="../builtin/ui.html"><strong aria-hidden="true">2.3.</strong> UI</a></li></ol></li><li class="chapter-item expanded "><a href="../extensions/index.html"><strong aria-hidden="true">3.</strong> Extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../extensions/hooks.html"><strong aria-hidden="true">3.1.</strong> Hooks</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../extensions/startup-hooks.html"><strong aria-hidden="true">3.1.1.</strong> Startup Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/event-hooks.html"><strong aria-hidden="true">3.1.2.</strong> Event Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/manage-hooks.html"><strong aria-hidden="true">3.1.3.</strong> Manage Hooks</a></li><li class="chapter-item expanded "><a href="../extensions/refresh-hooks.html"><strong aria-hidden="true">3.1.4.</strong> Refresh Hooks</a></li></ol></li><li class="chapter-item expanded "><a href="../extensions/ewmh.html"><strong aria-hidden="true">3.2.</strong> EWMH</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="../overview/index.html"><strong aria-hidden="true">4.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../overview/pure-vs-x.html"><strong aria-hidden="true">4.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="../overview/data-structures.html"><strong aria-hidden="true">4.2.</strong> Data Structures</a></li></ol></li><li class="chapter-item expanded "><a href="../building/index.html"><strong aria-hidden="true">5.</strong> Building on top of penrose</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../building/actions.html" class="active"><strong aria-hidden="true">5.1.</strong> Actions</a></li><li class="chapter-item expanded "><a href="../building/layouts.html"><strong aria-hidden="true">5.2.</strong> Layouts</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> Hooks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> State Extensions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> Example: Named Scratchpads</div></li></ol></li><li class="chapter-item expanded "><a href="../faq.html">FAQs</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu (default)</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Penrose Book</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
+<h1 id="actions"><a class="header" href="#actions">Actions</a></h1>
+<p>To start with we're going to assume that when we talk about running an <code>Action</code> we're talking about
+executing some custom code in response to a key binding bein pressed. With that in mind, lets take
+a look at the <a href="https://sminez.github.io/penrose/rustdoc/penrose/core/bindings/trait.KeyEventHandler.html">KeyEventHandler</a> trait found in <code>penrose::core::bindings</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait KeyEventHandler&lt;X: XConn&gt; {
+    fn call(&amp;mut self, state: &amp;mut State&lt;X&gt;, x: &amp;X) -&gt; Result&lt;()&gt;;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>There's not much to it: you are given mutable access to the window manager <code>State</code> and a reference to
+the X connection. From there you can do pretty much whatever you like other than return data (we'll
+take a look at how you can persist and manage your own state in a bit!)</p>
+<p>To make things easier to work with (and to avoid having to implement this trait for every piece of
+custom logic you want to run) there are several helper functions provided for wrapping free functions
+of the right signature.</p>
+<blockquote>
+<p><strong>NOTE</strong>: In any case where you do not need to manage any additional state, it is <em>strongly</em>
+recommended that you make use of these helpers to write your actions as simple functions rather
+than structs that implement the <code>KeyEventHandler</code> trait.</p>
+</blockquote>
+<h2 id="built-in-helpers"><a class="header" href="#built-in-helpers">Built-in helpers</a></h2>
+<p>In the <a href="https://sminez.github.io/penrose/rustdoc/penrose/builtin/actions/index.html">penrose::builtin::actions</a> module you will find a number of helper functions for writing
+actions. The most general of these being <code>key_handler</code> which simply handles plumbing through the
+required type information for Rust to generate the <code>KeyEventHandler</code> trait implementation for you.</p>
+<h3 id="an-example"><a class="header" href="#an-example">An example</a></h3>
+<p>As a real example of how this can be used, here is the power menu helper I have in my own set up
+which makes use of the dmenu based helpers in <a href="https://sminez.github.io/penrose/rustdoc/penrose/extensions/util/dmenu/index.html">penrose::extensions::util::dmenu</a> to prompt the
+user for a selection before executing the selected action:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use penrose::{
+    builtin::actions::key_handler,
+    core::bindings::KeyEventHandler,
+    custom_error,
+    extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch},
+    util::spawn,
+};
+use std::process::exit;
+
+pub fn power_menu&lt;X: XConn&gt;() -&gt; KeyEventHandler&lt;X&gt; {
+    key_handler(|state, _| {
+        let options = vec![&quot;lock&quot;, &quot;logout&quot;, &quot;restart-wm&quot;, &quot;shutdown&quot;, &quot;reboot&quot;];
+        let menu = DMenu::new(&quot;&gt;&gt;&gt; &quot;, options, DMenuConfig::default());
+        let screen_index = state.client_set.current_screen().index();
+
+        if let Ok(MenuMatch::Line(_, choice)) = menu.run(screen_index) {
+            match choice.as_ref() {
+                &quot;lock&quot; =&gt; spawn(&quot;xflock4&quot;),
+                &quot;logout&quot; =&gt; spawn(&quot;pkill -fi penrose&quot;),
+                &quot;shutdown&quot; =&gt; spawn(&quot;sudo shutdown -h now&quot;),
+                &quot;reboot&quot; =&gt; spawn(&quot;sudo reboot&quot;),
+                &quot;restart-wm&quot; =&gt; exit(0), // Wrapper script then handles restarting us
+                _ =&gt; unimplemented!(),
+            }
+        } else {
+            Ok(())
+        }
+    })
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The window manager state is used to determine the current screen (where we want to open dmenu)
+but other than that we're running completely arbitrary code in response to a keypress. The main
+thing to keep in mind is that penrose is <em>single threaded</em> so anything you do in an action must
+complete in order for the event loop to continue running.</p>
+<h3 id="stackset-manipulation"><a class="header" href="#stackset-manipulation">StackSet manipulation</a></h3>
+<p>The most common set of actions you'll want to perform are modifications to the <code>StackSet</code> in
+to reposition and select windows on the screen. There are <a href="https://sminez.github.io/penrose/rustdoc/penrose/pure/struct.StackSet.html">a large number of methods</a> available
+for modifying the current state of your windows and the <a href="https://sminez.github.io/penrose/rustdoc/penrose/builtin/actions/fn.modify_with.html">modify_with</a> helper gives you an
+easy way to call them directly. If you think back to the minimal example window manager we covered
+in the &quot;getting started&quot; section, we saw this in use for most of the key bindings. Paraphrasing
+a little, it looks like this:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use penrose::builtin::actions::modify_with;
+
+// Select the next available layout algorithm
+modify_with(|cs| cs.next_layout());
+
+// Close the currently focused window
+modify_with(|cs| cs.kill_focused());
+<span class="boring">}
+</span></code></pre></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../building/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../building/layouts.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../building/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../building/layouts.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>
