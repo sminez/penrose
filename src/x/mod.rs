@@ -113,6 +113,10 @@ pub trait XConn {
 
     /// Look up a specific property on a given client window.
     fn get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>>;
+    /// List the known property names set for a given client.
+    fn list_props(&self, client: Xid) -> Result<Vec<String>>;
+    /// Get the current [WmState] for a given client window.
+    fn get_wm_state(&self, client: Xid) -> Result<Option<WmState>>;
     /// Request the [WindowAttributes] for a given client window from the X server.
     fn get_window_attributes(&self, client: Xid) -> Result<WindowAttributes>;
 
@@ -120,6 +124,8 @@ pub trait XConn {
     fn set_wm_state(&self, client: Xid, wm_state: WmState) -> Result<()>;
     /// Set a specific property on a given client window.
     fn set_prop(&self, client: Xid, name: &str, val: Prop) -> Result<()>;
+    /// Delete a property for a given client window.
+    fn delete_prop(&self, client: Xid, prop_name: &str) -> Result<()>;
     /// Set one or more [ClientAttr] for a given client window.
     fn set_client_attributes(&self, client: Xid, attrs: &[ClientAttr]) -> Result<()>;
     /// Set the [ClientConfig] for a given client window.
@@ -374,6 +380,17 @@ pub trait XConnExt: XConn + Sized {
         let y = (screen.r.y + screen.r.h / 2) as i16;
 
         self.warp_pointer(self.root(), x, y)
+    }
+
+    /// Fetch the value of all known properties for a given client window
+    fn all_props_for(&self, id: Xid) -> Result<HashMap<String, Prop>> {
+        self.list_props(id)?
+            .into_iter()
+            .map(|s| {
+                self.get_prop(id, &s)
+                    .map(|opt| (s, opt.expect("prop to be set")))
+            })
+            .collect()
     }
 
     /// Request the title of a given client window following ICCCM/EWMH standards.

@@ -504,6 +504,23 @@ where
         Ok(Some(p))
     }
 
+    fn list_props(&self, id: Xid) -> Result<Vec<String>> {
+        self.conn
+            .list_properties(*id)?
+            .reply()?
+            .atoms
+            .into_iter()
+            .map(|a| self.atom_name(Xid(a)))
+            .collect()
+    }
+
+    fn delete_prop(&self, id: Xid, prop_name: &str) -> Result<()> {
+        let prop_id = *self.intern_atom(prop_name)?;
+        self.conn.delete_property(*id, prop_id)?;
+
+        Ok(())
+    }
+
     fn get_window_attributes(&self, id: Xid) -> Result<WindowAttributes> {
         let win_attrs = self.conn.get_window_attributes(*id)?.reply()?;
 
@@ -526,6 +543,19 @@ where
             map_state,
             window_class,
         ))
+    }
+
+    fn get_wm_state(&self, client: Xid) -> Result<Option<WmState>> {
+        match self.get_prop(client, Atom::WmState.as_ref())? {
+            Some(Prop::Bytes(data)) => match data[0] {
+                0 => Ok(Some(WmState::Withdrawn)),
+                1 => Ok(Some(WmState::Normal)),
+                3 => Ok(Some(WmState::Iconic)),
+                _ => Ok(None),
+            },
+
+            _ => Ok(None),
+        }
     }
 
     fn set_wm_state(&self, id: Xid, wm_state: WmState) -> Result<()> {

@@ -1,7 +1,11 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
     pure::{Diff, StackSet, Workspace},
-    x::{manage_without_refresh, Atom, Prop, XConn, XConnExt, XEvent},
+    x::{
+        manage_without_refresh,
+        property::{MapState, WmState},
+        Atom, Prop, WindowAttributes, XConn, XConnExt, XEvent,
+    },
     Color, Error, Result,
 };
 use anymap::{any::Any, AnyMap};
@@ -480,8 +484,18 @@ where
         let first_tag = self.state.client_set.ordered_tags()[0].clone();
 
         for id in self.x.existing_clients()? {
-            if self.state.client_set.contains(&id)
-                || self.x.get_window_attributes(id)?.override_redirect
+            let WindowAttributes {
+                override_redirect,
+                map_state,
+                ..
+            } = self.x.get_window_attributes(id)?;
+
+            // ignore override_redirect == true, already managed clients and clients
+            // that are not either currently visible or iconic
+            if override_redirect
+                || self.state.client_set.contains(&id)
+                || !(map_state == MapState::Viewable
+                    || self.x.get_wm_state(id)? != Some(WmState::Iconic))
             {
                 continue;
             }
