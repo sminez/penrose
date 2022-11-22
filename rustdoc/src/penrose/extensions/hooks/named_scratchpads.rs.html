@@ -178,6 +178,10 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Support for managing multiple floating scratchpad programs that can be</span>
 <span class="doccomment">//! toggled on or off on the active workspace.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -186,7 +190,7 @@
     <span class="ident">x</span>::{<span class="ident">Query</span>, <span class="ident">XConn</span>, <span class="ident">XConnExt</span>},
     <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
 };
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">fmt</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">collections::HashMap</span>, <span class="ident">fmt</span>};
 <span class="kw">use</span> <span class="ident">tracing</span>::{<span class="ident">debug</span>, <span class="ident">error</span>, <span class="ident">warn</span>};
 
 <span class="doccomment">/// The tag used for a placeholder Workspace that holds scratchpad windows when</span>
@@ -198,8 +202,8 @@
 <span class="kw">where</span>
     <span class="ident">X</span>: <span class="ident">XConn</span>,
 {
-    <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-    <span class="ident">prog</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+    <span class="ident">name</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
+    <span class="ident">prog</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
     <span class="ident">client</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>,
     <span class="ident">query</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Query</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">hook</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ManageHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -221,8 +225,8 @@
 {
     <span class="doccomment">/// Create a new named scratchpad.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">H</span><span class="op">&gt;</span>(
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-        <span class="ident">prog</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+        <span class="ident">name</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">prog</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">query</span>: <span class="ident">Q</span>,
         <span class="ident">manage_hook</span>: <span class="ident">H</span>,
         <span class="ident">run_hook_on_toggle</span>: <span class="ident">bool</span>,
@@ -231,9 +235,10 @@
         <span class="ident">Q</span>: <span class="ident">Query</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
         <span class="ident">H</span>: <span class="ident">ManageHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     {
+        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">nsp</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">name</span>,
-            <span class="ident">prog</span>,
+            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">clone</span>(),
+            <span class="ident">prog</span>: <span class="ident">prog</span>.<span class="ident">into</span>(),
             <span class="ident">client</span>: <span class="prelude-val">None</span>,
             <span class="ident">query</span>: <span class="ident">Box::new</span>(<span class="ident">query</span>),
             <span class="ident">hook</span>: <span class="ident">Box::new</span>(<span class="ident">manage_hook</span>),
@@ -250,7 +255,7 @@
 }
 
 <span class="comment">// Private wrapper type to ensure that only this module can access this state extension</span>
-<span class="kw">struct</span> <span class="ident">NamedScratchPadState</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">NamedScratchPad</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>);
+<span class="kw">struct</span> <span class="ident">NamedScratchPadState</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">NamedScratchPad</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>);
 
 <span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].</span>
 <span class="doccomment">///</span>
@@ -263,7 +268,10 @@
 <span class="kw">where</span>
     <span class="ident">X</span>: <span class="ident">XConn</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">let</span> <span class="ident">state</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">scratchpads</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">nsp</span><span class="op">|</span> (<span class="ident">nsp</span>.<span class="ident">name</span>, <span class="ident">nsp</span>)).<span class="ident">collect</span>();
+    <span class="kw">let</span> <span class="ident">state</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">scratchpads</span>
+        .<span class="ident">into_iter</span>()
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">nsp</span><span class="op">|</span> (<span class="ident">nsp</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">nsp</span>))
+        .<span class="ident">collect</span>();
 
     <span class="ident">wm</span>.<span class="ident">state</span>.<span class="ident">add_extension</span>(<span class="ident">NamedScratchPadState</span>(<span class="ident">state</span>));
     <span class="ident">wm</span>.<span class="ident">state</span>
@@ -281,7 +289,7 @@
 
     <span class="kw">for</span> <span class="ident">sp</span> <span class="kw">in</span> <span class="ident">s</span>.<span class="ident">borrow_mut</span>().<span class="number">0</span>.<span class="ident">values_mut</span>() {
         <span class="kw">if</span> <span class="ident">sp</span>.<span class="ident">client</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">sp</span>.<span class="ident">query</span>.<span class="ident">run</span>(<span class="ident">id</span>, <span class="ident">x</span>)<span class="question-mark">?</span> {
-            <span class="macro">debug!</span>(<span class="ident">scratchpad</span><span class="op">=</span><span class="ident">sp</span>.<span class="ident">name</span>, <span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;matched query for named scratchpad&quot;</span>);
+            <span class="macro">debug!</span>(<span class="ident">scratchpad</span><span class="op">=</span><span class="ident">sp</span>.<span class="ident">name</span>.<span class="ident">as_ref</span>(), <span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;matched query for named scratchpad&quot;</span>);
             <span class="ident">sp</span>.<span class="ident">client</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>);
             <span class="kw">return</span> <span class="ident">sp</span>.<span class="ident">hook</span>.<span class="ident">call</span>(<span class="ident">id</span>, <span class="ident">state</span>, <span class="ident">x</span>);
         }
@@ -295,9 +303,9 @@
 <span class="doccomment">/// This will spawn the requested client program if it isn&#39;t currently running or</span>
 <span class="doccomment">/// move it to the focused workspace. If the scratchpad is currently visible it</span>
 <span class="doccomment">/// will be hidden.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ToggleNamedScratchPad</span> {
-    <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+    <span class="ident">name</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
     <span class="ident">run_hook_on_toggle</span>: <span class="ident">bool</span>,
 }
 
@@ -306,9 +314,9 @@
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">_s</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">extension</span>::<span class="op">&lt;</span><span class="ident">NamedScratchPadState</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">_s</span>.<span class="ident">borrow_mut</span>();
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">name</span>;
+        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">name</span>.<span class="ident">as_ref</span>();
 
-        <span class="kw">let</span> (<span class="ident">id</span>, <span class="ident">hook</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="number">0</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>) {
+        <span class="kw">let</span> (<span class="ident">id</span>, <span class="ident">hook</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="number">0</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>) {
             <span class="comment">// Active client somewhere in the StackSet</span>
             <span class="prelude-val">Some</span>(<span class="ident">NamedScratchPad</span> {
                 <span class="ident">client</span>: <span class="prelude-val">Some</span>(<span class="ident">id</span>),
@@ -320,7 +328,7 @@
             <span class="prelude-val">Some</span>(<span class="ident">nsp</span>) =&gt; {
                 <span class="macro">debug!</span>(<span class="op">%</span><span class="ident">nsp</span>.<span class="ident">prog</span>, <span class="op">%</span><span class="ident">name</span>, <span class="string">&quot;spawning NamedScratchPad program&quot;</span>);
                 <span class="ident">nsp</span>.<span class="ident">client</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                <span class="kw">return</span> <span class="ident">spawn</span>(<span class="ident">nsp</span>.<span class="ident">prog</span>);
+                <span class="kw">return</span> <span class="ident">spawn</span>(<span class="ident">nsp</span>.<span class="ident">prog</span>.<span class="ident">as_ref</span>());
             }
 
             <span class="comment">// The user created a ToggleNamedScratchPad but didn&#39;t register the scratchpad</span>
