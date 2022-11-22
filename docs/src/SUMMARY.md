@@ -22,17 +22,11 @@
 - [Overview of Concepts](./overview/index.md)
   - [Pure Code vs X Code](./overview/pure-vs-x.md)
   - [Data Structures](./overview/data-structures.md)
-  - [Layouts](./overview/layouts.md)
-  - [Actions]()
-  - [Hooks]()
 
-- [Built in UI elements]()
-  - [Draw and Context]()
-  - [Status Bar]()
-
-- [Building on top of penrose]()
+- [Building on top of penrose](./building/index.md)
+  - [Actions](./building/actions.md)
+  - [Layouts](./building/layouts.md)
   - [Hooks]()
-  - [Actions]()
   - [State Extensions]()
   - [Example: Named Scratchpads]()
 
