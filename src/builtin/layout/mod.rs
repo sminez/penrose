@@ -92,11 +92,16 @@ impl MainAndStack {
         ((d as f32) * ratio) as u32
     }
 
+    // In each of these four cases we no longer have a split point giving
+    // us two independent stacks.
+    fn all_windows_in_single_stack(&self, n: u32) -> bool {
+        n <= self.max_main || self.max_main == 0 || self.ratio == 1.0 || self.ratio == 0.0
+    }
+
     fn layout_side(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
         let n = s.len() as u32;
 
-        if n <= self.max_main || self.max_main == 0 {
-            // In both cases we have all windows in a single stack (all main or all secondary)
+        if self.all_windows_in_single_stack(n) {
             r.as_rows(n).iter().zip(s).map(|(r, c)| (*c, *r)).collect()
         } else {
             // We have two stacks so split the screen in two and then build a stack for each
@@ -118,7 +123,7 @@ impl MainAndStack {
     fn layout_bottom(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
         let n = s.len() as u32;
 
-        if n <= self.max_main || self.max_main == 0 {
+        if self.all_windows_in_single_stack(n) {
             r.as_columns(n)
                 .iter()
                 .zip(s)
