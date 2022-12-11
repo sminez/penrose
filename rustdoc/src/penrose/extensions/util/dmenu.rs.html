@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/dmenu.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dmenu.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/dmenu.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dmenu.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -232,237 +232,237 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A simple wrapper for suckless&#39; [dmenu][1] tool for providing quick text based menus</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [1]: https://tools.suckless.org/dmenu/</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Color</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">io</span>::{<span class="ident">Read</span>, <span class="ident">Write</span>},
-    <span class="ident">process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>},
+</pre><pre class="rust"><code><span class="doccomment">//! A simple wrapper for suckless&#39; [dmenu][1] tool for providing quick text based menus
+//!
+//! [1]: https://tools.suckless.org/dmenu/
+</span><span class="kw">use crate</span>::{Color, Error, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>std::{
+    io::{Read, Write},
+    process::{Command, Stdio},
 };
 
-<span class="doccomment">/// The result of attempting to match against user input in a [DMenu]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MenuMatch</span> {
-    <span class="doccomment">/// The selected line along its line number (0 indexed)</span>
-    <span class="ident">Line</span>(<span class="ident">usize</span>, <span class="ident">String</span>),
-    <span class="doccomment">/// Nothing matched and this was the user&#39;s input when they hit Return</span>
-    <span class="ident">UserInput</span>(<span class="ident">String</span>),
-    <span class="doccomment">/// The user exited out of matching or had nothing typed</span>
-    <span class="ident">NoMatch</span>,
+<span class="doccomment">/// The result of attempting to match against user input in a [DMenu]
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>MenuMatch {
+    <span class="doccomment">/// The selected line along its line number (0 indexed)
+    </span>Line(usize, String),
+    <span class="doccomment">/// Nothing matched and this was the user&#39;s input when they hit Return
+    </span>UserInput(String),
+    <span class="doccomment">/// The user exited out of matching or had nothing typed
+    </span>NoMatch,
 }
 
-<span class="doccomment">/// Config for running a [DMenu] selection</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DMenuConfig</span> {
-    <span class="doccomment">/// Should line numbers be displayed to the user?</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: false</span>
-    <span class="kw">pub</span> <span class="ident">show_line_numbers</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// Config for running a [DMenu] selection
+</span><span class="attribute">#[derive(Debug, Copy, Clone)]
+</span><span class="kw">pub struct </span>DMenuConfig {
+    <span class="doccomment">/// Should line numbers be displayed to the user?
+    ///
+    /// Default: false
+    </span><span class="kw">pub </span>show_line_numbers: bool,
 
-    <span class="doccomment">/// Should dmenu treat the input as a password and render characters as &#39;*&#39;?</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # NOTE</span>
-    <span class="doccomment">/// This requires the [Password][1] patch in order to work.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: false</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [1]: https://tools.suckless.org/dmenu/patches/password/</span>
-    <span class="kw">pub</span> <span class="ident">password_input</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Should dmenu treat the input as a password and render characters as &#39;*&#39;?
+    ///
+    /// # NOTE
+    /// This requires the [Password][1] patch in order to work.
+    ///
+    /// Default: false
+    ///
+    /// [1]: https://tools.suckless.org/dmenu/patches/password/
+    </span><span class="kw">pub </span>password_input: bool,
 
-    <span class="doccomment">/// Should dmenu ignore case in the user input when matching?</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: false</span>
-    <span class="kw">pub</span> <span class="ident">ignore_case</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Should dmenu ignore case in the user input when matching?
+    ///
+    /// Default: false
+    </span><span class="kw">pub </span>ignore_case: bool,
 
-    <span class="doccomment">/// Background color for the rendered window</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: #282828</span>
-    <span class="kw">pub</span> <span class="ident">bg_color</span>: <span class="ident">Color</span>,
+    <span class="doccomment">/// Background color for the rendered window
+    ///
+    /// Default: #282828
+    </span><span class="kw">pub </span>bg_color: Color,
 
-    <span class="doccomment">/// Foreground color for text</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: #ebdbb2</span>
-    <span class="kw">pub</span> <span class="ident">fg_color</span>: <span class="ident">Color</span>,
+    <span class="doccomment">/// Foreground color for text
+    ///
+    /// Default: #ebdbb2
+    </span><span class="kw">pub </span>fg_color: Color,
 
-    <span class="doccomment">/// Selected line background color</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: #458588</span>
-    <span class="kw">pub</span> <span class="ident">selected_color</span>: <span class="ident">Color</span>,
+    <span class="doccomment">/// Selected line background color
+    ///
+    /// Default: #458588
+    </span><span class="kw">pub </span>selected_color: Color,
 
-    <span class="doccomment">/// Number of lines to display at a time.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Setting n_lines=0 will result in the choices being displayed horizontally</span>
-    <span class="doccomment">/// instead of vertically.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default: 10</span>
-    <span class="kw">pub</span> <span class="ident">n_lines</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// Number of lines to display at a time.
+    ///
+    /// Setting n_lines=0 will result in the choices being displayed horizontally
+    /// instead of vertically.
+    ///
+    /// Default: 10
+    </span><span class="kw">pub </span>n_lines: u8,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DMenuConfig</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">show_line_numbers</span>: <span class="bool-val">false</span>,
-            <span class="ident">password_input</span>: <span class="bool-val">false</span>,
-            <span class="ident">ignore_case</span>: <span class="bool-val">false</span>,
-            <span class="ident">bg_color</span>: <span class="number">0x282828ff</span>.<span class="ident">into</span>(),
-            <span class="ident">fg_color</span>: <span class="number">0xebdbb2ff</span>.<span class="ident">into</span>(),
-            <span class="ident">selected_color</span>: <span class="number">0x458588ff</span>.<span class="ident">into</span>(),
-            <span class="ident">n_lines</span>: <span class="number">10</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>DMenuConfig {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            show_line_numbers: <span class="bool-val">false</span>,
+            password_input: <span class="bool-val">false</span>,
+            ignore_case: <span class="bool-val">false</span>,
+            bg_color: <span class="number">0x282828ff</span>.into(),
+            fg_color: <span class="number">0xebdbb2ff</span>.into(),
+            selected_color: <span class="number">0x458588ff</span>.into(),
+            n_lines: <span class="number">10</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">DMenuConfig</span> {
-    <span class="kw">fn</span> <span class="ident">flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">prompt</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">screen_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">DMenuConfig</span> {
-            <span class="ident">password_input</span>,
-            <span class="ident">ignore_case</span>,
-            <span class="ident">bg_color</span>,
-            <span class="ident">fg_color</span>,
-            <span class="ident">selected_color</span>,
-            <span class="ident">n_lines</span>,
+<span class="kw">impl </span>DMenuConfig {
+    <span class="kw">fn </span>flags(<span class="kw-2">&amp;</span><span class="self">self</span>, prompt: <span class="kw-2">&amp;</span>str, screen_index: usize) -&gt; Vec&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">&amp;</span>DMenuConfig {
+            password_input,
+            ignore_case,
+            bg_color,
+            fg_color,
+            selected_color,
+            n_lines,
             ..
-        } <span class="op">=</span> <span class="self">self</span>;
+        } = <span class="self">self</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">format!</span>(
+        <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">format!</span>(
             <span class="string">&quot;-nb {} -nf {} -sb {} -m {}&quot;</span>,
-            <span class="ident">bg_color</span>.<span class="ident">as_rgb_hex_string</span>(),
-            <span class="ident">fg_color</span>.<span class="ident">as_rgb_hex_string</span>(),
-            <span class="ident">selected_color</span>.<span class="ident">as_rgb_hex_string</span>(),
-            <span class="ident">screen_index</span>,
+            bg_color.as_rgb_hex_string(),
+            fg_color.as_rgb_hex_string(),
+            selected_color.as_rgb_hex_string(),
+            screen_index,
         );
 
-        <span class="kw">if</span> <span class="ident">n_lines</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="ident">s</span>.<span class="ident">push_str</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot; -l {n_lines}&quot;</span>))
+        <span class="kw">if </span>n_lines &gt; <span class="number">0 </span>{
+            s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot; -l {n_lines}&quot;</span>))
         }
 
-        <span class="kw">if</span> <span class="ident">password_input</span> {
-            <span class="ident">s</span>.<span class="ident">push_str</span>(<span class="string">&quot; -P&quot;</span>);
+        <span class="kw">if </span>password_input {
+            s.push_str(<span class="string">&quot; -P&quot;</span>);
         }
 
-        <span class="kw">if</span> <span class="ident">ignore_case</span> {
-            <span class="ident">s</span>.<span class="ident">push_str</span>(<span class="string">&quot; -i&quot;</span>);
+        <span class="kw">if </span>ignore_case {
+            s.push_str(<span class="string">&quot; -i&quot;</span>);
         }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">prompt</span>.<span class="ident">is_empty</span>() {
-            <span class="ident">s</span>.<span class="ident">push_str</span>(<span class="string">&quot; -p &quot;</span>);
-            <span class="ident">s</span>.<span class="ident">push_str</span>(<span class="ident">prompt</span>);
+        <span class="kw">if </span>!prompt.is_empty() {
+            s.push_str(<span class="string">&quot; -p &quot;</span>);
+            s.push_str(prompt);
         }
 
-        <span class="ident">s</span>.<span class="ident">split_whitespace</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_owned</span>()).<span class="ident">collect</span>()
+        s.split_whitespace().map(|s| s.to_owned()).collect()
     }
 }
 
-<span class="doccomment">/// A wrapper around the suckless [dmenu][1] program for creating dynamic menus</span>
-<span class="doccomment">/// in penrose.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [1]: https://tools.suckless.org/dmenu/</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DMenu</span> {
-    <span class="ident">config</span>: <span class="ident">DMenuConfig</span>,
-    <span class="ident">prompt</span>: <span class="ident">String</span>,
-    <span class="ident">choices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A wrapper around the suckless [dmenu][1] program for creating dynamic menus
+/// in penrose.
+///
+/// [1]: https://tools.suckless.org/dmenu/
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>DMenu {
+    config: DMenuConfig,
+    prompt: String,
+    choices: Vec&lt;String&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">DMenu</span> {
-    <span class="doccomment">/// Create a new [DMenu] command which can be triggered and re-used by calling the `run` method</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">prompt</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">choices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">config</span>: <span class="ident">DMenuConfig</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">prompt</span>: <span class="ident">prompt</span>.<span class="ident">into</span>(),
-            <span class="ident">choices</span>: <span class="ident">choices</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">into</span>()).<span class="ident">collect</span>(),
-            <span class="ident">config</span>,
+<span class="kw">impl </span>DMenu {
+    <span class="doccomment">/// Create a new [DMenu] command which can be triggered and re-used by calling the `run` method
+    </span><span class="kw">pub fn </span>new(
+        prompt: <span class="kw">impl </span>Into&lt;String&gt;,
+        choices: Vec&lt;<span class="kw">impl </span>Into&lt;String&gt;&gt;,
+        config: DMenuConfig,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            prompt: prompt.into(),
+            choices: choices.into_iter().map(|s| s.into()).collect(),
+            config,
         }
     }
 
-    <span class="doccomment">/// Run this [DMenu] command and return the selected choice.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">/// ```no_run</span>
-    <span class="doccomment">/// # use penrose::extensions::util::dmenu::*;</span>
-    <span class="doccomment">/// let lines = vec![&quot;some&quot;, &quot;choices&quot;, &quot;to&quot;, &quot;pick&quot;, &quot;from&quot;];</span>
-    <span class="doccomment">/// let menu = DMenu::new(&quot;&gt;&gt;&gt;&quot;, lines, DMenuConfig::default());</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let screen_index = 0;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// match menu.run(screen_index).unwrap() {</span>
-    <span class="doccomment">///     MenuMatch::Line(i, s) =&gt; println!(&quot;matched &#39;{}&#39; on line &#39;{}&#39;&quot;, s, i),</span>
-    <span class="doccomment">///     MenuMatch::UserInput(s) =&gt; println!(&quot;user input: &#39;{}&#39;&quot;, s),</span>
-    <span class="doccomment">///     MenuMatch::NoMatch =&gt; println!(&quot;no match&quot;),</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">screen_index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MenuMatch</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw_user_choice_from_dmenu</span>(<span class="ident">screen_index</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">choice</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">trim</span>();
+    <span class="doccomment">/// Run this [DMenu] command and return the selected choice.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use penrose::extensions::util::dmenu::*;
+    /// let lines = vec![&quot;some&quot;, &quot;choices&quot;, &quot;to&quot;, &quot;pick&quot;, &quot;from&quot;];
+    /// let menu = DMenu::new(&quot;&gt;&gt;&gt;&quot;, lines, DMenuConfig::default());
+    ///
+    /// let screen_index = 0;
+    ///
+    /// match menu.run(screen_index).unwrap() {
+    ///     MenuMatch::Line(i, s) =&gt; println!(&quot;matched &#39;{}&#39; on line &#39;{}&#39;&quot;, s, i),
+    ///     MenuMatch::UserInput(s) =&gt; println!(&quot;user input: &#39;{}&#39;&quot;, s),
+    ///     MenuMatch::NoMatch =&gt; println!(&quot;no match&quot;),
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>run(<span class="kw-2">&amp;</span><span class="self">self</span>, screen_index: usize) -&gt; <span class="prelude-ty">Result</span>&lt;MenuMatch&gt; {
+        <span class="kw">let </span>raw = <span class="self">self</span>.raw_user_choice_from_dmenu(screen_index)<span class="question-mark">?</span>;
+        <span class="kw">let </span>choice = raw.trim();
 
-        <span class="kw">if</span> <span class="ident">choice</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MenuMatch::NoMatch</span>);
+        <span class="kw">if </span>choice.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(MenuMatch::NoMatch);
         }
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">choices</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">s</span>)<span class="op">|</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">show_line_numbers</span> {
-                    <span class="macro">format!</span>(<span class="string">&quot;{:&lt;3} {}&quot;</span>, <span class="ident">i</span>, <span class="ident">s</span>) <span class="op">==</span> <span class="ident">choice</span>
-                } <span class="kw">else</span> {
-                    <span class="kw-2">*</span><span class="ident">s</span> <span class="op">==</span> <span class="ident">choice</span>
+        <span class="kw">let </span>res = <span class="self">self
+            </span>.choices
+            .iter()
+            .enumerate()
+            .find(|(i, s)| {
+                <span class="kw">if </span><span class="self">self</span>.config.show_line_numbers {
+                    <span class="macro">format!</span>(<span class="string">&quot;{:&lt;3} {}&quot;</span>, i, s) == choice
+                } <span class="kw">else </span>{
+                    <span class="kw-2">*</span>s == choice
                 }
             })
-            .<span class="ident">map_or_else</span>(
-                <span class="op">|</span><span class="op">|</span> <span class="ident">MenuMatch::UserInput</span>(<span class="ident">choice</span>.<span class="ident">to_string</span>()),
-                <span class="op">|</span>(<span class="ident">i</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">MenuMatch::Line</span>(<span class="ident">i</span>, <span class="self">self</span>.<span class="ident">choices</span>[<span class="ident">i</span>].<span class="ident">to_string</span>()),
+            .map_or_else(
+                || MenuMatch::UserInput(choice.to_string()),
+                |(i, <span class="kw">_</span>)| MenuMatch::Line(i, <span class="self">self</span>.choices[i].to_string()),
             );
 
-        <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+        <span class="prelude-val">Ok</span>(res)
     }
 
-    <span class="kw">fn</span> <span class="ident">choices_as_input_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">choices</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">show_line_numbers</span> {
-            <span class="self">self</span>.<span class="ident">choices</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">enumerate</span>()
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">s</span>)<span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{:&lt;3} {}&quot;</span>, <span class="ident">i</span>, <span class="ident">s</span>))
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>)
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">choices</span>.<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>)
+    <span class="kw">fn </span>choices_as_input_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;u8&gt; {
+        <span class="kw">let </span>choices = <span class="kw">if </span><span class="self">self</span>.config.show_line_numbers {
+            <span class="self">self</span>.choices
+                .iter()
+                .enumerate()
+                .map(|(i, s)| <span class="macro">format!</span>(<span class="string">&quot;{:&lt;3} {}&quot;</span>, i, s))
+                .collect::&lt;Vec&lt;String&gt;&gt;()
+                .join(<span class="string">&quot;\n&quot;</span>)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.choices.join(<span class="string">&quot;\n&quot;</span>)
         };
 
-        <span class="ident">choices</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>()
+        choices.as_bytes().to_vec()
     }
 
-    <span class="kw">fn</span> <span class="ident">raw_user_choice_from_dmenu</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">screen_index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">args</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">prompt</span>, <span class="ident">screen_index</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">proc</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;dmenu&quot;</span>)
-            .<span class="ident">stdin</span>(<span class="ident">Stdio::piped</span>())
-            .<span class="ident">stdout</span>(<span class="ident">Stdio::piped</span>())
-            .<span class="ident">args</span>(<span class="ident">args</span>)
-            .<span class="ident">spawn</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>raw_user_choice_from_dmenu(<span class="kw-2">&amp;</span><span class="self">self</span>, screen_index: usize) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span>args = <span class="self">self</span>.config.flags(<span class="kw-2">&amp;</span><span class="self">self</span>.prompt, screen_index);
+        <span class="kw">let </span><span class="kw-2">mut </span>proc = Command::new(<span class="string">&quot;dmenu&quot;</span>)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .args(args)
+            .spawn()<span class="question-mark">?</span>;
 
         {
-            <span class="comment">// Taking stdin here and dropping it when the block scope ends to close it and</span>
-            <span class="comment">// let dmenu determine the end of input</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="ident">proc</span>
-                .<span class="ident">stdin</span>
-                .<span class="ident">take</span>()
-                .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::Custom</span>(<span class="string">&quot;unable to open stdin&quot;</span>.<span class="ident">to_owned</span>()))<span class="question-mark">?</span>;
+            <span class="comment">// Taking stdin here and dropping it when the block scope ends to close it and
+            // let dmenu determine the end of input
+            </span><span class="kw">let </span><span class="kw-2">mut </span>stdin = proc
+                .stdin
+                .take()
+                .ok_or_else(|| Error::Custom(<span class="string">&quot;unable to open stdin&quot;</span>.to_owned()))<span class="question-mark">?</span>;
 
-            <span class="ident">stdin</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">choices_as_input_bytes</span>())<span class="question-mark">?</span>;
+            stdin.write_all(<span class="kw-2">&amp;</span><span class="self">self</span>.choices_as_input_bytes())<span class="question-mark">?</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">String::new</span>();
-        <span class="ident">proc</span>.<span class="ident">stdout</span>
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::Custom</span>(<span class="string">&quot;failed to spawn dmenu&quot;</span>.<span class="ident">to_owned</span>()))<span class="question-mark">?</span>
-            .<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">raw</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>raw = String::new();
+        proc.stdout
+            .ok_or_else(|| Error::Custom(<span class="string">&quot;failed to spawn dmenu&quot;</span>.to_owned()))<span class="question-mark">?
+            </span>.read_to_string(<span class="kw-2">&amp;mut </span>raw)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">raw</span>)
+        <span class="prelude-val">Ok</span>(raw)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

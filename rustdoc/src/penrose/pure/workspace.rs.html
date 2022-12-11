@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/workspace.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>workspace.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/workspace.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>workspace.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -215,220 +215,220 @@
 <span id="213">213</span>
 <span id="214">214</span>
 <span id="215">215</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core::layout</span>::{<span class="ident">IntoMessage</span>, <span class="ident">LayoutStack</span>},
-    <span class="ident">pure::Stack</span>,
-    <span class="ident">Error</span>, <span class="prelude-ty">Result</span>,
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{
+    core::layout::{IntoMessage, LayoutStack},
+    pure::Stack,
+    Error, <span class="prelude-ty">Result</span>,
 };
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
+<span class="kw">use </span>std::fmt;
 
-<span class="doccomment">/// A wrapper around a [Stack] of windows belonging to a single &quot;workspace&quot; or virtual</span>
-<span class="doccomment">/// desktop. When this workspace is active on a given screen, the windows contained in</span>
-<span class="doccomment">/// its stack will be positioned using the active layout of its [LayoutStack].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">id</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">tag</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">layouts</span>: <span class="ident">LayoutStack</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">stack</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A wrapper around a [Stack] of windows belonging to a single &quot;workspace&quot; or virtual
+/// desktop. When this workspace is active on a given screen, the windows contained in
+/// its stack will be positioned using the active layout of its [LayoutStack].
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Workspace&lt;T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) id: usize,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tag: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) layouts: LayoutStack,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) stack: <span class="prelude-ty">Option</span>&lt;Stack&lt;T&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">id</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">tag</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">layouts</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">stack</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>Workspace&lt;T&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id: Default::default(),
+            tag: Default::default(),
+            layouts: Default::default(),
+            stack: Default::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">stack</span>
-            .<span class="ident">as_ref</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
-            .<span class="ident">unwrap_or_default</span>();
+<span class="kw">impl</span>&lt;T: fmt::Display&gt; fmt::Display <span class="kw">for </span>Workspace&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">let </span>stack = <span class="self">self
+            </span>.stack
+            .as_ref()
+            .map(|s| s.to_string())
+            .unwrap_or_default();
 
         <span class="macro">write!</span>(
-            <span class="ident">f</span>,
+            f,
             <span class="string">&quot;Workspace({}, {}):\n  - layouts: {}\n  - stack: {}&quot;</span>,
-            <span class="self">self</span>.<span class="ident">id</span>, <span class="self">self</span>.<span class="ident">tag</span>, <span class="self">self</span>.<span class="ident">layouts</span>, <span class="ident">stack</span>
+            <span class="self">self</span>.id, <span class="self">self</span>.tag, <span class="self">self</span>.layouts, stack
         )
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new Workspace with the given layouts and stack.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">usize</span>, <span class="ident">tag</span>: <span class="ident">S</span>, <span class="ident">layouts</span>: <span class="ident">LayoutStack</span>, <span class="ident">stack</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;T&gt; Workspace&lt;T&gt; {
+    <span class="doccomment">/// Create a new Workspace with the given layouts and stack.
+    </span><span class="kw">pub fn </span>new&lt;S&gt;(id: usize, tag: S, layouts: LayoutStack, stack: <span class="prelude-ty">Option</span>&lt;Stack&lt;T&gt;&gt;) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>S: Into&lt;String&gt;,
     {
-        <span class="self">Self</span> {
-            <span class="ident">id</span>,
-            <span class="ident">tag</span>: <span class="ident">tag</span>.<span class="ident">into</span>(),
-            <span class="ident">layouts</span>,
-            <span class="ident">stack</span>,
+        <span class="self">Self </span>{
+            id,
+            tag: tag.into(),
+            layouts,
+            stack,
         }
     }
 
-    <span class="comment">// Used for padding workspaces when needed in a rescreen event (see detect_screens in src/core/handle.rs)</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new_default</span>(<span class="ident">id</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">id</span>,
-            <span class="ident">tag</span>: <span class="macro">format!</span>(<span class="string">&quot;WS-{id}&quot;</span>),
-            ..<span class="ident"><span class="self">Self</span>::default</span>()
+    <span class="comment">// Used for padding workspaces when needed in a rescreen event (see detect_screens in src/core/handle.rs)
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_default(id: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id,
+            tag: <span class="macro">format!</span>(<span class="string">&quot;WS-{id}&quot;</span>),
+            ..<span class="self">Self</span>::default()
         }
     }
 
-    <span class="doccomment">/// A fixed integer ID for this workspace.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">id</span>
+    <span class="doccomment">/// A fixed integer ID for this workspace.
+    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.id
     }
 
-    <span class="doccomment">/// The string tag for this workspace.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tag</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tag</span>
+    <span class="doccomment">/// The string tag for this workspace.
+    </span><span class="kw">pub fn </span>tag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.tag
     }
 
-    <span class="doccomment">/// The name of the currently active layout being used by this workspace</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">layout_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">layouts</span>.<span class="ident">focus</span>.<span class="ident">name</span>()
+    <span class="doccomment">/// The name of the currently active layout being used by this workspace
+    </span><span class="kw">pub fn </span>layout_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.layouts.focus.name()
     }
 
-    <span class="doccomment">/// Whether or not this workspace currently holds any windows</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">is_none</span>()
+    <span class="doccomment">/// Whether or not this workspace currently holds any windows
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.stack.is_none()
     }
 
-    <span class="doccomment">/// An immutable reference to the focused window for this workspace if there is one</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focus</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">focus</span>)
+    <span class="doccomment">/// An immutable reference to the focused window for this workspace if there is one
+    </span><span class="kw">pub fn </span>focus(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+        <span class="self">self</span>.stack.as_ref().map(|s| <span class="kw-2">&amp;</span>s.focus)
     }
 
-    <span class="doccomment">/// An iterator over all windows in this workspace.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">iter</span>())
+    <span class="doccomment">/// An iterator over all windows in this workspace.
+    </span><span class="kw">pub fn </span>clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>T&gt; {
+        <span class="self">self</span>.stack.iter().flat_map(|s| s.iter())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove_focused</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">take</span>();
-        <span class="kw">let</span> (<span class="ident">focus</span>, <span class="ident">new_stack</span>) <span class="op">=</span> <span class="ident">current</span><span class="question-mark">?</span>.<span class="ident">remove_focused</span>();
-        <span class="self">self</span>.<span class="ident">stack</span> <span class="op">=</span> <span class="ident">new_stack</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_focused(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+        <span class="kw">let </span>current = <span class="self">self</span>.stack.take();
+        <span class="kw">let </span>(focus, new_stack) = current<span class="question-mark">?</span>.remove_focused();
+        <span class="self">self</span>.stack = new_stack;
 
-        <span class="prelude-val">Some</span>(<span class="ident">focus</span>)
+        <span class="prelude-val">Some</span>(focus)
     }
 
-    <span class="doccomment">/// Pass the given message on to the currently focused layout.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">handle_message</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="ident">M</span>)
-    <span class="kw">where</span>
-        <span class="ident">M</span>: <span class="ident">IntoMessage</span>,
+    <span class="doccomment">/// Pass the given message on to the currently focused layout.
+    </span><span class="kw">pub fn </span>handle_message&lt;M&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: M)
+    <span class="kw">where
+        </span>M: IntoMessage,
     {
-        <span class="self">self</span>.<span class="ident">layouts</span>.<span class="ident">handle_message</span>(<span class="ident">m</span>)
+        <span class="self">self</span>.layouts.handle_message(m)
     }
 
-    <span class="doccomment">/// Pass the given message on to _all_ layouts available to this workspace.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">broadcast_message</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="ident">M</span>)
-    <span class="kw">where</span>
-        <span class="ident">M</span>: <span class="ident">IntoMessage</span>,
+    <span class="doccomment">/// Pass the given message on to _all_ layouts available to this workspace.
+    </span><span class="kw">pub fn </span>broadcast_message&lt;M&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: M)
+    <span class="kw">where
+        </span>M: IntoMessage,
     {
-        <span class="self">self</span>.<span class="ident">layouts</span>.<span class="ident">broadcast_message</span>(<span class="ident">m</span>)
+        <span class="self">self</span>.layouts.broadcast_message(m)
     }
 
-    <span class="doccomment">/// Switch to the next available layout for this workspace.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">layouts</span>.<span class="ident">focus_down</span>();
+    <span class="doccomment">/// Switch to the next available layout for this workspace.
+    </span><span class="kw">pub fn </span>next_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.layouts.focus_down();
     }
 
-    <span class="doccomment">/// Switch to the previous available layout for this workspace.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">previous_layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">layouts</span>.<span class="ident">focus_up</span>();
+    <span class="doccomment">/// Switch to the previous available layout for this workspace.
+    </span><span class="kw">pub fn </span>previous_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.layouts.focus_up();
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Check if a given window is currently part of this workspace</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">t</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stack</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">contains</span>(<span class="ident">t</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+<span class="kw">impl</span>&lt;T: PartialEq&gt; Workspace&lt;T&gt; {
+    <span class="doccomment">/// Check if a given window is currently part of this workspace
+    </span><span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; bool {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.stack {
+            <span class="prelude-val">Some</span>(s) =&gt; s.contains(t),
+            <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">t</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">take</span>();
-        <span class="kw">let</span> (<span class="ident">maybe_t</span>, <span class="ident">new_stack</span>) <span class="op">=</span> <span class="ident">current</span><span class="question-mark">?</span>.<span class="ident">remove</span>(<span class="ident">t</span>);
-        <span class="self">self</span>.<span class="ident">stack</span> <span class="op">=</span> <span class="ident">new_stack</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+        <span class="kw">let </span>current = <span class="self">self</span>.stack.take();
+        <span class="kw">let </span>(maybe_t, new_stack) = current<span class="question-mark">?</span>.remove(t);
+        <span class="self">self</span>.stack = new_stack;
 
-        <span class="ident">maybe_t</span>
+        maybe_t
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">check_workspace_invariants</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">workspaces</span>: <span class="kw-2">&amp;</span>[<span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">tags</span> <span class="op">=</span> <span class="ident">workspaces</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">w</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">w</span>.<span class="ident">tag</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seen</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">duplicates</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>check_workspace_invariants&lt;T&gt;(workspaces: <span class="kw-2">&amp;</span>[Workspace&lt;T&gt;]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>tags = workspaces.iter().map(|w| <span class="kw-2">&amp;</span>w.tag);
+    <span class="kw">let </span><span class="kw-2">mut </span>seen = <span class="macro">vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>duplicates = <span class="macro">vec!</span>[];
 
-    <span class="kw">for</span> <span class="ident">tag</span> <span class="kw">in</span> <span class="ident">tags</span> {
-        <span class="kw">if</span> <span class="ident">seen</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>) {
-            <span class="ident">duplicates</span>.<span class="ident">push</span>(<span class="ident">tag</span>.<span class="ident">to_owned</span>());
+    <span class="kw">for </span>tag <span class="kw">in </span>tags {
+        <span class="kw">if </span>seen.contains(<span class="kw-2">&amp;</span>tag) {
+            duplicates.push(tag.to_owned());
         }
-        <span class="ident">seen</span>.<span class="ident">push</span>(<span class="ident">tag</span>);
+        seen.push(tag);
     }
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">duplicates</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">duplicates</span>.<span class="ident">sort</span>();
-        <span class="ident">duplicates</span>.<span class="ident">dedup</span>();
+    <span class="kw">if </span>!duplicates.is_empty() {
+        duplicates.sort();
+        duplicates.dedup();
 
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NonUniqueTags</span> { <span class="ident">tags</span>: <span class="ident">duplicates</span> });
+        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::NonUniqueTags { tags: duplicates });
     }
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stack</span>;
-    <span class="kw">use</span> <span class="ident">simple_test_case::test_case</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::stack;
+    <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>])), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">true</span>; <span class="string">&quot;known in stack&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">5</span>)), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">false</span>; <span class="string">&quot;known focus only&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>])), <span class="prelude-val">None</span>, <span class="bool-val">true</span>; <span class="string">&quot;unknown&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>; <span class="string">&quot;empty stack&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">remove_returns_as_expected</span>(<span class="ident">stack</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">maybe_t</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">is_some</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">Workspace::new</span>(<span class="number">0</span>, <span class="string">&quot;test&quot;</span>, <span class="ident">LayoutStack::default</span>(), <span class="ident">stack</span>);
+    <span class="attribute">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>])), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">true</span>; <span class="string">&quot;known in stack&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">5</span>)), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">false</span>; <span class="string">&quot;known focus only&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>])), <span class="prelude-val">None</span>, <span class="bool-val">true</span>; <span class="string">&quot;unknown&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>; <span class="string">&quot;empty stack&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>remove_returns_as_expected(stack: <span class="prelude-ty">Option</span>&lt;Stack&lt;u8&gt;&gt;, maybe_t: <span class="prelude-ty">Option</span>&lt;u8&gt;, is_some: bool) {
+        <span class="kw">let </span><span class="kw-2">mut </span>w = Workspace::new(<span class="number">0</span>, <span class="string">&quot;test&quot;</span>, LayoutStack::default(), stack);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">w</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="number">5</span>), <span class="ident">maybe_t</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">w</span>.<span class="ident">stack</span>.<span class="ident">is_some</span>(), <span class="ident">is_some</span>);
+        <span class="macro">assert_eq!</span>(w.remove(<span class="kw-2">&amp;</span><span class="number">5</span>), maybe_t);
+        <span class="macro">assert_eq!</span>(w.stack.is_some(), is_some);
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">None</span>; <span class="string">&quot;no duplicate tags&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>]); <span class="string">&quot;single duplicate&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates sorted&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">check_workspace_invariants</span>(<span class="ident">tags</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>], <span class="ident">duplicates</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]<span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">workspaces</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tags</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">tag</span>)<span class="op">|</span> <span class="ident">Workspace::new</span>(<span class="ident">i</span>, <span class="kw-2">*</span><span class="ident">tag</span>, <span class="ident">Default::default</span>(), <span class="prelude-val">None</span>))
-            .<span class="ident">collect</span>();
+    <span class="attribute">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">None</span>; <span class="string">&quot;no duplicate tags&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>]); <span class="string">&quot;single duplicate&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates sorted&quot;</span>)]
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>check_workspace_invariants(tags: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], duplicates: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]&gt;) {
+        <span class="kw">let </span>workspaces: Vec&lt;Workspace&lt;u8&gt;&gt; = tags
+            .iter()
+            .enumerate()
+            .map(|(i, tag)| Workspace::new(i, <span class="kw-2">*</span>tag, Default::default(), <span class="prelude-val">None</span>))
+            .collect();
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">check_workspace_invariants</span>(<span class="kw-2">&amp;</span><span class="ident">workspaces</span>);
+        <span class="kw">let </span>res = check_workspace_invariants(<span class="kw-2">&amp;</span>workspaces);
 
-        <span class="kw">match</span> <span class="ident">duplicates</span> {
-            <span class="prelude-val">None</span> =&gt; <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_ok</span>()),
-            <span class="prelude-val">Some</span>(<span class="ident">expected_tags</span>) =&gt; <span class="kw">match</span> <span class="ident">res</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">Error::NonUniqueTags</span> { <span class="ident">tags</span> }) =&gt; <span class="macro">assert_eq!</span>(<span class="ident">tags</span>, <span class="ident">expected_tags</span>),
-                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected NonUniqueTags, got {res:?}&quot;</span>),
+        <span class="kw">match </span>duplicates {
+            <span class="prelude-val">None </span>=&gt; <span class="macro">assert!</span>(res.is_ok()),
+            <span class="prelude-val">Some</span>(expected_tags) =&gt; <span class="kw">match </span>res {
+                <span class="prelude-val">Err</span>(Error::NonUniqueTags { tags }) =&gt; <span class="macro">assert_eq!</span>(tags, expected_tags),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected NonUniqueTags, got {res:?}&quot;</span>),
             },
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

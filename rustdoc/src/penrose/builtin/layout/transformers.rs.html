@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/transformers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transformers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/transformers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transformers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -185,190 +185,190 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Built-in layout transformers.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core::layout</span>::{<span class="ident">Layout</span>, <span class="ident">LayoutTransformer</span>},
-    <span class="ident">pure::geometry::Rect</span>,
-    <span class="ident">simple_transformer</span>, <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Built-in layout transformers.
+</span><span class="kw">use crate</span>::{
+    core::layout::{Layout, LayoutTransformer},
+    pure::geometry::Rect,
+    simple_transformer, Xid,
 };
 
 <span class="macro">simple_transformer!</span>(
-    <span class="doccomment">/// Wrap an existing layout and reflect its window positions horizontally.</span>
-    <span class="ident">ReflectHorizontal</span>,
-    <span class="ident">reflect_horizontal</span>,
-    <span class="string">&quot;Reflected&quot;</span>
-);
+    <span class="doccomment">/// Wrap an existing layout and reflect its window positions horizontally.
+    </span>ReflectHorizontal,
+    reflect_horizontal,
+    <span class="string">&quot;Reflected&quot;
+</span>);
 
-<span class="kw">fn</span> <span class="ident">reflect_horizontal</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">mid</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="op">/</span> <span class="number">2</span>;
+<span class="kw">fn </span>reflect_horizontal(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+    <span class="kw">let </span>mid = r.x + r.w / <span class="number">2</span>;
 
-    <span class="ident">positions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="kw-2">mut</span> <span class="ident">r</span>)<span class="op">|</span> {
-            <span class="ident">r</span>.<span class="ident">x</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">mid</span> {
-                <span class="number">2</span> <span class="op">*</span> (<span class="ident">mid</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">x</span>) <span class="op">-</span> <span class="ident">r</span>.<span class="ident">w</span>
-            } <span class="kw">else</span> {
-                <span class="number">2</span> <span class="op">*</span> <span class="ident">mid</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">x</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">w</span>
+    positions
+        .into_iter()
+        .map(|(id, <span class="kw-2">mut </span>r)| {
+            r.x = <span class="kw">if </span>r.x &lt;= mid {
+                <span class="number">2 </span>* (mid - r.x) - r.w
+            } <span class="kw">else </span>{
+                <span class="number">2 </span>* mid - r.x - r.w
             };
 
-            (<span class="ident">id</span>, <span class="ident">r</span>)
+            (id, r)
         })
-        .<span class="ident">collect</span>()
+        .collect()
 }
 
 <span class="macro">simple_transformer!</span>(
-    <span class="doccomment">/// Wrap an existing layout and reflect its window positions vertically.</span>
-    <span class="ident">ReflectVertical</span>,
-    <span class="ident">reflect_vertical</span>,
-    <span class="string">&quot;Flipped&quot;</span>
-);
+    <span class="doccomment">/// Wrap an existing layout and reflect its window positions vertically.
+    </span>ReflectVertical,
+    reflect_vertical,
+    <span class="string">&quot;Flipped&quot;
+</span>);
 
-<span class="kw">fn</span> <span class="ident">reflect_vertical</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">mid</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">y</span> <span class="op">+</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="op">/</span> <span class="number">2</span>;
+<span class="kw">fn </span>reflect_vertical(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+    <span class="kw">let </span>mid = r.y + r.h / <span class="number">2</span>;
 
-    <span class="ident">positions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="kw-2">mut</span> <span class="ident">r</span>)<span class="op">|</span> {
-            <span class="ident">r</span>.<span class="ident">y</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">y</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">mid</span> {
-                <span class="number">2</span> <span class="op">*</span> (<span class="ident">mid</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">y</span>) <span class="op">-</span> <span class="ident">r</span>.<span class="ident">h</span>
-            } <span class="kw">else</span> {
-                <span class="number">2</span> <span class="op">*</span> <span class="ident">mid</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">y</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">h</span>
+    positions
+        .into_iter()
+        .map(|(id, <span class="kw-2">mut </span>r)| {
+            r.y = <span class="kw">if </span>r.y &lt;= mid {
+                <span class="number">2 </span>* (mid - r.y) - r.h
+            } <span class="kw">else </span>{
+                <span class="number">2 </span>* mid - r.y - r.h
             };
 
-            (<span class="ident">id</span>, <span class="ident">r</span>)
+            (id, r)
         })
-        .<span class="ident">collect</span>()
+        .collect()
 }
 
-<span class="doccomment">/// Simple gaps around the window placement of the enclosed [Layout].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`</span>
-<span class="doccomment">/// controls the gap around each individual window. Set both equal to one another to have</span>
-<span class="doccomment">/// a consistant gap size in all places.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Gaps</span> {
-    <span class="doccomment">/// The inner [Layout] having gaps applied to it.</span>
-    <span class="kw">pub</span> <span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The desired outer gap size in pixels</span>
-    <span class="kw">pub</span> <span class="ident">outer_px</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The desired inner gap size in pixels</span>
-    <span class="kw">pub</span> <span class="ident">inner_px</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// Simple gaps around the window placement of the enclosed [Layout].
+///
+/// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`
+/// controls the gap around each individual window. Set both equal to one another to have
+/// a consistant gap size in all places.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Gaps {
+    <span class="doccomment">/// The inner [Layout] having gaps applied to it.
+    </span><span class="kw">pub </span>layout: Box&lt;<span class="kw">dyn </span>Layout&gt;,
+    <span class="doccomment">/// The desired outer gap size in pixels
+    </span><span class="kw">pub </span>outer_px: u32,
+    <span class="doccomment">/// The desired inner gap size in pixels
+    </span><span class="kw">pub </span>inner_px: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">Gaps</span> {
-    <span class="doccomment">/// Wrap an existing [Layout] with the given gap sizes.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wrap</span>(<span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>, <span class="ident">outer_px</span>: <span class="ident">u32</span>, <span class="ident">inner_px</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="self">Self</span> {
-            <span class="ident">layout</span>,
-            <span class="ident">outer_px</span>,
-            <span class="ident">inner_px</span>,
+<span class="kw">impl </span>Gaps {
+    <span class="doccomment">/// Wrap an existing [Layout] with the given gap sizes.
+    </span><span class="kw">pub fn </span>wrap(layout: Box&lt;<span class="kw">dyn </span>Layout&gt;, outer_px: u32, inner_px: u32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">Self </span>{
+            layout,
+            outer_px,
+            inner_px,
         })
     }
 }
 
-<span class="kw">fn</span> <span class="ident">shrink</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">px</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Rect</span> {
-    <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="ident">r</span>;
+<span class="kw">fn </span>shrink(r: Rect, px: u32) -&gt; Rect {
+    <span class="kw">if </span>r.w == <span class="number">0 </span>|| r.h == <span class="number">0 </span>{
+        <span class="kw">return </span>r;
     }
 
-    <span class="ident">Rect</span> {
-        <span class="ident">x</span>: <span class="ident">r</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">px</span>,
-        <span class="ident">y</span>: <span class="ident">r</span>.<span class="ident">y</span> <span class="op">+</span> <span class="ident">px</span>,
-        <span class="ident">w</span>: <span class="ident">r</span>.<span class="ident">w</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">px</span>,
-        <span class="ident">h</span>: <span class="ident">r</span>.<span class="ident">h</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">px</span>,
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">LayoutTransformer</span> <span class="kw">for</span> <span class="ident">Gaps</span> {
-    <span class="kw">fn</span> <span class="ident">transformed_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">layout</span>.<span class="ident">name</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">inner_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">layout</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">transform_initial</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="ident">shrink</span>(<span class="ident">r</span>, <span class="self">self</span>.<span class="ident">outer_px</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">transform_positions</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="ident">Rect</span>, <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
-        <span class="ident">positions</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">r</span>)<span class="op">|</span> (<span class="ident">id</span>, <span class="ident">shrink</span>(<span class="ident">r</span>, <span class="self">self</span>.<span class="ident">inner_px</span>)))
-            .<span class="ident">collect</span>()
+    Rect {
+        x: r.x + px,
+        y: r.y + px,
+        w: r.w - <span class="number">2 </span>* px,
+        h: r.h - <span class="number">2 </span>* px,
     }
 }
 
-<span class="doccomment">/// Reserve `px` pixels at the top of the screen.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Typically used for providing space for a status bar.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReserveTop</span> {
-    <span class="doccomment">/// The wrapped inner layout</span>
-    <span class="kw">pub</span> <span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The number of pixels to reserve at the top of the screen</span>
-    <span class="kw">pub</span> <span class="ident">px</span>: <span class="ident">u32</span>,
-}
+<span class="kw">impl </span>LayoutTransformer <span class="kw">for </span>Gaps {
+    <span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.layout.name()
+    }
 
-<span class="kw">impl</span> <span class="ident">ReserveTop</span> {
-    <span class="doccomment">/// Wrap an existing [Layout] with the given reserved area.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wrap</span>(<span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>, <span class="ident">px</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="self">Self</span> { <span class="ident">layout</span>, <span class="ident">px</span> })
+    <span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.layout
+    }
+
+    <span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;</span><span class="self">self</span>, r: Rect) -&gt; Rect {
+        shrink(r, <span class="self">self</span>.outer_px)
+    }
+
+    <span class="kw">fn </span>transform_positions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        positions
+            .into_iter()
+            .map(|(id, r)| (id, shrink(r, <span class="self">self</span>.inner_px)))
+            .collect()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">LayoutTransformer</span> <span class="kw">for</span> <span class="ident">ReserveTop</span> {
-    <span class="kw">fn</span> <span class="ident">transformed_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">layout</span>.<span class="ident">name</span>()
+<span class="doccomment">/// Reserve `px` pixels at the top of the screen.
+///
+/// Typically used for providing space for a status bar.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>ReserveTop {
+    <span class="doccomment">/// The wrapped inner layout
+    </span><span class="kw">pub </span>layout: Box&lt;<span class="kw">dyn </span>Layout&gt;,
+    <span class="doccomment">/// The number of pixels to reserve at the top of the screen
+    </span><span class="kw">pub </span>px: u32,
+}
+
+<span class="kw">impl </span>ReserveTop {
+    <span class="doccomment">/// Wrap an existing [Layout] with the given reserved area.
+    </span><span class="kw">pub fn </span>wrap(layout: Box&lt;<span class="kw">dyn </span>Layout&gt;, px: u32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">Self </span>{ layout, px })
+    }
+}
+
+<span class="kw">impl </span>LayoutTransformer <span class="kw">for </span>ReserveTop {
+    <span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.layout.name()
     }
 
-    <span class="kw">fn</span> <span class="ident">inner_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">layout</span>
+    <span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.layout
     }
 
-    <span class="kw">fn</span> <span class="ident">transform_initial</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="ident">r</span>;
+    <span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>r: Rect) -&gt; Rect {
+        <span class="kw">if </span>r.w == <span class="number">0 </span>|| r.h == <span class="number">0 </span>{
+            <span class="kw">return </span>r;
         }
 
-        <span class="ident">r</span>.<span class="ident">y</span> <span class="op">+</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">px</span>;
-        <span class="ident">r</span>.<span class="ident">h</span> <span class="op">-</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">px</span>;
+        r.y += <span class="self">self</span>.px;
+        r.h -= <span class="self">self</span>.px;
 
-        <span class="ident">r</span>
+        r
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">simple_test_case::test_case</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>); <span class="string">&quot;fullscreen is idempotent&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>), <span class="ident">Rect::new</span>(<span class="number">60</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>); <span class="string">&quot;not crossing midpoint left&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">60</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>); <span class="string">&quot;not crossing midpoint right&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">60</span>, <span class="number">100</span>), <span class="ident">Rect::new</span>(<span class="number">40</span>, <span class="number">0</span>, <span class="number">60</span>, <span class="number">100</span>); <span class="string">&quot;crossing midpoint&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">100</span>), <span class="ident">Rect::new</span>(<span class="number">50</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">100</span>); <span class="string">&quot;on midpoint&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">reflect_horizontal</span>(<span class="ident">original</span>: <span class="ident">Rect</span>, <span class="ident">expected</span>: <span class="ident">Rect</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>);
-        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">reflect_horizontal</span>(<span class="ident">r</span>, <span class="macro">vec!</span>[(<span class="ident">Xid</span>(<span class="number">1</span>), <span class="ident">original</span>)]);
+    <span class="attribute">#[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>); <span class="string">&quot;fullscreen is idempotent&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>), Rect::new(<span class="number">60</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>); <span class="string">&quot;not crossing midpoint left&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">60</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">40</span>, <span class="number">100</span>); <span class="string">&quot;not crossing midpoint right&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">60</span>, <span class="number">100</span>), Rect::new(<span class="number">40</span>, <span class="number">0</span>, <span class="number">60</span>, <span class="number">100</span>); <span class="string">&quot;crossing midpoint&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">100</span>), Rect::new(<span class="number">50</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">100</span>); <span class="string">&quot;on midpoint&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>reflect_horizontal(original: Rect, expected: Rect) {
+        <span class="kw">let </span>r = Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>);
+        <span class="kw">let </span>transformed = reflect_horizontal(r, <span class="macro">vec!</span>[(Xid(<span class="number">1</span>), original)]);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">transformed</span>, <span class="macro">vec!</span>[(<span class="ident">Xid</span>(<span class="number">1</span>), <span class="ident">expected</span>)]);
+        <span class="macro">assert_eq!</span>(transformed, <span class="macro">vec!</span>[(Xid(<span class="number">1</span>), expected)]);
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>); <span class="string">&quot;fullscreen is idempotent&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">80</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">120</span>, <span class="number">50</span>, <span class="number">80</span>); <span class="string">&quot;not crossing midpoint above&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">120</span>, <span class="number">50</span>, <span class="number">80</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">80</span>); <span class="string">&quot;not crossing midpoint below&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">120</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">80</span>, <span class="number">50</span>, <span class="number">120</span>); <span class="string">&quot;crossing midpoint&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">100</span>), <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">100</span>, <span class="number">50</span>, <span class="number">100</span>); <span class="string">&quot;on midpoint&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">reflect_vertical</span>(<span class="ident">original</span>: <span class="ident">Rect</span>, <span class="ident">expected</span>: <span class="ident">Rect</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>);
-        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="ident">reflect_vertical</span>(<span class="ident">r</span>, <span class="macro">vec!</span>[(<span class="ident">Xid</span>(<span class="number">1</span>), <span class="ident">original</span>)]);
+    <span class="attribute">#[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>); <span class="string">&quot;fullscreen is idempotent&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">80</span>), Rect::new(<span class="number">0</span>, <span class="number">120</span>, <span class="number">50</span>, <span class="number">80</span>); <span class="string">&quot;not crossing midpoint above&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">120</span>, <span class="number">50</span>, <span class="number">80</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">80</span>); <span class="string">&quot;not crossing midpoint below&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">120</span>), Rect::new(<span class="number">0</span>, <span class="number">80</span>, <span class="number">50</span>, <span class="number">120</span>); <span class="string">&quot;crossing midpoint&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">100</span>), Rect::new(<span class="number">0</span>, <span class="number">100</span>, <span class="number">50</span>, <span class="number">100</span>); <span class="string">&quot;on midpoint&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>reflect_vertical(original: Rect, expected: Rect) {
+        <span class="kw">let </span>r = Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>);
+        <span class="kw">let </span>transformed = reflect_vertical(r, <span class="macro">vec!</span>[(Xid(<span class="number">1</span>), original)]);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">transformed</span>, <span class="macro">vec!</span>[(<span class="ident">Xid</span>(<span class="number">1</span>), <span class="ident">expected</span>)]);
+        <span class="macro">assert_eq!</span>(transformed, <span class="macro">vec!</span>[(Xid(<span class="number">1</span>), expected)]);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

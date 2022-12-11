@@ -6,7 +6,6 @@
         <title>The Penrose Book</title>
         <meta name="robots" content="noindex" />
         <!-- Custom HTML head -->
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
@@ -29,13 +28,13 @@
     </head>
     <body>
         <!-- Provide site root to javascript -->
-        <script type="text/javascript">
+        <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
         </script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script type="text/javascript">
+        <script>
             try {
                 var theme = localStorage.getItem('mdbook-theme');
                 var sidebar = localStorage.getItem('mdbook-sidebar');
@@ -51,7 +50,7 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script type="text/javascript">
+        <script>
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
@@ -63,7 +62,7 @@
         </script>
 
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script type="text/javascript">
+        <script>
             var html = document.querySelector('html');
             var sidebar = 'hidden';
             if (document.body.clientWidth >= 1080) {
@@ -98,7 +97,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
                         <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
@@ -125,7 +124,7 @@
                     </div>
                 </div>
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script type="text/javascript">
+                <script>
                     document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
                     document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
                     Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
@@ -195,8 +194,7 @@ $ exa -T  # or just plain old 'ls' if you prefer
 <p>If you open up <code>main.rs</code> you should see a simple hello world program:</p>
 <pre><pre class="playground"><code class="language-rust">fn main() {
     println!(&quot;Hello, world!&quot;);
-}
-</code></pre></pre>
+}</code></pre></pre>
 <p>We can run this using <code>cargo run</code> to check everything is good to go:</p>
 <pre><code class="language-bash">$ cargo run
    Compiling example v0.1.0 (/home/roger/my_penrose_config)
@@ -317,8 +315,7 @@ mod tests {
             panic!(&quot;{e}&quot;);
         }
     }
-}
-</code></pre></pre>
+}</code></pre></pre>
 <h3 id="checking-were-good-to-go"><a class="header" href="#checking-were-good-to-go">Checking we're good to go</a></h3>
 <p>Hopefully you've spotted that the end of the example includes a test. Now, it's entirely up
 to you whether or not you keep (and run) the test but it's highly recommended that you do.
@@ -530,8 +527,7 @@ pub fn current_date_and_time(style: &amp;TextStyle) -&gt; RefreshText {
             .to_string()
     })
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <h2 id="built-in-widgets"><a class="header" href="#built-in-widgets">Built in widgets</a></h2>
 <h3 id="workspaces"><a class="header" href="#workspaces">Workspaces</a></h3>
 <p>The <a href="https://sminez.github.io/penrose/rustdoc/penrose_ui/bar/widgets/struct.Workspaces.html">Workspaces</a> widget is the most complicated built in widget on offer. It checks the
@@ -649,8 +645,7 @@ server. In simplified rust code, it looks something like this:</p>
         // for each event type run the appropriate handler
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>There's obviously more to it than that, but this is a pretty good starting point for how to think about
 your window manager. Penrose provides a number of different ways to modify how the default handling
 of events behaves and for running custom code in response to key presses. The pages in this section of
@@ -751,8 +746,7 @@ Rust type wise, a workspace look like this (the fields on a real <code>Workspace
     layouts: Stack&lt;Layout&gt;,
     stack: Option&lt;Stack&lt;Xid&gt;&gt;,
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>The <code>id</code> and <code>tag</code> fields are used to identify workspaces within the larger pure state: useful, but not particularly
 interesting. The client <code>Stack</code> itself is wrapped in an Option because (like we mentioned above) there is no such
 thing as an empty <code>Stack</code>, so a <code>Workspace</code> with no windows has <code>None</code>. Running operations on the stack contained in
@@ -793,8 +787,7 @@ this:</p>
     hidden: LinkedList&lt;Workspace&gt;,
     // and some book-keeping...
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>I'm not quite sure how best to describe what's going on here in terms of Zippers as it's a <em>little</em> bit of an abuse of
 the concept but, if you squint hard enough, what you're looking at is pretty much a &quot;Stack of Stacks&quot;. Albeit with a
 healthy sprinkling of meta-data throughout and the fact that for the unfocused elements we don't care about their order
@@ -858,8 +851,7 @@ a look at the <a href="https://sminez.github.io/penrose/rustdoc/penrose/core/bin
 </span>pub trait KeyEventHandler&lt;X: XConn&gt; {
     fn call(&amp;mut self, state: &amp;mut State&lt;X&gt;, x: &amp;X) -&gt; Result&lt;()&gt;;
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>There's not much to it: you are given mutable access to the window manager <code>State</code> and a reference to
 the X connection. From there you can do pretty much whatever you like other than return data (we'll
 take a look at how you can persist and manage your own state in a bit!)</p>
@@ -910,8 +902,7 @@ pub fn power_menu&lt;X: XConn&gt;() -&gt; KeyEventHandler&lt;X&gt; {
         }
     })
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>The window manager state is used to determine the current screen (where we want to open dmenu)
 but other than that we're running completely arbitrary code in response to a keypress. The main
 thing to keep in mind is that penrose is <em>single threaded</em> so anything you do in an action must
@@ -932,8 +923,7 @@ modify_with(|cs| cs.next_layout());
 
 // Close the currently focused window
 modify_with(|cs| cs.kill_focused());
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
 <h1 id="layouts-2"><a class="header" href="#layouts-2">Layouts</a></h1>
 <p>Layouts are (lets face it) a large part of why people use a dynamic tiling window manager in the first place.
@@ -974,8 +964,7 @@ customisation you want to give the user while the window manager is running:</p>
 
     fn handle_message(&amp;mut self, m: &amp;Message) -&gt; Option&lt;Box&lt;dyn Layout&gt;&gt;;
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>On the &quot;laying out windows&quot; front (you know, the main one) you have three choices:</p>
 <ul>
 <li>Specify how to layout a possibly empty workspace based on the specific tag being laid out</li>
@@ -1026,8 +1015,7 @@ impl Layout for Monocle {
         None
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>Pretty simple right? Admittedly, this is about as simple as you can make it (the focused window gets the
 full screen and everything else gets unmapped) but the overall boilerplate is kept to a minimum, which
 is nice.</p>
@@ -1057,8 +1045,7 @@ can be <a href="https://doc.rust-lang.org/std/any/trait.Any.html">literally anyt
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>impl IntoMessage for MyMessage {}
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>What any given message actually <em>does</em> is entirely at the discression of the <code>Layout</code> that handles it. So far,
 so vague...lets take a look at an example:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -1088,8 +1075,7 @@ impl Layout for MyLayout {
         None
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>The <code>downcast_ref</code> method is the thing to pay attention to here: this is how we go from a <code>Message</code> (really just
 a wrapper around the standard library <code>Any</code> trait) to a concrete type. Anything that implements <code>IntoMessage</code>
 can be sent to our Layout so we do our own type checking to see if the message is something we care about. Messages
@@ -1130,8 +1116,7 @@ impl Layout for MyLayout {
         None
     }
 }
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <p>Nice!</p>
 <p>That's all well and good if we have a bunch of our own layouts that we can write and swap between, but what if we
 just want to <em>tweak</em> an existing layout a bit? Well that's where we move over to the wonderful world of
@@ -1160,8 +1145,7 @@ fn my_transformer(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid,
 }
 
 simple_transformer!(&quot;MyTransform&quot;, MyTransformer, my_transformer);
-<span class="boring">}
-</span></code></pre></pre>
+<span class="boring">}</span></code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><p><image width="50px" src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" align="left"></image></p>
 <h1 id="penrose-faqs"><a class="header" href="#penrose-faqs">Penrose FAQs</a></h1>
 <h2 id="how-do-i-install-penrose"><a class="header" href="#how-do-i-install-penrose">How do I install Penrose?</a></h2>
@@ -1267,18 +1251,18 @@ not something you want to manage and maintain, then <code>penrose</code> is not 
 
         </div>
 
-        <script type="text/javascript">
+        <script>
             window.playground_copyable = true;
         </script>
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script type="text/javascript">
+        <script>
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);
         });

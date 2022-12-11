@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/debug.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>debug.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/debug.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>debug.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -88,93 +88,93 @@
 <span id="86">86</span>
 <span id="87">87</span>
 <span id="88">88</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Debugging utilities for diagnosing issues with penrose.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core</span>::{<span class="ident">hooks::StateHook</span>, <span class="ident">State</span>},
-    <span class="ident">extensions::util::notify_send</span>,
-    <span class="ident">x::XConn</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Debugging utilities for diagnosing issues with penrose.
+</span><span class="kw">use crate</span>::{
+    core::{hooks::StateHook, State},
+    extensions::util::notify_send,
+    x::XConn,
     <span class="prelude-ty">Result</span>,
 };
 
-<span class="doccomment">/// Use `notify-send` to display details about the current Window Manager each</span>
-<span class="doccomment">/// time there is a refresh</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NotfyState</span>(<span class="kw">pub</span> <span class="ident">CurrentStateConfig</span>);
+<span class="doccomment">/// Use `notify-send` to display details about the current Window Manager each
+/// time there is a refresh
+</span><span class="attribute">#[derive(Default, Debug, Clone, Copy)]
+</span><span class="kw">pub struct </span>NotfyState(<span class="kw">pub </span>CurrentStateConfig);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span> <span class="ident">StateHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NotfyState</span> {
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">summarise_state</span>(<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>);
+<span class="kw">impl</span>&lt;X: XConn&gt; StateHook&lt;X&gt; <span class="kw">for </span>NotfyState {
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>msg = summarise_state(state, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>);
 
-        <span class="ident">notify_send</span>(<span class="string">&quot;Current State&quot;</span>, <span class="ident">msg</span>)
+        notify_send(<span class="string">&quot;Current State&quot;</span>, msg)
     }
 }
 
-<span class="doccomment">/// Flag based configuration of debug printing of the current window manager state</span>
-<span class="doccomment">/// All fields default to true</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CurrentStateConfig</span> {
-    <span class="doccomment">/// Should the current screen index be shown?</span>
-    <span class="kw">pub</span> <span class="ident">focused_screen</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Should the focused client id (if there is one) be shown?</span>
-    <span class="kw">pub</span> <span class="ident">focused_client</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Should the focused workspace tag be shown?</span>
-    <span class="kw">pub</span> <span class="ident">focused_tag</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Should the total number of managed clients be shown?</span>
-    <span class="kw">pub</span> <span class="ident">n_clients</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Should the number of clients expected to be mapped to the screen be shown?</span>
-    <span class="kw">pub</span> <span class="ident">n_mapped_clients</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// Flag based configuration of debug printing of the current window manager state
+/// All fields default to true
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>CurrentStateConfig {
+    <span class="doccomment">/// Should the current screen index be shown?
+    </span><span class="kw">pub </span>focused_screen: bool,
+    <span class="doccomment">/// Should the focused client id (if there is one) be shown?
+    </span><span class="kw">pub </span>focused_client: bool,
+    <span class="doccomment">/// Should the focused workspace tag be shown?
+    </span><span class="kw">pub </span>focused_tag: bool,
+    <span class="doccomment">/// Should the total number of managed clients be shown?
+    </span><span class="kw">pub </span>n_clients: bool,
+    <span class="doccomment">/// Should the number of clients expected to be mapped to the screen be shown?
+    </span><span class="kw">pub </span>n_mapped_clients: bool,
 
-    <span class="doccomment">/// Should each stat be displayed on its own line?</span>
-    <span class="kw">pub</span> <span class="ident">line_per_stat</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Should each stat be displayed on its own line?
+    </span><span class="kw">pub </span>line_per_stat: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">CurrentStateConfig</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">focused_screen</span>: <span class="bool-val">true</span>,
-            <span class="ident">focused_client</span>: <span class="bool-val">true</span>,
-            <span class="ident">focused_tag</span>: <span class="bool-val">true</span>,
-            <span class="ident">n_clients</span>: <span class="bool-val">true</span>,
-            <span class="ident">n_mapped_clients</span>: <span class="bool-val">true</span>,
-            <span class="ident">line_per_stat</span>: <span class="bool-val">true</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>CurrentStateConfig {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            focused_screen: <span class="bool-val">true</span>,
+            focused_client: <span class="bool-val">true</span>,
+            focused_tag: <span class="bool-val">true</span>,
+            n_clients: <span class="bool-val">true</span>,
+            n_mapped_clients: <span class="bool-val">true</span>,
+            line_per_stat: <span class="bool-val">true</span>,
         }
     }
 }
 
-<span class="doccomment">/// Summarise the current state of the window manager as simple key value pairs.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">summarise_state</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">cfg</span>: <span class="kw-2">&amp;</span><span class="ident">CurrentStateConfig</span>) -&gt; <span class="ident">String</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fields</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+<span class="doccomment">/// Summarise the current state of the window manager as simple key value pairs.
+</span><span class="kw">pub fn </span>summarise_state&lt;X: XConn&gt;(state: <span class="kw-2">&amp;</span>State&lt;X&gt;, cfg: <span class="kw-2">&amp;</span>CurrentStateConfig) -&gt; String {
+    <span class="kw">let </span><span class="kw-2">mut </span>fields = Vec::new();
 
-    <span class="kw">if</span> <span class="ident">cfg</span>.<span class="ident">focused_screen</span> {
-        <span class="ident">fields</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;screen={}&quot;</span>, <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">screens</span>.<span class="ident">focus</span>.<span class="ident">index</span>()));
+    <span class="kw">if </span>cfg.focused_screen {
+        fields.push(<span class="macro">format!</span>(<span class="string">&quot;screen={}&quot;</span>, state.client_set.screens.focus.index()));
     }
 
-    <span class="kw">if</span> <span class="ident">cfg</span>.<span class="ident">focused_client</span> {
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">current_client</span>();
+    <span class="kw">if </span>cfg.focused_client {
+        <span class="kw">let </span>c = state.client_set.current_client();
 
-        <span class="ident">fields</span>.<span class="ident">push</span>(<span class="macro">format!</span>(
+        fields.push(<span class="macro">format!</span>(
             <span class="string">&quot;client={}&quot;</span>,
-            <span class="ident">c</span>.<span class="ident">map_or</span>(<span class="string">&quot;None&quot;</span>.<span class="ident">to_owned</span>(), <span class="op">|</span><span class="ident">c</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">c</span>).<span class="ident">to_string</span>())
+            c.map_or(<span class="string">&quot;None&quot;</span>.to_owned(), |c| (<span class="kw-2">*</span>c).to_string())
         ));
     }
 
-    <span class="kw">if</span> <span class="ident">cfg</span>.<span class="ident">focused_tag</span> {
-        <span class="ident">fields</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;tag={}&quot;</span>, <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">current_tag</span>()));
+    <span class="kw">if </span>cfg.focused_tag {
+        fields.push(<span class="macro">format!</span>(<span class="string">&quot;tag={}&quot;</span>, state.client_set.current_tag()));
     }
 
-    <span class="kw">if</span> <span class="ident">cfg</span>.<span class="ident">n_clients</span> {
-        <span class="ident">fields</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;n_clients={}&quot;</span>, <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">clients</span>().<span class="ident">count</span>()));
+    <span class="kw">if </span>cfg.n_clients {
+        fields.push(<span class="macro">format!</span>(<span class="string">&quot;n_clients={}&quot;</span>, state.client_set.clients().count()));
     }
 
-    <span class="kw">if</span> <span class="ident">cfg</span>.<span class="ident">n_mapped_clients</span> {
-        <span class="ident">fields</span>.<span class="ident">push</span>(<span class="macro">format!</span>(<span class="string">&quot;n_mapped={}&quot;</span>, <span class="ident">state</span>.<span class="ident">mapped</span>.<span class="ident">len</span>()));
+    <span class="kw">if </span>cfg.n_mapped_clients {
+        fields.push(<span class="macro">format!</span>(<span class="string">&quot;n_mapped={}&quot;</span>, state.mapped.len()));
     }
 
-    <span class="kw">if</span> <span class="ident">cfg</span>.<span class="ident">line_per_stat</span> {
-        <span class="ident">fields</span>.<span class="ident">join</span>(<span class="string">&quot;\n&quot;</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">fields</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>)
+    <span class="kw">if </span>cfg.line_per_stat {
+        fields.join(<span class="string">&quot;\n&quot;</span>)
+    } <span class="kw">else </span>{
+        fields.join(<span class="string">&quot;, &quot;</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

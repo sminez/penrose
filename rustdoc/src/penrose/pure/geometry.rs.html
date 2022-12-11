@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/geometry.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>geometry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/geometry.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>geometry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -524,529 +524,529 @@
 <span id="522">522</span>
 <span id="523">523</span>
 <span id="524">524</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Geometry primitives</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std::cmp::max</span>;
+</pre><pre class="rust"><code><span class="doccomment">//! Geometry primitives
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+</span><span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>std::cmp::max;
 
-<span class="doccomment">/// An x,y coordinate pair</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Point</span> {
-    <span class="doccomment">/// An absolute x coordinate relative to the root window</span>
-    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// An absolute y coordinate relative to the root window</span>
-    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// An x,y coordinate pair
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>Point {
+    <span class="doccomment">/// An absolute x coordinate relative to the root window
+    </span><span class="kw">pub </span>x: u32,
+    <span class="doccomment">/// An absolute y coordinate relative to the root window
+    </span><span class="kw">pub </span>y: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">Point</span> {
-    <span class="doccomment">/// Create a new Point.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">u32</span>, <span class="ident">y</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">x</span>, <span class="ident">y</span> }
+<span class="kw">impl </span>Point {
+    <span class="doccomment">/// Create a new Point.
+    </span><span class="kw">pub fn </span>new(x: u32, y: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ x, y }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Point</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">raw</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>)) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">raw</span>;
+<span class="kw">impl </span>From&lt;(u32, u32)&gt; <span class="kw">for </span>Point {
+    <span class="kw">fn </span>from(raw: (u32, u32)) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(x, y) = raw;
 
-        <span class="self">Self</span> { <span class="ident">x</span>, <span class="ident">y</span> }
+        <span class="self">Self </span>{ x, y }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">u32</span>, <span class="kw-2">&amp;</span><span class="ident">u32</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Point</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">raw</span>: (<span class="kw-2">&amp;</span><span class="ident">u32</span>, <span class="kw-2">&amp;</span><span class="ident">u32</span>)) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="kw-2">&amp;</span><span class="ident">x</span>, <span class="kw-2">&amp;</span><span class="ident">y</span>) <span class="op">=</span> <span class="ident">raw</span>;
+<span class="kw">impl </span>From&lt;(<span class="kw-2">&amp;</span>u32, <span class="kw-2">&amp;</span>u32)&gt; <span class="kw">for </span>Point {
+    <span class="kw">fn </span>from(raw: (<span class="kw-2">&amp;</span>u32, <span class="kw-2">&amp;</span>u32)) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(<span class="kw-2">&amp;</span>x, <span class="kw-2">&amp;</span>y) = raw;
 
-        <span class="self">Self</span> { <span class="ident">x</span>, <span class="ident">y</span> }
+        <span class="self">Self </span>{ x, y }
     }
 }
 
-<span class="comment">// A Rect converts to its top left corner</span>
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Point</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">Rect</span> { <span class="ident">x</span>, <span class="ident">y</span>, .. } <span class="op">=</span> <span class="ident">r</span>;
+<span class="comment">// A Rect converts to its top left corner
+</span><span class="kw">impl </span>From&lt;Rect&gt; <span class="kw">for </span>Point {
+    <span class="kw">fn </span>from(r: Rect) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>Rect { x, y, .. } = r;
 
-        <span class="self">Self</span> { <span class="ident">x</span>, <span class="ident">y</span> }
+        <span class="self">Self </span>{ x, y }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Rect</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Point</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">Rect</span> { <span class="ident">x</span>, <span class="ident">y</span>, .. } <span class="op">=</span> <span class="ident">r</span>;
+<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>Rect&gt; <span class="kw">for </span>Point {
+    <span class="kw">fn </span>from(r: <span class="kw-2">&amp;</span>Rect) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">&amp;</span>Rect { x, y, .. } = r;
 
-        <span class="self">Self</span> { <span class="ident">x</span>, <span class="ident">y</span> }
+        <span class="self">Self </span>{ x, y }
     }
 }
 
-<span class="doccomment">/// An X window / screen position: top left corner + extent as percentages</span>
-<span class="doccomment">/// of the current screen containing the window.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RelativeRect</span> {
-    <span class="ident">x</span>: <span class="ident">f64</span>,
-    <span class="ident">y</span>: <span class="ident">f64</span>,
-    <span class="ident">w</span>: <span class="ident">f64</span>,
-    <span class="ident">h</span>: <span class="ident">f64</span>,
+<span class="doccomment">/// An X window / screen position: top left corner + extent as percentages
+/// of the current screen containing the window.
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Default, Debug, PartialEq, Clone, Copy)]
+</span><span class="kw">pub struct </span>RelativeRect {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
 }
 
-<span class="kw">impl</span> <span class="ident">RelativeRect</span> {
-    <span class="doccomment">/// Create a new RelativeRect from the provided values.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Values are clamped to be in the range 0.0 to 1.0.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">w</span>: <span class="ident">f64</span>, <span class="ident">h</span>: <span class="ident">f64</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">x</span>: <span class="ident">x</span>.<span class="ident">clamp</span>(<span class="number">0.0</span>, <span class="number">1.0</span>),
-            <span class="ident">y</span>: <span class="ident">y</span>.<span class="ident">clamp</span>(<span class="number">0.0</span>, <span class="number">1.0</span>),
-            <span class="ident">w</span>: <span class="ident">w</span>.<span class="ident">clamp</span>(<span class="number">0.0</span>, <span class="number">1.0</span>),
-            <span class="ident">h</span>: <span class="ident">h</span>.<span class="ident">clamp</span>(<span class="number">0.0</span>, <span class="number">1.0</span>),
+<span class="kw">impl </span>RelativeRect {
+    <span class="doccomment">/// Create a new RelativeRect from the provided values.
+    ///
+    /// Values are clamped to be in the range 0.0 to 1.0.
+    </span><span class="kw">pub fn </span>new(x: f64, y: f64, w: f64, h: f64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            x: x.clamp(<span class="number">0.0</span>, <span class="number">1.0</span>),
+            y: y.clamp(<span class="number">0.0</span>, <span class="number">1.0</span>),
+            w: w.clamp(<span class="number">0.0</span>, <span class="number">1.0</span>),
+            h: h.clamp(<span class="number">0.0</span>, <span class="number">1.0</span>),
         }
     }
 
-    <span class="doccomment">/// All available space within a given Rect</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fullscreen</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">x</span>: <span class="number">0.0</span>,
-            <span class="ident">y</span>: <span class="number">0.0</span>,
-            <span class="ident">w</span>: <span class="number">1.0</span>,
-            <span class="ident">h</span>: <span class="number">1.0</span>,
+    <span class="doccomment">/// All available space within a given Rect
+    </span><span class="kw">pub fn </span>fullscreen() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            x: <span class="number">0.0</span>,
+            y: <span class="number">0.0</span>,
+            w: <span class="number">1.0</span>,
+            h: <span class="number">1.0</span>,
         }
     }
 
-    <span class="doccomment">/// Apply the proportions of this RelativeRect to a given Rect.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">applied_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="ident">Rect</span> {
-            <span class="ident">x</span>: <span class="ident">r</span>.<span class="ident">x</span> <span class="op">+</span> (<span class="ident">r</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">x</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">y</span>: <span class="ident">r</span>.<span class="ident">y</span> <span class="op">+</span> (<span class="ident">r</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">y</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">w</span>: (<span class="ident">r</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">w</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">h</span>: (<span class="ident">r</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">h</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">u32</span>,
+    <span class="doccomment">/// Apply the proportions of this RelativeRect to a given Rect.
+    </span><span class="kw">pub fn </span>applied_to(<span class="kw-2">&amp;</span><span class="self">self</span>, r: <span class="kw-2">&amp;</span>Rect) -&gt; Rect {
+        Rect {
+            x: r.x + (r.w <span class="kw">as </span>f64 * <span class="self">self</span>.x).floor() <span class="kw">as </span>u32,
+            y: r.y + (r.h <span class="kw">as </span>f64 * <span class="self">self</span>.y).floor() <span class="kw">as </span>u32,
+            w: (r.w <span class="kw">as </span>f64 * <span class="self">self</span>.w).floor() <span class="kw">as </span>u32,
+            h: (r.h <span class="kw">as </span>f64 * <span class="self">self</span>.h).floor() <span class="kw">as </span>u32,
         }
     }
 
-    <span class="doccomment">/// Apply some [Rect] based operation to this [RelativeRect] by applying it</span>
-    <span class="doccomment">/// to a given reference [Rect].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_as_rect</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">Rect</span>) -&gt; <span class="ident">Rect</span>,
+    <span class="doccomment">/// Apply some [Rect] based operation to this [RelativeRect] by applying it
+    /// to a given reference [Rect].
+    </span><span class="kw">pub fn </span>apply_as_rect&lt;F&gt;(<span class="self">self</span>, r: <span class="kw-2">&amp;</span>Rect, f: F) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>F: Fn(Rect) -&gt; Rect,
     {
-        <span class="ident">f</span>(<span class="self">self</span>.<span class="ident">applied_to</span>(<span class="ident">r</span>)).<span class="ident">relative_to</span>(<span class="ident">r</span>)
+        f(<span class="self">self</span>.applied_to(r)).relative_to(r)
     }
 }
 
-<span class="doccomment">/// Something that can be converted into a [RelativeRect] by comparing to</span>
-<span class="doccomment">/// some reference [Rect].</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RelativeTo</span> {
-    <span class="doccomment">/// Convert to a [RelativeRect] using the reference [Rect]</span>
-    <span class="kw">fn</span> <span class="ident">relative_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="ident">RelativeRect</span>;
+<span class="doccomment">/// Something that can be converted into a [RelativeRect] by comparing to
+/// some reference [Rect].
+</span><span class="kw">pub trait </span>RelativeTo {
+    <span class="doccomment">/// Convert to a [RelativeRect] using the reference [Rect]
+    </span><span class="kw">fn </span>relative_to(<span class="kw-2">&amp;</span><span class="self">self</span>, r: <span class="kw-2">&amp;</span>Rect) -&gt; RelativeRect;
 }
 
-<span class="kw">impl</span> <span class="ident">RelativeTo</span> <span class="kw">for</span> <span class="ident">RelativeRect</span> {
-    <span class="kw">fn</span> <span class="ident">relative_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_r</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="ident">RelativeRect</span> {
-        <span class="kw-2">*</span><span class="self">self</span>
-    }
+<span class="kw">impl </span>RelativeTo <span class="kw">for </span>RelativeRect {
+    <span class="kw">fn </span>relative_to(<span class="kw-2">&amp;</span><span class="self">self</span>, _r: <span class="kw-2">&amp;</span>Rect) -&gt; RelativeRect {
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
 }
 
-<span class="comment">// TODO: the current implemention will produce essentially garbage results if the</span>
-<span class="comment">//       child Rect is not a subregion of the parent. This needs bounds checking</span>
-<span class="comment">//       and some sensible default behaviour when those checks fail (such as translating</span>
-<span class="comment">//       the Rect to fit or scaling it down)</span>
-<span class="kw">impl</span> <span class="ident">RelativeTo</span> <span class="kw">for</span> <span class="ident">Rect</span> {
-    <span class="kw">fn</span> <span class="ident">relative_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="ident">RelativeRect</span> {
-        <span class="ident">RelativeRect::new</span>(
-            (<span class="self">self</span>.<span class="ident">x</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">x</span>) <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span>,
-            (<span class="self">self</span>.<span class="ident">y</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">y</span>) <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span>,
-            <span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span>,
-            <span class="self">self</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span>,
+<span class="comment">// TODO: the current implemention will produce essentially garbage results if the
+//       child Rect is not a subregion of the parent. This needs bounds checking
+//       and some sensible default behaviour when those checks fail (such as translating
+//       the Rect to fit or scaling it down)
+</span><span class="kw">impl </span>RelativeTo <span class="kw">for </span>Rect {
+    <span class="kw">fn </span>relative_to(<span class="kw-2">&amp;</span><span class="self">self</span>, r: <span class="kw-2">&amp;</span>Rect) -&gt; RelativeRect {
+        RelativeRect::new(
+            (<span class="self">self</span>.x - r.x) <span class="kw">as </span>f64 / r.w <span class="kw">as </span>f64,
+            (<span class="self">self</span>.y - r.y) <span class="kw">as </span>f64 / r.h <span class="kw">as </span>f64,
+            <span class="self">self</span>.w <span class="kw">as </span>f64 / r.w <span class="kw">as </span>f64,
+            <span class="self">self</span>.h <span class="kw">as </span>f64 / r.h <span class="kw">as </span>f64,
         )
     }
 }
 
-<span class="doccomment">/// An X window / screen position: top left corner + extent</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Rect</span> {
-    <span class="doccomment">/// The x-coordinate of the top left corner of this rect</span>
-    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The y-coordinate of the top left corner of this rect</span>
-    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The width of this rect</span>
-    <span class="kw">pub</span> <span class="ident">w</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The height of this rect</span>
-    <span class="kw">pub</span> <span class="ident">h</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// An X window / screen position: top left corner + extent
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Default, Debug, PartialEq, Eq, Clone, Copy, Hash)]
+</span><span class="kw">pub struct </span>Rect {
+    <span class="doccomment">/// The x-coordinate of the top left corner of this rect
+    </span><span class="kw">pub </span>x: u32,
+    <span class="doccomment">/// The y-coordinate of the top left corner of this rect
+    </span><span class="kw">pub </span>y: u32,
+    <span class="doccomment">/// The width of this rect
+    </span><span class="kw">pub </span>w: u32,
+    <span class="doccomment">/// The height of this rect
+    </span><span class="kw">pub </span>h: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">Rect</span> {
-    <span class="doccomment">/// Create a new Rect.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">x</span>: <span class="ident">u32</span>, <span class="ident">y</span>: <span class="ident">u32</span>, <span class="ident">w</span>: <span class="ident">u32</span>, <span class="ident">h</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="ident">Rect</span> { <span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span> }
+<span class="kw">impl </span>Rect {
+    <span class="doccomment">/// Create a new Rect.
+    </span><span class="kw">pub fn </span>new(x: u32, y: u32, w: u32, h: u32) -&gt; Rect {
+        Rect { x, y, w, h }
     }
 
-    <span class="doccomment">/// The four corners of this [Rect] in [Point] form returned in clockwise</span>
-    <span class="doccomment">/// order from the top left corener.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">corners</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">Point</span>, <span class="ident">Point</span>, <span class="ident">Point</span>, <span class="ident">Point</span>) {
-        <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="ident">Rect</span> { <span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span> } <span class="op">=</span> <span class="self">self</span>;
+    <span class="doccomment">/// The four corners of this [Rect] in [Point] form returned in clockwise
+    /// order from the top left corener.
+    </span><span class="kw">pub fn </span>corners(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (Point, Point, Point, Point) {
+        <span class="kw">let </span><span class="kw-2">&amp;</span>Rect { x, y, w, h } = <span class="self">self</span>;
 
         (
-            <span class="ident">Point</span> { <span class="ident">x</span>, <span class="ident">y</span> },
-            <span class="ident">Point</span> { <span class="ident">x</span>: <span class="ident">x</span> <span class="op">+</span> <span class="ident">w</span>, <span class="ident">y</span> },
-            <span class="ident">Point</span> { <span class="ident">x</span>: <span class="ident">x</span> <span class="op">+</span> <span class="ident">w</span>, <span class="ident">y</span>: <span class="ident">y</span> <span class="op">+</span> <span class="ident">h</span> },
-            <span class="ident">Point</span> { <span class="ident">x</span>, <span class="ident">y</span>: <span class="ident">y</span> <span class="op">+</span> <span class="ident">h</span> },
+            Point { x, y },
+            Point { x: x + w, y },
+            Point { x: x + w, y: y + h },
+            Point { x, y: y + h },
         )
     }
 
-    <span class="doccomment">/// The midpoint of this rectangle</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">midpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Point</span> {
-        <span class="ident">Point</span> {
-            <span class="ident">x</span>: <span class="self">self</span>.<span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">w</span> <span class="op">/</span> <span class="number">2</span>,
-            <span class="ident">y</span>: <span class="self">self</span>.<span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">h</span> <span class="op">/</span> <span class="number">2</span>,
+    <span class="doccomment">/// The midpoint of this rectangle
+    </span><span class="kw">pub fn </span>midpoint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point {
+        Point {
+            x: <span class="self">self</span>.x + <span class="self">self</span>.w / <span class="number">2</span>,
+            y: <span class="self">self</span>.y + <span class="self">self</span>.h / <span class="number">2</span>,
         }
     }
 
-    <span class="doccomment">/// Shrink width and height by the given pixel border, maintaining the current x and y</span>
-    <span class="doccomment">/// coordinates.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shrink_in</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">border</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">w</span> <span class="op">&lt;</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">border</span> {
-            <span class="number">1</span>
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">w</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">border</span>
+    <span class="doccomment">/// Shrink width and height by the given pixel border, maintaining the current x and y
+    /// coordinates.
+    </span><span class="kw">pub fn </span>shrink_in(<span class="kw-2">&amp;</span><span class="self">self</span>, border: u32) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>w = <span class="kw">if </span><span class="self">self</span>.w &lt; <span class="number">2 </span>* border {
+            <span class="number">1
+        </span>} <span class="kw">else </span>{
+            <span class="self">self</span>.w - <span class="number">2 </span>* border
         };
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">h</span> <span class="op">&lt;</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">border</span> {
-            <span class="number">1</span>
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">h</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">border</span>
+        <span class="kw">let </span>h = <span class="kw">if </span><span class="self">self</span>.h &lt; <span class="number">2 </span>* border {
+            <span class="number">1
+        </span>} <span class="kw">else </span>{
+            <span class="self">self</span>.h - <span class="number">2 </span>* border
         };
 
-        <span class="self">Self</span> { <span class="ident">w</span>, <span class="ident">h</span>, ..<span class="kw-2">*</span><span class="self">self</span> }
+        <span class="self">Self </span>{ w, h, ..<span class="kw-2">*</span><span class="self">self </span>}
     }
 
-    <span class="doccomment">/// Create a new [Rect] with width equal to `factor` x `self.w`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scale_w</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">factor</span>: <span class="ident">f64</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">w</span>: (<span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">factor</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            ..<span class="kw-2">*</span><span class="self">self</span>
+    <span class="doccomment">/// Create a new [Rect] with width equal to `factor` x `self.w`
+    </span><span class="kw">pub fn </span>scale_w(<span class="kw-2">&amp;</span><span class="self">self</span>, factor: f64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            w: (<span class="self">self</span>.w <span class="kw">as </span>f64 * factor).floor() <span class="kw">as </span>u32,
+            ..<span class="kw-2">*</span><span class="self">self
+        </span>}
+    }
+
+    <span class="doccomment">/// Create a new [Rect] with height equal to `factor` x `self.h`
+    </span><span class="kw">pub fn </span>scale_h(<span class="kw-2">&amp;</span><span class="self">self</span>, factor: f64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            h: (<span class="self">self</span>.h <span class="kw">as </span>f64 * factor).floor() <span class="kw">as </span>u32,
+            ..<span class="kw-2">*</span><span class="self">self
+        </span>}
+    }
+
+    <span class="doccomment">/// Update the width and height of this [Rect] by specified deltas.
+    ///
+    /// Minimum size is clamped at 0x0
+    </span><span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dw: i32, dh: i32) {
+        <span class="self">self</span>.w = max(<span class="number">0</span>, (<span class="self">self</span>.w <span class="kw">as </span>i32) + dw) <span class="kw">as </span>u32;
+        <span class="self">self</span>.h = max(<span class="number">0</span>, (<span class="self">self</span>.h <span class="kw">as </span>i32) + dh) <span class="kw">as </span>u32;
+    }
+
+    <span class="doccomment">/// Update the position of this [Rect] by specified deltas.
+    ///
+    /// Minimum (x, y) coordinates are clamped at (0, 0)
+    </span><span class="kw">pub fn </span>reposition(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dx: i32, dy: i32) {
+        <span class="self">self</span>.x = max(<span class="number">0</span>, (<span class="self">self</span>.x <span class="kw">as </span>i32) + dx) <span class="kw">as </span>u32;
+        <span class="self">self</span>.y = max(<span class="number">0</span>, (<span class="self">self</span>.y <span class="kw">as </span>i32) + dy) <span class="kw">as </span>u32;
+    }
+
+    <span class="doccomment">/// Check whether this Rect contains `other` as a sub-Rect
+    </span><span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Rect) -&gt; bool {
+        <span class="kw">match </span>other {
+            Rect { x, .. } <span class="kw">if </span><span class="kw-2">*</span>x &lt; <span class="self">self</span>.x =&gt; <span class="bool-val">false</span>,
+            Rect { x, w, .. } <span class="kw">if </span>(<span class="kw-2">*</span>x + <span class="kw-2">*</span>w) &gt; (<span class="self">self</span>.x + <span class="self">self</span>.w) =&gt; <span class="bool-val">false</span>,
+            Rect { y, .. } <span class="kw">if </span><span class="kw-2">*</span>y &lt; <span class="self">self</span>.y =&gt; <span class="bool-val">false</span>,
+            Rect { y, h, .. } <span class="kw">if </span>(<span class="kw-2">*</span>y + <span class="kw-2">*</span>h) &gt; (<span class="self">self</span>.y + <span class="self">self</span>.h) =&gt; <span class="bool-val">false</span>,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
         }
     }
 
-    <span class="doccomment">/// Create a new [Rect] with height equal to `factor` x `self.h`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scale_h</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">factor</span>: <span class="ident">f64</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">h</span>: (<span class="self">self</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">*</span> <span class="ident">factor</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            ..<span class="kw-2">*</span><span class="self">self</span>
-        }
+    <span class="doccomment">/// Check whether this Rect is physically larger than `other` regardless
+    /// of position.
+    </span><span class="kw">pub fn </span>is_larger_than(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Rect) -&gt; bool {
+        <span class="self">self</span>.w &gt; other.w &amp;&amp; <span class="self">self</span>.h &gt; other.h
     }
 
-    <span class="doccomment">/// Update the width and height of this [Rect] by specified deltas.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Minimum size is clamped at 0x0</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dw</span>: <span class="ident">i32</span>, <span class="ident">dh</span>: <span class="ident">i32</span>) {
-        <span class="self">self</span>.<span class="ident">w</span> <span class="op">=</span> <span class="ident">max</span>(<span class="number">0</span>, (<span class="self">self</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="ident">dw</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="self">self</span>.<span class="ident">h</span> <span class="op">=</span> <span class="ident">max</span>(<span class="number">0</span>, (<span class="self">self</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="ident">dh</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-    }
-
-    <span class="doccomment">/// Update the position of this [Rect] by specified deltas.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Minimum (x, y) coordinates are clamped at (0, 0)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reposition</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dx</span>: <span class="ident">i32</span>, <span class="ident">dy</span>: <span class="ident">i32</span>) {
-        <span class="self">self</span>.<span class="ident">x</span> <span class="op">=</span> <span class="ident">max</span>(<span class="number">0</span>, (<span class="self">self</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="ident">dx</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="self">self</span>.<span class="ident">y</span> <span class="op">=</span> <span class="ident">max</span>(<span class="number">0</span>, (<span class="self">self</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">+</span> <span class="ident">dy</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-    }
-
-    <span class="doccomment">/// Check whether this Rect contains `other` as a sub-Rect</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="ident">other</span> {
-            <span class="ident">Rect</span> { <span class="ident">x</span>, .. } <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">x</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">x</span> =&gt; <span class="bool-val">false</span>,
-            <span class="ident">Rect</span> { <span class="ident">x</span>, <span class="ident">w</span>, .. } <span class="kw">if</span> (<span class="kw-2">*</span><span class="ident">x</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">w</span>) <span class="op">&gt;</span> (<span class="self">self</span>.<span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">w</span>) =&gt; <span class="bool-val">false</span>,
-            <span class="ident">Rect</span> { <span class="ident">y</span>, .. } <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">y</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">y</span> =&gt; <span class="bool-val">false</span>,
-            <span class="ident">Rect</span> { <span class="ident">y</span>, <span class="ident">h</span>, .. } <span class="kw">if</span> (<span class="kw-2">*</span><span class="ident">y</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">h</span>) <span class="op">&gt;</span> (<span class="self">self</span>.<span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">h</span>) =&gt; <span class="bool-val">false</span>,
-            <span class="kw">_</span> =&gt; <span class="bool-val">true</span>,
-        }
-    }
-
-    <span class="doccomment">/// Check whether this Rect is physically larger than `other` regardless</span>
-    <span class="doccomment">/// of position.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_larger_than</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">w</span> <span class="op">&gt;</span> <span class="ident">other</span>.<span class="ident">w</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">h</span> <span class="op">&gt;</span> <span class="ident">other</span>.<span class="ident">h</span>
-    }
-
-    <span class="doccomment">/// Check whether this Rect contains `p`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains_point</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">p</span>: <span class="ident">P</span>) -&gt; <span class="ident">bool</span>
-    <span class="kw">where</span>
-        <span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Check whether this Rect contains `p`
+    </span><span class="kw">pub fn </span>contains_point&lt;P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, p: P) -&gt; bool
+    <span class="kw">where
+        </span>P: Into&lt;Point&gt;,
     {
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">p</span>.<span class="ident">into</span>();
+        <span class="kw">let </span>p = p.into();
 
-        (<span class="self">self</span>.<span class="ident">x</span>..(<span class="self">self</span>.<span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">w</span> <span class="op">+</span> <span class="number">1</span>)).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>.<span class="ident">x</span>)
-            <span class="op">&amp;&amp;</span> (<span class="self">self</span>.<span class="ident">y</span>..(<span class="self">self</span>.<span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">h</span> <span class="op">+</span> <span class="number">1</span>)).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">p</span>.<span class="ident">y</span>)
+        (<span class="self">self</span>.x..(<span class="self">self</span>.x + <span class="self">self</span>.w + <span class="number">1</span>)).contains(<span class="kw-2">&amp;</span>p.x)
+            &amp;&amp; (<span class="self">self</span>.y..(<span class="self">self</span>.y + <span class="self">self</span>.h + <span class="number">1</span>)).contains(<span class="kw-2">&amp;</span>p.y)
     }
 
-    <span class="doccomment">/// Center this Rect inside of `enclosing`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` if this Rect can not fit inside enclosing</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">centered_in</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">enclosing</span>: <span class="kw-2">&amp;</span><span class="ident">Rect</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">w</span> <span class="op">&gt;</span> <span class="ident">enclosing</span>.<span class="ident">w</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">h</span> <span class="op">&gt;</span> <span class="ident">enclosing</span>.<span class="ident">h</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="doccomment">/// Center this Rect inside of `enclosing`.
+    ///
+    /// Returns `None` if this Rect can not fit inside enclosing
+    </span><span class="kw">pub fn </span>centered_in(<span class="kw-2">&amp;</span><span class="self">self</span>, enclosing: <span class="kw-2">&amp;</span>Rect) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">if </span><span class="self">self</span>.w &gt; enclosing.w || <span class="self">self</span>.h &gt; enclosing.h {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">x</span>: <span class="ident">enclosing</span>.<span class="ident">x</span> <span class="op">+</span> ((<span class="ident">enclosing</span>.<span class="ident">w</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">w</span>) <span class="op">/</span> <span class="number">2</span>),
-            <span class="ident">y</span>: <span class="ident">enclosing</span>.<span class="ident">y</span> <span class="op">+</span> ((<span class="ident">enclosing</span>.<span class="ident">h</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">h</span>) <span class="op">/</span> <span class="number">2</span>),
-            ..<span class="kw-2">*</span><span class="self">self</span>
-        })
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            x: enclosing.x + ((enclosing.w - <span class="self">self</span>.w) / <span class="number">2</span>),
+            y: enclosing.y + ((enclosing.h - <span class="self">self</span>.h) / <span class="number">2</span>),
+            ..<span class="kw-2">*</span><span class="self">self
+        </span>})
     }
 
-    <span class="doccomment">/// Split this `Rect` into evenly sized rows.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_rows</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n_rows</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">n_rows</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
-            <span class="kw">return</span> <span class="macro">vec!</span>[<span class="kw-2">*</span><span class="self">self</span>];
+    <span class="doccomment">/// Split this `Rect` into evenly sized rows.
+    </span><span class="kw">pub fn </span>as_rows(<span class="kw-2">&amp;</span><span class="self">self</span>, n_rows: u32) -&gt; Vec&lt;Rect&gt; {
+        <span class="kw">if </span>n_rows &lt;= <span class="number">1 </span>{
+            <span class="kw">return </span><span class="macro">vec!</span>[<span class="kw-2">*</span><span class="self">self</span>];
         }
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">h</span> <span class="op">/</span> <span class="ident">n_rows</span>;
-        (<span class="number">0</span>..<span class="ident">n_rows</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">n</span><span class="op">|</span> <span class="ident">Rect::new</span>(<span class="self">self</span>.<span class="ident">x</span>, (<span class="self">self</span>.<span class="ident">y</span> <span class="op">+</span> <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">w</span>, <span class="ident">h</span>))
-            .<span class="ident">collect</span>()
+        <span class="kw">let </span>h = <span class="self">self</span>.h / n_rows;
+        (<span class="number">0</span>..n_rows)
+            .map(|n| Rect::new(<span class="self">self</span>.x, (<span class="self">self</span>.y + n <span class="kw">as </span>u32 * h) <span class="kw">as </span>u32, <span class="self">self</span>.w, h))
+            .collect()
     }
 
-    <span class="doccomment">/// Split this `Rect` into evenly sized columns.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_columns</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">n_columns</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">n_columns</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span> {
-            <span class="kw">return</span> <span class="macro">vec!</span>[<span class="kw-2">*</span><span class="self">self</span>];
+    <span class="doccomment">/// Split this `Rect` into evenly sized columns.
+    </span><span class="kw">pub fn </span>as_columns(<span class="kw-2">&amp;</span><span class="self">self</span>, n_columns: u32) -&gt; Vec&lt;Rect&gt; {
+        <span class="kw">if </span>n_columns &lt;= <span class="number">1 </span>{
+            <span class="kw">return </span><span class="macro">vec!</span>[<span class="kw-2">*</span><span class="self">self</span>];
         }
-        <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">w</span> <span class="op">/</span> <span class="ident">n_columns</span> <span class="kw">as</span> <span class="ident">u32</span>;
-        (<span class="number">0</span>..<span class="ident">n_columns</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">n</span><span class="op">|</span> <span class="ident">Rect::new</span>((<span class="self">self</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">w</span>) <span class="kw">as</span> <span class="ident">u32</span>, <span class="self">self</span>.<span class="ident">y</span>, <span class="ident">w</span>, <span class="self">self</span>.<span class="ident">h</span>))
-            .<span class="ident">collect</span>()
+        <span class="kw">let </span>w = <span class="self">self</span>.w / n_columns <span class="kw">as </span>u32;
+        (<span class="number">0</span>..n_columns)
+            .map(|n| Rect::new((<span class="self">self</span>.x + n <span class="kw">as </span>u32 * w) <span class="kw">as </span>u32, <span class="self">self</span>.y, w, <span class="self">self</span>.h))
+            .collect()
     }
 
-    <span class="doccomment">/// Divides this rect into two columns where the first has the given width.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` if new_width is out of bounds</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">split_at_width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_width</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="self">Self</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">new_width</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">w</span> {
-            <span class="prelude-val">None</span>
-        } <span class="kw">else</span> {
+    <span class="doccomment">/// Divides this rect into two columns where the first has the given width.
+    ///
+    /// Returns `None` if new_width is out of bounds
+    </span><span class="kw">pub fn </span>split_at_width(<span class="kw-2">&amp;</span><span class="self">self</span>, new_width: u32) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>, <span class="self">Self</span>)&gt; {
+        <span class="kw">if </span>new_width &gt;= <span class="self">self</span>.w {
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
             <span class="prelude-val">Some</span>((
-                <span class="self">Self</span> {
-                    <span class="ident">w</span>: <span class="ident">new_width</span>,
-                    ..<span class="kw-2">*</span><span class="self">self</span>
-                },
-                <span class="self">Self</span> {
-                    <span class="ident">x</span>: <span class="self">self</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">new_width</span>,
-                    <span class="ident">w</span>: <span class="self">self</span>.<span class="ident">w</span> <span class="op">-</span> <span class="ident">new_width</span>,
-                    ..<span class="kw-2">*</span><span class="self">self</span>
-                },
+                <span class="self">Self </span>{
+                    w: new_width,
+                    ..<span class="kw-2">*</span><span class="self">self
+                </span>},
+                <span class="self">Self </span>{
+                    x: <span class="self">self</span>.x + new_width,
+                    w: <span class="self">self</span>.w - new_width,
+                    ..<span class="kw-2">*</span><span class="self">self
+                </span>},
             ))
         }
     }
 
-    <span class="doccomment">/// Divides this rect into two rows where the first has the given height.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` if new_height is out of bounds</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">split_at_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_height</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="self">Self</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">new_height</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">h</span> {
-            <span class="prelude-val">None</span>
-        } <span class="kw">else</span> {
+    <span class="doccomment">/// Divides this rect into two rows where the first has the given height.
+    ///
+    /// Returns `None` if new_height is out of bounds
+    </span><span class="kw">pub fn </span>split_at_height(<span class="kw-2">&amp;</span><span class="self">self</span>, new_height: u32) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>, <span class="self">Self</span>)&gt; {
+        <span class="kw">if </span>new_height &gt;= <span class="self">self</span>.h {
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
             <span class="prelude-val">Some</span>((
-                <span class="self">Self</span> {
-                    <span class="ident">h</span>: <span class="ident">new_height</span>,
-                    ..<span class="kw-2">*</span><span class="self">self</span>
-                },
-                <span class="self">Self</span> {
-                    <span class="ident">y</span>: <span class="self">self</span>.<span class="ident">y</span> <span class="op">+</span> <span class="ident">new_height</span>,
-                    <span class="ident">h</span>: <span class="self">self</span>.<span class="ident">h</span> <span class="op">-</span> <span class="ident">new_height</span>,
-                    ..<span class="kw-2">*</span><span class="self">self</span>
-                },
+                <span class="self">Self </span>{
+                    h: new_height,
+                    ..<span class="kw-2">*</span><span class="self">self
+                </span>},
+                <span class="self">Self </span>{
+                    y: <span class="self">self</span>.y + new_height,
+                    h: <span class="self">self</span>.h - new_height,
+                    ..<span class="kw-2">*</span><span class="self">self
+                </span>},
             ))
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">simple_test_case::test_case</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">1.5</span>, <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">45</span>, <span class="number">40</span>); <span class="string">&quot;scale up&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0.5</span>, <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">15</span>, <span class="number">40</span>); <span class="string">&quot;scale down&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">1.0</span>, <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">&quot;unchanged&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">scale_w</span>(<span class="ident">factor</span>: <span class="ident">f64</span>, <span class="ident">expected</span>: <span class="ident">Rect</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
+    <span class="attribute">#[test_case(<span class="number">1.5</span>, Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">45</span>, <span class="number">40</span>); <span class="string">&quot;scale up&quot;</span>)]
+    #[test_case(<span class="number">0.5</span>, Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">15</span>, <span class="number">40</span>); <span class="string">&quot;scale down&quot;</span>)]
+    #[test_case(<span class="number">1.0</span>, Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">&quot;unchanged&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>scale_w(factor: f64, expected: Rect) {
+        <span class="kw">let </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">scale_w</span>(<span class="ident">factor</span>), <span class="ident">expected</span>);
+        <span class="macro">assert_eq!</span>(r.scale_w(factor), expected);
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">1.5</span>, <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">60</span>); <span class="string">&quot;scale up&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0.5</span>, <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">20</span>); <span class="string">&quot;scale down&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">1.0</span>, <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">&quot;unchanged&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">scale_h</span>(<span class="ident">factor</span>: <span class="ident">f64</span>, <span class="ident">expected</span>: <span class="ident">Rect</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
+    <span class="attribute">#[test_case(<span class="number">1.5</span>, Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">60</span>); <span class="string">&quot;scale up&quot;</span>)]
+    #[test_case(<span class="number">0.5</span>, Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">20</span>); <span class="string">&quot;scale down&quot;</span>)]
+    #[test_case(<span class="number">1.0</span>, Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">&quot;unchanged&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>scale_h(factor: f64, expected: Rect) {
+        <span class="kw">let </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">scale_h</span>(<span class="ident">factor</span>), <span class="ident">expected</span>);
+        <span class="macro">assert_eq!</span>(r.scale_h(factor), expected);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">contains_rect</span>() {
-        <span class="kw">let</span> <span class="ident">r1</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">10</span>, <span class="number">50</span>, <span class="number">50</span>);
-        <span class="kw">let</span> <span class="ident">r2</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>contains_rect() {
+        <span class="kw">let </span>r1 = Rect::new(<span class="number">10</span>, <span class="number">10</span>, <span class="number">50</span>, <span class="number">50</span>);
+        <span class="kw">let </span>r2 = Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>);
 
-        <span class="macro">assert!</span>(<span class="ident">r2</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">r1</span>));
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">r1</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">r2</span>));
+        <span class="macro">assert!</span>(r2.contains(<span class="kw-2">&amp;</span>r1));
+        <span class="macro">assert!</span>(!r1.contains(<span class="kw-2">&amp;</span>r2));
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Point::new</span>(<span class="number">0</span>, <span class="number">0</span>), <span class="bool-val">false</span>; <span class="string">&quot;outside&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Point::new</span>(<span class="number">30</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;inside&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Point::new</span>(<span class="number">10</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;top left&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Point::new</span>(<span class="number">40</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;top right&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Point::new</span>(<span class="number">10</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">&quot;bottom left&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Point::new</span>(<span class="number">40</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">&quot;bottom right&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">contains_point</span>(<span class="ident">p</span>: <span class="ident">Point</span>, <span class="ident">expected</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
+    <span class="attribute">#[test_case(Point::new(<span class="number">0</span>, <span class="number">0</span>), <span class="bool-val">false</span>; <span class="string">&quot;outside&quot;</span>)]
+    #[test_case(Point::new(<span class="number">30</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;inside&quot;</span>)]
+    #[test_case(Point::new(<span class="number">10</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;top left&quot;</span>)]
+    #[test_case(Point::new(<span class="number">40</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;top right&quot;</span>)]
+    #[test_case(Point::new(<span class="number">10</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">&quot;bottom left&quot;</span>)]
+    #[test_case(Point::new(<span class="number">40</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">&quot;bottom right&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>contains_point(p: Point, expected: bool) {
+        <span class="kw">let </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">r</span>.<span class="ident">contains_point</span>(<span class="ident">p</span>), <span class="ident">expected</span>);
+        <span class="macro">assert_eq!</span>(r.contains_point(p), expected);
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(
-        <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>),
-        <span class="prelude-val">Some</span>(<span class="ident">Rect::new</span>(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>));
-        <span class="string">&quot;fits&quot;</span>
-    )]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(
-        <span class="ident">Rect::new</span>(<span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>),
-        <span class="prelude-val">Some</span>(<span class="ident">Rect::new</span>(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>));
-        <span class="string">&quot;fits overlaping&quot;</span>
-    )]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(
-        <span class="ident">Rect::new</span>(<span class="number">100</span>, <span class="number">100</span>, <span class="number">10</span>, <span class="number">10</span>),
-        <span class="prelude-val">Some</span>(<span class="ident">Rect::new</span>(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>));
-        <span class="string">&quot;fits but not contained&quot;</span>
-    )]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="prelude-val">None</span>; <span class="string">&quot;doesn&#39;t fit&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">centered_in</span>(<span class="ident">inner</span>: <span class="ident">Rect</span>, <span class="ident">expected</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">outer</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">20</span>);
+    <span class="attribute">#[test_case(
+        Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>),
+        <span class="prelude-val">Some</span>(Rect::new(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>));
+        <span class="string">&quot;fits&quot;
+    </span>)]
+    #[test_case(
+        Rect::new(<span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>),
+        <span class="prelude-val">Some</span>(Rect::new(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>));
+        <span class="string">&quot;fits overlaping&quot;
+    </span>)]
+    #[test_case(
+        Rect::new(<span class="number">100</span>, <span class="number">100</span>, <span class="number">10</span>, <span class="number">10</span>),
+        <span class="prelude-val">Some</span>(Rect::new(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>));
+        <span class="string">&quot;fits but not contained&quot;
+    </span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="prelude-val">None</span>; <span class="string">&quot;doesn&#39;t fit&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>centered_in(inner: Rect, expected: <span class="prelude-ty">Option</span>&lt;Rect&gt;) {
+        <span class="kw">let </span>outer = Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">20</span>);
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">centered_in</span>(<span class="kw-2">&amp;</span><span class="ident">outer</span>);
+        <span class="kw">let </span>res = inner.centered_in(<span class="kw-2">&amp;</span>outer);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="ident">expected</span>);
+        <span class="macro">assert_eq!</span>(res, expected);
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">&quot;simple single&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">&quot;simple even&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">&quot;simple odd&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">&quot;awkward single&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">&quot;awkward even&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">&quot;awkward odd&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_rows</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">n_rows</span>: <span class="ident">u32</span>) {
-        <span class="kw">let</span> <span class="ident">rects</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">as_rows</span>(<span class="ident">n_rows</span>);
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">rects</span>[<span class="number">0</span>].<span class="ident">h</span>;
+    <span class="attribute">#[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">&quot;simple single&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">&quot;simple even&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">&quot;simple odd&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">&quot;awkward single&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">&quot;awkward even&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">&quot;awkward odd&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>as_rows(r: Rect, n_rows: u32) {
+        <span class="kw">let </span>rects = r.as_rows(n_rows);
+        <span class="kw">let </span>h = rects[<span class="number">0</span>].h;
 
-        <span class="macro">assert_eq!</span>(<span class="ident">rects</span>.<span class="ident">len</span>(), <span class="ident">n_rows</span> <span class="kw">as</span> <span class="ident">usize</span>);
-        <span class="macro">assert!</span>(<span class="ident">rects</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">h</span> <span class="op">==</span> <span class="ident">h</span>));
+        <span class="macro">assert_eq!</span>(rects.len(), n_rows <span class="kw">as </span>usize);
+        <span class="macro">assert!</span>(rects.iter().all(|r| r.h == h));
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">&quot;simple single&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">&quot;simple even&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">&quot;simple odd&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">&quot;awkward single&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">&quot;awkward even&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">&quot;awkward odd&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">as_columns</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">n_cols</span>: <span class="ident">u32</span>) {
-        <span class="kw">let</span> <span class="ident">rects</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">as_rows</span>(<span class="ident">n_cols</span>);
-        <span class="kw">let</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">rects</span>[<span class="number">0</span>].<span class="ident">w</span>;
+    <span class="attribute">#[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">&quot;simple single&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">&quot;simple even&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">&quot;simple odd&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">&quot;awkward single&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">&quot;awkward even&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">&quot;awkward odd&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>as_columns(r: Rect, n_cols: u32) {
+        <span class="kw">let </span>rects = r.as_rows(n_cols);
+        <span class="kw">let </span>w = rects[<span class="number">0</span>].w;
 
-        <span class="macro">assert_eq!</span>(<span class="ident">rects</span>.<span class="ident">len</span>(), <span class="ident">n_cols</span> <span class="kw">as</span> <span class="ident">usize</span>);
-        <span class="macro">assert!</span>(<span class="ident">rects</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">w</span> <span class="op">==</span> <span class="ident">w</span>));
+        <span class="macro">assert_eq!</span>(rects.len(), n_cols <span class="kw">as </span>usize);
+        <span class="macro">assert!</span>(rects.iter().all(|r| r.w == w));
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">&quot;half width&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">&quot;offset half width&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">&quot;at width&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of range&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">split_at_width</span>(<span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">p</span>: <span class="ident">u32</span>, <span class="ident">expected</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="ident">offset</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">split_at_width</span>(<span class="ident">p</span> <span class="op">+</span> <span class="ident">offset</span>);
+    <span class="attribute">#[test_case(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">&quot;half width&quot;</span>)]
+    #[test_case(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">&quot;offset half width&quot;</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">&quot;at width&quot;</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of range&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>split_at_width(offset: u32, p: u32, expected: <span class="prelude-ty">Option</span>&lt;(u32, u32)&gt;) {
+        <span class="kw">let </span>r = Rect::new(offset, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>);
+        <span class="kw">let </span>res = r.split_at_width(p + offset);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">w1</span>, <span class="ident">w2</span>)) <span class="op">=</span> <span class="ident">expected</span> {
-            <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_some</span>());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((w1, w2)) = expected {
+            <span class="macro">assert!</span>(res.is_some());
 
-            <span class="kw">let</span> (<span class="ident">r1</span>, <span class="ident">r2</span>) <span class="op">=</span> <span class="ident">res</span>.<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">r1</span>, <span class="ident">Rect::new</span>(<span class="ident">offset</span>, <span class="number">0</span>, <span class="ident">w1</span>, <span class="number">100</span>));
-            <span class="macro">assert_eq!</span>(<span class="ident">r2</span>, <span class="ident">Rect::new</span>(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">w1</span>, <span class="number">0</span>, <span class="ident">w2</span>, <span class="number">100</span>));
-        } <span class="kw">else</span> {
-            <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_none</span>());
+            <span class="kw">let </span>(r1, r2) = res.unwrap();
+            <span class="macro">assert_eq!</span>(r1, Rect::new(offset, <span class="number">0</span>, w1, <span class="number">100</span>));
+            <span class="macro">assert_eq!</span>(r2, Rect::new(offset + w1, <span class="number">0</span>, w2, <span class="number">100</span>));
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(res.is_none());
         }
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">&quot;half height&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">&quot;offset half height&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">&quot;at height&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of range&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">split_at_height</span>(<span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">p</span>: <span class="ident">u32</span>, <span class="ident">expected</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="ident">offset</span>, <span class="number">100</span>, <span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">r</span>.<span class="ident">split_at_height</span>(<span class="ident">p</span> <span class="op">+</span> <span class="ident">offset</span>);
+    <span class="attribute">#[test_case(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">&quot;half height&quot;</span>)]
+    #[test_case(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">&quot;offset half height&quot;</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">&quot;at height&quot;</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of range&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>split_at_height(offset: u32, p: u32, expected: <span class="prelude-ty">Option</span>&lt;(u32, u32)&gt;) {
+        <span class="kw">let </span>r = Rect::new(<span class="number">0</span>, offset, <span class="number">100</span>, <span class="number">100</span>);
+        <span class="kw">let </span>res = r.split_at_height(p + offset);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">h1</span>, <span class="ident">h2</span>)) <span class="op">=</span> <span class="ident">expected</span> {
-            <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_some</span>());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((h1, h2)) = expected {
+            <span class="macro">assert!</span>(res.is_some());
 
-            <span class="kw">let</span> (<span class="ident">r1</span>, <span class="ident">r2</span>) <span class="op">=</span> <span class="ident">res</span>.<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">r1</span>, <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="ident">offset</span>, <span class="number">100</span>, <span class="ident">h1</span>));
-            <span class="macro">assert_eq!</span>(<span class="ident">r2</span>, <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="ident">offset</span> <span class="op">+</span> <span class="ident">h1</span>, <span class="number">100</span>, <span class="ident">h2</span>));
-        } <span class="kw">else</span> {
-            <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_none</span>());
+            <span class="kw">let </span>(r1, r2) = res.unwrap();
+            <span class="macro">assert_eq!</span>(r1, Rect::new(<span class="number">0</span>, offset, <span class="number">100</span>, h1));
+            <span class="macro">assert_eq!</span>(r2, Rect::new(<span class="number">0</span>, offset + h1, <span class="number">100</span>, h2));
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(res.is_none());
         }
     }
 
-    <span class="comment">// Helpers to make it easier to read the cases for the relative_to_rect tests below</span>
+    <span class="comment">// Helpers to make it easier to read the cases for the relative_to_rect tests below
 
-    <span class="kw">fn</span> <span class="ident">r</span>(<span class="ident">x</span>: <span class="ident">u32</span>, <span class="ident">y</span>: <span class="ident">u32</span>, <span class="ident">w</span>: <span class="ident">u32</span>, <span class="ident">h</span>: <span class="ident">u32</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="ident">Rect::new</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span>)
+    </span><span class="kw">fn </span>r(x: u32, y: u32, w: u32, h: u32) -&gt; Rect {
+        Rect::new(x, y, w, h)
     }
 
-    <span class="kw">fn</span> <span class="ident">rr</span>(<span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">w</span>: <span class="ident">f64</span>, <span class="ident">h</span>: <span class="ident">f64</span>) -&gt; <span class="ident">RelativeRect</span> {
-        <span class="ident">RelativeRect::new</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span>)
+    <span class="kw">fn </span>rr(x: f64, y: f64, w: f64, h: f64) -&gt; RelativeRect {
+        RelativeRect::new(x, y, w, h)
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>); <span class="string">&quot;fullscreen&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">50</span>), <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with same xy&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">r</span>(<span class="number">10</span>, <span class="number">10</span>, <span class="number">50</span>, <span class="number">50</span>), <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), <span class="ident">rr</span>(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with different xy&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">r</span>(<span class="number">110</span>, <span class="number">110</span>, <span class="number">50</span>, <span class="number">50</span>), <span class="ident">r</span>(<span class="number">100</span>, <span class="number">100</span>, <span class="number">200</span>, <span class="number">100</span>), <span class="ident">rr</span>(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with different xy and parent not at origin&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">relative_to_rect</span>(<span class="ident">child</span>: <span class="ident">Rect</span>, <span class="ident">parent</span>: <span class="ident">Rect</span>, <span class="ident">expected</span>: <span class="ident">RelativeRect</span>) {
-        <span class="kw">let</span> <span class="ident">relative</span> <span class="op">=</span> <span class="ident">child</span>.<span class="ident">relative_to</span>(<span class="kw-2">&amp;</span><span class="ident">parent</span>);
+    <span class="attribute">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>); <span class="string">&quot;fullscreen&quot;</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with same xy&quot;</span>)]
+    #[test_case(r(<span class="number">10</span>, <span class="number">10</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with different xy&quot;</span>)]
+    #[test_case(r(<span class="number">110</span>, <span class="number">110</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">100</span>, <span class="number">100</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with different xy and parent not at origin&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>relative_to_rect(child: Rect, parent: Rect, expected: RelativeRect) {
+        <span class="kw">let </span>relative = child.relative_to(<span class="kw-2">&amp;</span>parent);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">relative</span>, <span class="ident">expected</span>);
+        <span class="macro">assert_eq!</span>(relative, expected);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">apply_as_rect_resize</span>() {
-        <span class="kw">let</span> <span class="ident">relative</span> <span class="op">=</span> <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>);
-        <span class="kw">let</span> <span class="ident">reference</span> <span class="op">=</span> <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>apply_as_rect_resize() {
+        <span class="kw">let </span>relative = rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>);
+        <span class="kw">let </span>reference = r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>);
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">relative</span>.<span class="ident">apply_as_rect</span>(<span class="kw-2">&amp;</span><span class="ident">reference</span>, <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">r</span><span class="op">|</span> {
-            <span class="ident">r</span>.<span class="ident">resize</span>(<span class="op">-</span><span class="number">10</span>, <span class="number">0</span>);
-            <span class="ident">r</span>
+        <span class="kw">let </span>res = relative.apply_as_rect(<span class="kw-2">&amp;</span>reference, |<span class="kw-2">mut </span>r| {
+            r.resize(-<span class="number">10</span>, <span class="number">0</span>);
+            r
         });
 
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.795</span>, <span class="number">0.8</span>));
+        <span class="macro">assert_eq!</span>(res, rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.795</span>, <span class="number">0.8</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">apply_as_rect_reposition</span>() {
-        <span class="kw">let</span> <span class="ident">relative</span> <span class="op">=</span> <span class="ident">rr</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>);
-        <span class="kw">let</span> <span class="ident">reference</span> <span class="op">=</span> <span class="ident">r</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>apply_as_rect_reposition() {
+        <span class="kw">let </span>relative = rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>);
+        <span class="kw">let </span>reference = r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>);
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">relative</span>.<span class="ident">apply_as_rect</span>(<span class="kw-2">&amp;</span><span class="ident">reference</span>, <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">r</span><span class="op">|</span> {
-            <span class="ident">r</span>.<span class="ident">reposition</span>(<span class="number">10</span>, <span class="number">0</span>);
-            <span class="ident">r</span>
+        <span class="kw">let </span>res = relative.apply_as_rect(<span class="kw-2">&amp;</span>reference, |<span class="kw-2">mut </span>r| {
+            r.reposition(<span class="number">10</span>, <span class="number">0</span>);
+            r
         });
 
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="ident">rr</span>(<span class="number">0.005</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>));
+        <span class="macro">assert_eq!</span>(res, rr(<span class="number">0.005</span>, <span class="number">0.0</span>, <span class="number">0.8</span>, <span class="number">0.8</span>));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

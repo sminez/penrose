@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -316,321 +316,321 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Data types for working with X events</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core::bindings</span>::{<span class="ident">KeyCode</span>, <span class="ident">MouseEvent</span>},
-    <span class="ident">pure::geometry</span>::{<span class="ident">Point</span>, <span class="ident">Rect</span>},
-    <span class="ident">x</span>::{<span class="ident">Atom</span>, <span class="ident">XConn</span>},
-    <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Data types for working with X events
+</span><span class="kw">use crate</span>::{
+    core::bindings::{KeyCode, MouseEvent},
+    pure::geometry::{Point, Rect},
+    x::{Atom, XConn},
+    <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+</span><span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>std::convert::TryFrom;
 
-<span class="doccomment">/// Wrapper around the low level X event types that correspond to request / response data when</span>
-<span class="doccomment">/// communicating with the X server itself.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The variant names and data have developed with the reference xcb implementation in mind but</span>
-<span class="doccomment">/// should be applicable for all back ends.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">XEvent</span> {
-    <span class="doccomment">/// A message has been sent to a particular client</span>
-    <span class="ident">ClientMessage</span>(<span class="ident">ClientMessage</span>),
-    <span class="doccomment">/// Client config has changed in some way</span>
-    <span class="ident">ConfigureNotify</span>(<span class="ident">ConfigureEvent</span>),
-    <span class="doccomment">/// A client is requesting to be repositioned</span>
-    <span class="ident">ConfigureRequest</span>(<span class="ident">ConfigureEvent</span>),
-    <span class="doccomment">/// The mouse pointer has entered a new client window</span>
-    <span class="ident">Enter</span>(<span class="ident">PointerChange</span>),
-    <span class="doccomment">/// A part or all of a client has become visible</span>
-    <span class="ident">Expose</span>(<span class="ident">ExposeEvent</span>),
-    <span class="doccomment">/// A client should have focus</span>
-    <span class="ident">FocusIn</span>(<span class="ident">Xid</span>),
-    <span class="doccomment">/// A client window has been closed</span>
-    <span class="ident">Destroy</span>(<span class="ident">Xid</span>),
-    <span class="doccomment">/// A grabbed key combination has been entered by the user</span>
-    <span class="ident">KeyPress</span>(<span class="ident">KeyCode</span>),
-    <span class="doccomment">/// The mouse pointer has left the current client window</span>
-    <span class="ident">Leave</span>(<span class="ident">PointerChange</span>),
-    <span class="doccomment">/// Keybindings have changed</span>
-    <span class="ident">MappingNotify</span>,
-    <span class="doccomment">/// A client window is requesting to be positioned and rendered on the screen.</span>
-    <span class="ident">MapRequest</span>(<span class="ident">Xid</span>),
-    <span class="doccomment">/// The mouse has moved or a mouse button has been pressed</span>
-    <span class="ident">MouseEvent</span>(<span class="ident">MouseEvent</span>),
-    <span class="doccomment">/// A client property has changed in some way</span>
-    <span class="ident">PropertyNotify</span>(<span class="ident">PropertyEvent</span>),
-    <span class="doccomment">/// A randr action has occured (new outputs, resolution change etc)</span>
-    <span class="ident">RandrNotify</span>,
-    <span class="doccomment">/// Focus has moved to a different screen</span>
-    <span class="ident">ScreenChange</span>,
-    <span class="doccomment">/// A client is being unmapped</span>
-    <span class="ident">UnmapNotify</span>(<span class="ident">Xid</span>),
+<span class="doccomment">/// Wrapper around the low level X event types that correspond to request / response data when
+/// communicating with the X server itself.
+///
+/// The variant names and data have developed with the reference xcb implementation in mind but
+/// should be applicable for all back ends.
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>XEvent {
+    <span class="doccomment">/// A message has been sent to a particular client
+    </span>ClientMessage(ClientMessage),
+    <span class="doccomment">/// Client config has changed in some way
+    </span>ConfigureNotify(ConfigureEvent),
+    <span class="doccomment">/// A client is requesting to be repositioned
+    </span>ConfigureRequest(ConfigureEvent),
+    <span class="doccomment">/// The mouse pointer has entered a new client window
+    </span>Enter(PointerChange),
+    <span class="doccomment">/// A part or all of a client has become visible
+    </span>Expose(ExposeEvent),
+    <span class="doccomment">/// A client should have focus
+    </span>FocusIn(Xid),
+    <span class="doccomment">/// A client window has been closed
+    </span>Destroy(Xid),
+    <span class="doccomment">/// A grabbed key combination has been entered by the user
+    </span>KeyPress(KeyCode),
+    <span class="doccomment">/// The mouse pointer has left the current client window
+    </span>Leave(PointerChange),
+    <span class="doccomment">/// Keybindings have changed
+    </span>MappingNotify,
+    <span class="doccomment">/// A client window is requesting to be positioned and rendered on the screen.
+    </span>MapRequest(Xid),
+    <span class="doccomment">/// The mouse has moved or a mouse button has been pressed
+    </span>MouseEvent(MouseEvent),
+    <span class="doccomment">/// A client property has changed in some way
+    </span>PropertyNotify(PropertyEvent),
+    <span class="doccomment">/// A randr action has occured (new outputs, resolution change etc)
+    </span>RandrNotify,
+    <span class="doccomment">/// Focus has moved to a different screen
+    </span>ScreenChange,
+    <span class="doccomment">/// A client is being unmapped
+    </span>UnmapNotify(Xid),
 }
 
-<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">XEvent</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-        <span class="kw">use</span> <span class="ident">XEvent</span>::<span class="kw-2">*</span>;
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>XEvent {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">use </span>XEvent::<span class="kw-2">*</span>;
 
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">ClientMessage</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;ClientMessage&quot;</span>),
-            <span class="ident">ConfigureNotify</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;ConfigureNotify&quot;</span>),
-            <span class="ident">ConfigureRequest</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;ConfigureRequest&quot;</span>),
-            <span class="ident">Enter</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Enter&quot;</span>),
-            <span class="ident">Expose</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Expose&quot;</span>),
-            <span class="ident">FocusIn</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;FocusIn&quot;</span>),
-            <span class="ident">Destroy</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Destroy&quot;</span>),
-            <span class="ident">KeyPress</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;KeyPress&quot;</span>),
-            <span class="ident">Leave</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Leave&quot;</span>),
-            <span class="ident">MappingNotify</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;MappingNotify&quot;</span>),
-            <span class="ident">MapRequest</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;MapRequest&quot;</span>),
-            <span class="ident">MouseEvent</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;MouseEvent&quot;</span>),
-            <span class="ident">PropertyNotify</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;PropertyNotify&quot;</span>),
-            <span class="ident">RandrNotify</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;RandrNotify&quot;</span>),
-            <span class="ident">ScreenChange</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;ScreenChange&quot;</span>),
-            <span class="ident">UnmapNotify</span>(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;UnmapNotify&quot;</span>),
+        <span class="kw">match </span><span class="self">self </span>{
+            ClientMessage(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;ClientMessage&quot;</span>),
+            ConfigureNotify(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;ConfigureNotify&quot;</span>),
+            ConfigureRequest(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;ConfigureRequest&quot;</span>),
+            Enter(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Enter&quot;</span>),
+            Expose(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Expose&quot;</span>),
+            FocusIn(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;FocusIn&quot;</span>),
+            Destroy(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Destroy&quot;</span>),
+            KeyPress(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;KeyPress&quot;</span>),
+            Leave(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Leave&quot;</span>),
+            MappingNotify =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;MappingNotify&quot;</span>),
+            MapRequest(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;MapRequest&quot;</span>),
+            MouseEvent(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;MouseEvent&quot;</span>),
+            PropertyNotify(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;PropertyNotify&quot;</span>),
+            RandrNotify =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;RandrNotify&quot;</span>),
+            ScreenChange =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;ScreenChange&quot;</span>),
+            UnmapNotify(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;UnmapNotify&quot;</span>),
         }
     }
 }
 
-<span class="doccomment">/// Known common client message formats.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ClientMessageKind</span> {
-    <span class="doccomment">/// Inform a client that it is being closed</span>
-    <span class="ident">DeleteWindow</span>(<span class="ident">Xid</span>),
-    <span class="doccomment">/// Request that a client take input focus</span>
-    <span class="ident">TakeFocus</span>(<span class="ident">Xid</span>),
-    <span class="doccomment">/// Take ownership of the systray</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Args are the id of the root window and id of the window being used as a systray</span>
-    <span class="ident">TakeSystrayOwnership</span>(<span class="ident">Xid</span>, <span class="ident">Xid</span>),
-    <span class="doccomment">/// Inform an embedded window that it has gained focus</span>
-    <span class="ident">XEmbedFocusIn</span>(<span class="ident">Xid</span>, <span class="ident">Xid</span>),
-    <span class="doccomment">/// Inform an embedded window that it has been blocked by a modal dialog</span>
-    <span class="ident">XEmbedModalityOn</span>(<span class="ident">Xid</span>, <span class="ident">Xid</span>),
-    <span class="doccomment">/// Inform a window that it is being embedded</span>
-    <span class="ident">XEmbedNotify</span>(<span class="ident">Xid</span>, <span class="ident">Xid</span>),
-    <span class="doccomment">/// Inform an embedded window that it is now active</span>
-    <span class="ident">XEmbedWindowActivate</span>(<span class="ident">Xid</span>, <span class="ident">Xid</span>),
+<span class="doccomment">/// Known common client message formats.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>ClientMessageKind {
+    <span class="doccomment">/// Inform a client that it is being closed
+    </span>DeleteWindow(Xid),
+    <span class="doccomment">/// Request that a client take input focus
+    </span>TakeFocus(Xid),
+    <span class="doccomment">/// Take ownership of the systray
+    ///
+    /// Args are the id of the root window and id of the window being used as a systray
+    </span>TakeSystrayOwnership(Xid, Xid),
+    <span class="doccomment">/// Inform an embedded window that it has gained focus
+    </span>XEmbedFocusIn(Xid, Xid),
+    <span class="doccomment">/// Inform an embedded window that it has been blocked by a modal dialog
+    </span>XEmbedModalityOn(Xid, Xid),
+    <span class="doccomment">/// Inform a window that it is being embedded
+    </span>XEmbedNotify(Xid, Xid),
+    <span class="doccomment">/// Inform an embedded window that it is now active
+    </span>XEmbedWindowActivate(Xid, Xid),
 }
 
-<span class="kw">impl</span> <span class="ident">ClientMessageKind</span> {
-    <span class="doccomment">/// Build a default [ClientMessage] compatible with X11 / XCB formats.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Most impls of `X*` traits should be able to use the default data generated by this method,</span>
-    <span class="doccomment">/// but if you need to send something else, you can always construct the `ClientMessage`</span>
-    <span class="doccomment">/// explicitly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_message</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">q</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientMessage</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl </span>ClientMessageKind {
+    <span class="doccomment">/// Build a default [ClientMessage] compatible with X11 / XCB formats.
+    ///
+    /// Most impls of `X*` traits should be able to use the default data generated by this method,
+    /// but if you need to send something else, you can always construct the `ClientMessage`
+    /// explicitly.
+    </span><span class="kw">pub fn </span>as_message&lt;X&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, q: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;ClientMessage&gt;
+    <span class="kw">where
+        </span>X: XConn,
     {
-        <span class="kw">let</span> <span class="ident">proto_msg</span> <span class="op">=</span> <span class="op">|</span><span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">atom</span>: <span class="ident">Atom</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">proto</span> <span class="op">=</span> <span class="ident">Atom::WmProtocols</span>.<span class="ident">as_ref</span>();
-            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="kw-2">*</span><span class="ident">q</span>.<span class="ident">intern_atom</span>(<span class="ident">atom</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>];
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">ClientEventMask::NoEventMask</span>;
+        <span class="kw">let </span>proto_msg = |id: Xid, atom: Atom| {
+            <span class="kw">let </span>proto = Atom::WmProtocols.as_ref();
+            <span class="kw">let </span>data = <span class="kw-2">&amp;</span>[<span class="kw-2">*</span>q.intern_atom(atom.as_ref())<span class="question-mark">?</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>];
+            <span class="kw">let </span>mask = ClientEventMask::NoEventMask;
 
-            <span class="prelude-val">Ok</span>(<span class="ident">ClientMessage::new</span>(<span class="ident">id</span>, <span class="ident">mask</span>, <span class="ident">proto</span>, <span class="ident">data</span>.<span class="ident">into</span>()))
+            <span class="prelude-val">Ok</span>(ClientMessage::new(id, mask, proto, data.into()))
         };
 
-        <span class="comment">// https://specifications.freedesktop.org/xembed-spec/xembed-spec-latest.html</span>
-        <span class="kw">let</span> <span class="ident">xembed_version</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">notify</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">activate</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">let</span> <span class="ident">focus_in</span> <span class="op">=</span> <span class="number">4</span>;
-        <span class="kw">let</span> <span class="ident">modality_on</span> <span class="op">=</span> <span class="number">10</span>;
+        <span class="comment">// https://specifications.freedesktop.org/xembed-spec/xembed-spec-latest.html
+        </span><span class="kw">let </span>xembed_version = <span class="number">0</span>;
+        <span class="kw">let </span>notify = <span class="number">0</span>;
+        <span class="kw">let </span>activate = <span class="number">1</span>;
+        <span class="kw">let </span>focus_in = <span class="number">4</span>;
+        <span class="kw">let </span>modality_on = <span class="number">10</span>;
 
-        <span class="kw">let</span> <span class="ident">xembed_msg</span> <span class="op">=</span> <span class="op">|</span><span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">embedder</span>: <span class="ident">Xid</span>, <span class="ident">kind</span>: <span class="ident">u32</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">atom</span> <span class="op">=</span> <span class="ident">Atom::XEmbed</span>.<span class="ident">as_ref</span>();
-            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="ident">kind</span>, <span class="number">0</span>, <span class="kw-2">*</span><span class="ident">embedder</span>, <span class="ident">xembed_version</span>];
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">ClientEventMask::SubstructureNotify</span>;
+        <span class="kw">let </span>xembed_msg = |id: Xid, embedder: Xid, kind: u32| {
+            <span class="kw">let </span>atom = Atom::XEmbed.as_ref();
+            <span class="kw">let </span>data = <span class="kw-2">&amp;</span>[<span class="number">0</span>, kind, <span class="number">0</span>, <span class="kw-2">*</span>embedder, xembed_version];
+            <span class="kw">let </span>mask = ClientEventMask::SubstructureNotify;
 
-            <span class="prelude-val">Ok</span>(<span class="ident">ClientMessage::new</span>(<span class="ident">id</span>, <span class="ident">mask</span>, <span class="ident">atom</span>, <span class="ident">data</span>.<span class="ident">into</span>()))
+            <span class="prelude-val">Ok</span>(ClientMessage::new(id, mask, atom, data.into()))
         };
 
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">ClientMessageKind::DeleteWindow</span>(<span class="ident">id</span>) =&gt; <span class="ident">proto_msg</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">Atom::WmDeleteWindow</span>),
-            <span class="ident">ClientMessageKind::TakeFocus</span>(<span class="ident">id</span>) =&gt; <span class="ident">proto_msg</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">Atom::WmTakeFocus</span>),
+        <span class="kw">match </span><span class="self">self </span>{
+            ClientMessageKind::DeleteWindow(id) =&gt; proto_msg(<span class="kw-2">*</span>id, Atom::WmDeleteWindow),
+            ClientMessageKind::TakeFocus(id) =&gt; proto_msg(<span class="kw-2">*</span>id, Atom::WmTakeFocus),
 
-            <span class="ident">ClientMessageKind::TakeSystrayOwnership</span>(<span class="ident">root_id</span>, <span class="ident">systray_id</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">atom</span> <span class="op">=</span> <span class="ident">Atom::Manager</span>.<span class="ident">as_ref</span>();
-                <span class="kw">let</span> <span class="ident">systray</span> <span class="op">=</span> <span class="ident">q</span>.<span class="ident">intern_atom</span>(<span class="ident">Atom::NetSystemTrayS0</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="kw-2">*</span><span class="ident">systray</span>, <span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">systray_id</span>, <span class="number">0</span>, <span class="number">0</span>];
-                <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">ClientEventMask::SubstructureNotify</span>;
+            ClientMessageKind::TakeSystrayOwnership(root_id, systray_id) =&gt; {
+                <span class="kw">let </span>atom = Atom::Manager.as_ref();
+                <span class="kw">let </span>systray = q.intern_atom(Atom::NetSystemTrayS0.as_ref())<span class="question-mark">?</span>;
+                <span class="kw">let </span>data = <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="kw-2">*</span>systray, <span class="kw-2">**</span>systray_id, <span class="number">0</span>, <span class="number">0</span>];
+                <span class="kw">let </span>mask = ClientEventMask::SubstructureNotify;
 
-                <span class="prelude-val">Ok</span>(<span class="ident">ClientMessage::new</span>(<span class="kw-2">*</span><span class="ident">root_id</span>, <span class="ident">mask</span>, <span class="ident">atom</span>, <span class="ident">data</span>.<span class="ident">into</span>()))
+                <span class="prelude-val">Ok</span>(ClientMessage::new(<span class="kw-2">*</span>root_id, mask, atom, data.into()))
             }
 
-            <span class="ident">ClientMessageKind::XEmbedFocusIn</span>(<span class="ident">id</span>, <span class="ident">other</span>) =&gt; <span class="ident">xembed_msg</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">*</span><span class="ident">other</span>, <span class="ident">focus_in</span>),
-            <span class="ident">ClientMessageKind::XEmbedModalityOn</span>(<span class="ident">id</span>, <span class="ident">other</span>) =&gt; <span class="ident">xembed_msg</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">*</span><span class="ident">other</span>, <span class="ident">modality_on</span>),
-            <span class="ident">ClientMessageKind::XEmbedNotify</span>(<span class="ident">id</span>, <span class="ident">other</span>) =&gt; <span class="ident">xembed_msg</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">*</span><span class="ident">other</span>, <span class="ident">notify</span>),
-            <span class="ident">ClientMessageKind::XEmbedWindowActivate</span>(<span class="ident">id</span>, <span class="ident">other</span>) =&gt; <span class="ident">xembed_msg</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">*</span><span class="ident">other</span>, <span class="ident">activate</span>),
+            ClientMessageKind::XEmbedFocusIn(id, other) =&gt; xembed_msg(<span class="kw-2">*</span>id, <span class="kw-2">*</span>other, focus_in),
+            ClientMessageKind::XEmbedModalityOn(id, other) =&gt; xembed_msg(<span class="kw-2">*</span>id, <span class="kw-2">*</span>other, modality_on),
+            ClientMessageKind::XEmbedNotify(id, other) =&gt; xembed_msg(<span class="kw-2">*</span>id, <span class="kw-2">*</span>other, notify),
+            ClientMessageKind::XEmbedWindowActivate(id, other) =&gt; xembed_msg(<span class="kw-2">*</span>id, <span class="kw-2">*</span>other, activate),
         }
     }
 }
 
-<span class="doccomment">/// Event masks used when sending client events</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ClientEventMask</span> {
-    <span class="doccomment">/// Substructure Notify</span>
-    <span class="ident">SubstructureNotify</span>,
-    <span class="doccomment">/// Structure Notify</span>
-    <span class="ident">StructureNotify</span>,
-    <span class="doccomment">/// No Mask: all clients should accept</span>
-    <span class="ident">NoEventMask</span>,
+<span class="doccomment">/// Event masks used when sending client events
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>ClientEventMask {
+    <span class="doccomment">/// Substructure Notify
+    </span>SubstructureNotify,
+    <span class="doccomment">/// Structure Notify
+    </span>StructureNotify,
+    <span class="doccomment">/// No Mask: all clients should accept
+    </span>NoEventMask,
 }
 
-<span class="doccomment">/// The raw data contained in a [`ClientMessage`]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ClientMessageData</span> {
-    <span class="doccomment">/// Slice of u8</span>
-    <span class="ident">U8</span>([<span class="ident">u8</span>; <span class="number">20</span>]),
-    <span class="doccomment">/// Slice of u16</span>
-    <span class="ident">U16</span>([<span class="ident">u16</span>; <span class="number">10</span>]),
-    <span class="doccomment">/// Slice of u32</span>
-    <span class="ident">U32</span>([<span class="ident">u32</span>; <span class="number">5</span>]),
+<span class="doccomment">/// The raw data contained in a [`ClientMessage`]
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>ClientMessageData {
+    <span class="doccomment">/// Slice of u8
+    </span>U8([u8; <span class="number">20</span>]),
+    <span class="doccomment">/// Slice of u16
+    </span>U16([u16; <span class="number">10</span>]),
+    <span class="doccomment">/// Slice of u32
+    </span>U32([u32; <span class="number">5</span>]),
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">cast_slice</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+<span class="macro">macro_rules! </span>cast_slice {
+    (<span class="macro-nonterminal">$s</span>:expr, <span class="macro-nonterminal">$t</span>:ty) =&gt; {
+        <span class="macro-nonterminal">$s</span>.iter().map(|<span class="kw-2">&amp;</span>v| v <span class="kw">as </span><span class="macro-nonterminal">$t</span>).collect::&lt;Vec&lt;<span class="macro-nonterminal">$t</span>&gt;&gt;()
     };
 }
 
-<span class="kw">impl</span> <span class="ident">ClientMessageData</span> {
-    <span class="doccomment">/// Convert this client message into a single data format</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The number of raw values will be maintained but this allows you to have a consistant</span>
-    <span class="doccomment">/// interface without needing to match on the variant or cast all the time.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_usize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::U8</span>(<span class="ident">data</span>) =&gt; <span class="macro">cast_slice!</span>(<span class="ident">data</span>, <span class="ident">usize</span>),
-            <span class="ident"><span class="self">Self</span>::U16</span>(<span class="ident">data</span>) =&gt; <span class="macro">cast_slice!</span>(<span class="ident">data</span>, <span class="ident">usize</span>),
-            <span class="ident"><span class="self">Self</span>::U32</span>(<span class="ident">data</span>) =&gt; <span class="macro">cast_slice!</span>(<span class="ident">data</span>, <span class="ident">usize</span>),
+<span class="kw">impl </span>ClientMessageData {
+    <span class="doccomment">/// Convert this client message into a single data format
+    ///
+    /// The number of raw values will be maintained but this allows you to have a consistant
+    /// interface without needing to match on the variant or cast all the time.
+    </span><span class="kw">pub fn </span>as_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;usize&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::U8(data) =&gt; <span class="macro">cast_slice!</span>(data, usize),
+            <span class="self">Self</span>::U16(data) =&gt; <span class="macro">cast_slice!</span>(data, usize),
+            <span class="self">Self</span>::U32(data) =&gt; <span class="macro">cast_slice!</span>(data, usize),
         }
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">__impl_client_message_data</span>(
-    { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">count</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>:<span class="ident">ident</span> } =&gt; {
-        <span class="kw">impl</span> <span class="ident">ClientMessageData</span> {
-            <span class="doccomment">/// Convert this client message into a single data format</span>
-            <span class="doccomment">///</span>
-            <span class="doccomment">/// The number of raw values will be maintained but this allows you to have a consistant</span>
-            <span class="doccomment">/// interface without needing to match on the variant or cast all the time.</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="self">self</span> {
-                    <span class="ident"><span class="self">Self</span>::U8</span>(<span class="ident">data</span>) =&gt; <span class="macro">cast_slice!</span>(<span class="ident">data</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>),
-                    <span class="ident"><span class="self">Self</span>::U16</span>(<span class="ident">data</span>) =&gt; <span class="macro">cast_slice!</span>(<span class="ident">data</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>),
-                    <span class="ident"><span class="self">Self</span>::U32</span>(<span class="ident">data</span>) =&gt; <span class="macro">cast_slice!</span>(<span class="ident">data</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>),
+<span class="macro">macro_rules! </span>__impl_client_message_data(
+    { <span class="macro-nonterminal">$t</span>:ty; <span class="macro-nonterminal">$count</span>:expr, <span class="macro-nonterminal">$variant</span>:expr, <span class="macro-nonterminal">$method</span>:ident } =&gt; {
+        <span class="kw">impl </span>ClientMessageData {
+            <span class="doccomment">/// Convert this client message into a single data format
+            ///
+            /// The number of raw values will be maintained but this allows you to have a consistant
+            /// interface without needing to match on the variant or cast all the time.
+            </span><span class="kw">pub fn </span><span class="macro-nonterminal">$method</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;<span class="macro-nonterminal">$t</span>&gt; {
+                <span class="kw">match </span><span class="self">self </span>{
+                    <span class="self">Self</span>::U8(data) =&gt; <span class="macro">cast_slice!</span>(data, <span class="macro-nonterminal">$t</span>),
+                    <span class="self">Self</span>::U16(data) =&gt; <span class="macro">cast_slice!</span>(data, <span class="macro-nonterminal">$t</span>),
+                    <span class="self">Self</span>::U32(data) =&gt; <span class="macro">cast_slice!</span>(data, <span class="macro-nonterminal">$t</span>),
                 }
             }
         }
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">count</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ClientMessageData</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">data</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">count</span>]) -&gt; <span class="self">Self</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>(<span class="ident">data</span>)
+        <span class="kw">impl </span>From&lt;[<span class="macro-nonterminal">$t</span>; <span class="macro-nonterminal">$count</span>]&gt; <span class="kw">for </span>ClientMessageData {
+            <span class="kw">fn </span>from(data: [<span class="macro-nonterminal">$t</span>; <span class="macro-nonterminal">$count</span>]) -&gt; <span class="self">Self </span>{
+                <span class="macro-nonterminal">$variant</span>(data)
             }
         }
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">count</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ClientMessageData</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">count</span>]) -&gt; <span class="self">Self</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>(<span class="kw-2">*</span><span class="ident">data</span>)
+        <span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$t</span>; <span class="macro-nonterminal">$count</span>]&gt; <span class="kw">for </span>ClientMessageData {
+            <span class="kw">fn </span>from(data: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$t</span>; <span class="macro-nonterminal">$count</span>]) -&gt; <span class="self">Self </span>{
+                <span class="macro-nonterminal">$variant</span>(<span class="kw-2">*</span>data)
             }
         }
-        <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ClientMessageData</span> {
-            <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::array::TryFromSliceError</span>;
+        <span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$t</span>]&gt; <span class="kw">for </span>ClientMessageData {
+            <span class="kw">type </span>Error = std::array::TryFromSliceError;
 
-            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">variant</span>(<span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">count</span>]<span class="op">&gt;</span><span class="ident">::try_from</span>(<span class="ident">data</span>)<span class="question-mark">?</span>))
+            <span class="kw">fn </span>try_from(data: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$t</span>]) -&gt; std::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+                <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">$variant</span>(&lt;[<span class="macro-nonterminal">$t</span>; <span class="macro-nonterminal">$count</span>]&gt;::try_from(data)<span class="question-mark">?</span>))
             }
         }
     }
 );
 
-<span class="macro">__impl_client_message_data!</span>(<span class="ident">u8</span>; <span class="number">20</span>, <span class="ident">ClientMessageData::U8</span>, <span class="ident">as_u8</span>);
-<span class="macro">__impl_client_message_data!</span>(<span class="ident">u16</span>; <span class="number">10</span>, <span class="ident">ClientMessageData::U16</span>, <span class="ident">as_u16</span>);
-<span class="macro">__impl_client_message_data!</span>(<span class="ident">u32</span>; <span class="number">5</span>, <span class="ident">ClientMessageData::U32</span>, <span class="ident">as_u32</span>);
+<span class="macro">__impl_client_message_data!</span>(u8; <span class="number">20</span>, ClientMessageData::U8, as_u8);
+<span class="macro">__impl_client_message_data!</span>(u16; <span class="number">10</span>, ClientMessageData::U16, as_u16);
+<span class="macro">__impl_client_message_data!</span>(u32; <span class="number">5</span>, ClientMessageData::U32, as_u32);
 
-<span class="doccomment">/// A client message that needs to be parsed and handled based on its type</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientMessage</span> {
-    <span class="doccomment">/// The ID of the window that sent the message</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="doccomment">/// The mask to use when sending the event</span>
-    <span class="kw">pub</span> <span class="ident">mask</span>: <span class="ident">ClientEventMask</span>,
-    <span class="doccomment">/// The data type being set</span>
-    <span class="kw">pub</span> <span class="ident">dtype</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// The raw data being sent in this message</span>
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">ClientMessageData</span>,
+<span class="doccomment">/// A client message that needs to be parsed and handled based on its type
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>ClientMessage {
+    <span class="doccomment">/// The ID of the window that sent the message
+    </span><span class="kw">pub </span>id: Xid,
+    <span class="doccomment">/// The mask to use when sending the event
+    </span><span class="kw">pub </span>mask: ClientEventMask,
+    <span class="doccomment">/// The data type being set
+    </span><span class="kw">pub </span>dtype: String,
+    <span class="doccomment">/// The raw data being sent in this message
+    </span><span class="kw">pub </span>data: ClientMessageData,
 }
 
-<span class="kw">impl</span> <span class="ident">ClientMessage</span> {
-    <span class="doccomment">/// Try to build a new ClientMessage. Fails if the data is invalid</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">id</span>: <span class="ident">Xid</span>,
-        <span class="ident">mask</span>: <span class="ident">ClientEventMask</span>,
-        <span class="ident">dtype</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">data</span>: <span class="ident">ClientMessageData</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">id</span>,
-            <span class="ident">mask</span>,
-            <span class="ident">dtype</span>: <span class="ident">dtype</span>.<span class="ident">into</span>(),
-            <span class="ident">data</span>,
+<span class="kw">impl </span>ClientMessage {
+    <span class="doccomment">/// Try to build a new ClientMessage. Fails if the data is invalid
+    </span><span class="kw">pub fn </span>new(
+        id: Xid,
+        mask: ClientEventMask,
+        dtype: <span class="kw">impl </span>Into&lt;String&gt;,
+        data: ClientMessageData,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id,
+            mask,
+            dtype: dtype.into(),
+            data,
         }
     }
 }
 
-<span class="doccomment">/// A configure request or notification when a client changes position or size</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ConfigureEvent</span> {
-    <span class="doccomment">/// The ID of the window that had a property changed</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="doccomment">/// The new window size</span>
-    <span class="kw">pub</span> <span class="ident">r</span>: <span class="ident">Rect</span>,
-    <span class="doccomment">/// Is this window the root window?</span>
-    <span class="kw">pub</span> <span class="ident">is_root</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// A configure request or notification when a client changes position or size
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>ConfigureEvent {
+    <span class="doccomment">/// The ID of the window that had a property changed
+    </span><span class="kw">pub </span>id: Xid,
+    <span class="doccomment">/// The new window size
+    </span><span class="kw">pub </span>r: Rect,
+    <span class="doccomment">/// Is this window the root window?
+    </span><span class="kw">pub </span>is_root: bool,
 }
 
-<span class="doccomment">/// A notification that a window has become visible</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExposeEvent</span> {
-    <span class="doccomment">/// The ID of the window that has become exposed</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="doccomment">/// The current size and position of the window</span>
-    <span class="kw">pub</span> <span class="ident">r</span>: <span class="ident">Rect</span>,
-    <span class="doccomment">/// How many following expose events are pending</span>
-    <span class="kw">pub</span> <span class="ident">count</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// A notification that a window has become visible
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>ExposeEvent {
+    <span class="doccomment">/// The ID of the window that has become exposed
+    </span><span class="kw">pub </span>id: Xid,
+    <span class="doccomment">/// The current size and position of the window
+    </span><span class="kw">pub </span>r: Rect,
+    <span class="doccomment">/// How many following expose events are pending
+    </span><span class="kw">pub </span>count: usize,
 }
 
-<span class="doccomment">/// A notification that the mouse pointer has entered or left a window</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PointerChange</span> {
-    <span class="doccomment">/// The ID of the window that was entered</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="doccomment">/// Absolute coordinate of the event</span>
-    <span class="kw">pub</span> <span class="ident">abs</span>: <span class="ident">Point</span>,
-    <span class="doccomment">/// Coordinate of the event relative to top-left of the window itself</span>
-    <span class="kw">pub</span> <span class="ident">relative</span>: <span class="ident">Point</span>,
-    <span class="doccomment">/// Whether or not the event window is on the same screen as the root window</span>
-    <span class="kw">pub</span> <span class="ident">same_screen</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// A notification that the mouse pointer has entered or left a window
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>PointerChange {
+    <span class="doccomment">/// The ID of the window that was entered
+    </span><span class="kw">pub </span>id: Xid,
+    <span class="doccomment">/// Absolute coordinate of the event
+    </span><span class="kw">pub </span>abs: Point,
+    <span class="doccomment">/// Coordinate of the event relative to top-left of the window itself
+    </span><span class="kw">pub </span>relative: Point,
+    <span class="doccomment">/// Whether or not the event window is on the same screen as the root window
+    </span><span class="kw">pub </span>same_screen: bool,
 }
 
-<span class="doccomment">/// A property change on a known client</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PropertyEvent</span> {
-    <span class="doccomment">/// The ID of the window that had a property changed</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="doccomment">/// The property that changed</span>
-    <span class="kw">pub</span> <span class="ident">atom</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// Is this window the root window?</span>
-    <span class="kw">pub</span> <span class="ident">is_root</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// A property change on a known client
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>PropertyEvent {
+    <span class="doccomment">/// The ID of the window that had a property changed
+    </span><span class="kw">pub </span>id: Xid,
+    <span class="doccomment">/// The property that changed
+    </span><span class="kw">pub </span>atom: String,
+    <span class="doccomment">/// Is this window the root window?
+    </span><span class="kw">pub </span>is_root: bool,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

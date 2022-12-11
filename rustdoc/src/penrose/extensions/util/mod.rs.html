@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -102,107 +102,107 @@
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Utility extensions for use in the penrose window manager</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">pure::RelativePosition</span>,
-    <span class="ident">util</span>::{<span class="ident">spawn</span>, <span class="ident">spawn_for_output</span>, <span class="ident">spawn_with_args</span>},
-    <span class="ident">Error</span>, <span class="prelude-ty">Result</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Utility extensions for use in the penrose window manager
+</span><span class="kw">use crate</span>::{
+    pure::RelativePosition,
+    util::{spawn, spawn_for_output, spawn_with_args},
+    Error, <span class="prelude-ty">Result</span>,
 };
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">debug</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dmenu</span>;
+<span class="kw">pub mod </span>debug;
+<span class="kw">pub mod </span>dmenu;
 
-<span class="doccomment">/// Detect the current monitor set up and arrange the monitors if needed using [xrandr][1].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// NOTE</span>
-<span class="doccomment">/// - Primary monitor will be set to `primary`</span>
-<span class="doccomment">/// - Monitor resolution is set using the --auto flag in xrandr</span>
-<span class="doccomment">/// - Only supports one and two monitor setups.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [1]: https://wiki.archlinux.org/index.php/Xrandr</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_monitors_via_xrandr</span>(
-    <span class="ident">primary</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">secondary</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">position</span>: <span class="ident">RelativePosition</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">spawn_for_output</span>(<span class="string">&quot;xrandr&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">raw</span>
-        .<span class="ident">lines</span>()
-        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">line</span><span class="op">|</span> <span class="ident">line</span>.<span class="ident">starts_with</span>(<span class="ident">secondary</span>))
-        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">Error::Custom</span>(<span class="string">&quot;unable to find secondary monitor in xrandr output&quot;</span>.<span class="ident">to_owned</span>())
-        })<span class="question-mark">?</span>
-        .<span class="ident">split</span>(<span class="string">&#39; &#39;</span>)
-        .<span class="ident">nth</span>(<span class="number">1</span>)
-        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::Custom</span>(<span class="string">&quot;unexpected xrandr output&quot;</span>.<span class="ident">to_owned</span>()))<span class="question-mark">?</span>;
+<span class="doccomment">/// Detect the current monitor set up and arrange the monitors if needed using [xrandr][1].
+///
+/// NOTE
+/// - Primary monitor will be set to `primary`
+/// - Monitor resolution is set using the --auto flag in xrandr
+/// - Only supports one and two monitor setups.
+///
+/// [1]: https://wiki.archlinux.org/index.php/Xrandr
+</span><span class="kw">pub fn </span>update_monitors_via_xrandr(
+    primary: <span class="kw-2">&amp;</span>str,
+    secondary: <span class="kw-2">&amp;</span>str,
+    position: RelativePosition,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>raw = spawn_for_output(<span class="string">&quot;xrandr&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>status = raw
+        .lines()
+        .find(|line| line.starts_with(secondary))
+        .ok_or_else(|| {
+            Error::Custom(<span class="string">&quot;unable to find secondary monitor in xrandr output&quot;</span>.to_owned())
+        })<span class="question-mark">?
+        </span>.split(<span class="string">&#39; &#39;</span>)
+        .nth(<span class="number">1</span>)
+        .ok_or_else(|| Error::Custom(<span class="string">&quot;unexpected xrandr output&quot;</span>.to_owned()))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">position</span> {
-        <span class="ident">RelativePosition::Left</span> =&gt; <span class="string">&quot;--left-of&quot;</span>,
-        <span class="ident">RelativePosition::Right</span> =&gt; <span class="string">&quot;--right-of&quot;</span>,
-        <span class="ident">RelativePosition::Above</span> =&gt; <span class="string">&quot;--above&quot;</span>,
-        <span class="ident">RelativePosition::Below</span> =&gt; <span class="string">&quot;--below&quot;</span>,
+    <span class="kw">let </span>pos = <span class="kw">match </span>position {
+        RelativePosition::Left =&gt; <span class="string">&quot;--left-of&quot;</span>,
+        RelativePosition::Right =&gt; <span class="string">&quot;--right-of&quot;</span>,
+        RelativePosition::Above =&gt; <span class="string">&quot;--above&quot;</span>,
+        RelativePosition::Below =&gt; <span class="string">&quot;--below&quot;</span>,
     };
 
-    <span class="comment">// force the primary monitor</span>
-    <span class="ident">spawn</span>(<span class="macro">format!</span>(<span class="string">&quot;xrandr --output {} --primary --auto&quot;</span>, <span class="ident">primary</span>))<span class="question-mark">?</span>;
+    <span class="comment">// force the primary monitor
+    </span>spawn(<span class="macro">format!</span>(<span class="string">&quot;xrandr --output {} --primary --auto&quot;</span>, primary))<span class="question-mark">?</span>;
 
-    <span class="comment">// Updated the secondary monitor</span>
-    <span class="kw">match</span> <span class="ident">status</span> {
-        <span class="string">&quot;disconnected&quot;</span> =&gt; <span class="ident">spawn</span>(<span class="macro">format!</span>(<span class="string">&quot;xrandr --output {secondary} --off&quot;</span>)),
+    <span class="comment">// Updated the secondary monitor
+    </span><span class="kw">match </span>status {
+        <span class="string">&quot;disconnected&quot; </span>=&gt; spawn(<span class="macro">format!</span>(<span class="string">&quot;xrandr --output {secondary} --off&quot;</span>)),
 
-        <span class="string">&quot;connected&quot;</span> =&gt; <span class="ident">spawn</span>(<span class="macro">format!</span>(
+        <span class="string">&quot;connected&quot; </span>=&gt; spawn(<span class="macro">format!</span>(
             <span class="string">&quot;xrandr --output {secondary} --auto {pos} {primary}&quot;</span>,
         )),
 
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(()),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(()),
     }
 }
 
-<span class="doccomment">/// A notification level when calling notify-send</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The effect of this on the generated notification will depend on the notification</span>
-<span class="doccomment">/// daemon that you are using.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NotifyLevel</span> {
-    <span class="doccomment">/// Low priority</span>
-    <span class="ident">Low</span>,
-    <span class="doccomment">/// Normal priority</span>
-    <span class="ident">Normal</span>,
-    <span class="doccomment">/// Critical priority</span>
-    <span class="ident">Critical</span>,
+<span class="doccomment">/// A notification level when calling notify-send
+///
+/// The effect of this on the generated notification will depend on the notification
+/// daemon that you are using.
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+</span><span class="kw">pub enum </span>NotifyLevel {
+    <span class="doccomment">/// Low priority
+    </span>Low,
+    <span class="doccomment">/// Normal priority
+    </span>Normal,
+    <span class="doccomment">/// Critical priority
+    </span>Critical,
 }
 
-<span class="doccomment">/// Send a notification using the `notify-send` command line program</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">notify_send</span>(<span class="ident">title</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">body</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">notify_send_custom</span>(<span class="ident">title</span>, <span class="ident">body</span>, <span class="ident">NotifyLevel::Normal</span>, <span class="number">5000</span>)
+<span class="doccomment">/// Send a notification using the `notify-send` command line program
+</span><span class="kw">pub fn </span>notify_send(title: <span class="kw">impl </span>AsRef&lt;str&gt;, body: <span class="kw">impl </span>AsRef&lt;str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    notify_send_custom(title, body, NotifyLevel::Normal, <span class="number">5000</span>)
 }
 
-<span class="doccomment">/// Send a notification using the `notify-send` command line program</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Duration is in ms.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">notify_send_custom</span>(
-    <span class="ident">title</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    <span class="ident">body</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    <span class="ident">level</span>: <span class="ident">NotifyLevel</span>,
-    <span class="ident">duration</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">level</span> {
-        <span class="ident">NotifyLevel::Low</span> =&gt; <span class="string">&quot;low&quot;</span>,
-        <span class="ident">NotifyLevel::Normal</span> =&gt; <span class="string">&quot;normal&quot;</span>,
-        <span class="ident">NotifyLevel::Critical</span> =&gt; <span class="string">&quot;critical&quot;</span>,
+<span class="doccomment">/// Send a notification using the `notify-send` command line program
+///
+/// Duration is in ms.
+</span><span class="kw">pub fn </span>notify_send_custom(
+    title: <span class="kw">impl </span>AsRef&lt;str&gt;,
+    body: <span class="kw">impl </span>AsRef&lt;str&gt;,
+    level: NotifyLevel,
+    duration: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>level = <span class="kw">match </span>level {
+        NotifyLevel::Low =&gt; <span class="string">&quot;low&quot;</span>,
+        NotifyLevel::Normal =&gt; <span class="string">&quot;normal&quot;</span>,
+        NotifyLevel::Critical =&gt; <span class="string">&quot;critical&quot;</span>,
     };
 
-    <span class="ident">spawn_with_args</span>(
+    spawn_with_args(
         <span class="string">&quot;notify-send&quot;</span>,
         <span class="kw-2">&amp;</span>[
             <span class="string">&quot;-u&quot;</span>,
-            <span class="ident">level</span>,
+            level,
             <span class="string">&quot;-t&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="ident">duration</span>.<span class="ident">to_string</span>(),
-            <span class="ident">title</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">body</span>.<span class="ident">as_ref</span>(),
+            <span class="kw-2">&amp;</span>duration.to_string(),
+            title.as_ref(),
+            body.as_ref(),
         ],
     )
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

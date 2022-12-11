@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -254,259 +254,269 @@
 <span id="252">252</span>
 <span id="253">253</span>
 <span id="254">254</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Built-in layouts.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">builtin::layout::messages</span>::{<span class="ident">ExpandMain</span>, <span class="ident">IncMain</span>, <span class="ident">Mirror</span>, <span class="ident">Rotate</span>, <span class="ident">ShrinkMain</span>},
-    <span class="ident">core::layout</span>::{<span class="ident">Layout</span>, <span class="ident">Message</span>},
-    <span class="ident">pure</span>::{<span class="ident">geometry::Rect</span>, <span class="ident">Stack</span>},
-    <span class="ident">Xid</span>,
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Built-in layouts.
+</span><span class="kw">use crate</span>::{
+    builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
+    core::layout::{Layout, Message},
+    pure::{geometry::Rect, Stack},
+    Xid,
 };
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">messages</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">transformers</span>;
+<span class="kw">pub mod </span>messages;
+<span class="kw">pub mod </span>transformers;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">enum</span> <span class="ident">StackPosition</span> {
-    <span class="ident">Side</span>,
-    <span class="ident">Bottom</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">enum </span>StackPosition {
+    Side,
+    Bottom,
 }
 
-<span class="doccomment">/// A simple [Layout] with main and secondary regions.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - `MainAndStack::side` give a main region to the left and remaining clients to the right.</span>
-<span class="doccomment">/// - `MainAndStack::bottom` give a main region to the top and remaining clients to the bottom.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The ratio between the main and secondary stack regions can be adjusted by sending [ShrinkMain]</span>
-<span class="doccomment">/// and [ExpandMain] messages to this layout. The number of clients in the main area can be</span>
-<span class="doccomment">/// increased or decreased by sending an [IncMain] message. To flip between the side and bottom</span>
-<span class="doccomment">/// behaviours you can send a [Rotate] message.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MainAndStack</span> {
-    <span class="ident">pos</span>: <span class="ident">StackPosition</span>,
-    <span class="ident">max_main</span>: <span class="ident">u32</span>,
-    <span class="ident">ratio</span>: <span class="ident">f32</span>,
-    <span class="ident">ratio_step</span>: <span class="ident">f32</span>,
-    <span class="ident">mirrored</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// A simple [Layout] with main and secondary regions.
+///
+/// - `MainAndStack::side` give a main region to the left and remaining clients to the right.
+/// - `MainAndStack::bottom` give a main region to the top and remaining clients to the bottom.
+///
+/// The ratio between the main and secondary stack regions can be adjusted by sending [ShrinkMain]
+/// and [ExpandMain] messages to this layout. The number of clients in the main area can be
+/// increased or decreased by sending an [IncMain] message. To flip between the side and bottom
+/// behaviours you can send a [Rotate] message.
+</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub struct </span>MainAndStack {
+    pos: StackPosition,
+    max_main: u32,
+    ratio: f32,
+    ratio_step: f32,
+    mirrored: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">MainAndStack</span> {
-    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows</span>
-    <span class="doccomment">/// stacked to the right.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">side</span>(<span class="ident">max_main</span>: <span class="ident">u32</span>, <span class="ident">ratio</span>: <span class="ident">f32</span>, <span class="ident">ratio_step</span>: <span class="ident">f32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="ident"><span class="self">Self</span>::side_unboxed</span>(<span class="ident">max_main</span>, <span class="ident">ratio</span>, <span class="ident">ratio_step</span>, <span class="bool-val">false</span>))
+<span class="kw">impl </span>MainAndStack {
+    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows
+    /// stacked to the right.
+    </span><span class="kw">pub fn </span>side(max_main: u32, ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">Self</span>::side_unboxed(max_main, ratio, ratio_step, <span class="bool-val">false</span>))
     }
 
-    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the right and remaining windows</span>
-    <span class="doccomment">/// stacked to the left.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">side_mirrored</span>(<span class="ident">max_main</span>: <span class="ident">u32</span>, <span class="ident">ratio</span>: <span class="ident">f32</span>, <span class="ident">ratio_step</span>: <span class="ident">f32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="ident"><span class="self">Self</span>::side_unboxed</span>(<span class="ident">max_main</span>, <span class="ident">ratio</span>, <span class="ident">ratio_step</span>, <span class="bool-val">true</span>))
+    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the right and remaining windows
+    /// stacked to the left.
+    </span><span class="kw">pub fn </span>side_mirrored(max_main: u32, ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">Self</span>::side_unboxed(max_main, ratio, ratio_step, <span class="bool-val">true</span>))
     }
 
-    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area and remaining windows</span>
-    <span class="doccomment">/// stacked to the side.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">side_unboxed</span>(<span class="ident">max_main</span>: <span class="ident">u32</span>, <span class="ident">ratio</span>: <span class="ident">f32</span>, <span class="ident">ratio_step</span>: <span class="ident">f32</span>, <span class="ident">mirrored</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">pos</span>: <span class="ident">StackPosition::Side</span>,
-            <span class="ident">max_main</span>,
-            <span class="ident">ratio</span>,
-            <span class="ident">ratio_step</span>,
-            <span class="ident">mirrored</span>,
+    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area and remaining windows
+    /// stacked to the side.
+    </span><span class="kw">pub fn </span>side_unboxed(max_main: u32, ratio: f32, ratio_step: f32, mirrored: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            pos: StackPosition::Side,
+            max_main,
+            ratio,
+            ratio_step,
+            mirrored,
         }
     }
 
-    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the top and remaining windows</span>
-    <span class="doccomment">/// stacked on the bottom.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bottom</span>(<span class="ident">max_main</span>: <span class="ident">u32</span>, <span class="ident">ratio</span>: <span class="ident">f32</span>, <span class="ident">ratio_step</span>: <span class="ident">f32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="ident"><span class="self">Self</span>::bottom_unboxed</span>(<span class="ident">max_main</span>, <span class="ident">ratio</span>, <span class="ident">ratio_step</span>, <span class="bool-val">false</span>))
+    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the top and remaining windows
+    /// stacked on the bottom.
+    </span><span class="kw">pub fn </span>bottom(max_main: u32, ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">Self</span>::bottom_unboxed(max_main, ratio, ratio_step, <span class="bool-val">false</span>))
     }
 
-    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the bottom and remaining windows</span>
-    <span class="doccomment">/// stacked on the top.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">top</span>(<span class="ident">max_main</span>: <span class="ident">u32</span>, <span class="ident">ratio</span>: <span class="ident">f32</span>, <span class="ident">ratio_step</span>: <span class="ident">f32</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="ident"><span class="self">Self</span>::bottom_unboxed</span>(<span class="ident">max_main</span>, <span class="ident">ratio</span>, <span class="ident">ratio_step</span>, <span class="bool-val">true</span>))
+    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the bottom and remaining windows
+    /// stacked on the top.
+    </span><span class="kw">pub fn </span>top(max_main: u32, ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">Self</span>::bottom_unboxed(max_main, ratio, ratio_step, <span class="bool-val">true</span>))
     }
 
-    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with a main area and the remaining windows</span>
-    <span class="doccomment">/// stacked either on the top or the bottom.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bottom_unboxed</span>(<span class="ident">max_main</span>: <span class="ident">u32</span>, <span class="ident">ratio</span>: <span class="ident">f32</span>, <span class="ident">ratio_step</span>: <span class="ident">f32</span>, <span class="ident">mirrored</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">pos</span>: <span class="ident">StackPosition::Bottom</span>,
-            <span class="ident">max_main</span>,
-            <span class="ident">ratio</span>,
-            <span class="ident">ratio_step</span>,
-            <span class="ident">mirrored</span>,
+    <span class="doccomment">/// Create a new [MainAndStack] [Layout] with a main area and the remaining windows
+    /// stacked either on the top or the bottom.
+    </span><span class="kw">pub fn </span>bottom_unboxed(max_main: u32, ratio: f32, ratio_step: f32, mirrored: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            pos: StackPosition::Bottom,
+            max_main,
+            ratio,
+            ratio_step,
+            mirrored,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">split</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">d</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
-        <span class="kw">let</span> <span class="ident">ratio</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">mirrored</span> {
-            <span class="number">1.0</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">ratio</span>
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">ratio</span>
+    <span class="kw">fn </span>split(<span class="kw-2">&amp;</span><span class="self">self</span>, d: u32) -&gt; u32 {
+        <span class="kw">let </span>ratio = <span class="kw">if </span><span class="self">self</span>.mirrored {
+            <span class="number">1.0 </span>- <span class="self">self</span>.ratio
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.ratio
         };
 
-        ((<span class="ident">d</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">*</span> <span class="ident">ratio</span>) <span class="kw">as</span> <span class="ident">u32</span>
+        ((d <span class="kw">as </span>f32) * ratio) <span class="kw">as </span>u32
     }
 
-    <span class="kw">fn</span> <span class="ident">layout_side</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="comment">// In each of these four cases we no longer have a split point giving
+    // us two independent stacks.
+    </span><span class="kw">fn </span>all_windows_in_single_stack(<span class="kw-2">&amp;</span><span class="self">self</span>, n: u32) -&gt; bool {
+        n &lt;= <span class="self">self</span>.max_main || <span class="self">self</span>.max_main == <span class="number">0 </span>|| <span class="self">self</span>.ratio == <span class="number">1.0 </span>|| <span class="self">self</span>.ratio == <span class="number">0.0
+    </span>}
 
-        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">max_main</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">max_main</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="comment">// In both cases we have all windows in a single stack (all main or all secondary)</span>
-            <span class="ident">r</span>.<span class="ident">as_rows</span>(<span class="ident">n</span>).<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">s</span>).<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">r</span>, <span class="ident">c</span>)<span class="op">|</span> (<span class="kw-2">*</span><span class="ident">c</span>, <span class="kw-2">*</span><span class="ident">r</span>)).<span class="ident">collect</span>()
-        } <span class="kw">else</span> {
-            <span class="comment">// We have two stacks so split the screen in two and then build a stack for each</span>
-            <span class="kw">let</span> <span class="ident">split</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">split</span>(<span class="ident">r</span>.<span class="ident">w</span>);
-            <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">main</span>, <span class="kw-2">mut</span> <span class="ident">stack</span>) <span class="op">=</span> <span class="ident">r</span>.<span class="ident">split_at_width</span>(<span class="ident">split</span>).<span class="ident">expect</span>(<span class="string">&quot;split point to be valid&quot;</span>);
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">mirrored</span> {
-                (<span class="ident">main</span>, <span class="ident">stack</span>) <span class="op">=</span> (<span class="ident">stack</span>, <span class="ident">main</span>);
+    <span class="kw">fn </span>layout_side(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        <span class="kw">let </span>n = s.len() <span class="kw">as </span>u32;
+
+        <span class="kw">if </span><span class="self">self</span>.all_windows_in_single_stack(n) {
+            r.as_rows(n).iter().zip(s).map(|(r, c)| (<span class="kw-2">*</span>c, <span class="kw-2">*</span>r)).collect()
+        } <span class="kw">else </span>{
+            <span class="comment">// We have two stacks so split the screen in two and then build a stack for each
+            </span><span class="kw">let </span>split = <span class="self">self</span>.split(r.w);
+            <span class="kw">let </span>(<span class="kw-2">mut </span>main, <span class="kw-2">mut </span>stack) = r.split_at_width(split).expect(<span class="string">&quot;split point to be valid&quot;</span>);
+            <span class="kw">if </span><span class="self">self</span>.mirrored {
+                (main, stack) = (stack, main);
             }
 
-            <span class="ident">main</span>.<span class="ident">as_rows</span>(<span class="self">self</span>.<span class="ident">max_main</span>)
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">chain</span>(<span class="ident">stack</span>.<span class="ident">as_rows</span>(<span class="ident">n</span>.<span class="ident">saturating_sub</span>(<span class="self">self</span>.<span class="ident">max_main</span>)))
-                .<span class="ident">zip</span>(<span class="ident">s</span>)
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">r</span>, <span class="ident">c</span>)<span class="op">|</span> (<span class="kw-2">*</span><span class="ident">c</span>, <span class="ident">r</span>))
-                .<span class="ident">collect</span>()
+            main.as_rows(<span class="self">self</span>.max_main)
+                .into_iter()
+                .chain(stack.as_rows(n.saturating_sub(<span class="self">self</span>.max_main)))
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, r))
+                .collect()
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">layout_bottom</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">fn </span>layout_bottom(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        <span class="kw">let </span>n = s.len() <span class="kw">as </span>u32;
 
-        <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">max_main</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">max_main</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="ident">r</span>.<span class="ident">as_columns</span>(<span class="ident">n</span>)
-                .<span class="ident">iter</span>()
-                .<span class="ident">zip</span>(<span class="ident">s</span>)
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">r</span>, <span class="ident">c</span>)<span class="op">|</span> (<span class="kw-2">*</span><span class="ident">c</span>, <span class="kw-2">*</span><span class="ident">r</span>))
-                .<span class="ident">collect</span>()
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">split</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">split</span>(<span class="ident">r</span>.<span class="ident">h</span>);
-            <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">main</span>, <span class="kw-2">mut</span> <span class="ident">stack</span>) <span class="op">=</span> <span class="ident">r</span>.<span class="ident">split_at_height</span>(<span class="ident">split</span>).<span class="ident">expect</span>(<span class="string">&quot;split point to be valid&quot;</span>);
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">mirrored</span> {
-                (<span class="ident">main</span>, <span class="ident">stack</span>) <span class="op">=</span> (<span class="ident">stack</span>, <span class="ident">main</span>);
+        <span class="kw">if </span><span class="self">self</span>.all_windows_in_single_stack(n) {
+            r.as_columns(n)
+                .iter()
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, <span class="kw-2">*</span>r))
+                .collect()
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>split = <span class="self">self</span>.split(r.h);
+            <span class="kw">let </span>(<span class="kw-2">mut </span>main, <span class="kw-2">mut </span>stack) = r.split_at_height(split).expect(<span class="string">&quot;split point to be valid&quot;</span>);
+            <span class="kw">if </span><span class="self">self</span>.mirrored {
+                (main, stack) = (stack, main);
             }
 
-            <span class="ident">main</span>.<span class="ident">as_columns</span>(<span class="self">self</span>.<span class="ident">max_main</span>)
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">chain</span>(<span class="ident">stack</span>.<span class="ident">as_columns</span>(<span class="ident">n</span>.<span class="ident">saturating_sub</span>(<span class="self">self</span>.<span class="ident">max_main</span>)))
-                .<span class="ident">zip</span>(<span class="ident">s</span>)
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">r</span>, <span class="ident">c</span>)<span class="op">|</span> (<span class="kw-2">*</span><span class="ident">c</span>, <span class="ident">r</span>))
-                .<span class="ident">collect</span>()
+            main.as_columns(<span class="self">self</span>.max_main)
+                .into_iter()
+                .chain(stack.as_columns(n.saturating_sub(<span class="self">self</span>.max_main)))
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, r))
+                .collect()
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">MainAndStack</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">pos</span>: <span class="ident">StackPosition::Side</span>,
-            <span class="ident">max_main</span>: <span class="number">1</span>,
-            <span class="ident">ratio</span>: <span class="number">0.6</span>,
-            <span class="ident">ratio_step</span>: <span class="number">0.1</span>,
-            <span class="ident">mirrored</span>: <span class="bool-val">false</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>MainAndStack {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            pos: StackPosition::Side,
+            max_main: <span class="number">1</span>,
+            ratio: <span class="number">0.6</span>,
+            ratio_step: <span class="number">0.1</span>,
+            mirrored: <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Layout</span> <span class="kw">for</span> <span class="ident">MainAndStack</span> {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">pos</span>, <span class="self">self</span>.<span class="ident">mirrored</span>) {
-            (<span class="ident">StackPosition::Side</span>, <span class="bool-val">false</span>) =&gt; <span class="string">&quot;Side&quot;</span>.<span class="ident">to_owned</span>(),
-            (<span class="ident">StackPosition::Side</span>, <span class="bool-val">true</span>) =&gt; <span class="string">&quot;Mirror&quot;</span>.<span class="ident">to_owned</span>(),
-            (<span class="ident">StackPosition::Bottom</span>, <span class="bool-val">false</span>) =&gt; <span class="string">&quot;Bottom&quot;</span>.<span class="ident">to_owned</span>(),
-            (<span class="ident">StackPosition::Bottom</span>, <span class="bool-val">true</span>) =&gt; <span class="string">&quot;Top&quot;</span>.<span class="ident">to_owned</span>(),
+<span class="kw">impl </span>Layout <span class="kw">for </span>MainAndStack {
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">match </span>(<span class="self">self</span>.pos, <span class="self">self</span>.mirrored) {
+            (StackPosition::Side, <span class="bool-val">false</span>) =&gt; <span class="string">&quot;Side&quot;</span>.to_owned(),
+            (StackPosition::Side, <span class="bool-val">true</span>) =&gt; <span class="string">&quot;Mirror&quot;</span>.to_owned(),
+            (StackPosition::Bottom, <span class="bool-val">false</span>) =&gt; <span class="string">&quot;Bottom&quot;</span>.to_owned(),
+            (StackPosition::Bottom, <span class="bool-val">true</span>) =&gt; <span class="string">&quot;Top&quot;</span>.to_owned(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">boxed_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="kw-2">*</span><span class="self">self</span>)
+    <span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="kw-2">*</span><span class="self">self</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">pos</span> {
-            <span class="ident">StackPosition::Side</span> =&gt; <span class="self">self</span>.<span class="ident">layout_side</span>(<span class="ident">s</span>, <span class="ident">r</span>),
-            <span class="ident">StackPosition::Bottom</span> =&gt; <span class="self">self</span>.<span class="ident">layout_bottom</span>(<span class="ident">s</span>, <span class="ident">r</span>),
+    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        <span class="kw">let </span>positions = <span class="kw">match </span><span class="self">self</span>.pos {
+            StackPosition::Side =&gt; <span class="self">self</span>.layout_side(s, r),
+            StackPosition::Bottom =&gt; <span class="self">self</span>.layout_bottom(s, r),
         };
 
-        (<span class="prelude-val">None</span>, <span class="ident">positions</span>)
+        (<span class="prelude-val">None</span>, positions)
     }
 
-    <span class="kw">fn</span> <span class="ident">handle_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">ExpandMain</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">downcast_ref</span>() {
-            <span class="self">self</span>.<span class="ident">ratio</span> <span class="op">+</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">ratio_step</span>;
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ratio</span> <span class="op">&gt;</span> <span class="number">1.0</span> {
-                <span class="self">self</span>.<span class="ident">ratio</span> <span class="op">=</span> <span class="number">1.0</span>;
+    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ExpandMain) = m.downcast_ref() {
+            <span class="self">self</span>.ratio += <span class="self">self</span>.ratio_step;
+            <span class="kw">if </span><span class="self">self</span>.ratio &gt; <span class="number">1.0 </span>{
+                <span class="self">self</span>.ratio = <span class="number">1.0</span>;
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">ShrinkMain</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">downcast_ref</span>() {
-            <span class="self">self</span>.<span class="ident">ratio</span> <span class="op">-</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">ratio_step</span>;
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ratio</span> <span class="op">&lt;</span> <span class="number">0.0</span> {
-                <span class="self">self</span>.<span class="ident">ratio</span> <span class="op">=</span> <span class="number">0.0</span>;
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ShrinkMain) = m.downcast_ref() {
+            <span class="self">self</span>.ratio -= <span class="self">self</span>.ratio_step;
+            <span class="kw">if </span><span class="self">self</span>.ratio &lt; <span class="number">0.0 </span>{
+                <span class="self">self</span>.ratio = <span class="number">0.0</span>;
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">IncMain</span>(<span class="ident">n</span>)) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">downcast_ref</span>() {
-            <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">0</span> {
-                <span class="self">self</span>.<span class="ident">max_main</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">max_main</span>.<span class="ident">saturating_sub</span>((<span class="op">-</span><span class="ident">n</span>) <span class="kw">as</span> <span class="ident">u32</span>);
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">max_main</span> <span class="op">+</span><span class="op">=</span> <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>;
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>IncMain(n)) = m.downcast_ref() {
+            <span class="kw">if </span>n &lt; <span class="number">0 </span>{
+                <span class="self">self</span>.max_main = <span class="self">self</span>.max_main.saturating_sub((-n) <span class="kw">as </span>u32);
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.max_main += n <span class="kw">as </span>u32;
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Mirror</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">downcast_ref</span>() {
-            <span class="self">self</span>.<span class="ident">mirrored</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">mirrored</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Rotate</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">downcast_ref</span>() {
-            <span class="self">self</span>.<span class="ident">pos</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">pos</span> {
-                <span class="ident">StackPosition::Side</span> =&gt; <span class="ident">StackPosition::Bottom</span>,
-                <span class="ident">StackPosition::Bottom</span> =&gt; <span class="ident">StackPosition::Side</span>,
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Mirror) = m.downcast_ref() {
+            <span class="self">self</span>.mirrored = !<span class="self">self</span>.mirrored;
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Rotate) = m.downcast_ref() {
+            <span class="self">self</span>.pos = <span class="kw">match </span><span class="self">self</span>.pos {
+                StackPosition::Side =&gt; StackPosition::Bottom,
+                StackPosition::Bottom =&gt; StackPosition::Side,
             };
         }
 
-        <span class="prelude-val">None</span>
+        <span class="prelude-val">None
+    </span>}
+}
+
+<span class="doccomment">/// A simple monolce layout that gives the maximum available space to the currently
+/// focused client and unmaps all other windows.
+</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub struct </span>Monocle;
+
+<span class="kw">impl </span>Monocle {
+    <span class="doccomment">/// Create a new [Monocle] [Layout] as a boxed trait object
+    </span><span class="kw">pub fn </span>boxed() -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(Monocle)
     }
 }
 
-<span class="doccomment">/// A simple monolce layout that gives the maximum available space to the currently</span>
-<span class="doccomment">/// focused client and unmaps all other windows.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Monocle</span>;
-
-<span class="kw">impl</span> <span class="ident">Monocle</span> {
-    <span class="doccomment">/// Create a new [Monocle] [Layout] as a boxed trait object</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">boxed</span>() -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="ident">Monocle</span>)
+<span class="kw">impl </span>Layout <span class="kw">for </span>Monocle {
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="string">&quot;Mono&quot;</span>.to_owned()
     }
+
+    <span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        <span class="self">Self</span>::boxed()
+    }
+
+    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        (<span class="prelude-val">None</span>, <span class="macro">vec!</span>[(s.focus, r)])
+    }
+
+    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">impl</span> <span class="ident">Layout</span> <span class="kw">for</span> <span class="ident">Monocle</span> {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="string">&quot;Mono&quot;</span>.<span class="ident">to_owned</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">boxed_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="self">Self</span>::boxed</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        (<span class="prelude-val">None</span>, <span class="macro">vec!</span>[(<span class="ident">s</span>.<span class="ident">focus</span>, <span class="ident">r</span>)])
-    }
-
-    <span class="kw">fn</span> <span class="ident">handle_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">None</span>
-    }
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">builtin::layout</span>::{<span class="ident">messages::IncMain</span>, <span class="kw-2">*</span>},
-        <span class="ident">core::layout::IntoMessage</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use crate</span>::{
+        builtin::layout::{messages::IncMain, <span class="kw-2">*</span>},
+        core::layout::IntoMessage,
     };
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">message_handling</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">MainAndStack::side_unboxed</span>(<span class="number">1</span>, <span class="number">0.6</span>, <span class="number">0.1</span>, <span class="bool-val">false</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>message_handling() {
+        <span class="kw">let </span><span class="kw-2">mut </span>l = MainAndStack::side_unboxed(<span class="number">1</span>, <span class="number">0.6</span>, <span class="number">0.1</span>, <span class="bool-val">false</span>);
 
-        <span class="ident">l</span>.<span class="ident">handle_message</span>(<span class="kw-2">&amp;</span><span class="ident">IncMain</span>(<span class="number">2</span>).<span class="ident">into_message</span>());
+        l.handle_message(<span class="kw-2">&amp;</span>IncMain(<span class="number">2</span>).into_message());
 
-        <span class="macro">assert_eq!</span>(<span class="ident">l</span>.<span class="ident">max_main</span>, <span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(l.max_main, <span class="number">3</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

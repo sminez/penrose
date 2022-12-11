@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/messages.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>messages.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/builtin/layout/messages.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>messages.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -51,56 +51,56 @@
 <span id="49">49</span>
 <span id="50">50</span>
 <span id="51">51</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Built-in layout messages.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! It is not a hard requirement for [crate::core::layout::Layout] implementations to handle each</span>
-<span class="doccomment">//! of the messages provided by this module but wherever possible you should</span>
-<span class="doccomment">//! attempt to do so if the semantics of the message make sense for the</span>
-<span class="doccomment">//! layout you are writing.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Built-in layout messages.
+//!
+//! It is not a hard requirement for [crate::core::layout::Layout] implementations to handle each
+//! of the messages provided by this module but wherever possible you should
+//! attempt to do so if the semantics of the message make sense for the
+//! layout you are writing.
 
-<span class="macro">macro_rules!</span> <span class="ident">msg</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">m</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::IntoMessage</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">m</span> {}
+</span><span class="macro">macro_rules! </span>msg {
+    (<span class="macro-nonterminal">$m</span>:ident) =&gt; {
+        <span class="kw">impl </span><span class="macro-nonterminal">$crate::core::layout::IntoMessage </span><span class="kw">for </span><span class="macro-nonterminal">$m </span>{}
     };
 }
 
-<span class="doccomment">/// Alter the number of clients contained in the main area of the [crate::core::layout::Layout].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IncMain</span>(<span class="kw">pub</span> <span class="ident">i8</span>);
-<span class="macro">msg!</span>(<span class="ident">IncMain</span>);
+<span class="doccomment">/// Alter the number of clients contained in the main area of the [crate::core::layout::Layout].
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>IncMain(<span class="kw">pub </span>i8);
+<span class="macro">msg!</span>(IncMain);
 
-<span class="doccomment">/// Expand the size of the main area of the [crate::core::layout::Layout].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExpandMain</span>;
-<span class="macro">msg!</span>(<span class="ident">ExpandMain</span>);
+<span class="doccomment">/// Expand the size of the main area of the [crate::core::layout::Layout].
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>ExpandMain;
+<span class="macro">msg!</span>(ExpandMain);
 
-<span class="doccomment">/// Shrink the size of the main area of the [crate::core::layout::Layout]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShrinkMain</span>;
-<span class="macro">msg!</span>(<span class="ident">ShrinkMain</span>);
+<span class="doccomment">/// Shrink the size of the main area of the [crate::core::layout::Layout]
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>ShrinkMain;
+<span class="macro">msg!</span>(ShrinkMain);
 
-<span class="doccomment">/// Rotate the [crate::core::layout::Layout] to a new orientation</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Rotate</span>;
-<span class="macro">msg!</span>(<span class="ident">Rotate</span>);
+<span class="doccomment">/// Rotate the [crate::core::layout::Layout] to a new orientation
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Rotate;
+<span class="macro">msg!</span>(Rotate);
 
-<span class="doccomment">/// Mirror the [crate::core::layout::Layout] over either the horizontal or vertical axis.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Mirror</span>;
-<span class="macro">msg!</span>(<span class="ident">Mirror</span>);
+<span class="doccomment">/// Mirror the [crate::core::layout::Layout] over either the horizontal or vertical axis.
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Mirror;
+<span class="macro">msg!</span>(Mirror);
 
-<span class="doccomment">/// Unwrap a [crate::core::layout::LayoutTransformer] to return the underlying [crate::core::layout::Layout].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Handling of this message is provided automatically by the [crate::core::layout::LayoutTransformer]</span>
-<span class="doccomment">/// trait.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnwrapTransformer</span>;
-<span class="macro">msg!</span>(<span class="ident">UnwrapTransformer</span>);
+<span class="doccomment">/// Unwrap a [crate::core::layout::LayoutTransformer] to return the underlying [crate::core::layout::Layout].
+///
+/// Handling of this message is provided automatically by the [crate::core::layout::LayoutTransformer]
+/// trait.
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>UnwrapTransformer;
+<span class="macro">msg!</span>(UnwrapTransformer);
 
-<span class="doccomment">/// A [crate::core::layout::Message] sent when a [crate::core::layout::Layout] is no longer visible (e.g.</span>
-<span class="doccomment">/// Layout changed on a visible [crate::pure::Workspace] or the workspace itself becoming hidden).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Hide</span>;
-<span class="macro">msg!</span>(<span class="ident">Hide</span>);
+<span class="doccomment">/// A [crate::core::layout::Message] sent when a [crate::core::layout::Layout] is no longer visible (e.g.
+/// Layout changed on a visible [crate::pure::Workspace] or the workspace itself becoming hidden).
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Hide;
+<span class="macro">msg!</span>(Hide);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

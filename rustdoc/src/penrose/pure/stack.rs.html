@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/stack.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>stack.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/stack.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>stack.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -944,949 +944,949 @@
 <span id="942">942</span>
 <span id="943">943</span>
 <span id="944">944</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pop_where</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections::linked_list</span>::{<span class="self">self</span>, <span class="ident">LinkedList</span>},
-    <span class="ident">fmt</span>,
-    <span class="ident">iter</span>::{<span class="ident">once</span>, <span class="ident">IntoIterator</span>},
-    <span class="ident">mem</span>::{<span class="ident">swap</span>, <span class="ident">take</span>},
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pop_where;
+<span class="kw">use </span>std::{
+    collections::linked_list::{<span class="self">self</span>, LinkedList},
+    fmt,
+    iter::{once, IntoIterator},
+    mem::{swap, take},
 };
 
-<span class="doccomment">/// Create a [Stack] containing the arguments. The only required element is the focus,</span>
-<span class="doccomment">/// it is not possible to create an empty [Stack];</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use penrose::stack;</span>
-<span class="doccomment">/// let s = stack!([1, 2], 3, [4, 5]);</span>
-<span class="doccomment">/// let s = stack!([1, 2], 3);</span>
-<span class="doccomment">/// let s = stack!(1, [2, 3]);</span>
-<span class="doccomment">/// let s = stack!(1, 2, 3);</span>
-<span class="doccomment">/// let s = stack!(1);</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">stack</span> {
-    ([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">up</span>:<span class="ident">expr</span>),<span class="kw-2">*</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>:<span class="ident">expr</span>, [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">down</span>:<span class="ident">expr</span>),<span class="kw-2">*</span>]) =&gt; { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::Stack::new</span>([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">up</span>),<span class="kw-2">*</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>, [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">down</span>),<span class="kw-2">*</span>]) };
-    ([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">up</span>:<span class="ident">expr</span>),<span class="kw-2">*</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>:<span class="ident">expr</span>) =&gt; { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::Stack::new</span>([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">up</span>),<span class="kw-2">*</span>], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>, []) };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>:<span class="ident">expr</span>, [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">down</span>:<span class="ident">expr</span>),<span class="kw-2">*</span>]) =&gt; { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::Stack::new</span>([], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>, [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">down</span>),<span class="kw-2">*</span>]) };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>:<span class="ident">expr</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">down</span>:<span class="ident">expr</span>),<span class="op">+</span>) =&gt; { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::Stack::new</span>([], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>, [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">down</span>),<span class="kw-2">*</span>]) };
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>:<span class="ident">expr</span>) =&gt; { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::Stack::new</span>([], <span class="macro-nonterminal">$</span><span class="macro-nonterminal">focus</span>, []) };
+<span class="doccomment">/// Create a [Stack] containing the arguments. The only required element is the focus,
+/// it is not possible to create an empty [Stack];
+/// ```
+/// # use penrose::stack;
+/// let s = stack!([1, 2], 3, [4, 5]);
+/// let s = stack!([1, 2], 3);
+/// let s = stack!(1, [2, 3]);
+/// let s = stack!(1, 2, 3);
+/// let s = stack!(1);
+/// ```
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>stack {
+    ([$(<span class="macro-nonterminal">$up</span>:expr),<span class="kw-2">*</span>], <span class="macro-nonterminal">$focus</span>:expr, [$(<span class="macro-nonterminal">$down</span>:expr),<span class="kw-2">*</span>]) =&gt; { <span class="macro-nonterminal">$crate::pure::Stack::new</span>([$(<span class="macro-nonterminal">$up</span>),<span class="kw-2">*</span>], <span class="macro-nonterminal">$focus</span>, [$(<span class="macro-nonterminal">$down</span>),<span class="kw-2">*</span>]) };
+    ([$(<span class="macro-nonterminal">$up</span>:expr),<span class="kw-2">*</span>], <span class="macro-nonterminal">$focus</span>:expr) =&gt; { <span class="macro-nonterminal">$crate::pure::Stack::new</span>([$(<span class="macro-nonterminal">$up</span>),<span class="kw-2">*</span>], <span class="macro-nonterminal">$focus</span>, []) };
+    (<span class="macro-nonterminal">$focus</span>:expr, [$(<span class="macro-nonterminal">$down</span>:expr),<span class="kw-2">*</span>]) =&gt; { <span class="macro-nonterminal">$crate::pure::Stack::new</span>([], <span class="macro-nonterminal">$focus</span>, [$(<span class="macro-nonterminal">$down</span>),<span class="kw-2">*</span>]) };
+    (<span class="macro-nonterminal">$focus</span>:expr, $(<span class="macro-nonterminal">$down</span>:expr),+) =&gt; { <span class="macro-nonterminal">$crate::pure::Stack::new</span>([], <span class="macro-nonterminal">$focus</span>, [$(<span class="macro-nonterminal">$down</span>),<span class="kw-2">*</span>]) };
+    (<span class="macro-nonterminal">$focus</span>:expr) =&gt; { <span class="macro-nonterminal">$crate::pure::Stack::new</span>([], <span class="macro-nonterminal">$focus</span>, []) };
 }
 
-<span class="doccomment">/// A position within a [Stack].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Position</span> {
-    <span class="doccomment">/// The current focus point</span>
-    <span class="ident">Focus</span>,
-    <span class="doccomment">/// Above the current focus point</span>
-    <span class="ident">Before</span>,
-    <span class="doccomment">/// Below the current focus point</span>
-    <span class="ident">After</span>,
-    <span class="doccomment">/// The first element of the stack</span>
-    <span class="ident">Head</span>,
-    <span class="doccomment">/// The last element of the stack</span>
-    <span class="ident">Tail</span>,
+<span class="doccomment">/// A position within a [Stack].
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>Position {
+    <span class="doccomment">/// The current focus point
+    </span>Focus,
+    <span class="doccomment">/// Above the current focus point
+    </span>Before,
+    <span class="doccomment">/// Below the current focus point
+    </span>After,
+    <span class="doccomment">/// The first element of the stack
+    </span>Head,
+    <span class="doccomment">/// The last element of the stack
+    </span>Tail,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Position</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Position::Focus</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>Position {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        Position::Focus
     }
 }
 
-<span class="doccomment">/// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark</span>
-<span class="doccomment">/// a single element that currently holds focus. By convention, the main element is</span>
-<span class="doccomment">/// the first element in the stack (regardless of focus). Focusing operations do not</span>
-<span class="doccomment">/// reorder the elements of the stack or the resulting [Vec] that can be obtained</span>
-<span class="doccomment">/// from calling [Stack::flatten].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))</span>
-<span class="doccomment">/// over a [LinkedList]. Many of the methods that mutate the structure of the Stack</span>
-<span class="doccomment">/// return back a mutable reference so that they are able to be chained.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">up</span>: <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">focus</span>: <span class="ident">T</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">down</span>: <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark
+/// a single element that currently holds focus. By convention, the main element is
+/// the first element in the stack (regardless of focus). Focusing operations do not
+/// reorder the elements of the stack or the resulting [Vec] that can be obtained
+/// from calling [Stack::flatten].
+///
+/// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
+/// over a [LinkedList]. Many of the methods that mutate the structure of the Stack
+/// return back a mutable reference so that they are able to be chained.
+</span><span class="attribute">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Stack&lt;T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) up: LinkedList&lt;T&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) focus: T,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) down: LinkedList&lt;T&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="ident">up</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">iter</span>().<span class="ident">rev</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{t}&quot;</span>)).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">down</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{t}&quot;</span>)).<span class="ident">collect</span>();
+<span class="kw">impl</span>&lt;T: fmt::Display&gt; fmt::Display <span class="kw">for </span>Stack&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">let </span>up: Vec&lt;String&gt; = <span class="self">self</span>.up.iter().rev().map(|t| <span class="macro">format!</span>(<span class="string">&quot;{t}&quot;</span>)).collect();
+        <span class="kw">let </span>down: Vec&lt;String&gt; = <span class="self">self</span>.down.iter().map(|t| <span class="macro">format!</span>(<span class="string">&quot;{t}&quot;</span>)).collect();
 
         <span class="macro">write!</span>(
-            <span class="ident">f</span>,
+            f,
             <span class="string">&quot;Stack([{}], {}, [{}])&quot;</span>,
-            <span class="ident">up</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>),
-            <span class="self">self</span>.<span class="ident">focus</span>,
-            <span class="ident">down</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>)
+            up.join(<span class="string">&quot;, &quot;</span>),
+            <span class="self">self</span>.focus,
+            down.join(<span class="string">&quot;, &quot;</span>)
         )
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new Stack specifying the focused element and and elements</span>
-    <span class="doccomment">/// above and below it.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">J</span><span class="op">&gt;</span>(<span class="ident">up</span>: <span class="ident">I</span>, <span class="ident">focus</span>: <span class="ident">T</span>, <span class="ident">down</span>: <span class="ident">J</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
-        <span class="ident">J</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;T&gt; Stack&lt;T&gt; {
+    <span class="doccomment">/// Create a new Stack specifying the focused element and and elements
+    /// above and below it.
+    </span><span class="kw">pub fn </span>new&lt;I, J&gt;(up: I, focus: T, down: J) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>I: IntoIterator&lt;Item = T&gt;,
+        J: IntoIterator&lt;Item = T&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reversed_up</span> <span class="op">=</span> <span class="ident">LinkedList::new</span>();
-        <span class="kw">for</span> <span class="ident">elem</span> <span class="kw">in</span> <span class="ident">up</span>.<span class="ident">into_iter</span>() {
-            <span class="ident">reversed_up</span>.<span class="ident">push_front</span>(<span class="ident">elem</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>reversed_up = LinkedList::new();
+        <span class="kw">for </span>elem <span class="kw">in </span>up.into_iter() {
+            reversed_up.push_front(elem);
         }
 
-        <span class="self">Self</span> {
-            <span class="ident">focus</span>,
-            <span class="ident">up</span>: <span class="ident">reversed_up</span>,
-            <span class="ident">down</span>: <span class="ident">down</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
+        <span class="self">Self </span>{
+            focus,
+            up: reversed_up,
+            down: down.into_iter().collect(),
         }
     }
 
-    <span class="comment">// NOTE: Can&#39;t implement FromIterator&lt;T&gt; because we disallow an empty stack</span>
-    <span class="doccomment">/// For an iterator of at least one element, the first element will</span>
-    <span class="doccomment">/// be focused and all remaining elements will be placed after it.</span>
-    <span class="doccomment">/// For an empty iterator, return None.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_iter</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="comment">// NOTE: Can&#39;t implement FromIterator&lt;T&gt; because we disallow an empty stack
+    </span><span class="doccomment">/// For an iterator of at least one element, the first element will
+    /// be focused and all remaining elements will be placed after it.
+    /// For an empty iterator, return None.
+    </span><span class="kw">pub fn </span>try_from_iter&lt;I&gt;(iter: I) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
+        </span>I: IntoIterator&lt;Item = T&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">into_iter</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>it = iter.into_iter();
 
-        <span class="kw">let</span> <span class="ident">focus</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">it</span>.<span class="ident">next</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; <span class="ident">t</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+        <span class="kw">let </span>focus = <span class="kw">match </span>it.next() {
+            <span class="prelude-val">Some</span>(t) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         };
 
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">up</span>: <span class="ident">LinkedList::default</span>(),
-            <span class="ident">focus</span>,
-            <span class="ident">down</span>: <span class="ident">it</span>.<span class="ident">collect</span>(),
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            up: LinkedList::default(),
+            focus,
+            down: it.collect(),
         })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_iter_unchecked</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_iter_unchecked&lt;I&gt;(iter: I) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>I: IntoIterator&lt;Item = T&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">into_iter</span>();
-        <span class="kw">let</span> <span class="ident">focus</span> <span class="op">=</span> <span class="ident">it</span>.<span class="ident">next</span>().<span class="ident">expect</span>(<span class="string">&quot;at least one element&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>it = iter.into_iter();
+        <span class="kw">let </span>focus = it.next().expect(<span class="string">&quot;at least one element&quot;</span>);
 
-        <span class="self">Self</span> {
-            <span class="ident">up</span>: <span class="ident">LinkedList::default</span>(),
-            <span class="ident">focus</span>,
-            <span class="ident">down</span>: <span class="ident">it</span>.<span class="ident">collect</span>(),
+        <span class="self">Self </span>{
+            up: LinkedList::default(),
+            focus,
+            down: it.collect(),
         }
     }
 
-    <span class="doccomment">/// The number of elements in this Stack.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>
-    }
+    <span class="doccomment">/// The number of elements in this Stack.
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.up.len() + <span class="self">self</span>.down.len() + <span class="number">1
+    </span>}
 
-    <span class="doccomment">/// Always false: a Stack always has at least one focused element.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="bool-val">false</span>
-    }
+    <span class="doccomment">/// Always false: a Stack always has at least one focused element.
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="bool-val">false
+    </span>}
 
-    <span class="doccomment">/// Provide an iterator over this stack iterating over up,</span>
-    <span class="doccomment">/// focus and then down.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">Iter</span> {
-            <span class="ident">up</span>: <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">iter</span>(),
-            <span class="ident">focus</span>: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span>),
-            <span class="ident">down</span>: <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">iter</span>(),
+    <span class="doccomment">/// Provide an iterator over this stack iterating over up,
+    /// focus and then down.
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+        Iter {
+            up: <span class="self">self</span>.up.iter(),
+            focus: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.focus),
+            down: <span class="self">self</span>.down.iter(),
         }
     }
 
-    <span class="doccomment">/// Provide an iterator over this stack iterating over up,</span>
-    <span class="doccomment">/// focus and then down with mutable references.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">IterMut</span> {
-            <span class="ident">up</span>: <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">iter_mut</span>(),
-            <span class="ident">focus</span>: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">focus</span>),
-            <span class="ident">down</span>: <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">iter_mut</span>(),
+    <span class="doccomment">/// Provide an iterator over this stack iterating over up,
+    /// focus and then down with mutable references.
+    </span><span class="kw">pub fn </span>iter_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; IterMut&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+        IterMut {
+            up: <span class="self">self</span>.up.iter_mut(),
+            focus: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.focus),
+            down: <span class="self">self</span>.down.iter_mut(),
         }
     }
 
-    <span class="doccomment">/// Iterate over the clients in this stack from the the focused element</span>
-    <span class="doccomment">/// down through the stack.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use penrose::stack;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let unraveled: Vec&lt;u8&gt; = stack!([1, 2], 3, [4, 5]).unravel().copied().collect();</span>
-    <span class="doccomment">/// assert_eq!(unraveled, vec![3, 4, 5, 1, 2]);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unravel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">once</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span>)
-            .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">down</span>.<span class="ident">iter</span>())
-            .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">up</span>.<span class="ident">iter</span>().<span class="ident">rev</span>())
+    <span class="doccomment">/// Iterate over the clients in this stack from the the focused element
+    /// down through the stack.
+    ///
+    /// ```
+    /// # use penrose::stack;
+    ///
+    /// let unraveled: Vec&lt;u8&gt; = stack!([1, 2], 3, [4, 5]).unravel().copied().collect();
+    /// assert_eq!(unraveled, vec![3, 4, 5, 1, 2]);
+    /// ```
+    </span><span class="kw">pub fn </span>unravel(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>T&gt; {
+        once(<span class="kw-2">&amp;</span><span class="self">self</span>.focus)
+            .chain(<span class="self">self</span>.down.iter())
+            .chain(<span class="self">self</span>.up.iter().rev())
     }
 
-    <span class="doccomment">/// Flatten a Stack into a Vector, losing the information of which</span>
-    <span class="doccomment">/// element is focused.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flatten</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()
+    <span class="doccomment">/// Flatten a Stack into a Vector, losing the information of which
+    /// element is focused.
+    </span><span class="kw">pub fn </span>flatten(<span class="self">self</span>) -&gt; Vec&lt;T&gt; {
+        <span class="self">self</span>.into_iter().collect()
     }
 
-    <span class="doccomment">/// Return a reference to the first element in this [Stack]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">head</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">back</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span>)
+    <span class="doccomment">/// Return a reference to the first element in this [Stack]
+    </span><span class="kw">pub fn </span>head(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
+        <span class="self">self</span>.up.back().unwrap_or(<span class="kw-2">&amp;</span><span class="self">self</span>.focus)
     }
 
-    <span class="doccomment">/// Return a reference to the focused element in this [Stack]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span>
+    <span class="doccomment">/// Return a reference to the focused element in this [Stack]
+    </span><span class="kw">pub fn </span>focused(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.focus
     }
 
-    <span class="doccomment">/// Return a reference to the last element in this [Stack]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">back</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span>)
+    <span class="doccomment">/// Return a reference to the last element in this [Stack]
+    </span><span class="kw">pub fn </span>last(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
+        <span class="self">self</span>.down.back().unwrap_or(<span class="kw-2">&amp;</span><span class="self">self</span>.focus)
     }
 
-    <span class="doccomment">/// Swap the current head element with the focused element in the</span>
-    <span class="doccomment">/// stack order. Focus stays with the original focused element.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">swap_focus_and_head</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">up</span>);
+    <span class="doccomment">/// Swap the current head element with the focused element in the
+    /// stack order. Focus stays with the original focused element.
+    </span><span class="kw">pub fn </span>swap_focus_and_head(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>tmp = take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">head</span>) <span class="op">=</span> <span class="ident">tmp</span>.<span class="ident">pop_back</span>() {
-            <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">head</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(head) = tmp.pop_back() {
+            <span class="self">self</span>.down.push_front(head);
         }
 
-        <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">tmp</span>.<span class="ident">into_iter</span>() {
-            <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">item</span>);
+        <span class="kw">for </span>item <span class="kw">in </span>tmp.into_iter() {
+            <span class="self">self</span>.down.push_front(item);
         }
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Rotate the Stack until the current focused element is in the head position</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rotate_focus_to_head</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="self">self</span>;
+    <span class="doccomment">/// Rotate the Stack until the current focused element is in the head position
+    </span><span class="kw">pub fn </span>rotate_focus_to_head(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">if </span><span class="self">self</span>.up.is_empty() {
+            <span class="kw">return </span><span class="self">self</span>;
         }
 
-        <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">up</span>).<span class="ident">into_iter</span>().<span class="ident">rev</span>() {
-            <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_back</span>(<span class="ident">item</span>);
+        <span class="kw">for </span>item <span class="kw">in </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up).into_iter().rev() {
+            <span class="self">self</span>.down.push_back(item);
         }
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Move focus to the element in the head position</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focus_head</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">head</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">pop_back</span>() {
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="self">self</span>, <span class="comment">// focus is already head</span>
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; <span class="ident">t</span>,
+    <span class="doccomment">/// Move focus to the element in the head position
+    </span><span class="kw">pub fn </span>focus_head(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>head = <span class="kw">match </span><span class="self">self</span>.up.pop_back() {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="self">self</span>, <span class="comment">// focus is already head
+            </span><span class="prelude-val">Some</span>(t) =&gt; t,
         };
 
-        <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">head</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">focus</span>);
-        <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">head</span>);
+        swap(<span class="kw-2">&amp;mut </span>head, <span class="kw-2">&amp;mut </span><span class="self">self</span>.focus);
+        <span class="self">self</span>.down.push_front(head);
 
-        <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">up</span>).<span class="ident">into_iter</span>().<span class="ident">rev</span>() {
-            <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">item</span>);
+        <span class="kw">for </span>item <span class="kw">in </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up).into_iter().rev() {
+            <span class="self">self</span>.down.push_front(item);
         }
 
-        <span class="self">self</span>
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Insert the given element in place of the current focus, pushing
+    /// the current focus down the [Stack].
+    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: T) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.insert_at(Position::default(), t)
     }
 
-    <span class="doccomment">/// Insert the given element in place of the current focus, pushing</span>
-    <span class="doccomment">/// the current focus down the [Stack].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">t</span>: <span class="ident">T</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">insert_at</span>(<span class="ident">Position::default</span>(), <span class="ident">t</span>)
-    }
+    <span class="doccomment">/// Insert the given element at the requested position in the [Stack].
+    /// See [Position] for the semantics of each case. For all cases, the
+    /// existing elements in the [Stack] are pushed down to make room for
+    /// the new one.
+    </span><span class="kw">pub fn </span>insert_at(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: Position, <span class="kw-2">mut </span>t: T) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">use </span>Position::<span class="kw-2">*</span>;
 
-    <span class="doccomment">/// Insert the given element at the requested position in the [Stack].</span>
-    <span class="doccomment">/// See [Position] for the semantics of each case. For all cases, the</span>
-    <span class="doccomment">/// existing elements in the [Stack] are pushed down to make room for</span>
-    <span class="doccomment">/// the new one.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_at</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">Position</span>, <span class="kw-2">mut</span> <span class="ident">t</span>: <span class="ident">T</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">use</span> <span class="ident">Position</span>::<span class="kw-2">*</span>;
-
-        <span class="kw">match</span> <span class="ident">pos</span> {
-            <span class="ident">Focus</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">t</span>);
-                <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">t</span>);
+        <span class="kw">match </span>pos {
+            Focus =&gt; {
+                <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>t);
+                <span class="self">self</span>.down.push_front(t);
             }
-            <span class="ident">Before</span> =&gt; <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">push_front</span>(<span class="ident">t</span>),
-            <span class="ident">After</span> =&gt; <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">t</span>),
-            <span class="ident">Head</span> =&gt; <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">push_back</span>(<span class="ident">t</span>),
-            <span class="ident">Tail</span> =&gt; <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_back</span>(<span class="ident">t</span>),
+            Before =&gt; <span class="self">self</span>.up.push_front(t),
+            After =&gt; <span class="self">self</span>.down.push_front(t),
+            Head =&gt; <span class="self">self</span>.up.push_back(t),
+            Tail =&gt; <span class="self">self</span>.down.push_back(t),
         };
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Remove the focused element of this Stack. If this was the only element then</span>
-    <span class="doccomment">/// the stack is dropped and None is returned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_focused</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; (<span class="ident">T</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">focus</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">pop_front</span>().<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">pop_front</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">focus</span>) =&gt; <span class="ident">focus</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> (<span class="self">self</span>.<span class="ident">focus</span>, <span class="prelude-val">None</span>),
+    <span class="doccomment">/// Remove the focused element of this Stack. If this was the only element then
+    /// the stack is dropped and None is returned.
+    </span><span class="kw">pub fn </span>remove_focused(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; (T, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">let </span>focus = <span class="kw">match </span><span class="self">self</span>.down.pop_front().or_else(|| <span class="self">self</span>.up.pop_front()) {
+            <span class="prelude-val">Some</span>(focus) =&gt; focus,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>(<span class="self">self</span>.focus, <span class="prelude-val">None</span>),
         };
 
         (
-            <span class="self">self</span>.<span class="ident">focus</span>,
-            <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-                <span class="ident">focus</span>,
-                <span class="ident">up</span>: <span class="self">self</span>.<span class="ident">up</span>,
-                <span class="ident">down</span>: <span class="self">self</span>.<span class="ident">down</span>,
+            <span class="self">self</span>.focus,
+            <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+                focus,
+                up: <span class="self">self</span>.up,
+                down: <span class="self">self</span>.down,
             }),
         )
     }
 
-    <span class="doccomment">/// Remove an element from the stack.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the element was present it is returned along with the rest of the [Stack].</span>
-    <span class="doccomment">/// If this was the last element in the stack, the stack is dropped and None is</span>
-    <span class="doccomment">/// returned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">t</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>)
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">PartialEq</span>,
+    <span class="doccomment">/// Remove an element from the stack.
+    ///
+    /// If the element was present it is returned along with the rest of the [Stack].
+    /// If this was the last element in the stack, the stack is dropped and None is
+    /// returned.
+    </span><span class="kw">pub fn </span>remove(<span class="kw-2">mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; (<span class="prelude-ty">Option</span>&lt;T&gt;, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;)
+    <span class="kw">where
+        </span>T: PartialEq,
     {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">found</span>) <span class="op">=</span> <span class="macro">pop_where!</span>(<span class="self">self</span>, <span class="ident">up</span>, <span class="op">|</span><span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">|</span> <span class="ident">elem</span> <span class="op">==</span> <span class="ident">t</span>) {
-            <span class="kw">return</span> (<span class="prelude-val">Some</span>(<span class="ident">found</span>), <span class="prelude-val">Some</span>(<span class="self">self</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(found) = <span class="macro">pop_where!</span>(<span class="self">self</span>, up, |elem: <span class="kw-2">&amp;</span>T| elem == t) {
+            <span class="kw">return </span>(<span class="prelude-val">Some</span>(found), <span class="prelude-val">Some</span>(<span class="self">self</span>));
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">found</span>) <span class="op">=</span> <span class="macro">pop_where!</span>(<span class="self">self</span>, <span class="ident">down</span>, <span class="op">|</span><span class="ident">elem</span>: <span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">|</span> <span class="ident">elem</span> <span class="op">==</span> <span class="ident">t</span>) {
-            <span class="kw">return</span> (<span class="prelude-val">Some</span>(<span class="ident">found</span>), <span class="prelude-val">Some</span>(<span class="self">self</span>));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(found) = <span class="macro">pop_where!</span>(<span class="self">self</span>, down, |elem: <span class="kw-2">&amp;</span>T| elem == t) {
+            <span class="kw">return </span>(<span class="prelude-val">Some</span>(found), <span class="prelude-val">Some</span>(<span class="self">self</span>));
         }
 
-        <span class="kw">if</span> <span class="ident">t</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span> {
-            <span class="kw">let</span> (<span class="ident">focus</span>, <span class="ident">stack</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">remove_focused</span>();
-            (<span class="prelude-val">Some</span>(<span class="ident">focus</span>), <span class="ident">stack</span>)
-        } <span class="kw">else</span> {
+        <span class="kw">if </span>t == <span class="kw-2">&amp;</span><span class="self">self</span>.focus {
+            <span class="kw">let </span>(focus, stack) = <span class="self">self</span>.remove_focused();
+            (<span class="prelude-val">Some</span>(focus), stack)
+        } <span class="kw">else </span>{
             (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>))
         }
     }
 
-    <span class="doccomment">/// Map a function over all elements in this [Stack], returning a new one.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">U</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">T</span>) -&gt; <span class="ident">U</span>,
+    <span class="doccomment">/// Map a function over all elements in this [Stack], returning a new one.
+    </span><span class="kw">pub fn </span>map&lt;F, U&gt;(<span class="self">self</span>, f: F) -&gt; Stack&lt;U&gt;
+    <span class="kw">where
+        </span>F: Fn(T) -&gt; U,
     {
-        <span class="ident">Stack</span> {
-            <span class="ident">focus</span>: <span class="ident">f</span>(<span class="self">self</span>.<span class="ident">focus</span>),
-            <span class="ident">up</span>: <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>).<span class="ident">collect</span>(),
-            <span class="ident">down</span>: <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>).<span class="ident">collect</span>(),
+        Stack {
+            focus: f(<span class="self">self</span>.focus),
+            up: <span class="self">self</span>.up.into_iter().map(<span class="kw-2">&amp;</span>f).collect(),
+            down: <span class="self">self</span>.down.into_iter().map(<span class="kw-2">&amp;</span>f).collect(),
         }
     }
 
-    <span class="doccomment">/// Retain only elements which satisfy the given predicate. If the focused</span>
-    <span class="doccomment">/// element is removed then focus shifts to the first remaining element</span>
-    <span class="doccomment">/// after it, if there are no elements after then focus moves to the first</span>
-    <span class="doccomment">/// remaining element before. If no elements satisfy the predicate then</span>
-    <span class="doccomment">/// None is returned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">filter</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">bool</span>,
+    <span class="doccomment">/// Retain only elements which satisfy the given predicate. If the focused
+    /// element is removed then focus shifts to the first remaining element
+    /// after it, if there are no elements after then focus moves to the first
+    /// remaining element before. If no elements satisfy the predicate then
+    /// None is returned.
+    </span><span class="kw">pub fn </span>filter&lt;F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>T) -&gt; bool,
     {
-        <span class="kw">let</span> <span class="ident">new_stack</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">focus</span>: <span class="self">self</span>.<span class="ident">focus</span>,
-            <span class="ident">up</span>: <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">into_iter</span>().<span class="ident">filter</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>).<span class="ident">collect</span>(),
-            <span class="ident">down</span>: <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">into_iter</span>().<span class="ident">filter</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>).<span class="ident">collect</span>(),
+        <span class="kw">let </span>new_stack = <span class="self">Self </span>{
+            focus: <span class="self">self</span>.focus,
+            up: <span class="self">self</span>.up.into_iter().filter(<span class="kw-2">&amp;</span>f).collect(),
+            down: <span class="self">self</span>.down.into_iter().filter(<span class="kw-2">&amp;</span>f).collect(),
         };
 
-        <span class="kw">if</span> <span class="ident">f</span>(<span class="kw-2">&amp;</span><span class="ident">new_stack</span>.<span class="ident">focus</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">new_stack</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">maybe_stack</span>) <span class="op">=</span> <span class="ident">new_stack</span>.<span class="ident">remove_focused</span>();
-            <span class="ident">maybe_stack</span>
+        <span class="kw">if </span>f(<span class="kw-2">&amp;</span>new_stack.focus) {
+            <span class="prelude-val">Some</span>(new_stack)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>(<span class="kw">_</span>, maybe_stack) = new_stack.remove_focused();
+            maybe_stack
         }
     }
 
-    <span class="doccomment">/// Reverse the ordering of a Stack (up becomes down) while maintaining</span>
-    <span class="doccomment">/// focus.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reverse</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">up</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">down</span>);
+    <span class="doccomment">/// Reverse the ordering of a Stack (up becomes down) while maintaining
+    /// focus.
+    </span><span class="kw">pub fn </span>reverse(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up, <span class="kw-2">&amp;mut </span><span class="self">self</span>.down);
 
-        <span class="self">self</span>
+        <span class="self">self
+    </span>}
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_focus(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new: <span class="kw-2">&amp;mut </span>T) {
+        swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.focus, new);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new</span>: <span class="kw-2">&amp;mut</span> <span class="ident">T</span>) {
-        <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">focus</span>, <span class="ident">new</span>);
-    }
+    <span class="kw">fn </span>rev_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>reversed = take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up).into_iter().rev().collect();
+        swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up, <span class="kw-2">&amp;mut </span>reversed);
 
-    <span class="kw">fn</span> <span class="ident">rev_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reversed</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">up</span>).<span class="ident">into_iter</span>().<span class="ident">rev</span>().<span class="ident">collect</span>();
-        <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">up</span>, <span class="kw-2">&amp;mut</span> <span class="ident">reversed</span>);
+        <span class="self">self
+    </span>}
 
-        <span class="self">self</span>
-    }
+    <span class="kw">fn </span>rev_down(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>reversed = take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.down).into_iter().rev().collect();
+        swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.down, <span class="kw-2">&amp;mut </span>reversed);
 
-    <span class="kw">fn</span> <span class="ident">rev_down</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reversed</span> <span class="op">=</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">down</span>).<span class="ident">into_iter</span>().<span class="ident">rev</span>().<span class="ident">collect</span>();
-        <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">down</span>, <span class="kw-2">&amp;mut</span> <span class="ident">reversed</span>);
+        <span class="self">self
+    </span>}
 
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Move focus from the current element up the stack, wrapping to the</span>
-    <span class="doccomment">/// bottom if focus is already at the top.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focus_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">up</span>.<span class="ident">is_empty</span>(), <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">is_empty</span>()) {
-            <span class="comment">// xs:x f ys   -&gt; xs x f:ys</span>
-            <span class="comment">// xs:x f []   -&gt; xs x f</span>
-            (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">focus</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">pop_front</span>().<span class="ident">expect</span>(<span class="string">&quot;non-empty&quot;</span>);
-                <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">focus</span>);
-                <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">focus</span>);
+    <span class="doccomment">/// Move focus from the current element up the stack, wrapping to the
+    /// bottom if focus is already at the top.
+    </span><span class="kw">pub fn </span>focus_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">match </span>(<span class="self">self</span>.up.is_empty(), <span class="self">self</span>.down.is_empty()) {
+            <span class="comment">// xs:x f ys   -&gt; xs x f:ys
+            // xs:x f []   -&gt; xs x f
+            </span>(<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>focus = <span class="self">self</span>.up.pop_front().expect(<span class="string">&quot;non-empty&quot;</span>);
+                <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>focus);
+                <span class="self">self</span>.down.push_front(focus);
             }
 
-            <span class="comment">// [] f ys:y   -&gt; f:ys y []</span>
-            (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">focus</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">pop_back</span>().<span class="ident">expect</span>(<span class="string">&quot;non-empty&quot;</span>);
-                <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">focus</span>);
-                <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">focus</span>);
-                <span class="self">self</span>.<span class="ident">reverse</span>().<span class="ident">rev_up</span>();
+            <span class="comment">// [] f ys:y   -&gt; f:ys y []
+            </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>focus = <span class="self">self</span>.down.pop_back().expect(<span class="string">&quot;non-empty&quot;</span>);
+                <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>focus);
+                <span class="self">self</span>.down.push_front(focus);
+                <span class="self">self</span>.reverse().rev_up();
             }
 
-            <span class="comment">// [] f []     -&gt; [] f []</span>
-            (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; (),
+            <span class="comment">// [] f []     -&gt; [] f []
+            </span>(<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; (),
         }
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Move focus from the current element down the stack, wrapping to the</span>
-    <span class="doccomment">/// top if focus is already at the bottom.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focus_down</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">up</span>.<span class="ident">is_empty</span>(), <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">is_empty</span>()) {
-            <span class="comment">// xs f y:ys   -&gt; xs:f y ys</span>
-            <span class="comment">// [] f y:ys   -&gt; f y ys</span>
-            (<span class="kw">_</span>, <span class="bool-val">false</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">focus</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">pop_front</span>().<span class="ident">expect</span>(<span class="string">&quot;non-empty&quot;</span>);
-                <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">focus</span>);
-                <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">push_front</span>(<span class="ident">focus</span>);
+    <span class="doccomment">/// Move focus from the current element down the stack, wrapping to the
+    /// top if focus is already at the bottom.
+    </span><span class="kw">pub fn </span>focus_down(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">match </span>(<span class="self">self</span>.up.is_empty(), <span class="self">self</span>.down.is_empty()) {
+            <span class="comment">// xs f y:ys   -&gt; xs:f y ys
+            // [] f y:ys   -&gt; f y ys
+            </span>(<span class="kw">_</span>, <span class="bool-val">false</span>) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>focus = <span class="self">self</span>.down.pop_front().expect(<span class="string">&quot;non-empty&quot;</span>);
+                <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>focus);
+                <span class="self">self</span>.up.push_front(focus);
             }
 
-            <span class="comment">// x:xs f []   -&gt; [] x xs:f</span>
-            (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">focus</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">pop_back</span>().<span class="ident">expect</span>(<span class="string">&quot;non-empty&quot;</span>);
-                <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">focus</span>);
-                <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">push_front</span>(<span class="ident">focus</span>);
-                <span class="self">self</span>.<span class="ident">reverse</span>().<span class="ident">rev_down</span>();
+            <span class="comment">// x:xs f []   -&gt; [] x xs:f
+            </span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>focus = <span class="self">self</span>.up.pop_back().expect(<span class="string">&quot;non-empty&quot;</span>);
+                <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>focus);
+                <span class="self">self</span>.up.push_front(focus);
+                <span class="self">self</span>.reverse().rev_down();
             }
 
-            <span class="comment">// [] f []     -&gt; [] f []</span>
-            (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; (),
+            <span class="comment">// [] f []     -&gt; [] f []
+            </span>(<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; (),
         }
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Swap the focused element with the one above, wrapping from top to bottom.</span>
-    <span class="doccomment">/// The currently focused element is maintained by this operation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">swap_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">pop_front</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_front</span>(<span class="ident">t</span>);
-                <span class="self">self</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">reverse</span>().<span class="ident">rev_up</span>(),
-        }
-    }
-
-    <span class="doccomment">/// Swap the focused element with the one below, wrapping from top to bottom.</span>
-    <span class="doccomment">/// The currently focused element is maintained by this operation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">swap_down</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">pop_front</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">push_front</span>(<span class="ident">t</span>);
-                <span class="self">self</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">reverse</span>().<span class="ident">rev_down</span>(),
+    <span class="doccomment">/// Swap the focused element with the one above, wrapping from top to bottom.
+    /// The currently focused element is maintained by this operation.
+    </span><span class="kw">pub fn </span>swap_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self</span>.up.pop_front() {
+            <span class="prelude-val">Some</span>(t) =&gt; {
+                <span class="self">self</span>.down.push_front(t);
+                <span class="self">self
+            </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.reverse().rev_up(),
         }
     }
 
-    <span class="doccomment">/// Rotate all elements of the stack forward, wrapping from top to bottom.</span>
-    <span class="doccomment">/// The currently focused element in the stack is maintained by this operation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rotate_up</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">pop_back</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">push_back</span>(<span class="ident">t</span>);
-                <span class="self">self</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">reverse</span>().<span class="ident">rev_up</span>(),
+    <span class="doccomment">/// Swap the focused element with the one below, wrapping from top to bottom.
+    /// The currently focused element is maintained by this operation.
+    </span><span class="kw">pub fn </span>swap_down(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self</span>.down.pop_front() {
+            <span class="prelude-val">Some</span>(t) =&gt; {
+                <span class="self">self</span>.up.push_front(t);
+                <span class="self">self
+            </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.reverse().rev_down(),
         }
     }
 
-    <span class="doccomment">/// Rotate all elements of the stack back, wrapping from bottom to top.</span>
-    <span class="doccomment">/// The currently focused element in the stack is maintained by this operation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rotate_down</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">pop_back</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">push_back</span>(<span class="ident">t</span>);
-                <span class="self">self</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">reverse</span>().<span class="ident">rev_down</span>(),
+    <span class="doccomment">/// Rotate all elements of the stack forward, wrapping from top to bottom.
+    /// The currently focused element in the stack is maintained by this operation.
+    </span><span class="kw">pub fn </span>rotate_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self</span>.up.pop_back() {
+            <span class="prelude-val">Some</span>(t) =&gt; {
+                <span class="self">self</span>.down.push_back(t);
+                <span class="self">self
+            </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.reverse().rev_up(),
+        }
+    }
+
+    <span class="doccomment">/// Rotate all elements of the stack back, wrapping from bottom to top.
+    /// The currently focused element in the stack is maintained by this operation.
+    </span><span class="kw">pub fn </span>rotate_down(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">match </span><span class="self">self</span>.down.pop_back() {
+            <span class="prelude-val">Some</span>(t) =&gt; {
+                <span class="self">self</span>.up.push_back(t);
+                <span class="self">self
+            </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.reverse().rev_down(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Clone</span><span class="op">&gt;</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Attempt to create a new Stack from this one by filtering the existing</span>
-    <span class="doccomment">/// elements using a predicate function. This will return `None` if no</span>
-    <span class="doccomment">/// elements match the predicate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_filtered</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">bool</span>,
+<span class="kw">impl</span>&lt;T: Clone&gt; Stack&lt;T&gt; {
+    <span class="doccomment">/// Attempt to create a new Stack from this one by filtering the existing
+    /// elements using a predicate function. This will return `None` if no
+    /// elements match the predicate.
+    </span><span class="kw">pub fn </span>from_filtered&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, f: F) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>T) -&gt; bool,
     {
-        <span class="kw">let</span> <span class="ident">new</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
+        <span class="kw">let </span>new = <span class="self">self</span>.clone();
 
-        <span class="ident">new</span>.<span class="ident">filter</span>(<span class="ident">f</span>)
+        new.filter(f)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Check whether a given element is in this Stack</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">t</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus</span> <span class="op">==</span> <span class="ident">t</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">up</span>.<span class="ident">contains</span>(<span class="ident">t</span>) <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">contains</span>(<span class="ident">t</span>)
+<span class="kw">impl</span>&lt;T: PartialEq&gt; Stack&lt;T&gt; {
+    <span class="doccomment">/// Check whether a given element is in this Stack
+    </span><span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) -&gt; bool {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.focus == t || <span class="self">self</span>.up.contains(t) || <span class="self">self</span>.down.contains(t)
     }
 }
 
-<span class="comment">// Iteration</span>
+<span class="comment">// Iteration
 
-<span class="doccomment">/// An owned iterator over a [Stack].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">focus</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">up</span>: <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">down</span>: <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+</span><span class="doccomment">/// An owned iterator over a [Stack].
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>IntoIter&lt;T&gt; {
+    focus: <span class="prelude-ty">Option</span>&lt;T&gt;,
+    up: LinkedList&lt;T&gt;,
+    down: LinkedList&lt;T&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span>;
+<span class="kw">impl</span>&lt;T&gt; Iterator <span class="kw">for </span>IntoIter&lt;T&gt; {
+    <span class="kw">type </span>Item = T;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">up</span>
-            .<span class="ident">pop_back</span>()
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">focus</span>.<span class="ident">take</span>())
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">pop_front</span>())
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="self">self</span>.up
+            .pop_back()
+            .or_else(|| <span class="self">self</span>.focus.take())
+            .or_else(|| <span class="self">self</span>.down.pop_front())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span>;
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;T&gt; IntoIterator <span class="kw">for </span>Stack&lt;T&gt; {
+    <span class="kw">type </span>Item = T;
+    <span class="kw">type </span>IntoIter = IntoIter&lt;T&gt;;
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident">IntoIter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">IntoIter</span> {
-            <span class="ident">focus</span>: <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">focus</span>),
-            <span class="ident">up</span>: <span class="self">self</span>.<span class="ident">up</span>,
-            <span class="ident">down</span>: <span class="self">self</span>.<span class="ident">down</span>,
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; IntoIter&lt;T&gt; {
+        IntoIter {
+            focus: <span class="prelude-val">Some</span>(<span class="self">self</span>.focus),
+            up: <span class="self">self</span>.up,
+            down: <span class="self">self</span>.down,
         }
     }
 }
 
-<span class="doccomment">/// An iterator over a [Stack].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">up</span>: <span class="ident">linked_list::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">focus</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">down</span>: <span class="ident">linked_list::Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An iterator over a [Stack].
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    up: linked_list::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+    focus: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;,
+    down: linked_list::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">up</span>
-            .<span class="ident">next_back</span>()
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">focus</span>.<span class="ident">take</span>())
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">next</span>())
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>;
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">iter</span>()
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="self">self</span>.up
+            .next_back()
+            .or_else(|| <span class="self">self</span>.focus.take())
+            .or_else(|| <span class="self">self</span>.down.next())
     }
 }
 
-<span class="doccomment">/// A mutable iterator over a [Stack].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">focus</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">up</span>: <span class="ident">linked_list::IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">down</span>: <span class="ident">linked_list::IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>,
-}
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Stack&lt;T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">T</span>;
-
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">up</span>
-            .<span class="ident">next_back</span>()
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">focus</span>.<span class="ident">take</span>())
-            .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">down</span>.<span class="ident">next</span>())
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+        <span class="self">self</span>.iter()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">T</span>;
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>;
+<span class="doccomment">/// A mutable iterator over a [Stack].
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    focus: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T&gt;,
+    up: linked_list::IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+    down: linked_list::IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+}
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident">IterMut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">iter_mut</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T;
+
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="self">self</span>.up
+            .next_back()
+            .or_else(|| <span class="self">self</span>.focus.take())
+            .or_else(|| <span class="self">self</span>.down.next())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">simple_test_case::test_case</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Stack&lt;T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T;
+    <span class="kw">type </span>IntoIter = IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">focused</span>() {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>.<span class="ident">focused</span>(), <span class="kw-2">&amp;</span><span class="number">3</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">head</span>() {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>.<span class="ident">head</span>(), <span class="kw-2">&amp;</span><span class="number">1</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">2</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">2</span>, <span class="number">1</span>]); <span class="string">&quot;items up&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">&quot;focus only&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">swap_focus_and_head</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">swap_focus_and_head</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">&quot;focus only&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">rotate_focus_to_head</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">rotate_focus_to_head</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]); <span class="string">&quot;items up&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">&quot;focus only&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">focus_head</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">focus_head</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">iter_yields_all_elements_in_order</span>() {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-        <span class="kw">let</span> <span class="ident">elems</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">collect</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">elems</span>, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">iter_mut_yields_all_elements_in_order</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-        <span class="kw">let</span> <span class="ident">elems</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">iter_mut</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">c</span>).<span class="ident">collect</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">elems</span>, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">into_iter_yields_all_elements_in_order</span>() {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-        <span class="kw">let</span> <span class="ident">elems</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">elems</span>, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">map_preserves_structure</span>() {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bunch&quot;</span>], <span class="string">&quot;of&quot;</span>, [<span class="string">&quot;string&quot;</span>, <span class="string">&quot;refs&quot;</span>]);
-
-        <span class="kw">let</span> <span class="ident">mapped</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">5</span>], <span class="number">2</span>, [<span class="number">6</span>, <span class="number">4</span>]);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">mapped</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">&gt;</span> <span class="number">5</span>, <span class="prelude-val">None</span>; <span class="string">&quot;returns None if no elements satisfy the predicate&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">3</span>]</span>, <span class="number">1</span>, [<span class="number">5</span>])); <span class="string">&quot;holds focus with predicate&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">4</span>)); <span class="string">&quot;moves focus to top of down when possible&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">==</span> <span class="number">2</span> <span class="op">|</span><span class="op">|</span> <span class="ident">x</span> <span class="op">==</span> <span class="number">3</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">3</span>)); <span class="string">&quot;moves focus to end of up if down is empty&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">filter</span>(<span class="ident">predicate</span>: <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="ident">usize</span>) -&gt; <span class="ident">bool</span>, <span class="ident">expected</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">mapped</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">2</span>, <span class="number">3</span>], <span class="number">1</span>, [<span class="number">4</span>, <span class="number">5</span>]).<span class="ident">filter</span>(<span class="ident">predicate</span>);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">mapped</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">flatten_is_correctly_ordered</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]).<span class="ident">flatten</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_iter_is_correctly_ordered</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Stack::try_from_iter</span>(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])));
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_iter_of_empty_iterable_is_none</span>() {
-        <span class="kw">let</span> <span class="ident">empty</span>: <span class="ident">Vec</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-
-        <span class="macro">assert_eq!</span>(<span class="ident">Stack::try_from_iter</span>(<span class="ident">empty</span>), <span class="prelude-val">None</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">try_from_iter_after_flatten_with_empty_up_is_inverse</span>() {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Stack::try_from_iter</span>(<span class="ident">s</span>.<span class="ident">clone</span>().<span class="ident">flatten</span>());
-
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="prelude-val">Some</span>(<span class="ident">s</span>));
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">reverse_holds_focus</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-        <span class="ident">s</span>.<span class="ident">reverse</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="macro">stack!</span>([<span class="number">5</span>, <span class="number">4</span>], <span class="number">3</span>, [<span class="number">2</span>, <span class="number">1</span>]));
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">2</span>, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([]</span>, <span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>); <span class="string">&quot;items down only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, []), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">2</span>, [<span class="number">3</span>]); <span class="string">&quot;items up only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([]</span>, <span class="number">1</span>, []), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">focus_up</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">focus_up</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], <span class="number">4</span>, [<span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">2</span>, [<span class="number">3</span>]); <span class="string">&quot;items down only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]); <span class="string">&quot;items up only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">focus_down</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">focus_down</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">3</span>, [<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">2</span>, <span class="number">3</span>], <span class="number">1</span>); <span class="string">&quot;items down only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">3</span>, [<span class="number">2</span>]); <span class="string">&quot;items up only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">swap_up</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">swap_up</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">swap_up_chained</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>]);
-
-        <span class="ident">s</span>.<span class="ident">swap_up</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">3</span>, [<span class="number">2</span>, <span class="number">4</span>]));
-        <span class="ident">s</span>.<span class="ident">swap_up</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>]));
-        <span class="ident">s</span>.<span class="ident">swap_up</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>], <span class="number">3</span>));
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>], <span class="number">3</span>, [<span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">2</span>], <span class="number">1</span>, [<span class="number">3</span>]); <span class="string">&quot;items down only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">swap_down</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">swap_down</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">1</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">2</span>, <span class="number">3</span>], <span class="number">1</span>); <span class="string">&quot;items down only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>([<span class="number">2</span>], <span class="number">3</span>, [<span class="number">1</span>]); <span class="string">&quot;items up only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">rotate_up</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">rotate_up</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">5</span>, <span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>]); <span class="string">&quot;items up and down&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">3</span>], <span class="number">1</span>, [<span class="number">2</span>]); <span class="string">&quot;items down only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up only&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">rotate_down</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="ident">s</span>.<span class="ident">rotate_down</span>();
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Position::Focus</span>, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">6</span>, [<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;focus&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Position::Before</span>, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>,<span class="number">6</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;before&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Position::After</span>, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">6</span>,<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;after&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Position::Head</span>, <span class="macro">stack!</span>([<span class="number">6</span>,<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;head&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Position::Tail</span>, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]); <span class="string">&quot;tail&quot;</span>)]
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">insert_at</span>(<span class="ident">pos</span>: <span class="ident">Position</span>, <span class="ident">expected</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
-        <span class="ident">s</span>.<span class="ident">insert_at</span>(<span class="ident">pos</span>, <span class="number">6</span>);
-
-        <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">expected</span>);
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+        <span class="self">self</span>.iter_mut()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">quickcheck_tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">quickcheck</span>::{<span class="ident">Arbitrary</span>, <span class="ident">Gen</span>};
-    <span class="kw">use</span> <span class="ident">quickcheck_macros::quickcheck</span>;
-    <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="comment">// For the tests below we only care about the stack structure not the elements themselves, so</span>
-    <span class="comment">// we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.</span>
-    <span class="comment">//</span>
-    <span class="comment">// Focus is always `42` and elements are unique.</span>
-    <span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Gen</span>) -&gt; <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">up</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="ident">::arbitrary</span>(<span class="ident">g</span>)
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">n</span><span class="op">|</span> <span class="ident">n</span> <span class="op">!</span><span class="op">=</span> <span class="number">42</span>)
-                .<span class="ident">collect</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>focused() {
+        <span class="kw">let </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
 
-            <span class="kw">let</span> <span class="ident">focus</span> <span class="op">=</span> <span class="number">42</span>;
+        <span class="macro">assert_eq!</span>(s.focused(), <span class="kw-2">&amp;</span><span class="number">3</span>)
+    }
 
-            <span class="kw">if</span> <span class="ident">up</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">return</span> <span class="macro">stack!</span>(<span class="ident">focus</span>); <span class="comment">// return a minimal stack as we don&#39;t allow empty</span>
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>head() {
+        <span class="kw">let </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
+
+        <span class="macro">assert_eq!</span>(s.head(), <span class="kw-2">&amp;</span><span class="number">1</span>)
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">2</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">2</span>, <span class="number">1</span>]); <span class="string">&quot;items up&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">&quot;focus only&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>swap_focus_and_head(<span class="kw-2">mut </span>s: Stack&lt;u8&gt;, expected: Stack&lt;u8&gt;) {
+        s.swap_focus_and_head();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">&quot;focus only&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>rotate_focus_to_head(<span class="kw-2">mut </span>s: Stack&lt;u8&gt;, expected: Stack&lt;u8&gt;) {
+        s.rotate_focus_to_head();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]); <span class="string">&quot;items up&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">&quot;focus only&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>focus_head(<span class="kw-2">mut </span>s: Stack&lt;u8&gt;, expected: Stack&lt;u8&gt;) {
+        s.focus_head();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>iter_yields_all_elements_in_order() {
+        <span class="kw">let </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
+        <span class="kw">let </span>elems: Vec&lt;u8&gt; = s.iter().copied().collect();
+
+        <span class="macro">assert_eq!</span>(elems, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>iter_mut_yields_all_elements_in_order() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
+        <span class="kw">let </span>elems: Vec&lt;u8&gt; = s.iter_mut().map(|c| <span class="kw-2">*</span>c).collect();
+
+        <span class="macro">assert_eq!</span>(elems, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>into_iter_yields_all_elements_in_order() {
+        <span class="kw">let </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
+        <span class="kw">let </span>elems: Vec&lt;u8&gt; = s.into_iter().collect();
+
+        <span class="macro">assert_eq!</span>(elems, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>map_preserves_structure() {
+        <span class="kw">let </span>s = <span class="macro">stack!</span>([<span class="string">&quot;a&quot;</span>, <span class="string">&quot;bunch&quot;</span>], <span class="string">&quot;of&quot;</span>, [<span class="string">&quot;string&quot;</span>, <span class="string">&quot;refs&quot;</span>]);
+
+        <span class="kw">let </span>mapped = s.map(|x| x.len());
+        <span class="kw">let </span>expected = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">5</span>], <span class="number">2</span>, [<span class="number">6</span>, <span class="number">4</span>]);
+
+        <span class="macro">assert_eq!</span>(mapped, expected);
+    }
+
+    <span class="attribute">#[test_case(|<span class="kw-2">&amp;</span>x| x &gt; <span class="number">5</span>, <span class="prelude-val">None</span>; <span class="string">&quot;returns None if no elements satisfy the predicate&quot;</span>)]
+    #[test_case(|x| x % <span class="number">2 </span>== <span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">3</span>]</span>, <span class="number">1</span>, [<span class="number">5</span>])); <span class="string">&quot;holds focus with predicate&quot;</span>)]
+    <span class="attribute">#[test_case(|x| x % <span class="number">2 </span>== <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">4</span>)); <span class="string">&quot;moves focus to top of down when possible&quot;</span>)]
+    <span class="attribute">#[test_case(|<span class="kw-2">&amp;</span>x| x == <span class="number">2 </span>|| x == <span class="number">3</span>, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">3</span>)); <span class="string">&quot;moves focus to end of up if down is empty&quot;</span>)]
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>filter(predicate: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>usize) -&gt; bool, expected: <span class="prelude-ty">Option</span>&lt;Stack&lt;usize&gt;&gt;) {
+        <span class="kw">let </span>mapped = <span class="macro">stack!</span>([<span class="number">2</span>, <span class="number">3</span>], <span class="number">1</span>, [<span class="number">4</span>, <span class="number">5</span>]).filter(predicate);
+
+        <span class="macro">assert_eq!</span>(mapped, expected);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>flatten_is_correctly_ordered() {
+        <span class="kw">let </span>res = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]).flatten();
+
+        <span class="macro">assert_eq!</span>(res, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_iter_is_correctly_ordered() {
+        <span class="kw">let </span>res = Stack::try_from_iter(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]);
+
+        <span class="macro">assert_eq!</span>(res, <span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])));
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_iter_of_empty_iterable_is_none() {
+        <span class="kw">let </span>empty: Vec&lt;()&gt; = <span class="macro">vec!</span>[];
+
+        <span class="macro">assert_eq!</span>(Stack::try_from_iter(empty), <span class="prelude-val">None</span>);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_from_iter_after_flatten_with_empty_up_is_inverse() {
+        <span class="kw">let </span>s = <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
+        <span class="kw">let </span>res = Stack::try_from_iter(s.clone().flatten());
+
+        <span class="macro">assert_eq!</span>(res, <span class="prelude-val">Some</span>(s));
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>reverse_holds_focus() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
+        s.reverse();
+
+        <span class="macro">assert_eq!</span>(s, <span class="macro">stack!</span>([<span class="number">5</span>, <span class="number">4</span>], <span class="number">3</span>, [<span class="number">2</span>, <span class="number">1</span>]));
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">2</span>, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([]</span>, <span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>); <span class="string">&quot;items down only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, []), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">2</span>, [<span class="number">3</span>]); <span class="string">&quot;items up only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([]</span>, <span class="number">1</span>, []), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>focus_up(<span class="kw-2">mut </span>s: Stack&lt;usize&gt;, expected: Stack&lt;usize&gt;) {
+        s.focus_up();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], <span class="number">4</span>, [<span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">2</span>, [<span class="number">3</span>]); <span class="string">&quot;items down only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]); <span class="string">&quot;items up only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>focus_down(<span class="kw-2">mut </span>s: Stack&lt;usize&gt;, expected: Stack&lt;usize&gt;) {
+        s.focus_down();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">3</span>, [<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">2</span>, <span class="number">3</span>], <span class="number">1</span>); <span class="string">&quot;items down only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">3</span>, [<span class="number">2</span>]); <span class="string">&quot;items up only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>swap_up(<span class="kw-2">mut </span>s: Stack&lt;usize&gt;, expected: Stack&lt;usize&gt;) {
+        s.swap_up();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>swap_up_chained() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>]);
+
+        s.swap_up();
+        <span class="macro">assert_eq!</span>(s, <span class="macro">stack!</span>([<span class="number">1</span>], <span class="number">3</span>, [<span class="number">2</span>, <span class="number">4</span>]));
+        s.swap_up();
+        <span class="macro">assert_eq!</span>(s, <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>]));
+        s.swap_up();
+        <span class="macro">assert_eq!</span>(s, <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>], <span class="number">3</span>));
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>], <span class="number">3</span>, [<span class="number">5</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">2</span>], <span class="number">1</span>, [<span class="number">3</span>]); <span class="string">&quot;items down only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>swap_down(<span class="kw-2">mut </span>s: Stack&lt;usize&gt;, expected: Stack&lt;usize&gt;) {
+        s.swap_down();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">1</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">2</span>, <span class="number">3</span>], <span class="number">1</span>); <span class="string">&quot;items down only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>([<span class="number">2</span>], <span class="number">3</span>, [<span class="number">1</span>]); <span class="string">&quot;items up only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>rotate_up(<span class="kw-2">mut </span>s: Stack&lt;usize&gt;, expected: Stack&lt;usize&gt;) {
+        s.rotate_up();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>([<span class="number">5</span>, <span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>]); <span class="string">&quot;items up and down&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]</span>), <span class="macro">stack!</span>([<span class="number">3</span>], <span class="number">1</span>, [<span class="number">2</span>]); <span class="string">&quot;items down only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">1</span>, <span class="number">2</span>]); <span class="string">&quot;items up only&quot;</span>)]
+    <span class="attribute">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>), <span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;only focused&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>rotate_down(<span class="kw-2">mut </span>s: Stack&lt;usize&gt;, expected: Stack&lt;usize&gt;) {
+        s.rotate_down();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
+    <span class="attribute">#[test_case(Position::Focus, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">6</span>, [<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;focus&quot;</span>)]
+    <span class="attribute">#[test_case(Position::Before, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>,<span class="number">6</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;before&quot;</span>)]
+    <span class="attribute">#[test_case(Position::After, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">6</span>,<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;after&quot;</span>)]
+    <span class="attribute">#[test_case(Position::Head, <span class="macro">stack!</span>([<span class="number">6</span>,<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>,<span class="number">5</span>]); <span class="string">&quot;head&quot;</span>)]
+    <span class="attribute">#[test_case(Position::Tail, <span class="macro">stack!</span>([<span class="number">1</span>,<span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]); <span class="string">&quot;tail&quot;</span>)]
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>insert_at(pos: Position, expected: Stack&lt;usize&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]);
+        s.insert_at(pos, <span class="number">6</span>);
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>quickcheck_tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>quickcheck::{Arbitrary, Gen};
+    <span class="kw">use </span>quickcheck_macros::quickcheck;
+    <span class="kw">use </span>std::collections::HashSet;
+
+    <span class="comment">// For the tests below we only care about the stack structure not the elements themselves, so
+    // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
+    //
+    // Focus is always `42` and elements are unique.
+    </span><span class="kw">impl </span>Arbitrary <span class="kw">for </span>Stack&lt;u8&gt; {
+        <span class="kw">fn </span>arbitrary(g: <span class="kw-2">&amp;mut </span>Gen) -&gt; <span class="self">Self </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>up: Vec&lt;u8&gt; = HashSet::&lt;u8&gt;::arbitrary(g)
+                .into_iter()
+                .filter(|<span class="kw-2">&amp;</span>n| n != <span class="number">42</span>)
+                .collect();
+
+            <span class="kw">let </span>focus = <span class="number">42</span>;
+
+            <span class="kw">if </span>up.is_empty() {
+                <span class="kw">return </span><span class="macro">stack!</span>(focus); <span class="comment">// return a minimal stack as we don&#39;t allow empty
+            </span>}
+
+            <span class="kw">let </span>split_at = usize::arbitrary(g) % (up.len());
+            <span class="kw">let </span>down = up.split_off(split_at);
+
+            <span class="self">Self</span>::new(up, focus, down)
+        }
+    }
+
+    <span class="kw">impl</span>&lt;T&gt; Stack&lt;T&gt; {
+        <span class="comment">// Helper to reduce the verbosity of some of the composition laws
+        </span><span class="kw">fn </span>rev_both(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+            <span class="self">self</span>.rev_up().rev_down()
+        }
+    }
+
+    <span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>remove_and_re_insert_is_idempotent(stack: Stack&lt;u8&gt;) -&gt; bool {
+        <span class="kw">let </span>original = stack.clone();
+        <span class="kw">let </span>focused = <span class="kw-2">*</span>stack.focused();
+
+        <span class="kw">match </span>stack.remove(<span class="kw-2">&amp;</span>focused) {
+            (<span class="prelude-val">Some</span>(t), <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>s)) =&gt; {
+                s.insert(t);
+                s == original
             }
 
-            <span class="kw">let</span> <span class="ident">split_at</span> <span class="op">=</span> <span class="ident">usize::arbitrary</span>(<span class="ident">g</span>) <span class="op">%</span> (<span class="ident">up</span>.<span class="ident">len</span>());
-            <span class="kw">let</span> <span class="ident">down</span> <span class="op">=</span> <span class="ident">up</span>.<span class="ident">split_off</span>(<span class="ident">split_at</span>);
+            (<span class="prelude-val">Some</span>(t), <span class="prelude-val">None</span>) =&gt; <span class="macro">stack!</span>(t) == original,
 
-            <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">up</span>, <span class="ident">focus</span>, <span class="ident">down</span>)
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;delete of focused returned None&quot;</span>),
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="comment">// Helper to reduce the verbosity of some of the composition laws</span>
-        <span class="kw">fn</span> <span class="ident">rev_both</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-            <span class="self">self</span>.<span class="ident">rev_up</span>().<span class="ident">rev_down</span>()
-        }
-    }
+    <span class="comment">// Define a composition law for operations on a Stack.
+    // Using these as the real implementation is not particularly efficient but the laws should
+    // hold for the hand written impls as well.
+    </span><span class="macro">macro_rules! </span>composition_law {
+        (<span class="macro-nonterminal">$test</span>:ident =&gt; <span class="macro-nonterminal">$method</span>:ident == $(<span class="macro-nonterminal">$f</span>:ident).+) =&gt; {
+            <span class="attribute">#[quickcheck]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$test</span>(<span class="kw-2">mut </span>stack: Stack&lt;u8&gt;) -&gt; bool {
+                <span class="kw">let </span><span class="kw-2">mut </span>by_composition = stack.clone();
+                by_composition.$(<span class="macro-nonterminal">$f</span>()).+;
+                stack.<span class="macro-nonterminal">$method</span>();
 
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">remove_and_re_insert_is_idempotent</span>(<span class="ident">stack</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">original</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">focused</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">stack</span>.<span class="ident">focused</span>();
-
-        <span class="kw">match</span> <span class="ident">stack</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">focused</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">t</span>), <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">s</span>)) =&gt; {
-                <span class="ident">s</span>.<span class="ident">insert</span>(<span class="ident">t</span>);
-                <span class="ident">s</span> <span class="op">==</span> <span class="ident">original</span>
-            }
-
-            (<span class="prelude-val">Some</span>(<span class="ident">t</span>), <span class="prelude-val">None</span>) =&gt; <span class="macro">stack!</span>(<span class="ident">t</span>) <span class="op">==</span> <span class="ident">original</span>,
-
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;delete of focused returned None&quot;</span>),
-        }
-    }
-
-    <span class="comment">// Define a composition law for operations on a Stack.</span>
-    <span class="comment">// Using these as the real implementation is not particularly efficient but the laws should</span>
-    <span class="comment">// hold for the hand written impls as well.</span>
-    <span class="macro">macro_rules!</span> <span class="ident">composition_law</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">test</span>:<span class="ident">ident</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>:<span class="ident">ident</span> <span class="op">==</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>:<span class="ident">ident</span>).<span class="op">+</span>) =&gt; {
-            <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-            <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">test</span>(<span class="kw-2">mut</span> <span class="ident">stack</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">by_composition</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">clone</span>();
-                <span class="ident">by_composition</span>.$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>()).<span class="op">+</span>;
-                <span class="ident">stack</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>();
-
-                <span class="ident">stack</span> <span class="op">==</span> <span class="ident">by_composition</span>
+                stack == by_composition
             }
         }
     }
 
     <span class="macro">composition_law!</span>(
-        <span class="ident">focus_down_from_focus_up</span> =&gt;
-        <span class="ident">focus_down</span> <span class="op">==</span> <span class="ident">reverse</span> . <span class="ident">focus_up</span> . <span class="ident">reverse</span>
+        focus_down_from_focus_up =&gt;
+        focus_down == reverse . focus_up . reverse
     );
 
     <span class="macro">composition_law!</span>(
-        <span class="ident">swap_down_from_swap_up</span> =&gt;
-        <span class="ident">swap_down</span> <span class="op">==</span> <span class="ident">reverse</span> . <span class="ident">swap_up</span> . <span class="ident">reverse</span>
+        swap_down_from_swap_up =&gt;
+        swap_down == reverse . swap_up . reverse
     );
 
     <span class="macro">composition_law!</span>(
-        <span class="ident">rotate_up_from_swap_up</span> =&gt;
-        <span class="ident">rotate_up</span> <span class="op">==</span> <span class="ident">rev_both</span> . <span class="ident">swap_up</span> . <span class="ident">rev_both</span>
+        rotate_up_from_swap_up =&gt;
+        rotate_up == rev_both . swap_up . rev_both
     );
 
     <span class="macro">composition_law!</span>(
-        <span class="ident">rotate_down_from_swap_up</span> =&gt;
-        <span class="ident">rotate_down</span> <span class="op">==</span> <span class="ident">rev_both</span> . <span class="ident">reverse</span> . <span class="ident">swap_up</span> . <span class="ident">reverse</span> . <span class="ident">rev_both</span>
+        rotate_down_from_swap_up =&gt;
+        rotate_down == rev_both . reverse . swap_up . reverse . rev_both
     );
 
     <span class="macro">composition_law!</span>(
-        <span class="ident">rotate_down_from_rotate_up</span> =&gt;
-        <span class="ident">rotate_down</span> <span class="op">==</span> <span class="ident">reverse</span> . <span class="ident">rotate_up</span> . <span class="ident">reverse</span>
+        rotate_down_from_rotate_up =&gt;
+        rotate_down == reverse . rotate_up . reverse
     );
 
-    <span class="comment">// Two methods that should act as both left and right inverses of one another</span>
-    <span class="macro">macro_rules!</span> <span class="ident">are_inverse</span> {
-        (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">test</span>:<span class="ident">ident</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">ident</span> <span class="op">&lt;</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">ident</span>) =&gt; {
-            <span class="macro">paste::paste!</span> {
-                <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-                <span class="kw">fn</span> [<span class="op">&lt;</span><span class="ident">inverse</span> <span class="kw">_</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">test</span> <span class="kw">_</span> <span class="ident">left_right</span><span class="op">&gt;</span>](<span class="kw-2">mut</span> <span class="ident">stack</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-                    <span class="kw">let</span> <span class="ident">original</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">clone</span>();
-                    <span class="ident">stack</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>().<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>();
+    <span class="comment">// Two methods that should act as both left and right inverses of one another
+    </span><span class="macro">macro_rules! </span>are_inverse {
+        (<span class="macro-nonterminal">$test</span>:ident =&gt; <span class="macro-nonterminal">$a</span>:ident &lt;&gt; <span class="macro-nonterminal">$b</span>:ident) =&gt; {
+            <span class="macro">paste::paste! </span>{
+                <span class="attribute">#[quickcheck]
+                </span><span class="kw">fn </span>[&lt;inverse <span class="kw">_ </span><span class="macro-nonterminal">$test </span><span class="kw">_ </span>left_right&gt;](<span class="kw-2">mut </span>stack: Stack&lt;u8&gt;) -&gt; bool {
+                    <span class="kw">let </span>original = stack.clone();
+                    stack.<span class="macro-nonterminal">$a</span>().<span class="macro-nonterminal">$b</span>();
 
-                    <span class="ident">stack</span> <span class="op">==</span> <span class="ident">original</span>
+                    stack == original
                 }
 
-                <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-                <span class="kw">fn</span> [<span class="op">&lt;</span><span class="ident">inverse</span> <span class="kw">_</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">test</span> <span class="kw">_</span> <span class="ident">right_left</span><span class="op">&gt;</span>](<span class="kw-2">mut</span> <span class="ident">stack</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-                    <span class="kw">let</span> <span class="ident">original</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">clone</span>();
-                    <span class="ident">stack</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>().<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>();
+                <span class="attribute">#[quickcheck]
+                </span><span class="kw">fn </span>[&lt;inverse <span class="kw">_ </span><span class="macro-nonterminal">$test </span><span class="kw">_ </span>right_left&gt;](<span class="kw-2">mut </span>stack: Stack&lt;u8&gt;) -&gt; bool {
+                    <span class="kw">let </span>original = stack.clone();
+                    stack.<span class="macro-nonterminal">$b</span>().<span class="macro-nonterminal">$a</span>();
 
-                    <span class="ident">stack</span> <span class="op">==</span> <span class="ident">original</span>
+                    stack == original
                 }
             }
         };
     }
 
-    <span class="macro">are_inverse!</span>(<span class="ident">reverse</span>  =&gt; <span class="ident">reverse</span>   <span class="op">&lt;</span><span class="op">&gt;</span> <span class="ident">reverse</span>);
-    <span class="macro">are_inverse!</span>(<span class="ident">rev_up</span>   =&gt; <span class="ident">rev_up</span>    <span class="op">&lt;</span><span class="op">&gt;</span> <span class="ident">rev_up</span>);
-    <span class="macro">are_inverse!</span>(<span class="ident">rev_down</span> =&gt; <span class="ident">rev_down</span>  <span class="op">&lt;</span><span class="op">&gt;</span> <span class="ident">rev_down</span>);
-    <span class="macro">are_inverse!</span>(<span class="ident">focus</span>    =&gt; <span class="ident">focus_up</span>  <span class="op">&lt;</span><span class="op">&gt;</span> <span class="ident">focus_down</span>);
-    <span class="macro">are_inverse!</span>(<span class="ident">swap</span>     =&gt; <span class="ident">swap_up</span>   <span class="op">&lt;</span><span class="op">&gt;</span> <span class="ident">swap_down</span>);
-    <span class="macro">are_inverse!</span>(<span class="ident">rotate</span>   =&gt; <span class="ident">rotate_up</span> <span class="op">&lt;</span><span class="op">&gt;</span> <span class="ident">rotate_down</span>);
+    <span class="macro">are_inverse!</span>(reverse  =&gt; reverse   &lt;&gt; reverse);
+    <span class="macro">are_inverse!</span>(rev_up   =&gt; rev_up    &lt;&gt; rev_up);
+    <span class="macro">are_inverse!</span>(rev_down =&gt; rev_down  &lt;&gt; rev_down);
+    <span class="macro">are_inverse!</span>(focus    =&gt; focus_up  &lt;&gt; focus_down);
+    <span class="macro">are_inverse!</span>(swap     =&gt; swap_up   &lt;&gt; swap_down);
+    <span class="macro">are_inverse!</span>(rotate   =&gt; rotate_up &lt;&gt; rotate_down);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

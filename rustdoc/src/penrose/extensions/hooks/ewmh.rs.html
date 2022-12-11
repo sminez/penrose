@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/hooks/ewmh.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ewmh.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/hooks/ewmh.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ewmh.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -271,276 +271,276 @@
 <span id="269">269</span>
 <span id="270">270</span>
 <span id="271">271</span>
-</pre><pre class="rust"><code><span class="doccomment">//! EWMH compliance for Penrose</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The primary use of this extension is to provide support for external</span>
-<span class="doccomment">//! status bars / panels and fullscreen windows.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! See details of the spec here:</span>
-<span class="doccomment">//!   &lt;https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html&gt;</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core</span>::{<span class="ident">ClientSet</span>, <span class="ident">Config</span>, <span class="ident">State</span>},
-    <span class="ident">extensions::actions</span>::{<span class="ident">set_fullscreen_state</span>, <span class="ident">FullScreenAction</span>},
-    <span class="ident">x</span>::{
-        <span class="ident">atom::Atom</span>,
-        <span class="ident">event</span>::{<span class="ident">ClientMessage</span>, <span class="ident">ClientMessageData</span>},
-        <span class="ident">property::Prop</span>,
-        <span class="ident">XConn</span>, <span class="ident">XConnExt</span>, <span class="ident">XEvent</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! EWMH compliance for Penrose
+//!
+//! The primary use of this extension is to provide support for external
+//! status bars / panels and fullscreen windows.
+//!
+//! See details of the spec here:
+//!   &lt;https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html&gt;
+</span><span class="kw">use crate</span>::{
+    core::{ClientSet, Config, State},
+    extensions::actions::{set_fullscreen_state, FullScreenAction},
+    x::{
+        atom::Atom,
+        event::{ClientMessage, ClientMessageData},
+        property::Prop,
+        XConn, XConnExt, XEvent,
     },
-    <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
+    <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="kw">use</span> <span class="ident">tracing::warn</span>;
+<span class="kw">use </span>tracing::warn;
 
-<span class="doccomment">/// The set of Atoms this extension adds support for.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// _NET_SUPPORTED is set to this as part of [startup_hook]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EWMH_SUPPORTED_ATOMS</span>: <span class="kw-2">&amp;</span>[<span class="ident">Atom</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
-    <span class="ident">Atom::NetWmStateHidden</span>,
-    <span class="ident">Atom::NetWmStateFullscreen</span>,
-    <span class="ident">Atom::NetWmStateDemandsAttention</span>,
-    <span class="ident">Atom::NetNumberOfDesktops</span>,
-    <span class="ident">Atom::NetClientList</span>,
-    <span class="ident">Atom::NetClientListStacking</span>,
-    <span class="ident">Atom::NetCurrentDesktop</span>,
-    <span class="ident">Atom::NetDesktopNames</span>,
-    <span class="ident">Atom::NetActiveWindow</span>,
-    <span class="ident">Atom::NetWmDesktop</span>,
-    <span class="ident">Atom::NetWmStrut</span>,
-    <span class="ident">Atom::NetWmState</span>,
-    <span class="ident">Atom::NetWmName</span>,
-    <span class="comment">// TODO: read up on how this works and implement</span>
-    <span class="comment">// Atom::NetDesktopViewport,</span>
-];
+<span class="doccomment">/// The set of Atoms this extension adds support for.
+///
+/// _NET_SUPPORTED is set to this as part of [startup_hook]
+</span><span class="kw">pub const </span>EWMH_SUPPORTED_ATOMS: <span class="kw-2">&amp;</span>[Atom] = <span class="kw-2">&amp;</span>[
+    Atom::NetWmStateHidden,
+    Atom::NetWmStateFullscreen,
+    Atom::NetWmStateDemandsAttention,
+    Atom::NetNumberOfDesktops,
+    Atom::NetClientList,
+    Atom::NetClientListStacking,
+    Atom::NetCurrentDesktop,
+    Atom::NetDesktopNames,
+    Atom::NetActiveWindow,
+    Atom::NetWmDesktop,
+    Atom::NetWmStrut,
+    Atom::NetWmState,
+    Atom::NetWmName,
+    <span class="comment">// TODO: read up on how this works and implement
+    // Atom::NetDesktopViewport,
+</span>];
 
-<span class="doccomment">/// The WM_NAME that will be set for the X server</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WM_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;penrose&quot;</span>;
+<span class="doccomment">/// The WM_NAME that will be set for the X server
+</span><span class="kw">pub const </span>WM_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;penrose&quot;</span>;
 
-<span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See the module level docs for details of what functionality is provided by</span>
-<span class="doccomment">/// this extension.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_ewmh_hooks</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">config</span>: <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>) -&gt; <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].
+///
+/// See the module level docs for details of what functionality is provided by
+/// this extension.
+</span><span class="kw">pub fn </span>add_ewmh_hooks&lt;X&gt;(<span class="kw-2">mut </span>config: Config&lt;X&gt;) -&gt; Config&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn + <span class="lifetime">&#39;static</span>,
 {
-    <span class="ident">config</span>.<span class="ident">compose_or_set_startup_hook</span>(<span class="ident">startup_hook</span>);
-    <span class="ident">config</span>.<span class="ident">compose_or_set_refresh_hook</span>(<span class="ident">refresh_hook</span>);
-    <span class="ident">config</span>.<span class="ident">compose_or_set_event_hook</span>(<span class="ident">event_hook</span>);
+    config.compose_or_set_startup_hook(startup_hook);
+    config.compose_or_set_refresh_hook(refresh_hook);
+    config.compose_or_set_event_hook(event_hook);
 
-    <span class="ident">config</span>
+    config
 }
 
-<span class="doccomment">/// Advertise EWMH support to the X server</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">startup_hook</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">_state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">root</span>();
+<span class="doccomment">/// Advertise EWMH support to the X server
+</span><span class="kw">pub fn </span>startup_hook&lt;X: XConn&gt;(_state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>root = x.root();
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">root</span>,
-        <span class="ident">Atom::WmName</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::UTF8String</span>(<span class="macro">vec!</span>[<span class="ident">WM_NAME</span>.<span class="ident">to_owned</span>()]),
+    x.set_prop(
+        root,
+        Atom::WmName.as_ref(),
+        Prop::UTF8String(<span class="macro">vec!</span>[WM_NAME.to_owned()]),
     )<span class="question-mark">?</span>;
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">root</span>,
-        <span class="ident">Atom::NetSupported</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::Atom</span>(
-            <span class="ident">EWMH_SUPPORTED_ATOMS</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>())
-                .<span class="ident">collect</span>(),
+    x.set_prop(
+        root,
+        Atom::NetSupported.as_ref(),
+        Prop::Atom(
+            EWMH_SUPPORTED_ATOMS
+                .iter()
+                .map(|a| a.as_ref().to_owned())
+                .collect(),
         ),
     )
 }
 
-<span class="doccomment">/// Intercept messages from external applications and handle them.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Currently supports the following:</span>
-<span class="doccomment">///   - _NET_CURRENT_DESKTOP :: switching between workspaces</span>
-<span class="doccomment">///   - _NET_WM_DESKTOP      :: moving clients between workspaces</span>
-<span class="doccomment">///   - _NET_ACTIVE_WINDOW   :: focus a new client and handle workspace switching</span>
-<span class="doccomment">///   - _NET_CLOSE_WINDOW    :: closing a client window</span>
-<span class="doccomment">///   - _NET_WM_STATE        :: support for fullscreen windows</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event_hook</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">XEvent</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">ClientMessage</span> {
-        <span class="ident">id</span>, <span class="ident">dtype</span>, <span class="ident">data</span>, ..
-    } <span class="op">=</span> <span class="kw">match</span> <span class="ident">event</span> {
-        <span class="ident">XEvent::ClientMessage</span>(<span class="ident">m</span>) =&gt; <span class="ident">m</span>,
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+<span class="doccomment">/// Intercept messages from external applications and handle them.
+///
+/// Currently supports the following:
+///   - _NET_CURRENT_DESKTOP :: switching between workspaces
+///   - _NET_WM_DESKTOP      :: moving clients between workspaces
+///   - _NET_ACTIVE_WINDOW   :: focus a new client and handle workspace switching
+///   - _NET_CLOSE_WINDOW    :: closing a client window
+///   - _NET_WM_STATE        :: support for fullscreen windows
+</span><span class="kw">pub fn </span>event_hook&lt;X: XConn&gt;(event: <span class="kw-2">&amp;</span>XEvent, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+    <span class="kw">let </span>ClientMessage {
+        id, dtype, data, ..
+    } = <span class="kw">match </span>event {
+        XEvent::ClientMessage(m) =&gt; m,
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
     };
 
-    <span class="kw">match</span> <span class="ident">dtype</span>.<span class="ident">as_ref</span>() {
-        <span class="comment">// Focus the requested desktop</span>
-        <span class="string">&quot;_NET_CURRENT_DESKTOP&quot;</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">tag_for_workspace_id</span>(<span class="ident">data</span>.<span class="ident">as_usize</span>()[<span class="number">0</span>]);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tag</span>) <span class="op">=</span> <span class="ident">tag</span> {
-                <span class="ident">x</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">state</span>, <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> <span class="ident">cs</span>.<span class="ident">focus_tag</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>))<span class="question-mark">?</span>;
+    <span class="kw">match </span>dtype.as_ref() {
+        <span class="comment">// Focus the requested desktop
+        </span><span class="string">&quot;_NET_CURRENT_DESKTOP&quot; </span>=&gt; {
+            <span class="kw">let </span>tag = state.client_set.tag_for_workspace_id(data.as_usize()[<span class="number">0</span>]);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(tag) = tag {
+                x.modify_and_refresh(state, |cs| cs.focus_tag(<span class="kw-2">&amp;</span>tag))<span class="question-mark">?</span>;
             }
         }
 
-        <span class="comment">// Move the client receiving the message to its desired workspace</span>
-        <span class="string">&quot;_NET_WM_DESKTOP&quot;</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">tag_for_workspace_id</span>(<span class="ident">data</span>.<span class="ident">as_usize</span>()[<span class="number">0</span>]);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tag</span>) <span class="op">=</span> <span class="ident">tag</span> {
-                <span class="ident">x</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">state</span>, <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> <span class="ident">cs</span>.<span class="ident">move_client_to_tag</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">tag</span>))<span class="question-mark">?</span>;
+        <span class="comment">// Move the client receiving the message to its desired workspace
+        </span><span class="string">&quot;_NET_WM_DESKTOP&quot; </span>=&gt; {
+            <span class="kw">let </span>tag = state.client_set.tag_for_workspace_id(data.as_usize()[<span class="number">0</span>]);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(tag) = tag {
+                x.modify_and_refresh(state, |cs| cs.move_client_to_tag(id, <span class="kw-2">&amp;</span>tag))<span class="question-mark">?</span>;
             }
         }
 
-        <span class="comment">// If the request came from a pager, the first data element should be 2.</span>
-        <span class="comment">// For pager requests, set the active client (see docs linked at the top of</span>
-        <span class="comment">// this file for more details on the semantics of this message)</span>
-        <span class="string">&quot;_NET_ACTIVE_WINDOW&quot;</span> =&gt; {
-            <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">as_u32</span>()[<span class="number">0</span>] <span class="op">==</span> <span class="number">2</span> {
-                <span class="ident">x</span>.<span class="ident">set_active_client</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">state</span>)<span class="question-mark">?</span>;
+        <span class="comment">// If the request came from a pager, the first data element should be 2.
+        // For pager requests, set the active client (see docs linked at the top of
+        // this file for more details on the semantics of this message)
+        </span><span class="string">&quot;_NET_ACTIVE_WINDOW&quot; </span>=&gt; {
+            <span class="kw">if </span>data.as_u32()[<span class="number">0</span>] == <span class="number">2 </span>{
+                x.set_active_client(<span class="kw-2">*</span>id, state)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="comment">// Attempt to remove the requested client</span>
-        <span class="string">&quot;_NET_CLOSE_WINDOW&quot;</span> =&gt; <span class="ident">x</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">state</span>, <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> {
-            <span class="ident">cs</span>.<span class="ident">remove_client</span>(<span class="ident">id</span>);
+        <span class="comment">// Attempt to remove the requested client
+        </span><span class="string">&quot;_NET_CLOSE_WINDOW&quot; </span>=&gt; x.modify_and_refresh(state, |cs| {
+            cs.remove_client(id);
         })<span class="question-mark">?</span>,
 
-        <span class="comment">// Handle clients that want fullscreen behaviour</span>
-        <span class="string">&quot;_NET_WM_STATE&quot;</span> =&gt; <span class="ident">handle_fullscreen_message</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">data</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
+        <span class="comment">// Handle clients that want fullscreen behaviour
+        </span><span class="string">&quot;_NET_WM_STATE&quot; </span>=&gt; handle_fullscreen_message(<span class="kw-2">*</span>id, data, state, x)<span class="question-mark">?</span>,
 
-        <span class="comment">// Leave other client messages for the default event handling</span>
-        <span class="kw">_</span> =&gt; (),
+        <span class="comment">// Leave other client messages for the default event handling
+        </span><span class="kw">_ </span>=&gt; (),
     }
 
     <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">handle_fullscreen_message</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(
-    <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ClientMessageData</span>,
-    <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-    <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data32</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_u32</span>();
-    <span class="kw">if</span> <span class="ident">data32</span>.<span class="ident">is_empty</span>() {
-        <span class="macro">warn!</span>(<span class="question-mark">?</span><span class="ident">data</span>, <span class="string">&quot;malformed data in _NET_WM_STATE message&quot;</span>);
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+<span class="kw">fn </span>handle_fullscreen_message&lt;X: XConn&gt;(
+    id: Xid,
+    data: <span class="kw-2">&amp;</span>ClientMessageData,
+    state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
+    x: <span class="kw-2">&amp;</span>X,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>data32 = data.as_u32();
+    <span class="kw">if </span>data32.is_empty() {
+        <span class="macro">warn!</span>(<span class="question-mark">?</span>data, <span class="string">&quot;malformed data in _NET_WM_STATE message&quot;</span>);
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="kw">let</span> <span class="ident">full_screen</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">intern_atom</span>(<span class="ident">Atom::NetWmStateFullscreen</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">raw_action</span> <span class="op">=</span> <span class="ident">data32</span>.<span class="ident">remove</span>(<span class="number">0</span>);
+    <span class="kw">let </span>full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())<span class="question-mark">?</span>;
+    <span class="kw">let </span>raw_action = data32.remove(<span class="number">0</span>);
 
-    <span class="comment">// Only handling fullscreen messages and only for known clients</span>
-    <span class="kw">if</span> <span class="op">!</span>(<span class="ident">data32</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">full_screen</span>) <span class="op">&amp;&amp;</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)) {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+    <span class="comment">// Only handling fullscreen messages and only for known clients
+    </span><span class="kw">if </span>!(data32.contains(<span class="kw-2">&amp;</span>full_screen) &amp;&amp; state.client_set.contains(<span class="kw-2">&amp;</span>id)) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="kw">let</span> <span class="ident">action</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">raw_action</span> {
-        <span class="number">0</span> =&gt; <span class="ident">FullScreenAction::Remove</span>,
-        <span class="number">1</span> =&gt; <span class="ident">FullScreenAction::Add</span>,
-        <span class="number">2</span> =&gt; <span class="ident">FullScreenAction::Toggle</span>,
-        <span class="ident">action</span> =&gt; {
-            <span class="macro">warn!</span>(<span class="op">%</span><span class="ident">action</span>, <span class="string">&quot;invalid fullscreen action: expected 0, 1 or 2&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+    <span class="kw">let </span>action = <span class="kw">match </span>raw_action {
+        <span class="number">0 </span>=&gt; FullScreenAction::Remove,
+        <span class="number">1 </span>=&gt; FullScreenAction::Add,
+        <span class="number">2 </span>=&gt; FullScreenAction::Toggle,
+        action =&gt; {
+            <span class="macro">warn!</span>(%action, <span class="string">&quot;invalid fullscreen action: expected 0, 1 or 2&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
     };
 
-    <span class="ident">set_fullscreen_state</span>(<span class="ident">id</span>, <span class="ident">action</span>, <span class="ident">state</span>, <span class="ident">x</span>)
+    set_fullscreen_state(id, action, state, x)
 }
 
-<span class="doccomment">/// Notify external clients of the current status of workspaces and clients</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refresh_hook</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">set_known_desktops</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">client_set</span>, <span class="ident">x</span>)<span class="question-mark">?</span>;
-    <span class="ident">set_known_clients</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">client_set</span>, <span class="ident">x</span>)<span class="question-mark">?</span>;
-    <span class="ident">set_current_desktop</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">client_set</span>, <span class="ident">x</span>)<span class="question-mark">?</span>;
-    <span class="ident">set_client_desktops</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">client_set</span>, <span class="ident">x</span>)<span class="question-mark">?</span>;
-    <span class="ident">set_active_client</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">client_set</span>, <span class="ident">x</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// Notify external clients of the current status of workspaces and clients
+</span><span class="kw">pub fn </span>refresh_hook&lt;X: XConn&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    set_known_desktops(<span class="kw-2">&amp;</span>state.client_set, x)<span class="question-mark">?</span>;
+    set_known_clients(<span class="kw-2">&amp;</span>state.client_set, x)<span class="question-mark">?</span>;
+    set_current_desktop(<span class="kw-2">&amp;</span>state.client_set, x)<span class="question-mark">?</span>;
+    set_client_desktops(<span class="kw-2">&amp;</span>state.client_set, x)<span class="question-mark">?</span>;
+    set_active_client(<span class="kw-2">&amp;</span>state.client_set, x)<span class="question-mark">?</span>;
 
-    <span class="comment">// TODO: set desktop viewport</span>
+    <span class="comment">// TODO: set desktop viewport
 
-    <span class="prelude-val">Ok</span>(())
+    </span><span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn</span> <span class="ident">set_known_desktops</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">ClientSet</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">fn </span>set_known_desktops&lt;X&gt;(cs: <span class="kw-2">&amp;</span>ClientSet, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="kw">let</span> <span class="ident">workspaces_names</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">ordered_tags</span>();
+    <span class="kw">let </span>workspaces_names = cs.ordered_tags();
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">x</span>.<span class="ident">root</span>(),
-        <span class="ident">Atom::NetNumberOfDesktops</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::Cardinal</span>(<span class="macro">vec!</span>[<span class="ident">workspaces_names</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>]),
+    x.set_prop(
+        x.root(),
+        Atom::NetNumberOfDesktops.as_ref(),
+        Prop::Cardinal(<span class="macro">vec!</span>[workspaces_names.len() <span class="kw">as </span>u32]),
     )<span class="question-mark">?</span>;
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">x</span>.<span class="ident">root</span>(),
-        <span class="ident">Atom::NetDesktopNames</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::UTF8String</span>(<span class="ident">workspaces_names</span>),
+    x.set_prop(
+        x.root(),
+        Atom::NetDesktopNames.as_ref(),
+        Prop::UTF8String(workspaces_names),
     )
 }
 
-<span class="kw">fn</span> <span class="ident">set_known_clients</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">ClientSet</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">fn </span>set_known_clients&lt;X&gt;(cs: <span class="kw-2">&amp;</span>ClientSet, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="comment">// FIXME: this currently isn&#39;t in stacking order</span>
-    <span class="kw">let</span> <span class="ident">ordered_clients</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">clients</span>().<span class="ident">copied</span>().<span class="ident">collect</span>();
+    <span class="comment">// FIXME: this currently isn&#39;t in stacking order
+    </span><span class="kw">let </span>ordered_clients: Vec&lt;Xid&gt; = cs.clients().copied().collect();
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">x</span>.<span class="ident">root</span>(),
-        <span class="ident">Atom::NetClientList</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::Window</span>(<span class="ident">ordered_clients</span>.<span class="ident">clone</span>()),
+    x.set_prop(
+        x.root(),
+        Atom::NetClientList.as_ref(),
+        Prop::Window(ordered_clients.clone()),
     )<span class="question-mark">?</span>;
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">x</span>.<span class="ident">root</span>(),
-        <span class="ident">Atom::NetClientListStacking</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::Window</span>(<span class="ident">ordered_clients</span>),
+    x.set_prop(
+        x.root(),
+        Atom::NetClientListStacking.as_ref(),
+        Prop::Window(ordered_clients),
     )
 }
 
-<span class="kw">fn</span> <span class="ident">set_current_desktop</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">ClientSet</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">fn </span>set_current_desktop&lt;X&gt;(cs: <span class="kw-2">&amp;</span>ClientSet, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="kw">let</span> <span class="ident">current_desktop</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">current_workspace</span>().<span class="ident">id</span> <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let </span>current_desktop = cs.current_workspace().id <span class="kw">as </span>u32;
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(
-        <span class="ident">x</span>.<span class="ident">root</span>(),
-        <span class="ident">Atom::NetCurrentDesktop</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">Prop::Cardinal</span>(<span class="macro">vec!</span>[<span class="ident">current_desktop</span>]),
+    x.set_prop(
+        x.root(),
+        Atom::NetCurrentDesktop.as_ref(),
+        Prop::Cardinal(<span class="macro">vec!</span>[current_desktop]),
     )
 }
 
-<span class="kw">fn</span> <span class="ident">set_client_desktops</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">ClientSet</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">fn </span>set_client_desktops&lt;X&gt;(cs: <span class="kw-2">&amp;</span>ClientSet, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="kw">let</span> <span class="ident">client_desktops</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">workspaces</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">w</span><span class="op">|</span> {
-        <span class="ident">w</span>.<span class="ident">stack</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> (<span class="ident">w</span>.<span class="ident">id</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">c</span>)))
+    <span class="kw">let </span>client_desktops = cs.workspaces().flat_map(|w| {
+        w.stack
+            .iter()
+            .flat_map(|s| s.iter().map(|<span class="kw-2">&amp;</span>c| (w.id <span class="kw">as </span>u32, c)))
     });
 
-    <span class="kw">for</span> (<span class="ident">desktop</span>, <span class="ident">client</span>) <span class="kw">in</span> <span class="ident">client_desktops</span> {
-        <span class="ident">x</span>.<span class="ident">set_prop</span>(
-            <span class="ident">client</span>,
-            <span class="ident">Atom::NetWmDesktop</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">Prop::Cardinal</span>(<span class="macro">vec!</span>[<span class="ident">desktop</span>]),
+    <span class="kw">for </span>(desktop, client) <span class="kw">in </span>client_desktops {
+        x.set_prop(
+            client,
+            Atom::NetWmDesktop.as_ref(),
+            Prop::Cardinal(<span class="macro">vec!</span>[desktop]),
         )<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn</span> <span class="ident">set_active_client</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">cs</span>: <span class="kw-2">&amp;</span><span class="ident">ClientSet</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">fn </span>set_active_client&lt;X&gt;(cs: <span class="kw-2">&amp;</span>ClientSet, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">current_client</span>() {
-        <span class="ident">x</span>.<span class="ident">set_prop</span>(
-            <span class="ident">x</span>.<span class="ident">root</span>(),
-            <span class="ident">Atom::NetActiveWindow</span>.<span class="ident">as_ref</span>(),
-            <span class="ident">Prop::Window</span>(<span class="macro">vec!</span>[<span class="ident">id</span>]),
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>id) = cs.current_client() {
+        x.set_prop(
+            x.root(),
+            Atom::NetActiveWindow.as_ref(),
+            Prop::Window(<span class="macro">vec!</span>[id]),
         )<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

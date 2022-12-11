@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/diff.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>diff.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/diff.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>diff.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -330,335 +330,335 @@
 <span id="328">328</span>
 <span id="329">329</span>
 <span id="330">330</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A diff of changes to pure State</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pure</span>::{<span class="ident">geometry::Rect</span>, <span class="ident">screen::Screen</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">hash::Hash</span>, <span class="ident">iter::once</span>, <span class="ident">mem::swap</span>};
+</pre><pre class="rust"><code><span class="doccomment">//! A diff of changes to pure State
+</span><span class="kw">use </span><span class="kw">crate</span>::pure::{geometry::Rect, screen::Screen};
+<span class="kw">use </span>std::{collections::HashSet, hash::Hash, iter::once, mem::swap};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">ScreenState</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="attribute">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ScreenState&lt;C&gt;
+<span class="kw">where
+    </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub</span> <span class="ident">screen</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">tag</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span> <span class="ident">clients</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>screen: usize,
+    <span class="kw">pub </span>tag: String,
+    <span class="kw">pub </span>clients: Vec&lt;C&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Screen</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ScreenState</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="kw">impl</span>&lt;C&gt; From&lt;<span class="kw-2">&amp;</span>Screen&lt;C&gt;&gt; <span class="kw">for </span>ScreenState&lt;C&gt;
+<span class="kw">where
+    </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Screen</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">screen</span>: <span class="ident">s</span>.<span class="ident">index</span>,
-            <span class="ident">tag</span>: <span class="ident">s</span>.<span class="ident">workspace</span>.<span class="ident">tag</span>.<span class="ident">clone</span>(),
-            <span class="ident">clients</span>: <span class="ident">s</span>.<span class="ident">workspace</span>.<span class="ident">clients</span>().<span class="ident">copied</span>().<span class="ident">collect</span>(),
+    <span class="kw">fn </span>from(s: <span class="kw-2">&amp;</span>Screen&lt;C&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            screen: s.index,
+            tag: s.workspace.tag.clone(),
+            clients: s.workspace.clients().copied().collect(),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="attribute">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Snapshot&lt;C&gt;
+<span class="kw">where
+    </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub</span> <span class="ident">focused_client</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">focused</span>: <span class="ident">ScreenState</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">visible</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ScreenState</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">C</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">hidden_clients</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">killed_clients</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>focused_client: <span class="prelude-ty">Option</span>&lt;C&gt;,
+    <span class="kw">pub </span>focused: ScreenState&lt;C&gt;,
+    <span class="kw">pub </span>visible: Vec&lt;ScreenState&lt;C&gt;&gt;,
+    <span class="kw">pub </span>positions: Vec&lt;(C, Rect)&gt;,
+    <span class="kw">pub </span>hidden_clients: Vec&lt;C&gt;,
+    <span class="kw">pub </span>killed_clients: Vec&lt;C&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="kw">impl</span>&lt;C&gt; Snapshot&lt;C&gt;
+<span class="kw">where
+    </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">visible_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">positions</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">c</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">c</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>visible_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="self">self</span>.positions.iter().map(|(c, <span class="kw">_</span>)| c)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">all_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">focused</span>
-            .<span class="ident">clients</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">visible</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">clients</span>.<span class="ident">iter</span>()))
-            .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">hidden_clients</span>.<span class="ident">iter</span>())
-    }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Diff</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
-{
-    <span class="kw">pub</span> <span class="ident">before</span>: <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">after</span>: <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">Diff</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
-{
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">before</span>: <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>, <span class="ident">after</span>: <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">before</span>, <span class="ident">after</span> }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">after</span>: <span class="ident">Snapshot</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>) {
-        <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">before</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">after</span>);
-        <span class="self">self</span>.<span class="ident">after</span> <span class="op">=</span> <span class="ident">after</span>;
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focused_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">focused_client</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focused_client_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">before</span>.<span class="ident">focused_client</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">focused_client</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_changed_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">before</span>.<span class="ident">positions</span>.<span class="ident">iter</span>();
-        <span class="kw">let</span> <span class="ident">before</span> <span class="op">=</span> <span class="ident">it</span>.<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">c</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">id</span>).<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">r</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">r</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">positions</span>.<span class="ident">iter</span>();
-        <span class="kw">let</span> <span class="ident">after</span> <span class="op">=</span> <span class="ident">it</span>.<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">c</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">id</span>).<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">r</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">r</span>);
-
-        <span class="ident">before</span> <span class="op">!</span><span class="op">=</span> <span class="ident">after</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">newly_focused_screen</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">before</span>.<span class="ident">focused</span>.<span class="ident">screen</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">focused</span>.<span class="ident">screen</span> {
-            <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">after</span>.<span class="ident">focused</span>.<span class="ident">screen</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">before</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">before</span>.<span class="ident">all_clients</span>().<span class="ident">collect</span>();
-
-        <span class="self">self</span>.<span class="ident">after</span>
-            .<span class="ident">all_clients</span>()
-            .<span class="ident">filter</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="op">!</span><span class="ident">before</span>.<span class="ident">contains</span>(<span class="ident">c</span>))
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hidden_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">after</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">visible_clients</span>().<span class="ident">collect</span>();
-
-        <span class="self">self</span>.<span class="ident">before</span>
-            .<span class="ident">visible_clients</span>()
-            .<span class="ident">filter</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="op">!</span><span class="ident">after</span>.<span class="ident">contains</span>(<span class="ident">c</span>))
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visible_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">visible_clients</span>()
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">withdrawn_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">after</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">all_clients</span>().<span class="ident">collect</span>();
-
-        <span class="self">self</span>.<span class="ident">before</span>
-            .<span class="ident">all_clients</span>()
-            .<span class="ident">filter</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="op">!</span><span class="ident">after</span>.<span class="ident">contains</span>(<span class="ident">c</span>))
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">killed_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">killed_clients</span>.<span class="ident">iter</span>()
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">previous_visible_tags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="ident">once</span>(<span class="self">self</span>.<span class="ident">before</span>.<span class="ident">focused</span>.<span class="ident">tag</span>.<span class="ident">as_ref</span>())
-            .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">before</span>.<span class="ident">visible</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">tag</span>.<span class="ident">as_ref</span>()))
-            .<span class="ident">collect</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_visible_tags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="ident">once</span>(<span class="self">self</span>.<span class="ident">after</span>.<span class="ident">focused</span>.<span class="ident">tag</span>.<span class="ident">as_ref</span>())
-            .<span class="ident">chain</span>(<span class="self">self</span>.<span class="ident">after</span>.<span class="ident">visible</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">tag</span>.<span class="ident">as_ref</span>()))
-            .<span class="ident">collect</span>()
-    }
-
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="op">!</span>(<span class="self">self</span>.<span class="ident">focused_client_changed</span>()
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">newly_focused_screen</span>().<span class="ident">is_some</span>()
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">new_clients</span>().<span class="ident">count</span>() <span class="op">&gt;</span> <span class="number">0</span>
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">withdrawn_clients</span>().<span class="ident">count</span>() <span class="op">&gt;</span> <span class="number">0</span>
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">previous_visible_tags</span>() <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">current_visible_tags</span>()
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">before</span>.<span class="ident">positions</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">positions</span>
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">after</span>.<span class="ident">killed_clients</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>all_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="self">self</span>.focused
+            .clients
+            .iter()
+            .chain(<span class="self">self</span>.visible.iter().flat_map(|s| s.clients.iter()))
+            .chain(<span class="self">self</span>.hidden_clients.iter())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">pure::stack_set::tests</span>::{<span class="ident">test_stack_set</span>, <span class="ident">test_stack_set_with_stacks</span>},
-        <span class="ident">stack</span>, <span class="ident">Xid</span>,
+<span class="attribute">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Diff&lt;C&gt;
+<span class="kw">where
+    </span>C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    <span class="kw">pub </span>before: Snapshot&lt;C&gt;,
+    <span class="kw">pub </span>after: Snapshot&lt;C&gt;,
+}
+
+<span class="kw">impl</span>&lt;C&gt; Diff&lt;C&gt;
+<span class="kw">where
+    </span>C: Copy + Clone + PartialEq + Eq + Hash,
+{
+    <span class="kw">pub fn </span>new(before: Snapshot&lt;C&gt;, after: Snapshot&lt;C&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ before, after }
+    }
+
+    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, after: Snapshot&lt;C&gt;) {
+        swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.before, <span class="kw-2">&amp;mut </span><span class="self">self</span>.after);
+        <span class="self">self</span>.after = after;
+    }
+
+    <span class="kw">pub fn </span>focused_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;C&gt; {
+        <span class="self">self</span>.after.focused_client
+    }
+
+    <span class="kw">pub fn </span>focused_client_changed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.before.focused_client != <span class="self">self</span>.after.focused_client
+    }
+
+    <span class="kw">pub fn </span>client_changed_position(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>C) -&gt; bool {
+        <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.before.positions.iter();
+        <span class="kw">let </span>before = it.find(|<span class="kw-2">&amp;</span>(c, <span class="kw">_</span>)| c == id).map(|(<span class="kw">_</span>, r)| <span class="kw-2">*</span>r);
+        <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.after.positions.iter();
+        <span class="kw">let </span>after = it.find(|<span class="kw-2">&amp;</span>(c, <span class="kw">_</span>)| c == id).map(|(<span class="kw">_</span>, r)| <span class="kw-2">*</span>r);
+
+        before != after
+    }
+
+    <span class="kw">pub fn </span>newly_focused_screen(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">if </span><span class="self">self</span>.before.focused.screen != <span class="self">self</span>.after.focused.screen {
+            <span class="prelude-val">Some</span>(<span class="self">self</span>.after.focused.screen)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+
+    <span class="kw">pub fn </span>new_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="kw">let </span>before: HashSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.before.all_clients().collect();
+
+        <span class="self">self</span>.after
+            .all_clients()
+            .filter(<span class="kw">move </span>|c| !before.contains(c))
+    }
+
+    <span class="kw">pub fn </span>hidden_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="kw">let </span>after: HashSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.after.visible_clients().collect();
+
+        <span class="self">self</span>.before
+            .visible_clients()
+            .filter(<span class="kw">move </span>|c| !after.contains(c))
+    }
+
+    <span class="kw">pub fn </span>visible_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="self">self</span>.after.visible_clients()
+    }
+
+    <span class="kw">pub fn </span>withdrawn_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="kw">let </span>after: HashSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.after.all_clients().collect();
+
+        <span class="self">self</span>.before
+            .all_clients()
+            .filter(<span class="kw">move </span>|c| !after.contains(c))
+    }
+
+    <span class="kw">pub fn </span>killed_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+        <span class="self">self</span>.after.killed_clients.iter()
+    }
+
+    <span class="kw">pub fn </span>previous_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
+        once(<span class="self">self</span>.before.focused.tag.as_ref())
+            .chain(<span class="self">self</span>.before.visible.iter().map(|s| s.tag.as_ref()))
+            .collect()
+    }
+
+    <span class="attribute">#[cfg(test)]
+    </span><span class="kw">pub fn </span>current_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
+        once(<span class="self">self</span>.after.focused.tag.as_ref())
+            .chain(<span class="self">self</span>.after.visible.iter().map(|s| s.tag.as_ref()))
+            .collect()
+    }
+
+    <span class="attribute">#[cfg(test)]
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        !(<span class="self">self</span>.focused_client_changed()
+            || <span class="self">self</span>.newly_focused_screen().is_some()
+            || <span class="self">self</span>.new_clients().count() &gt; <span class="number">0
+            </span>|| <span class="self">self</span>.withdrawn_clients().count() &gt; <span class="number">0
+            </span>|| <span class="self">self</span>.previous_visible_tags() != <span class="self">self</span>.current_visible_tags()
+            || <span class="self">self</span>.before.positions != <span class="self">self</span>.after.positions
+            || <span class="self">self</span>.after.killed_clients.len() &gt; <span class="number">0</span>)
+    }
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{
+        pure::stack_set::tests::{test_stack_set, test_stack_set_with_stacks},
+        stack, Xid,
     };
-    <span class="kw">use</span> <span class="ident">simple_test_case::test_case</span>;
+    <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">diff_of_unchanged_stackset_is_empty</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">test_stack_set</span>(<span class="number">5</span>, <span class="number">2</span>);
-        <span class="kw">let</span> <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">clients</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> (<span class="ident">c</span>, <span class="ident">Rect::default</span>())).<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">snapshot</span>(<span class="ident">positions</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>diff_of_unchanged_stackset_is_empty() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">2</span>);
+        <span class="kw">let </span>positions: Vec&lt;<span class="kw">_</span>&gt; = s.clients().map(|<span class="kw-2">&amp;</span>c| (c, Rect::default())).collect();
+        <span class="kw">let </span>ss = s.snapshot(positions);
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>.<span class="ident">clone</span>(), <span class="ident">ss</span>);
+        <span class="kw">let </span>diff = Diff::new(ss.clone(), ss);
 
-        <span class="macro">assert!</span>(<span class="ident">diff</span>.<span class="ident">is_empty</span>())
+        <span class="macro">assert!</span>(diff.is_empty())
     }
 
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="bool-val">false</span>; <span class="string">&quot;unchanged&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test_case</span>(<span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">30</span>), <span class="bool-val">true</span>; <span class="string">&quot;changed&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">client_changed_position_works</span>(<span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">expected</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">test_stack_set</span>(<span class="number">1</span>, <span class="number">1</span>);
-        <span class="ident">s</span>.<span class="ident">insert</span>(<span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">before</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">snapshot</span>(<span class="macro">vec!</span>[(<span class="number">1</span>, <span class="ident">Rect::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>))]);
-        <span class="kw">let</span> <span class="ident">after</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">snapshot</span>(<span class="macro">vec!</span>[(<span class="number">1</span>, <span class="ident">r</span>)]);
+    <span class="attribute">#[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="bool-val">false</span>; <span class="string">&quot;unchanged&quot;</span>)]
+    #[test_case(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">30</span>), <span class="bool-val">true</span>; <span class="string">&quot;changed&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>client_changed_position_works(r: Rect, expected: bool) {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">1</span>, <span class="number">1</span>);
+        s.insert(<span class="number">1</span>);
+        <span class="kw">let </span>before = s.snapshot(<span class="macro">vec!</span>[(<span class="number">1</span>, Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>))]);
+        <span class="kw">let </span>after = s.snapshot(<span class="macro">vec!</span>[(<span class="number">1</span>, r)]);
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">before</span>, <span class="ident">after</span>);
+        <span class="kw">let </span>diff = Diff::new(before, after);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">diff</span>.<span class="ident">client_changed_position</span>(<span class="kw-2">&amp;</span><span class="number">1</span>), <span class="ident">expected</span>)
+        <span class="macro">assert_eq!</span>(diff.client_changed_position(<span class="kw-2">&amp;</span><span class="number">1</span>), expected)
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">drag_workspace_generates_correct_diff</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">test_stack_set_with_stacks</span>(
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>drag_workspace_generates_correct_diff() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set_with_stacks(
             <span class="macro">vec!</span>[
-                <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="ident">Xid</span>(<span class="number">1</span>), <span class="ident">Xid</span>(<span class="number">2</span>)], <span class="ident">Xid</span>(<span class="number">3</span>), [<span class="ident">Xid</span>(<span class="number">4</span>), <span class="ident">Xid</span>(<span class="number">5</span>)])),
-                <span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="ident">Xid</span>(<span class="number">6</span>), [<span class="ident">Xid</span>(<span class="number">7</span>), <span class="ident">Xid</span>(<span class="number">8</span>)])),
+                <span class="prelude-val">Some</span>(<span class="macro">stack!</span>([Xid(<span class="number">1</span>), Xid(<span class="number">2</span>)], Xid(<span class="number">3</span>), [Xid(<span class="number">4</span>), Xid(<span class="number">5</span>)])),
+                <span class="prelude-val">Some</span>(<span class="macro">stack!</span>(Xid(<span class="number">6</span>), [Xid(<span class="number">7</span>), Xid(<span class="number">8</span>)])),
                 <span class="prelude-val">None</span>,
             ],
             <span class="number">2</span>,
         );
 
-        <span class="kw">let</span> <span class="ident">before</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
-        <span class="ident">s</span>.<span class="ident">drag_workspace_forward</span>();
-        <span class="kw">let</span> <span class="ident">after</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
+        <span class="kw">let </span>before = s.position_and_snapshot();
+        s.drag_workspace_forward();
+        <span class="kw">let </span>after = s.position_and_snapshot();
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">before</span>, <span class="ident">after</span>);
+        <span class="kw">let </span>diff = Diff::new(before, after);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">diff</span>.<span class="ident">newly_focused_screen</span>(), <span class="prelude-val">Some</span>(<span class="number">1</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">diff</span>.<span class="ident">focused_client</span>(), <span class="prelude-val">Some</span>(<span class="ident">Xid</span>(<span class="number">3</span>)));
+        <span class="macro">assert_eq!</span>(diff.newly_focused_screen(), <span class="prelude-val">Some</span>(<span class="number">1</span>));
+        <span class="macro">assert_eq!</span>(diff.focused_client(), <span class="prelude-val">Some</span>(Xid(<span class="number">3</span>)));
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">quickcheck_tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">pure::StackSet</span>, <span class="ident">Xid</span>};
-    <span class="kw">use</span> <span class="ident">quickcheck_macros::quickcheck</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>quickcheck_tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{pure::StackSet, Xid};
+    <span class="kw">use </span>quickcheck_macros::quickcheck;
 
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">diff_of_unchanged_stackset_is_empty</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>.<span class="ident">clone</span>(), <span class="ident">ss</span>);
+    <span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>diff_of_unchanged_stackset_is_empty(<span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;) -&gt; bool {
+        <span class="kw">let </span>ss = s.position_and_snapshot();
+        <span class="kw">let </span>diff = Diff::new(ss.clone(), ss);
 
-        <span class="ident">diff</span>.<span class="ident">is_empty</span>()
+        diff.is_empty()
     }
 
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">adding_a_client_is_new_in_diff</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
-        <span class="kw">let</span> <span class="ident">new</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">minimal_unknown_client</span>();
+    <span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>adding_a_client_is_new_in_diff(<span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;) -&gt; bool {
+        <span class="kw">let </span>ss = s.position_and_snapshot();
+        <span class="kw">let </span>new = s.minimal_unknown_client();
 
-        <span class="ident">s</span>.<span class="ident">insert</span>(<span class="ident">new</span>);
+        s.insert(new);
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>, <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>());
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">diff</span>.<span class="ident">new_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">new</span>);
+        <span class="kw">let </span>diff = Diff::new(ss, s.position_and_snapshot());
+        <span class="kw">let </span>res = diff.new_clients().any(|<span class="kw-2">&amp;</span>c| c == new);
 
-        <span class="ident">res</span>
+        res
     }
 
-    <span class="comment">// NOTE: Not checking that clients on the new workspace are visible as this is driven entirely by</span>
-    <span class="comment">//       the positions returned by the Layout. In these tests, those are being specified manually</span>
-    <span class="comment">//       so there is nothing to test.</span>
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">focusing_new_workspace_hides_old_clients_and_tag_in_diff</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">first_hidden_tag</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) =&gt; <span class="ident">t</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">true</span>,
+    <span class="comment">// NOTE: Not checking that clients on the new workspace are visible as this is driven entirely by
+    //       the positions returned by the Layout. In these tests, those are being specified manually
+    //       so there is nothing to test.
+    </span><span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>focusing_new_workspace_hides_old_clients_and_tag_in_diff(<span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;) -&gt; bool {
+        <span class="kw">let </span>tag = <span class="kw">match </span>s.first_hidden_tag() {
+            <span class="prelude-val">Some</span>(t) =&gt; t,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">true</span>,
         };
-        <span class="kw">let</span> <span class="ident">prev_tag</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">current_tag</span>().<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">clients_on_active</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">current_stack</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">stack</span>) =&gt; <span class="ident">stack</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>(),
-            <span class="prelude-val">None</span> =&gt; <span class="macro">vec!</span>[],
-        };
-
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
-
-        <span class="ident">s</span>.<span class="ident">focus_tag</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>);
-
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>, <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>());
-        <span class="kw">let</span> <span class="ident">hidden</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">diff</span>.<span class="ident">hidden_clients</span>().<span class="ident">collect</span>();
-
-        <span class="kw">let</span> <span class="ident">focused_clients_now_hidden</span> <span class="op">=</span> <span class="ident">clients_on_active</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">hidden</span>.<span class="ident">contains</span>(<span class="ident">c</span>));
-        <span class="kw">let</span> <span class="ident">tag_now_hidden</span> <span class="op">=</span> <span class="ident">diff</span>.<span class="ident">previous_visible_tags</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">prev_tag</span>.<span class="ident">as_ref</span>());
-
-        <span class="ident">focused_clients_now_hidden</span> <span class="op">&amp;&amp;</span> <span class="ident">tag_now_hidden</span>
-    }
-
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">removing_focused_client_sets_withdrawn_and_hidden_in_diff</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">focus</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">current_client</span>() {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>) =&gt; <span class="ident">c</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">true</span>, <span class="comment">// nothing to remove</span>
+        <span class="kw">let </span>prev_tag = s.current_tag().to_string();
+        <span class="kw">let </span>clients_on_active: Vec&lt;Xid&gt; = <span class="kw">match </span>s.current_stack() {
+            <span class="prelude-val">Some</span>(stack) =&gt; stack.iter().cloned().collect(),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">vec!</span>[],
         };
 
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
-        <span class="ident">s</span>.<span class="ident">remove_focused</span>();
+        <span class="kw">let </span>ss = s.position_and_snapshot();
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>, <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>());
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">diff</span>.<span class="ident">withdrawn_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">focus</span>)
-            <span class="op">&amp;&amp;</span> <span class="ident">diff</span>.<span class="ident">hidden_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">focus</span>);
+        s.focus_tag(<span class="kw-2">&amp;</span>tag);
 
-        <span class="ident">res</span>
+        <span class="kw">let </span>diff = Diff::new(ss, s.position_and_snapshot());
+        <span class="kw">let </span>hidden: HashSet&lt;<span class="kw">_</span>&gt; = diff.hidden_clients().collect();
+
+        <span class="kw">let </span>focused_clients_now_hidden = clients_on_active.iter().all(|c| hidden.contains(c));
+        <span class="kw">let </span>tag_now_hidden = diff.previous_visible_tags().contains(<span class="kw-2">&amp;</span>prev_tag.as_ref());
+
+        focused_clients_now_hidden &amp;&amp; tag_now_hidden
     }
 
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">killing_focused_client_sets_killed_withdrawn_and_hidden_in_diff</span>(
-        <span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">focus</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">current_client</span>() {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>) =&gt; <span class="ident">c</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">true</span>, <span class="comment">// nothing to remove</span>
-        };
+    <span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>removing_focused_client_sets_withdrawn_and_hidden_in_diff(<span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;) -&gt; bool {
+        <span class="kw">let </span>focus = <span class="kw">match </span>s.current_client() {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>c) =&gt; c,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">true</span>, <span class="comment">// nothing to remove
+        </span>};
 
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
-        <span class="ident">s</span>.<span class="ident">kill_focused</span>();
+        <span class="kw">let </span>ss = s.position_and_snapshot();
+        s.remove_focused();
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>, <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>());
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">diff</span>.<span class="ident">withdrawn_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">focus</span>)
-            <span class="op">&amp;&amp;</span> <span class="ident">diff</span>.<span class="ident">hidden_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">focus</span>)
-            <span class="op">&amp;&amp;</span> <span class="ident">diff</span>.<span class="ident">killed_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">focus</span>);
+        <span class="kw">let </span>diff = Diff::new(ss, s.position_and_snapshot());
+        <span class="kw">let </span>res = diff.withdrawn_clients().any(|<span class="kw-2">&amp;</span>c| c == focus)
+            &amp;&amp; diff.hidden_clients().any(|<span class="kw-2">&amp;</span>c| c == focus);
 
-        <span class="ident">res</span>
+        res
     }
 
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">moving_client_to_hidden_workspace_sets_hidden_in_diff</span>(<span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">first_hidden_tag</span>();
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">current_client</span>().<span class="ident">cloned</span>();
+    <span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>killing_focused_client_sets_killed_withdrawn_and_hidden_in_diff(
+        <span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;,
+    ) -&gt; bool {
+        <span class="kw">let </span>focus = <span class="kw">match </span>s.current_client() {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>c) =&gt; c,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">true</span>, <span class="comment">// nothing to remove
+        </span>};
 
-        <span class="kw">match</span> (<span class="ident">client</span>, <span class="ident">tag</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">client</span>), <span class="prelude-val">Some</span>(<span class="ident">tag</span>)) =&gt; {
-                <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>();
+        <span class="kw">let </span>ss = s.position_and_snapshot();
+        s.kill_focused();
 
-                <span class="ident">s</span>.<span class="ident">move_client_to_tag</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">tag</span>);
+        <span class="kw">let </span>diff = Diff::new(ss, s.position_and_snapshot());
+        <span class="kw">let </span>res = diff.withdrawn_clients().any(|<span class="kw-2">&amp;</span>c| c == focus)
+            &amp;&amp; diff.hidden_clients().any(|<span class="kw-2">&amp;</span>c| c == focus)
+            &amp;&amp; diff.killed_clients().any(|<span class="kw-2">&amp;</span>c| c == focus);
 
-                <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>, <span class="ident">s</span>.<span class="ident">position_and_snapshot</span>());
-                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">diff</span>.<span class="ident">hidden_clients</span>().<span class="ident">any</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">client</span>);
+        res
+    }
 
-                <span class="ident">res</span>
+    <span class="attribute">#[quickcheck]
+    </span><span class="kw">fn </span>moving_client_to_hidden_workspace_sets_hidden_in_diff(<span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;) -&gt; bool {
+        <span class="kw">let </span>tag = s.first_hidden_tag();
+        <span class="kw">let </span>client = s.current_client().cloned();
+
+        <span class="kw">match </span>(client, tag) {
+            (<span class="prelude-val">Some</span>(client), <span class="prelude-val">Some</span>(tag)) =&gt; {
+                <span class="kw">let </span>ss = s.position_and_snapshot();
+
+                s.move_client_to_tag(<span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>tag);
+
+                <span class="kw">let </span>diff = Diff::new(ss, s.position_and_snapshot());
+                <span class="kw">let </span>res = diff.hidden_clients().any(|<span class="kw-2">&amp;</span>c| c == client);
+
+                res
             }
 
-            <span class="kw">_</span> =&gt; <span class="bool-val">true</span>, <span class="comment">// No hidden tags or no clients</span>
-        }
+            <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>, <span class="comment">// No hidden tags or no clients
+        </span>}
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

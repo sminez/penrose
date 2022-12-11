@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/bindings.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bindings.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/bindings.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bindings.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -395,400 +395,400 @@
 <span id="393">393</span>
 <span id="394">394</span>
 <span id="395">395</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Setting up and responding to user defined key/mouse bindings</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core</span>::{<span class="ident">State</span>, <span class="ident">Xid</span>},
-    <span class="ident">pure::geometry::Point</span>,
-    <span class="ident">x::XConn</span>,
-    <span class="ident">Error</span>, <span class="prelude-ty">Result</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Setting up and responding to user defined key/mouse bindings
+</span><span class="kw">use crate</span>::{
+    core::{State, Xid},
+    pure::geometry::Point,
+    x::XConn,
+    Error, <span class="prelude-ty">Result</span>,
 };
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;keysyms&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">penrose_keysyms::XKeySym</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryFrom</span>, <span class="ident">fmt</span>, <span class="ident">process::Command</span>};
-<span class="kw">use</span> <span class="ident">strum</span>::{<span class="ident">EnumIter</span>, <span class="ident">IntoEnumIterator</span>};
-<span class="kw">use</span> <span class="ident">tracing::trace</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;keysyms&quot;</span>)]
+</span><span class="kw">use </span>penrose_keysyms::XKeySym;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+</span><span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>std::{collections::HashMap, convert::TryFrom, fmt, process::Command};
+<span class="kw">use </span>strum::{EnumIter, IntoEnumIterator};
+<span class="kw">use </span>tracing::trace;
 
-<span class="doccomment">/// Run the xmodmap command to dump the system keymap table.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is done in a form that we can load in and convert back to key</span>
-<span class="doccomment">/// codes. This lets the user define key bindings in the way that they</span>
-<span class="doccomment">/// would expect while also ensuring that it is east to debug any odd</span>
-<span class="doccomment">/// issues with bindings by referring the user to the xmodmap output.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Panics</span>
-<span class="doccomment">/// This function will panic if it is unable to fetch keycodes using the xmodmap</span>
-<span class="doccomment">/// binary on your system or if the output of `xmodmap -pke` is not valid</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keycodes_from_xmodmap</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;xmodmap&quot;</span>).<span class="ident">arg</span>(<span class="string">&quot;-pke&quot;</span>).<span class="ident">output</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">String::from_utf8</span>(<span class="ident">output</span>.<span class="ident">stdout</span>)<span class="question-mark">?</span>
-        .<span class="ident">lines</span>()
-        .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">words</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">split_whitespace</span>(); <span class="comment">// keycode &lt;code&gt; = &lt;names ...&gt;</span>
-            <span class="kw">let</span> <span class="ident">key_code</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">words</span>.<span class="ident">nth</span>(<span class="number">1</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">word</span>) =&gt; <span class="kw">match</span> <span class="ident">word</span>.<span class="ident">parse</span>() {
-                    <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; <span class="ident">val</span>,
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>),
+<span class="doccomment">/// Run the xmodmap command to dump the system keymap table.
+///
+/// This is done in a form that we can load in and convert back to key
+/// codes. This lets the user define key bindings in the way that they
+/// would expect while also ensuring that it is east to debug any odd
+/// issues with bindings by referring the user to the xmodmap output.
+///
+/// # Panics
+/// This function will panic if it is unable to fetch keycodes using the xmodmap
+/// binary on your system or if the output of `xmodmap -pke` is not valid
+</span><span class="kw">pub fn </span>keycodes_from_xmodmap() -&gt; <span class="prelude-ty">Result</span>&lt;HashMap&lt;String, u8&gt;&gt; {
+    <span class="kw">let </span>output = Command::new(<span class="string">&quot;xmodmap&quot;</span>).arg(<span class="string">&quot;-pke&quot;</span>).output()<span class="question-mark">?</span>;
+    <span class="kw">let </span>m = String::from_utf8(output.stdout)<span class="question-mark">?
+        </span>.lines()
+        .flat_map(|l| {
+            <span class="kw">let </span><span class="kw-2">mut </span>words = l.split_whitespace(); <span class="comment">// keycode &lt;code&gt; = &lt;names ...&gt;
+            </span><span class="kw">let </span>key_code: u8 = <span class="kw">match </span>words.nth(<span class="number">1</span>) {
+                <span class="prelude-val">Some</span>(word) =&gt; <span class="kw">match </span>word.parse() {
+                    <span class="prelude-val">Ok</span>(val) =&gt; val,
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}&quot;</span>, e),
                 },
-                <span class="prelude-val">None</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected output format from xmodmap -pke&quot;</span>),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected output format from xmodmap -pke&quot;</span>),
             };
-            <span class="ident">words</span>.<span class="ident">skip</span>(<span class="number">1</span>).<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">name</span><span class="op">|</span> (<span class="ident">name</span>.<span class="ident">into</span>(), <span class="ident">key_code</span>))
+            words.skip(<span class="number">1</span>).map(<span class="kw">move </span>|name| (name.into(), key_code))
         })
-        .<span class="ident">collect</span>();
+        .collect();
 
-    <span class="prelude-val">Ok</span>(<span class="ident">m</span>)
+    <span class="prelude-val">Ok</span>(m)
 }
 
-<span class="kw">fn</span> <span class="ident">parse_binding</span>(<span class="ident">pattern</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">known_codes</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">KeyCode</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">pattern</span>.<span class="ident">split</span>(<span class="string">&#39;-&#39;</span>).<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">parts</span>.<span class="ident">remove</span>(<span class="ident">parts</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>);
+<span class="kw">fn </span>parse_binding(pattern: <span class="kw-2">&amp;</span>str, known_codes: <span class="kw-2">&amp;</span>HashMap&lt;String, u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;KeyCode&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = pattern.split(<span class="string">&#39;-&#39;</span>).collect();
+    <span class="kw">let </span>name = parts.remove(parts.len() - <span class="number">1</span>);
 
-    <span class="kw">match</span> <span class="ident">known_codes</span>.<span class="ident">get</span>(<span class="ident">name</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">code</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">parts</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">ModifierKey::try_from</span>(<span class="ident">s</span>))
-                .<span class="ident">try_fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">|</span> <span class="ident">u16::from</span>(<span class="ident">inner</span>)))<span class="question-mark">?</span>;
+    <span class="kw">match </span>known_codes.get(name) {
+        <span class="prelude-val">Some</span>(code) =&gt; {
+            <span class="kw">let </span>mask = parts
+                .iter()
+                .map(|<span class="kw-2">&amp;</span>s| ModifierKey::try_from(s))
+                .try_fold(<span class="number">0</span>, |acc, v| v.map(|inner| acc | u16::from(inner)))<span class="question-mark">?</span>;
 
-            <span class="macro">trace!</span>(<span class="question-mark">?</span><span class="ident">pattern</span>, <span class="ident">mask</span>, <span class="ident">code</span>, <span class="string">&quot;parsed keybinding&quot;</span>);
-            <span class="prelude-val">Ok</span>(<span class="ident">KeyCode</span> {
-                <span class="ident">mask</span>: <span class="ident">mask</span> <span class="kw">as</span> <span class="ident">u16</span>,
-                <span class="ident">code</span>: <span class="kw-2">*</span><span class="ident">code</span>,
+            <span class="macro">trace!</span>(<span class="question-mark">?</span>pattern, mask, code, <span class="string">&quot;parsed keybinding&quot;</span>);
+            <span class="prelude-val">Ok</span>(KeyCode {
+                mask: mask <span class="kw">as </span>u16,
+                code: <span class="kw-2">*</span>code,
             })
         }
 
-        <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::UnknownKeyName</span> {
-            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_owned</span>(),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownKeyName {
+            name: name.to_owned(),
         }),
     }
 }
 
-<span class="doccomment">/// Parse string format key bindings into [KeyCode] based [KeyBindings] using</span>
-<span class="doccomment">/// the command line `xmodmap` utility.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_keybindings_with_xmodmap</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">X</span><span class="op">&gt;</span>(
-    <span class="ident">str_bindings</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">KeyBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// Parse string format key bindings into [KeyCode] based [KeyBindings] using
+/// the command line `xmodmap` utility.
+///
+/// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
+</span><span class="kw">pub fn </span>parse_keybindings_with_xmodmap&lt;S, X&gt;(
+    str_bindings: HashMap&lt;S, Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt;&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;KeyBindings&lt;X&gt;&gt;
+<span class="kw">where
+    </span>S: AsRef&lt;str&gt;,
+    X: XConn,
 {
-    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">keycodes_from_xmodmap</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>m = keycodes_from_xmodmap()<span class="question-mark">?</span>;
 
-    <span class="ident">str_bindings</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">s</span>, <span class="ident">v</span>)<span class="op">|</span> <span class="ident">parse_binding</span>(<span class="ident">s</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">m</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">k</span><span class="op">|</span> (<span class="ident">k</span>, <span class="ident">v</span>)))
-        .<span class="ident">collect</span>()
+    str_bindings
+        .into_iter()
+        .map(|(s, v)| parse_binding(s.as_ref(), <span class="kw-2">&amp;</span>m).map(|k| (k, v)))
+        .collect()
 }
 
-<span class="doccomment">/// Some action to be run by a user key binding</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// Some action to be run by a user key binding
+</span><span class="kw">pub trait </span>KeyEventHandler&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// Call this handler with the current window manager state</span>
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Call this handler with the current window manager state
+    </span><span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;KeyEventHandler&quot;</span>).<span class="ident">finish</span>()
+<span class="kw">impl</span>&lt;X: XConn&gt; fmt::Debug <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;KeyEventHandler&quot;</span>).finish()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">X</span><span class="op">&gt;</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;F, X&gt; KeyEventHandler&lt;X&gt; <span class="kw">for </span>F
+<span class="kw">where
+    </span>F: FnMut(<span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;,
+    X: XConn,
 {
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        (<span class="self">self</span>)(<span class="ident">state</span>, <span class="ident">x</span>)
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        (<span class="self">self</span>)(state, x)
     }
 }
 
-<span class="doccomment">/// User defined key bindings</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">KeyBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">KeyCode</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// User defined key bindings
+</span><span class="kw">pub type </span>KeyBindings&lt;X&gt; = HashMap&lt;KeyCode, Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt;&gt;;
 
-<span class="doccomment">/// An action to be run in response to a mouse event</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MouseEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// An action to be run in response to a mouse event
+</span><span class="kw">pub trait </span>MouseEventHandler&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// Call this handler with the current window manager state and mouse state</span>
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">evt</span>: <span class="kw-2">&amp;</span><span class="ident">MouseEvent</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="doccomment">/// Call this handler with the current window manager state and mouse state
+    </span><span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, evt: <span class="kw-2">&amp;</span>MouseEvent, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">MouseEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;KeyEventHandler&quot;</span>).<span class="ident">finish</span>()
+<span class="kw">impl</span>&lt;X: XConn&gt; fmt::Debug <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>MouseEventHandler&lt;X&gt;&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;KeyEventHandler&quot;</span>).finish()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">X</span><span class="op">&gt;</span> <span class="ident">MouseEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">F</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">MouseEvent</span>, <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;F, X&gt; MouseEventHandler&lt;X&gt; <span class="kw">for </span>F
+<span class="kw">where
+    </span>F: FnMut(<span class="kw-2">&amp;</span>MouseEvent, <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;,
+    X: XConn,
 {
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">evt</span>: <span class="kw-2">&amp;</span><span class="ident">MouseEvent</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        (<span class="self">self</span>)(<span class="ident">evt</span>, <span class="ident">state</span>, <span class="ident">x</span>)
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, evt: <span class="kw-2">&amp;</span>MouseEvent, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        (<span class="self">self</span>)(evt, state, x)
     }
 }
 
-<span class="doccomment">/// User defined mouse bindings</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MouseBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span>(<span class="ident">MouseEventKind</span>, <span class="ident">MouseState</span>), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">MouseEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// User defined mouse bindings
+</span><span class="kw">pub type </span>MouseBindings&lt;X&gt; = HashMap&lt;(MouseEventKind, MouseState), Box&lt;<span class="kw">dyn </span>MouseEventHandler&lt;X&gt;&gt;&gt;;
 
-<span class="doccomment">/// Abstraction layer for working with key presses</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">KeyPress</span> {
-    <span class="doccomment">/// A raw character key</span>
-    <span class="ident">Utf8</span>(<span class="ident">String</span>),
-    <span class="doccomment">/// Return / enter key</span>
-    <span class="ident">Return</span>,
-    <span class="doccomment">/// Escape</span>
-    <span class="ident">Escape</span>,
-    <span class="doccomment">/// Tab</span>
-    <span class="ident">Tab</span>,
-    <span class="doccomment">/// Backspace</span>
-    <span class="ident">Backspace</span>,
-    <span class="doccomment">/// Delete</span>
-    <span class="ident">Delete</span>,
-    <span class="doccomment">/// PageUp</span>
-    <span class="ident">PageUp</span>,
-    <span class="doccomment">/// PageDown</span>
-    <span class="ident">PageDown</span>,
-    <span class="doccomment">/// Up</span>
-    <span class="ident">Up</span>,
-    <span class="doccomment">/// Down</span>
-    <span class="ident">Down</span>,
-    <span class="doccomment">/// Left</span>
-    <span class="ident">Left</span>,
-    <span class="doccomment">/// Right</span>
-    <span class="ident">Right</span>,
+<span class="doccomment">/// Abstraction layer for working with key presses
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>KeyPress {
+    <span class="doccomment">/// A raw character key
+    </span>Utf8(String),
+    <span class="doccomment">/// Return / enter key
+    </span>Return,
+    <span class="doccomment">/// Escape
+    </span>Escape,
+    <span class="doccomment">/// Tab
+    </span>Tab,
+    <span class="doccomment">/// Backspace
+    </span>Backspace,
+    <span class="doccomment">/// Delete
+    </span>Delete,
+    <span class="doccomment">/// PageUp
+    </span>PageUp,
+    <span class="doccomment">/// PageDown
+    </span>PageDown,
+    <span class="doccomment">/// Up
+    </span>Up,
+    <span class="doccomment">/// Down
+    </span>Down,
+    <span class="doccomment">/// Left
+    </span>Left,
+    <span class="doccomment">/// Right
+    </span>Right,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;keysyms&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">XKeySym</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">KeyPress</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::string::FromUtf8Error</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;keysyms&quot;</span>)]
+</span><span class="kw">impl </span>TryFrom&lt;XKeySym&gt; <span class="kw">for </span>KeyPress {
+    <span class="kw">type </span>Error = std::string::FromUtf8Error;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">s</span>: <span class="ident">XKeySym</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">KeyPress</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">s</span> {
-            <span class="ident">XKeySym::XK_Return</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Enter</span> <span class="op">|</span> <span class="ident">XKeySym::XK_ISO_Enter</span> =&gt; <span class="ident">KeyPress::Return</span>,
-            <span class="ident">XKeySym::XK_Escape</span> =&gt; <span class="ident">KeyPress::Escape</span>,
-            <span class="ident">XKeySym::XK_Tab</span> <span class="op">|</span> <span class="ident">XKeySym::XK_ISO_Left_Tab</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Tab</span> =&gt; <span class="ident">KeyPress::Tab</span>,
-            <span class="ident">XKeySym::XK_BackSpace</span> =&gt; <span class="ident">KeyPress::Backspace</span>,
-            <span class="ident">XKeySym::XK_Delete</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Delete</span> =&gt; <span class="ident">KeyPress::Delete</span>,
-            <span class="ident">XKeySym::XK_Page_Up</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Page_Up</span> =&gt; <span class="ident">KeyPress::PageUp</span>,
-            <span class="ident">XKeySym::XK_Page_Down</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Page_Down</span> =&gt; <span class="ident">KeyPress::PageDown</span>,
-            <span class="ident">XKeySym::XK_Up</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Up</span> =&gt; <span class="ident">KeyPress::Up</span>,
-            <span class="ident">XKeySym::XK_Down</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Down</span> =&gt; <span class="ident">KeyPress::Down</span>,
-            <span class="ident">XKeySym::XK_Left</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Left</span> =&gt; <span class="ident">KeyPress::Left</span>,
-            <span class="ident">XKeySym::XK_Right</span> <span class="op">|</span> <span class="ident">XKeySym::XK_KP_Right</span> =&gt; <span class="ident">KeyPress::Right</span>,
-            <span class="ident">s</span> =&gt; <span class="ident">KeyPress::Utf8</span>(<span class="ident">s</span>.<span class="ident">as_utf8_string</span>()<span class="question-mark">?</span>),
+    <span class="kw">fn </span>try_from(s: XKeySym) -&gt; std::result::Result&lt;KeyPress, <span class="self">Self</span>::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>s {
+            XKeySym::XK_Return | XKeySym::XK_KP_Enter | XKeySym::XK_ISO_Enter =&gt; KeyPress::Return,
+            XKeySym::XK_Escape =&gt; KeyPress::Escape,
+            XKeySym::XK_Tab | XKeySym::XK_ISO_Left_Tab | XKeySym::XK_KP_Tab =&gt; KeyPress::Tab,
+            XKeySym::XK_BackSpace =&gt; KeyPress::Backspace,
+            XKeySym::XK_Delete | XKeySym::XK_KP_Delete =&gt; KeyPress::Delete,
+            XKeySym::XK_Page_Up | XKeySym::XK_KP_Page_Up =&gt; KeyPress::PageUp,
+            XKeySym::XK_Page_Down | XKeySym::XK_KP_Page_Down =&gt; KeyPress::PageDown,
+            XKeySym::XK_Up | XKeySym::XK_KP_Up =&gt; KeyPress::Up,
+            XKeySym::XK_Down | XKeySym::XK_KP_Down =&gt; KeyPress::Down,
+            XKeySym::XK_Left | XKeySym::XK_KP_Left =&gt; KeyPress::Left,
+            XKeySym::XK_Right | XKeySym::XK_KP_Right =&gt; KeyPress::Right,
+            s =&gt; KeyPress::Utf8(s.as_utf8_string()<span class="question-mark">?</span>),
         })
     }
 }
 
-<span class="doccomment">/// A u16 X key-code bitmask</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">KeyCodeMask</span> <span class="op">=</span> <span class="ident">u16</span>;
+<span class="doccomment">/// A u16 X key-code bitmask
+</span><span class="kw">pub type </span>KeyCodeMask = u16;
 
-<span class="doccomment">/// A u8 X key-code enum value</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">KeyCodeValue</span> <span class="op">=</span> <span class="ident">u8</span>;
+<span class="doccomment">/// A u8 X key-code enum value
+</span><span class="kw">pub type </span>KeyCodeValue = u8;
 
-<span class="doccomment">/// A key press and held modifiers</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyCode</span> {
-    <span class="doccomment">/// The held modifier mask</span>
-    <span class="kw">pub</span> <span class="ident">mask</span>: <span class="ident">KeyCodeMask</span>,
-    <span class="doccomment">/// The key code that was held</span>
-    <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">KeyCodeValue</span>,
+<span class="doccomment">/// A key press and held modifiers
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>KeyCode {
+    <span class="doccomment">/// The held modifier mask
+    </span><span class="kw">pub </span>mask: KeyCodeMask,
+    <span class="doccomment">/// The key code that was held
+    </span><span class="kw">pub </span>code: KeyCodeValue,
 }
 
-<span class="kw">impl</span> <span class="ident">KeyCode</span> {
-    <span class="doccomment">/// Create a new [KeyCode] from this one that removes the given mask</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ignoring_modifier</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mask</span>: <span class="ident">KeyCodeMask</span>) -&gt; <span class="ident">KeyCode</span> {
-        <span class="ident">KeyCode</span> {
-            <span class="ident">mask</span>: <span class="self">self</span>.<span class="ident">mask</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">mask</span>,
-            <span class="ident">code</span>: <span class="self">self</span>.<span class="ident">code</span>,
+<span class="kw">impl </span>KeyCode {
+    <span class="doccomment">/// Create a new [KeyCode] from this one that removes the given mask
+    </span><span class="kw">pub fn </span>ignoring_modifier(<span class="kw-2">&amp;</span><span class="self">self</span>, mask: KeyCodeMask) -&gt; KeyCode {
+        KeyCode {
+            mask: <span class="self">self</span>.mask &amp; !mask,
+            code: <span class="self">self</span>.code,
         }
     }
 }
 
-<span class="doccomment">/// Known mouse buttons for binding actions</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MouseButton</span> {
-    <span class="doccomment">/// 1</span>
-    <span class="ident">Left</span>,
-    <span class="doccomment">/// 2</span>
-    <span class="ident">Middle</span>,
-    <span class="doccomment">/// 3</span>
-    <span class="ident">Right</span>,
-    <span class="doccomment">/// 4</span>
-    <span class="ident">ScrollUp</span>,
-    <span class="doccomment">/// 5</span>
-    <span class="ident">ScrollDown</span>,
+<span class="doccomment">/// Known mouse buttons for binding actions
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub enum </span>MouseButton {
+    <span class="doccomment">/// 1
+    </span>Left,
+    <span class="doccomment">/// 2
+    </span>Middle,
+    <span class="doccomment">/// 3
+    </span>Right,
+    <span class="doccomment">/// 4
+    </span>ScrollUp,
+    <span class="doccomment">/// 5
+    </span>ScrollDown,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MouseButton</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u8</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">b</span>: <span class="ident">MouseButton</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="ident">b</span> {
-            <span class="ident">MouseButton::Left</span> =&gt; <span class="number">1</span>,
-            <span class="ident">MouseButton::Middle</span> =&gt; <span class="number">2</span>,
-            <span class="ident">MouseButton::Right</span> =&gt; <span class="number">3</span>,
-            <span class="ident">MouseButton::ScrollUp</span> =&gt; <span class="number">4</span>,
-            <span class="ident">MouseButton::ScrollDown</span> =&gt; <span class="number">5</span>,
+<span class="kw">impl </span>From&lt;MouseButton&gt; <span class="kw">for </span>u8 {
+    <span class="kw">fn </span>from(b: MouseButton) -&gt; u8 {
+        <span class="kw">match </span>b {
+            MouseButton::Left =&gt; <span class="number">1</span>,
+            MouseButton::Middle =&gt; <span class="number">2</span>,
+            MouseButton::Right =&gt; <span class="number">3</span>,
+            MouseButton::ScrollUp =&gt; <span class="number">4</span>,
+            MouseButton::ScrollDown =&gt; <span class="number">5</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MouseButton</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+<span class="kw">impl </span>TryFrom&lt;u8&gt; <span class="kw">for </span>MouseButton {
+    <span class="kw">type </span>Error = Error;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">n</span>: <span class="ident">u8</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">n</span> {
-            <span class="number">1</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Left</span>),
-            <span class="number">2</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Middle</span>),
-            <span class="number">3</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Right</span>),
-            <span class="number">4</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::ScrollUp</span>),
-            <span class="number">5</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::ScrollDown</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::UnknownMouseButton</span> { <span class="ident">button</span>: <span class="ident">n</span> }),
+    <span class="kw">fn </span>try_from(n: u8) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">match </span>n {
+            <span class="number">1 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Left),
+            <span class="number">2 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Middle),
+            <span class="number">3 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Right),
+            <span class="number">4 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::ScrollUp),
+            <span class="number">5 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::ScrollDown),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownMouseButton { button: n }),
         }
     }
 }
 
-<span class="doccomment">/// Known modifier keys for bindings</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">EnumIter</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ModifierKey</span> {
-    <span class="doccomment">/// Control</span>
-    <span class="ident">Ctrl</span>,
-    <span class="doccomment">/// Alt</span>
-    <span class="ident">Alt</span>,
-    <span class="doccomment">/// Shift</span>
-    <span class="ident">Shift</span>,
-    <span class="doccomment">/// Meta / super / windows</span>
-    <span class="ident">Meta</span>,
+<span class="doccomment">/// Known modifier keys for bindings
+</span><span class="attribute">#[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub enum </span>ModifierKey {
+    <span class="doccomment">/// Control
+    </span>Ctrl,
+    <span class="doccomment">/// Alt
+    </span>Alt,
+    <span class="doccomment">/// Shift
+    </span>Shift,
+    <span class="doccomment">/// Meta / super / windows
+    </span>Meta,
 }
 
-<span class="kw">impl</span> <span class="ident">ModifierKey</span> {
-    <span class="kw">fn</span> <span class="ident">was_held</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mask</span>: <span class="ident">u16</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">mask</span> <span class="op">&amp;</span> <span class="ident">u16::from</span>(<span class="kw-2">*</span><span class="self">self</span>) <span class="op">&gt;</span> <span class="number">0</span>
+<span class="kw">impl </span>ModifierKey {
+    <span class="kw">fn </span>was_held(<span class="kw-2">&amp;</span><span class="self">self</span>, mask: u16) -&gt; bool {
+        mask &amp; u16::from(<span class="kw-2">*</span><span class="self">self</span>) &gt; <span class="number">0
+    </span>}
+}
+
+<span class="kw">impl </span>From&lt;ModifierKey&gt; <span class="kw">for </span>u16 {
+    <span class="kw">fn </span>from(m: ModifierKey) -&gt; u16 {
+        (<span class="kw">match </span>m {
+            ModifierKey::Shift =&gt; <span class="number">1 </span>&lt;&lt; <span class="number">0</span>,
+            ModifierKey::Ctrl =&gt; <span class="number">1 </span>&lt;&lt; <span class="number">2</span>,
+            ModifierKey::Alt =&gt; <span class="number">1 </span>&lt;&lt; <span class="number">3</span>,
+            ModifierKey::Meta =&gt; <span class="number">1 </span>&lt;&lt; <span class="number">6</span>,
+        }) <span class="kw">as </span>u16
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ModifierKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u16</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">m</span>: <span class="ident">ModifierKey</span>) -&gt; <span class="ident">u16</span> {
-        (<span class="kw">match</span> <span class="ident">m</span> {
-            <span class="ident">ModifierKey::Shift</span> =&gt; <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>,
-            <span class="ident">ModifierKey::Ctrl</span> =&gt; <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>,
-            <span class="ident">ModifierKey::Alt</span> =&gt; <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>,
-            <span class="ident">ModifierKey::Meta</span> =&gt; <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>,
-        }) <span class="kw">as</span> <span class="ident">u16</span>
-    }
-}
+<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>str&gt; <span class="kw">for </span>ModifierKey {
+    <span class="kw">type </span>Error = Error;
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ModifierKey</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
-
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;C&quot;</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Ctrl</span>),
-            <span class="string">&quot;A&quot;</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Alt</span>),
-            <span class="string">&quot;S&quot;</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Shift</span>),
-            <span class="string">&quot;M&quot;</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::Meta</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::UnknownModifier</span> { <span class="ident">name</span>: <span class="ident">s</span>.<span class="ident">to_owned</span>() }),
+    <span class="kw">fn </span>try_from(s: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">match </span>s {
+            <span class="string">&quot;C&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Ctrl),
+            <span class="string">&quot;A&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Alt),
+            <span class="string">&quot;S&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Shift),
+            <span class="string">&quot;M&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Meta),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownModifier { name: s.to_owned() }),
         }
     }
 }
 
-<span class="doccomment">/// A mouse state specification indicating the button and modifiers held</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MouseState</span> {
-    <span class="doccomment">/// The [MouseButton] being held</span>
-    <span class="kw">pub</span> <span class="ident">button</span>: <span class="ident">MouseButton</span>,
-    <span class="doccomment">/// All [ModifierKey]s being held</span>
-    <span class="kw">pub</span> <span class="ident">modifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ModifierKey</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A mouse state specification indicating the button and modifiers held
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>MouseState {
+    <span class="doccomment">/// The [MouseButton] being held
+    </span><span class="kw">pub </span>button: MouseButton,
+    <span class="doccomment">/// All [ModifierKey]s being held
+    </span><span class="kw">pub </span>modifiers: Vec&lt;ModifierKey&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">MouseState</span> {
-    <span class="doccomment">/// Construct a new MouseState</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">button</span>: <span class="ident">MouseButton</span>, <span class="kw-2">mut</span> <span class="ident">modifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ModifierKey</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">modifiers</span>.<span class="ident">sort</span>();
-        <span class="self">Self</span> { <span class="ident">button</span>, <span class="ident">modifiers</span> }
+<span class="kw">impl </span>MouseState {
+    <span class="doccomment">/// Construct a new MouseState
+    </span><span class="kw">pub fn </span>new(button: MouseButton, <span class="kw-2">mut </span>modifiers: Vec&lt;ModifierKey&gt;) -&gt; <span class="self">Self </span>{
+        modifiers.sort();
+        <span class="self">Self </span>{ button, modifiers }
     }
 
-    <span class="doccomment">/// Parse raw mouse state values into a [MouseState]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_detail_and_state</span>(<span class="ident">detail</span>: <span class="ident">u8</span>, <span class="ident">state</span>: <span class="ident">u16</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">button</span>: <span class="ident">MouseButton::try_from</span>(<span class="ident">detail</span>)<span class="question-mark">?</span>,
-            <span class="ident">modifiers</span>: <span class="ident">ModifierKey::iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">was_held</span>(<span class="ident">state</span>)).<span class="ident">collect</span>(),
+    <span class="doccomment">/// Parse raw mouse state values into a [MouseState]
+    </span><span class="kw">pub fn </span>from_detail_and_state(detail: u8, state: u16) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            button: MouseButton::try_from(detail)<span class="question-mark">?</span>,
+            modifiers: ModifierKey::iter().filter(|m| m.was_held(state)).collect(),
         })
     }
 
-    <span class="doccomment">/// The xcb bitmask for this [MouseState]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u16</span> {
-        <span class="self">self</span>.<span class="ident">modifiers</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="kw-2">&amp;</span><span class="ident">val</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">|</span> <span class="ident">u16::from</span>(<span class="ident">val</span>))
+    <span class="doccomment">/// The xcb bitmask for this [MouseState]
+    </span><span class="kw">pub fn </span>mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u16 {
+        <span class="self">self</span>.modifiers
+            .iter()
+            .fold(<span class="number">0</span>, |acc, <span class="kw-2">&amp;</span>val| acc | u16::from(val))
     }
 
-    <span class="doccomment">/// The xcb button ID for this [MouseState]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">button</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u8</span> {
-        <span class="self">self</span>.<span class="ident">button</span>.<span class="ident">into</span>()
+    <span class="doccomment">/// The xcb button ID for this [MouseState]
+    </span><span class="kw">pub fn </span>button(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u8 {
+        <span class="self">self</span>.button.into()
     }
 }
 
-<span class="doccomment">/// The types of mouse events represented by a MouseEvent</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MouseEventKind</span> {
-    <span class="doccomment">/// A button was pressed</span>
-    <span class="ident">Press</span>,
-    <span class="doccomment">/// A button was released</span>
-    <span class="ident">Release</span>,
-    <span class="doccomment">/// The mouse was moved while a button was held</span>
-    <span class="ident">Motion</span>,
+<span class="doccomment">/// The types of mouse events represented by a MouseEvent
+</span><span class="attribute">#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub enum </span>MouseEventKind {
+    <span class="doccomment">/// A button was pressed
+    </span>Press,
+    <span class="doccomment">/// A button was released
+    </span>Release,
+    <span class="doccomment">/// The mouse was moved while a button was held
+    </span>Motion,
 }
 
-<span class="doccomment">/// A mouse movement or button event</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MouseEvent</span> {
-    <span class="doccomment">/// The ID of the window that was contained the click</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="doccomment">/// Absolute coordinate of the event</span>
-    <span class="kw">pub</span> <span class="ident">rpt</span>: <span class="ident">Point</span>,
-    <span class="doccomment">/// Coordinate of the event relative to top-left of the window itself</span>
-    <span class="kw">pub</span> <span class="ident">wpt</span>: <span class="ident">Point</span>,
-    <span class="doccomment">/// The modifier and button code that was received</span>
-    <span class="kw">pub</span> <span class="ident">state</span>: <span class="ident">MouseState</span>,
-    <span class="doccomment">/// Was this press, release or motion?</span>
-    <span class="kw">pub</span> <span class="ident">kind</span>: <span class="ident">MouseEventKind</span>,
+<span class="doccomment">/// A mouse movement or button event
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>MouseEvent {
+    <span class="doccomment">/// The ID of the window that was contained the click
+    </span><span class="kw">pub </span>id: Xid,
+    <span class="doccomment">/// Absolute coordinate of the event
+    </span><span class="kw">pub </span>rpt: Point,
+    <span class="doccomment">/// Coordinate of the event relative to top-left of the window itself
+    </span><span class="kw">pub </span>wpt: Point,
+    <span class="doccomment">/// The modifier and button code that was received
+    </span><span class="kw">pub </span>state: MouseState,
+    <span class="doccomment">/// Was this press, release or motion?
+    </span><span class="kw">pub </span>kind: MouseEventKind,
 }
 
-<span class="kw">impl</span> <span class="ident">MouseEvent</span> {
-    <span class="doccomment">/// Construct a new [MouseEvent] from raw data</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">id</span>: <span class="ident">Xid</span>,
-        <span class="ident">rx</span>: <span class="ident">i16</span>,
-        <span class="ident">ry</span>: <span class="ident">i16</span>,
-        <span class="ident">ex</span>: <span class="ident">i16</span>,
-        <span class="ident">ey</span>: <span class="ident">i16</span>,
-        <span class="ident">state</span>: <span class="ident">MouseState</span>,
-        <span class="ident">kind</span>: <span class="ident">MouseEventKind</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="ident">MouseEvent</span> {
-            <span class="ident">id</span>,
-            <span class="ident">rpt</span>: <span class="ident">Point::new</span>(<span class="ident">rx</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">ry</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">wpt</span>: <span class="ident">Point::new</span>(<span class="ident">ex</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">ey</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">state</span>,
-            <span class="ident">kind</span>,
+<span class="kw">impl </span>MouseEvent {
+    <span class="doccomment">/// Construct a new [MouseEvent] from raw data
+    </span><span class="kw">pub fn </span>new(
+        id: Xid,
+        rx: i16,
+        ry: i16,
+        ex: i16,
+        ey: i16,
+        state: MouseState,
+        kind: MouseEventKind,
+    ) -&gt; <span class="self">Self </span>{
+        MouseEvent {
+            id,
+            rpt: Point::new(rx <span class="kw">as </span>u32, ry <span class="kw">as </span>u32),
+            wpt: Point::new(ex <span class="kw">as </span>u32, ey <span class="kw">as </span>u32),
+            state,
+            kind,
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/actions/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/actions/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -131,136 +131,136 @@
 <span id="129">129</span>
 <span id="130">130</span>
 <span id="131">131</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">builtin::actions</span>::{<span class="ident">key_handler</span>, <span class="ident">modify_with</span>},
-    <span class="ident">core</span>::{<span class="ident">bindings::KeyEventHandler</span>, <span class="ident">layout::LayoutStack</span>, <span class="ident">State</span>},
-    <span class="ident">pure::geometry::RelativeRect</span>,
-    <span class="ident">util::spawn</span>,
-    <span class="ident">x</span>::{<span class="ident">atom::Atom</span>, <span class="ident">property::Prop</span>, <span class="ident">XConn</span>, <span class="ident">XConnExt</span>},
-    <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings
+</span><span class="kw">use crate</span>::{
+    builtin::actions::{key_handler, modify_with},
+    core::{bindings::KeyEventHandler, layout::LayoutStack, State},
+    pure::geometry::RelativeRect,
+    util::spawn,
+    x::{atom::Atom, property::Prop, XConn, XConnExt},
+    <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="kw">use</span> <span class="ident">tracing::error</span>;
+<span class="kw">use </span>tracing::error;
 
-<span class="kw">mod</span> <span class="ident">dynamic_select</span>;
+<span class="kw">mod </span>dynamic_select;
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">dynamic_select</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span>dynamic_select::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// The possible valid actions to use when manipulating full screen state</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FullScreenAction</span> {
-    <span class="doccomment">/// Force the window out of fullscreen state</span>
-    <span class="ident">Remove</span>,
-    <span class="doccomment">/// Force the window into fullscreen state</span>
-    <span class="ident">Add</span>,
-    <span class="doccomment">/// Toggle the fullscreen state of the window</span>
-    <span class="ident">Toggle</span>,
+<span class="doccomment">/// The possible valid actions to use when manipulating full screen state
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="kw">pub enum </span>FullScreenAction {
+    <span class="doccomment">/// Force the window out of fullscreen state
+    </span>Remove,
+    <span class="doccomment">/// Force the window into fullscreen state
+    </span>Add,
+    <span class="doccomment">/// Toggle the fullscreen state of the window
+    </span>Toggle,
 }
 
-<span class="doccomment">/// Set the fullscreen state of a particular client</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_fullscreen_state</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>(
-    <span class="ident">id</span>: <span class="ident">Xid</span>,
-    <span class="ident">action</span>: <span class="ident">FullScreenAction</span>,
-    <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-    <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">FullScreenAction</span>::<span class="kw-2">*</span>;
+<span class="doccomment">/// Set the fullscreen state of a particular client
+</span><span class="kw">pub fn </span>set_fullscreen_state&lt;X: XConn&gt;(
+    id: Xid,
+    action: FullScreenAction,
+    state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
+    x: <span class="kw-2">&amp;</span>X,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">use </span>FullScreenAction::<span class="kw-2">*</span>;
 
-    <span class="kw">let</span> <span class="ident">net_wm_state</span> <span class="op">=</span> <span class="ident">Atom::NetWmState</span>.<span class="ident">as_ref</span>();
-    <span class="kw">let</span> <span class="ident">full_screen</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">intern_atom</span>(<span class="ident">Atom::NetWmStateFullscreen</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+    <span class="kw">let </span>net_wm_state = Atom::NetWmState.as_ref();
+    <span class="kw">let </span>full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wstate</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">x</span>.<span class="ident">get_prop</span>(<span class="ident">id</span>, <span class="ident">net_wm_state</span>) {
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">Prop::Cardinal</span>(<span class="ident">vals</span>))) =&gt; <span class="ident">vals</span>,
-        <span class="kw">_</span> =&gt; <span class="macro">vec!</span>[],
+    <span class="kw">let </span><span class="kw-2">mut </span>wstate = <span class="kw">match </span>x.get_prop(id, net_wm_state) {
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Cardinal(vals))) =&gt; vals,
+        <span class="kw">_ </span>=&gt; <span class="macro">vec!</span>[],
     };
 
-    <span class="kw">let</span> <span class="ident">currently_fullscreen</span> <span class="op">=</span> <span class="ident">wstate</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">full_screen</span>);
+    <span class="kw">let </span>currently_fullscreen = wstate.contains(<span class="kw-2">&amp;</span>full_screen);
 
-    <span class="kw">if</span> <span class="ident">action</span> <span class="op">==</span> <span class="ident">Add</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">action</span> <span class="op">==</span> <span class="ident">Toggle</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">currently_fullscreen</span>) {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">RelativeRect::fullscreen</span>();
-        <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">float_unchecked</span>(<span class="ident">id</span>, <span class="ident">r</span>);
-        <span class="ident">wstate</span>.<span class="ident">push</span>(<span class="kw-2">*</span><span class="ident">full_screen</span>);
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">action</span> <span class="op">==</span> <span class="ident">Remove</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">action</span> <span class="op">==</span> <span class="ident">Toggle</span> <span class="op">&amp;&amp;</span> <span class="ident">currently_fullscreen</span>) {
-        <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">sink</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>);
-        <span class="ident">wstate</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">val</span><span class="op">|</span> <span class="ident">val</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">full_screen</span>);
+    <span class="kw">if </span>action == Add || (action == Toggle &amp;&amp; !currently_fullscreen) {
+        <span class="kw">let </span>r = RelativeRect::fullscreen();
+        state.client_set.float_unchecked(id, r);
+        wstate.push(<span class="kw-2">*</span>full_screen);
+    } <span class="kw">else if </span>action == Remove || (action == Toggle &amp;&amp; currently_fullscreen) {
+        state.client_set.sink(<span class="kw-2">&amp;</span>id);
+        wstate.retain(|<span class="kw-2">&amp;</span>val| val != <span class="kw-2">*</span>full_screen);
     }
 
-    <span class="ident">x</span>.<span class="ident">set_prop</span>(<span class="ident">id</span>, <span class="ident">net_wm_state</span>, <span class="ident">Prop::Cardinal</span>(<span class="ident">wstate</span>))<span class="question-mark">?</span>;
-    <span class="ident">x</span>.<span class="ident">refresh</span>(<span class="ident">state</span>)
+    x.set_prop(id, net_wm_state, Prop::Cardinal(wstate))<span class="question-mark">?</span>;
+    x.refresh(state)
 }
 
-<span class="doccomment">/// Toggle the fullscreen state of the currently focused window.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// **NOTE**: You will need to make use of [add_ewmh_hooks][0] for this action to</span>
-<span class="doccomment">///           work correctly.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///   [0]: crate::extensions::hooks::add_ewmh_hooks</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">toggle_fullscreen</span><span class="op">&lt;</span><span class="ident">X</span>: <span class="ident">XConn</span><span class="op">&gt;</span>() -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="ident">key_handler</span>(<span class="op">|</span><span class="ident">state</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">current_client</span>() {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) =&gt; <span class="ident">id</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(()),
+<span class="doccomment">/// Toggle the fullscreen state of the currently focused window.
+///
+/// **NOTE**: You will need to make use of [add_ewmh_hooks][0] for this action to
+///           work correctly.
+///
+///   [0]: crate::extensions::hooks::add_ewmh_hooks
+</span><span class="kw">pub fn </span>toggle_fullscreen&lt;X: XConn&gt;() -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
+    key_handler(|state, x: <span class="kw-2">&amp;</span>X| {
+        <span class="kw">let </span>id = <span class="kw">match </span>state.client_set.current_client() {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>id) =&gt; id,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
         };
 
-        <span class="ident">set_fullscreen_state</span>(<span class="ident">id</span>, <span class="ident">FullScreenAction::Toggle</span>, <span class="ident">state</span>, <span class="ident">x</span>)
+        set_fullscreen_state(id, FullScreenAction::Toggle, state, x)
     })
 }
 
-<span class="doccomment">/// Jump to, or create, a [crate::pure::Workspace]</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Call &#39;get_name&#39; to obtain a Workspace name and check to see if there is currently a Workspace</span>
-<span class="doccomment">/// with that name being managed by the WindowManager. If there is no existing workspace with the</span>
-<span class="doccomment">/// given name, create it with the supplied available layouts. If a matching Workspace _does_</span>
-<span class="doccomment">/// already exist then simply switch focus to it. This action is most useful when combined with the</span>
-<span class="doccomment">/// DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_or_switch_to_workspace</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(
-    <span class="ident">get_name</span>: <span class="kw">fn</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">layouts</span>: <span class="ident">LayoutStack</span>,
-) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// Jump to, or create, a [crate::pure::Workspace]
+///
+/// Call &#39;get_name&#39; to obtain a Workspace name and check to see if there is currently a Workspace
+/// with that name being managed by the WindowManager. If there is no existing workspace with the
+/// given name, create it with the supplied available layouts. If a matching Workspace _does_
+/// already exist then simply switch focus to it. This action is most useful when combined with the
+/// DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.
+</span><span class="kw">pub fn </span>create_or_switch_to_workspace&lt;X&gt;(
+    get_name: <span class="kw">fn</span>() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt;,
+    layouts: LayoutStack,
+) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="ident">modify_with</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">get_name</span>() {
-            <span class="comment">// if this errors it&#39;s because the tag is already present in the stackset</span>
-            <span class="comment">// so we can just focus it.</span>
-            <span class="kw">_</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">add_workspace</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">layouts</span>.<span class="ident">clone</span>());
+    modify_with(<span class="kw">move </span>|cs| {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = get_name() {
+            <span class="comment">// if this errors it&#39;s because the tag is already present in the stackset
+            // so we can just focus it.
+            </span><span class="kw">_ </span>= cs.add_workspace(<span class="kw-2">&amp;</span>name, layouts.clone());
 
-            <span class="ident">cs</span>.<span class="ident">focus_tag</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>);
+            cs.focus_tag(<span class="kw-2">&amp;</span>name);
         }
     })
 }
 
-<span class="doccomment">/// Focus a client with the given class as `WM_CLASS` or spawn the program with the given command</span>
-<span class="doccomment">/// if no such client exists.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is useful for key bindings that are based on the program you want to work with rather than</span>
-<span class="doccomment">/// having to remember where things are running.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">focus_or_spawn</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>(<span class="ident">class</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">command</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">KeyEventHandler</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// Focus a client with the given class as `WM_CLASS` or spawn the program with the given command
+/// if no such client exists.
+///
+/// This is useful for key bindings that are based on the program you want to work with rather than
+/// having to remember where things are running.
+</span><span class="kw">pub fn </span>focus_or_spawn&lt;X&gt;(class: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, command: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="ident">key_handler</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">s</span>: <span class="kw-2">&amp;mut</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">X</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    key_handler(<span class="kw">move </span>|s: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X| {
+        <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="prelude-val">None</span>;
 
-        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">id</span> <span class="kw">in</span> <span class="ident">s</span>.<span class="ident">client_set</span>.<span class="ident">clients</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Prop::UTF8String</span>(<span class="ident">classes</span>)) <span class="op">=</span> <span class="ident">x</span>.<span class="ident">get_prop</span>(<span class="ident">id</span>, <span class="ident">Atom::WmClass</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span> {
-                <span class="kw">if</span> <span class="ident">classes</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span> <span class="op">==</span> <span class="ident">class</span>) {
-                    <span class="ident">client</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>);
+        <span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>s.client_set.clients() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(Prop::UTF8String(classes)) = x.get_prop(id, Atom::WmClass.as_ref())<span class="question-mark">? </span>{
+                <span class="kw">if </span>classes.iter().any(|s| s == class) {
+                    client = <span class="prelude-val">Some</span>(id);
                     <span class="kw">break</span>;
                 }
             }
         }
 
-        <span class="ident">x</span>.<span class="ident">modify_and_refresh</span>(<span class="ident">s</span>, <span class="op">|</span><span class="ident">cs</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">client</span> {
-                <span class="ident">cs</span>.<span class="ident">focus_client</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">spawn</span>(<span class="ident">command</span>) {
-                <span class="macro">error!</span>(<span class="op">%</span><span class="ident">e</span>, <span class="op">%</span><span class="ident">command</span>, <span class="string">&quot;unable to spawn program&quot;</span>)
+        x.modify_and_refresh(s, |cs| {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = client {
+                cs.focus_client(<span class="kw-2">&amp;</span>id)
+            } <span class="kw">else if let </span><span class="prelude-val">Err</span>(e) = spawn(command) {
+                <span class="macro">error!</span>(%e, %command, <span class="string">&quot;unable to spawn program&quot;</span>)
             }
         })
     })
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/core/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose_ui/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose_ui/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose_ui/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/core/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose_ui/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose_ui/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose_ui/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -255,114 +255,114 @@
 <span id="255">255</span>
 <span id="256">256</span>
 <span id="257">257</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">cairo</span>::{<span class="ident">Matrix</span>, <span class="ident">Operator</span>, <span class="ident">XCBConnection</span>, <span class="ident">XCBDrawable</span>, <span class="ident">XCBSurface</span>, <span class="ident">XCBVisualType</span>};
-<span class="kw">use</span> <span class="ident">pango</span>::{<span class="ident">EllipsizeMode</span>, <span class="ident">FontDescription</span>, <span class="ident">SCALE</span>};
-<span class="kw">use</span> <span class="ident">pangocairo::functions</span>::{<span class="ident">create_layout</span>, <span class="ident">show_layout</span>};
-<span class="kw">use</span> <span class="ident">penrose</span>::{
-    <span class="ident">pure::geometry::Rect</span>,
-    <span class="ident">x</span>::{<span class="ident">WinType</span>, <span class="ident">XConn</span>},
-    <span class="ident">x11rb::XcbConn</span>,
-    <span class="ident">Color</span>, <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{Error, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>cairo::{Matrix, Operator, XCBConnection, XCBDrawable, XCBSurface, XCBVisualType};
+<span class="kw">use </span>pango::{EllipsizeMode, FontDescription, SCALE};
+<span class="kw">use </span>pangocairo::functions::{create_layout, show_layout};
+<span class="kw">use </span>penrose::{
+    pure::geometry::Rect,
+    x::{WinType, XConn},
+    x11rb::XcbConn,
+    Color, Xid,
 };
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">tracing</span>::{<span class="ident">debug</span>, <span class="ident">info</span>};
-<span class="kw">use</span> <span class="ident">x11rb</span>::{<span class="ident">connection::Connection</span>, <span class="ident">protocol::xproto::Screen</span>};
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>tracing::{debug, info};
+<span class="kw">use </span>x11rb::{connection::Connection, protocol::xproto::Screen};
 
-<span class="comment">// A rust version of XCB&#39;s `xcb_visualtype_t` struct for FFI.</span>
-<span class="comment">// Taken from https://github.com/psychon/x11rb/blob/c3894c092101a16cedf4c45e487652946a3c4284/cairo-example/src/main.rs</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">struct</span> <span class="ident">XcbVisualtypeT</span> {
-    <span class="kw">pub</span> <span class="ident">visual_id</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">class</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">bits_per_rgb_value</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">colormap_entries</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">red_mask</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">green_mask</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">blue_mask</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">pad0</span>: [<span class="ident">u8</span>; <span class="number">4</span>],
+<span class="comment">// A rust version of XCB&#39;s `xcb_visualtype_t` struct for FFI.
+// Taken from https://github.com/psychon/x11rb/blob/c3894c092101a16cedf4c45e487652946a3c4284/cairo-example/src/main.rs
+</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+</span><span class="kw">struct </span>XcbVisualtypeT {
+    <span class="kw">pub </span>visual_id: u32,
+    <span class="kw">pub </span>class: u8,
+    <span class="kw">pub </span>bits_per_rgb_value: u8,
+    <span class="kw">pub </span>colormap_entries: u16,
+    <span class="kw">pub </span>red_mask: u32,
+    <span class="kw">pub </span>green_mask: u32,
+    <span class="kw">pub </span>blue_mask: u32,
+    <span class="kw">pub </span>pad0: [u8; <span class="number">4</span>],
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="doccomment">/// A set of styling options for a text string</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextStyle</span> {
-    <span class="doccomment">/// Font name to use for rendering</span>
-    <span class="kw">pub</span> <span class="ident">font</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// Point size to render the font at</span>
-    <span class="kw">pub</span> <span class="ident">point_size</span>: <span class="ident">i32</span>,
-    <span class="doccomment">/// Foreground color in 0xRRGGBB format</span>
-    <span class="kw">pub</span> <span class="ident">fg</span>: <span class="ident">Color</span>,
-    <span class="doccomment">/// Optional background color in 0xRRGGBB format (default to current background if None)</span>
-    <span class="kw">pub</span> <span class="ident">bg</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Color</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Pixel padding around this piece of text</span>
-    <span class="kw">pub</span> <span class="ident">padding</span>: (<span class="ident">f64</span>, <span class="ident">f64</span>),
+<span class="attribute">#[derive(Clone, Debug, PartialEq)]
+</span><span class="doccomment">/// A set of styling options for a text string
+</span><span class="kw">pub struct </span>TextStyle {
+    <span class="doccomment">/// Font name to use for rendering
+    </span><span class="kw">pub </span>font: String,
+    <span class="doccomment">/// Point size to render the font at
+    </span><span class="kw">pub </span>point_size: i32,
+    <span class="doccomment">/// Foreground color in 0xRRGGBB format
+    </span><span class="kw">pub </span>fg: Color,
+    <span class="doccomment">/// Optional background color in 0xRRGGBB format (default to current background if None)
+    </span><span class="kw">pub </span>bg: <span class="prelude-ty">Option</span>&lt;Color&gt;,
+    <span class="doccomment">/// Pixel padding around this piece of text
+    </span><span class="kw">pub </span>padding: (f64, f64),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Draw</span> {
-    <span class="kw">pub</span> <span class="ident">conn</span>: <span class="ident">XcbConn</span>,
-    <span class="ident">fonts</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">FontDescription</span><span class="op">&gt;</span>,
-    <span class="ident">surfaces</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Xid</span>, <span class="ident">XCBSurface</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Draw {
+    <span class="kw">pub </span>conn: XcbConn,
+    fonts: HashMap&lt;String, FontDescription&gt;,
+    surfaces: HashMap&lt;Xid, XCBSurface&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Draw</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">conn</span>: <span class="ident">XcbConn::new</span>()<span class="question-mark">?</span>,
-            <span class="ident">fonts</span>: <span class="ident">HashMap::new</span>(),
-            <span class="ident">surfaces</span>: <span class="ident">HashMap::new</span>(),
+<span class="kw">impl </span>Draw {
+    <span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            conn: XcbConn::new()<span class="question-mark">?</span>,
+            fonts: HashMap::new(),
+            surfaces: HashMap::new(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_window</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">WinType</span>, <span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">managed</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> {
-        <span class="macro">info!</span>(<span class="question-mark">?</span><span class="ident">ty</span>, <span class="question-mark">?</span><span class="ident">r</span>, <span class="op">%</span><span class="ident">managed</span>, <span class="string">&quot;creating new window&quot;</span>);
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">create_window</span>(<span class="ident">ty</span>, <span class="ident">r</span>, <span class="ident">managed</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>new_window(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: WinType, r: Rect, managed: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Xid&gt; {
+        <span class="macro">info!</span>(<span class="question-mark">?</span>ty, <span class="question-mark">?</span>r, %managed, <span class="string">&quot;creating new window&quot;</span>);
+        <span class="kw">let </span>id = <span class="self">self</span>.conn.create_window(ty, r, managed)<span class="question-mark">?</span>;
 
         <span class="macro">debug!</span>(<span class="string">&quot;getting screen details&quot;</span>);
-        <span class="kw">let</span> <span class="ident">screen</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">connection</span>().<span class="ident">setup</span>().<span class="ident">roots</span>[<span class="number">0</span>];
+        <span class="kw">let </span>screen = <span class="kw-2">&amp;</span><span class="self">self</span>.conn.connection().setup().roots[<span class="number">0</span>];
 
         <span class="macro">debug!</span>(<span class="string">&quot;creating surface&quot;</span>);
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">surface</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">screen</span>, <span class="ident">r</span>.<span class="ident">w</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="ident">r</span>.<span class="ident">h</span> <span class="kw">as</span> <span class="ident">i32</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">surface</span>);
+        <span class="kw">let </span>surface = <span class="self">self</span>.surface(<span class="kw-2">*</span>id, screen, r.w <span class="kw">as </span>i32, r.h <span class="kw">as </span>i32)<span class="question-mark">?</span>;
+        <span class="self">self</span>.surfaces.insert(id, surface);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">id</span>)
+        <span class="prelude-val">Ok</span>(id)
     }
 
-    <span class="kw">fn</span> <span class="ident">surface</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">u32</span>, <span class="ident">screen</span>: <span class="kw-2">&amp;</span><span class="ident">Screen</span>, <span class="ident">w</span>: <span class="ident">i32</span>, <span class="ident">h</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">XCBSurface</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">visual</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_xcb_visualtype</span>(<span class="ident">screen</span>.<span class="ident">root_visual</span>);
+    <span class="kw">fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>, id: u32, screen: <span class="kw-2">&amp;</span>Screen, w: i32, h: i32) -&gt; <span class="prelude-ty">Result</span>&lt;XCBSurface&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>visual = <span class="self">self</span>.find_xcb_visualtype(screen.root_visual);
 
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="macro">debug!</span>(<span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;calling cairo::XCBSurface::create&quot;</span>);
-            <span class="ident">cairo::XCBSurface::create</span>(
-                <span class="kw-2">&amp;</span><span class="ident">XCBConnection::from_raw_none</span>(<span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">connection</span>().<span class="ident">get_raw_xcb_connection</span>() <span class="kw">as</span> <span class="kw">_</span>),
-                <span class="kw-2">&amp;</span><span class="ident">XCBDrawable</span>(<span class="ident">id</span>),
-                <span class="kw-2">&amp;</span><span class="ident">XCBVisualType::from_raw_none</span>(<span class="kw-2">&amp;mut</span> <span class="ident">visual</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw">_</span>),
-                <span class="ident">w</span>,
-                <span class="ident">h</span>,
-            )<span class="question-mark">?</span>
-        };
+        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
+            <span class="macro">debug!</span>(%id, <span class="string">&quot;calling cairo::XCBSurface::create&quot;</span>);
+            cairo::XCBSurface::create(
+                <span class="kw-2">&amp;</span>XCBConnection::from_raw_none(<span class="self">self</span>.conn.connection().get_raw_xcb_connection() <span class="kw">as _</span>),
+                <span class="kw-2">&amp;</span>XCBDrawable(id),
+                <span class="kw-2">&amp;</span>XCBVisualType::from_raw_none(<span class="kw-2">&amp;mut </span>visual <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as _</span>),
+                w,
+                h,
+            )<span class="question-mark">?
+        </span>};
 
-        <span class="macro">debug!</span>(<span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;setting surface size&quot;</span>);
-        <span class="ident">surface</span>.<span class="ident">set_size</span>(<span class="ident">w</span>, <span class="ident">h</span>)<span class="question-mark">?</span>;
+        <span class="macro">debug!</span>(%id, <span class="string">&quot;setting surface size&quot;</span>);
+        surface.set_size(w, h)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">surface</span>)
+        <span class="prelude-val">Ok</span>(surface)
     }
 
-    <span class="kw">fn</span> <span class="ident">find_xcb_visualtype</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">visual_id</span>: <span class="ident">u32</span>) -&gt; <span class="ident">XcbVisualtypeT</span> {
-        <span class="kw">for</span> <span class="ident">root</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">connection</span>().<span class="ident">setup</span>().<span class="ident">roots</span> {
-            <span class="kw">for</span> <span class="ident">depth</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">root</span>.<span class="ident">allowed_depths</span> {
-                <span class="kw">for</span> <span class="ident">visual</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">depth</span>.<span class="ident">visuals</span> {
-                    <span class="kw">if</span> <span class="ident">visual</span>.<span class="ident">visual_id</span> <span class="op">==</span> <span class="ident">visual_id</span> {
-                        <span class="kw">return</span> <span class="ident">XcbVisualtypeT</span> {
-                            <span class="ident">visual_id</span>: <span class="ident">visual</span>.<span class="ident">visual_id</span>,
-                            <span class="ident">class</span>: <span class="ident">visual</span>.<span class="ident">class</span>.<span class="ident">into</span>(),
-                            <span class="ident">bits_per_rgb_value</span>: <span class="ident">visual</span>.<span class="ident">bits_per_rgb_value</span>,
-                            <span class="ident">colormap_entries</span>: <span class="ident">visual</span>.<span class="ident">colormap_entries</span>,
-                            <span class="ident">red_mask</span>: <span class="ident">visual</span>.<span class="ident">red_mask</span>,
-                            <span class="ident">green_mask</span>: <span class="ident">visual</span>.<span class="ident">green_mask</span>,
-                            <span class="ident">blue_mask</span>: <span class="ident">visual</span>.<span class="ident">blue_mask</span>,
-                            <span class="ident">pad0</span>: [<span class="number">0</span>; <span class="number">4</span>],
+    <span class="kw">fn </span>find_xcb_visualtype(<span class="kw-2">&amp;</span><span class="self">self</span>, visual_id: u32) -&gt; XcbVisualtypeT {
+        <span class="kw">for </span>root <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.conn.connection().setup().roots {
+            <span class="kw">for </span>depth <span class="kw">in </span><span class="kw-2">&amp;</span>root.allowed_depths {
+                <span class="kw">for </span>visual <span class="kw">in </span><span class="kw-2">&amp;</span>depth.visuals {
+                    <span class="kw">if </span>visual.visual_id == visual_id {
+                        <span class="kw">return </span>XcbVisualtypeT {
+                            visual_id: visual.visual_id,
+                            class: visual.class.into(),
+                            bits_per_rgb_value: visual.bits_per_rgb_value,
+                            colormap_entries: visual.colormap_entries,
+                            red_mask: visual.red_mask,
+                            green_mask: visual.green_mask,
+                            blue_mask: visual.blue_mask,
+                            pad0: [<span class="number">0</span>; <span class="number">4</span>],
                         };
                     }
                 }
@@ -372,145 +372,145 @@
         <span class="macro">panic!</span>(<span class="string">&quot;unable to find XCB visual type&quot;</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_font</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">font_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">let</span> <span class="ident">description</span> <span class="op">=</span> <span class="ident">FontDescription::from_string</span>(<span class="ident">font_name</span>);
-        <span class="self">self</span>.<span class="ident">fonts</span>.<span class="ident">insert</span>(<span class="ident">font_name</span>.<span class="ident">into</span>(), <span class="ident">description</span>);
+    <span class="kw">pub fn </span>register_font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font_name: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">let </span>description = FontDescription::from_string(font_name);
+        <span class="self">self</span>.fonts.insert(font_name.into(), description);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">context_for</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">cairo::Context::new</span>(
-            <span class="self">self</span>.<span class="ident">surfaces</span>
-                .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
-                .<span class="ident">ok_or</span>(<span class="ident">Error::UnintialisedSurface</span> { <span class="ident">id</span> })<span class="question-mark">?</span>,
+    <span class="kw">pub fn </span>context_for(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Context&gt; {
+        <span class="kw">let </span>ctx = cairo::Context::new(
+            <span class="self">self</span>.surfaces
+                .get(<span class="kw-2">&amp;</span>id)
+                .ok_or(Error::UnintialisedSurface { id })<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Context</span> {
-            <span class="ident">ctx</span>,
-            <span class="ident">font</span>: <span class="prelude-val">None</span>,
-            <span class="ident">fonts</span>: <span class="self">self</span>.<span class="ident">fonts</span>.<span class="ident">clone</span>(),
+        <span class="prelude-val">Ok</span>(Context {
+            ctx,
+            font: <span class="prelude-val">None</span>,
+            fonts: <span class="self">self</span>.fonts.clone(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">temp_context</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">w</span>: <span class="ident">i32</span>, <span class="ident">h</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">screen</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">connection</span>().<span class="ident">setup</span>().<span class="ident">roots</span>[<span class="number">0</span>];
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">surface</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">root</span>(), <span class="ident">screen</span>, <span class="ident">w</span>, <span class="ident">h</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">create_similar</span>(<span class="ident">cairo::Content::Color</span>, <span class="ident">w</span>, <span class="ident">h</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">cairo::Context::new</span>(<span class="kw-2">&amp;</span><span class="ident">surface</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>temp_context(<span class="kw-2">&amp;</span><span class="self">self</span>, w: i32, h: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Context&gt; {
+        <span class="kw">let </span>screen = <span class="kw-2">&amp;</span><span class="self">self</span>.conn.connection().setup().roots[<span class="number">0</span>];
+        <span class="kw">let </span>surface = <span class="self">self</span>.surface(<span class="kw-2">*</span><span class="self">self</span>.conn.root(), screen, w, h)<span class="question-mark">?</span>;
+        <span class="kw">let </span>surface = surface.create_similar(cairo::Content::Color, w, h)<span class="question-mark">?</span>;
+        <span class="kw">let </span>ctx = cairo::Context::new(<span class="kw-2">&amp;</span>surface)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Context</span> {
-            <span class="ident">ctx</span>,
-            <span class="ident">font</span>: <span class="prelude-val">None</span>,
-            <span class="ident">fonts</span>: <span class="self">self</span>.<span class="ident">fonts</span>.<span class="ident">clone</span>(),
+        <span class="prelude-val">Ok</span>(Context {
+            ctx,
+            font: <span class="prelude-val">None</span>,
+            fonts: <span class="self">self</span>.fonts.clone(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-            <span class="ident">s</span>.<span class="ident">flush</span>()
+    <span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.surfaces.get(<span class="kw-2">&amp;</span>id) {
+            s.flush()
         };
 
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">map</span>(<span class="ident">id</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">flush</span>();
+        <span class="self">self</span>.conn.map(id)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.flush();
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Context</span> {
-    <span class="ident">ctx</span>: <span class="ident">cairo::Context</span>,
-    <span class="ident">font</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FontDescription</span><span class="op">&gt;</span>,
-    <span class="ident">fonts</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">FontDescription</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>Context {
+    ctx: cairo::Context,
+    font: <span class="prelude-ty">Option</span>&lt;FontDescription&gt;,
+    fonts: HashMap&lt;String, FontDescription&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Context</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">font</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">font_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">point_size</span>: <span class="ident">i32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">font</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fonts</span>
-            .<span class="ident">get_mut</span>(<span class="ident">font_name</span>)
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::UnknownFont</span> {
-                <span class="ident">font</span>: <span class="ident">font_name</span>.<span class="ident">into</span>(),
-            })<span class="question-mark">?</span>
-            .<span class="ident">clone</span>();
+<span class="kw">impl </span>Context {
+    <span class="kw">pub fn </span>font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font_name: <span class="kw-2">&amp;</span>str, point_size: i32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>font = <span class="self">self
+            </span>.fonts
+            .get_mut(font_name)
+            .ok_or_else(|| Error::UnknownFont {
+                font: font_name.into(),
+            })<span class="question-mark">?
+            </span>.clone();
 
-        <span class="ident">font</span>.<span class="ident">set_size</span>(<span class="ident">point_size</span> <span class="op">*</span> <span class="ident">SCALE</span>);
-        <span class="self">self</span>.<span class="ident">font</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">font</span>);
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">color</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">color</span>: <span class="kw-2">&amp;</span><span class="ident">Color</span>) {
-        <span class="kw">let</span> (<span class="ident">r</span>, <span class="ident">g</span>, <span class="ident">b</span>, <span class="ident">a</span>) <span class="op">=</span> <span class="ident">color</span>.<span class="ident">rgba</span>();
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">set_source_rgba</span>(<span class="ident">r</span>, <span class="ident">g</span>, <span class="ident">b</span>, <span class="ident">a</span>);
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">save</span>()<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">set_operator</span>(<span class="ident">Operator::Clear</span>);
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">paint</span>()<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">restore</span>()<span class="question-mark">?</span>;
+        font.set_size(point_size * SCALE);
+        <span class="self">self</span>.font = <span class="prelude-val">Some</span>(font);
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">translate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dx</span>: <span class="ident">f64</span>, <span class="ident">dy</span>: <span class="ident">f64</span>) {
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">translate</span>(<span class="ident">dx</span>, <span class="ident">dy</span>)
+    <span class="kw">pub fn </span>color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: <span class="kw-2">&amp;</span>Color) {
+        <span class="kw">let </span>(r, g, b, a) = color.rgba();
+        <span class="self">self</span>.ctx.set_source_rgba(r, g, b, a);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_x_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">x</span>: <span class="ident">f64</span>) {
-        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">y_offset</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">matrix</span>().<span class="ident">transform_point</span>(<span class="number">0.0</span>, <span class="number">0.0</span>);
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">set_matrix</span>(<span class="ident">Matrix::identity</span>());
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">translate</span>(<span class="ident">x</span>, <span class="ident">y_offset</span>);
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_y_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">y</span>: <span class="ident">f64</span>) {
-        <span class="kw">let</span> (<span class="ident">x_offset</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">matrix</span>().<span class="ident">transform_point</span>(<span class="number">0.0</span>, <span class="number">0.0</span>);
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">set_matrix</span>(<span class="ident">Matrix::identity</span>());
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">translate</span>(<span class="ident">x_offset</span>, <span class="ident">y</span>);
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rectangle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">w</span>: <span class="ident">f64</span>, <span class="ident">h</span>: <span class="ident">f64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">rectangle</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span>);
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">fill</span>()<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.ctx.save()<span class="question-mark">?</span>;
+        <span class="self">self</span>.ctx.set_operator(Operator::Clear);
+        <span class="self">self</span>.ctx.paint()<span class="question-mark">?</span>;
+        <span class="self">self</span>.ctx.restore()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">txt</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">h_offset</span>: <span class="ident">f64</span>, <span class="ident">padding</span>: (<span class="ident">f64</span>, <span class="ident">f64</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">f64</span>, <span class="ident">f64</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">create_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ctx</span>).<span class="ident">ok_or</span>(<span class="ident">Error::UnableToCreateLayout</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">font</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">font</span> {
-            <span class="ident">layout</span>.<span class="ident">set_font_description</span>(<span class="prelude-val">Some</span>(<span class="ident">font</span>));
+    <span class="kw">pub fn </span>translate(<span class="kw-2">&amp;</span><span class="self">self</span>, dx: f64, dy: f64) {
+        <span class="self">self</span>.ctx.translate(dx, dy)
+    }
+
+    <span class="kw">pub fn </span>set_x_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, x: f64) {
+        <span class="kw">let </span>(<span class="kw">_</span>, y_offset) = <span class="self">self</span>.ctx.matrix().transform_point(<span class="number">0.0</span>, <span class="number">0.0</span>);
+        <span class="self">self</span>.ctx.set_matrix(Matrix::identity());
+        <span class="self">self</span>.ctx.translate(x, y_offset);
+    }
+
+    <span class="kw">pub fn </span>set_y_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, y: f64) {
+        <span class="kw">let </span>(x_offset, <span class="kw">_</span>) = <span class="self">self</span>.ctx.matrix().transform_point(<span class="number">0.0</span>, <span class="number">0.0</span>);
+        <span class="self">self</span>.ctx.set_matrix(Matrix::identity());
+        <span class="self">self</span>.ctx.translate(x_offset, y);
+    }
+
+    <span class="kw">pub fn </span>rectangle(<span class="kw-2">&amp;</span><span class="self">self</span>, x: f64, y: f64, w: f64, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.ctx.rectangle(x, y, w, h);
+        <span class="self">self</span>.ctx.fill()<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub fn </span>text(<span class="kw-2">&amp;</span><span class="self">self</span>, txt: <span class="kw-2">&amp;</span>str, h_offset: f64, padding: (f64, f64)) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+        <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx).ok_or(Error::UnableToCreateLayout)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>font) = <span class="self">self</span>.font {
+            layout.set_font_description(<span class="prelude-val">Some</span>(font));
         }
 
-        <span class="ident">layout</span>.<span class="ident">set_text</span>(<span class="ident">txt</span>);
-        <span class="ident">layout</span>.<span class="ident">set_ellipsize</span>(<span class="ident">EllipsizeMode::End</span>);
+        layout.set_text(txt);
+        layout.set_ellipsize(EllipsizeMode::End);
 
-        <span class="kw">let</span> (<span class="ident">w</span>, <span class="ident">h</span>) <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">pixel_size</span>();
-        <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="ident">padding</span>;
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">translate</span>(<span class="ident">l</span>, <span class="ident">h_offset</span>);
-        <span class="ident">show_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">layout</span>);
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">translate</span>(<span class="op">-</span><span class="ident">l</span>, <span class="op">-</span><span class="ident">h_offset</span>);
+        <span class="kw">let </span>(w, h) = layout.pixel_size();
+        <span class="kw">let </span>(l, r) = padding;
+        <span class="self">self</span>.ctx.translate(l, h_offset);
+        show_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx, <span class="kw-2">&amp;</span>layout);
+        <span class="self">self</span>.ctx.translate(-l, -h_offset);
 
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">+</span> <span class="ident">l</span> <span class="op">+</span> <span class="ident">r</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span>;
+        <span class="kw">let </span>width = w <span class="kw">as </span>f64 + l + r;
+        <span class="kw">let </span>height = h <span class="kw">as </span>f64;
 
-        <span class="prelude-val">Ok</span>((<span class="ident">width</span>, <span class="ident">height</span>))
+        <span class="prelude-val">Ok</span>((width, height))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">text_extent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">f64</span>, <span class="ident">f64</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">create_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ctx</span>).<span class="ident">ok_or</span>(<span class="ident">Error::UnableToCreateLayout</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">font</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">font</span> {
-            <span class="ident">layout</span>.<span class="ident">set_font_description</span>(<span class="prelude-val">Some</span>(<span class="ident">font</span>));
+    <span class="kw">pub fn </span>text_extent(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+        <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx).ok_or(Error::UnableToCreateLayout)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>font) = <span class="self">self</span>.font {
+            layout.set_font_description(<span class="prelude-val">Some</span>(font));
         }
-        <span class="ident">layout</span>.<span class="ident">set_text</span>(<span class="ident">s</span>);
-        <span class="kw">let</span> (<span class="ident">w</span>, <span class="ident">h</span>) <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">pixel_size</span>();
+        layout.set_text(s);
+        <span class="kw">let </span>(w, h) = layout.pixel_size();
 
-        <span class="prelude-val">Ok</span>((<span class="ident">w</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="ident">h</span> <span class="kw">as</span> <span class="ident">f64</span>))
+        <span class="prelude-val">Ok</span>((w <span class="kw">as </span>f64, h <span class="kw">as </span>f64))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">target</span>().<span class="ident">flush</span>();
+    <span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.ctx.target().flush();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose_ui" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose_ui" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

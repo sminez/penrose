@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>util.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>util.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -109,114 +109,114 @@
 <span id="107">107</span>
 <span id="108">108</span>
 <span id="109">109</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Utility functions for use in other parts of penrose</span>
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Result</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">io::Read</span>,
-    <span class="ident">process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>},
+</pre><pre class="rust"><code><span class="doccomment">//! Utility functions for use in other parts of penrose
+</span><span class="kw">use </span><span class="kw">crate</span>::Result;
+<span class="kw">use </span>std::{
+    io::Read,
+    process::{Command, Stdio},
 };
-<span class="kw">use</span> <span class="ident">tracing::debug</span>;
+<span class="kw">use </span>tracing::debug;
 
-<span class="doccomment">/// Run an external command</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This redirects the process stdout and stderr to /dev/null.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">cmd</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">into</span>();
-    <span class="kw">let</span> <span class="ident">parts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">split_whitespace</span>().<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">parts</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
-        <span class="ident">Command::new</span>(<span class="ident">parts</span>[<span class="number">0</span>])
-            .<span class="ident">args</span>(<span class="kw-2">&amp;</span><span class="ident">parts</span>[<span class="number">1</span>..])
-            .<span class="ident">stdout</span>(<span class="ident">Stdio::null</span>())
-            .<span class="ident">stderr</span>(<span class="ident">Stdio::null</span>())
-            .<span class="ident">spawn</span>()
-    } <span class="kw">else</span> {
-        <span class="ident">Command::new</span>(<span class="ident">parts</span>[<span class="number">0</span>])
-            .<span class="ident">stdout</span>(<span class="ident">Stdio::null</span>())
-            .<span class="ident">stderr</span>(<span class="ident">Stdio::null</span>())
-            .<span class="ident">spawn</span>()
+<span class="doccomment">/// Run an external command
+///
+/// This redirects the process stdout and stderr to /dev/null.
+</span><span class="kw">pub fn </span>spawn&lt;S: Into&lt;String&gt;&gt;(cmd: S) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>s = cmd.into();
+    <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = s.split_whitespace().collect();
+    <span class="kw">let </span>result = <span class="kw">if </span>parts.len() &gt; <span class="number">1 </span>{
+        Command::new(parts[<span class="number">0</span>])
+            .args(<span class="kw-2">&amp;</span>parts[<span class="number">1</span>..])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+    } <span class="kw">else </span>{
+        Command::new(parts[<span class="number">0</span>])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
     };
 
-    <span class="kw">match</span> <span class="ident">result</span> {
+    <span class="kw">match </span>result {
         <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e.into()),
     }
 }
 
-<span class="doccomment">/// Run an external command with the specified command line arguments</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This redirects the process stdout and stderr to /dev/null.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn_with_args</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">cmd</span>: <span class="ident">S</span>, <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="ident">cmd</span>.<span class="ident">into</span>())
-        .<span class="ident">args</span>(<span class="ident">args</span>)
-        .<span class="ident">stdout</span>(<span class="ident">Stdio::null</span>())
-        .<span class="ident">stderr</span>(<span class="ident">Stdio::null</span>())
-        .<span class="ident">spawn</span>();
+<span class="doccomment">/// Run an external command with the specified command line arguments
+///
+/// This redirects the process stdout and stderr to /dev/null.
+</span><span class="kw">pub fn </span>spawn_with_args&lt;S: Into&lt;String&gt;&gt;(cmd: S, args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>result = Command::new(cmd.into())
+        .args(args)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn();
 
-    <span class="kw">match</span> <span class="ident">result</span> {
+    <span class="kw">match </span>result {
         <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
+        <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e.into()),
     }
 }
 
-<span class="doccomment">/// Run an external command and return its output.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// NOTE: std::process::Command::output will not work within penrose due to the</span>
-<span class="doccomment">/// way that signal handling is set up. Use this function if you need to access the</span>
-<span class="doccomment">/// output of a process that you spawn.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn_for_output</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">cmd</span>: <span class="ident">S</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">into</span>();
-    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="string">&quot;spawning subprocess for output&quot;</span>);
-    <span class="kw">let</span> <span class="ident">parts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">split_whitespace</span>().<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">parts</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
-        <span class="ident">Command::new</span>(<span class="ident">parts</span>[<span class="number">0</span>])
-            .<span class="ident">stdout</span>(<span class="ident">Stdio::piped</span>())
-            .<span class="ident">args</span>(<span class="kw-2">&amp;</span><span class="ident">parts</span>[<span class="number">1</span>..])
-            .<span class="ident">spawn</span>()
-    } <span class="kw">else</span> {
-        <span class="ident">Command::new</span>(<span class="ident">parts</span>[<span class="number">0</span>]).<span class="ident">stdout</span>(<span class="ident">Stdio::piped</span>()).<span class="ident">spawn</span>()
+<span class="doccomment">/// Run an external command and return its output.
+///
+/// NOTE: std::process::Command::output will not work within penrose due to the
+/// way that signal handling is set up. Use this function if you need to access the
+/// output of a process that you spawn.
+</span><span class="kw">pub fn </span>spawn_for_output&lt;S: Into&lt;String&gt;&gt;(cmd: S) -&gt; std::io::Result&lt;String&gt; {
+    <span class="kw">let </span>cmd = cmd.into();
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">&quot;spawning subprocess for output&quot;</span>);
+    <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = cmd.split_whitespace().collect();
+    <span class="kw">let </span>result = <span class="kw">if </span>parts.len() &gt; <span class="number">1 </span>{
+        Command::new(parts[<span class="number">0</span>])
+            .stdout(Stdio::piped())
+            .args(<span class="kw-2">&amp;</span>parts[<span class="number">1</span>..])
+            .spawn()
+    } <span class="kw">else </span>{
+        Command::new(parts[<span class="number">0</span>]).stdout(Stdio::piped()).spawn()
     };
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="string">&quot;reading output&quot;</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">result</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buff</span> <span class="op">=</span> <span class="ident">String::new</span>();
-    <span class="ident">child</span>
-        .<span class="ident">stdout</span>
-        .<span class="ident">take</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;to have output&quot;</span>)
-        .<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buff</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">buff</span>)
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">&quot;reading output&quot;</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>child = result<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>buff = String::new();
+    child
+        .stdout
+        .take()
+        .expect(<span class="string">&quot;to have output&quot;</span>)
+        .read_to_string(<span class="kw-2">&amp;mut </span>buff)
+        .map(|<span class="kw">_</span>| buff)
 }
 
-<span class="doccomment">/// Run an external command with arguments and return its output.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// NOTE: std::process::Command::output will not work within penrose due to the</span>
-<span class="doccomment">/// way that signal handling is set up. Use this function if you need to access the</span>
-<span class="doccomment">/// output of a process that you spawn.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn_for_output_with_args</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-    <span class="ident">cmd</span>: <span class="ident">S</span>,
-    <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>],
-) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">cmd</span>.<span class="ident">into</span>();
+<span class="doccomment">/// Run an external command with arguments and return its output.
+///
+/// NOTE: std::process::Command::output will not work within penrose due to the
+/// way that signal handling is set up. Use this function if you need to access the
+/// output of a process that you spawn.
+</span><span class="kw">pub fn </span>spawn_for_output_with_args&lt;S: Into&lt;String&gt;&gt;(
+    cmd: S,
+    args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str],
+) -&gt; std::io::Result&lt;String&gt; {
+    <span class="kw">let </span>cmd = cmd.into();
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="question-mark">?</span><span class="ident">args</span>, <span class="string">&quot;spawning subprocess for output&quot;</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="kw-2">&amp;</span><span class="ident">cmd</span>)
-        .<span class="ident">stdout</span>(<span class="ident">Stdio::piped</span>())
-        .<span class="ident">args</span>(<span class="ident">args</span>)
-        .<span class="ident">spawn</span>()<span class="question-mark">?</span>;
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">&quot;spawning subprocess for output&quot;</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>child = Command::new(<span class="kw-2">&amp;</span>cmd)
+        .stdout(Stdio::piped())
+        .args(args)
+        .spawn()<span class="question-mark">?</span>;
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span><span class="ident">cmd</span>, <span class="question-mark">?</span><span class="ident">args</span>, <span class="string">&quot;reading output&quot;</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buff</span> <span class="op">=</span> <span class="ident">String::new</span>();
-    <span class="ident">child</span>
-        .<span class="ident">stdout</span>
-        .<span class="ident">take</span>()
-        .<span class="ident">unwrap</span>()
-        .<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buff</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">buff</span>)
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">&quot;reading output&quot;</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>buff = String::new();
+    child
+        .stdout
+        .take()
+        .unwrap()
+        .read_to_string(<span class="kw-2">&amp;mut </span>buff)
+        .map(|<span class="kw">_</span>| buff)
 }
 
-<span class="doccomment">/// Use `notify-send` to display a message to the user</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">notify</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">Command::new</span>(<span class="string">&quot;notify-send&quot;</span>).<span class="ident">arg</span>(<span class="ident">msg</span>).<span class="ident">output</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+<span class="doccomment">/// Use `notify-send` to display a message to the user
+</span><span class="kw">pub fn </span>notify(msg: <span class="kw-2">&amp;</span>str) -&gt; std::io::Result&lt;()&gt; {
+    Command::new(<span class="string">&quot;notify-send&quot;</span>).arg(msg).output().map(|<span class="kw">_</span>| ())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

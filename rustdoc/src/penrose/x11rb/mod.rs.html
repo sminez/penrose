@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x11rb/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x11rb/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -693,698 +693,698 @@
 <span id="691">691</span>
 <span id="692">692</span>
 <span id="693">693</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For</span>
-<span class="doccomment">//! X11 extensions, there are usually separate documentations. For example, the RandR extension is</span>
-<span class="doccomment">//! documented in [2].</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This module contains the code for talking to the X11 server using the x11rb crate, which</span>
-<span class="doccomment">//! offers an implementation of the X11 protocol in safe Rust. The actual protocol bindings are</span>
-<span class="doccomment">//! autogenerated from an XML spec. The XML files can be found [in its xcb-proto-{something}</span>
-<span class="doccomment">//! subfolder](https://github.com/psychon/x11rb) and are useful as a reference for how the API</span>
-<span class="doccomment">//! works. x11rb also [offers](https://github.com/psychon/x11rb/blob/master/doc/generated_code.md)</span>
-<span class="doccomment">//! some explanation on how the XML is turned into Rust code.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The original implementation of this was by @psychon (Uli Schlachter).</span>
-<span class="doccomment">//! Re-write for the new 0.3.0 API by @sminez (Innes Anderson-Morrison).</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [1]: https://www.x.org/releases/X11R7.6/doc/xproto/x11protocol.html</span>
-<span class="doccomment">//! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">core::bindings</span>::{<span class="ident">KeyCode</span>, <span class="ident">MouseState</span>},
-    <span class="ident">pure::geometry</span>::{<span class="ident">Point</span>, <span class="ident">Rect</span>},
-    <span class="ident">x</span>::{
+</pre><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose
+//!
+//! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For
+//! X11 extensions, there are usually separate documentations. For example, the RandR extension is
+//! documented in [2].
+//!
+//! This module contains the code for talking to the X11 server using the x11rb crate, which
+//! offers an implementation of the X11 protocol in safe Rust. The actual protocol bindings are
+//! autogenerated from an XML spec. The XML files can be found [in its xcb-proto-{something}
+//! subfolder](https://github.com/psychon/x11rb) and are useful as a reference for how the API
+//! works. x11rb also [offers](https://github.com/psychon/x11rb/blob/master/doc/generated_code.md)
+//! some explanation on how the XML is turned into Rust code.
+//!
+//! The original implementation of this was by @psychon (Uli Schlachter).
+//! Re-write for the new 0.3.0 API by @sminez (Innes Anderson-Morrison).
+//!
+//! [1]: https://www.x.org/releases/X11R7.6/doc/xproto/x11protocol.html
+//! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt
+</span><span class="kw">use crate</span>::{
+    core::bindings::{KeyCode, MouseState},
+    pure::geometry::{Point, Rect},
+    x::{
         <span class="self">self</span>,
-        <span class="ident">atom::Atom</span>,
-        <span class="ident">event</span>::{<span class="ident">ClientEventMask</span>, <span class="ident">ClientMessage</span>, <span class="ident">ClientMessageKind</span>},
-        <span class="ident">property</span>::{<span class="ident">Prop</span>, <span class="ident">WindowAttributes</span>, <span class="ident">WmHints</span>, <span class="ident">WmNormalHints</span>, <span class="ident">WmState</span>},
-        <span class="ident">ClientAttr</span>, <span class="ident">ClientConfig</span>, <span class="ident">WinType</span>, <span class="ident">XConn</span>, <span class="ident">XConnExt</span>, <span class="ident">XEvent</span>,
+        atom::Atom,
+        event::{ClientEventMask, ClientMessage, ClientMessageKind},
+        property::{Prop, WindowAttributes, WmHints, WmNormalHints, WmState},
+        ClientAttr, ClientConfig, WinType, XConn, XConnExt, XEvent,
     },
-    <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
+    Error, <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">str::FromStr</span>};
-<span class="kw">use</span> <span class="ident">strum::IntoEnumIterator</span>;
-<span class="kw">use</span> <span class="ident">tracing::error</span>;
-<span class="kw">use</span> <span class="ident">x11rb</span>::{
-    <span class="ident">connection::Connection</span>,
-    <span class="ident">protocol</span>::{
-        <span class="ident">randr</span>::{<span class="self">self</span>, <span class="ident">ConnectionExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">NotifyMask</span>},
-        <span class="ident">xproto</span>::{
-            <span class="ident">AtomEnum</span>, <span class="ident">ChangeWindowAttributesAux</span>, <span class="ident">ClientMessageData</span>, <span class="ident">ClientMessageEvent</span>,
-            <span class="ident">ColormapAlloc</span>, <span class="ident">ConfigureWindowAux</span>, <span class="ident">ConnectionExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">CreateWindowAux</span>, <span class="ident">EventMask</span>,
-            <span class="ident">GrabMode</span>, <span class="ident">InputFocus</span>, <span class="ident">MapState</span>, <span class="ident">ModMask</span>, <span class="ident">PropMode</span>, <span class="ident">StackMode</span>, <span class="ident">WindowClass</span>,
-            <span class="ident">CLIENT_MESSAGE_EVENT</span>,
+<span class="kw">use </span>std::{collections::HashMap, str::FromStr};
+<span class="kw">use </span>strum::IntoEnumIterator;
+<span class="kw">use </span>tracing::error;
+<span class="kw">use </span>x11rb::{
+    connection::Connection,
+    protocol::{
+        randr::{<span class="self">self</span>, ConnectionExt <span class="kw">as _</span>, NotifyMask},
+        xproto::{
+            AtomEnum, ChangeWindowAttributesAux, ClientMessageData, ClientMessageEvent,
+            ColormapAlloc, ConfigureWindowAux, ConnectionExt <span class="kw">as _</span>, CreateWindowAux, EventMask,
+            GrabMode, InputFocus, MapState, ModMask, PropMode, StackMode, WindowClass,
+            CLIENT_MESSAGE_EVENT,
         },
     },
-    <span class="ident">rust_connection::RustConnection</span>,
-    <span class="ident">wrapper::ConnectionExt</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">xcb_ffi::XCBConnection</span>,
-    <span class="ident">CURRENT_TIME</span>,
+    rust_connection::RustConnection,
+    wrapper::ConnectionExt <span class="kw">as _</span>,
+    xcb_ffi::XCBConnection,
+    CURRENT_TIME,
 };
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">conversions</span>;
+<span class="kw">pub mod </span>conversions;
 
-<span class="kw">use</span> <span class="ident">conversions::convert_event</span>;
+<span class="kw">use </span>conversions::convert_event;
 
-<span class="kw">const</span> <span class="ident">RANDR_VER</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>) <span class="op">=</span> (<span class="number">1</span>, <span class="number">2</span>);
+<span class="kw">const </span>RANDR_VER: (u32, u32) = (<span class="number">1</span>, <span class="number">2</span>);
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Atoms</span> {
-    <span class="ident">atoms</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Atom</span>, <span class="ident">u32</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Atoms {
+    atoms: HashMap&lt;Atom, u32&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Atoms</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">Connection</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="comment">// First send all requests...</span>
-        <span class="kw">let</span> <span class="ident">atom_requests</span> <span class="op">=</span> <span class="ident">Atom::iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">atom</span><span class="op">|</span> <span class="prelude-val">Ok</span>((<span class="ident">atom</span>, <span class="ident">conn</span>.<span class="ident">intern_atom</span>(<span class="bool-val">false</span>, <span class="ident">atom</span>.<span class="ident">as_ref</span>().<span class="ident">as_bytes</span>())<span class="question-mark">?</span>)))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+<span class="kw">impl </span>Atoms {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(conn: <span class="kw-2">&amp;</span><span class="kw">impl </span>Connection) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="comment">// First send all requests...
+        </span><span class="kw">let </span>atom_requests = Atom::iter()
+            .map(|atom| <span class="prelude-val">Ok</span>((atom, conn.intern_atom(<span class="bool-val">false</span>, atom.as_ref().as_bytes())<span class="question-mark">?</span>)))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="comment">// ..then get all the replies (so that we only need one instead of many round-trips to the</span>
-        <span class="comment">// X11 server)</span>
-        <span class="kw">let</span> <span class="ident">atoms</span> <span class="op">=</span> <span class="ident">atom_requests</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">atom</span>, <span class="ident">cookie</span>)<span class="op">|</span> <span class="prelude-val">Ok</span>((<span class="ident">atom</span>, <span class="ident">cookie</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>.<span class="ident">atom</span>)))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        <span class="comment">// ..then get all the replies (so that we only need one instead of many round-trips to the
+        // X11 server)
+        </span><span class="kw">let </span>atoms = atom_requests
+            .into_iter()
+            .map(|(atom, cookie)| <span class="prelude-val">Ok</span>((atom, cookie.reply()<span class="question-mark">?</span>.atom)))
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">atoms</span> })
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ atoms })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">known_atom</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">atom</span>: <span class="ident">Atom</span>) -&gt; <span class="ident">u32</span> {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">atoms</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">atom</span>).<span class="ident">unwrap</span>()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>known_atom(<span class="kw-2">&amp;</span><span class="self">self</span>, atom: Atom) -&gt; u32 {
+        <span class="kw-2">*</span><span class="self">self</span>.atoms.get(<span class="kw-2">&amp;</span>atom).unwrap()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">atom_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">atom</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Atom</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">atoms</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">value</span>)<span class="op">|</span> <span class="ident">atom</span> <span class="op">==</span> <span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">value</span>)
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">key</span>)
-    }
-}
-
-<span class="doccomment">/// Handles communication with an X server via the x11rb crate.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Connection</span><span class="op">&gt;</span> {
-    <span class="ident">conn</span>: <span class="ident">C</span>,
-    <span class="ident">root</span>: <span class="ident">u32</span>,
-    <span class="ident">atoms</span>: <span class="ident">Atoms</span>,
-}
-
-<span class="doccomment">/// A pure rust based connection to the X server using a [RustConnection].</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RustConn</span> <span class="op">=</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">RustConnection</span><span class="op">&gt;</span>;
-
-<span class="kw">impl</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">RustConnection</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using</span>
-    <span class="doccomment">/// [x11rb::rust_connection::RustConnection].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">conn</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">RustConnection::connect</span>(<span class="prelude-val">None</span>).<span class="ident">map_err</span>(<span class="ident">Error::from</span>)<span class="question-mark">?</span>;
-
-        <span class="ident"><span class="self">Self</span>::new_for_connection</span>(<span class="ident">conn</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>atom_name(<span class="kw-2">&amp;</span><span class="self">self</span>, atom: u32) -&gt; <span class="prelude-ty">Option</span>&lt;Atom&gt; {
+        <span class="self">self</span>.atoms
+            .iter()
+            .find(|(<span class="kw">_</span>, value)| atom == <span class="kw-2">**</span>value)
+            .map(|(key, <span class="kw">_</span>)| <span class="kw-2">*</span>key)
     }
 }
 
-<span class="doccomment">/// An C based connection to the X server using an [XCBConnection].</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">XcbConn</span> <span class="op">=</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">XCBConnection</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Handles communication with an X server via the x11rb crate.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Conn&lt;C: Connection&gt; {
+    conn: C,
+    root: u32,
+    atoms: Atoms,
+}
 
-<span class="kw">impl</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">XCBConnection</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using</span>
-    <span class="doccomment">/// [x11rb::xcb_ffi::XCBConnection].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">conn</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">XCBConnection::connect</span>(<span class="prelude-val">None</span>).<span class="ident">map_err</span>(<span class="ident">Error::from</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// A pure rust based connection to the X server using a [RustConnection].
+</span><span class="kw">pub type </span>RustConn = Conn&lt;RustConnection&gt;;
 
-        <span class="ident"><span class="self">Self</span>::new_for_connection</span>(<span class="ident">conn</span>)
+<span class="kw">impl </span>Conn&lt;RustConnection&gt; {
+    <span class="doccomment">/// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
+    /// [x11rb::rust_connection::RustConnection].
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>(conn, <span class="kw">_</span>) = RustConnection::connect(<span class="prelude-val">None</span>).map_err(Error::from)<span class="question-mark">?</span>;
+
+        <span class="self">Self</span>::new_for_connection(conn)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Connection</span>,
+<span class="doccomment">/// An C based connection to the X server using an [XCBConnection].
+</span><span class="kw">pub type </span>XcbConn = Conn&lt;XCBConnection&gt;;
+
+<span class="kw">impl </span>Conn&lt;XCBConnection&gt; {
+    <span class="doccomment">/// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
+    /// [x11rb::xcb_ffi::XCBConnection].
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>(conn, <span class="kw">_</span>) = XCBConnection::connect(<span class="prelude-val">None</span>).map_err(Error::from)<span class="question-mark">?</span>;
+
+        <span class="self">Self</span>::new_for_connection(conn)
+    }
+}
+
+<span class="kw">impl</span>&lt;C&gt; Conn&lt;C&gt;
+<span class="kw">where
+    </span>C: Connection,
 {
-    <span class="kw">fn</span> <span class="ident">new_for_connection</span>(<span class="ident">conn</span>: <span class="ident">C</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">setup</span>().<span class="ident">roots</span>[<span class="number">0</span>].<span class="ident">root</span>;
-        <span class="ident">conn</span>.<span class="ident">prefetch_extension_information</span>(<span class="ident">randr::X11_EXTENSION_NAME</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">atoms</span> <span class="op">=</span> <span class="ident">Atoms::new</span>(<span class="kw-2">&amp;</span><span class="ident">conn</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>new_for_connection(conn: C) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>root = conn.setup().roots[<span class="number">0</span>].root;
+        conn.prefetch_extension_information(randr::X11_EXTENSION_NAME)<span class="question-mark">?</span>;
+        <span class="kw">let </span>atoms = Atoms::new(<span class="kw-2">&amp;</span>conn)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">extension_info</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">extension_information</span>(<span class="ident">randr::X11_EXTENSION_NAME</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">extension_info</span>.<span class="ident">is_none</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Randr</span>(<span class="string">&quot;RandR not supported&quot;</span>.<span class="ident">to_string</span>()));
+        <span class="kw">let </span>extension_info = conn.extension_information(randr::X11_EXTENSION_NAME)<span class="question-mark">?</span>;
+        <span class="kw">if </span>extension_info.is_none() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Randr(<span class="string">&quot;RandR not supported&quot;</span>.to_string()));
         }
 
-        <span class="kw">let</span> <span class="ident">randr_ver</span> <span class="op">=</span> <span class="ident">conn</span>
-            .<span class="ident">randr_query_version</span>(<span class="ident">RANDR_VER</span>.<span class="number">0</span>, <span class="ident">RANDR_VER</span>.<span class="number">1</span>)<span class="question-mark">?</span>
-            .<span class="ident">reply</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> (<span class="ident">maj</span>, <span class="ident">min</span>) <span class="op">=</span> (<span class="ident">randr_ver</span>.<span class="ident">major_version</span>, <span class="ident">randr_ver</span>.<span class="ident">minor_version</span>);
-        <span class="kw">if</span> (<span class="ident">maj</span>, <span class="ident">min</span>) <span class="op">!</span><span class="op">=</span> <span class="ident">RANDR_VER</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Randr</span>(<span class="macro">format!</span>(
+        <span class="kw">let </span>randr_ver = conn
+            .randr_query_version(RANDR_VER.<span class="number">0</span>, RANDR_VER.<span class="number">1</span>)<span class="question-mark">?
+            </span>.reply()<span class="question-mark">?</span>;
+        <span class="kw">let </span>(maj, min) = (randr_ver.major_version, randr_ver.minor_version);
+        <span class="kw">if </span>(maj, min) != RANDR_VER {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Randr(<span class="macro">format!</span>(
                 <span class="string">&quot;penrose requires RandR version &gt;= {}.{}: detected {}.{}\nplease update RandR to a newer version&quot;</span>,
-                <span class="ident">RANDR_VER</span>.<span class="number">0</span>, <span class="ident">RANDR_VER</span>.<span class="number">1</span>, <span class="ident">maj</span>, <span class="ident">min</span>
+                RANDR_VER.<span class="number">0</span>, RANDR_VER.<span class="number">1</span>, maj, min
             )));
         }
 
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">NotifyMask::OUTPUT_CHANGE</span> <span class="op">|</span> <span class="ident">NotifyMask::CRTC_CHANGE</span> <span class="op">|</span> <span class="ident">NotifyMask::SCREEN_CHANGE</span>;
-        <span class="ident">conn</span>.<span class="ident">randr_select_input</span>(<span class="ident">root</span>, <span class="ident">mask</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>mask = NotifyMask::OUTPUT_CHANGE | NotifyMask::CRTC_CHANGE | NotifyMask::SCREEN_CHANGE;
+        conn.randr_select_input(root, mask)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">xconn</span> <span class="op">=</span> <span class="self">Self</span> { <span class="ident">conn</span>, <span class="ident">root</span>, <span class="ident">atoms</span> };
+        <span class="kw">let </span>xconn = <span class="self">Self </span>{ conn, root, atoms };
 
-        <span class="ident">xconn</span>.<span class="ident">set_client_attributes</span>(<span class="ident">Xid</span>(<span class="ident">root</span>), <span class="kw-2">&amp;</span>[<span class="ident">ClientAttr::RootEventMask</span>])<span class="question-mark">?</span>;
+        xconn.set_client_attributes(Xid(root), <span class="kw-2">&amp;</span>[ClientAttr::RootEventMask])<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">xconn</span>)
+        <span class="prelude-val">Ok</span>(xconn)
     }
 
-    <span class="doccomment">/// Get a handle to the underlying connection.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">C</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">conn</span>
+    <span class="doccomment">/// Get a handle to the underlying connection.
+    </span><span class="kw">pub fn </span>connection(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>C {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.conn
     }
 
-    <span class="doccomment">/// Create and map a new window to the screen with the specified [WinType].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">WinType</span>, <span class="ident">r</span>: <span class="ident">Rect</span>, <span class="ident">managed</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">ty</span>, <span class="kw-2">mut</span> <span class="ident">win_aux</span>, <span class="ident">class</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">WinType::CheckWin</span> =&gt; (<span class="prelude-val">None</span>, <span class="ident">CreateWindowAux::new</span>(), <span class="ident">WindowClass::INPUT_OUTPUT</span>),
+    <span class="doccomment">/// Create and map a new window to the screen with the specified [WinType].
+    </span><span class="kw">pub fn </span>create_window(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: WinType, r: Rect, managed: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Xid&gt; {
+        <span class="kw">let </span>(ty, <span class="kw-2">mut </span>win_aux, class) = <span class="kw">match </span>ty {
+            WinType::CheckWin =&gt; (<span class="prelude-val">None</span>, CreateWindowAux::new(), WindowClass::INPUT_OUTPUT),
 
-            <span class="ident">WinType::InputOnly</span> =&gt; (<span class="prelude-val">None</span>, <span class="ident">CreateWindowAux::new</span>(), <span class="ident">WindowClass::INPUT_ONLY</span>),
+            WinType::InputOnly =&gt; (<span class="prelude-val">None</span>, CreateWindowAux::new(), WindowClass::INPUT_ONLY),
 
-            <span class="ident">WinType::InputOutput</span>(<span class="ident">a</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">colormap</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">generate_id</span>()<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">screen</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">setup</span>().<span class="ident">roots</span>[<span class="number">0</span>];
+            WinType::InputOutput(a) =&gt; {
+                <span class="kw">let </span>colormap = <span class="self">self</span>.conn.generate_id()<span class="question-mark">?</span>;
+                <span class="kw">let </span>screen = <span class="kw-2">&amp;</span><span class="self">self</span>.conn.setup().roots[<span class="number">0</span>];
 
-                <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">create_colormap</span>(
-                    <span class="ident">ColormapAlloc::NONE</span>,
-                    <span class="ident">colormap</span>,
-                    <span class="ident">screen</span>.<span class="ident">root</span>,
-                    <span class="ident">screen</span>.<span class="ident">root_visual</span>,
+                <span class="self">self</span>.conn.create_colormap(
+                    ColormapAlloc::NONE,
+                    colormap,
+                    screen.root,
+                    screen.root_visual,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">win_aux</span> <span class="op">=</span> <span class="ident">CreateWindowAux::new</span>()
-                    .<span class="ident">event_mask</span>(<span class="ident">EventMask::EXPOSURE</span> <span class="op">|</span> <span class="ident">EventMask::STRUCTURE_NOTIFY</span>)
-                    .<span class="ident">background_pixel</span>(<span class="ident">x11rb::NONE</span>)
-                    .<span class="ident">border_pixel</span>(<span class="ident">screen</span>.<span class="ident">black_pixel</span>)
-                    .<span class="ident">colormap</span>(<span class="ident">colormap</span>);
+                <span class="kw">let </span>win_aux = CreateWindowAux::new()
+                    .event_mask(EventMask::EXPOSURE | EventMask::STRUCTURE_NOTIFY)
+                    .background_pixel(x11rb::NONE)
+                    .border_pixel(screen.black_pixel)
+                    .colormap(colormap);
 
-                (<span class="prelude-val">Some</span>(<span class="ident">a</span>), <span class="ident">win_aux</span>, <span class="ident">WindowClass::INPUT_OUTPUT</span>)
+                (<span class="prelude-val">Some</span>(a), win_aux, WindowClass::INPUT_OUTPUT)
             }
         };
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">managed</span> {
-            <span class="ident">win_aux</span> <span class="op">=</span> <span class="ident">win_aux</span>.<span class="ident">override_redirect</span>(<span class="number">1</span>);
+        <span class="kw">if </span>!managed {
+            win_aux = win_aux.override_redirect(<span class="number">1</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">Rect</span> { <span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span> } <span class="op">=</span> <span class="ident">r</span>;
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Xid</span>(<span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">generate_id</span>()<span class="question-mark">?</span>);
-        <span class="kw">let</span> <span class="ident">border_width</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let </span>Rect { x, y, w, h } = r;
+        <span class="kw">let </span>id = Xid(<span class="self">self</span>.conn.generate_id()<span class="question-mark">?</span>);
+        <span class="kw">let </span>border_width = <span class="number">0</span>;
 
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">create_window</span>(
-            <span class="ident">x11rb::COPY_DEPTH_FROM_PARENT</span>,
-            <span class="kw-2">*</span><span class="ident">id</span>,
-            <span class="self">self</span>.<span class="ident">root</span>,
-            <span class="ident">x</span> <span class="kw">as</span> <span class="ident">i16</span>,
-            <span class="ident">y</span> <span class="kw">as</span> <span class="ident">i16</span>,
-            <span class="ident">w</span> <span class="kw">as</span> <span class="ident">u16</span>,
-            <span class="ident">h</span> <span class="kw">as</span> <span class="ident">u16</span>,
-            <span class="ident">border_width</span>,
-            <span class="ident">class</span>,
-            <span class="ident">x11rb::COPY_FROM_PARENT</span>,
-            <span class="kw-2">&amp;</span><span class="ident">win_aux</span>,
+        <span class="self">self</span>.conn.create_window(
+            x11rb::COPY_DEPTH_FROM_PARENT,
+            <span class="kw-2">*</span>id,
+            <span class="self">self</span>.root,
+            x <span class="kw">as </span>i16,
+            y <span class="kw">as </span>i16,
+            w <span class="kw">as </span>u16,
+            h <span class="kw">as </span>u16,
+            border_width,
+            class,
+            x11rb::COPY_FROM_PARENT,
+            <span class="kw-2">&amp;</span>win_aux,
         )<span class="question-mark">?</span>;
 
-        <span class="comment">// Input only windows don&#39;t need mapping</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">atom</span>) <span class="op">=</span> <span class="ident">ty</span> {
-            <span class="kw">let</span> <span class="ident">net_name</span> <span class="op">=</span> <span class="ident">Atom::NetWmWindowType</span>.<span class="ident">as_ref</span>();
-            <span class="self">self</span>.<span class="ident">set_prop</span>(<span class="ident">id</span>, <span class="ident">net_name</span>, <span class="ident">Prop::Atom</span>(<span class="macro">vec!</span>[<span class="ident">atom</span>.<span class="ident">as_ref</span>().<span class="ident">into</span>()]))<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">map</span>(<span class="ident">id</span>)<span class="question-mark">?</span>;
+        <span class="comment">// Input only windows don&#39;t need mapping
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(atom) = ty {
+            <span class="kw">let </span>net_name = Atom::NetWmWindowType.as_ref();
+            <span class="self">self</span>.set_prop(id, net_name, Prop::Atom(<span class="macro">vec!</span>[atom.as_ref().into()]))<span class="question-mark">?</span>;
+            <span class="self">self</span>.map(id)<span class="question-mark">?</span>;
         }
 
-        <span class="self">self</span>.<span class="ident">flush</span>();
+        <span class="self">self</span>.flush();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">id</span>)
+        <span class="prelude-val">Ok</span>(id)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="ident">XConn</span> <span class="kw">for</span> <span class="ident">Conn</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">C</span>: <span class="ident">Connection</span>,
+<span class="kw">impl</span>&lt;C&gt; XConn <span class="kw">for </span>Conn&lt;C&gt;
+<span class="kw">where
+    </span>C: Connection,
 {
-    <span class="kw">fn</span> <span class="ident">root</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Xid</span> {
-        <span class="self">self</span>.<span class="ident">root</span>.<span class="ident">into</span>()
+    <span class="kw">fn </span>root(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Xid {
+        <span class="self">self</span>.root.into()
     }
 
-    <span class="kw">fn</span> <span class="ident">screen_details</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">resources</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">randr_get_screen_resources</span>(<span class="self">self</span>.<span class="ident">root</span>)<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>screen_details(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Rect&gt;&gt; {
+        <span class="kw">let </span>resources = <span class="self">self</span>.conn.randr_get_screen_resources(<span class="self">self</span>.root)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
 
-        <span class="comment">// Send queries for all CRTCs</span>
-        <span class="kw">let</span> <span class="ident">crtcs</span> <span class="op">=</span> <span class="ident">resources</span>
-            .<span class="ident">crtcs</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> {
-                <span class="self">self</span>.<span class="ident">conn</span>
-                    .<span class="ident">randr_get_crtc_info</span>(<span class="kw-2">*</span><span class="ident">c</span>, <span class="number">0</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">into</span>())
+        <span class="comment">// Send queries for all CRTCs
+        </span><span class="kw">let </span>crtcs = resources
+            .crtcs
+            .iter()
+            .map(|c| {
+                <span class="self">self</span>.conn
+                    .randr_get_crtc_info(<span class="kw-2">*</span>c, <span class="number">0</span>)
+                    .map_err(|err| err.into())
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">rects</span> <span class="op">=</span> <span class="ident">crtcs</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">cookie</span><span class="op">|</span> <span class="ident">cookie</span>.<span class="ident">reply</span>().<span class="ident">ok</span>())
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">reply</span><span class="op">|</span> <span class="ident">reply</span>.<span class="ident">width</span> <span class="op">&gt;</span> <span class="number">0</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">reply</span><span class="op">|</span> {
-                <span class="ident">Rect::new</span>(
-                    <span class="ident">reply</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                    <span class="ident">reply</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                    <span class="ident">reply</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                    <span class="ident">reply</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>,
+        <span class="kw">let </span>rects = crtcs
+            .into_iter()
+            .flat_map(|cookie| cookie.reply().ok())
+            .filter(|reply| reply.width &gt; <span class="number">0</span>)
+            .map(|reply| {
+                Rect::new(
+                    reply.x <span class="kw">as </span>u32,
+                    reply.y <span class="kw">as </span>u32,
+                    reply.width <span class="kw">as </span>u32,
+                    reply.height <span class="kw">as </span>u32,
                 )
             })
-            .<span class="ident">collect</span>();
+            .collect();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">rects</span>)
+        <span class="prelude-val">Ok</span>(rects)
     }
 
-    <span class="kw">fn</span> <span class="ident">cursor_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">reply</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query_pointer</span>(<span class="self">self</span>.<span class="ident">root</span>)<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>cursor_position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Point&gt; {
+        <span class="kw">let </span>reply = <span class="self">self</span>.conn.query_pointer(<span class="self">self</span>.root)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Point::new</span>(<span class="ident">reply</span>.<span class="ident">root_x</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">reply</span>.<span class="ident">root_y</span> <span class="kw">as</span> <span class="ident">u32</span>))
+        <span class="prelude-val">Ok</span>(Point::new(reply.root_x <span class="kw">as </span>u32, reply.root_y <span class="kw">as </span>u32))
     }
 
-    <span class="kw">fn</span> <span class="ident">grab</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key_codes</span>: <span class="kw-2">&amp;</span>[<span class="ident">KeyCode</span>], <span class="ident">mouse_states</span>: <span class="kw-2">&amp;</span>[<span class="ident">MouseState</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// We need to explicitly grab NumLock as an additional modifier and then drop it later on</span>
-        <span class="comment">// when we are passing events through to the WindowManager as NumLock alters the modifier</span>
-        <span class="comment">// mask when it is active.</span>
-        <span class="kw">let</span> <span class="ident">modifiers</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="ident">u16::from</span>(<span class="ident">ModMask::M2</span>)];
-        <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">GrabMode::ASYNC</span>;
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">EventMask::BUTTON_PRESS</span> <span class="op">|</span> <span class="ident">EventMask::BUTTON_RELEASE</span> <span class="op">|</span> <span class="ident">EventMask::BUTTON_MOTION</span>;
+    <span class="kw">fn </span>grab(<span class="kw-2">&amp;</span><span class="self">self</span>, key_codes: <span class="kw-2">&amp;</span>[KeyCode], mouse_states: <span class="kw-2">&amp;</span>[MouseState]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// We need to explicitly grab NumLock as an additional modifier and then drop it later on
+        // when we are passing events through to the WindowManager as NumLock alters the modifier
+        // mask when it is active.
+        </span><span class="kw">let </span>modifiers = <span class="kw-2">&amp;</span>[<span class="number">0</span>, u16::from(ModMask::M2)];
+        <span class="kw">let </span>mode = GrabMode::ASYNC;
+        <span class="kw">let </span>mask = EventMask::BUTTON_PRESS | EventMask::BUTTON_RELEASE | EventMask::BUTTON_MOTION;
 
-        <span class="kw">for</span> <span class="ident">m</span> <span class="kw">in</span> <span class="ident">modifiers</span>.<span class="ident">iter</span>() {
-            <span class="kw">for</span> <span class="ident">k</span> <span class="kw">in</span> <span class="ident">key_codes</span>.<span class="ident">iter</span>() {
-                <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">grab_key</span>(
-                    <span class="bool-val">false</span>,               <span class="comment">// don&#39;t pass grabbed events through to the client</span>
-                    <span class="self">self</span>.<span class="ident">root</span>,           <span class="comment">// the window to grab: in this case the root window</span>
-                    (<span class="ident">k</span>.<span class="ident">mask</span> <span class="op">|</span> <span class="ident">m</span>).<span class="ident">into</span>(), <span class="comment">// modifiers to grab</span>
-                    <span class="ident">k</span>.<span class="ident">code</span>,              <span class="comment">// keycode to grab</span>
-                    <span class="ident">mode</span>,                <span class="comment">// don&#39;t lock pointer input while grabbing</span>
-                    <span class="ident">mode</span>,                <span class="comment">// don&#39;t lock keyboard input while grabbing</span>
-                )<span class="question-mark">?</span>;
+        <span class="kw">for </span>m <span class="kw">in </span>modifiers.iter() {
+            <span class="kw">for </span>k <span class="kw">in </span>key_codes.iter() {
+                <span class="self">self</span>.conn.grab_key(
+                    <span class="bool-val">false</span>,               <span class="comment">// don&#39;t pass grabbed events through to the client
+                    </span><span class="self">self</span>.root,           <span class="comment">// the window to grab: in this case the root window
+                    </span>(k.mask | m).into(), <span class="comment">// modifiers to grab
+                    </span>k.code,              <span class="comment">// keycode to grab
+                    </span>mode,                <span class="comment">// don&#39;t lock pointer input while grabbing
+                    </span>mode,                <span class="comment">// don&#39;t lock keyboard input while grabbing
+                </span>)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="kw">for</span> <span class="ident">m</span> <span class="kw">in</span> <span class="ident">modifiers</span>.<span class="ident">iter</span>() {
-            <span class="kw">for</span> <span class="ident">state</span> <span class="kw">in</span> <span class="ident">mouse_states</span>.<span class="ident">iter</span>() {
-                <span class="kw">let</span> <span class="ident">button</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">button</span>().<span class="ident">into</span>();
-                <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">grab_button</span>(
-                    <span class="bool-val">false</span>,                     <span class="comment">// don&#39;t pass grabbed events through to the client</span>
-                    <span class="self">self</span>.<span class="ident">root</span>,                 <span class="comment">// the window to grab: in this case the root window</span>
-                    <span class="ident">mask</span>,                      <span class="comment">// which events are reported to the client</span>
-                    <span class="ident">mode</span>,                      <span class="comment">// don&#39;t lock pointer input while grabbing</span>
-                    <span class="ident">mode</span>,                      <span class="comment">// don&#39;t lock keyboard input while grabbing</span>
-                    <span class="ident">x11rb::NONE</span>,               <span class="comment">// don&#39;t confine the cursor to a specific window</span>
-                    <span class="ident">x11rb::NONE</span>,               <span class="comment">// don&#39;t change the cursor type</span>
-                    <span class="ident">button</span>,                    <span class="comment">// the button to grab</span>
-                    (<span class="ident">state</span>.<span class="ident">mask</span>() <span class="op">|</span> <span class="ident">m</span>).<span class="ident">into</span>(), <span class="comment">// modifiers to grab</span>
-                )<span class="question-mark">?</span>;
+        <span class="kw">for </span>m <span class="kw">in </span>modifiers.iter() {
+            <span class="kw">for </span>state <span class="kw">in </span>mouse_states.iter() {
+                <span class="kw">let </span>button = state.button().into();
+                <span class="self">self</span>.conn.grab_button(
+                    <span class="bool-val">false</span>,                     <span class="comment">// don&#39;t pass grabbed events through to the client
+                    </span><span class="self">self</span>.root,                 <span class="comment">// the window to grab: in this case the root window
+                    </span>mask,                      <span class="comment">// which events are reported to the client
+                    </span>mode,                      <span class="comment">// don&#39;t lock pointer input while grabbing
+                    </span>mode,                      <span class="comment">// don&#39;t lock keyboard input while grabbing
+                    </span>x11rb::NONE,               <span class="comment">// don&#39;t confine the cursor to a specific window
+                    </span>x11rb::NONE,               <span class="comment">// don&#39;t change the cursor type
+                    </span>button,                    <span class="comment">// the button to grab
+                    </span>(state.mask() | m).into(), <span class="comment">// modifiers to grab
+                </span>)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="self">self</span>.<span class="ident">flush</span>();
+        <span class="self">self</span>.flush();
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">next_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">XEvent</span><span class="op">&gt;</span> {
-        <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">wait_for_event</span>()<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="ident">convert_event</span>(<span class="self">self</span>, <span class="ident">event</span>)<span class="question-mark">?</span> {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">event</span>);
+    <span class="kw">fn </span>next_event(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;XEvent&gt; {
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>event = <span class="self">self</span>.conn.wait_for_event()<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(event) = convert_event(<span class="self">self</span>, event)<span class="question-mark">? </span>{
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(event);
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">flush</span>().<span class="ident">unwrap_or</span>(());
+    <span class="kw">fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.conn.flush().unwrap_or(());
     }
 
-    <span class="kw">fn</span> <span class="ident">intern_atom</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">atom</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Atom::from_str</span>(<span class="ident">atom</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">known</span>) =&gt; <span class="self">self</span>.<span class="ident">atoms</span>.<span class="ident">known_atom</span>(<span class="ident">known</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">intern_atom</span>(<span class="bool-val">false</span>, <span class="ident">atom</span>.<span class="ident">as_bytes</span>())<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>.<span class="ident">atom</span>,
+    <span class="kw">fn </span>intern_atom(<span class="kw-2">&amp;</span><span class="self">self</span>, atom: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Xid&gt; {
+        <span class="kw">let </span>id = <span class="kw">match </span>Atom::from_str(atom) {
+            <span class="prelude-val">Ok</span>(known) =&gt; <span class="self">self</span>.atoms.known_atom(known),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="self">self</span>.conn.intern_atom(<span class="bool-val">false</span>, atom.as_bytes())<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>.atom,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Xid</span>(<span class="ident">id</span>))
+        <span class="prelude-val">Ok</span>(Xid(id))
     }
 
-    <span class="kw">fn</span> <span class="ident">atom_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">xid</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="comment">// Is the atom already known?</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">atom</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">atoms</span>.<span class="ident">atom_name</span>(<span class="kw-2">*</span><span class="ident">xid</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">atom</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>());
+    <span class="kw">fn </span>atom_name(<span class="kw-2">&amp;</span><span class="self">self</span>, xid: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="comment">// Is the atom already known?
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(atom) = <span class="self">self</span>.atoms.atom_name(<span class="kw-2">*</span>xid) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(atom.as_ref().to_string());
         }
 
-        <span class="comment">// Nope, ask the X11 server</span>
-        <span class="kw">let</span> <span class="ident">reply</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">get_atom_name</span>(<span class="kw-2">*</span><span class="ident">xid</span>)<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">String::from_utf8</span>(<span class="ident">reply</span>.<span class="ident">name</span>).<span class="ident">map_err</span>(<span class="ident">Error::from</span>)<span class="question-mark">?</span>;
+        <span class="comment">// Nope, ask the X11 server
+        </span><span class="kw">let </span>reply = <span class="self">self</span>.conn.get_atom_name(<span class="kw-2">*</span>xid)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
+        <span class="kw">let </span>name = String::from_utf8(reply.name).map_err(Error::from)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">name</span>)
+        <span class="prelude-val">Ok</span>(name)
     }
 
-    <span class="kw">fn</span> <span class="ident">client_geometry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">get_geometry</span>(<span class="kw-2">*</span><span class="ident">id</span>)<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>client_geometry(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Rect&gt; {
+        <span class="kw">let </span>res = <span class="self">self</span>.conn.get_geometry(<span class="kw-2">*</span>id)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Rect::new</span>(
-            <span class="ident">res</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">res</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">res</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">res</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>,
+        <span class="prelude-val">Ok</span>(Rect::new(
+            res.x <span class="kw">as </span>u32,
+            res.y <span class="kw">as </span>u32,
+            res.width <span class="kw">as </span>u32,
+            res.height <span class="kw">as </span>u32,
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">existing_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">raw_ids</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">query_tree</span>(<span class="self">self</span>.<span class="ident">root</span>)<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>.<span class="ident">children</span>;
-        <span class="kw">let</span> <span class="ident">ids</span> <span class="op">=</span> <span class="ident">raw_ids</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">Xid</span>).<span class="ident">collect</span>();
+    <span class="kw">fn </span>existing_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Xid&gt;&gt; {
+        <span class="kw">let </span>raw_ids = <span class="self">self</span>.conn.query_tree(<span class="self">self</span>.root)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>.children;
+        <span class="kw">let </span>ids = raw_ids.into_iter().map(Xid).collect();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">ids</span>)
+        <span class="prelude-val">Ok</span>(ids)
     }
 
-    <span class="kw">fn</span> <span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">map_window</span>(<span class="kw-2">*</span><span class="ident">client</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>map(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.conn.map_window(<span class="kw-2">*</span>client)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">unmap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">unmap_window</span>(<span class="kw-2">*</span><span class="ident">client</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.conn.unmap_window(<span class="kw-2">*</span>client)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">kill</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">supports_delete</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">client_supports_protocol</span>(<span class="ident">client</span>, <span class="ident">Atom::WmDeleteWindow</span>.<span class="ident">as_ref</span>())
-            .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>);
+    <span class="kw">fn </span>kill(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>supports_delete = <span class="self">self
+            </span>.client_supports_protocol(client, Atom::WmDeleteWindow.as_ref())
+            .unwrap_or(<span class="bool-val">false</span>);
 
-        <span class="kw">if</span> <span class="ident">supports_delete</span> {
-            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ClientMessageKind::DeleteWindow</span>(<span class="ident">client</span>).<span class="ident">as_message</span>(<span class="self">self</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">send_client_message</span>(<span class="ident">msg</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">flush</span>();
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">kill_client</span>(<span class="kw-2">*</span><span class="ident">client</span>)<span class="question-mark">?</span>;
+        <span class="kw">if </span>supports_delete {
+            <span class="kw">let </span>msg = ClientMessageKind::DeleteWindow(client).as_message(<span class="self">self</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.send_client_message(msg)<span class="question-mark">?</span>;
+            <span class="self">self</span>.flush();
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.conn.kill_client(<span class="kw-2">*</span>client)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">focus</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">conn</span>
-            .<span class="ident">set_input_focus</span>(<span class="ident">InputFocus::PARENT</span>, <span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">CURRENT_TIME</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>focus(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.conn
+            .set_input_focus(InputFocus::PARENT, <span class="kw-2">*</span>id, CURRENT_TIME)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">get_prop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">prop_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Prop</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">atom</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">intern_atom</span>(<span class="ident">prop_name</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">conn</span>
-            .<span class="ident">get_property</span>(<span class="bool-val">false</span>, <span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">atom</span>, <span class="ident">AtomEnum::ANY</span>, <span class="number">0</span>, <span class="number">1024</span>)<span class="question-mark">?</span>
-            .<span class="ident">reply</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>get_prop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, prop_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Prop&gt;&gt; {
+        <span class="kw">let </span>atom = <span class="kw-2">*</span><span class="self">self</span>.intern_atom(prop_name)<span class="question-mark">?</span>;
+        <span class="kw">let </span>r = <span class="self">self
+            </span>.conn
+            .get_property(<span class="bool-val">false</span>, <span class="kw-2">*</span>id, atom, AtomEnum::ANY, <span class="number">0</span>, <span class="number">1024</span>)<span class="question-mark">?
+            </span>.reply()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">prop_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">r</span>.<span class="ident">type_</span> {
-            <span class="number">0</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), <span class="comment">// Null response</span>
-            <span class="ident">id</span> =&gt; <span class="self">self</span>.<span class="ident">atom_name</span>(<span class="ident">Xid</span>(<span class="ident">id</span>))<span class="question-mark">?</span>,
+        <span class="kw">let </span>prop_type = <span class="kw">match </span>r.type_ {
+            <span class="number">0 </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), <span class="comment">// Null response
+            </span>id =&gt; <span class="self">self</span>.atom_name(Xid(id))<span class="question-mark">?</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">prop_type</span>.<span class="ident">as_ref</span>() {
-            <span class="string">&quot;ATOM&quot;</span> =&gt; <span class="ident">Prop::Atom</span>(
-                <span class="ident">r</span>.<span class="ident">value32</span>()
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::InvalidPropertyData</span> {
-                        <span class="ident">id</span>,
-                        <span class="ident">prop</span>: <span class="ident">prop_name</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">ty</span>: <span class="ident">prop_type</span>.<span class="ident">to_owned</span>(),
-                    })<span class="question-mark">?</span>
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">atom_name</span>(<span class="ident">Xid</span>(<span class="ident">a</span>)))
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>,
+        <span class="kw">let </span>p = <span class="kw">match </span>prop_type.as_ref() {
+            <span class="string">&quot;ATOM&quot; </span>=&gt; Prop::Atom(
+                r.value32()
+                    .ok_or_else(|| Error::InvalidPropertyData {
+                        id,
+                        prop: prop_name.to_owned(),
+                        ty: prop_type.to_owned(),
+                    })<span class="question-mark">?
+                    </span>.map(|a| <span class="self">self</span>.atom_name(Xid(a)))
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt;&gt;()<span class="question-mark">?</span>,
             ),
 
-            <span class="string">&quot;CARDINAL&quot;</span> =&gt; <span class="ident">Prop::Cardinal</span>(
-                <span class="ident">r</span>.<span class="ident">value32</span>()
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::InvalidPropertyData</span> {
-                        <span class="ident">id</span>,
-                        <span class="ident">prop</span>: <span class="ident">prop_name</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">ty</span>: <span class="ident">prop_type</span>.<span class="ident">to_owned</span>(),
-                    })<span class="question-mark">?</span>
-                    .<span class="ident">collect</span>(),
+            <span class="string">&quot;CARDINAL&quot; </span>=&gt; Prop::Cardinal(
+                r.value32()
+                    .ok_or_else(|| Error::InvalidPropertyData {
+                        id,
+                        prop: prop_name.to_owned(),
+                        ty: prop_type.to_owned(),
+                    })<span class="question-mark">?
+                    </span>.collect(),
             ),
 
-            <span class="string">&quot;STRING&quot;</span> <span class="op">|</span> <span class="string">&quot;UTF8_STRING&quot;</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">format</span> <span class="op">!</span><span class="op">=</span> <span class="number">8</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPropertyData</span> {
-                        <span class="ident">id</span>,
-                        <span class="ident">prop</span>: <span class="ident">prop_name</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">ty</span>: <span class="ident">prop_type</span>.<span class="ident">to_owned</span>(),
+            <span class="string">&quot;STRING&quot; </span>| <span class="string">&quot;UTF8_STRING&quot; </span>=&gt; {
+                <span class="kw">if </span>r.format != <span class="number">8 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidPropertyData {
+                        id,
+                        prop: prop_name.to_owned(),
+                        ty: prop_type.to_owned(),
                     });
-                } <span class="kw">else</span> {
-                    <span class="ident">Prop::UTF8String</span>(
-                        <span class="ident">String::from_utf8</span>(<span class="ident">r</span>.<span class="ident">value</span>)<span class="question-mark">?</span>
-                            .<span class="ident">trim_matches</span>(<span class="string">&#39;\0&#39;</span>)
-                            .<span class="ident">split</span>(<span class="string">&#39;\0&#39;</span>)
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
-                            .<span class="ident">collect</span>(),
+                } <span class="kw">else </span>{
+                    Prop::UTF8String(
+                        String::from_utf8(r.value)<span class="question-mark">?
+                            </span>.trim_matches(<span class="string">&#39;\0&#39;</span>)
+                            .split(<span class="string">&#39;\0&#39;</span>)
+                            .map(|s| s.to_string())
+                            .collect(),
                     )
                 }
             }
 
-            <span class="string">&quot;WINDOW&quot;</span> =&gt; <span class="ident">Prop::Window</span>(
-                <span class="ident">r</span>.<span class="ident">value32</span>()
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::InvalidPropertyData</span> {
-                        <span class="ident">id</span>,
-                        <span class="ident">prop</span>: <span class="ident">prop_name</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">ty</span>: <span class="ident">prop_type</span>.<span class="ident">to_owned</span>(),
-                    })<span class="question-mark">?</span>
-                    .<span class="ident">map</span>(<span class="ident">Xid</span>)
-                    .<span class="ident">collect</span>(),
+            <span class="string">&quot;WINDOW&quot; </span>=&gt; Prop::Window(
+                r.value32()
+                    .ok_or_else(|| Error::InvalidPropertyData {
+                        id,
+                        prop: prop_name.to_owned(),
+                        ty: prop_type.to_owned(),
+                    })<span class="question-mark">?
+                    </span>.map(Xid)
+                    .collect(),
             ),
 
-            <span class="string">&quot;WM_HINTS&quot;</span> =&gt; <span class="ident">Prop::WmHints</span>(<span class="ident">WmHints::try_from_bytes</span>(
-                <span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">value32</span>()
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::InvalidPropertyData</span> {
-                        <span class="ident">id</span>,
-                        <span class="ident">prop</span>: <span class="ident">prop_name</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">ty</span>: <span class="ident">prop_type</span>.<span class="ident">to_owned</span>(),
-                    })<span class="question-mark">?</span>
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="string">&quot;WM_HINTS&quot; </span>=&gt; Prop::WmHints(WmHints::try_from_bytes(
+                <span class="kw-2">&amp;</span>r.value32()
+                    .ok_or_else(|| Error::InvalidPropertyData {
+                        id,
+                        prop: prop_name.to_owned(),
+                        ty: prop_type.to_owned(),
+                    })<span class="question-mark">?
+                    </span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
             )<span class="question-mark">?</span>),
 
-            <span class="string">&quot;WM_SIZE_HINTS&quot;</span> =&gt; <span class="ident">Prop::WmNormalHints</span>(<span class="ident">WmNormalHints::try_from_bytes</span>(
-                <span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">value32</span>()
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error::InvalidPropertyData</span> {
-                        <span class="ident">id</span>,
-                        <span class="ident">prop</span>: <span class="ident">prop_name</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">ty</span>: <span class="ident">prop_type</span>.<span class="ident">to_owned</span>(),
-                    })<span class="question-mark">?</span>
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="string">&quot;WM_SIZE_HINTS&quot; </span>=&gt; Prop::WmNormalHints(WmNormalHints::try_from_bytes(
+                <span class="kw-2">&amp;</span>r.value32()
+                    .ok_or_else(|| Error::InvalidPropertyData {
+                        id,
+                        prop: prop_name.to_owned(),
+                        ty: prop_type.to_owned(),
+                    })<span class="question-mark">?
+                    </span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
             )<span class="question-mark">?</span>),
 
-            <span class="comment">// Default to returning the raw bytes as u32s which the user can then</span>
-            <span class="comment">// convert as needed if the prop type is not one we recognise</span>
-            <span class="kw">_</span> =&gt; <span class="ident">Prop::Bytes</span>(<span class="kw">match</span> <span class="ident">r</span>.<span class="ident">format</span> {
-                <span class="number">8</span> =&gt; <span class="ident">r</span>.<span class="ident">value8</span>().<span class="ident">unwrap</span>().<span class="ident">map</span>(<span class="ident">From::from</span>).<span class="ident">collect</span>(),
-                <span class="number">16</span> =&gt; <span class="ident">r</span>.<span class="ident">value16</span>().<span class="ident">unwrap</span>().<span class="ident">map</span>(<span class="ident">From::from</span>).<span class="ident">collect</span>(),
-                <span class="number">32</span> =&gt; <span class="ident">r</span>.<span class="ident">value32</span>().<span class="ident">unwrap</span>().<span class="ident">collect</span>(),
-                <span class="kw">_</span> =&gt; {
+            <span class="comment">// Default to returning the raw bytes as u32s which the user can then
+            // convert as needed if the prop type is not one we recognise
+            </span><span class="kw">_ </span>=&gt; Prop::Bytes(<span class="kw">match </span>r.format {
+                <span class="number">8 </span>=&gt; r.value8().unwrap().map(From::from).collect(),
+                <span class="number">16 </span>=&gt; r.value16().unwrap().map(From::from).collect(),
+                <span class="number">32 </span>=&gt; r.value32().unwrap().collect(),
+                <span class="kw">_ </span>=&gt; {
                     <span class="macro">error!</span>(
                         <span class="string">&quot;prop type for {} was {} which claims to have a data format of {}&quot;</span>,
-                        <span class="ident">prop_name</span>, <span class="ident">prop_type</span>, <span class="ident">r</span>.<span class="ident">type_</span>
+                        prop_name, prop_type, r.type_
                     );
 
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                 }
             }),
         };
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">p</span>))
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(p))
     }
 
-    <span class="kw">fn</span> <span class="ident">list_props</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">conn</span>
-            .<span class="ident">list_properties</span>(<span class="kw-2">*</span><span class="ident">id</span>)<span class="question-mark">?</span>
-            .<span class="ident">reply</span>()<span class="question-mark">?</span>
-            .<span class="ident">atoms</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">atom_name</span>(<span class="ident">Xid</span>(<span class="ident">a</span>)))
-            .<span class="ident">collect</span>()
+    <span class="kw">fn </span>list_props(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
+        <span class="self">self</span>.conn
+            .list_properties(<span class="kw-2">*</span>id)<span class="question-mark">?
+            </span>.reply()<span class="question-mark">?
+            </span>.atoms
+            .into_iter()
+            .map(|a| <span class="self">self</span>.atom_name(Xid(a)))
+            .collect()
     }
 
-    <span class="kw">fn</span> <span class="ident">delete_prop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">prop_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">prop_id</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">intern_atom</span>(<span class="ident">prop_name</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">delete_property</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">prop_id</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>delete_prop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, prop_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>prop_id = <span class="kw-2">*</span><span class="self">self</span>.intern_atom(prop_name)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.delete_property(<span class="kw-2">*</span>id, prop_id)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">get_window_attributes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">WindowAttributes</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">win_attrs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">get_window_attributes</span>(<span class="kw-2">*</span><span class="ident">id</span>)<span class="question-mark">?</span>.<span class="ident">reply</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>get_window_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;WindowAttributes&gt; {
+        <span class="kw">let </span>win_attrs = <span class="self">self</span>.conn.get_window_attributes(<span class="kw-2">*</span>id)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">map_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">win_attrs</span>.<span class="ident">map_state</span> {
-            <span class="ident">MapState::UNMAPPED</span> =&gt; <span class="ident">x::property::MapState::Unmapped</span>,
-            <span class="ident">MapState::UNVIEWABLE</span> =&gt; <span class="ident">x::property::MapState::UnViewable</span>,
-            <span class="ident">MapState::VIEWABLE</span> =&gt; <span class="ident">x::property::MapState::Viewable</span>,
-            <span class="ident">s</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;got invalid map state from x server: {s:?}&quot;</span>),
+        <span class="kw">let </span>map_state = <span class="kw">match </span>win_attrs.map_state {
+            MapState::UNMAPPED =&gt; x::property::MapState::Unmapped,
+            MapState::UNVIEWABLE =&gt; x::property::MapState::UnViewable,
+            MapState::VIEWABLE =&gt; x::property::MapState::Viewable,
+            s =&gt; <span class="macro">panic!</span>(<span class="string">&quot;got invalid map state from x server: {s:?}&quot;</span>),
         };
 
-        <span class="kw">let</span> <span class="ident">window_class</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">win_attrs</span>.<span class="ident">class</span> {
-            <span class="ident">WindowClass::COPY_FROM_PARENT</span> =&gt; <span class="ident">x::property::WindowClass::CopyFromParent</span>,
-            <span class="ident">WindowClass::INPUT_OUTPUT</span> =&gt; <span class="ident">x::property::WindowClass::InputOutput</span>,
-            <span class="ident">WindowClass::INPUT_ONLY</span> =&gt; <span class="ident">x::property::WindowClass::InputOnly</span>,
-            <span class="ident">c</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;got invalid window class from x server: {c:?}&quot;</span>),
+        <span class="kw">let </span>window_class = <span class="kw">match </span>win_attrs.class {
+            WindowClass::COPY_FROM_PARENT =&gt; x::property::WindowClass::CopyFromParent,
+            WindowClass::INPUT_OUTPUT =&gt; x::property::WindowClass::InputOutput,
+            WindowClass::INPUT_ONLY =&gt; x::property::WindowClass::InputOnly,
+            c =&gt; <span class="macro">panic!</span>(<span class="string">&quot;got invalid window class from x server: {c:?}&quot;</span>),
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">WindowAttributes::new</span>(
-            <span class="ident">win_attrs</span>.<span class="ident">override_redirect</span>,
-            <span class="ident">map_state</span>,
-            <span class="ident">window_class</span>,
+        <span class="prelude-val">Ok</span>(WindowAttributes::new(
+            win_attrs.override_redirect,
+            map_state,
+            window_class,
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">get_wm_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Xid</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WmState</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_prop</span>(<span class="ident">client</span>, <span class="ident">Atom::WmState</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">Prop::Bytes</span>(<span class="ident">data</span>)) =&gt; <span class="kw">match</span> <span class="ident">data</span>[<span class="number">0</span>] {
-                <span class="number">0</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">WmState::Withdrawn</span>)),
-                <span class="number">1</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">WmState::Normal</span>)),
-                <span class="number">3</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">WmState::Iconic</span>)),
-                <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+    <span class="kw">fn </span>get_wm_state(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;WmState&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.get_prop(client, Atom::WmState.as_ref())<span class="question-mark">? </span>{
+            <span class="prelude-val">Some</span>(Prop::Bytes(data)) =&gt; <span class="kw">match </span>data[<span class="number">0</span>] {
+                <span class="number">0 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(WmState::Withdrawn)),
+                <span class="number">1 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(WmState::Normal)),
+                <span class="number">3 </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(WmState::Iconic)),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             },
 
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">set_wm_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">wm_state</span>: <span class="ident">WmState</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">PropMode::REPLACE</span>;
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">intern_atom</span>(<span class="ident">Atom::WmState</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wm_state</span> {
-            <span class="ident">WmState::Withdrawn</span> =&gt; <span class="number">0</span>,
-            <span class="ident">WmState::Normal</span> =&gt; <span class="number">1</span>,
-            <span class="ident">WmState::Iconic</span> =&gt; <span class="number">3</span>,
+    <span class="kw">fn </span>set_wm_state(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, wm_state: WmState) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>mode = PropMode::REPLACE;
+        <span class="kw">let </span>a = <span class="kw-2">*</span><span class="self">self</span>.intern_atom(Atom::WmState.as_ref())<span class="question-mark">?</span>;
+        <span class="kw">let </span>state = <span class="kw">match </span>wm_state {
+            WmState::Withdrawn =&gt; <span class="number">0</span>,
+            WmState::Normal =&gt; <span class="number">1</span>,
+            WmState::Iconic =&gt; <span class="number">3</span>,
         };
 
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">change_property32</span>(<span class="ident">mode</span>, <span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">a</span>, <span class="ident">a</span>, <span class="kw-2">&amp;</span>[<span class="ident">state</span>])<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.change_property32(mode, <span class="kw-2">*</span>id, a, a, <span class="kw-2">&amp;</span>[state])<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">set_prop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">val</span>: <span class="ident">Prop</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">intern_atom</span>(<span class="ident">name</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>set_prop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, name: <span class="kw-2">&amp;</span>str, val: Prop) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>a = <span class="kw-2">*</span><span class="self">self</span>.intern_atom(name)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">ty</span>, <span class="ident">data</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">val</span> {
-            <span class="ident">Prop::UTF8String</span>(<span class="ident">strs</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">change_property8</span>(
-                    <span class="ident">PropMode::REPLACE</span>,
-                    <span class="kw-2">*</span><span class="ident">id</span>,
-                    <span class="ident">a</span>,
-                    <span class="ident">AtomEnum::STRING</span>,
-                    <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;\0&quot;</span>).<span class="ident">as_bytes</span>(),
+        <span class="kw">let </span>(ty, data) = <span class="kw">match </span>val {
+            Prop::UTF8String(strs) =&gt; {
+                <span class="self">self</span>.conn.change_property8(
+                    PropMode::REPLACE,
+                    <span class="kw-2">*</span>id,
+                    a,
+                    AtomEnum::STRING,
+                    strs.join(<span class="string">&quot;\0&quot;</span>).as_bytes(),
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
 
-            <span class="ident">Prop::Atom</span>(<span class="ident">atoms</span>) =&gt; (
-                <span class="ident">AtomEnum::ATOM</span>,
-                <span class="ident">atoms</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">intern_atom</span>(<span class="ident">a</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">id</span>))
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>,
+            Prop::Atom(atoms) =&gt; (
+                AtomEnum::ATOM,
+                atoms
+                    .iter()
+                    .map(|a| <span class="self">self</span>.intern_atom(a).map(|id| <span class="kw-2">*</span>id))
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;u32&gt;&gt;&gt;()<span class="question-mark">?</span>,
             ),
 
-            <span class="ident">Prop::Cardinal</span>(<span class="ident">vals</span>) =&gt; (<span class="ident">AtomEnum::CARDINAL</span>, <span class="ident">vals</span>),
+            Prop::Cardinal(vals) =&gt; (AtomEnum::CARDINAL, vals),
 
-            <span class="ident">Prop::Window</span>(<span class="ident">ids</span>) =&gt; (<span class="ident">AtomEnum::WINDOW</span>, <span class="ident">ids</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">id</span>).<span class="ident">collect</span>()),
+            Prop::Window(ids) =&gt; (AtomEnum::WINDOW, ids.into_iter().map(|id| <span class="kw-2">*</span>id).collect()),
 
-            <span class="comment">// FIXME: handle changing WmHints and WmNormalHints correctly in change_prop</span>
-            <span class="ident">Prop::Bytes</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Prop::WmHints</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Prop::WmNormalHints</span>(<span class="kw">_</span>) =&gt; {
+            <span class="comment">// FIXME: handle changing WmHints and WmNormalHints correctly in change_prop
+            </span>Prop::Bytes(<span class="kw">_</span>) | Prop::WmHints(<span class="kw">_</span>) | Prop::WmNormalHints(<span class="kw">_</span>) =&gt; {
                 <span class="macro">panic!</span>(<span class="string">&quot;unable to change Prop, WmHints or WmNormalHints properties&quot;</span>);
             }
         };
 
-        <span class="self">self</span>.<span class="ident">conn</span>
-            .<span class="ident">change_property32</span>(<span class="ident">PropMode::REPLACE</span>, <span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">a</span>, <span class="ident">ty</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn
+            .change_property32(PropMode::REPLACE, <span class="kw-2">*</span>id, a, ty, <span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">set_client_attributes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">attrs</span>: <span class="kw-2">&amp;</span>[<span class="ident">ClientAttr</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client_event_mask</span> <span class="op">=</span> <span class="ident">EventMask::ENTER_WINDOW</span>
-            <span class="op">|</span> <span class="ident">EventMask::LEAVE_WINDOW</span>
-            <span class="op">|</span> <span class="ident">EventMask::PROPERTY_CHANGE</span>
-            <span class="op">|</span> <span class="ident">EventMask::STRUCTURE_NOTIFY</span>;
+    <span class="kw">fn </span>set_client_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, attrs: <span class="kw-2">&amp;</span>[ClientAttr]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>client_event_mask = EventMask::ENTER_WINDOW
+            | EventMask::LEAVE_WINDOW
+            | EventMask::PROPERTY_CHANGE
+            | EventMask::STRUCTURE_NOTIFY;
 
-        <span class="kw">let</span> <span class="ident">client_unmap_mask</span> <span class="op">=</span>
-            <span class="ident">EventMask::ENTER_WINDOW</span> <span class="op">|</span> <span class="ident">EventMask::LEAVE_WINDOW</span> <span class="op">|</span> <span class="ident">EventMask::PROPERTY_CHANGE</span>;
+        <span class="kw">let </span>client_unmap_mask =
+            EventMask::ENTER_WINDOW | EventMask::LEAVE_WINDOW | EventMask::PROPERTY_CHANGE;
 
-        <span class="kw">let</span> <span class="ident">root_event_mask</span> <span class="op">=</span> <span class="ident">EventMask::PROPERTY_CHANGE</span>
-            <span class="op">|</span> <span class="ident">EventMask::SUBSTRUCTURE_REDIRECT</span>
-            <span class="op">|</span> <span class="ident">EventMask::SUBSTRUCTURE_NOTIFY</span>
-            <span class="op">|</span> <span class="ident">EventMask::BUTTON_MOTION</span>;
+        <span class="kw">let </span>root_event_mask = EventMask::PROPERTY_CHANGE
+            | EventMask::SUBSTRUCTURE_REDIRECT
+            | EventMask::SUBSTRUCTURE_NOTIFY
+            | EventMask::BUTTON_MOTION;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">ChangeWindowAttributesAux::new</span>();
-        <span class="kw">for</span> <span class="ident">conf</span> <span class="kw">in</span> <span class="ident">attrs</span>.<span class="ident">iter</span>() {
-            <span class="kw">match</span> <span class="ident">conf</span> {
-                <span class="ident">ClientAttr::BorderColor</span>(<span class="ident">c</span>) =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">border_pixel</span>(<span class="kw-2">*</span><span class="ident">c</span>),
-                <span class="ident">ClientAttr::ClientEventMask</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">event_mask</span>(<span class="ident">client_event_mask</span>),
-                <span class="ident">ClientAttr::ClientUnmapMask</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">event_mask</span>(<span class="ident">client_unmap_mask</span>),
-                <span class="ident">ClientAttr::RootEventMask</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">event_mask</span>(<span class="ident">root_event_mask</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = ChangeWindowAttributesAux::new();
+        <span class="kw">for </span>conf <span class="kw">in </span>attrs.iter() {
+            <span class="kw">match </span>conf {
+                ClientAttr::BorderColor(c) =&gt; aux = aux.border_pixel(<span class="kw-2">*</span>c),
+                ClientAttr::ClientEventMask =&gt; aux = aux.event_mask(client_event_mask),
+                ClientAttr::ClientUnmapMask =&gt; aux = aux.event_mask(client_unmap_mask),
+                ClientAttr::RootEventMask =&gt; aux = aux.event_mask(root_event_mask),
             }
         }
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">change_window_attributes</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">aux</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.change_window_attributes(<span class="kw-2">*</span>id, <span class="kw-2">&amp;</span>aux)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">set_client_config</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">ClientConfig</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aux</span> <span class="op">=</span> <span class="ident">ConfigureWindowAux::new</span>();
-        <span class="kw">for</span> <span class="ident">conf</span> <span class="kw">in</span> <span class="ident">data</span>.<span class="ident">iter</span>() {
-            <span class="kw">match</span> <span class="ident">conf</span> {
-                <span class="ident">ClientConfig::BorderPx</span>(<span class="ident">px</span>) =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">border_width</span>(<span class="kw-2">*</span><span class="ident">px</span>),
-                <span class="ident">ClientConfig::Position</span>(<span class="ident">r</span>) =&gt; {
-                    <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">x</span>(<span class="ident">r</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">y</span>(<span class="ident">r</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">width</span>(<span class="ident">r</span>.<span class="ident">w</span>).<span class="ident">height</span>(<span class="ident">r</span>.<span class="ident">h</span>);
+    <span class="kw">fn </span>set_client_config(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, data: <span class="kw-2">&amp;</span>[ClientConfig]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>aux = ConfigureWindowAux::new();
+        <span class="kw">for </span>conf <span class="kw">in </span>data.iter() {
+            <span class="kw">match </span>conf {
+                ClientConfig::BorderPx(px) =&gt; aux = aux.border_width(<span class="kw-2">*</span>px),
+                ClientConfig::Position(r) =&gt; {
+                    aux = aux.x(r.x <span class="kw">as </span>i32).y(r.y <span class="kw">as </span>i32).width(r.w).height(r.h);
                 }
-                <span class="ident">ClientConfig::StackBelow</span>(<span class="ident">s</span>) =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">sibling</span>(<span class="ident">s</span>.<span class="number">0</span>).<span class="ident">stack_mode</span>(<span class="ident">StackMode::BELOW</span>),
-                <span class="ident">ClientConfig::StackAbove</span>(<span class="ident">s</span>) =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">sibling</span>(<span class="ident">s</span>.<span class="number">0</span>).<span class="ident">stack_mode</span>(<span class="ident">StackMode::ABOVE</span>),
-                <span class="ident">ClientConfig::StackBottom</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">stack_mode</span>(<span class="ident">StackMode::BELOW</span>),
-                <span class="ident">ClientConfig::StackTop</span> =&gt; <span class="ident">aux</span> <span class="op">=</span> <span class="ident">aux</span>.<span class="ident">stack_mode</span>(<span class="ident">StackMode::ABOVE</span>),
+                ClientConfig::StackBelow(s) =&gt; aux = aux.sibling(s.<span class="number">0</span>).stack_mode(StackMode::BELOW),
+                ClientConfig::StackAbove(s) =&gt; aux = aux.sibling(s.<span class="number">0</span>).stack_mode(StackMode::ABOVE),
+                ClientConfig::StackBottom =&gt; aux = aux.stack_mode(StackMode::BELOW),
+                ClientConfig::StackTop =&gt; aux = aux.stack_mode(StackMode::ABOVE),
             }
         }
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">configure_window</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">aux</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.configure_window(<span class="kw-2">*</span>id, <span class="kw-2">&amp;</span>aux)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">send_client_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="ident">ClientMessage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">type_</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">intern_atom</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">dtype</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">data</span> {
-            <span class="ident">x::event::ClientMessageData::U8</span>(<span class="ident">u8s</span>) =&gt; <span class="ident">ClientMessageData::from</span>(<span class="ident">u8s</span>),
-            <span class="ident">x::event::ClientMessageData::U16</span>(<span class="ident">u16s</span>) =&gt; <span class="ident">ClientMessageData::from</span>(<span class="ident">u16s</span>),
-            <span class="ident">x::event::ClientMessageData::U32</span>(<span class="ident">u32s</span>) =&gt; <span class="ident">ClientMessageData::from</span>(<span class="ident">u32s</span>),
+    <span class="kw">fn </span>send_client_message(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: ClientMessage) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>type_ = <span class="kw-2">*</span><span class="self">self</span>.intern_atom(<span class="kw-2">&amp;</span>msg.dtype)<span class="question-mark">?</span>;
+        <span class="kw">let </span>data = <span class="kw">match </span>msg.data {
+            x::event::ClientMessageData::U8(u8s) =&gt; ClientMessageData::from(u8s),
+            x::event::ClientMessageData::U16(u16s) =&gt; ClientMessageData::from(u16s),
+            x::event::ClientMessageData::U32(u32s) =&gt; ClientMessageData::from(u32s),
         };
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ClientMessageEvent</span> {
-            <span class="ident">response_type</span>: <span class="ident">CLIENT_MESSAGE_EVENT</span>,
-            <span class="ident">format</span>: <span class="number">32</span>,
-            <span class="ident">sequence</span>: <span class="number">0</span>,
-            <span class="ident">window</span>: <span class="kw-2">*</span><span class="ident">msg</span>.<span class="ident">id</span>,
-            <span class="ident">type_</span>,
-            <span class="ident">data</span>,
+        <span class="kw">let </span>event = ClientMessageEvent {
+            response_type: CLIENT_MESSAGE_EVENT,
+            format: <span class="number">32</span>,
+            sequence: <span class="number">0</span>,
+            window: <span class="kw-2">*</span>msg.id,
+            type_,
+            data,
         };
-        <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">mask</span> {
-            <span class="ident">ClientEventMask::NoEventMask</span> =&gt; <span class="ident">EventMask::NO_EVENT</span>,
-            <span class="ident">ClientEventMask::StructureNotify</span> =&gt; <span class="ident">EventMask::STRUCTURE_NOTIFY</span>,
-            <span class="ident">ClientEventMask::SubstructureNotify</span> =&gt; <span class="ident">EventMask::SUBSTRUCTURE_NOTIFY</span>,
+        <span class="kw">let </span>mask = <span class="kw">match </span>msg.mask {
+            ClientEventMask::NoEventMask =&gt; EventMask::NO_EVENT,
+            ClientEventMask::StructureNotify =&gt; EventMask::STRUCTURE_NOTIFY,
+            ClientEventMask::SubstructureNotify =&gt; EventMask::SUBSTRUCTURE_NOTIFY,
         };
 
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">send_event</span>(<span class="bool-val">false</span>, <span class="kw-2">*</span><span class="ident">msg</span>.<span class="ident">id</span>, <span class="ident">mask</span>, <span class="ident">event</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.send_event(<span class="bool-val">false</span>, <span class="kw-2">*</span>msg.id, mask, event)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">warp_pointer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Xid</span>, <span class="ident">x</span>: <span class="ident">i16</span>, <span class="ident">y</span>: <span class="ident">i16</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">conn</span>.<span class="ident">warp_pointer</span>(<span class="ident">x11rb::NONE</span>, <span class="kw-2">*</span><span class="ident">id</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">x</span>, <span class="ident">y</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>warp_pointer(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, x: i16, y: i16) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.conn.warp_pointer(x11rb::NONE, <span class="kw-2">*</span>id, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, x, y)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

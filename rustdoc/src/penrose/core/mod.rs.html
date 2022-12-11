@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -516,521 +516,521 @@
 <span id="514">514</span>
 <span id="515">515</span>
 <span id="516">516</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">pure</span>::{<span class="ident">Diff</span>, <span class="ident">StackSet</span>, <span class="ident">Workspace</span>},
-    <span class="ident">x</span>::{
-        <span class="ident">manage_without_refresh</span>,
-        <span class="ident">property</span>::{<span class="ident">MapState</span>, <span class="ident">WmState</span>},
-        <span class="ident">Atom</span>, <span class="ident">Prop</span>, <span class="ident">WindowAttributes</span>, <span class="ident">XConn</span>, <span class="ident">XConnExt</span>, <span class="ident">XEvent</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
+</span><span class="kw">use crate</span>::{
+    pure::{Diff, StackSet, Workspace},
+    x::{
+        manage_without_refresh,
+        property::{MapState, WmState},
+        Atom, Prop, WindowAttributes, XConn, XConnExt, XEvent,
     },
-    <span class="ident">Color</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>,
+    Color, Error, <span class="prelude-ty">Result</span>,
 };
-<span class="kw">use</span> <span class="ident">anymap</span>::{<span class="ident">any::Any</span>, <span class="ident">AnyMap</span>};
-<span class="kw">use</span> <span class="ident">nix::sys::signal</span>::{<span class="ident">signal</span>, <span class="ident">SigHandler</span>, <span class="ident">Signal</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">any::TypeId</span>,
-    <span class="ident">cell::RefCell</span>,
-    <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>},
-    <span class="ident">fmt</span>,
-    <span class="ident">ops::Deref</span>,
-    <span class="ident">sync::Arc</span>,
+<span class="kw">use </span>anymap::{any::Any, AnyMap};
+<span class="kw">use </span>nix::sys::signal::{signal, SigHandler, Signal};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+</span><span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>std::{
+    any::TypeId,
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    fmt,
+    ops::Deref,
+    sync::Arc,
 };
-<span class="kw">use</span> <span class="ident">tracing</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">span</span>, <span class="ident">trace</span>, <span class="ident">Level</span>};
+<span class="kw">use </span>tracing::{error, info, span, trace, Level};
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bindings</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">handle</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hooks</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">layout</span>;
+<span class="kw">pub mod </span>bindings;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>handle;
+<span class="kw">pub mod </span>hooks;
+<span class="kw">pub mod </span>layout;
 
-<span class="kw">use</span> <span class="ident">bindings</span>::{<span class="ident">KeyBindings</span>, <span class="ident">MouseBindings</span>};
-<span class="kw">use</span> <span class="ident">hooks</span>::{<span class="ident">EventHook</span>, <span class="ident">ManageHook</span>, <span class="ident">StateHook</span>};
-<span class="kw">use</span> <span class="ident">layout::LayoutStack</span>;
+<span class="kw">use </span>bindings::{KeyBindings, MouseBindings};
+<span class="kw">use </span>hooks::{EventHook, ManageHook, StateHook};
+<span class="kw">use </span>layout::LayoutStack;
 
-<span class="doccomment">/// An X11 ID for a given resource</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Xid</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">u32</span>);
+<span class="doccomment">/// An X11 ID for a given resource
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+</span><span class="kw">pub struct </span>Xid(<span class="kw">pub</span>(<span class="kw">crate</span>) u32);
 
-<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">Xid</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Xid {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Xid</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="kw">impl </span>Deref <span class="kw">for </span>Xid {
+    <span class="kw">type </span>Target = u32;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl </span>From&lt;u32&gt; <span class="kw">for </span>Xid {
+    <span class="kw">fn </span>from(id: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(id)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Xid</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">id</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">id</span>)
-    }
+<span class="kw">impl </span>From&lt;Xid&gt; <span class="kw">for </span>u32 {
+    <span class="kw">fn </span>from(id: Xid) -&gt; <span class="self">Self </span>{
+        id.<span class="number">0
+    </span>}
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u32</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">id</span>: <span class="ident">Xid</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">id</span>.<span class="number">0</span>
-    }
-}
+<span class="doccomment">/// The pure client state information for the window manager
+</span><span class="kw">pub type </span>ClientSet = StackSet&lt;Xid&gt;;
 
-<span class="doccomment">/// The pure client state information for the window manager</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ClientSet</span> <span class="op">=</span> <span class="ident">StackSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>;
+<span class="doccomment">/// The pure client state information for a single [Workspace]
+</span><span class="kw">pub type </span>ClientSpace = Workspace&lt;Xid&gt;;
 
-<span class="doccomment">/// The pure client state information for a single [Workspace]</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ClientSpace</span> <span class="op">=</span> <span class="ident">Workspace</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>;
-
-<span class="doccomment">/// Mutable internal state for the window manager</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// Mutable internal state for the window manager
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>State&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// The user defined configuration options for running the main window manager logic</span>
-    <span class="kw">pub</span> <span class="ident">config</span>: <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The pure window manager state</span>
-    <span class="kw">pub</span> <span class="ident">client_set</span>: <span class="ident">ClientSet</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">extensions</span>: <span class="ident">AnyMap</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">root</span>: <span class="ident">Xid</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">mapped</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pending_unmap</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Xid</span>, <span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">current_event</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">XEvent</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">diff</span>: <span class="ident">Diff</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>,
-    <span class="comment">// pub(crate) mouse_focused: bool,</span>
-    <span class="comment">// pub(crate) mouse_position: Option&lt;(Point, Point)&gt;,</span>
-}
+    <span class="doccomment">/// The user defined configuration options for running the main window manager logic
+    </span><span class="kw">pub </span>config: Config&lt;X&gt;,
+    <span class="doccomment">/// The pure window manager state
+    </span><span class="kw">pub </span>client_set: ClientSet,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) extensions: AnyMap,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) root: Xid,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) mapped: HashSet&lt;Xid&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pending_unmap: HashMap&lt;Xid, usize&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) current_event: <span class="prelude-ty">Option</span>&lt;XEvent&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) diff: Diff&lt;Xid&gt;,
+    <span class="comment">// pub(crate) mouse_focused: bool,
+    // pub(crate) mouse_position: Option&lt;(Point, Point)&gt;,
+</span>}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;X&gt; State&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// The Xid of the root window for the running [WindowManager].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">root</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Xid</span> {
-        <span class="self">self</span>.<span class="ident">root</span>
+    <span class="doccomment">/// The Xid of the root window for the running [WindowManager].
+    </span><span class="kw">pub fn </span>root(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Xid {
+        <span class="self">self</span>.root
     }
 
-    <span class="doccomment">/// The set of all client windows currently mapped to a screen.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mapped_clients</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mapped</span>
+    <span class="doccomment">/// The set of all client windows currently mapped to a screen.
+    </span><span class="kw">pub fn </span>mapped_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>HashSet&lt;Xid&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.mapped
     }
 
-    <span class="doccomment">/// The event currently being processed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">XEvent</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">current_event</span>.<span class="ident">as_ref</span>()
+    <span class="doccomment">/// The event currently being processed.
+    </span><span class="kw">pub fn </span>current_event(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>XEvent&gt; {
+        <span class="self">self</span>.current_event.as_ref()
     }
 
-    <span class="doccomment">/// Get access to a shared state extension.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// To add an extension to [State] before starting the Window Manager, see the</span>
-    <span class="doccomment">/// [WindowManager::add_extension] method. To add an extension dynamically</span>
-    <span class="doccomment">/// when you have access to [State], see [State::add_extension].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">/// Returns `Error::UnknownStateExtension` if there is no extension of type `E`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extension</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Any</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">extensions</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">map</span>(<span class="ident">Arc::clone</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">Error::UnknownStateExtension</span> {
-                <span class="ident">type_id</span>: <span class="ident">TypeId::of</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(),
+    <span class="doccomment">/// Get access to a shared state extension.
+    ///
+    /// To add an extension to [State] before starting the Window Manager, see the
+    /// [WindowManager::add_extension] method. To add an extension dynamically
+    /// when you have access to [State], see [State::add_extension].
+    ///
+    /// # Errors
+    /// Returns `Error::UnknownStateExtension` if there is no extension of type `E`.
+    </span><span class="kw">pub fn </span>extension&lt;E: Any&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;RefCell&lt;E&gt;&gt;&gt; {
+        <span class="self">self</span>.extensions
+            .get()
+            .map(Arc::clone)
+            .ok_or(Error::UnknownStateExtension {
+                type_id: TypeId::of::&lt;E&gt;(),
             })
     }
 
-    <span class="doccomment">/// Get access to a shared state extension or set it using Default.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extension_or_default</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Any</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">contains</span>::<span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>() {
-            <span class="self">self</span>.<span class="ident">add_extension</span>(<span class="ident">E::default</span>());
+    <span class="doccomment">/// Get access to a shared state extension or set it using Default.
+    </span><span class="kw">pub fn </span>extension_or_default&lt;E: Default + Any&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Arc&lt;RefCell&lt;E&gt;&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.extensions.contains::&lt;Arc&lt;RefCell&lt;E&gt;&gt;&gt;() {
+            <span class="self">self</span>.add_extension(E::default());
         }
 
-        <span class="self">self</span>.<span class="ident">extension</span>().<span class="ident">expect</span>(<span class="string">&quot;to have defaulted if missing&quot;</span>)
+        <span class="self">self</span>.extension().expect(<span class="string">&quot;to have defaulted if missing&quot;</span>)
     }
 
-    <span class="doccomment">/// Remove a shared state extension entirely.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` if there is no extension of type `E` or if that extension</span>
-    <span class="doccomment">/// is currently being held by another thread.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_extension</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Any</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">remove</span>()<span class="question-mark">?</span>;
+    <span class="doccomment">/// Remove a shared state extension entirely.
+    ///
+    /// Returns `None` if there is no extension of type `E` or if that extension
+    /// is currently being held by another thread.
+    </span><span class="kw">pub fn </span>remove_extension&lt;E: Any&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;E&gt; {
+        <span class="kw">let </span>arc: Arc&lt;RefCell&lt;E&gt;&gt; = <span class="self">self</span>.extensions.remove()<span class="question-mark">?</span>;
 
-        <span class="comment">// If there is only one strong reference to this state then we&#39;ll be able to</span>
-        <span class="comment">// try_unwrap it and return the underlying `E`. If not the this fails so we</span>
-        <span class="comment">// need to store it back in the extensions anymap.</span>
-        <span class="kw">match</span> <span class="ident">Arc::try_unwrap</span>(<span class="ident">arc</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">rc</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">rc</span>.<span class="ident">into_inner</span>()),
-            <span class="prelude-val">Err</span>(<span class="ident">arc</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">insert</span>(<span class="ident">arc</span>);
-                <span class="prelude-val">None</span>
-            }
+        <span class="comment">// If there is only one strong reference to this state then we&#39;ll be able to
+        // try_unwrap it and return the underlying `E`. If not the this fails so we
+        // need to store it back in the extensions anymap.
+        </span><span class="kw">match </span>Arc::try_unwrap(arc) {
+            <span class="prelude-val">Ok</span>(rc) =&gt; <span class="prelude-val">Some</span>(rc.into_inner()),
+            <span class="prelude-val">Err</span>(arc) =&gt; {
+                <span class="self">self</span>.extensions.insert(arc);
+                <span class="prelude-val">None
+            </span>}
         }
     }
 
-    <span class="doccomment">/// Add a typed [State] extension to this State.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_extension</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Any</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">extension</span>: <span class="ident">E</span>) {
-        <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">insert</span>(<span class="ident">Arc::new</span>(<span class="ident">RefCell::new</span>(<span class="ident">extension</span>)));
+    <span class="doccomment">/// Add a typed [State] extension to this State.
+    </span><span class="kw">pub fn </span>add_extension&lt;E: Any&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, extension: E) {
+        <span class="self">self</span>.extensions.insert(Arc::new(RefCell::new(extension)));
     }
 }
 
-<span class="doccomment">/// The user specified config options for how the window manager should run</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// The user specified config options for how the window manager should run
+</span><span class="kw">pub struct </span>Config&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// The RGBA color to use for normal (unfocused) window borders</span>
-    <span class="kw">pub</span> <span class="ident">normal_border</span>: <span class="ident">Color</span>,
-    <span class="doccomment">/// The RGBA color to use for the focused window border</span>
-    <span class="kw">pub</span> <span class="ident">focused_border</span>: <span class="ident">Color</span>,
-    <span class="doccomment">/// The width in pixels to use for drawing window borders</span>
-    <span class="kw">pub</span> <span class="ident">border_width</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// Whether or not the mouse entering a new window should set focus</span>
-    <span class="kw">pub</span> <span class="ident">focus_follow_mouse</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// The stack of layouts to use for each workspace</span>
-    <span class="kw">pub</span> <span class="ident">default_layouts</span>: <span class="ident">LayoutStack</span>,
-    <span class="doccomment">/// The ordered set of workspace tags to use on window manager startup</span>
-    <span class="kw">pub</span> <span class="ident">tags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Window classes that should always be assigned floating positions rather than tiled</span>
-    <span class="kw">pub</span> <span class="ident">floating_classes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A [StateHook] to run before entering the main event loop</span>
-    <span class="kw">pub</span> <span class="ident">startup_hook</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StateHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A [StateHook] to run before processing each [XEvent]</span>
-    <span class="kw">pub</span> <span class="ident">event_hook</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">EventHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A [ManageHook] to run after each new window becomes managed by the window manager</span>
-    <span class="kw">pub</span> <span class="ident">manage_hook</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">ManageHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A [StateHook] to run every time the on screen X state is refreshed</span>
-    <span class="kw">pub</span> <span class="ident">refresh_hook</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StateHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The RGBA color to use for normal (unfocused) window borders
+    </span><span class="kw">pub </span>normal_border: Color,
+    <span class="doccomment">/// The RGBA color to use for the focused window border
+    </span><span class="kw">pub </span>focused_border: Color,
+    <span class="doccomment">/// The width in pixels to use for drawing window borders
+    </span><span class="kw">pub </span>border_width: u32,
+    <span class="doccomment">/// Whether or not the mouse entering a new window should set focus
+    </span><span class="kw">pub </span>focus_follow_mouse: bool,
+    <span class="doccomment">/// The stack of layouts to use for each workspace
+    </span><span class="kw">pub </span>default_layouts: LayoutStack,
+    <span class="doccomment">/// The ordered set of workspace tags to use on window manager startup
+    </span><span class="kw">pub </span>tags: Vec&lt;String&gt;,
+    <span class="doccomment">/// Window classes that should always be assigned floating positions rather than tiled
+    </span><span class="kw">pub </span>floating_classes: Vec&lt;String&gt;,
+    <span class="doccomment">/// A [StateHook] to run before entering the main event loop
+    </span><span class="kw">pub </span>startup_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>StateHook&lt;X&gt;&gt;&gt;,
+    <span class="doccomment">/// A [StateHook] to run before processing each [XEvent]
+    </span><span class="kw">pub </span>event_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>EventHook&lt;X&gt;&gt;&gt;,
+    <span class="doccomment">/// A [ManageHook] to run after each new window becomes managed by the window manager
+    </span><span class="kw">pub </span>manage_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>ManageHook&lt;X&gt;&gt;&gt;,
+    <span class="doccomment">/// A [StateHook] to run every time the on screen X state is refreshed
+    </span><span class="kw">pub </span>refresh_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>StateHook&lt;X&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;X&gt; fmt::Debug <span class="kw">for </span>Config&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Config&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;normal_border&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">normal_border</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;focused_border&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focused_border</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;border_width&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">border_width</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;focus_follow_mouse&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">focus_follow_mouse</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;default_layouts&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">default_layouts</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;tags&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tags</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;floating_classes&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">floating_classes</span>)
-            .<span class="ident">finish</span>()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;Config&quot;</span>)
+            .field(<span class="string">&quot;normal_border&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.normal_border)
+            .field(<span class="string">&quot;focused_border&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.focused_border)
+            .field(<span class="string">&quot;border_width&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.border_width)
+            .field(<span class="string">&quot;focus_follow_mouse&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.focus_follow_mouse)
+            .field(<span class="string">&quot;default_layouts&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.default_layouts)
+            .field(<span class="string">&quot;tags&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.tags)
+            .field(<span class="string">&quot;floating_classes&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.floating_classes)
+            .finish()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;X&gt; Default <span class="kw">for </span>Config&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">strings</span> <span class="op">=</span> <span class="op">|</span><span class="ident">slice</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]<span class="op">|</span> <span class="ident">slice</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()).<span class="ident">collect</span>();
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>strings = |slice: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]| slice.iter().map(|s| s.to_string()).collect();
 
-        <span class="ident">Config</span> {
-            <span class="ident">normal_border</span>: <span class="string">&quot;#3c3836&quot;</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;valid hex code&quot;</span>),
-            <span class="ident">focused_border</span>: <span class="string">&quot;#cc241d&quot;</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;valid hex code&quot;</span>),
-            <span class="ident">border_width</span>: <span class="number">2</span>,
-            <span class="ident">focus_follow_mouse</span>: <span class="bool-val">true</span>,
-            <span class="ident">default_layouts</span>: <span class="ident">LayoutStack::default</span>(),
-            <span class="ident">tags</span>: <span class="ident">strings</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;4&quot;</span>, <span class="string">&quot;5&quot;</span>, <span class="string">&quot;6&quot;</span>, <span class="string">&quot;7&quot;</span>, <span class="string">&quot;8&quot;</span>, <span class="string">&quot;9&quot;</span>]),
-            <span class="ident">floating_classes</span>: <span class="ident">strings</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;dmenu&quot;</span>, <span class="string">&quot;dunst&quot;</span>]),
-            <span class="ident">startup_hook</span>: <span class="prelude-val">None</span>,
-            <span class="ident">event_hook</span>: <span class="prelude-val">None</span>,
-            <span class="ident">manage_hook</span>: <span class="prelude-val">None</span>,
-            <span class="ident">refresh_hook</span>: <span class="prelude-val">None</span>,
+        Config {
+            normal_border: <span class="string">&quot;#3c3836&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
+            focused_border: <span class="string">&quot;#cc241d&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
+            border_width: <span class="number">2</span>,
+            focus_follow_mouse: <span class="bool-val">true</span>,
+            default_layouts: LayoutStack::default(),
+            tags: strings(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;4&quot;</span>, <span class="string">&quot;5&quot;</span>, <span class="string">&quot;6&quot;</span>, <span class="string">&quot;7&quot;</span>, <span class="string">&quot;8&quot;</span>, <span class="string">&quot;9&quot;</span>]),
+            floating_classes: strings(<span class="kw-2">&amp;</span>[<span class="string">&quot;dmenu&quot;</span>, <span class="string">&quot;dunst&quot;</span>]),
+            startup_hook: <span class="prelude-val">None</span>,
+            event_hook: <span class="prelude-val">None</span>,
+            manage_hook: <span class="prelude-val">None</span>,
+            refresh_hook: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;X&gt; Config&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// Set the startup_hook or compose it with what is already set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The new hook will run before what was there before.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_or_set_startup_hook</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hook</span>: <span class="ident">H</span>)
-    <span class="kw">where</span>
-        <span class="ident">H</span>: <span class="ident">StateHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-        <span class="ident">X</span>: <span class="lifetime">&#39;static</span>,
+    <span class="doccomment">/// Set the startup_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
+    </span><span class="kw">pub fn </span>compose_or_set_startup_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
+    <span class="kw">where
+        </span>H: StateHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        X: <span class="lifetime">&#39;static</span>,
     {
-        <span class="self">self</span>.<span class="ident">startup_hook</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">startup_hook</span>.<span class="ident">take</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">then_boxed</span>(<span class="ident">h</span>)),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">boxed</span>()),
+        <span class="self">self</span>.startup_hook = <span class="kw">match </span><span class="self">self</span>.startup_hook.take() {
+            <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(hook.boxed()),
         };
     }
 
-    <span class="doccomment">/// Set the event_hook or compose it with what is already set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The new hook will run before what was there before.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_or_set_event_hook</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hook</span>: <span class="ident">H</span>)
-    <span class="kw">where</span>
-        <span class="ident">H</span>: <span class="ident">EventHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-        <span class="ident">X</span>: <span class="lifetime">&#39;static</span>,
+    <span class="doccomment">/// Set the event_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
+    </span><span class="kw">pub fn </span>compose_or_set_event_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
+    <span class="kw">where
+        </span>H: EventHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        X: <span class="lifetime">&#39;static</span>,
     {
-        <span class="self">self</span>.<span class="ident">event_hook</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">event_hook</span>.<span class="ident">take</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">then_boxed</span>(<span class="ident">h</span>)),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">boxed</span>()),
+        <span class="self">self</span>.event_hook = <span class="kw">match </span><span class="self">self</span>.event_hook.take() {
+            <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(hook.boxed()),
         };
     }
 
-    <span class="doccomment">/// Set the manage_hook or compose it with what is already set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The new hook will run before what was there before.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_or_set_manage_hook</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hook</span>: <span class="ident">H</span>)
-    <span class="kw">where</span>
-        <span class="ident">H</span>: <span class="ident">ManageHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-        <span class="ident">X</span>: <span class="lifetime">&#39;static</span>,
+    <span class="doccomment">/// Set the manage_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
+    </span><span class="kw">pub fn </span>compose_or_set_manage_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
+    <span class="kw">where
+        </span>H: ManageHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        X: <span class="lifetime">&#39;static</span>,
     {
-        <span class="self">self</span>.<span class="ident">manage_hook</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">manage_hook</span>.<span class="ident">take</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">then_boxed</span>(<span class="ident">h</span>)),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">boxed</span>()),
+        <span class="self">self</span>.manage_hook = <span class="kw">match </span><span class="self">self</span>.manage_hook.take() {
+            <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(hook.boxed()),
         };
     }
 
-    <span class="doccomment">/// Set the refresh_hook or compose it with what is already set.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The new hook will run before what was there before.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compose_or_set_refresh_hook</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">hook</span>: <span class="ident">H</span>)
-    <span class="kw">where</span>
-        <span class="ident">H</span>: <span class="ident">StateHook</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-        <span class="ident">X</span>: <span class="lifetime">&#39;static</span>,
+    <span class="doccomment">/// Set the refresh_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
+    </span><span class="kw">pub fn </span>compose_or_set_refresh_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
+    <span class="kw">where
+        </span>H: StateHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        X: <span class="lifetime">&#39;static</span>,
     {
-        <span class="self">self</span>.<span class="ident">refresh_hook</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">refresh_hook</span>.<span class="ident">take</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">then_boxed</span>(<span class="ident">h</span>)),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">hook</span>.<span class="ident">boxed</span>()),
+        <span class="self">self</span>.refresh_hook = <span class="kw">match </span><span class="self">self</span>.refresh_hook.take() {
+            <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(hook.boxed()),
         };
     }
 }
 
-<span class="doccomment">/// A top level struct holding all of the state required to run as an X11 window manager.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This allows for final configuration to be carried out before entering the main event</span>
-<span class="doccomment">/// loop.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WindowManager</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="doccomment">/// A top level struct holding all of the state required to run as an X11 window manager.
+///
+/// This allows for final configuration to be carried out before entering the main event
+/// loop.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>WindowManager&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="ident">x</span>: <span class="ident">X</span>,
-    <span class="doccomment">/// The mutable [State] of the window manager</span>
-    <span class="kw">pub</span> <span class="ident">state</span>: <span class="ident">State</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-    <span class="ident">key_bindings</span>: <span class="ident">KeyBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-    <span class="ident">mouse_bindings</span>: <span class="ident">MouseBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
+    x: X,
+    <span class="doccomment">/// The mutable [State] of the window manager
+    </span><span class="kw">pub </span>state: State&lt;X&gt;,
+    key_bindings: KeyBindings&lt;X&gt;,
+    mouse_bindings: MouseBindings&lt;X&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span> <span class="ident">WindowManager</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">X</span>: <span class="ident">XConn</span>,
+<span class="kw">impl</span>&lt;X&gt; WindowManager&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
 {
-    <span class="doccomment">/// Construct a new [WindowManager] with the provided config and X connection.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If you need to set [State] extensions, call [WindowManager::add_extension] after</span>
-    <span class="doccomment">/// constructing your initial WindowManager.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">config</span>: <span class="ident">Config</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-        <span class="ident">key_bindings</span>: <span class="ident">KeyBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-        <span class="ident">mouse_bindings</span>: <span class="ident">MouseBindings</span><span class="op">&lt;</span><span class="ident">X</span><span class="op">&gt;</span>,
-        <span class="ident">x</span>: <span class="ident">X</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client_set</span> <span class="op">=</span> <span class="ident">StackSet::try_new</span>(
-            <span class="ident">config</span>.<span class="ident">default_layouts</span>.<span class="ident">clone</span>(),
-            <span class="ident">config</span>.<span class="ident">tags</span>.<span class="ident">iter</span>(),
-            <span class="ident">x</span>.<span class="ident">screen_details</span>()<span class="question-mark">?</span>,
+    <span class="doccomment">/// Construct a new [WindowManager] with the provided config and X connection.
+    ///
+    /// If you need to set [State] extensions, call [WindowManager::add_extension] after
+    /// constructing your initial WindowManager.
+    </span><span class="kw">pub fn </span>new(
+        config: Config&lt;X&gt;,
+        key_bindings: KeyBindings&lt;X&gt;,
+        mouse_bindings: MouseBindings&lt;X&gt;,
+        x: X,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>client_set = StackSet::try_new(
+            config.default_layouts.clone(),
+            config.tags.iter(),
+            x.screen_details()<span class="question-mark">?</span>,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">client_set</span>.<span class="ident">snapshot</span>(<span class="macro">vec!</span>[]);
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">Diff::new</span>(<span class="ident">ss</span>.<span class="ident">clone</span>(), <span class="ident">ss</span>);
+        <span class="kw">let </span>ss = client_set.snapshot(<span class="macro">vec!</span>[]);
+        <span class="kw">let </span>diff = Diff::new(ss.clone(), ss);
 
-        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State</span> {
-            <span class="ident">config</span>,
-            <span class="ident">client_set</span>,
-            <span class="ident">extensions</span>: <span class="ident">AnyMap::new</span>(),
-            <span class="ident">root</span>: <span class="ident">x</span>.<span class="ident">root</span>(),
-            <span class="ident">mapped</span>: <span class="ident">HashSet::new</span>(),
-            <span class="ident">pending_unmap</span>: <span class="ident">HashMap::new</span>(),
-            <span class="ident">current_event</span>: <span class="prelude-val">None</span>,
-            <span class="ident">diff</span>,
+        <span class="kw">let </span>state = State {
+            config,
+            client_set,
+            extensions: AnyMap::new(),
+            root: x.root(),
+            mapped: HashSet::new(),
+            pending_unmap: HashMap::new(),
+            current_event: <span class="prelude-val">None</span>,
+            diff,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">x</span>,
-            <span class="ident">state</span>,
-            <span class="ident">key_bindings</span>,
-            <span class="ident">mouse_bindings</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            x,
+            state,
+            key_bindings,
+            mouse_bindings,
         })
     }
 
-    <span class="doccomment">/// Add a typed [State] extension to this WindowManager.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_extension</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Any</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">extension</span>: <span class="ident">E</span>) {
-        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">add_extension</span>(<span class="ident">extension</span>);
+    <span class="doccomment">/// Add a typed [State] extension to this WindowManager.
+    </span><span class="kw">pub fn </span>add_extension&lt;E: Any&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, extension: E) {
+        <span class="self">self</span>.state.add_extension(extension);
     }
 
-    <span class="doccomment">/// Start the WindowManager and run it until told to exit.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Any provided startup hooks will be run after setting signal handlers and grabbing</span>
-    <span class="doccomment">/// key / mouse bindings from the X server. Any set up you need to do should be run</span>
-    <span class="doccomment">/// explicitly before calling this method or as part of a startup hook.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="doccomment">/// Start the WindowManager and run it until told to exit.
+    ///
+    /// Any provided startup hooks will be run after setting signal handlers and grabbing
+    /// key / mouse bindings from the X server. Any set up you need to do should be run
+    /// explicitly before calling this method or as part of a startup hook.
+    </span><span class="kw">pub fn </span>run(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">info!</span>(<span class="string">&quot;registering SIGCHILD signal handler&quot;</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">signal</span>(<span class="ident">Signal::SIGCHLD</span>, <span class="ident">SigHandler::SigIgn</span>) } {
-            <span class="macro">panic!</span>(<span class="string">&quot;unable to set signal handler: {}&quot;</span>, <span class="ident">e</span>);
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
+            <span class="macro">panic!</span>(<span class="string">&quot;unable to set signal handler: {}&quot;</span>, e);
         }
 
-        <span class="self">self</span>.<span class="ident">grab</span>()<span class="question-mark">?</span>;
+        <span class="self">self</span>.grab()<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">h</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">config</span>.<span class="ident">startup_hook</span>.<span class="ident">take</span>() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>h) = <span class="self">self</span>.state.config.startup_hook.take() {
             <span class="macro">trace!</span>(<span class="string">&quot;running user startup hook&quot;</span>);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">h</span>.<span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">x</span>) {
-                <span class="macro">error!</span>(<span class="op">%</span><span class="ident">e</span>, <span class="string">&quot;error returned from user startup hook&quot;</span>);
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = h.call(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state, <span class="kw-2">&amp;</span><span class="self">self</span>.x) {
+                <span class="macro">error!</span>(%e, <span class="string">&quot;error returned from user startup hook&quot;</span>);
             }
         }
 
-        <span class="self">self</span>.<span class="ident">manage_existing_clients</span>()<span class="question-mark">?</span>;
+        <span class="self">self</span>.manage_existing_clients()<span class="question-mark">?</span>;
 
-        <span class="kw">loop</span> {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">next_event</span>() {
-                <span class="prelude-val">Ok</span>(<span class="ident">event</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="macro">span!</span>(<span class="ident">target</span>: <span class="string">&quot;penrose&quot;</span>, <span class="ident">Level::INFO</span>, <span class="string">&quot;XEvent&quot;</span>, <span class="op">%</span><span class="ident">event</span>);
-                    <span class="kw">let</span> <span class="ident">_enter</span> <span class="op">=</span> <span class="ident">span</span>.<span class="ident">enter</span>();
-                    <span class="macro">trace!</span>(<span class="ident">details</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">event</span>, <span class="string">&quot;event details&quot;</span>);
-                    <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">current_event</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">event</span>.<span class="ident">clone</span>());
+        <span class="kw">loop </span>{
+            <span class="kw">match </span><span class="self">self</span>.x.next_event() {
+                <span class="prelude-val">Ok</span>(event) =&gt; {
+                    <span class="kw">let </span>span = <span class="macro">span!</span>(target: <span class="string">&quot;penrose&quot;</span>, Level::INFO, <span class="string">&quot;XEvent&quot;</span>, %event);
+                    <span class="kw">let </span>_enter = span.enter();
+                    <span class="macro">trace!</span>(details = <span class="question-mark">?</span>event, <span class="string">&quot;event details&quot;</span>);
+                    <span class="self">self</span>.state.current_event = <span class="prelude-val">Some</span>(event.clone());
 
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">handle_xevent</span>(<span class="ident">event</span>) {
-                        <span class="macro">error!</span>(<span class="op">%</span><span class="ident">e</span>, <span class="string">&quot;Error handling XEvent&quot;</span>);
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.handle_xevent(event) {
+                        <span class="macro">error!</span>(%e, <span class="string">&quot;Error handling XEvent&quot;</span>);
                     }
-                    <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">flush</span>();
+                    <span class="self">self</span>.x.flush();
 
-                    <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">current_event</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+                    <span class="self">self</span>.state.current_event = <span class="prelude-val">None</span>;
                 }
 
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="macro">error!</span>(<span class="op">%</span><span class="ident">e</span>, <span class="string">&quot;Error pulling next x event&quot;</span>),
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">error!</span>(%e, <span class="string">&quot;Error pulling next x event&quot;</span>),
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">grab</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn </span>grab(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">trace!</span>(<span class="string">&quot;grabbing key and mouse bindings&quot;</span>);
-        <span class="kw">let</span> <span class="ident">key_codes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">key_bindings</span>.<span class="ident">keys</span>().<span class="ident">copied</span>().<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">mouse_states</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">mouse_bindings</span>
-            .<span class="ident">keys</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">state</span>)<span class="op">|</span> <span class="ident">state</span>.<span class="ident">clone</span>())
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>key_codes: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.key_bindings.keys().copied().collect();
+        <span class="kw">let </span>mouse_states: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self
+            </span>.mouse_bindings
+            .keys()
+            .map(|(<span class="kw">_</span>, state)| state.clone())
+            .collect();
 
-        <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">grab</span>(<span class="kw-2">&amp;</span><span class="ident">key_codes</span>, <span class="kw-2">&amp;</span><span class="ident">mouse_states</span>)
+        <span class="self">self</span>.x.grab(<span class="kw-2">&amp;</span>key_codes, <span class="kw-2">&amp;</span>mouse_states)
     }
 
-    <span class="kw">fn</span> <span class="ident">handle_xevent</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">XEvent</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">XEvent</span>::<span class="kw-2">*</span>;
+    <span class="kw">fn </span>handle_xevent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: XEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">use </span>XEvent::<span class="kw-2">*</span>;
 
-        <span class="kw">let</span> <span class="ident">WindowManager</span> {
-            <span class="ident">x</span>,
-            <span class="ident">state</span>,
-            <span class="ident">key_bindings</span>,
-            <span class="ident">mouse_bindings</span>,
-        } <span class="op">=</span> <span class="self">self</span>;
+        <span class="kw">let </span>WindowManager {
+            x,
+            state,
+            key_bindings,
+            mouse_bindings,
+        } = <span class="self">self</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hook</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">config</span>.<span class="ident">event_hook</span>.<span class="ident">take</span>();
-        <span class="kw">let</span> <span class="ident">should_run</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">hook</span> {
-            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">h</span>) =&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>hook = state.config.event_hook.take();
+        <span class="kw">let </span>should_run = <span class="kw">match </span>hook {
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) =&gt; {
                 <span class="macro">trace!</span>(<span class="string">&quot;running user event hook&quot;</span>);
-                <span class="kw">match</span> <span class="ident">h</span>.<span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>, <span class="ident">state</span>, <span class="ident">x</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">should_run</span>) =&gt; <span class="ident">should_run</span>,
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                        <span class="macro">error!</span>(<span class="op">%</span><span class="ident">e</span>, <span class="string">&quot;error returned from user event hook&quot;</span>);
-                        <span class="bool-val">true</span>
-                    }
+                <span class="kw">match </span>h.call(<span class="kw-2">&amp;</span>event, state, x) {
+                    <span class="prelude-val">Ok</span>(should_run) =&gt; should_run,
+                    <span class="prelude-val">Err</span>(e) =&gt; {
+                        <span class="macro">error!</span>(%e, <span class="string">&quot;error returned from user event hook&quot;</span>);
+                        <span class="bool-val">true
+                    </span>}
                 }
             }
 
-            <span class="prelude-val">None</span> =&gt; <span class="bool-val">true</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="bool-val">true</span>,
         };
-        <span class="ident">state</span>.<span class="ident">config</span>.<span class="ident">event_hook</span> <span class="op">=</span> <span class="ident">hook</span>;
+        state.config.event_hook = hook;
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">should_run</span> {
+        <span class="kw">if </span>!should_run {
             <span class="macro">trace!</span>(<span class="string">&quot;User event hook returned false: skipping default handling&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">event</span> {
-            <span class="ident">ClientMessage</span>(<span class="ident">m</span>) =&gt; <span class="ident">handle::client_message</span>(<span class="ident">m</span>.<span class="ident">clone</span>(), <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">ConfigureNotify</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">is_root</span> =&gt; <span class="ident">handle::detect_screens</span>(<span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">ConfigureNotify</span>(<span class="kw">_</span>) =&gt; (),  <span class="comment">// Not currently handled</span>
-            <span class="ident">ConfigureRequest</span>(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled</span>
-            <span class="ident">Enter</span>(<span class="ident">p</span>) =&gt; <span class="ident">handle::enter</span>(<span class="kw-2">*</span><span class="ident">p</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">Expose</span>(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled</span>
-            <span class="ident">FocusIn</span>(<span class="ident">id</span>) =&gt; <span class="ident">handle::focus_in</span>(<span class="kw-2">*</span><span class="ident">id</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">Destroy</span>(<span class="ident">xid</span>) =&gt; <span class="ident">handle::destroy</span>(<span class="kw-2">*</span><span class="ident">xid</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">KeyPress</span>(<span class="ident">code</span>) =&gt; <span class="ident">handle::keypress</span>(<span class="kw-2">*</span><span class="ident">code</span>, <span class="ident">key_bindings</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">Leave</span>(<span class="ident">p</span>) =&gt; <span class="ident">handle::leave</span>(<span class="kw-2">*</span><span class="ident">p</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">MappingNotify</span> =&gt; (), <span class="comment">// Not currently handled</span>
-            <span class="ident">MapRequest</span>(<span class="ident">xid</span>) =&gt; <span class="ident">handle::map_request</span>(<span class="kw-2">*</span><span class="ident">xid</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">MouseEvent</span>(<span class="ident">e</span>) =&gt; <span class="ident">handle::mouse_event</span>(<span class="ident">e</span>.<span class="ident">clone</span>(), <span class="ident">mouse_bindings</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">PropertyNotify</span>(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled</span>
-            <span class="ident">RandrNotify</span> =&gt; <span class="ident">handle::detect_screens</span>(<span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">ScreenChange</span> =&gt; <span class="ident">handle::screen_change</span>(<span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
-            <span class="ident">UnmapNotify</span>(<span class="ident">xid</span>) =&gt; <span class="ident">handle::unmap_notify</span>(<span class="kw-2">*</span><span class="ident">xid</span>, <span class="ident">state</span>, <span class="ident">x</span>)<span class="question-mark">?</span>,
+        <span class="kw">match </span><span class="kw-2">&amp;</span>event {
+            ClientMessage(m) =&gt; handle::client_message(m.clone(), state, x)<span class="question-mark">?</span>,
+            ConfigureNotify(e) <span class="kw">if </span>e.is_root =&gt; handle::detect_screens(state, x)<span class="question-mark">?</span>,
+            ConfigureNotify(<span class="kw">_</span>) =&gt; (),  <span class="comment">// Not currently handled
+            </span>ConfigureRequest(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
+            </span>Enter(p) =&gt; handle::enter(<span class="kw-2">*</span>p, state, x)<span class="question-mark">?</span>,
+            Expose(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
+            </span>FocusIn(id) =&gt; handle::focus_in(<span class="kw-2">*</span>id, state, x)<span class="question-mark">?</span>,
+            Destroy(xid) =&gt; handle::destroy(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
+            KeyPress(code) =&gt; handle::keypress(<span class="kw-2">*</span>code, key_bindings, state, x)<span class="question-mark">?</span>,
+            Leave(p) =&gt; handle::leave(<span class="kw-2">*</span>p, state, x)<span class="question-mark">?</span>,
+            MappingNotify =&gt; (), <span class="comment">// Not currently handled
+            </span>MapRequest(xid) =&gt; handle::map_request(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
+            MouseEvent(e) =&gt; handle::mouse_event(e.clone(), mouse_bindings, state, x)<span class="question-mark">?</span>,
+            PropertyNotify(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
+            </span>RandrNotify =&gt; handle::detect_screens(state, x)<span class="question-mark">?</span>,
+            ScreenChange =&gt; handle::screen_change(state, x)<span class="question-mark">?</span>,
+            UnmapNotify(xid) =&gt; handle::unmap_notify(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// A &quot;best effort&quot; attempt to manage existing clients on the workspaces they were present</span>
-    <span class="comment">// on previously. This is not guaranteed to preserve the stack order or correctly handle</span>
-    <span class="comment">// any clients that were on invisible workspaces / workspaces that no longer exist.</span>
-    <span class="comment">//</span>
-    <span class="comment">// NOTE: the check for if each client is already in state is in case a startup hook has</span>
-    <span class="comment">//       pre-managed clients for us. In that case we want to avoid stomping on</span>
-    <span class="comment">//       anything that they have set up.</span>
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;info&quot;</span>, <span class="ident">skip</span>(<span class="self">self</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">manage_existing_clients</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// A &quot;best effort&quot; attempt to manage existing clients on the workspaces they were present
+    // on previously. This is not guaranteed to preserve the stack order or correctly handle
+    // any clients that were on invisible workspaces / workspaces that no longer exist.
+    //
+    // NOTE: the check for if each client is already in state is in case a startup hook has
+    //       pre-managed clients for us. In that case we want to avoid stomping on
+    //       anything that they have set up.
+    </span><span class="attribute">#[tracing::instrument(level = <span class="string">&quot;info&quot;</span>, skip(<span class="self">self</span>))]
+    </span><span class="kw">fn </span>manage_existing_clients(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">info!</span>(<span class="string">&quot;managing existing clients&quot;</span>);
 
-        <span class="comment">// We&#39;re not guaranteed that workspace indices are _always_ continuous from 0..n</span>
-        <span class="comment">// so we explicitly map tags to indices instead.</span>
-        <span class="kw">let</span> <span class="ident">ws_map</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">state</span>
-            .<span class="ident">client_set</span>
-            .<span class="ident">workspaces</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">w</span><span class="op">|</span> (<span class="ident">w</span>.<span class="ident">id</span>, <span class="ident">w</span>.<span class="ident">tag</span>.<span class="ident">clone</span>()))
-            .<span class="ident">collect</span>();
+        <span class="comment">// We&#39;re not guaranteed that workspace indices are _always_ continuous from 0..n
+        // so we explicitly map tags to indices instead.
+        </span><span class="kw">let </span>ws_map: HashMap&lt;usize, String&gt; = <span class="self">self
+            </span>.state
+            .client_set
+            .workspaces()
+            .map(|w| (w.id, w.tag.clone()))
+            .collect();
 
-        <span class="kw">let</span> <span class="ident">first_tag</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">ordered_tags</span>()[<span class="number">0</span>].<span class="ident">clone</span>();
+        <span class="kw">let </span>first_tag = <span class="self">self</span>.state.client_set.ordered_tags()[<span class="number">0</span>].clone();
 
-        <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">existing_clients</span>()<span class="question-mark">?</span> {
-            <span class="kw">let</span> <span class="ident">WindowAttributes</span> {
-                <span class="ident">override_redirect</span>,
-                <span class="ident">map_state</span>,
+        <span class="kw">for </span>id <span class="kw">in </span><span class="self">self</span>.x.existing_clients()<span class="question-mark">? </span>{
+            <span class="kw">let </span>WindowAttributes {
+                override_redirect,
+                map_state,
                 ..
-            } <span class="op">=</span> <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">get_window_attributes</span>(<span class="ident">id</span>)<span class="question-mark">?</span>;
+            } = <span class="self">self</span>.x.get_window_attributes(id)<span class="question-mark">?</span>;
 
-            <span class="comment">// ignore override_redirect == true, already managed clients and clients</span>
-            <span class="comment">// that are not either currently visible or iconic</span>
-            <span class="kw">if</span> <span class="ident">override_redirect</span>
-                <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">client_set</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
-                <span class="op">|</span><span class="op">|</span> <span class="op">!</span>(<span class="ident">map_state</span> <span class="op">==</span> <span class="ident">MapState::Viewable</span>
-                    <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">get_wm_state</span>(<span class="ident">id</span>)<span class="question-mark">?</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">WmState::Iconic</span>))
+            <span class="comment">// ignore override_redirect == true, already managed clients and clients
+            // that are not either currently visible or iconic
+            </span><span class="kw">if </span>override_redirect
+                || <span class="self">self</span>.state.client_set.contains(<span class="kw-2">&amp;</span>id)
+                || !(map_state == MapState::Viewable
+                    || <span class="self">self</span>.x.get_wm_state(id)<span class="question-mark">? </span>!= <span class="prelude-val">Some</span>(WmState::Iconic))
             {
                 <span class="kw">continue</span>;
             }
 
-            <span class="macro">info!</span>(<span class="op">%</span><span class="ident">id</span>, <span class="string">&quot;attempting to manage existing client&quot;</span>);
-            <span class="kw">let</span> <span class="ident">workspace_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">get_prop</span>(<span class="ident">id</span>, <span class="ident">Atom::NetWmDesktop</span>.<span class="ident">as_ref</span>()) {
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">Prop::Cardinal</span>(<span class="ident">ids</span>))) =&gt; <span class="ident">ids</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>,
-                <span class="kw">_</span> =&gt; <span class="number">0</span>, <span class="comment">// we know that we always have at least one workspace</span>
-            };
+            <span class="macro">info!</span>(%id, <span class="string">&quot;attempting to manage existing client&quot;</span>);
+            <span class="kw">let </span>workspace_id = <span class="kw">match </span><span class="self">self</span>.x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Cardinal(ids))) =&gt; ids[<span class="number">0</span>] <span class="kw">as </span>usize,
+                <span class="kw">_ </span>=&gt; <span class="number">0</span>, <span class="comment">// we know that we always have at least one workspace
+            </span>};
 
-            <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="ident">ws_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">workspace_id</span>).<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">first_tag</span>);
-            <span class="ident">manage_without_refresh</span>(<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">tag</span>), <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">x</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>tag = ws_map.get(<span class="kw-2">&amp;</span>workspace_id).unwrap_or(<span class="kw-2">&amp;</span>first_tag);
+            manage_without_refresh(id, <span class="prelude-val">Some</span>(tag), <span class="kw-2">&amp;mut </span><span class="self">self</span>.state, <span class="kw-2">&amp;</span><span class="self">self</span>.x)<span class="question-mark">?</span>;
         }
 
         <span class="macro">info!</span>(<span class="string">&quot;triggering refresh&quot;</span>);
-        <span class="self">self</span>.<span class="ident">x</span>.<span class="ident">refresh</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">state</span>)
+        <span class="self">self</span>.x.refresh(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

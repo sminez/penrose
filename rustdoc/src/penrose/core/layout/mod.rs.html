@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/layout/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/layout/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -207,212 +207,212 @@
 <span id="205">205</span>
 <span id="206">206</span>
 <span id="207">207</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Layouts for positioning client windows on the screen within a given workspace.</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">pure</span>::{<span class="ident">geometry::Rect</span>, <span class="ident">Stack</span>},
-    <span class="ident">stack</span>, <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Layouts for positioning client windows on the screen within a given workspace.
+</span><span class="kw">use crate</span>::{
+    pure::{geometry::Rect, Stack},
+    stack, Xid,
 };
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">mem::swap</span>};
+<span class="kw">use </span>std::{fmt, mem::swap};
 
-<span class="kw">mod</span> <span class="ident">messages</span>;
-<span class="kw">mod</span> <span class="ident">transformers</span>;
+<span class="kw">mod </span>messages;
+<span class="kw">mod </span>transformers;
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">messages</span>::{<span class="ident">IntoMessage</span>, <span class="ident">Message</span>};
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">transformers::LayoutTransformer</span>;
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span>messages::{IntoMessage, Message};
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span>transformers::LayoutTransformer;
 
-<span class="comment">// TODO: Do I also need versions of the layout methods that have access to the overall X state as well?</span>
-<span class="comment">//       That would allow for doing more involved layouts that were aware of things like the specific</span>
-<span class="comment">//       program running in each client window or the properties on each client.</span>
-<span class="comment">//       The layouts I&#39;m writing initially are all fairly simple from that perspective so there is no</span>
-<span class="comment">//       need for it to start, and adding it later is possible using the same default imple deferral</span>
-<span class="comment">//       approach used in `layout_workspace` if it _is_ needed in future without it needing to be a</span>
-<span class="comment">//       breaking API change to the trait.</span>
+<span class="comment">// TODO: Do I also need versions of the layout methods that have access to the overall X state as well?
+//       That would allow for doing more involved layouts that were aware of things like the specific
+//       program running in each client window or the properties on each client.
+//       The layouts I&#39;m writing initially are all fairly simple from that perspective so there is no
+//       need for it to start, and adding it later is possible using the same default imple deferral
+//       approach used in `layout_workspace` if it _is_ needed in future without it needing to be a
+//       breaking API change to the trait.
 
-<span class="doccomment">/// A [Layout] is responsible for positioning a [Stack] of clients in a given coordinate space denoting</span>
-<span class="doccomment">/// the dimensions of users display.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Mutating the state of a Layout is possible by sending it a [Message] which can then either modify</span>
-<span class="doccomment">/// the existing layout (e.g. increase the number of clients positioned in a &quot;main&quot; area) or replace</span>
-<span class="doccomment">/// the existing Layout with a new one. There is no requirement to be able to handle all message types.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Layout</span> {
-    <span class="doccomment">/// A short display name for this Layout, appropriate for rendering in a status bar as an indicator</span>
-    <span class="doccomment">/// of which layout is currently being used.</span>
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span>;
+</span><span class="doccomment">/// A [Layout] is responsible for positioning a [Stack] of clients in a given coordinate space denoting
+/// the dimensions of users display.
+///
+/// Mutating the state of a Layout is possible by sending it a [Message] which can then either modify
+/// the existing layout (e.g. increase the number of clients positioned in a &quot;main&quot; area) or replace
+/// the existing Layout with a new one. There is no requirement to be able to handle all message types.
+</span><span class="kw">pub trait </span>Layout {
+    <span class="doccomment">/// A short display name for this Layout, appropriate for rendering in a status bar as an indicator
+    /// of which layout is currently being used.
+    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
 
-    <span class="doccomment">/// Provide a clone of this [Layout] wrapped as a trait object. (Trait objects can not require</span>
-    <span class="doccomment">/// Clone directly)</span>
-    <span class="kw">fn</span> <span class="ident">boxed_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Provide a clone of this [Layout] wrapped as a trait object. (Trait objects can not require
+    /// Clone directly)
+    </span><span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt;;
 
-    <span class="doccomment">/// Generate screen positions for clients on a given [crate::pure::Workspace].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If you do not need to know the details of the workspace being laid out, you should can use the</span>
-    <span class="doccomment">/// default implementation of this methods which calls [Layout::layout] if there are any clients</span>
-    <span class="doccomment">/// present and [Layout::layout_empty] if not.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Positioning clients</span>
-    <span class="doccomment">/// For each client that should be shown on the screen a pair of its [Xid] and a [Rect] should be</span>
-    <span class="doccomment">/// provided, indicating the screen position the client should be placed at. To hide a client that</span>
-    <span class="doccomment">/// was present in the [crate::pure::Workspace] simply do not provide a position for it. (You may also provide</span>
-    <span class="doccomment">/// positions for clients that were not present in the input if you have the [Xid] available.)</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The order in which the ([Xid], [Rect]) pairs are returned determines the stacking order on the</span>
-    <span class="doccomment">/// screen. It does not have to match the stack order of the clients within the [crate::pure::Workspace].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Returning a new layout</span>
-    <span class="doccomment">/// When a layout is run it may optionally replace itself with a new [Layout]. If `Some(layout)`</span>
-    <span class="doccomment">/// is returned from this method, it will be swapped out for the current one after the provided</span>
-    <span class="doccomment">/// positions have been applied.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">layout_workspace</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_tag</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">stack</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">r</span>: <span class="ident">Rect</span>,
-    ) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        <span class="kw">match</span> <span class="ident">stack</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; <span class="self">self</span>.<span class="ident">layout</span>(<span class="ident">s</span>, <span class="ident">r</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">layout_empty</span>(<span class="ident">r</span>),
+    <span class="doccomment">/// Generate screen positions for clients on a given [crate::pure::Workspace].
+    ///
+    /// If you do not need to know the details of the workspace being laid out, you should can use the
+    /// default implementation of this methods which calls [Layout::layout] if there are any clients
+    /// present and [Layout::layout_empty] if not.
+    ///
+    /// # Positioning clients
+    /// For each client that should be shown on the screen a pair of its [Xid] and a [Rect] should be
+    /// provided, indicating the screen position the client should be placed at. To hide a client that
+    /// was present in the [crate::pure::Workspace] simply do not provide a position for it. (You may also provide
+    /// positions for clients that were not present in the input if you have the [Xid] available.)
+    ///
+    /// The order in which the ([Xid], [Rect]) pairs are returned determines the stacking order on the
+    /// screen. It does not have to match the stack order of the clients within the [crate::pure::Workspace].
+    ///
+    /// # Returning a new layout
+    /// When a layout is run it may optionally replace itself with a new [Layout]. If `Some(layout)`
+    /// is returned from this method, it will be swapped out for the current one after the provided
+    /// positions have been applied.
+    </span><span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">fn </span>layout_workspace(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _tag: <span class="kw-2">&amp;</span>str,
+        stack: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Stack&lt;Xid&gt;&gt;,
+        r: Rect,
+    ) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        <span class="kw">match </span>stack {
+            <span class="prelude-val">Some</span>(s) =&gt; <span class="self">self</span>.layout(s, r),
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.layout_empty(r),
         }
     }
 
-    <span class="doccomment">/// Generate screen positions for clients from a given [Stack].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See [Layout::layout_workspace] for details of how positions should be returned.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>);
+    <span class="doccomment">/// Generate screen positions for clients from a given [Stack].
+    ///
+    /// See [Layout::layout_workspace] for details of how positions should be returned.
+    </span><span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;);
 
-    <span class="doccomment">/// Generate screen positions for an empty [Stack].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See [Layout::layout_workspace] for details of how positions should be returned.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">layout_empty</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
+    <span class="doccomment">/// Generate screen positions for an empty [Stack].
+    ///
+    /// See [Layout::layout_workspace] for details of how positions should be returned.
+    </span><span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">fn </span>layout_empty(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
         (<span class="prelude-val">None</span>, <span class="macro">vec!</span>[])
     }
 
-    <span class="doccomment">/// Process a dynamic [Message].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// See the trait level docs for details on what is possible with messages.</span>
-    <span class="kw">fn</span> <span class="ident">handle_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Process a dynamic [Message].
+    ///
+    /// See the trait level docs for details on what is possible with messages.
+    </span><span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;;
 }
 
-<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">boxed_clone</span>()
+<span class="kw">impl </span>Clone <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>Layout&gt; {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.boxed_clone()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Layout&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>())
-            .<span class="ident">finish</span>()
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>Layout&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;Layout&quot;</span>)
+            .field(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name())
+            .finish()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Layout({})&quot;</span>, <span class="self">self</span>.<span class="ident">name</span>())
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>Layout&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;Layout({})&quot;</span>, <span class="self">self</span>.name())
     }
 }
 
-<span class="doccomment">/// A stack of [Layout] options for use on a particular [crate::pure::Workspace].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The [Stack] itself acts as a [Layout], deferring all operations to the</span>
-<span class="doccomment">/// currently focused Layout.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">LayoutStack</span> <span class="op">=</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// A stack of [Layout] options for use on a particular [crate::pure::Workspace].
+///
+/// The [Stack] itself acts as a [Layout], deferring all operations to the
+/// currently focused Layout.
+</span><span class="kw">pub type </span>LayoutStack = Stack&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;;
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">LayoutStack</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="macro">stack!</span>(<span class="ident">Box::new</span>(<span class="ident"><span class="kw">crate</span>::builtin::layout::MainAndStack::default</span>()))
+<span class="kw">impl </span>Default <span class="kw">for </span>LayoutStack {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="macro">stack!</span>(Box::new(<span class="kw">crate</span>::builtin::layout::MainAndStack::default()))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">LayoutStack</span> {
-    <span class="doccomment">/// Run the currently focused [Layout] and return the positions it generates.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the layout being run wants to be replaced with a new layout, swap it</span>
-    <span class="doccomment">/// out for the new one in its current position in the [Stack].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_and_replace</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>),
+<span class="kw">impl </span>LayoutStack {
+    <span class="doccomment">/// Run the currently focused [Layout] and return the positions it generates.
+    ///
+    /// If the layout being run wants to be replaced with a new layout, swap it
+    /// out for the new one in its current position in the [Stack].
+    </span><span class="kw">pub fn </span>run_and_replace&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) -&gt; Vec&lt;(Xid, Rect)&gt;
+    <span class="kw">where
+        </span>F: FnOnce(<span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;),
     {
-        <span class="kw">let</span> (<span class="ident">new_focus</span>, <span class="ident">rs</span>) <span class="op">=</span> (<span class="ident">f</span>)(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">focus</span>);
+        <span class="kw">let </span>(new_focus, rs) = (f)(<span class="kw-2">&amp;mut </span><span class="self">self</span>.focus);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">new</span>) <span class="op">=</span> <span class="ident">new_focus</span> {
-            <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">new</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>new) = new_focus {
+            <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>new);
         }
 
-        <span class="ident">rs</span>
+        rs
     }
 
-    <span class="doccomment">/// Send the given [Message] to the currently active [Layout].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">handle_message</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="ident">M</span>)
-    <span class="kw">where</span>
-        <span class="ident">M</span>: <span class="ident">IntoMessage</span>,
+    <span class="doccomment">/// Send the given [Message] to the currently active [Layout].
+    </span><span class="kw">pub fn </span>handle_message&lt;M&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: M)
+    <span class="kw">where
+        </span>M: IntoMessage,
     {
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">into_message</span>();
+        <span class="kw">let </span>m = m.into_message();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">new</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">focus</span>.<span class="ident">handle_message</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>) {
-            <span class="ident">swap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">focus</span>, <span class="kw-2">&amp;mut</span> <span class="ident">new</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>new) = <span class="self">self</span>.focus.handle_message(<span class="kw-2">&amp;</span>m) {
+            swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.focus, <span class="kw-2">&amp;mut </span>new);
         }
     }
 
-    <span class="doccomment">/// Send the given [Message] to every [Layout] in this stack rather that just the</span>
-    <span class="doccomment">/// currently active one.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">broadcast_message</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="ident">M</span>)
-    <span class="kw">where</span>
-        <span class="ident">M</span>: <span class="ident">IntoMessage</span>,
+    <span class="doccomment">/// Send the given [Message] to every [Layout] in this stack rather that just the
+    /// currently active one.
+    </span><span class="kw">pub fn </span>broadcast_message&lt;M&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: M)
+    <span class="kw">where
+        </span>M: IntoMessage,
     {
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">into_message</span>();
+        <span class="kw">let </span>m = m.into_message();
 
-        <span class="kw">for</span> <span class="ident">l</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">iter_mut</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">new</span>) <span class="op">=</span> <span class="ident">l</span>.<span class="ident">handle_message</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>) {
-                <span class="ident">swap</span>(<span class="ident">l</span>, <span class="kw-2">&amp;mut</span> <span class="ident">new</span>);
+        <span class="kw">for </span>l <span class="kw">in </span><span class="self">self</span>.iter_mut() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>new) = l.handle_message(<span class="kw-2">&amp;</span>m) {
+                swap(l, <span class="kw-2">&amp;mut </span>new);
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Layout</span> <span class="kw">for</span> <span class="ident">LayoutStack</span> {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">focus</span>.<span class="ident">name</span>()
+<span class="kw">impl </span>Layout <span class="kw">for </span>LayoutStack {
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.focus.name()
     }
 
-    <span class="kw">fn</span> <span class="ident">boxed_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+    <span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">self</span>.clone())
     }
 
-    <span class="kw">fn</span> <span class="ident">layout_workspace</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">stack</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">r</span>: <span class="ident">Rect</span>,
-    ) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
+    <span class="kw">fn </span>layout_workspace(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        tag: <span class="kw-2">&amp;</span>str,
+        stack: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Stack&lt;Xid&gt;&gt;,
+        r: Rect,
+    ) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
         (
             <span class="prelude-val">None</span>,
-            <span class="self">self</span>.<span class="ident">run_and_replace</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">layout_workspace</span>(<span class="ident">tag</span>, <span class="ident">stack</span>, <span class="ident">r</span>)),
+            <span class="self">self</span>.run_and_replace(|l| l.layout_workspace(tag, stack, r)),
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        (<span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">run_and_replace</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">layout</span>(<span class="ident">s</span>, <span class="ident">r</span>)))
+    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        (<span class="prelude-val">None</span>, <span class="self">self</span>.run_and_replace(|l| l.layout(s, r)))
     }
 
-    <span class="kw">fn</span> <span class="ident">layout_empty</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        (<span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">run_and_replace</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">layout_empty</span>(<span class="ident">r</span>)))
+    <span class="kw">fn </span>layout_empty(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        (<span class="prelude-val">None</span>, <span class="self">self</span>.run_and_replace(|l| l.layout_empty(r)))
     }
 
-    <span class="kw">fn</span> <span class="ident">handle_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">new_focus</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">focus</span>.<span class="ident">handle_message</span>(<span class="ident">m</span>);
+    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+        <span class="kw">let </span>new_focus = <span class="self">self</span>.focus.handle_message(m);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">new</span>) <span class="op">=</span> <span class="ident">new_focus</span> {
-            <span class="self">self</span>.<span class="ident">swap_focus</span>(<span class="kw-2">&amp;mut</span> <span class="ident">new</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>new) = new_focus {
+            <span class="self">self</span>.swap_focus(<span class="kw-2">&amp;mut </span>new);
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/layout/transformers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transformers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/layout/transformers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transformers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -175,180 +175,180 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">builtin::layout</span>::{<span class="ident">messages::UnwrapTransformer</span>, <span class="ident">Monocle</span>},
-    <span class="ident">core::layout</span>::{<span class="ident">messages::Message</span>, <span class="ident">Layout</span>},
-    <span class="ident">pure</span>::{<span class="ident">geometry::Rect</span>, <span class="ident">Stack</span>},
-    <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{
+    builtin::layout::{messages::UnwrapTransformer, Monocle},
+    core::layout::{messages::Message, Layout},
+    pure::{geometry::Rect, Stack},
+    Xid,
 };
-<span class="kw">use</span> <span class="ident">std::mem::swap</span>;
+<span class="kw">use </span>std::mem::swap;
 
-<span class="doccomment">/// A wrapper round another [Layout] that is able to intercept and modify both the positions being</span>
-<span class="doccomment">/// returned by the inner layout and messages being sent to it.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">LayoutTransformer</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> {
-    <span class="doccomment">/// The same as [Layout::name] but for [LayoutTransformer] itself.</span>
-    <span class="kw">fn</span> <span class="ident">transformed_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span>;
+<span class="doccomment">/// A wrapper round another [Layout] that is able to intercept and modify both the positions being
+/// returned by the inner layout and messages being sent to it.
+</span><span class="kw">pub trait </span>LayoutTransformer: Clone + Sized + <span class="lifetime">&#39;static </span>{
+    <span class="doccomment">/// The same as [Layout::name] but for [LayoutTransformer] itself.
+    </span><span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
 
-    <span class="doccomment">/// Provide a mutable reference to the [Layout] wrapped by this transformer.</span>
-    <span class="kw">fn</span> <span class="ident">inner_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Provide a mutable reference to the [Layout] wrapped by this transformer.
+    </span><span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;;
 
-    <span class="doccomment">/// Replace the currently wrapped [Layout] with a new one.</span>
-    <span class="kw">fn</span> <span class="ident">swap_inner</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">new</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">swap</span>(<span class="self">self</span>.<span class="ident">inner_mut</span>(), <span class="kw-2">&amp;mut</span> <span class="ident">new</span>);
+    <span class="doccomment">/// Replace the currently wrapped [Layout] with a new one.
+    </span><span class="kw">fn </span>swap_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>new: Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        swap(<span class="self">self</span>.inner_mut(), <span class="kw-2">&amp;mut </span>new);
 
-        <span class="ident">new</span>
+        new
     }
 
-    <span class="doccomment">/// Remove the inner [Layout] from this [LayoutTransformer].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The default implementation of this method simply swaps the built-in [Monocle]</span>
-    <span class="doccomment">/// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better</span>
-    <span class="doccomment">/// implementation is possible then it should be implemented but this default will</span>
-    <span class="doccomment">/// give the correct behaviour when [LayoutTransformer::passthrough_message] receives</span>
-    <span class="doccomment">/// an [UnwrapTransformer] message.</span>
-    <span class="kw">fn</span> <span class="ident">unwrap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">swap_inner</span>(<span class="ident">Box::new</span>(<span class="ident">Monocle</span>))
+    <span class="doccomment">/// Remove the inner [Layout] from this [LayoutTransformer].
+    ///
+    /// The default implementation of this method simply swaps the built-in [Monocle]
+    /// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better
+    /// implementation is possible then it should be implemented but this default will
+    /// give the correct behaviour when [LayoutTransformer::passthrough_message] receives
+    /// an [UnwrapTransformer] message.
+    </span><span class="kw">fn </span>unwrap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        <span class="self">self</span>.swap_inner(Box::new(Monocle))
     }
 
-    <span class="doccomment">/// Modify the initial [Rect] that will be passed to the inner [Layout].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The default implementation of this method leaves the initial Rect unchanged.</span>
-    <span class="kw">fn</span> <span class="ident">transform_initial</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="ident">r</span>
+    <span class="doccomment">/// Modify the initial [Rect] that will be passed to the inner [Layout].
+    ///
+    /// The default implementation of this method leaves the initial Rect unchanged.
+    </span><span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;</span><span class="self">self</span>, r: Rect) -&gt; Rect {
+        r
     }
 
-    <span class="doccomment">/// Optionally modify any of the positions returned by the inner [Layout] before they are</span>
-    <span class="doccomment">/// applied by the window manager. The dimensions of the screen being layed out are avaiable</span>
-    <span class="doccomment">/// as `r`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The default implementation of this method leaves the positions returned by the inner layout</span>
-    <span class="doccomment">/// unchanged.</span>
-    <span class="kw">fn</span> <span class="ident">transform_positions</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_r</span>: <span class="ident">Rect</span>, <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span> {
-        <span class="ident">positions</span>
+    <span class="doccomment">/// Optionally modify any of the positions returned by the inner [Layout] before they are
+    /// applied by the window manager. The dimensions of the screen being layed out are avaiable
+    /// as `r`.
+    ///
+    /// The default implementation of this method leaves the positions returned by the inner layout
+    /// unchanged.
+    </span><span class="kw">fn </span>transform_positions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        positions
     }
 
-    <span class="doccomment">/// Apply the [LayoutTransformer] to its wrapped inner [Layout].</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">run_transform</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="ident">Rect</span>, <span class="kw-2">&amp;mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>),
+    <span class="doccomment">/// Apply the [LayoutTransformer] to its wrapped inner [Layout].
+    </span><span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">fn </span>run_transform&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;)
+    <span class="kw">where
+        </span>F: FnOnce(Rect, <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;),
     {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">transform_initial</span>(<span class="ident">r</span>);
-        <span class="kw">let</span> (<span class="ident">new</span>, <span class="ident">positions</span>) <span class="op">=</span> (<span class="ident">f</span>)(<span class="ident">r</span>, <span class="self">self</span>.<span class="ident">inner_mut</span>());
-        <span class="kw">let</span> <span class="ident">transformed</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">transform_positions</span>(<span class="ident">r</span>, <span class="ident">positions</span>);
+        <span class="kw">let </span>r = <span class="self">self</span>.transform_initial(r);
+        <span class="kw">let </span>(new, positions) = (f)(r, <span class="self">self</span>.inner_mut());
+        <span class="kw">let </span>transformed = <span class="self">self</span>.transform_positions(r, positions);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">l</span>) <span class="op">=</span> <span class="ident">new</span> {
-            <span class="self">self</span>.<span class="ident">swap_inner</span>(<span class="ident">l</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(l) = new {
+            <span class="self">self</span>.swap_inner(l);
         }
 
-        (<span class="prelude-val">None</span>, <span class="ident">transformed</span>)
+        (<span class="prelude-val">None</span>, transformed)
     }
 
-    <span class="doccomment">/// Pass a message on to the wrapped inner [Layout].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The default implementation of this method will return `Some(inner_layout)` if it</span>
-    <span class="doccomment">/// receives an [UnwrapTransformer] [Message] using the `unwrap` method of this trait.</span>
-    <span class="kw">fn</span> <span class="ident">passthrough_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">new</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner_mut</span>().<span class="ident">handle_message</span>(<span class="ident">m</span>) {
-            <span class="self">self</span>.<span class="ident">swap_inner</span>(<span class="ident">new</span>);
+    <span class="doccomment">/// Pass a message on to the wrapped inner [Layout].
+    ///
+    /// The default implementation of this method will return `Some(inner_layout)` if it
+    /// receives an [UnwrapTransformer] [Message] using the `unwrap` method of this trait.
+    </span><span class="kw">fn </span>passthrough_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(new) = <span class="self">self</span>.inner_mut().handle_message(m) {
+            <span class="self">self</span>.swap_inner(new);
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">LT</span><span class="op">&gt;</span> <span class="ident">Layout</span> <span class="kw">for</span> <span class="ident">LT</span>
-<span class="kw">where</span>
-    <span class="ident">LT</span>: <span class="ident">LayoutTransformer</span>,
+<span class="kw">impl</span>&lt;LT&gt; Layout <span class="kw">for </span>LT
+<span class="kw">where
+    </span>LT: LayoutTransformer,
 {
-    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">transformed_name</span>()
+    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.transformed_name()
     }
 
-    <span class="kw">fn</span> <span class="ident">boxed_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+    <span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(<span class="self">self</span>.clone())
     }
 
-    <span class="kw">fn</span> <span class="ident">layout_workspace</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">stack</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">r</span>: <span class="ident">Rect</span>,
-    ) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">run_transform</span>(<span class="op">|</span><span class="ident">r</span>, <span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span>.<span class="ident">layout_workspace</span>(<span class="ident">tag</span>, <span class="ident">stack</span>, <span class="ident">r</span>), <span class="ident">r</span>)
+    <span class="kw">fn </span>layout_workspace(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        tag: <span class="kw-2">&amp;</span>str,
+        stack: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Stack&lt;Xid&gt;&gt;,
+        r: Rect,
+    ) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        <span class="self">self</span>.run_transform(|r, inner| inner.layout_workspace(tag, stack, r), r)
     }
 
-    <span class="kw">fn</span> <span class="ident">layout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">run_transform</span>(<span class="op">|</span><span class="ident">r</span>, <span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span>.<span class="ident">layout</span>(<span class="ident">s</span>, <span class="ident">r</span>), <span class="ident">r</span>)
+    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        <span class="self">self</span>.run_transform(|r, inner| inner.layout(s, r), r)
     }
 
-    <span class="kw">fn</span> <span class="ident">layout_empty</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Xid</span>, <span class="ident">Rect</span>)<span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">run_transform</span>(<span class="op">|</span><span class="ident">r</span>, <span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span>.<span class="ident">layout_empty</span>(<span class="ident">r</span>), <span class="ident">r</span>)
+    <span class="kw">fn </span>layout_empty(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+        <span class="self">self</span>.run_transform(|r, inner| inner.layout_empty(r), r)
     }
 
-    <span class="kw">fn</span> <span class="ident">handle_message</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">UnwrapTransformer</span>) <span class="op">=</span> <span class="ident">m</span>.<span class="ident">downcast_ref</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">unwrap</span>());
+    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>UnwrapTransformer) = m.downcast_ref() {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="self">self</span>.unwrap());
         }
 
-        <span class="self">self</span>.<span class="ident">passthrough_message</span>(<span class="ident">m</span>)
+        <span class="self">self</span>.passthrough_message(m)
     }
 }
 
-<span class="doccomment">/// Quickly define a [LayoutTransformer] from a single element tuple struct and a</span>
-<span class="doccomment">/// transformation function: `fn(Rect, Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt;`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The struct must have a single field which is a `Box&lt;dyn Layout&gt;`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};</span>
-<span class="doccomment">/// fn my_transformation_function(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {</span>
-<span class="doccomment">///     // transformation implementation goes here</span>
-<span class="doccomment">///     positions</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// simple_transformer!(MyTransformer, my_transformation_function, &quot;MyTransform&quot;);</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">simple_transformer</span> {
+<span class="doccomment">/// Quickly define a [LayoutTransformer] from a single element tuple struct and a
+/// transformation function: `fn(Rect, Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt;`.
+///
+/// The struct must have a single field which is a `Box&lt;dyn Layout&gt;`.
+///
+/// # Example
+/// ```no_run
+/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};
+/// fn my_transformation_function(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+///     // transformation implementation goes here
+///     positions
+/// }
+///
+/// simple_transformer!(MyTransformer, my_transformation_function, &quot;MyTransform&quot;);
+/// ```
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>simple_transformer {
     (
-        $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_docs</span>:<span class="ident">meta</span>]</span>)<span class="op">*</span>
-        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ident</span>,
-        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>:<span class="ident">ident</span>,
-        <span class="macro-nonterminal">$</span><span class="macro-nonterminal">prefix</span>:<span class="ident">expr</span>
+        $(<span class="attribute">#[<span class="macro-nonterminal">$struct_docs</span>:meta]</span>)*
+        <span class="macro-nonterminal">$t</span>:ident,
+        <span class="macro-nonterminal">$f</span>:ident,
+        <span class="macro-nonterminal">$prefix</span>:expr
     ) =&gt; {
-        $(<span class="attribute">#[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_docs</span>]</span>)<span class="op">*</span>
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::Layout</span><span class="op">&gt;</span>);
+        $(<span class="attribute">#[<span class="macro-nonterminal">$struct_docs</span>]</span>)*
+        <span class="attribute">#[derive(Debug, Clone)]
+        </span><span class="kw">pub struct </span><span class="macro-nonterminal">$t</span>(Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt;);
 
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-            <span class="doccomment">/// Wrap an existing layout with this transformer</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wrap</span>(
-                <span class="ident">layout</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::Layout</span><span class="op">&gt;</span>,
-            ) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::Layout</span><span class="op">&gt;</span> {
-                <span class="ident">Box::new</span>(<span class="self">Self</span>(<span class="ident">layout</span>))
+        <span class="kw">impl </span><span class="macro-nonterminal">$t </span>{
+            <span class="doccomment">/// Wrap an existing layout with this transformer
+            </span><span class="kw">pub fn </span>wrap(
+                layout: Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt;,
+            ) -&gt; Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt; {
+                Box::new(<span class="self">Self</span>(layout))
             }
         }
 
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::LayoutTransformer</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
-            <span class="kw">fn</span> <span class="ident">transformed_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-                <span class="macro">format!</span>(<span class="string">&quot;{}&lt;{}&gt;&quot;</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">prefix</span>, <span class="self">self</span>.<span class="number">0</span>.<span class="ident">name</span>())
+        <span class="kw">impl </span><span class="macro-nonterminal">$crate::core::layout::LayoutTransformer </span><span class="kw">for </span><span class="macro-nonterminal">$t </span>{
+            <span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+                <span class="macro">format!</span>(<span class="string">&quot;{}&lt;{}&gt;&quot;</span>, <span class="macro-nonterminal">$prefix</span>, <span class="self">self</span>.<span class="number">0</span>.name())
             }
 
-            <span class="kw">fn</span> <span class="ident">inner_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::layout::Layout</span><span class="op">&gt;</span> {
-                <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="number">0</span>
-            }
+            <span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt; {
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
+            </span>}
 
-            <span class="kw">fn</span> <span class="ident">transform_positions</span>(
-                <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-                <span class="ident">r</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::geometry::Rect</span>,
-                <span class="ident">positions</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::Xid</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::geometry::Rect</span>)<span class="op">&gt;</span>,
-            ) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::core::Xid</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::pure::geometry::Rect</span>)<span class="op">&gt;</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>(<span class="ident">r</span>, <span class="ident">positions</span>)
+            <span class="kw">fn </span>transform_positions(
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+                r: <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>,
+                positions: Vec&lt;(<span class="macro-nonterminal">$crate::core::Xid</span>, <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>)&gt;,
+            ) -&gt; Vec&lt;(<span class="macro-nonterminal">$crate::core::Xid</span>, <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>)&gt; {
+                <span class="macro-nonterminal">$f</span>(r, positions)
             }
         }
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

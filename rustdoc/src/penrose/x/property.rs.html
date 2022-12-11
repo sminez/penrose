@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/property.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>property.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/property.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>property.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../penrose/index.html"><div class="logo-container">
                     <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../penrose/index.html">
                         <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -388,393 +388,393 @@
 <span id="386">386</span>
 <span id="387">387</span>
 <span id="388">388</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Data types for working with X window properties</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">pure::geometry</span>::{<span class="ident">Point</span>, <span class="ident">Rect</span>},
-    <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">Xid</span>,
+</pre><pre class="rust"><code><span class="doccomment">//! Data types for working with X window properties
+</span><span class="kw">use crate</span>::{
+    pure::geometry::{Point, Rect},
+    Error, <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="kw">use</span> <span class="ident">bitflags::bitflags</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>bitflags::bitflags;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+</span><span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="doccomment">/// Know property types that should be returnable by XConn impls when they check</span>
-<span class="doccomment">/// window properties.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Prop</span> {
-    <span class="doccomment">/// One or more X Atoms</span>
-    <span class="ident">Atom</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// Raw bytes for when the prop type is non-standard</span>
-    <span class="ident">Bytes</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// A cardinal number</span>
-    <span class="ident">Cardinal</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// UTF-8 encoded string data</span>
-    <span class="ident">UTF8String</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// An X window IDs</span>
-    <span class="ident">Window</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Xid</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// The WmHints properties for this window</span>
-    <span class="ident">WmHints</span>(<span class="ident">WmHints</span>),
-    <span class="doccomment">/// The WmNormalHints properties for this window</span>
-    <span class="ident">WmNormalHints</span>(<span class="ident">WmNormalHints</span>),
+<span class="doccomment">/// Know property types that should be returnable by XConn impls when they check
+/// window properties.
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub enum </span>Prop {
+    <span class="doccomment">/// One or more X Atoms
+    </span>Atom(Vec&lt;String&gt;),
+    <span class="doccomment">/// Raw bytes for when the prop type is non-standard
+    </span>Bytes(Vec&lt;u32&gt;),
+    <span class="doccomment">/// A cardinal number
+    </span>Cardinal(Vec&lt;u32&gt;),
+    <span class="doccomment">/// UTF-8 encoded string data
+    </span>UTF8String(Vec&lt;String&gt;),
+    <span class="doccomment">/// An X window IDs
+    </span>Window(Vec&lt;Xid&gt;),
+    <span class="doccomment">/// The WmHints properties for this window
+    </span>WmHints(WmHints),
+    <span class="doccomment">/// The WmNormalHints properties for this window
+    </span>WmNormalHints(WmNormalHints),
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="doccomment">/// Possible flags that can be set in a WmHints client property</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WmHintsFlags</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// Input hint is set</span>
-        <span class="kw">const</span> <span class="ident">INPUT_HINT</span>         <span class="op">=</span> <span class="number">0b0000000001</span>;
-        <span class="doccomment">/// State hint is set</span>
-        <span class="kw">const</span> <span class="ident">STATE_HINT</span>         <span class="op">=</span> <span class="number">0b0000000010</span>;
-        <span class="doccomment">/// Icon pixmap hint is set</span>
-        <span class="kw">const</span> <span class="ident">ICON_PIXMAP_HINT</span>   <span class="op">=</span> <span class="number">0b0000000100</span>;
-        <span class="doccomment">/// Icon window hint is set</span>
-        <span class="kw">const</span> <span class="ident">ICON_WINDOW_HINT</span>   <span class="op">=</span> <span class="number">0b0000001000</span>;
-        <span class="doccomment">/// Icon position hint is set</span>
-        <span class="kw">const</span> <span class="ident">ICON_POSITION_HINT</span> <span class="op">=</span> <span class="number">0b0000010000</span>;
-        <span class="doccomment">/// Icon mask hint is set</span>
-        <span class="kw">const</span> <span class="ident">ICON_MASK_HINT</span>     <span class="op">=</span> <span class="number">0b0000100000</span>;
-        <span class="doccomment">/// Window group hint is set</span>
-        <span class="kw">const</span> <span class="ident">WINDOW_GROUP_HINT</span>  <span class="op">=</span> <span class="number">0b0001000000</span>;
-        <span class="comment">// unused                  0b0010000000;</span>
-        <span class="doccomment">/// Urgency hint is set</span>
-        <span class="kw">const</span> <span class="ident">URGENCY_HINT</span>       <span class="op">=</span> <span class="number">0b0100000000</span>;
+<span class="macro">bitflags! </span>{
+    <span class="doccomment">/// Possible flags that can be set in a WmHints client property
+    </span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+    #[derive(Default)]
+    </span><span class="kw">pub struct </span>WmHintsFlags: u32 {
+        <span class="doccomment">/// Input hint is set
+        </span><span class="kw">const </span>INPUT_HINT         = <span class="number">0b0000000001</span>;
+        <span class="doccomment">/// State hint is set
+        </span><span class="kw">const </span>STATE_HINT         = <span class="number">0b0000000010</span>;
+        <span class="doccomment">/// Icon pixmap hint is set
+        </span><span class="kw">const </span>ICON_PIXMAP_HINT   = <span class="number">0b0000000100</span>;
+        <span class="doccomment">/// Icon window hint is set
+        </span><span class="kw">const </span>ICON_WINDOW_HINT   = <span class="number">0b0000001000</span>;
+        <span class="doccomment">/// Icon position hint is set
+        </span><span class="kw">const </span>ICON_POSITION_HINT = <span class="number">0b0000010000</span>;
+        <span class="doccomment">/// Icon mask hint is set
+        </span><span class="kw">const </span>ICON_MASK_HINT     = <span class="number">0b0000100000</span>;
+        <span class="doccomment">/// Window group hint is set
+        </span><span class="kw">const </span>WINDOW_GROUP_HINT  = <span class="number">0b0001000000</span>;
+        <span class="comment">// unused                  0b0010000000;
+        </span><span class="doccomment">/// Urgency hint is set
+        </span><span class="kw">const </span>URGENCY_HINT       = <span class="number">0b0100000000</span>;
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="doccomment">/// Possible flags that can be set in a WmNormalHints client property</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WmNormalHintsFlags</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// User-specified x, y</span>
-        <span class="kw">const</span> <span class="ident">U_POSITION</span>    <span class="op">=</span> <span class="number">0b0000000001</span>;
-        <span class="doccomment">/// User-specified width, height</span>
-        <span class="kw">const</span> <span class="ident">U_SIZE</span>        <span class="op">=</span> <span class="number">0b0000000010</span>;
-        <span class="doccomment">/// Program-specified position</span>
-        <span class="kw">const</span> <span class="ident">P_POSITION</span>    <span class="op">=</span> <span class="number">0b0000000100</span>;
-        <span class="doccomment">/// Program-specified size</span>
-        <span class="kw">const</span> <span class="ident">P_SIZE</span>        <span class="op">=</span> <span class="number">0b0000001000</span>;
-        <span class="doccomment">/// Program-specified minimum size</span>
-        <span class="kw">const</span> <span class="ident">P_MIN_SIZE</span>    <span class="op">=</span> <span class="number">0b0000010000</span>;
-        <span class="doccomment">/// Program-specified maximum size</span>
-        <span class="kw">const</span> <span class="ident">P_MAX_SIZE</span>    <span class="op">=</span> <span class="number">0b0000100000</span>;
-        <span class="doccomment">/// Program-specified resize increments</span>
-        <span class="kw">const</span> <span class="ident">P_RESIZE_INC</span>  <span class="op">=</span> <span class="number">0b0001000000</span>;
-        <span class="doccomment">/// Program-specified min and max aspect ratios</span>
-        <span class="kw">const</span> <span class="ident">P_ASPECT</span>      <span class="op">=</span> <span class="number">0b0010000000</span>;
-        <span class="doccomment">/// Program-specified base size</span>
-        <span class="kw">const</span> <span class="ident">P_BASE_SIZE</span>   <span class="op">=</span> <span class="number">0b0100000000</span>;
-        <span class="doccomment">/// Program-specified window gravity</span>
-        <span class="kw">const</span> <span class="ident">P_WIN_GRAVITY</span> <span class="op">=</span> <span class="number">0b1000000000</span>;
+<span class="macro">bitflags! </span>{
+    <span class="doccomment">/// Possible flags that can be set in a WmNormalHints client property
+    </span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+    #[derive(Default)]
+    </span><span class="kw">pub struct </span>WmNormalHintsFlags: u32 {
+        <span class="doccomment">/// User-specified x, y
+        </span><span class="kw">const </span>U_POSITION    = <span class="number">0b0000000001</span>;
+        <span class="doccomment">/// User-specified width, height
+        </span><span class="kw">const </span>U_SIZE        = <span class="number">0b0000000010</span>;
+        <span class="doccomment">/// Program-specified position
+        </span><span class="kw">const </span>P_POSITION    = <span class="number">0b0000000100</span>;
+        <span class="doccomment">/// Program-specified size
+        </span><span class="kw">const </span>P_SIZE        = <span class="number">0b0000001000</span>;
+        <span class="doccomment">/// Program-specified minimum size
+        </span><span class="kw">const </span>P_MIN_SIZE    = <span class="number">0b0000010000</span>;
+        <span class="doccomment">/// Program-specified maximum size
+        </span><span class="kw">const </span>P_MAX_SIZE    = <span class="number">0b0000100000</span>;
+        <span class="doccomment">/// Program-specified resize increments
+        </span><span class="kw">const </span>P_RESIZE_INC  = <span class="number">0b0001000000</span>;
+        <span class="doccomment">/// Program-specified min and max aspect ratios
+        </span><span class="kw">const </span>P_ASPECT      = <span class="number">0b0010000000</span>;
+        <span class="doccomment">/// Program-specified base size
+        </span><span class="kw">const </span>P_BASE_SIZE   = <span class="number">0b0100000000</span>;
+        <span class="doccomment">/// Program-specified window gravity
+        </span><span class="kw">const </span>P_WIN_GRAVITY = <span class="number">0b1000000000</span>;
     }
 }
 
-<span class="doccomment">/// Possible valid values for setting the `WM_STATE` property on a client.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See the [ICCCM docs][1] for more information.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [1]: https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.3.1</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WmState</span> {
-    <span class="doccomment">/// Window is not visible</span>
-    <span class="ident">Withdrawn</span>,
-    <span class="doccomment">/// Window is visible</span>
-    <span class="ident">Normal</span>,
-    <span class="doccomment">/// Window is iconified</span>
-    <span class="ident">Iconic</span>,
+<span class="doccomment">/// Possible valid values for setting the `WM_STATE` property on a client.
+///
+/// See the [ICCCM docs][1] for more information.
+///
+/// [1]: https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.3.1
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub enum </span>WmState {
+    <span class="doccomment">/// Window is not visible
+    </span>Withdrawn,
+    <span class="doccomment">/// Window is visible
+    </span>Normal,
+    <span class="doccomment">/// Window is iconified
+    </span>Iconic,
 }
 
-<span class="doccomment">/// The mapping states a window can be in</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MapState</span> {
-    <span class="doccomment">/// The window is unmapped</span>
-    <span class="ident">Unmapped</span>,
-    <span class="doccomment">/// The window is never viewable</span>
-    <span class="ident">UnViewable</span>,
-    <span class="doccomment">/// The window is currently viewable</span>
-    <span class="ident">Viewable</span>,
+<span class="doccomment">/// The mapping states a window can be in
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub enum </span>MapState {
+    <span class="doccomment">/// The window is unmapped
+    </span>Unmapped,
+    <span class="doccomment">/// The window is never viewable
+    </span>UnViewable,
+    <span class="doccomment">/// The window is currently viewable
+    </span>Viewable,
 }
 
-<span class="doccomment">/// The input class for a window</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WindowClass</span> {
-    <span class="doccomment">/// Class is copied from parent window</span>
-    <span class="ident">CopyFromParent</span>,
-    <span class="doccomment">/// Window can be displayed</span>
-    <span class="ident">InputOutput</span>,
-    <span class="doccomment">/// Window can only be used for queries</span>
-    <span class="ident">InputOnly</span>,
+<span class="doccomment">/// The input class for a window
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub enum </span>WindowClass {
+    <span class="doccomment">/// Class is copied from parent window
+    </span>CopyFromParent,
+    <span class="doccomment">/// Window can be displayed
+    </span>InputOutput,
+    <span class="doccomment">/// Window can only be used for queries
+    </span>InputOnly,
 }
 
-<span class="doccomment">/// Client requested hints about information other than window geometry.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See the ICCCM [spec][1] for further details.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [1]: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#wm_hints_property</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WmHints</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">flags</span>: <span class="ident">WmHintsFlags</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">accepts_input</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">initial_state</span>: <span class="ident">WmState</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">icon_pixmap</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">icon_win</span>: <span class="ident">Xid</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">icon_position</span>: <span class="ident">Point</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">icon_mask</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">window_group</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// Client requested hints about information other than window geometry.
+///
+/// See the ICCCM [spec][1] for further details.
+///
+/// [1]: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#wm_hints_property
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub struct </span>WmHints {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) flags: WmHintsFlags,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) accepts_input: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) initial_state: WmState,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) icon_pixmap: u32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) icon_win: Xid,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) icon_position: Point,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) icon_mask: u32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) window_group: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">WmHints</span> {
-    <span class="doccomment">/// Create a new instance from component parts</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">flags</span>: <span class="ident">WmHintsFlags</span>,
-        <span class="ident">accepts_input</span>: <span class="ident">bool</span>,
-        <span class="ident">initial_state</span>: <span class="ident">WmState</span>,
-        <span class="ident">icon_pixmap</span>: <span class="ident">u32</span>,
-        <span class="ident">icon_win</span>: <span class="ident">Xid</span>,
-        <span class="ident">icon_position</span>: <span class="ident">Point</span>,
-        <span class="ident">icon_mask</span>: <span class="ident">u32</span>,
-        <span class="ident">window_group</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">flags</span>,
-            <span class="ident">accepts_input</span>,
-            <span class="ident">initial_state</span>,
-            <span class="ident">icon_pixmap</span>,
-            <span class="ident">icon_win</span>,
-            <span class="ident">icon_position</span>,
-            <span class="ident">icon_mask</span>,
-            <span class="ident">window_group</span>,
+<span class="kw">impl </span>WmHints {
+    <span class="doccomment">/// Create a new instance from component parts
+    </span><span class="attribute">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">pub fn </span>new(
+        flags: WmHintsFlags,
+        accepts_input: bool,
+        initial_state: WmState,
+        icon_pixmap: u32,
+        icon_win: Xid,
+        icon_position: Point,
+        icon_mask: u32,
+        window_group: u32,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            flags,
+            accepts_input,
+            initial_state,
+            icon_pixmap,
+            icon_win,
+            icon_position,
+            icon_mask,
+            window_group,
         }
     }
 
-    <span class="doccomment">/// Try to construct a [WmHints] instance from raw bytes.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method expects a slice of 9 u32s corresponding to the C struct layout shown below.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```C</span>
-    <span class="doccomment">/// typedef struct {</span>
-    <span class="doccomment">///     long flags;          /* marks which fields in this structure are defined */</span>
-    <span class="doccomment">///     Bool input;          /* does this application rely on the window manager to</span>
-    <span class="doccomment">///                             get keyboard input? */</span>
-    <span class="doccomment">///     int initial_state;   /* see below */</span>
-    <span class="doccomment">///     Pixmap icon_pixmap;  /* pixmap to be used as icon */</span>
-    <span class="doccomment">///     Window icon_window;  /* window to be used as icon */</span>
-    <span class="doccomment">///     int icon_x, icon_y;  /* initial position of icon */</span>
-    <span class="doccomment">///     Pixmap icon_mask;    /* pixmap to be used as mask for icon_pixmap */</span>
-    <span class="doccomment">///     XID window_group;    /* id of related window group */</span>
-    <span class="doccomment">///     /* this structure may be extended in the future */</span>
-    <span class="doccomment">/// } XWMHints;</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_bytes</span>(<span class="ident">raw</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">raw</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">9</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidHints</span> {
-                <span class="ident">reason</span>: <span class="macro">format!</span>(
+    <span class="doccomment">/// Try to construct a [WmHints] instance from raw bytes.
+    ///
+    /// This method expects a slice of 9 u32s corresponding to the C struct layout shown below.
+    ///
+    /// ```C
+    /// typedef struct {
+    ///     long flags;          /* marks which fields in this structure are defined */
+    ///     Bool input;          /* does this application rely on the window manager to
+    ///                             get keyboard input? */
+    ///     int initial_state;   /* see below */
+    ///     Pixmap icon_pixmap;  /* pixmap to be used as icon */
+    ///     Window icon_window;  /* window to be used as icon */
+    ///     int icon_x, icon_y;  /* initial position of icon */
+    ///     Pixmap icon_mask;    /* pixmap to be used as mask for icon_pixmap */
+    ///     XID window_group;    /* id of related window group */
+    ///     /* this structure may be extended in the future */
+    /// } XWMHints;
+    /// ```
+    </span><span class="kw">pub fn </span>try_from_bytes(raw: <span class="kw-2">&amp;</span>[u32]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">if </span>raw.len() != <span class="number">9 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidHints {
+                reason: <span class="macro">format!</span>(
                     <span class="string">&quot;raw bytes should be [u32; 9] for WmHints, got [u32; {}]&quot;</span>,
-                    <span class="ident">raw</span>.<span class="ident">len</span>()
+                    raw.len()
                 ),
             });
         }
 
-        <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">WmHintsFlags::from_bits</span>(<span class="ident">raw</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">accepts_input</span> <span class="op">=</span> <span class="op">!</span><span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">WmHintsFlags::INPUT_HINT</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">raw</span>[<span class="number">1</span>] <span class="op">&gt;</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">initial_state</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">WmHintsFlags::STATE_HINT</span>), <span class="ident">raw</span>[<span class="number">2</span>]) {
-            (<span class="bool-val">true</span>, <span class="number">0</span>) =&gt; <span class="ident">WmState::Withdrawn</span>,
-            (<span class="bool-val">true</span>, <span class="number">1</span>) <span class="op">|</span> (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; <span class="ident">WmState::Normal</span>,
-            (<span class="bool-val">true</span>, <span class="number">2</span>) =&gt; <span class="ident">WmState::Iconic</span>,
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidHints</span> {
-                    <span class="ident">reason</span>: <span class="macro">format!</span>(<span class="string">&quot;initial state flag should be 0, 1, 2: got {}&quot;</span>, <span class="ident">raw</span>[<span class="number">2</span>]),
+        <span class="kw">let </span>flags = WmHintsFlags::from_bits(raw[<span class="number">0</span>]).unwrap();
+        <span class="kw">let </span>accepts_input = !flags.contains(WmHintsFlags::INPUT_HINT) || raw[<span class="number">1</span>] &gt; <span class="number">0</span>;
+        <span class="kw">let </span>initial_state = <span class="kw">match </span>(flags.contains(WmHintsFlags::STATE_HINT), raw[<span class="number">2</span>]) {
+            (<span class="bool-val">true</span>, <span class="number">0</span>) =&gt; WmState::Withdrawn,
+            (<span class="bool-val">true</span>, <span class="number">1</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; WmState::Normal,
+            (<span class="bool-val">true</span>, <span class="number">2</span>) =&gt; WmState::Iconic,
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidHints {
+                    reason: <span class="macro">format!</span>(<span class="string">&quot;initial state flag should be 0, 1, 2: got {}&quot;</span>, raw[<span class="number">2</span>]),
                 })
             }
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">flags</span>,
-            <span class="ident">accepts_input</span>,
-            <span class="ident">initial_state</span>,
-            <span class="ident">icon_pixmap</span>: <span class="ident">raw</span>[<span class="number">3</span>],
-            <span class="ident">icon_win</span>: <span class="ident">Xid</span>(<span class="ident">raw</span>[<span class="number">4</span>]),
-            <span class="ident">icon_position</span>: <span class="ident">Point::new</span>(<span class="ident">raw</span>[<span class="number">5</span>], <span class="ident">raw</span>[<span class="number">6</span>]),
-            <span class="ident">icon_mask</span>: <span class="ident">raw</span>[<span class="number">7</span>],
-            <span class="ident">window_group</span>: <span class="ident">raw</span>[<span class="number">8</span>],
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            flags,
+            accepts_input,
+            initial_state,
+            icon_pixmap: raw[<span class="number">3</span>],
+            icon_win: Xid(raw[<span class="number">4</span>]),
+            icon_position: Point::new(raw[<span class="number">5</span>], raw[<span class="number">6</span>]),
+            icon_mask: raw[<span class="number">7</span>],
+            window_group: raw[<span class="number">8</span>],
         })
     }
 }
 
-<span class="doccomment">/// Client requested hints about window geometry.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See the ICCCM [spec][1] for further details or the [Xlib manual][2] for more details of the</span>
-<span class="doccomment">/// data fromat but note that Penrose does not honour the following hints:</span>
-<span class="doccomment">///   - gravity</span>
-<span class="doccomment">///   - increment</span>
-<span class="doccomment">///   - aspect ratio</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [1]: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#wm_normal_hints_property</span>
-<span class="doccomment">/// [2]: https://tronche.com/gui/x/xlib/ICC/client-to-window-manager/wm-normal-hints.html</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WmNormalHints</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">flags</span>: <span class="ident">WmNormalHintsFlags</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">base</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">min</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">max</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">user_specified</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Client requested hints about window geometry.
+///
+/// See the ICCCM [spec][1] for further details or the [Xlib manual][2] for more details of the
+/// data fromat but note that Penrose does not honour the following hints:
+///   - gravity
+///   - increment
+///   - aspect ratio
+///
+/// [1]: https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#wm_normal_hints_property
+/// [2]: https://tronche.com/gui/x/xlib/ICC/client-to-window-manager/wm-normal-hints.html
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub struct </span>WmNormalHints {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) flags: WmNormalHintsFlags,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) base: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) min: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) max: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) user_specified: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">WmNormalHints</span> {
-    <span class="doccomment">/// Create a new instance from component parts</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">flags</span>: <span class="ident">WmNormalHintsFlags</span>,
-        <span class="ident">base</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-        <span class="ident">min</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-        <span class="ident">max</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-        <span class="ident">user_specified</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">flags</span>,
-            <span class="ident">base</span>,
-            <span class="ident">min</span>,
-            <span class="ident">max</span>,
-            <span class="ident">user_specified</span>,
+<span class="kw">impl </span>WmNormalHints {
+    <span class="doccomment">/// Create a new instance from component parts
+    </span><span class="kw">pub fn </span>new(
+        flags: WmNormalHintsFlags,
+        base: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+        min: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+        max: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+        user_specified: <span class="prelude-ty">Option</span>&lt;Rect&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            flags,
+            base,
+            min,
+            max,
+            user_specified,
         }
     }
 
-    <span class="doccomment">/// Apply these size hints to a given [Rect].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// NOTE: currently only the max size is respected</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">r</span>: <span class="ident">Rect</span>) -&gt; <span class="ident">Rect</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">max</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">max</span> {
-            <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">is_larger_than</span>(<span class="kw-2">&amp;</span><span class="ident">max</span>) {
-                <span class="ident">r</span>.<span class="ident">w</span> <span class="op">=</span> <span class="ident">max</span>.<span class="ident">w</span>;
-                <span class="ident">r</span>.<span class="ident">h</span> <span class="op">=</span> <span class="ident">max</span>.<span class="ident">h</span>
+    <span class="doccomment">/// Apply these size hints to a given [Rect].
+    ///
+    /// NOTE: currently only the max size is respected
+    </span><span class="kw">pub fn </span>apply_to(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>r: Rect) -&gt; Rect {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(max) = <span class="self">self</span>.max {
+            <span class="kw">if </span>r.is_larger_than(<span class="kw-2">&amp;</span>max) {
+                r.w = max.w;
+                r.h = max.h
             }
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">min</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">min</span> {
-            <span class="kw">if</span> <span class="ident">min</span>.<span class="ident">is_larger_than</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>) {
-                <span class="ident">r</span>.<span class="ident">w</span> <span class="op">=</span> <span class="ident">min</span>.<span class="ident">w</span>;
-                <span class="ident">r</span>.<span class="ident">h</span> <span class="op">=</span> <span class="ident">min</span>.<span class="ident">h</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(min) = <span class="self">self</span>.min {
+            <span class="kw">if </span>min.is_larger_than(<span class="kw-2">&amp;</span>r) {
+                r.w = min.w;
+                r.h = min.h;
             }
         }
 
-        <span class="ident">r</span>
+        r
     }
 
-    <span class="doccomment">/// Try to construct a [WmNormalHints] instance from raw bytes.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method expects a slice of 18 u32s corresponding to the C struct layout shown below.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```C</span>
-    <span class="doccomment">/// typedef struct {</span>
-    <span class="doccomment">///     long flags;                /* marks which fields in this structure are defined */</span>
-    <span class="doccomment">///     int x, y;                  /* Obsolete */</span>
-    <span class="doccomment">///     int width, height;         /* Obsolete */</span>
-    <span class="doccomment">///     int min_width, min_height;</span>
-    <span class="doccomment">///     int max_width, max_height;</span>
-    <span class="doccomment">///     int width_inc, height_inc;</span>
-    <span class="doccomment">///     struct {</span>
-    <span class="doccomment">///            int x;              /* numerator */</span>
-    <span class="doccomment">///            int y;              /* denominator */</span>
-    <span class="doccomment">///     } min_aspect, max_aspect;</span>
-    <span class="doccomment">///     int base_width, base_height;</span>
-    <span class="doccomment">///     int win_gravity;</span>
-    <span class="doccomment">///     /* this structure may be extended in the future */</span>
-    <span class="doccomment">/// } XSizeHints;</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_bytes</span>(<span class="ident">raw</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">raw</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">18</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidHints</span> {
-                <span class="ident">reason</span>: <span class="macro">format!</span>(
+    <span class="doccomment">/// Try to construct a [WmNormalHints] instance from raw bytes.
+    ///
+    /// This method expects a slice of 18 u32s corresponding to the C struct layout shown below.
+    ///
+    /// ```C
+    /// typedef struct {
+    ///     long flags;                /* marks which fields in this structure are defined */
+    ///     int x, y;                  /* Obsolete */
+    ///     int width, height;         /* Obsolete */
+    ///     int min_width, min_height;
+    ///     int max_width, max_height;
+    ///     int width_inc, height_inc;
+    ///     struct {
+    ///            int x;              /* numerator */
+    ///            int y;              /* denominator */
+    ///     } min_aspect, max_aspect;
+    ///     int base_width, base_height;
+    ///     int win_gravity;
+    ///     /* this structure may be extended in the future */
+    /// } XSizeHints;
+    /// ```
+    </span><span class="kw">pub fn </span>try_from_bytes(raw: <span class="kw-2">&amp;</span>[u32]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">if </span>raw.len() != <span class="number">18 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidHints {
+                reason: <span class="macro">format!</span>(
                     <span class="string">&quot;raw bytes should be [u32; 18] for WmNormalHints, got [u32; {}]&quot;</span>,
-                    <span class="ident">raw</span>.<span class="ident">len</span>()
+                    raw.len()
                 ),
             });
         }
 
-        <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">WmNormalHintsFlags::from_bits</span>(<span class="ident">raw</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>flags = WmNormalHintsFlags::from_bits(raw[<span class="number">0</span>]).unwrap();
 
-        <span class="comment">// These properties are marked as obsolete but some clients still set them</span>
-        <span class="comment">// so it they are useful as fallbacks</span>
-        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> (<span class="ident">raw</span>[<span class="number">1</span>], <span class="ident">raw</span>[<span class="number">2</span>]);
-        <span class="kw">let</span> (<span class="ident">user_w</span>, <span class="ident">user_h</span>) <span class="op">=</span> (<span class="ident">raw</span>[<span class="number">3</span>], <span class="ident">raw</span>[<span class="number">4</span>]);
+        <span class="comment">// These properties are marked as obsolete but some clients still set them
+        // so it they are useful as fallbacks
+        </span><span class="kw">let </span>(x, y) = (raw[<span class="number">1</span>], raw[<span class="number">2</span>]);
+        <span class="kw">let </span>(user_w, user_h) = (raw[<span class="number">3</span>], raw[<span class="number">4</span>]);
 
-        <span class="kw">let</span> (<span class="ident">min_w</span>, <span class="ident">min_h</span>) <span class="op">=</span> (<span class="ident">raw</span>[<span class="number">5</span>], <span class="ident">raw</span>[<span class="number">6</span>]);
-        <span class="kw">let</span> (<span class="ident">max_w</span>, <span class="ident">max_h</span>) <span class="op">=</span> (<span class="ident">raw</span>[<span class="number">7</span>], <span class="ident">raw</span>[<span class="number">8</span>]);
-        <span class="kw">let</span> (<span class="ident">base_w</span>, <span class="ident">base_h</span>) <span class="op">=</span> (<span class="ident">raw</span>[<span class="number">15</span>], <span class="ident">raw</span>[<span class="number">16</span>]);
+        <span class="kw">let </span>(min_w, min_h) = (raw[<span class="number">5</span>], raw[<span class="number">6</span>]);
+        <span class="kw">let </span>(max_w, max_h) = (raw[<span class="number">7</span>], raw[<span class="number">8</span>]);
+        <span class="kw">let </span>(base_w, base_h) = (raw[<span class="number">15</span>], raw[<span class="number">16</span>]);
 
-        <span class="comment">// ignoring increment, aspect ratio, gravity as they are not used in</span>
-        <span class="comment">// the main WindowManager logic</span>
+        <span class="comment">// ignoring increment, aspect ratio, gravity as they are not used in
+        // the main WindowManager logic
 
-        <span class="kw">let</span> <span class="ident">if_set</span> <span class="op">=</span> <span class="op">|</span><span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">w</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">h</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">Rect::new</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">w</span>, <span class="ident">h</span>))
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            }
+        </span><span class="kw">let </span>if_set = |x, y, w, h| {
+            <span class="kw">if </span>w &gt; <span class="number">0 </span>&amp;&amp; h &gt; <span class="number">0 </span>{
+                <span class="prelude-val">Some</span>(Rect::new(x, y, w, h))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">flags</span>,
-            <span class="ident">base</span>: <span class="ident">if_set</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">base_w</span>, <span class="ident">base_h</span>),
-            <span class="ident">min</span>: <span class="ident">if_set</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">min_w</span>, <span class="ident">min_h</span>),
-            <span class="ident">max</span>: <span class="ident">if_set</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">max_w</span>, <span class="ident">max_h</span>),
-            <span class="ident">user_specified</span>: <span class="ident">if_set</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">user_w</span>, <span class="ident">user_h</span>),
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            flags,
+            base: if_set(x, y, base_w, base_h),
+            min: if_set(x, y, min_w, min_h),
+            max: if_set(x, y, max_w, max_h),
+            user_specified: if_set(x, y, user_w, user_h),
         })
     }
 }
 
-<span class="doccomment">/// Window Attributes honoured by penose.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Only a small subset of window attributes are checked and honoured by penrose. This list may be</span>
-<span class="doccomment">/// extended in future.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```C</span>
-<span class="doccomment">/// typedef struct xcb_get_window_attributes_reply_t {</span>
-<span class="doccomment">///     uint8_t        response_type;</span>
-<span class="doccomment">///     uint8_t        backing_store;</span>
-<span class="doccomment">///     uint16_t       sequence;</span>
-<span class="doccomment">///     uint32_t       length;</span>
-<span class="doccomment">///     xcb_visualid_t visual;</span>
-<span class="doccomment">///     uint16_t       _class;</span>
-<span class="doccomment">///     uint8_t        bit_gravity;</span>
-<span class="doccomment">///     uint8_t        win_gravity;</span>
-<span class="doccomment">///     uint32_t       backing_planes;</span>
-<span class="doccomment">///     uint32_t       backing_pixel;</span>
-<span class="doccomment">///     uint8_t        save_under;</span>
-<span class="doccomment">///     uint8_t        map_is_installed;</span>
-<span class="doccomment">///     uint8_t        map_state;</span>
-<span class="doccomment">///     uint8_t        override_redirect;</span>
-<span class="doccomment">///     xcb_colormap_t colormap;</span>
-<span class="doccomment">///     uint32_t       all_event_masks;</span>
-<span class="doccomment">///     uint32_t       your_event_mask;</span>
-<span class="doccomment">///     uint16_t       do_not_propagate_mask;</span>
-<span class="doccomment">///     uint8_t        pad0[2];</span>
-<span class="doccomment">/// } xcb_get_window_attributes_reply_t;</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WindowAttributes</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">override_redirect</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">map_state</span>: <span class="ident">MapState</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">window_class</span>: <span class="ident">WindowClass</span>,
+<span class="doccomment">/// Window Attributes honoured by penose.
+///
+/// Only a small subset of window attributes are checked and honoured by penrose. This list may be
+/// extended in future.
+///
+/// ```C
+/// typedef struct xcb_get_window_attributes_reply_t {
+///     uint8_t        response_type;
+///     uint8_t        backing_store;
+///     uint16_t       sequence;
+///     uint32_t       length;
+///     xcb_visualid_t visual;
+///     uint16_t       _class;
+///     uint8_t        bit_gravity;
+///     uint8_t        win_gravity;
+///     uint32_t       backing_planes;
+///     uint32_t       backing_pixel;
+///     uint8_t        save_under;
+///     uint8_t        map_is_installed;
+///     uint8_t        map_state;
+///     uint8_t        override_redirect;
+///     xcb_colormap_t colormap;
+///     uint32_t       all_event_masks;
+///     uint32_t       your_event_mask;
+///     uint16_t       do_not_propagate_mask;
+///     uint8_t        pad0[2];
+/// } xcb_get_window_attributes_reply_t;
+/// ```
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+</span><span class="kw">pub struct </span>WindowAttributes {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) override_redirect: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) map_state: MapState,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) window_class: WindowClass,
 }
 
-<span class="kw">impl</span> <span class="ident">WindowAttributes</span> {
-    <span class="doccomment">/// Create a new instance from component parts</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">override_redirect</span>: <span class="ident">bool</span>, <span class="ident">map_state</span>: <span class="ident">MapState</span>, <span class="ident">window_class</span>: <span class="ident">WindowClass</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">override_redirect</span>,
-            <span class="ident">map_state</span>,
-            <span class="ident">window_class</span>,
+<span class="kw">impl </span>WindowAttributes {
+    <span class="doccomment">/// Create a new instance from component parts
+    </span><span class="kw">pub fn </span>new(override_redirect: bool, map_state: MapState, window_class: WindowClass) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            override_redirect,
+            map_state,
+            window_class,
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="penrose" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
