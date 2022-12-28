@@ -41,21 +41,21 @@ admire and aim for minimalism in code, I personally feel that it becomes a probl
 when your code base starts playing code golf to keep things short for the sake of it.
 
 I certainly won't claim that `Penrose` has the cleanest code base you've ever seen,
-but it should be readible in addition to being fast.
+but it should be readable in addition to being fast.
 
 
 #### Simple to configure
 
-I've also tried my hand at [Xmonad][6] in the past. I love the set-ups people can
-achive with it ([this one][7] is a personal favourite) but doing everything in
+I've also tried my hand at [Xmonad][6] in the past. I love the setups people can
+achieve with it ([this one][7] is a personal favourite), but doing everything in
 Haskell was a deal breaker for me. I'm sure many people will say the same thing
-about Rust but then at least I'm giving you some more options!
+about Rust, but then at least I'm giving you some more options!
 
 With `Penrose`, a simple window manager can be written in about 5 minutes and under
-100 lines of code. It will be pretty minimal but each additional feature (such as a
+100 lines of code. It will be pretty minimal, but each additional feature (such as a
 status bar, scratch-pads, custom layouts, dynamic menus...) can be added in as
-little as a single line. If the functionality you want isn't available however
-then that leads us on to...
+little as a single line. If the functionality you want isn't available however,
+that leads us on to...
 
 
 #### Easy to extend
@@ -67,7 +67,7 @@ manager has always felt like the right model for me for extending the window
 manager.
 
 `Penrose` provides a set of traits and APIs for extending the minimal core library
-that is provided out of the box. By default you essentially get an event loop and
+that is provided out of the box. By default, you essentially get an event loop and
 a nice clean split between the "pure" state manipulation APIs for managing your
 windows and a "diff and render" layer that interacts with the X server. There are
 enough built-in pieces to show how everything works and then some more interesting
@@ -80,13 +80,13 @@ enough built-in pieces to show how everything works and then some more interesti
 #### An external config file
 
 Parsing a config file and dynamically switching behaviour on the contents adds a
-large amount of complexity to the code: not to mention the need for _validating_
+large amount of complexity to the code, not to mention the need for _validating_
 the config file! By default, `Penrose` is configured statically in your **main.rs**
 and compiled each time you want to make changes (similar to [Xmonad][7] and [dwm][6]).
 There is no built-in support for hot reloading of changes or wrappers around the
 main window manager process.
 
-That said, the extensibility of `Penrose` means that you are definately able to define
+That said, the extensibility of `Penrose` means that you are definitely able to define
 your own config file format and parse that as part of your startup, if that is something
 you want.
 
