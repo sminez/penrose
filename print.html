@@ -224,12 +224,7 @@ what's going on inside as it runs!</p>
 even handles enabling optional features for us (which is handy, because we need to
 do just that with <code>tracing-subscriber</code>):</p>
 <pre><code class="language-bash">$ cargo add tracing-subscriber --features env-filter
-</code></pre>
-<blockquote>
-<p><strong>NOTE</strong>: For now, you will need to add penrose as a git dependency. Once <code>v0.3.0</code> is stable
-you will be able to add it in the same way as shown above for tracing-subscriber.</p>
-</blockquote>
-<pre><code class="language-bash">$ cargo add penrose --git https://github.com/sminez/penrose
+$ cargo add penrose
 </code></pre>
 <p>With that done, we're going to copy the <a href="https://github.com/sminez/penrose/blob/develop/examples/minimal/main.rs">minimal example</a> from the penrose repository in
 GitHub as our window manager. Either copy and paste the contents of the example into your
