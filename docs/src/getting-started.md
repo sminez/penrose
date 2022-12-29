@@ -88,13 +88,7 @@ do just that with `tracing-subscriber`):
 
 ```bash
 $ cargo add tracing-subscriber --features env-filter
-```
-
-> **NOTE**: For now, you will need to add penrose as a git dependency. Once `v0.3.0` is stable
-> you will be able to add it in the same way as shown above for tracing-subscriber.
-
-```bash
-$ cargo add penrose --git https://github.com/sminez/penrose
+$ cargo add penrose
 ```
 
 With that done, we're going to copy the [minimal example][3] from the penrose repository in
