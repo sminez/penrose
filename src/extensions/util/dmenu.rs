@@ -80,7 +80,7 @@ impl Default for DMenuConfig {
 }
 
 impl DMenuConfig {
-    fn flags(&self, prompt: &str, screen_index: usize) -> Vec<String> {
+    fn flags(&self, prompt: &str, screen_index: usize) -> impl Iterator<Item = String> + '_ {
         let &DMenuConfig {
             password_input,
             ignore_case,
@@ -91,32 +91,34 @@ impl DMenuConfig {
             ..
         } = self;
 
-        let mut s = format!(
-            "-nb {} -nf {} -sb {} -m {}",
+        let mut flags = vec![
+            "-nb".to_string(),
             bg_color.as_rgb_hex_string(),
+            "-nf".to_string(),
             fg_color.as_rgb_hex_string(),
+            "-sb".to_string(),
             selected_color.as_rgb_hex_string(),
-            screen_index,
-        );
+            "-m".to_string(),
+            screen_index.to_string(),
+        ];
 
         if n_lines > 0 {
-            s.push_str(&format!(" -l {n_lines}"))
+            flags.extend_from_slice(&["-l".to_string(), n_lines.to_string()]);
         }
 
         if password_input {
-            s.push_str(" -P");
+            flags.extend_from_slice(&["-P".to_string()]);
         }
 
         if ignore_case {
-            s.push_str(" -i");
+            flags.extend_from_slice(&["-i".to_string()]);
         }
 
         if !prompt.is_empty() {
-            s.push_str(" -p ");
-            s.push_str(prompt);
+            flags.extend_from_slice(&["-p".to_string(), prompt.to_string()]);
         }
 
-        s.split_whitespace().map(|s| s.to_owned()).collect()
+        flags.into_iter()
     }
 }
 
