@@ -80,7 +80,7 @@ impl Default for DMenuConfig {
 }
 
 impl DMenuConfig {
-    fn flags(&self, prompt: &str, screen_index: usize) -> impl Iterator<Item = String> + '_ {
+    fn flags(&self, prompt: &str, screen_index: usize) -> Vec<String> {
         let &DMenuConfig {
             password_input,
             ignore_case,
@@ -107,18 +107,18 @@ impl DMenuConfig {
         }
 
         if password_input {
-            flags.extend_from_slice(&["-P".to_string()]);
+            flags.push("-P".to_string());
         }
 
         if ignore_case {
-            flags.extend_from_slice(&["-i".to_string()]);
+            flags.push("-i".to_string());
         }
 
         if !prompt.is_empty() {
             flags.extend_from_slice(&["-p".to_string(), prompt.to_string()]);
         }
 
-        flags.into_iter()
+        flags
     }
 }
 
