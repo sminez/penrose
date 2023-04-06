@@ -156,7 +156,22 @@ impl Rect {
     }
 
     /// The four corners of this [Rect] in [Point] form returned in clockwise
-    /// order from the top left corener.
+    /// order from the top left corner.
+    /// ```
+    /// # use penrose::pure::geometry::{Rect, Point};
+    /// let r = Rect::new(0, 0, 100, 200);
+    /// let corners = r.corners();
+    ///
+    /// assert_eq!(
+    ///     corners,
+    ///     (
+    ///         Point { x: 0, y: 0 },
+    ///         Point { x: 100, y: 0 },
+    ///         Point { x: 100, y: 200 },
+    ///         Point { x: 0, y: 200 },
+    ///     )
+    /// );
+    /// ```
     pub fn corners(&self) -> (Point, Point, Point, Point) {
         let &Rect { x, y, w, h } = self;
 
@@ -168,7 +183,16 @@ impl Rect {
         )
     }
 
-    /// The midpoint of this rectangle
+    /// The midpoint of this rectangle.
+    ///
+    /// Odd side lengths will lead to a truncated point towards the top left corner
+    /// in order to maintain integer coordinates.
+    /// ```
+    /// # use penrose::pure::geometry::{Rect, Point};
+    /// let r = Rect::new(0, 0, 100, 200);
+    ///
+    /// assert_eq!(r.midpoint(), Point { x: 50, y: 100 });
+    /// ```
     pub fn midpoint(&self) -> Point {
         Point {
             x: self.x + self.w / 2,
@@ -177,14 +201,22 @@ impl Rect {
     }
 
     /// Shrink width and height by the given pixel border, maintaining the current x and y
-    /// coordinates.
+    /// coordinates. The resulting `Rect` will always have a minimum width and height of 1.
+    /// ```
+    /// # use penrose::pure::geometry::Rect;
+    /// let r = Rect::new(0, 0, 100, 200);
+    ///
+    /// assert_eq!(r.shrink_in(10), Rect::new(0, 0, 80, 180));
+    /// assert_eq!(r.shrink_in(50), Rect::new(0, 0, 1, 100));
+    /// assert_eq!(r.shrink_in(100), Rect::new(0, 0, 1, 1));
+    /// ```
     pub fn shrink_in(&self, border: u32) -> Self {
-        let w = if self.w < 2 * border {
+        let w = if self.w <= 2 * border {
             1
         } else {
             self.w - 2 * border
         };
-        let h = if self.h < 2 * border {
+        let h = if self.h <= 2 * border {
             1
         } else {
             self.h - 2 * border
@@ -194,6 +226,13 @@ impl Rect {
     }
 
     /// Create a new [Rect] with width equal to `factor` x `self.w`
+    /// ```
+    /// # use penrose::pure::geometry::Rect;
+    /// let r = Rect::new(0, 0, 30, 40);
+    ///
+    /// assert_eq!(r.scale_w(1.5), Rect::new(0, 0, 45, 40));
+    /// assert_eq!(r.scale_w(0.5), Rect::new(0, 0, 15, 40));
+    /// ```
     pub fn scale_w(&self, factor: f64) -> Self {
         Self {
             w: (self.w as f64 * factor).floor() as u32,
@@ -202,6 +241,13 @@ impl Rect {
     }
 
     /// Create a new [Rect] with height equal to `factor` x `self.h`
+    /// ```
+    /// # use penrose::pure::geometry::Rect;
+    /// let r = Rect::new(0, 0, 30, 40);
+    ///
+    /// assert_eq!(r.scale_h(1.5), Rect::new(0, 0, 30, 60));
+    /// assert_eq!(r.scale_h(0.5), Rect::new(0, 0, 30, 20));
+    /// ```
     pub fn scale_h(&self, factor: f64) -> Self {
         Self {
             h: (self.h as f64 * factor).floor() as u32,
@@ -211,15 +257,41 @@ impl Rect {
 
     /// Update the width and height of this [Rect] by specified deltas.
     ///
-    /// Minimum size is clamped at 0x0
+    /// Minimum size is clamped at 1x1.
+    ///
+    /// # Panics
+    /// This function will panic if one of the supplied deltas overflows `i32::MAX`.
+    /// ```
+    /// # use penrose::pure::geometry::Rect;
+    /// let mut r = Rect::new(0, 0, 100, 200);
+    ///
+    /// r.resize(20, 30);
+    /// assert_eq!(r, Rect::new(0, 0, 120, 230));
+    ///
+    /// r.resize(-40, -50);
+    /// assert_eq!(r, Rect::new(0, 0, 80, 180));
+    /// ```
     pub fn resize(&mut self, dw: i32, dh: i32) {
-        self.w = max(0, (self.w as i32) + dw) as u32;
-        self.h = max(0, (self.h as i32) + dh) as u32;
+        self.w = max(1, (self.w as i32) + dw) as u32;
+        self.h = max(1, (self.h as i32) + dh) as u32;
     }
 
     /// Update the position of this [Rect] by specified deltas.
     ///
     /// Minimum (x, y) coordinates are clamped at (0, 0)
+    ///
+    /// # Panics
+    /// This function will panic if one of the supplied deltas overflows `i32::MAX`.
+    /// ```
+    /// # use penrose::pure::geometry::Rect;
+    /// let mut r = Rect::new(0, 0, 100, 200);
+    ///
+    /// r.reposition(20, 30);
+    /// assert_eq!(r, Rect::new(20, 30, 100, 200));
+    ///
+    /// r.reposition(-40, -20);
+    /// assert_eq!(r, Rect::new(0, 10, 100, 200));
+    /// ```
     pub fn reposition(&mut self, dx: i32, dy: i32) {
         self.x = max(0, (self.x as i32) + dx) as u32;
         self.y = max(0, (self.y as i32) + dy) as u32;
@@ -338,9 +410,66 @@ mod tests {
     use super::*;
     use simple_test_case::test_case;
 
-    #[test_case(1.5, Rect::new(10, 20, 45, 40); "scale up")]
-    #[test_case(0.5, Rect::new(10, 20, 15, 40); "scale down")]
-    #[test_case(1.0, Rect::new(10, 20, 30, 40); "unchanged")]
+    // Helpers to make it easier to read the cases for the tests below
+
+    fn r(x: u32, y: u32, w: u32, h: u32) -> Rect {
+        Rect::new(x, y, w, h)
+    }
+
+    fn rr(x: f64, y: f64, w: f64, h: f64) -> RelativeRect {
+        RelativeRect::new(x, y, w, h)
+    }
+
+    fn p(x: u32, y: u32) -> Point {
+        Point { x, y }
+    }
+
+    #[test]
+    fn corners_works() {
+        let r = Rect::new(0, 0, 1, 2);
+        let corners = r.corners();
+
+        assert_eq!(
+            corners,
+            (
+                Point { x: 0, y: 0 },
+                Point { x: 1, y: 0 },
+                Point { x: 1, y: 2 },
+                Point { x: 0, y: 2 },
+            )
+        );
+    }
+
+    #[test_case(r(0, 0, 10, 20), p(5, 10); "even both")]
+    #[test_case(r(0, 0, 10, 21), p(5, 10); "even width")]
+    #[test_case(r(0, 0, 11, 20), p(5, 10); "even height")]
+    #[test_case(r(0, 0, 11, 21), p(5, 10); "odd both")]
+    #[test]
+    fn midpoint_works(r: Rect, p: Point) {
+        assert_eq!(r.midpoint(), p);
+    }
+
+    #[test_case(r(0, 0, 10, 20), 1, 8, 18; "small border")]
+    #[test_case(r(0, 0, 10, 20), 1000, 1, 1; "massive border")]
+    #[test_case(r(0, 0, 10, 20), 5, 1, 10; "border half of width")]
+    #[test_case(r(0, 0, 20, 10), 5, 10, 1; "border half of height")]
+    #[test]
+    fn shrink_in_works(r: Rect, b: u32, w: u32, h: u32) {
+        let res = r.shrink_in(b);
+        assert_eq!(
+            res,
+            Rect {
+                x: r.x,
+                y: r.y,
+                w,
+                h
+            }
+        )
+    }
+
+    #[test_case(1.5, r(10, 20, 45, 40); "scale up")]
+    #[test_case(0.5, r(10, 20, 15, 40); "scale down")]
+    #[test_case(1.0, r(10, 20, 30, 40); "unchanged")]
     #[test]
     fn scale_w(factor: f64, expected: Rect) {
         let r = Rect::new(10, 20, 30, 40);
@@ -348,14 +477,40 @@ mod tests {
         assert_eq!(r.scale_w(factor), expected);
     }
 
-    #[test_case(1.5, Rect::new(10, 20, 30, 60); "scale up")]
-    #[test_case(0.5, Rect::new(10, 20, 30, 20); "scale down")]
-    #[test_case(1.0, Rect::new(10, 20, 30, 40); "unchanged")]
+    #[test_case(1.5, r(10, 20, 30, 60); "scale up")]
+    #[test_case(0.5, r(10, 20, 30, 20); "scale down")]
+    #[test_case(1.0, r(10, 20, 30, 40); "unchanged")]
     #[test]
     fn scale_h(factor: f64, expected: Rect) {
         let r = Rect::new(10, 20, 30, 40);
 
         assert_eq!(r.scale_h(factor), expected);
+    }
+
+    // no case for increase by i32::MAX as this overflows (documented).
+    #[test_case(1, 2, r(0, 0, 11, 22); "increase")]
+    #[test_case(-1, -2, r(0, 0, 9, 18); "decrease")]
+    #[test_case(-100, -100, r(0, 0, 1, 1); "clamp at 1x1")]
+    #[test_case(-i32::MAX, -i32::MAX, r(0, 0, 1, 1); "decrease by max")]
+    #[test]
+    fn resize_works(dw: i32, dh: i32, expected: Rect) {
+        let mut r = Rect::new(0, 0, 10, 20);
+        r.resize(dw, dh);
+
+        assert_eq!(r, expected);
+    }
+
+    // no case for increase by i32::MAX as this overflows (documented).
+    #[test_case(1, 2, r(11, 22, 10, 20); "increase")]
+    #[test_case(-1, -2, r(9, 18, 10, 20); "decrease")]
+    #[test_case(-100, -100, r(0, 0, 10, 20); "clamp at 0x0")]
+    #[test_case(-i32::MAX, -i32::MAX, r(0, 0, 10, 20); "decrease by max")]
+    #[test]
+    fn reposition_works(dw: i32, dh: i32, expected: Rect) {
+        let mut r = Rect::new(10, 20, 10, 20);
+        r.reposition(dw, dh);
+
+        assert_eq!(r, expected);
     }
 
     #[test]
@@ -367,12 +522,12 @@ mod tests {
         assert!(!r1.contains(&r2));
     }
 
-    #[test_case(Point::new(0, 0), false; "outside")]
-    #[test_case(Point::new(30, 20), true; "inside")]
-    #[test_case(Point::new(10, 20), true; "top left")]
-    #[test_case(Point::new(40, 20), true; "top right")]
-    #[test_case(Point::new(10, 60), true; "bottom left")]
-    #[test_case(Point::new(40, 60), true; "bottom right")]
+    #[test_case(p(0, 0), false; "outside")]
+    #[test_case(p(30, 20), true; "inside")]
+    #[test_case(p(10, 20), true; "top left")]
+    #[test_case(p(40, 20), true; "top right")]
+    #[test_case(p(10, 60), true; "bottom left")]
+    #[test_case(p(40, 60), true; "bottom right")]
     #[test]
     fn contains_point(p: Point, expected: bool) {
         let r = Rect::new(10, 20, 30, 40);
@@ -380,22 +535,10 @@ mod tests {
         assert_eq!(r.contains_point(p), expected);
     }
 
-    #[test_case(
-        Rect::new(0, 0, 10, 10),
-        Some(Rect::new(5, 5, 10, 10));
-        "fits"
-    )]
-    #[test_case(
-        Rect::new(10, 10, 10, 10),
-        Some(Rect::new(5, 5, 10, 10));
-        "fits overlaping"
-    )]
-    #[test_case(
-        Rect::new(100, 100, 10, 10),
-        Some(Rect::new(5, 5, 10, 10));
-        "fits but not contained"
-    )]
-    #[test_case(Rect::new(0, 0, 100, 100), None; "doesn't fit")]
+    #[test_case(r(0, 0, 10, 10), Some(r(5, 5, 10, 10)); "fits")]
+    #[test_case(r(10, 10, 10, 10), Some(r(5, 5, 10, 10)); "fits overlaping")]
+    #[test_case(r(100, 100, 10, 10), Some(r(5, 5, 10, 10)); "fits but not contained")]
+    #[test_case(r(0, 0, 100, 100), None; "doesn't fit")]
     #[test]
     fn centered_in(inner: Rect, expected: Option<Rect>) {
         let outer = Rect::new(0, 0, 20, 20);
@@ -405,12 +548,12 @@ mod tests {
         assert_eq!(res, expected);
     }
 
-    #[test_case(Rect::new(0, 0, 100, 100), 1; "simple single")]
-    #[test_case(Rect::new(0, 0, 100, 100), 4; "simple even")]
-    #[test_case(Rect::new(0, 0, 100, 100), 7; "simple odd")]
-    #[test_case(Rect::new(0, 0, 79, 57), 1; "awkward single")]
-    #[test_case(Rect::new(0, 0, 79, 57), 4; "awkward even")]
-    #[test_case(Rect::new(0, 0, 79, 57), 7; "awkward odd")]
+    #[test_case(r(0, 0, 100, 100), 1; "simple single")]
+    #[test_case(r(0, 0, 100, 100), 4; "simple even")]
+    #[test_case(r(0, 0, 100, 100), 7; "simple odd")]
+    #[test_case(r(0, 0, 79, 57), 1; "awkward single")]
+    #[test_case(r(0, 0, 79, 57), 4; "awkward even")]
+    #[test_case(r(0, 0, 79, 57), 7; "awkward odd")]
     #[test]
     fn as_rows(r: Rect, n_rows: u32) {
         let rects = r.as_rows(n_rows);
@@ -420,12 +563,12 @@ mod tests {
         assert!(rects.iter().all(|r| r.h == h));
     }
 
-    #[test_case(Rect::new(0, 0, 100, 100), 1; "simple single")]
-    #[test_case(Rect::new(0, 0, 100, 100), 4; "simple even")]
-    #[test_case(Rect::new(0, 0, 100, 100), 7; "simple odd")]
-    #[test_case(Rect::new(0, 0, 79, 57), 1; "awkward single")]
-    #[test_case(Rect::new(0, 0, 79, 57), 4; "awkward even")]
-    #[test_case(Rect::new(0, 0, 79, 57), 7; "awkward odd")]
+    #[test_case(r(0, 0, 100, 100), 1; "simple single")]
+    #[test_case(r(0, 0, 100, 100), 4; "simple even")]
+    #[test_case(r(0, 0, 100, 100), 7; "simple odd")]
+    #[test_case(r(0, 0, 79, 57), 1; "awkward single")]
+    #[test_case(r(0, 0, 79, 57), 4; "awkward even")]
+    #[test_case(r(0, 0, 79, 57), 7; "awkward odd")]
     #[test]
     fn as_columns(r: Rect, n_cols: u32) {
         let rects = r.as_rows(n_cols);
@@ -473,16 +616,6 @@ mod tests {
         } else {
             assert!(res.is_none());
         }
-    }
-
-    // Helpers to make it easier to read the cases for the relative_to_rect tests below
-
-    fn r(x: u32, y: u32, w: u32, h: u32) -> Rect {
-        Rect::new(x, y, w, h)
-    }
-
-    fn rr(x: f64, y: f64, w: f64, h: f64) -> RelativeRect {
-        RelativeRect::new(x, y, w, h)
     }
 
     #[test_case(r(0, 0, 200, 100), r(0, 0, 200, 100), rr(0.0, 0.0, 1.0, 1.0); "fullscreen")]
