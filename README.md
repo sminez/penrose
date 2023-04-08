@@ -28,6 +28,8 @@ of this repo has several different starting points for you to begin with and my 
 set up can be found [here][4]. (You almost certainly _don't_ want to use my set up in
 full but it should serve as a good reference for what a real use case looks like!)
 
+Join us on discord [here](https://discord.gg/jtFsg2K3Fw)
+
 <br>
 
 
