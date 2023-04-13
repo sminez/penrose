@@ -41,9 +41,10 @@ pub enum DMenuKind {
 ///     show_on_bottom: true,
 ///     password_input: true,
 ///     ignore_case: false,
-///     n_lines: 20,
+///     n_lines: 0,
 ///     custom_font: Some("JetBrains Nerd Font Mono".to_owned()),
 ///     kind: DMenuKind::Rust,
+///     custom_prompt: Some(" ".to_owned()),
 ///     ..DMenuConfig::default()
 /// };
 /// ```
@@ -108,6 +109,11 @@ pub struct DMenuConfig {
     ///
     /// Default: Suckless
     pub kind: DMenuKind,
+
+    /// Optional prompt customization.
+    ///
+    /// Default: None
+    pub custom_prompt: Option<String>,
 }
 
 impl Default for DMenuConfig {
@@ -123,13 +129,14 @@ impl Default for DMenuConfig {
             n_lines: 10,
             custom_font: None,
             kind: DMenuKind::Suckless,
+            custom_prompt: None,
         }
     }
 }
 
 impl DMenuConfig {
     /// Build the dmenu flags
-    fn flags(&self, custom_prompt: &Option<String>, screen_index: usize) -> Vec<String> {
+    fn flags(&self, screen_index: usize) -> Vec<String> {
         let Self {
             show_on_bottom,
             password_input,
@@ -140,6 +147,7 @@ impl DMenuConfig {
             n_lines,
             custom_font,
             kind,
+            custom_prompt,
             ..
         } = self;
 
@@ -195,8 +203,6 @@ impl DMenuConfig {
 /// in penrose.
 #[derive(Debug, Clone)]
 pub struct DMenu {
-    /// Optional prompt customization.
-    prompt: Option<String>,
     /// Holds the custom dmenu configuration for this instance.
     config: DMenuConfig,
     /// The screen index this instance of dmenu will show up on
@@ -205,18 +211,19 @@ pub struct DMenu {
 
 impl DMenu {
     /// Create a new [`DMenu`] command which can be triggered and reused by calling
-    /// the `run` method.
-    pub fn new(prompt: Option<String>, config: &DMenuConfig, screen_index: usize) -> Self {
+    /// the `run` method for a basic dmenu prompt, or the `build_menu`
+    /// for more advanced selection menus.
+    pub fn new(config: &DMenuConfig, screen_index: usize) -> Self {
         Self {
-            prompt,
             config: config.to_owned(),
             screen_index,
         }
     }
 
-    /// Used for launching regular old [`DMenu`] with no menu matching.
+    /// Used for launching regular old [`DMenu`] with no menu matching
+    /// via the `dmenu_run` wrapper script.
     pub fn run(&self) -> Result<()> {
-        let args = self.config.flags(&self.prompt, self.screen_index);
+        let args = self.config.flags(self.screen_index);
         let spawned_process = Command::new("dmenu_run").args(args).spawn();
 
         match spawned_process {
@@ -234,7 +241,7 @@ impl DMenu {
     /// ```no_run
     /// # use penrose::extensions::util::dmenu::*;
     /// let screen_index = 0;
-    /// let dmenu = DMenu::new(Some(">>>".to_owned()), &DMenuConfig::default(), screen_index);
+    /// let dmenu = DMenu::new(&DMenuConfig::default(), screen_index);
     ///
     /// let choices = vec!["some", "choices", "to", "pick", "from"];
     ///
@@ -298,7 +305,7 @@ impl DMenu {
 
     /// Launch a shell process with all arguments to dmenu
     fn raw_user_choice_from_dmenu(&self, choices: &[String]) -> Result<String> {
-        let args = self.config.flags(&self.prompt, self.screen_index);
+        let args = self.config.flags(self.screen_index);
         let mut proc = Command::new("dmenu")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -344,7 +351,7 @@ mod tests {
 
         // Should default to suckless c-style dmenu
         assert_eq!(dc.kind, DMenuKind::Suckless);
-        let flags = dc.flags(&None, 0);
+        let flags = dc.flags(0);
 
         for (i, flag) in flags.into_iter().enumerate() {
             if i == 2 {
@@ -377,7 +384,7 @@ mod tests {
         };
 
         assert_eq!(dc.kind, DMenuKind::Rust);
-        let flags = dc.flags(&None, 0);
+        let flags = dc.flags(0);
 
         for (i, flag) in flags.into_iter().enumerate() {
             if i == 2 {

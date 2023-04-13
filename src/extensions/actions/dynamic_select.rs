@@ -12,15 +12,9 @@ use std::collections::HashMap;
 /// Use [DMenu] to dynamically select and focus a client window.
 ///
 /// # Arguments
-/// * `DMenuConfig` users custom DMenuConfig, the dmenu instance that is launched will
-///    obey colorscheme, postion, etc..
-///
-/// * `custom_prompt` so the user isn't locked into a default prompt.
-///    Default: Window
-pub fn dmenu_focus_client<X: XConn>(
-    config: DMenuConfig,
-    custom_prompt: Option<String>,
-) -> Box<dyn KeyEventHandler<X>> {
+/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
+///    obey colorscheme, postion, custom font, custom prompt etc...
+pub fn dmenu_focus_client<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state: &mut State<X>, x: &X| {
         let choices: HashMap<String, Xid> = state
             .client_set
@@ -36,11 +30,10 @@ pub fn dmenu_focus_client<X: XConn>(
             .collect();
 
         let screen = state.client_set.current_screen().index();
-        let dmenu: DMenu = if custom_prompt.is_some() {
-            DMenu::new(custom_prompt.to_owned(), &config, screen)
-        } else {
-            DMenu::new(Some("Window:".to_owned()), &config, screen)
-        };
+        if config.custom_prompt.is_none() {
+            config.custom_prompt = Some("Window: ".to_owned());
+        }
+        let dmenu = DMenu::new(&config, screen);
 
         if let MenuMatch::Line(_, s) = dmenu.build_menu(choices.keys().collect())? {
             let id = choices
@@ -57,24 +50,18 @@ pub fn dmenu_focus_client<X: XConn>(
 /// Use [DMenu] to dynamically select and focus a client window.
 ///
 /// # Arguments
-/// * `DMenuConfig` users custom DMenuConfig, the dmenu instance that is launched will
-///    obey colorscheme, postion, etc..
-///
-/// * `custom_prompt` so the user isn't locked into a default prompt.
-///    Default: Workspace
-pub fn dmenu_focus_tag<X: XConn>(
-    config: DMenuConfig,
-    custom_prompt: Option<String>,
-) -> Box<dyn KeyEventHandler<X>> {
+/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
+///    obey colorscheme, postion, custom font, custom prompt etc...
+pub fn dmenu_focus_tag<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state: &mut State<X>, x: &X| {
         let choices = state.client_set.ordered_tags();
         let screen = state.client_set.current_screen().index();
 
-        let dmenu: DMenu = if custom_prompt.is_some() {
-            DMenu::new(custom_prompt.to_owned(), &config, screen)
-        } else {
-            DMenu::new(Some("Window:".to_owned()), &config, screen)
-        };
+        if config.custom_prompt.is_none() {
+            config.custom_prompt = Some("Workspace: ".to_owned());
+        }
+
+        let dmenu = DMenu::new(&config, screen);
 
         if let MenuMatch::Line(_, tag) = dmenu.build_menu(choices)? {
             x.modify_and_refresh(state, |cs| cs.focus_tag(&tag))?;
@@ -87,23 +74,15 @@ pub fn dmenu_focus_tag<X: XConn>(
 /// Launch [DMenu] for its most basic purposes, launching other programs.
 ///
 /// # Arguments
-/// * `DMenuConfig` users custom DMenuConfig, the dmenu instance that is launched will
-///    obey colorscheme, postion, etc..
-///
-/// * `custom_prompt` so the user isn't locked into a default prompt.
-///    Default: >>>
-pub fn launch_dmenu<X: XConn>(
-    config: DMenuConfig,
-    custom_prompt: Option<String>,
-) -> Box<dyn KeyEventHandler<X>> {
+/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
+///    obey colorscheme, postion, custom font, custom prompt etc...
+pub fn launch_dmenu<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state, _| {
         let screen = state.client_set.current_screen().index();
-
-        let dmenu: DMenu = if custom_prompt.is_some() {
-            DMenu::new(custom_prompt.to_owned(), &config, screen)
-        } else {
-            DMenu::new(Some(">>> ".to_owned()), &config, screen)
-        };
+        if config.custom_prompt.is_none() {
+            config.custom_prompt = Some(">>> ".to_owned());
+        }
+        let dmenu = DMenu::new(&config, screen);
         dmenu.run()
     })
 }
