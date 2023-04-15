@@ -55,6 +55,38 @@
 <a href="#54" id="54">54</a>
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Dynamic selection based actions using Dmenu.
 </span><span class="kw">use crate</span>::{
     builtin::actions::key_handler,
@@ -67,7 +99,11 @@
 <span class="kw">use </span>std::collections::HashMap;
 
 <span class="doccomment">/// Use [DMenu] to dynamically select and focus a client window.
-</span><span class="kw">pub fn </span>dmenu_focus_client&lt;X: XConn&gt;(config: DMenuConfig) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
+///
+/// # Arguments
+/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
+///    obey colorscheme, postion, custom font, custom prompt etc...
+</span><span class="kw">pub fn </span>dmenu_focus_client&lt;X: XConn&gt;(<span class="kw-2">mut </span>config: DMenuConfig) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
     key_handler(<span class="kw">move </span>|state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X| {
         <span class="kw">let </span>choices: HashMap&lt;String, Xid&gt; = state
             .client_set
@@ -82,10 +118,13 @@
             })
             .collect();
 
-        <span class="kw">let </span>menu = DMenu::new(<span class="string">&quot;Window:&quot;</span>, choices.keys().collect(), config);
         <span class="kw">let </span>screen = state.client_set.current_screen().index();
+        <span class="kw">if </span>config.custom_prompt.is_none() {
+            config.custom_prompt = <span class="prelude-val">Some</span>(<span class="string">&quot;Window: &quot;</span>.to_owned());
+        }
+        <span class="kw">let </span>dmenu = DMenu::new(<span class="kw-2">&amp;</span>config, screen);
 
-        <span class="kw">if let </span>MenuMatch::Line(<span class="kw">_</span>, s) = menu.run(screen)<span class="question-mark">? </span>{
+        <span class="kw">if let </span>MenuMatch::Line(<span class="kw">_</span>, s) = dmenu.build_menu(choices.keys().collect())<span class="question-mark">? </span>{
             <span class="kw">let </span>id = choices
                 .get(<span class="kw-2">&amp;</span>s)
                 .ok_or_else(|| <span class="macro">custom_error!</span>(<span class="string">&quot;unexpected dmenu output: {}&quot;</span>, s))<span class="question-mark">?</span>;
@@ -98,17 +137,42 @@
 }
 
 <span class="doccomment">/// Use [DMenu] to dynamically select and focus a client window.
-</span><span class="kw">pub fn </span>dmenu_focus_tag&lt;X: XConn&gt;(config: DMenuConfig) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
+///
+/// # Arguments
+/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
+///    obey colorscheme, postion, custom font, custom prompt etc...
+</span><span class="kw">pub fn </span>dmenu_focus_tag&lt;X: XConn&gt;(<span class="kw-2">mut </span>config: DMenuConfig) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
     key_handler(<span class="kw">move </span>|state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X| {
         <span class="kw">let </span>choices = state.client_set.ordered_tags();
-        <span class="kw">let </span>menu = DMenu::new(<span class="string">&quot;Workspace:&quot;</span>, choices, config);
         <span class="kw">let </span>screen = state.client_set.current_screen().index();
 
-        <span class="kw">if let </span>MenuMatch::Line(<span class="kw">_</span>, tag) = menu.run(screen)<span class="question-mark">? </span>{
+        <span class="kw">if </span>config.custom_prompt.is_none() {
+            config.custom_prompt = <span class="prelude-val">Some</span>(<span class="string">&quot;Workspace: &quot;</span>.to_owned());
+        }
+
+        <span class="kw">let </span>dmenu = DMenu::new(<span class="kw-2">&amp;</span>config, screen);
+
+        <span class="kw">if let </span>MenuMatch::Line(<span class="kw">_</span>, tag) = dmenu.build_menu(choices)<span class="question-mark">? </span>{
             x.modify_and_refresh(state, |cs| cs.focus_tag(<span class="kw-2">&amp;</span>tag))<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
+    })
+}
+
+<span class="doccomment">/// Launch [DMenu] for its most basic purposes, launching other programs.
+///
+/// # Arguments
+/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
+///    obey colorscheme, postion, custom font, custom prompt etc...
+</span><span class="kw">pub fn </span>launch_dmenu&lt;X: XConn&gt;(<span class="kw-2">mut </span>config: DMenuConfig) -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
+    key_handler(<span class="kw">move </span>|state, <span class="kw">_</span>| {
+        <span class="kw">let </span>screen = state.client_set.current_screen().index();
+        <span class="kw">if </span>config.custom_prompt.is_none() {
+            config.custom_prompt = <span class="prelude-val">Some</span>(<span class="string">&quot;&gt;&gt;&gt; &quot;</span>.to_owned());
+        }
+        <span class="kw">let </span>dmenu = DMenu::new(<span class="kw-2">&amp;</span>config, screen);
+        dmenu.run()
     })
 }
 </code></pre></div>
