@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["conversions","Conversions to Penrose types from X11rb types"]],"struct":[["Conn","Handles communication with an X server via the x11rb crate."]],"type":[["RustConn","A pure rust based connection to the X server using a [RustConnection]."],["XcbConn","An C based connection to the X server using an [XCBConnection]."]]};
+window.SIDEBAR_ITEMS = {"mod":["conversions"],"struct":["Conn"],"type":["RustConn","XcbConn"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["summarise_state","Summarise the current state of the window manager as simple key value pairs."]],"struct":[["CurrentStateConfig","Flag based configuration of debug printing of the current window manager state All fields default to true"],["NotfyState","Use `notify-send` to display details about the current Window Manager each time there is a refresh"]]};
+window.SIDEBAR_ITEMS = {"fn":["summarise_state"],"struct":["CurrentStateConfig","NotfyState"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["ewmh","EWMH compliance for Penrose"],["manage","Manage hooks for common manage actions"],["named_scratchpads","Support for managing multiple floating scratchpad programs that can be toggled on or off on the active workspace."],["startup","Startup hooks for direct adding to your penrose config."],["window_swallowing","Window swallowing in the style of XMonad.Hooks.WindowSwallowing"]]};
+window.SIDEBAR_ITEMS = {"mod":["ewmh","manage","named_scratchpads","startup","window_swallowing"]};
