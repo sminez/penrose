@@ -1549,6 +1549,7 @@
 <a href="#1548" id="1548">1548</a>
 <a href="#1549" id="1549">1549</a>
 <a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::{Layout, LayoutStack},
     pop_where,
@@ -1822,7 +1823,8 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>float_unchecked&lt;R: RelativeTo&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: C, r: R) {
-        <span class="kw">let </span>r = r.relative_to(<span class="kw-2">&amp;</span><span class="self">self</span>.screens.focus.r);
+        <span class="kw">let </span>screen = <span class="self">self</span>.screen_for_client(<span class="kw-2">&amp;</span>client).expect(<span class="string">&quot;client to be known&quot;</span>);
+        <span class="kw">let </span>r = r.relative_to(<span class="kw-2">&amp;</span>screen.r);
         <span class="self">self</span>.floating.insert(client, r);
     }
 

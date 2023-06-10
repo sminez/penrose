@@ -938,11 +938,6 @@
 <a href="#937" id="937">937</a>
 <a href="#938" id="938">938</a>
 <a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pop_where;
 <span class="kw">use </span>std::{
     collections::linked_list::{<span class="self">self</span>, LinkedList},
@@ -971,9 +966,10 @@
 }
 
 <span class="doccomment">/// A position within a [Stack].
-</span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="attr">#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>Position {
     <span class="doccomment">/// The current focus point
+    </span><span class="attr">#[default]
     </span>Focus,
     <span class="doccomment">/// Above the current focus point
     </span>Before,
@@ -983,12 +979,6 @@
     </span>Head,
     <span class="doccomment">/// The last element of the stack
     </span>Tail,
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>Position {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        Position::Focus
-    }
 }
 
 <span class="doccomment">/// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark

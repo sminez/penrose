@@ -391,9 +391,6 @@
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
 <a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Setting up and responding to user defined key/mouse bindings
 </span><span class="kw">use crate</span>::{
     core::{State, Xid},
@@ -451,10 +448,7 @@
                 .try_fold(<span class="number">0</span>, |acc, v| v.map(|inner| acc | u16::from(inner)))<span class="question-mark">?</span>;
 
             <span class="macro">trace!</span>(<span class="question-mark">?</span>pattern, mask, code, <span class="string">&quot;parsed keybinding&quot;</span>);
-            <span class="prelude-val">Ok</span>(KeyCode {
-                mask: mask <span class="kw">as </span>u16,
-                code: <span class="kw-2">*</span>code,
-            })
+            <span class="prelude-val">Ok</span>(KeyCode { mask, code: <span class="kw-2">*</span>code })
         }
 
         <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownKeyName {

@@ -809,7 +809,7 @@
 
 <span class="kw">impl </span>Rect {
     <span class="doccomment">/// Create a new Rect.
-    </span><span class="kw">pub fn </span>new(x: u32, y: u32, w: u32, h: u32) -&gt; Rect {
+    </span><span class="kw">pub const fn </span>new(x: u32, y: u32, w: u32, h: u32) -&gt; Rect {
         Rect { x, y, w, h }
     }
 
@@ -1005,7 +1005,7 @@
         }
         <span class="kw">let </span>h = <span class="self">self</span>.h / n_rows;
         (<span class="number">0</span>..n_rows)
-            .map(|n| Rect::new(<span class="self">self</span>.x, (<span class="self">self</span>.y + n <span class="kw">as </span>u32 * h) <span class="kw">as </span>u32, <span class="self">self</span>.w, h))
+            .map(|n| Rect::new(<span class="self">self</span>.x, <span class="self">self</span>.y + n * h, <span class="self">self</span>.w, h))
             .collect()
     }
 
@@ -1014,9 +1014,9 @@
         <span class="kw">if </span>n_columns &lt;= <span class="number">1 </span>{
             <span class="kw">return </span><span class="macro">vec!</span>[<span class="kw-2">*</span><span class="self">self</span>];
         }
-        <span class="kw">let </span>w = <span class="self">self</span>.w / n_columns <span class="kw">as </span>u32;
+        <span class="kw">let </span>w = <span class="self">self</span>.w / n_columns;
         (<span class="number">0</span>..n_columns)
-            .map(|n| Rect::new((<span class="self">self</span>.x + n <span class="kw">as </span>u32 * w) <span class="kw">as </span>u32, <span class="self">self</span>.y, w, <span class="self">self</span>.h))
+            .map(|n| Rect::new(<span class="self">self</span>.x + n * w, <span class="self">self</span>.y, w, <span class="self">self</span>.h))
             .collect()
     }
 

@@ -515,6 +515,10 @@
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
 <a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{Diff, StackSet, Workspace},
@@ -609,6 +613,28 @@
 <span class="kw">where
     </span>X: XConn,
 {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_new(config: Config&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>client_set = StackSet::try_new(
+            config.default_layouts.clone(),
+            config.tags.iter(),
+            x.screen_details()<span class="question-mark">?</span>,
+        )<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>ss = client_set.snapshot(<span class="macro">vec!</span>[]);
+        <span class="kw">let </span>diff = Diff::new(ss.clone(), ss);
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            config,
+            client_set,
+            extensions: AnyMap::new(),
+            root: x.root(),
+            mapped: HashSet::new(),
+            pending_unmap: HashMap::new(),
+            current_event: <span class="prelude-val">None</span>,
+            diff,
+        })
+    }
+
     <span class="doccomment">/// The Xid of the root window for the running [WindowManager].
     </span><span class="kw">pub fn </span>root(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Xid {
         <span class="self">self</span>.root
@@ -835,25 +861,7 @@
         mouse_bindings: MouseBindings&lt;X&gt;,
         x: X,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>client_set = StackSet::try_new(
-            config.default_layouts.clone(),
-            config.tags.iter(),
-            x.screen_details()<span class="question-mark">?</span>,
-        )<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>ss = client_set.snapshot(<span class="macro">vec!</span>[]);
-        <span class="kw">let </span>diff = Diff::new(ss.clone(), ss);
-
-        <span class="kw">let </span>state = State {
-            config,
-            client_set,
-            extensions: AnyMap::new(),
-            root: x.root(),
-            mapped: HashSet::new(),
-            pending_unmap: HashMap::new(),
-            current_event: <span class="prelude-val">None</span>,
-            diff,
-        };
+        <span class="kw">let </span>state = State::try_new(config, <span class="kw-2">&amp;</span>x)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             x,
