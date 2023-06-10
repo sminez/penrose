@@ -706,21 +706,20 @@ impl StackSet<Xid> {
     /// from the layout.
     /// NOTE: we require Xid as the client type here as we need that when running layouts
     pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
-        let mut float_positions: Vec<(Xid, Rect)> = self
-            .on_screen_workspace_clients()
-            .flat_map(|c| {
-                self.floating
-                    .get(c)
-                    .map(|rr| (*c, rr.applied_to(&self.screens.focus.r)))
-            })
-            .collect();
+        let mut float_positions: Vec<(Xid, Rect)> = Vec::new();
+        for s in self.screens.iter() {
+            for c in s.workspace.clients() {
+                if let Some(r) = self.floating.get(c) {
+                    float_positions.push((*c, r.applied_to(&s.r)));
+                }
+            }
+        }
 
         float_positions.reverse();
 
         let mut positions: Vec<(Xid, Rect)> = Vec::new();
 
         for s in self.screens.iter_mut() {
-            let r = s.geometry();
             let tag = &s.workspace.tag;
             let true_stack = s.workspace.stack.as_ref();
             let tiling =
@@ -728,7 +727,7 @@ impl StackSet<Xid> {
 
             // TODO: if this supports using X state for determining layout position in future then this
             //       will be fallible and needs to fall back to a default layout.
-            let (_, stack_positions) = s.workspace.layouts.layout_workspace(tag, &tiling, r);
+            let (_, stack_positions) = s.workspace.layouts.layout_workspace(tag, &tiling, s.r);
 
             positions.extend(stack_positions.into_iter().rev());
         }
@@ -922,7 +921,9 @@ pub mod tests {
         C: Copy + Clone + PartialEq + Eq + Hash,
     {
         let tags = (1..=n_tags).map(|n| n.to_string());
-        let screens = vec![Rect::new(0, 0, 2000, 1000); n_screens];
+        let screens: Vec<Rect> = (0..(n_screens as u32))
+            .map(|k| Rect::new(k * 1000, k * 2000, 1000, 2000))
+            .collect();
 
         StackSet::try_new(LayoutStack::default(), tags, screens).unwrap()
     }
@@ -1246,6 +1247,33 @@ pub mod tests {
             let positions = s.visible_client_positions();
 
             assert!(positions.contains(&(Xid(1), r)), "{positions:?}")
+        }
+
+        #[test]
+        fn floating_clients_stay_on_their_assigned_screen() {
+            let mut s = test_xid_stack_set(5, 2);
+
+            for n in 0..4 {
+                s.insert(Xid(n));
+            }
+
+            let r = Rect::new(50, 50, 50, 50);
+            s.float_unchecked(Xid(1), r);
+
+            let positions = s.visible_client_positions();
+
+            assert!(positions.contains(&(Xid(1), r)), "{positions:?}");
+
+            // If we move the client to tag 2 on the second screen then it should
+            // change position and be relative to that screen instead
+            s.move_client_to_tag(&Xid(1), "2");
+            let positions = s.visible_client_positions();
+
+            assert!(!positions.contains(&(Xid(1), r)), "{positions:?}");
+            assert!(
+                positions.contains(&(Xid(1), Rect::new(1050, 2050, 50, 50))),
+                "{positions:?}"
+            );
         }
 
         #[test]
