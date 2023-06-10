@@ -19,6 +19,12 @@ pub mod event;
 pub mod property;
 pub mod query;
 
+#[cfg(test)]
+pub mod mock;
+
+#[cfg(test)]
+pub use mock::MockXConn;
+
 pub use atom::Atom;
 pub use event::XEvent;
 pub use property::{Prop, WindowAttributes};

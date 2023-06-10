@@ -89,6 +89,10 @@ pub use crate::core::Xid;
 /// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[cfg(test)]
+    #[error("This method was called on a MockXConn without an implementation being provided")]
+    UnimplementedMock,
+
     /// A custom error message from user code or extensions
     #[error("{0}")]
     Custom(String),
