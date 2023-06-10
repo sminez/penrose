@@ -135,6 +135,14 @@ impl Default for DMenuConfig {
 }
 
 impl DMenuConfig {
+    /// Construct a default config with a custom prompt
+    pub fn with_prompt(prompt: &str) -> Self {
+        Self {
+            custom_prompt: Some(prompt.to_string()),
+            ..Default::default()
+        }
+    }
+
     /// Build the dmenu flags
     fn flags(&self, screen_index: usize) -> Vec<String> {
         let Self {
@@ -251,7 +259,7 @@ impl DMenu {
     ///     MenuMatch::NoMatch => println!("no match"),
     /// }
     /// ```
-    #[allow(clippy::pattern_type_mismatch)]
+    // #[allow(clippy::pattern_type_mismatch)]
     pub fn build_menu(&self, param_choices: Vec<impl Into<String>>) -> Result<MenuMatch> {
         let choices: Vec<String> = param_choices
             .into_iter()

@@ -249,12 +249,6 @@ pub trait XConnExt: XConn + Sized {
 
     /// Check whether or not the given client should be assigned floating status or not.
     fn client_should_float(&self, client: Xid, floating_classes: &[String]) -> Result<bool> {
-        trace!(%client, "fetching WmTransientFor prop");
-        if let Some(prop) = self.get_prop(client, Atom::WmTransientFor.as_ref())? {
-            trace!(?prop, "window is transient: setting to floating state");
-            return Ok(true);
-        }
-
         trace!(%client, "fetching WmClass prop");
         if let Some(Prop::UTF8String(strs)) = self.get_prop(client, Atom::WmClass.as_ref())? {
             if strs.iter().any(|c| floating_classes.contains(c)) {
@@ -449,8 +443,14 @@ pub(crate) fn manage_without_refresh<X: XConn>(
     state: &mut State<X>,
     x: &X,
 ) -> Result<()> {
-    let should_float = x.client_should_float(id, &state.config.floating_classes)?;
-    let r = x.client_geometry(id)?;
+    trace!(%id, "fetching WmTransientFor prop");
+    let transient_for = match x.get_prop(id, Atom::WmTransientFor.as_ref())? {
+        Some(Prop::Window(ids)) => Some(ids[0]),
+        _ => None,
+    };
+
+    let should_float =
+        transient_for.is_some() || x.client_should_float(id, &state.config.floating_classes)?;
 
     match tag {
         Some(tag) => state.client_set.insert_as_focus_for(tag, id),
@@ -458,6 +458,13 @@ pub(crate) fn manage_without_refresh<X: XConn>(
     }
 
     if should_float {
+        let r_screen = transient_for
+            .and_then(|parent| state.client_set.screen_for_client(&parent))
+            .unwrap_or(&state.client_set.screens.focus)
+            .r;
+
+        let mut r = x.client_geometry(id)?;
+        r = r.centered_in(&r_screen).unwrap_or(r);
         state.client_set.float_unchecked(id, r);
     }
 

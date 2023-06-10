@@ -438,6 +438,12 @@ where
             .map(|w| w.tag.as_str())
     }
 
+    /// If the given client is currently visible on a screen return a
+    /// reference to that screen, otherwise None.
+    pub fn screen_for_client(&self, client: &C) -> Option<&Screen<C>> {
+        self.screens.iter().find(|s| s.workspace.contains(client))
+    }
+
     /// Find the tag of the [Workspace] with the given NetWmDesktop ID.
     pub fn tag_for_workspace_id(&self, id: usize) -> Option<String> {
         self.workspaces()
