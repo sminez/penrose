@@ -1,5 +1,6 @@
 //! Layouts for positioning client windows on the screen within a given workspace.
 use crate::{
+    builtin::layout::MainAndStack,
     pure::{geometry::Rect, Stack},
     stack, Xid,
 };
@@ -116,7 +117,7 @@ pub type LayoutStack = Stack<Box<dyn Layout>>;
 
 impl Default for LayoutStack {
     fn default() -> Self {
-        stack!(Box::new(crate::builtin::layout::MainAndStack::default()))
+        stack!(Box::<MainAndStack>::default())
     }
 }
 

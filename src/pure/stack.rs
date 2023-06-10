@@ -26,9 +26,10 @@ macro_rules! stack {
 }
 
 /// A position within a [Stack].
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub enum Position {
     /// The current focus point
+    #[default]
     Focus,
     /// Above the current focus point
     Before,
@@ -38,12 +39,6 @@ pub enum Position {
     Head,
     /// The last element of the stack
     Tail,
-}
-
-impl Default for Position {
-    fn default() -> Self {
-        Position::Focus
-    }
 }
 
 /// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark

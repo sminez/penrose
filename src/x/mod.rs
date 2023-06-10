@@ -666,7 +666,7 @@ mod tests {
         fn mock_client_geometry(&self, client: Xid) -> Result<Rect> {
             self.geometry
                 .get(&client)
-                .map(|&r| r)
+                .copied()
                 .ok_or(Error::UnknownClient)
         }
     }

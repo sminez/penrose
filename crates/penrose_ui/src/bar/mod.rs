@@ -99,8 +99,8 @@ impl<X: XConn> StatusBar<X> {
             .iter()
             .map(|&Rect { x, y, w, h }| {
                 let y = match self.position {
-                    Position::Top => y as u32,
-                    Position::Bottom => h as u32 - self.hpx,
+                    Position::Top => y,
+                    Position::Bottom => h - self.hpx,
                 };
 
                 debug!("creating new window");
@@ -138,7 +138,7 @@ impl<X: XConn> StatusBar<X> {
             ctx.clear()?;
 
             ctx.color(&self.bg);
-            ctx.rectangle(0.0, 0.0, w, self.h as f64)?;
+            ctx.rectangle(0.0, 0.0, w, self.h)?;
 
             let extents = self.layout(&mut ctx, w)?;
             let mut x = 0.0;

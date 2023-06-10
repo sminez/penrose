@@ -347,7 +347,7 @@ impl Rect {
         }
         let h = self.h / n_rows;
         (0..n_rows)
-            .map(|n| Rect::new(self.x, (self.y + n as u32 * h) as u32, self.w, h))
+            .map(|n| Rect::new(self.x, self.y + n * h, self.w, h))
             .collect()
     }
 
@@ -356,9 +356,9 @@ impl Rect {
         if n_columns <= 1 {
             return vec![*self];
         }
-        let w = self.w / n_columns as u32;
+        let w = self.w / n_columns;
         (0..n_columns)
-            .map(|n| Rect::new((self.x + n as u32 * w) as u32, self.y, w, self.h))
+            .map(|n| Rect::new(self.x + n * w, self.y, w, self.h))
             .collect()
     }
 

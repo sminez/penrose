@@ -55,10 +55,7 @@ fn parse_binding(pattern: &str, known_codes: &HashMap<String, u8>) -> Result<Key
                 .try_fold(0, |acc, v| v.map(|inner| acc | u16::from(inner)))?;
 
             trace!(?pattern, mask, code, "parsed keybinding");
-            Ok(KeyCode {
-                mask: mask as u16,
-                code: *code,
-            })
+            Ok(KeyCode { mask, code: *code })
         }
 
         None => Err(Error::UnknownKeyName {
