@@ -1521,6 +1521,34 @@
 <a href="#1520" id="1520">1520</a>
 <a href="#1521" id="1521">1521</a>
 <a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::{Layout, LayoutStack},
     pop_where,
@@ -2229,21 +2257,20 @@
     /// from the layout.
     /// NOTE: we require Xid as the client type here as we need that when running layouts
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>visible_client_positions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;(Xid, Rect)&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>float_positions: Vec&lt;(Xid, Rect)&gt; = <span class="self">self
-            </span>.on_screen_workspace_clients()
-            .flat_map(|c| {
-                <span class="self">self</span>.floating
-                    .get(c)
-                    .map(|rr| (<span class="kw-2">*</span>c, rr.applied_to(<span class="kw-2">&amp;</span><span class="self">self</span>.screens.focus.r)))
-            })
-            .collect();
+        <span class="kw">let </span><span class="kw-2">mut </span>float_positions: Vec&lt;(Xid, Rect)&gt; = Vec::new();
+        <span class="kw">for </span>s <span class="kw">in </span><span class="self">self</span>.screens.iter() {
+            <span class="kw">for </span>c <span class="kw">in </span>s.workspace.clients() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = <span class="self">self</span>.floating.get(c) {
+                    float_positions.push((<span class="kw-2">*</span>c, r.applied_to(<span class="kw-2">&amp;</span>s.r)));
+                }
+            }
+        }
 
         float_positions.reverse();
 
         <span class="kw">let </span><span class="kw-2">mut </span>positions: Vec&lt;(Xid, Rect)&gt; = Vec::new();
 
         <span class="kw">for </span>s <span class="kw">in </span><span class="self">self</span>.screens.iter_mut() {
-            <span class="kw">let </span>r = s.geometry();
             <span class="kw">let </span>tag = <span class="kw-2">&amp;</span>s.workspace.tag;
             <span class="kw">let </span>true_stack = s.workspace.stack.as_ref();
             <span class="kw">let </span>tiling =
@@ -2251,7 +2278,7 @@
 
             <span class="comment">// TODO: if this supports using X state for determining layout position in future then this
             //       will be fallible and needs to fall back to a default layout.
-            </span><span class="kw">let </span>(<span class="kw">_</span>, stack_positions) = s.workspace.layouts.layout_workspace(tag, <span class="kw-2">&amp;</span>tiling, r);
+            </span><span class="kw">let </span>(<span class="kw">_</span>, stack_positions) = s.workspace.layouts.layout_workspace(tag, <span class="kw-2">&amp;</span>tiling, s.r);
 
             positions.extend(stack_positions.into_iter().rev());
         }
@@ -2445,7 +2472,9 @@
         </span>C: Copy + Clone + PartialEq + Eq + Hash,
     {
         <span class="kw">let </span>tags = (<span class="number">1</span>..=n_tags).map(|n| n.to_string());
-        <span class="kw">let </span>screens = <span class="macro">vec!</span>[Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">1000</span>); n_screens];
+        <span class="kw">let </span>screens: Vec&lt;Rect&gt; = (<span class="number">0</span>..(n_screens <span class="kw">as </span>u32))
+            .map(|k| Rect::new(k * <span class="number">1000</span>, k * <span class="number">2000</span>, <span class="number">1000</span>, <span class="number">2000</span>))
+            .collect();
 
         StackSet::try_new(LayoutStack::default(), tags, screens).unwrap()
     }
@@ -2769,6 +2798,33 @@
             <span class="kw">let </span>positions = s.visible_client_positions();
 
             <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>)
+        }
+
+        <span class="attr">#[test]
+        </span><span class="kw">fn </span>floating_clients_stay_on_their_assigned_screen() {
+            <span class="kw">let </span><span class="kw-2">mut </span>s = test_xid_stack_set(<span class="number">5</span>, <span class="number">2</span>);
+
+            <span class="kw">for </span>n <span class="kw">in </span><span class="number">0</span>..<span class="number">4 </span>{
+                s.insert(Xid(n));
+            }
+
+            <span class="kw">let </span>r = Rect::new(<span class="number">50</span>, <span class="number">50</span>, <span class="number">50</span>, <span class="number">50</span>);
+            s.float_unchecked(Xid(<span class="number">1</span>), r);
+
+            <span class="kw">let </span>positions = s.visible_client_positions();
+
+            <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>);
+
+            <span class="comment">// If we move the client to tag 2 on the second screen then it should
+            // change position and be relative to that screen instead
+            </span>s.move_client_to_tag(<span class="kw-2">&amp;</span>Xid(<span class="number">1</span>), <span class="string">&quot;2&quot;</span>);
+            <span class="kw">let </span>positions = s.visible_client_positions();
+
+            <span class="macro">assert!</span>(!positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>);
+            <span class="macro">assert!</span>(
+                positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), Rect::new(<span class="number">1050</span>, <span class="number">2050</span>, <span class="number">50</span>, <span class="number">50</span>))),
+                <span class="string">&quot;{positions:?}&quot;
+            </span>);
         }
 
         <span class="attr">#[test]
