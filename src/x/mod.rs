@@ -450,27 +450,31 @@ pub(crate) fn manage_without_refresh<X: XConn>(
     x: &X,
 ) -> Result<()> {
     trace!(%id, "fetching WmTransientFor prop");
-    let transient_for = match x.get_prop(id, Atom::WmTransientFor.as_ref())? {
-        Some(Prop::Window(ids)) => Some(ids[0]),
-        _ => None,
+    let (owned_tag, transient_for) = match x.get_prop(id, Atom::WmTransientFor.as_ref())? {
+        Some(Prop::Window(ids)) => {
+            let parent = ids[0];
+            let owned_tag = state
+                .client_set
+                .tag_for_client(&parent)
+                .or(tag)
+                .map(|t| t.to_string());
+
+            (owned_tag, Some(parent))
+        }
+
+        _ => (tag.map(|t| t.to_string()), None),
     };
 
     let should_float =
         transient_for.is_some() || x.client_should_float(id, &state.config.floating_classes)?;
 
-    match tag {
-        Some(tag) => state.client_set.insert_as_focus_for(tag, id),
+    match owned_tag {
+        Some(tag) => state.client_set.insert_as_focus_for(tag.as_ref(), id),
         None => state.client_set.insert(id),
     }
 
     if should_float {
-        let r_screen = transient_for
-            .and_then(|parent| state.client_set.screen_for_client(&parent))
-            .unwrap_or(&state.client_set.screens.focus)
-            .r;
-
-        let mut r = x.client_geometry(id)?;
-        r = r.centered_in(&r_screen).unwrap_or(r);
+        let r = floating_client_position(id, transient_for, state, x)?;
         state.client_set.float_unchecked(id, r);
     }
 
@@ -484,6 +488,38 @@ pub(crate) fn manage_without_refresh<X: XConn>(
     state.config.manage_hook = hook;
 
     Ok(())
+}
+
+/// When positioning a floating client we try to position them in priority order of:
+///   - centered in their parent window (if transient)
+///   - centered in their parent's screen (if transient)
+///   - centered in the focused screen
+fn floating_client_position<X: XConn>(
+    id: Xid,
+    transient_for: Option<Xid>,
+    state: &State<X>,
+    x: &X,
+) -> Result<Rect> {
+    let r_initial = x.client_geometry(id)?;
+
+    let maybe_r = match transient_for {
+        Some(parent) => {
+            let r_parent = x.client_geometry(parent)?;
+            let r_screen = state
+                .client_set
+                .screen_for_client(&parent)
+                .unwrap_or(&state.client_set.screens.focus)
+                .r;
+
+            r_initial
+                .centered_in(&r_parent)
+                .or(r_initial.centered_in(&r_screen))
+        }
+
+        None => r_initial.centered_in(&state.client_set.screens.focus.r),
+    };
+
+    Ok(maybe_r.unwrap_or(r_initial))
 }
 
 fn notify_killed<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
@@ -591,5 +627,100 @@ fn set_focus<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
         x.focus(id)
     } else {
         x.focus(state.root)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{map, Error, Result};
+    use simple_test_case::test_case;
+    use std::collections::HashMap;
+
+    #[derive(Default)]
+    struct TransientXConn {
+        transient_ids: HashMap<Xid, Xid>,
+        geometry: HashMap<Xid, Rect>,
+    }
+
+    const TEST_SCREEN: Rect = Rect::new(0, 0, 1024, 768);
+    const TEST_SCREEN_2: Rect = Rect::new(1024, 0, 4096, 2160);
+
+    impl MockXConn for TransientXConn {
+        fn mock_screen_details(&self) -> Result<Vec<Rect>> {
+            Ok(vec![TEST_SCREEN, TEST_SCREEN_2])
+        }
+
+        fn mock_get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>> {
+            let maybe_prop = if prop_name == Atom::WmTransientFor.as_ref() {
+                self.transient_ids
+                    .get(&client)
+                    .map(|id| Prop::Window(vec![*id]))
+            } else {
+                None
+            };
+
+            Ok(maybe_prop)
+        }
+
+        fn mock_client_geometry(&self, client: Xid) -> Result<Rect> {
+            self.geometry
+                .get(&client)
+                .map(|&r| r)
+                .ok_or(Error::UnknownClient)
+        }
+    }
+
+    #[test_case(
+        Rect::new(0, 0, 600, 400),
+        Rect::new(0, 0, 20, 20),
+        0,
+        Rect::new(290, 190, 20, 20);
+        "fit inside parent"
+    )]
+    #[test_case(
+        Rect::new(0, 0, 100, 200),
+        Rect::new(0, 0, 200, 200),
+        0,
+        Rect::new(412, 284, 200, 200);
+        "larger than parent"
+    )]
+    #[test_case(
+        Rect::new(0, 0, 100, 200),
+        Rect::new(0, 0, 2000, 2000),
+        1,
+        Rect::new(2072, 80, 2000, 2000);
+        "larger than parent screen"
+    )]
+    #[test]
+    fn manage_without_refresh_transient(parent: Rect, child: Rect, screen: usize, expected: Rect) {
+        let conn = TransientXConn {
+            transient_ids: map! {
+                Xid(1) => Xid(2),
+            },
+            geometry: map! {
+                Xid(1) => child,
+                Xid(2) => parent,
+            },
+        };
+        let mut state = State::try_new(Default::default(), &conn).expect("test state");
+        state.client_set.focus_screen(screen);
+        state.client_set.insert(Xid(2));
+        state.client_set.focus_screen(0);
+
+        manage_without_refresh(Xid(1), None, &mut state, &conn).expect("refresh");
+
+        assert!(
+            state.client_set.contains(&Xid(1)),
+            "state contains managed transient"
+        );
+
+        let rel_rect = state.client_set.floating.get(&Xid(1));
+        assert!(rel_rect.is_some(), "transient client is floating");
+
+        let r_screen = [TEST_SCREEN, TEST_SCREEN_2][screen];
+        let r = rel_rect.unwrap().applied_to(&r_screen);
+
+        assert_eq!(r, expected, "client position is as expected");
     }
 }

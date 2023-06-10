@@ -92,6 +92,28 @@ impl<X> State<X>
 where
     X: XConn,
 {
+    pub(crate) fn try_new(config: Config<X>, x: &X) -> Result<Self> {
+        let mut client_set = StackSet::try_new(
+            config.default_layouts.clone(),
+            config.tags.iter(),
+            x.screen_details()?,
+        )?;
+
+        let ss = client_set.snapshot(vec![]);
+        let diff = Diff::new(ss.clone(), ss);
+
+        Ok(Self {
+            config,
+            client_set,
+            extensions: AnyMap::new(),
+            root: x.root(),
+            mapped: HashSet::new(),
+            pending_unmap: HashMap::new(),
+            current_event: None,
+            diff,
+        })
+    }
+
     /// The Xid of the root window for the running [WindowManager].
     pub fn root(&self) -> Xid {
         self.root
@@ -318,25 +340,7 @@ where
         mouse_bindings: MouseBindings<X>,
         x: X,
     ) -> Result<Self> {
-        let mut client_set = StackSet::try_new(
-            config.default_layouts.clone(),
-            config.tags.iter(),
-            x.screen_details()?,
-        )?;
-
-        let ss = client_set.snapshot(vec![]);
-        let diff = Diff::new(ss.clone(), ss);
-
-        let state = State {
-            config,
-            client_set,
-            extensions: AnyMap::new(),
-            root: x.root(),
-            mapped: HashSet::new(),
-            pending_unmap: HashMap::new(),
-            current_event: None,
-            diff,
-        };
+        let state = State::try_new(config, &x)?;
 
         Ok(Self {
             x,

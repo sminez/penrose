@@ -271,7 +271,8 @@ where
     }
 
     pub(crate) fn float_unchecked<R: RelativeTo>(&mut self, client: C, r: R) {
-        let r = r.relative_to(&self.screens.focus.r);
+        let screen = self.screen_for_client(&client).expect("client to be known");
+        let r = r.relative_to(&screen.r);
         self.floating.insert(client, r);
     }
 

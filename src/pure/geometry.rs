@@ -151,7 +151,7 @@ pub struct Rect {
 
 impl Rect {
     /// Create a new Rect.
-    pub fn new(x: u32, y: u32, w: u32, h: u32) -> Rect {
+    pub const fn new(x: u32, y: u32, w: u32, h: u32) -> Rect {
         Rect { x, y, w, h }
     }
 

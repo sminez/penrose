@@ -9,10 +9,10 @@ use crate::{
         property::{Prop, WindowAttributes, WmState},
         ClientAttr, ClientConfig, XConn,
     },
-    Error, Result, Xid,
+    Result, Xid,
 };
 
-/// All methods on this trait that return a Result will return `Error::UnimplementedMock` by
+/// All methods on this trait that return a Result unimplemented by
 /// default unless an implementation is provided.
 /// The `mock_root` method always returns id 0 and `mock_flush` by default is a no-op.
 ///
@@ -25,97 +25,97 @@ pub trait MockXConn {
     }
 
     fn mock_screen_details(&self) -> Result<Vec<Rect>> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_screen_details")
     }
 
     fn mock_cursor_position(&self) -> Result<Point> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_cursor_position")
     }
 
     fn mock_grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_grab")
     }
 
     fn mock_next_event(&self) -> Result<XEvent> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_next_event")
     }
 
     fn mock_flush(&self) {}
 
     fn mock_intern_atom(&self, atom: &str) -> Result<Xid> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_intern_atom")
     }
 
     fn mock_atom_name(&self, xid: Xid) -> Result<String> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_atom_name")
     }
 
     fn mock_client_geometry(&self, client: Xid) -> Result<Rect> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_client_geometry")
     }
 
     fn mock_existing_clients(&self) -> Result<Vec<Xid>> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_existing_clients")
     }
 
     fn mock_map(&self, client: Xid) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_map")
     }
 
     fn mock_unmap(&self, client: Xid) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_unmap")
     }
 
     fn mock_kill(&self, client: Xid) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_kill")
     }
 
     fn mock_focus(&self, client: Xid) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_focus")
     }
 
     fn mock_get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_get_prop")
     }
 
     fn mock_list_props(&self, client: Xid) -> Result<Vec<String>> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_list_props")
     }
 
     fn mock_get_wm_state(&self, client: Xid) -> Result<Option<WmState>> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_get_wm_state")
     }
 
     fn mock_get_window_attributes(&self, client: Xid) -> Result<WindowAttributes> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_get_window_attributes")
     }
 
     fn mock_set_wm_state(&self, client: Xid, wm_state: WmState) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_set_wm_state")
     }
 
     fn mock_set_prop(&self, client: Xid, name: &str, val: Prop) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_set_prop")
     }
 
     fn mock_delete_prop(&self, client: Xid, prop_name: &str) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_delete_prop")
     }
 
     fn mock_set_client_attributes(&self, client: Xid, attrs: &[ClientAttr]) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_set_client_attributes")
     }
 
     fn mock_set_client_config(&self, client: Xid, data: &[ClientConfig]) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_set_client_config")
     }
 
     fn mock_send_client_message(&self, msg: ClientMessage) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_send_client_message")
     }
 
     fn mock_warp_pointer(&self, id: Xid, x: i16, y: i16) -> Result<()> {
-        Err(Error::UnimplementedMock)
+        unimplemented!("mock_warp_pointer")
     }
 }
 
