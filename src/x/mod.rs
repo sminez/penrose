@@ -502,24 +502,16 @@ fn floating_client_position<X: XConn>(
 ) -> Result<Rect> {
     let r_initial = x.client_geometry(id)?;
 
-    let maybe_r = match transient_for {
-        Some(parent) => {
-            let r_parent = x.client_geometry(parent)?;
-            let r_screen = state
-                .client_set
-                .screen_for_client(&parent)
-                .unwrap_or(&state.client_set.screens.focus)
-                .r;
+    let r_screen = transient_for
+        .and_then(|parent| state.client_set.screen_for_client(&parent))
+        .unwrap_or(&state.client_set.screens.focus)
+        .r;
 
-            r_initial
-                .centered_in(&r_parent)
-                .or(r_initial.centered_in(&r_screen))
-        }
-
-        None => r_initial.centered_in(&state.client_set.screens.focus.r),
-    };
-
-    Ok(maybe_r.unwrap_or(r_initial))
+    Ok(r_initial.centered_in(&r_screen).unwrap_or_else(|| {
+        r_initial
+            .centered_in(&state.client_set.screens.focus.r)
+            .unwrap_or(r_initial)
+    }))
 }
 
 fn notify_killed<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
@@ -675,7 +667,7 @@ mod tests {
         Rect::new(0, 0, 600, 400),
         Rect::new(0, 0, 20, 20),
         0,
-        Rect::new(290, 190, 20, 20);
+        Rect::new(502, 374, 20, 20);
         "fit inside parent"
     )]
     #[test_case(

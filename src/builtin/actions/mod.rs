@@ -81,3 +81,21 @@ pub fn log_current_state<X: XConn + std::fmt::Debug>() -> Box<dyn KeyEventHandle
         Ok(())
     })
 }
+
+/// Remove the currently focused client from state and unmap it WITHOUT
+/// closing the client program.
+/// This is provided for removing clients that have been accidentally tiled when
+/// they should have been ignored.
+pub fn remove_and_unmap_focused_client<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
+    key_handler(|s: &mut State<X>, x: &X| {
+        if let Some(client) = s.client_set.remove_focused() {
+            info!(
+                ?client,
+                "Unmapping previously focused client following removal from state"
+            );
+            x.unmap(client)
+        } else {
+            Ok(())
+        }
+    })
+}
