@@ -271,6 +271,13 @@ where
     }
 
     fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+        // Release any grabbed keys that we currently have before attempting to grab
+        // the requested key codes.
+        // NOTE: The '0' here is XCB_GRAB_ANY
+        if let Err(e) = self.conn.ungrab_key(0, self.root, ModMask::ANY) {
+            error!(%e, "unable to ungrab keys");
+        };
+
         // We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.

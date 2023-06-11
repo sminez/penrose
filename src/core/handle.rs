@@ -24,6 +24,21 @@ pub(crate) fn client_message<X: XConn>(msg: ClientMessage, _: &mut State<X>, _: 
     Ok(())
 }
 
+pub(crate) fn mapping_notify<X: XConn>(
+    key_bindings: &KeyBindings<X>,
+    mouse_bindings: &MouseBindings<X>,
+    x: &X,
+) -> Result<()> {
+    trace!("grabbing key and mouse bindings");
+    let key_codes: Vec<_> = key_bindings.keys().copied().collect();
+    let mouse_states: Vec<_> = mouse_bindings
+        .keys()
+        .map(|(_, state)| state.clone())
+        .collect();
+
+    x.grab(&key_codes, &mouse_states)
+}
+
 pub(crate) fn keypress<X: XConn>(
     key: KeyCode,
     bindings: &mut KeyBindings<X>,

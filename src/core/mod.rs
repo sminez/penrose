@@ -366,7 +366,7 @@ where
             panic!("unable to set signal handler: {}", e);
         }
 
-        self.grab()?;
+        handle::mapping_notify(&self.key_bindings, &self.mouse_bindings, &self.x)?;
 
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
@@ -396,18 +396,6 @@ where
                 Err(e) => error!(%e, "Error pulling next x event"),
             }
         }
-    }
-
-    fn grab(&self) -> Result<()> {
-        trace!("grabbing key and mouse bindings");
-        let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
-        let mouse_states: Vec<_> = self
-            .mouse_bindings
-            .keys()
-            .map(|(_, state)| state.clone())
-            .collect();
-
-        self.x.grab(&key_codes, &mouse_states)
     }
 
     fn handle_xevent(&mut self, event: XEvent) -> Result<()> {
@@ -453,7 +441,7 @@ where
             Destroy(xid) => handle::destroy(*xid, state, x)?,
             KeyPress(code) => handle::keypress(*code, key_bindings, state, x)?,
             Leave(p) => handle::leave(*p, state, x)?,
-            MappingNotify => (), // Not currently handled
+            MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, x)?,
             MapRequest(xid) => handle::map_request(*xid, state, x)?,
             MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x)?,
             PropertyNotify(_) => (), // Not currently handled
