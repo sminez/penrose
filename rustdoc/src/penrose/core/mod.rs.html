@@ -966,9 +966,9 @@
         <span class="kw">match </span><span class="kw-2">&amp;</span>event {
             ClientMessage(m) =&gt; handle::client_message(m.clone(), state, x)<span class="question-mark">?</span>,
             ConfigureNotify(e) <span class="kw">if </span>e.is_root =&gt; handle::detect_screens(state, x)<span class="question-mark">?</span>,
-            ConfigureNotify(<span class="kw">_</span>) =&gt; (),  <span class="comment">// Not currently handled
-            </span>ConfigureRequest(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
-            </span>Enter(p) =&gt; handle::enter(<span class="kw-2">*</span>p, state, x)<span class="question-mark">?</span>,
+            ConfigureNotify(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
+            </span>ConfigureRequest(e) =&gt; handle::configure_request(e, state, x)<span class="question-mark">?</span>,
+            Enter(p) =&gt; handle::enter(<span class="kw-2">*</span>p, state, x)<span class="question-mark">?</span>,
             Expose(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
             </span>FocusIn(id) =&gt; handle::focus_in(<span class="kw-2">*</span>id, state, x)<span class="question-mark">?</span>,
             Destroy(xid) =&gt; handle::destroy(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,

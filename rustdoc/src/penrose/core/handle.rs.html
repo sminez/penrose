@@ -178,6 +178,18 @@
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
 </pre><pre class="rust"><code><span class="doccomment">//! XEvent handlers for use in the main event loop;
 </span><span class="kw">use crate</span>::{
     core::{
@@ -187,9 +199,9 @@
     pure::geometry::Point,
     x::{
         atom::Atom,
-        event::{ClientMessage, ClientMessageKind, PointerChange},
+        event::{ClientMessage, ClientMessageKind, ConfigureEvent, PointerChange},
         property::{Prop, WmHints},
-        XConn, XConnExt,
+        ClientConfig, XConn, XConnExt,
     },
     <span class="prelude-ty">Result</span>,
 };
@@ -250,6 +262,18 @@
     }
 
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>configure_request&lt;X: XConn&gt;(
+    ConfigureEvent { id, r, .. }: <span class="kw-2">&amp;</span>ConfigureEvent,
+    state: <span class="kw-2">&amp;</span>State&lt;X&gt;,
+    x: <span class="kw-2">&amp;</span>X,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">if </span>state.client_set.contains(id) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(()); <span class="comment">// Managed clients aren&#39;t allowed to configure themselves
+    </span>}
+
+    x.set_client_config(<span class="kw-2">*</span>id, <span class="kw-2">&amp;</span>[ClientConfig::Position(<span class="kw-2">*</span>r)])
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>map_request&lt;X: XConn&gt;(client: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
