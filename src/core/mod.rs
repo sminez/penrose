@@ -20,7 +20,7 @@ use std::{
     ops::Deref,
     sync::Arc,
 };
-use tracing::{error, info, span, trace, Level};
+use tracing::{error, info, span, trace, warn, Level};
 
 pub mod bindings;
 pub(crate) mod handle;
@@ -375,7 +375,7 @@ where
             }
         }
 
-        self.manage_existing_clients()?;
+        manage_existing_clients(&mut self.state, &self.x)?;
 
         loop {
             match self.x.next_event() {
@@ -464,57 +464,75 @@ where
 
         Ok(())
     }
+}
 
-    // A "best effort" attempt to manage existing clients on the workspaces they were present
-    // on previously. This is not guaranteed to preserve the stack order or correctly handle
-    // any clients that were on invisible workspaces / workspaces that no longer exist.
-    //
-    // NOTE: the check for if each client is already in state is in case a startup hook has
-    //       pre-managed clients for us. In that case we want to avoid stomping on
-    //       anything that they have set up.
-    #[tracing::instrument(level = "info", skip(self))]
-    fn manage_existing_clients(&mut self) -> Result<()> {
-        info!("managing existing clients");
+// A "best effort" attempt to manage existing clients on the workspaces they were present
+// on previously. This is not guaranteed to preserve the stack order or correctly handle
+// any clients that were on invisible workspaces / workspaces that no longer exist.
+//
+// NOTE: the check for if each client is already in state is in case a startup hook has
+//       pre-managed clients for us. In that case we want to avoid stomping on
+//       anything that they have set up.
+#[tracing::instrument(level = "info", skip(state, x))]
+fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
+    info!("managing existing clients");
 
-        // We're not guaranteed that workspace indices are _always_ continuous from 0..n
-        // so we explicitly map tags to indices instead.
-        let ws_map: HashMap<usize, String> = self
-            .state
-            .client_set
-            .workspaces()
-            .map(|w| (w.id, w.tag.clone()))
-            .collect();
+    // We're not guaranteed that workspace indices are _always_ continuous from 0..n
+    // so we explicitly map tags to indices instead.
+    // We also exclude hidden workspaces as those can contain windows which are
+    // externally managed by a user written extension, which can lead to malformed
+    // internal state for those extensions when they restart.
+    let ws_map: HashMap<usize, String> = state
+        .client_set
+        .non_hidden_workspaces()
+        .map(|w| (w.id, w.tag.clone()))
+        .collect();
 
-        let first_tag = self.state.client_set.ordered_tags()[0].clone();
+    let first_tag = state.client_set.ordered_tags()[0].clone();
 
-        for id in self.x.existing_clients()? {
-            let WindowAttributes {
-                override_redirect,
-                map_state,
-                ..
-            } = self.x.get_window_attributes(id)?;
-
-            // ignore override_redirect == true, already managed clients and clients
-            // that are not either currently visible or iconic
-            if override_redirect
-                || self.state.client_set.contains(&id)
-                || !(map_state == MapState::Viewable
-                    || self.x.get_wm_state(id)? != Some(WmState::Iconic))
-            {
+    for id in x.existing_clients()? {
+        let attrs = match x.get_window_attributes(id) {
+            Ok(attrs) => attrs,
+            _ => {
+                warn!(%id, "unable to pull window attributes for client: skipping.");
                 continue;
             }
+        };
 
-            info!(%id, "attempting to manage existing client");
-            let workspace_id = match self.x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
+        let wm_state = match x.get_wm_state(id) {
+            Ok(state) => state,
+            _ => {
+                warn!(%id, "unable to pull wm state for client: skipping.");
+                continue;
+            }
+        };
+
+        info!(%id, ?attrs, ?wm_state, "processing client");
+
+        let WindowAttributes {
+            override_redirect,
+            map_state,
+            ..
+        } = attrs;
+
+        let viewable = map_state == MapState::Viewable;
+        let iconic = wm_state == Some(WmState::Iconic);
+
+        // NOTE: This condition for determining what windows we should manage is
+        //       taken from the `scan` function found in both dwm and XMonad.
+        if !state.client_set.contains(&id) && !override_redirect && (viewable || iconic) {
+            let workspace_id = match x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
                 Ok(Some(Prop::Cardinal(ids))) => ids[0] as usize,
                 _ => 0, // we know that we always have at least one workspace
             };
 
             let tag = ws_map.get(&workspace_id).unwrap_or(&first_tag);
-            manage_without_refresh(id, Some(tag), &mut self.state, &self.x)?;
+            let title = x.window_title(id)?;
+            info!(%id, %title, %tag, "attempting to manage existing client");
+            manage_without_refresh(id, Some(tag), state, x)?;
         }
-
-        info!("triggering refresh");
-        self.x.refresh(&mut self.state)
     }
+
+    info!("triggering refresh");
+    x.refresh(state)
 }

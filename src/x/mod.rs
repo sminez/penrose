@@ -475,7 +475,9 @@ pub(crate) fn manage_without_refresh<X: XConn>(
 
     if should_float {
         let r = floating_client_position(id, transient_for, state, x)?;
-        state.client_set.float_unchecked(id, r);
+        if state.client_set.float(id, r).is_err() {
+            error!(%id, "attempted to float client which was not in state");
+        }
     }
 
     let mut hook = state.config.manage_hook.take();
@@ -491,7 +493,6 @@ pub(crate) fn manage_without_refresh<X: XConn>(
 }
 
 /// When positioning a floating client we try to position them in priority order of:
-///   - centered in their parent window (if transient)
 ///   - centered in their parent's screen (if transient)
 ///   - centered in the focused screen
 fn floating_client_position<X: XConn>(

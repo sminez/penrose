@@ -658,6 +658,11 @@ where
             .chain(self.hidden.iter())
     }
 
+    /// Iterate over each non-hidden [Workspace] in this [StackSet] in an arbitrary order.
+    pub fn non_hidden_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
+        self.screens.iter().map(|s| &s.workspace)
+    }
+
     /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
     pub fn workspaces_mut(&mut self) -> impl Iterator<Item = &mut Workspace<C>> {
         self.screens
