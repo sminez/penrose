@@ -491,36 +491,7 @@ fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> 
     let first_tag = state.client_set.ordered_tags()[0].clone();
 
     for id in x.existing_clients()? {
-        let attrs = match x.get_window_attributes(id) {
-            Ok(attrs) => attrs,
-            _ => {
-                warn!(%id, "unable to pull window attributes for client: skipping.");
-                continue;
-            }
-        };
-
-        let wm_state = match x.get_wm_state(id) {
-            Ok(state) => state,
-            _ => {
-                warn!(%id, "unable to pull wm state for client: skipping.");
-                continue;
-            }
-        };
-
-        info!(%id, ?attrs, ?wm_state, "processing client");
-
-        let WindowAttributes {
-            override_redirect,
-            map_state,
-            ..
-        } = attrs;
-
-        let viewable = map_state == MapState::Viewable;
-        let iconic = wm_state == Some(WmState::Iconic);
-
-        // NOTE: This condition for determining what windows we should manage is
-        //       taken from the `scan` function found in both dwm and XMonad.
-        if !state.client_set.contains(&id) && !override_redirect && (viewable || iconic) {
+        if !state.client_set.contains(&id) && client_should_be_manged(id, x) {
             let workspace_id = match x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
                 Ok(Some(Prop::Cardinal(ids))) => ids[0] as usize,
                 _ => 0, // we know that we always have at least one workspace
@@ -535,4 +506,98 @@ fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> 
 
     info!("triggering refresh");
     x.refresh(state)
+}
+
+/// For a given existing client being processed on startup, determine whether we need
+/// to bring it into our internal state and manage it.
+fn client_should_be_manged<X: XConn>(id: Xid, x: &X) -> bool {
+    let attrs = match x.get_window_attributes(id) {
+        Ok(attrs) => attrs,
+        _ => {
+            warn!(%id, "unable to pull window attributes for client: skipping.");
+            return false;
+        }
+    };
+
+    let wm_state = match x.get_wm_state(id) {
+        Ok(state) => state,
+        _ => {
+            warn!(%id, "unable to pull wm state for client: skipping.");
+            return false;
+        }
+    };
+
+    info!(%id, ?attrs, ?wm_state, "processing client");
+
+    let WindowAttributes {
+        override_redirect,
+        map_state,
+        ..
+    } = attrs;
+
+    let viewable = map_state == MapState::Viewable;
+    let iconic = wm_state == Some(WmState::Iconic);
+
+    // NOTE: This condition for determining what windows we should manage is
+    //       taken from the `scan` function found in both dwm and XMonad.
+    !override_redirect && (viewable || iconic)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        x::{property::WindowClass, MockXConn},
+        Error, Result,
+    };
+    use simple_test_case::test_case;
+
+    struct ManageConn {
+        attrs: Option<WindowAttributes>,
+        wm_state: Option<WmState>,
+    }
+
+    impl MockXConn for ManageConn {
+        fn mock_get_window_attributes(&self, _: Xid) -> Result<WindowAttributes> {
+            self.attrs.clone().ok_or(Error::UnknownClient)
+        }
+
+        fn mock_get_wm_state(&self, _: Xid) -> Result<Option<WmState>> {
+            match &self.wm_state {
+                Some(state) => Ok(Some(state.clone())),
+                None => Err(Error::UnknownClient),
+            }
+        }
+    }
+
+    // Error cases where we skip due to missing data
+    #[test_case(None, None, false; "missing attrs and state")]
+    #[test_case(None, Some(WmState::Iconic), false; "missing attrs")]
+    #[test_case(Some((true, MapState::Viewable)), None, false; "missing state")]
+    // Override redirect always means skip
+    #[test_case(Some((true, MapState::Viewable)), Some(WmState::Iconic), false; "override_redirect viewable iconic")]
+    #[test_case(Some((true, MapState::UnViewable)), Some(WmState::Iconic), false; "override_redirect unviewable iconic")]
+    #[test_case(Some((true, MapState::Viewable)), Some(WmState::Normal), false; "override_redirect viewable normal")]
+    #[test_case(Some((true, MapState::UnViewable)), Some(WmState::Normal), false; "override_redirect unviewable normal")]
+    // Neither viewable or iconic
+    #[test_case(Some((false, MapState::UnViewable)), Some(WmState::Normal), false; "unviewable normal")]
+    // Viewable or iconic
+    #[test_case(Some((false, MapState::Viewable)), Some(WmState::Iconic), true; "viewable iconic")]
+    #[test_case(Some((false, MapState::Viewable)), Some(WmState::Normal), true; "viewable normal")]
+    #[test_case(Some((false, MapState::UnViewable)), Some(WmState::Iconic), true; "unviewable iconic")]
+    #[test]
+    fn client_should_be_managed_works(
+        attr_data: Option<(bool, MapState)>,
+        wm_state: Option<WmState>,
+        expected: bool,
+    ) {
+        let attrs = attr_data.map(|(override_redirect, map_state)| WindowAttributes {
+            override_redirect,
+            map_state,
+            window_class: WindowClass::InputOutput,
+        });
+        let conn = ManageConn { attrs, wm_state };
+
+        assert_eq!(client_should_be_manged(Xid(1), &conn), expected)
+    }
 }
