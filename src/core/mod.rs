@@ -433,8 +433,8 @@ where
         match &event {
             ClientMessage(m) => handle::client_message(m.clone(), state, x)?,
             ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x)?,
-            ConfigureNotify(_) => (),  // Not currently handled
-            ConfigureRequest(_) => (), // Not currently handled
+            ConfigureNotify(_) => (), // Not currently handled
+            ConfigureRequest(e) => handle::configure_request(e, state, x)?,
             Enter(p) => handle::enter(*p, state, x)?,
             Expose(_) => (), // Not currently handled
             FocusIn(id) => handle::focus_in(*id, state, x)?,

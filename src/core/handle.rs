@@ -7,9 +7,9 @@ use crate::{
     pure::geometry::Point,
     x::{
         atom::Atom,
-        event::{ClientMessage, ClientMessageKind, PointerChange},
+        event::{ClientMessage, ClientMessageKind, ConfigureEvent, PointerChange},
         property::{Prop, WmHints},
-        XConn, XConnExt,
+        ClientConfig, XConn, XConnExt,
     },
     Result,
 };
@@ -70,6 +70,18 @@ pub(crate) fn mouse_event<X: XConn>(
     }
 
     Ok(())
+}
+
+pub(crate) fn configure_request<X: XConn>(
+    ConfigureEvent { id, r, .. }: &ConfigureEvent,
+    state: &State<X>,
+    x: &X,
+) -> Result<()> {
+    if state.client_set.contains(id) {
+        return Ok(()); // Managed clients aren't allowed to configure themselves
+    }
+
+    x.set_client_config(*id, &[ClientConfig::Position(*r)])
 }
 
 pub(crate) fn map_request<X: XConn>(client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
