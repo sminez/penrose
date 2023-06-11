@@ -531,18 +531,6 @@
 <a href="#530" id="530">530</a>
 <a href="#531" id="531">531</a>
 <a href="#532" id="532">532</a>
-<a href="#533" id="533">533</a>
-<a href="#534" id="534">534</a>
-<a href="#535" id="535">535</a>
-<a href="#536" id="536">536</a>
-<a href="#537" id="537">537</a>
-<a href="#538" id="538">538</a>
-<a href="#539" id="539">539</a>
-<a href="#540" id="540">540</a>
-<a href="#541" id="541">541</a>
-<a href="#542" id="542">542</a>
-<a href="#543" id="543">543</a>
-<a href="#544" id="544">544</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{Diff, StackSet, Workspace},
@@ -911,7 +899,7 @@
             <span class="macro">panic!</span>(<span class="string">&quot;unable to set signal handler: {}&quot;</span>, e);
         }
 
-        <span class="self">self</span>.grab()<span class="question-mark">?</span>;
+        handle::mapping_notify(<span class="kw-2">&amp;</span><span class="self">self</span>.key_bindings, <span class="kw-2">&amp;</span><span class="self">self</span>.mouse_bindings, <span class="kw-2">&amp;</span><span class="self">self</span>.x)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>h) = <span class="self">self</span>.state.config.startup_hook.take() {
             <span class="macro">trace!</span>(<span class="string">&quot;running user startup hook&quot;</span>);
@@ -941,18 +929,6 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">error!</span>(%e, <span class="string">&quot;Error pulling next x event&quot;</span>),
             }
         }
-    }
-
-    <span class="kw">fn </span>grab(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">trace!</span>(<span class="string">&quot;grabbing key and mouse bindings&quot;</span>);
-        <span class="kw">let </span>key_codes: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.key_bindings.keys().copied().collect();
-        <span class="kw">let </span>mouse_states: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self
-            </span>.mouse_bindings
-            .keys()
-            .map(|(<span class="kw">_</span>, state)| state.clone())
-            .collect();
-
-        <span class="self">self</span>.x.grab(<span class="kw-2">&amp;</span>key_codes, <span class="kw-2">&amp;</span>mouse_states)
     }
 
     <span class="kw">fn </span>handle_xevent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: XEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -998,8 +974,8 @@
             Destroy(xid) =&gt; handle::destroy(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
             KeyPress(code) =&gt; handle::keypress(<span class="kw-2">*</span>code, key_bindings, state, x)<span class="question-mark">?</span>,
             Leave(p) =&gt; handle::leave(<span class="kw-2">*</span>p, state, x)<span class="question-mark">?</span>,
-            MappingNotify =&gt; (), <span class="comment">// Not currently handled
-            </span>MapRequest(xid) =&gt; handle::map_request(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
+            MappingNotify =&gt; handle::mapping_notify(key_bindings, mouse_bindings, x)<span class="question-mark">?</span>,
+            MapRequest(xid) =&gt; handle::map_request(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
             MouseEvent(e) =&gt; handle::mouse_event(e.clone(), mouse_bindings, state, x)<span class="question-mark">?</span>,
             PropertyNotify(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
             </span>RandrNotify =&gt; handle::detect_screens(state, x)<span class="question-mark">?</span>,

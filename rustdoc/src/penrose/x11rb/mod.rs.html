@@ -692,6 +692,13 @@
 <a href="#691" id="691">691</a>
 <a href="#692" id="692">692</a>
 <a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose
 //!
 //! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For
@@ -965,6 +972,13 @@
     }
 
     <span class="kw">fn </span>grab(<span class="kw-2">&amp;</span><span class="self">self</span>, key_codes: <span class="kw-2">&amp;</span>[KeyCode], mouse_states: <span class="kw-2">&amp;</span>[MouseState]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// Release any grabbed keys that we currently have before attempting to grab
+        // the requested key codes.
+        // NOTE: The &#39;0&#39; here is XCB_GRAB_ANY
+        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.conn.ungrab_key(<span class="number">0</span>, <span class="self">self</span>.root, ModMask::ANY) {
+            <span class="macro">error!</span>(%e, <span class="string">&quot;unable to ungrab keys&quot;</span>);
+        };
+
         <span class="comment">// We need to explicitly grab NumLock as an additional modifier and then drop it later on
         // when we are passing events through to the WindowManager as NumLock alters the modifier
         // mask when it is active.

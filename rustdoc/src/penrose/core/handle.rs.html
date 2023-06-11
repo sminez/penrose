@@ -163,6 +163,21 @@
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
 </pre><pre class="rust"><code><span class="doccomment">//! XEvent handlers for use in the main event loop;
 </span><span class="kw">use crate</span>::{
     core::{
@@ -187,6 +202,21 @@
     <span class="macro">trace!</span>(id = msg.id.<span class="number">0</span>, dtype = <span class="question-mark">?</span>msg.dtype, <span class="question-mark">?</span>data, <span class="string">&quot;got client message&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>mapping_notify&lt;X: XConn&gt;(
+    key_bindings: <span class="kw-2">&amp;</span>KeyBindings&lt;X&gt;,
+    mouse_bindings: <span class="kw-2">&amp;</span>MouseBindings&lt;X&gt;,
+    x: <span class="kw-2">&amp;</span>X,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="macro">trace!</span>(<span class="string">&quot;grabbing key and mouse bindings&quot;</span>);
+    <span class="kw">let </span>key_codes: Vec&lt;<span class="kw">_</span>&gt; = key_bindings.keys().copied().collect();
+    <span class="kw">let </span>mouse_states: Vec&lt;<span class="kw">_</span>&gt; = mouse_bindings
+        .keys()
+        .map(|(<span class="kw">_</span>, state)| state.clone())
+        .collect();
+
+    x.grab(<span class="kw-2">&amp;</span>key_codes, <span class="kw-2">&amp;</span>mouse_states)
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>keypress&lt;X: XConn&gt;(
