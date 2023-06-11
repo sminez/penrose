@@ -519,6 +519,89 @@
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
 <a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{Diff, StackSet, Workspace},
@@ -541,7 +624,7 @@
     ops::Deref,
     sync::Arc,
 };
-<span class="kw">use </span>tracing::{error, info, span, trace, Level};
+<span class="kw">use </span>tracing::{error, info, span, trace, warn, Level};
 
 <span class="kw">pub mod </span>bindings;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>handle;
@@ -896,7 +979,7 @@
             }
         }
 
-        <span class="self">self</span>.manage_existing_clients()<span class="question-mark">?</span>;
+        manage_existing_clients(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state, <span class="kw-2">&amp;</span><span class="self">self</span>.x)<span class="question-mark">?</span>;
 
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="self">self</span>.x.next_event() {
@@ -985,58 +1068,141 @@
 
         <span class="prelude-val">Ok</span>(())
     }
+}
 
-    <span class="comment">// A &quot;best effort&quot; attempt to manage existing clients on the workspaces they were present
-    // on previously. This is not guaranteed to preserve the stack order or correctly handle
-    // any clients that were on invisible workspaces / workspaces that no longer exist.
-    //
-    // NOTE: the check for if each client is already in state is in case a startup hook has
-    //       pre-managed clients for us. In that case we want to avoid stomping on
-    //       anything that they have set up.
-    </span><span class="attr">#[tracing::instrument(level = <span class="string">&quot;info&quot;</span>, skip(<span class="self">self</span>))]
-    </span><span class="kw">fn </span>manage_existing_clients(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">info!</span>(<span class="string">&quot;managing existing clients&quot;</span>);
+<span class="comment">// A &quot;best effort&quot; attempt to manage existing clients on the workspaces they were present
+// on previously. This is not guaranteed to preserve the stack order or correctly handle
+// any clients that were on invisible workspaces / workspaces that no longer exist.
+//
+// NOTE: the check for if each client is already in state is in case a startup hook has
+//       pre-managed clients for us. In that case we want to avoid stomping on
+//       anything that they have set up.
+</span><span class="attr">#[tracing::instrument(level = <span class="string">&quot;info&quot;</span>, skip(state, x))]
+</span><span class="kw">fn </span>manage_existing_clients&lt;X: XConn&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="macro">info!</span>(<span class="string">&quot;managing existing clients&quot;</span>);
 
-        <span class="comment">// We&#39;re not guaranteed that workspace indices are _always_ continuous from 0..n
-        // so we explicitly map tags to indices instead.
-        </span><span class="kw">let </span>ws_map: HashMap&lt;usize, String&gt; = <span class="self">self
-            </span>.state
-            .client_set
-            .workspaces()
-            .map(|w| (w.id, w.tag.clone()))
-            .collect();
+    <span class="comment">// We&#39;re not guaranteed that workspace indices are _always_ continuous from 0..n
+    // so we explicitly map tags to indices instead.
+    // We also exclude hidden workspaces as those can contain windows which are
+    // externally managed by a user written extension, which can lead to malformed
+    // internal state for those extensions when they restart.
+    </span><span class="kw">let </span>ws_map: HashMap&lt;usize, String&gt; = state
+        .client_set
+        .non_hidden_workspaces()
+        .map(|w| (w.id, w.tag.clone()))
+        .collect();
 
-        <span class="kw">let </span>first_tag = <span class="self">self</span>.state.client_set.ordered_tags()[<span class="number">0</span>].clone();
+    <span class="kw">let </span>first_tag = state.client_set.ordered_tags()[<span class="number">0</span>].clone();
 
-        <span class="kw">for </span>id <span class="kw">in </span><span class="self">self</span>.x.existing_clients()<span class="question-mark">? </span>{
-            <span class="kw">let </span>WindowAttributes {
-                override_redirect,
-                map_state,
-                ..
-            } = <span class="self">self</span>.x.get_window_attributes(id)<span class="question-mark">?</span>;
-
-            <span class="comment">// ignore override_redirect == true, already managed clients and clients
-            // that are not either currently visible or iconic
-            </span><span class="kw">if </span>override_redirect
-                || <span class="self">self</span>.state.client_set.contains(<span class="kw-2">&amp;</span>id)
-                || !(map_state == MapState::Viewable
-                    || <span class="self">self</span>.x.get_wm_state(id)<span class="question-mark">? </span>!= <span class="prelude-val">Some</span>(WmState::Iconic))
-            {
-                <span class="kw">continue</span>;
-            }
-
-            <span class="macro">info!</span>(%id, <span class="string">&quot;attempting to manage existing client&quot;</span>);
-            <span class="kw">let </span>workspace_id = <span class="kw">match </span><span class="self">self</span>.x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
+    <span class="kw">for </span>id <span class="kw">in </span>x.existing_clients()<span class="question-mark">? </span>{
+        <span class="kw">if </span>!state.client_set.contains(<span class="kw-2">&amp;</span>id) &amp;&amp; client_should_be_manged(id, x) {
+            <span class="kw">let </span>workspace_id = <span class="kw">match </span>x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Cardinal(ids))) =&gt; ids[<span class="number">0</span>] <span class="kw">as </span>usize,
                 <span class="kw">_ </span>=&gt; <span class="number">0</span>, <span class="comment">// we know that we always have at least one workspace
             </span>};
 
             <span class="kw">let </span>tag = ws_map.get(<span class="kw-2">&amp;</span>workspace_id).unwrap_or(<span class="kw-2">&amp;</span>first_tag);
-            manage_without_refresh(id, <span class="prelude-val">Some</span>(tag), <span class="kw-2">&amp;mut </span><span class="self">self</span>.state, <span class="kw-2">&amp;</span><span class="self">self</span>.x)<span class="question-mark">?</span>;
+            <span class="kw">let </span>title = x.window_title(id)<span class="question-mark">?</span>;
+            <span class="macro">info!</span>(%id, %title, %tag, <span class="string">&quot;attempting to manage existing client&quot;</span>);
+            manage_without_refresh(id, <span class="prelude-val">Some</span>(tag), state, x)<span class="question-mark">?</span>;
+        }
+    }
+
+    <span class="macro">info!</span>(<span class="string">&quot;triggering refresh&quot;</span>);
+    x.refresh(state)
+}
+
+<span class="doccomment">/// For a given existing client being processed on startup, determine whether we need
+/// to bring it into our internal state and manage it.
+</span><span class="kw">fn </span>client_should_be_manged&lt;X: XConn&gt;(id: Xid, x: <span class="kw-2">&amp;</span>X) -&gt; bool {
+    <span class="kw">let </span>attrs = <span class="kw">match </span>x.get_window_attributes(id) {
+        <span class="prelude-val">Ok</span>(attrs) =&gt; attrs,
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">warn!</span>(%id, <span class="string">&quot;unable to pull window attributes for client: skipping.&quot;</span>);
+            <span class="kw">return </span><span class="bool-val">false</span>;
+        }
+    };
+
+    <span class="kw">let </span>wm_state = <span class="kw">match </span>x.get_wm_state(id) {
+        <span class="prelude-val">Ok</span>(state) =&gt; state,
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">warn!</span>(%id, <span class="string">&quot;unable to pull wm state for client: skipping.&quot;</span>);
+            <span class="kw">return </span><span class="bool-val">false</span>;
+        }
+    };
+
+    <span class="macro">info!</span>(%id, <span class="question-mark">?</span>attrs, <span class="question-mark">?</span>wm_state, <span class="string">&quot;processing client&quot;</span>);
+
+    <span class="kw">let </span>WindowAttributes {
+        override_redirect,
+        map_state,
+        ..
+    } = attrs;
+
+    <span class="kw">let </span>viewable = map_state == MapState::Viewable;
+    <span class="kw">let </span>iconic = wm_state == <span class="prelude-val">Some</span>(WmState::Iconic);
+
+    <span class="comment">// NOTE: This condition for determining what windows we should manage is
+    //       taken from the `scan` function found in both dwm and XMonad.
+    </span>!override_redirect &amp;&amp; (viewable || iconic)
+}
+
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{
+        x::{property::WindowClass, MockXConn},
+        Error, <span class="prelude-ty">Result</span>,
+    };
+    <span class="kw">use </span>simple_test_case::test_case;
+
+    <span class="kw">struct </span>ManageConn {
+        attrs: <span class="prelude-ty">Option</span>&lt;WindowAttributes&gt;,
+        wm_state: <span class="prelude-ty">Option</span>&lt;WmState&gt;,
+    }
+
+    <span class="kw">impl </span>MockXConn <span class="kw">for </span>ManageConn {
+        <span class="kw">fn </span>mock_get_window_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;WindowAttributes&gt; {
+            <span class="self">self</span>.attrs.clone().ok_or(Error::UnknownClient)
         }
 
-        <span class="macro">info!</span>(<span class="string">&quot;triggering refresh&quot;</span>);
-        <span class="self">self</span>.x.refresh(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state)
+        <span class="kw">fn </span>mock_get_wm_state(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;WmState&gt;&gt; {
+            <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.wm_state {
+                <span class="prelude-val">Some</span>(state) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(state.clone())),
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownClient),
+            }
+        }
+    }
+
+    <span class="comment">// Error cases where we skip due to missing data
+    </span><span class="attr">#[test_case(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>; <span class="string">&quot;missing attrs and state&quot;</span>)]
+    #[test_case(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(WmState::Iconic), <span class="bool-val">false</span>; <span class="string">&quot;missing attrs&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">true</span>, MapState::Viewable)), <span class="prelude-val">None</span>, <span class="bool-val">false</span>; <span class="string">&quot;missing state&quot;</span>)]
+    </span><span class="comment">// Override redirect always means skip
+    </span><span class="attr">#[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">true</span>, MapState::Viewable)), <span class="prelude-val">Some</span>(WmState::Iconic), <span class="bool-val">false</span>; <span class="string">&quot;override_redirect viewable iconic&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">true</span>, MapState::UnViewable)), <span class="prelude-val">Some</span>(WmState::Iconic), <span class="bool-val">false</span>; <span class="string">&quot;override_redirect unviewable iconic&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">true</span>, MapState::Viewable)), <span class="prelude-val">Some</span>(WmState::Normal), <span class="bool-val">false</span>; <span class="string">&quot;override_redirect viewable normal&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">true</span>, MapState::UnViewable)), <span class="prelude-val">Some</span>(WmState::Normal), <span class="bool-val">false</span>; <span class="string">&quot;override_redirect unviewable normal&quot;</span>)]
+    </span><span class="comment">// Neither viewable or iconic
+    </span><span class="attr">#[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">false</span>, MapState::UnViewable)), <span class="prelude-val">Some</span>(WmState::Normal), <span class="bool-val">false</span>; <span class="string">&quot;unviewable normal&quot;</span>)]
+    </span><span class="comment">// Viewable or iconic
+    </span><span class="attr">#[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">false</span>, MapState::Viewable)), <span class="prelude-val">Some</span>(WmState::Iconic), <span class="bool-val">true</span>; <span class="string">&quot;viewable iconic&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">false</span>, MapState::Viewable)), <span class="prelude-val">Some</span>(WmState::Normal), <span class="bool-val">true</span>; <span class="string">&quot;viewable normal&quot;</span>)]
+    #[test_case(<span class="prelude-val">Some</span>((<span class="bool-val">false</span>, MapState::UnViewable)), <span class="prelude-val">Some</span>(WmState::Iconic), <span class="bool-val">true</span>; <span class="string">&quot;unviewable iconic&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>client_should_be_managed_works(
+        attr_data: <span class="prelude-ty">Option</span>&lt;(bool, MapState)&gt;,
+        wm_state: <span class="prelude-ty">Option</span>&lt;WmState&gt;,
+        expected: bool,
+    ) {
+        <span class="kw">let </span>attrs = attr_data.map(|(override_redirect, map_state)| WindowAttributes {
+            override_redirect,
+            map_state,
+            window_class: WindowClass::InputOutput,
+        });
+        <span class="kw">let </span>conn = ManageConn { attrs, wm_state };
+
+        <span class="macro">assert_eq!</span>(client_should_be_manged(Xid(<span class="number">1</span>), <span class="kw-2">&amp;</span>conn), expected)
     }
 }
 </code></pre></div>

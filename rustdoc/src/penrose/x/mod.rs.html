@@ -717,6 +717,7 @@
 <a href="#716" id="716">716</a>
 <a href="#717" id="717">717</a>
 <a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::Hide,
@@ -1194,7 +1195,9 @@
 
     <span class="kw">if </span>should_float {
         <span class="kw">let </span>r = floating_client_position(id, transient_for, state, x)<span class="question-mark">?</span>;
-        state.client_set.float_unchecked(id, r);
+        <span class="kw">if </span>state.client_set.float(id, r).is_err() {
+            <span class="macro">error!</span>(%id, <span class="string">&quot;attempted to float client which was not in state&quot;</span>);
+        }
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>hook = state.config.manage_hook.take();
@@ -1210,7 +1213,6 @@
 }
 
 <span class="doccomment">/// When positioning a floating client we try to position them in priority order of:
-///   - centered in their parent window (if transient)
 ///   - centered in their parent&#39;s screen (if transient)
 ///   - centered in the focused screen
 </span><span class="kw">fn </span>floating_client_position&lt;X: XConn&gt;(
