@@ -717,14 +717,6 @@
 <a href="#716" id="716">716</a>
 <a href="#717" id="717">717</a>
 <a href="#718" id="718">718</a>
-<a href="#719" id="719">719</a>
-<a href="#720" id="720">720</a>
-<a href="#721" id="721">721</a>
-<a href="#722" id="722">722</a>
-<a href="#723" id="723">723</a>
-<a href="#724" id="724">724</a>
-<a href="#725" id="725">725</a>
-<a href="#726" id="726">726</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::Hide,
@@ -1229,24 +1221,16 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Rect&gt; {
     <span class="kw">let </span>r_initial = x.client_geometry(id)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>maybe_r = <span class="kw">match </span>transient_for {
-        <span class="prelude-val">Some</span>(parent) =&gt; {
-            <span class="kw">let </span>r_parent = x.client_geometry(parent)<span class="question-mark">?</span>;
-            <span class="kw">let </span>r_screen = state
-                .client_set
-                .screen_for_client(<span class="kw-2">&amp;</span>parent)
-                .unwrap_or(<span class="kw-2">&amp;</span>state.client_set.screens.focus)
-                .r;
+    <span class="kw">let </span>r_screen = transient_for
+        .and_then(|parent| state.client_set.screen_for_client(<span class="kw-2">&amp;</span>parent))
+        .unwrap_or(<span class="kw-2">&amp;</span>state.client_set.screens.focus)
+        .r;
 
-            r_initial
-                .centered_in(<span class="kw-2">&amp;</span>r_parent)
-                .or(r_initial.centered_in(<span class="kw-2">&amp;</span>r_screen))
-        }
-
-        <span class="prelude-val">None </span>=&gt; r_initial.centered_in(<span class="kw-2">&amp;</span>state.client_set.screens.focus.r),
-    };
-
-    <span class="prelude-val">Ok</span>(maybe_r.unwrap_or(r_initial))
+    <span class="prelude-val">Ok</span>(r_initial.centered_in(<span class="kw-2">&amp;</span>r_screen).unwrap_or_else(|| {
+        r_initial
+            .centered_in(<span class="kw-2">&amp;</span>state.client_set.screens.focus.r)
+            .unwrap_or(r_initial)
+    }))
 }
 
 <span class="kw">fn </span>notify_killed&lt;X: XConn&gt;(x: <span class="kw-2">&amp;</span>X, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -1402,7 +1386,7 @@
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">600</span>, <span class="number">400</span>),
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">20</span>),
         <span class="number">0</span>,
-        Rect::new(<span class="number">290</span>, <span class="number">190</span>, <span class="number">20</span>, <span class="number">20</span>);
+        Rect::new(<span class="number">502</span>, <span class="number">374</span>, <span class="number">20</span>, <span class="number">20</span>);
         <span class="string">&quot;fit inside parent&quot;
     </span>)]
     #[test_case(
