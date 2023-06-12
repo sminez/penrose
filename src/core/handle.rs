@@ -74,11 +74,13 @@ pub(crate) fn mouse_event<X: XConn>(
 
 pub(crate) fn configure_request<X: XConn>(
     ConfigureEvent { id, r, .. }: &ConfigureEvent,
-    state: &State<X>,
+    state: &mut State<X>,
     x: &X,
 ) -> Result<()> {
-    if state.client_set.contains(id) {
-        return Ok(()); // Managed clients aren't allowed to configure themselves
+    if state.client_set.floating.contains_key(id) {
+        let _ = state.client_set.float(*id, *r); // Update the new floating position
+    } else if state.client_set.contains(id) {
+        return Ok(()); // Managed tiled clients aren't allowed to configure themselves
     }
 
     x.set_client_config(*id, &[ClientConfig::Position(*r)])
