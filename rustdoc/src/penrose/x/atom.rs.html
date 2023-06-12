@@ -177,14 +177,6 @@
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Data types for working with X atoms
 </span><span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -360,14 +352,6 @@
     Atom::NetWindowTypeNotification,
     Atom::NetWindowTypePopupMenu,
     Atom::NetWindowTypeSplash,
-    Atom::NetWindowTypeToolbar,
-    Atom::NetWindowTypeUtility,
-];
-
-<span class="doccomment">/// Windows with a type in this array will not be managed by penrose
-</span><span class="kw">pub const </span>UNMANAGED_WINDOW_TYPES: <span class="kw-2">&amp;</span>[Atom] = <span class="kw-2">&amp;</span>[
-    Atom::NetWindowTypeDock,
-    Atom::NetWindowTypeNotification,
     Atom::NetWindowTypeToolbar,
     Atom::NetWindowTypeUtility,
 ];

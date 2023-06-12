@@ -84,13 +84,42 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Manage hooks for common manage actions
 //!
 //! Manage hooks should _not_ trigger a refresh directly: that is handled by penrose
 //! itself when the manage hook is called.
 </span><span class="kw">use crate</span>::{
     core::{hooks::ManageHook, State},
-    pure::geometry::Rect,
+    pure::geometry::{Rect, RelativeRect},
     x::{Query, XConn},
     <span class="prelude-ty">Result</span>, Xid,
 };
@@ -167,6 +196,35 @@
             .expect(<span class="string">&quot;bounds checks in FloatingCentered::new to be upheld&quot;</span>);
 
         float(client, r, state, x)
+    }
+}
+
+<span class="doccomment">/// Float clients at a relative position to the current screen.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>FloatingRelative(<span class="kw">pub </span>RelativeRect);
+<span class="kw">impl </span>FloatingRelative {
+    <span class="doccomment">/// Create a new [FloatingRelative] with the given x, y, width and height ratios.
+    </span><span class="kw">pub fn </span>new(x: f64, y: f64, w: f64, h: f64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(RelativeRect::new(x, y, w, h))
+    }
+}
+
+<span class="kw">impl</span>&lt;X: XConn&gt; ManageHook&lt;X&gt; <span class="kw">for </span>FloatingRelative {
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>r_screen = <span class="kw-2">&amp;</span>state.client_set.screens.focus.r;
+        <span class="kw">let </span>r = <span class="self">self</span>.<span class="number">0</span>.applied_to(r_screen);
+
+        float(client, r, state, x)
+    }
+}
+
+<span class="doccomment">/// Move the specified client to the named workspace.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>SetWorkspace(<span class="kw">pub </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str);
+<span class="kw">impl</span>&lt;X: XConn&gt; ManageHook&lt;X&gt; <span class="kw">for </span>SetWorkspace {
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        state.client_set.move_client_to_tag(<span class="kw-2">&amp;</span>client, <span class="self">self</span>.<span class="number">0</span>);
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
