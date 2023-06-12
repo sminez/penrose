@@ -176,11 +176,3 @@ pub const AUTO_FLOAT_WINDOW_TYPES: &[Atom] = &[
     Atom::NetWindowTypeToolbar,
     Atom::NetWindowTypeUtility,
 ];
-
-/// Windows with a type in this array will not be managed by penrose
-pub const UNMANAGED_WINDOW_TYPES: &[Atom] = &[
-    Atom::NetWindowTypeDock,
-    Atom::NetWindowTypeNotification,
-    Atom::NetWindowTypeToolbar,
-    Atom::NetWindowTypeUtility,
-];

@@ -4,7 +4,7 @@
 //! itself when the manage hook is called.
 use crate::{
     core::{hooks::ManageHook, State},
-    pure::geometry::Rect,
+    pure::geometry::{Rect, RelativeRect},
     x::{Query, XConn},
     Result, Xid,
 };
@@ -81,5 +81,34 @@ impl<X: XConn> ManageHook<X> for FloatingCentered {
             .expect("bounds checks in FloatingCentered::new to be upheld");
 
         float(client, r, state, x)
+    }
+}
+
+/// Float clients at a relative position to the current screen.
+#[derive(Debug)]
+pub struct FloatingRelative(pub RelativeRect);
+impl FloatingRelative {
+    /// Create a new [FloatingRelative] with the given x, y, width and height ratios.
+    pub fn new(x: f64, y: f64, w: f64, h: f64) -> Self {
+        Self(RelativeRect::new(x, y, w, h))
+    }
+}
+
+impl<X: XConn> ManageHook<X> for FloatingRelative {
+    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+        let r_screen = &state.client_set.screens.focus.r;
+        let r = self.0.applied_to(r_screen);
+
+        float(client, r, state, x)
+    }
+}
+
+/// Move the specified client to the named workspace.
+#[derive(Debug)]
+pub struct SetWorkspace(pub &'static str);
+impl<X: XConn> ManageHook<X> for SetWorkspace {
+    fn call(&mut self, client: Xid, state: &mut State<X>, _: &X) -> Result<()> {
+        state.client_set.move_client_to_tag(&client, self.0);
+        Ok(())
     }
 }
