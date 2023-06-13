@@ -560,26 +560,14 @@ fn handle_pointer_change<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
     if !matches!(state.current_event, Some(XEvent::Enter(_))) {
         if let Some(id) = state.diff.focused_client() {
             trace!("focused client changed");
-            // If the current workspace has any floating windows then warping the
-            // cursor is not guaranteed to land us in the target window, which in
-            // turn can lead to unexpected focus issues.
-            // We _could_ attempt to be a lot smarter here and re-examine the floating
-            // positions looking for any overlap of free screen space to move the
-            // cursor to but that then leads to a lot of additional complexity while
-            // still not providing any guaranteed behaviour. The simplest thing to
-            // do (that is also the easiest to reason about) is to just not move the
-            // cursor at all if there are any floating windows present.
-            //
             // NOTE: Some of the behaviour here is based on looking at whether or
             //       not the focused client has changed position as part of this
             //       diff. That is going to cause issues if and when mouse based
             //       window movement is implemented.
-            let tag = state.client_set.current_tag();
-            let has_floating = state.client_set.has_floating_windows(tag);
             let focus_changed = state.diff.focused_client_changed();
             let focused_client_moved = state.diff.client_changed_position(&id);
 
-            if !has_floating && (focus_changed || focused_client_moved) {
+            if focus_changed || focused_client_moved {
                 trace!(
                     focus_changed,
                     focused_client_moved,
