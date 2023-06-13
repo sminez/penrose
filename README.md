@@ -17,18 +17,25 @@ customise things to your liking.
 
 ### tl;dr - getting started
 
-The docs for penrose are written using mdBook and published to GitHub Pages [here][0].
+The user facing docs for penrose are written using mdBook and published to GitHub Pages [here][0].
 They cover some more general concepts about how to get up and running as opposed to the
-[crate docs][1] on docs.rs which are more aimed at covering the APIs themselves.
+[crate docs][1] on docs.rs which are more aimed at covering the APIs themselves and are
+what you would expect from an open source library.
 
-> The current development version of the docs can be found [here][2].
+> The current version of the docs build from the head of the `develop` branch can be found [here][2].
 
 If you want to have a look at how it all comes together then the [examples][3] directory
 of this repo has several different starting points for you to begin with and my personal
 set up can be found [here][4]. (You almost certainly _don't_ want to use my set up in
 full but it should serve as a good reference for what a real use case looks like!)
 
-Join us on discord [here](https://discord.gg/jtFsg2K3Fw)
+#### Discord
+First and foremost, you should refer to the docs (both the book and API docs) if you are looking
+to learn about Penrose and how it all works. The GitHub issue tracker is also an excellent
+resource for learning about solutions to common problems. That said, I have had repeated requests
+for somewhere that people can have more open ended discussions about things and chat about their
+individual set ups so with that in mind, you can join us on discord [here](https://discord.gg/jtFsg2K3Fw)
+if that sounds like your thing.
 
 <br>
 
