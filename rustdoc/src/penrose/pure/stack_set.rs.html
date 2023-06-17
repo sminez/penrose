@@ -1432,6 +1432,7 @@
 <a href="#1432" id="1432">1432</a>
 <a href="#1433" id="1433">1433</a>
 <a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -2094,7 +2095,8 @@
 
     <span class="doccomment">/// Iterate over each non-hidden [Workspace] in this [StackSet] in an arbitrary order.
     </span><span class="kw">pub fn </span>non_hidden_workspaces(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>Workspace&lt;C&gt;&gt; {
-        <span class="self">self</span>.screens.iter().map(|s| <span class="kw-2">&amp;</span>s.workspace)
+        <span class="self">self</span>.workspaces()
+            .filter(|w| !<span class="self">self</span>.invisible_tags.contains(<span class="kw-2">&amp;</span>w.tag))
     }
 
     <span class="doccomment">/// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
