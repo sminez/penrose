@@ -486,6 +486,47 @@ impl<T: Clone> Stack<T> {
 
         new.filter(f)
     }
+
+    /// Extract elements satisfying a predicate into a Vec, leaving remaining
+    /// elements in their original stack position.
+    pub fn extract<F>(&self, f: F) -> (Option<Self>, Vec<T>)
+    where
+        F: Fn(&T) -> bool,
+    {
+        let mut extracted = Vec::new();
+        let mut new_stack = Self {
+            focus: self.focus.clone(),
+            up: Default::default(),
+            down: Default::default(),
+        };
+
+        for t in self.up.clone().into_iter().rev() {
+            if f(&t) {
+                new_stack.up.push_front(t);
+            } else {
+                extracted.push(t);
+            }
+        }
+
+        let up_to_focus = extracted.len();
+
+        for t in self.down.clone().into_iter() {
+            if f(&t) {
+                new_stack.down.push_back(t);
+            } else {
+                extracted.push(t);
+            }
+        }
+
+        if f(&new_stack.focus) {
+            return (Some(new_stack), extracted);
+        }
+
+        let (t, maybe_stack) = new_stack.remove_focused();
+        extracted.insert(up_to_focus, t);
+
+        (maybe_stack, extracted)
+    }
 }
 
 impl<T: PartialEq> Stack<T> {
@@ -677,9 +718,25 @@ mod tests {
     #[test_case(|&x| x == 2 || x == 3, Some(stack!([2], 3)); "moves focus to end of up if down is empty")]
     #[test]
     fn filter(predicate: fn(&usize) -> bool, expected: Option<Stack<usize>>) {
-        let mapped = stack!([2, 3], 1, [4, 5]).filter(predicate);
+        let filtered = stack!([2, 3], 1, [4, 5]).filter(predicate);
 
-        assert_eq!(mapped, expected);
+        assert_eq!(filtered, expected);
+    }
+
+    #[test_case(|&x| x > 5, None, vec![2,3,1,4,5]; "no elements satisfy the predicate")]
+    #[test_case(|x| x % 2 == 1, Some(stack!([3], 1, [5])), vec![2,4]; "holds focus with predicate")]
+    #[test_case(|x| x % 2 == 0, Some(stack!([2], 4)), vec![3,1,5]; "moves focus to top of down when possible")]
+    #[test_case(|&x| x == 2 || x == 3, Some(stack!([2], 3)), vec![1,4,5]; "moves focus to end of up if down is empty")]
+    #[test]
+    fn extract(
+        predicate: fn(&usize) -> bool,
+        expected: Option<Stack<usize>>,
+        expected_extracted: Vec<usize>,
+    ) {
+        let (s, extracted) = stack!([2, 3], 1, [4, 5]).extract(predicate);
+
+        assert_eq!(s, expected);
+        assert_eq!(extracted, expected_extracted);
     }
 
     #[test]
