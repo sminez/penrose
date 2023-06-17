@@ -18,7 +18,11 @@ pub use stack_set::StackSet;
 #[doc(inline)]
 pub use workspace::Workspace;
 
-pub(crate) use diff::Diff;
+pub(crate) use diff::{Diff, Snapshot};
+pub(crate) use screen::ScreenClients;
+
+#[cfg(test)]
+pub(crate) use stack_set::tests::test_xid_stack_set;
 
 /// A relative position along the horizontal and vertical axes
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

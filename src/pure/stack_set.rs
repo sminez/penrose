@@ -1,5 +1,5 @@
 use crate::{
-    core::layout::{Layout, LayoutStack},
+    core::layout::LayoutStack,
     pop_where,
     pure::{
         diff::{ScreenState, Snapshot},
@@ -706,48 +706,34 @@ where
     }
 }
 
+#[cfg(test)]
 impl StackSet<Xid> {
-    /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
-    /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
-    /// from the layout.
-    /// NOTE: we require Xid as the client type here as we need that when running layouts
-    pub(crate) fn visible_client_positions(&mut self) -> Vec<(Xid, Rect)> {
-        let mut float_positions: Vec<(Xid, Rect)> = Vec::new();
-        for s in self.screens.iter() {
-            for c in s.workspace.clients() {
-                if let Some(r) = self.floating.get(c) {
-                    float_positions.push((*c, r.applied_to(&s.r)));
-                }
-            }
-        }
+    /// This is a test implementation that runs the `State::visible_client_positions`
+    /// logic using a stub XConn and no layout hook.
+    pub(crate) fn visible_client_positions(&self) -> Vec<(Xid, Rect)> {
+        let mut s = crate::core::State {
+            client_set: self.clone(),
+            config: Default::default(),
+            extensions: anymap::AnyMap::new(),
+            root: Xid(0),
+            mapped: Default::default(),
+            pending_unmap: Default::default(),
+            current_event: None,
+            diff: Default::default(),
+        };
 
-        float_positions.reverse();
-
-        let mut positions: Vec<(Xid, Rect)> = Vec::new();
-
-        for s in self.screens.iter_mut() {
-            let tag = &s.workspace.tag;
-            let true_stack = s.workspace.stack.as_ref();
-            let tiling =
-                true_stack.and_then(|st| st.from_filtered(|c| self.floating.get(c).is_none()));
-
-            // TODO: if this supports using X state for determining layout position in future then this
-            //       will be fallible and needs to fall back to a default layout.
-            let (_, stack_positions) = s.workspace.layouts.layout_workspace(tag, &tiling, s.r);
-
-            positions.extend(stack_positions.into_iter().rev());
-        }
-
-        positions.extend(float_positions);
-
-        positions
+        s.visible_client_positions(&crate::x::StubXConn)
     }
 
+    /// This is a test implementation that runs the `State::position_and_snapshot`
+    /// logic using a stub XConn and no layout hook.
     pub(crate) fn position_and_snapshot(&mut self) -> Snapshot<Xid> {
         let positions = self.visible_client_positions();
         self.snapshot(positions)
     }
+}
 
+impl StackSet<Xid> {
     pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
         let n_old = self.screens.len();
         let n_new = rects.len();
@@ -938,7 +924,7 @@ pub mod tests {
         _test_stack_set(n_tags, n_screens)
     }
 
-    fn test_xid_stack_set(n_tags: usize, n_screens: usize) -> StackSet<Xid> {
+    pub fn test_xid_stack_set(n_tags: usize, n_screens: usize) -> StackSet<Xid> {
         _test_stack_set(n_tags, n_screens)
     }
 
@@ -1229,114 +1215,6 @@ pub mod tests {
         s.move_client_to_tag(&client, tag);
 
         assert_eq!(s.workspace(tag).unwrap().focus(), Some(&client));
-    }
-
-    mod visible_client_positions {
-        use super::*;
-
-        fn stack_order(s: &mut StackSet<Xid>) -> Vec<u32> {
-            let positions = s.visible_client_positions();
-            positions.iter().map(|&(id, _)| *id).collect()
-        }
-
-        #[test]
-        fn floating_client_positions_are_respected() {
-            let mut s = test_xid_stack_set(5, 2);
-
-            for n in 0..4 {
-                s.insert(Xid(n));
-            }
-
-            let r = Rect::new(50, 50, 50, 50);
-            s.float_unchecked(Xid(1), r);
-
-            let positions = s.visible_client_positions();
-
-            assert!(positions.contains(&(Xid(1), r)), "{positions:?}")
-        }
-
-        #[test]
-        fn floating_clients_stay_on_their_assigned_screen() {
-            let mut s = test_xid_stack_set(5, 2);
-
-            for n in 0..4 {
-                s.insert(Xid(n));
-            }
-
-            let r = Rect::new(50, 50, 50, 50);
-            s.float_unchecked(Xid(1), r);
-
-            let positions = s.visible_client_positions();
-
-            assert!(positions.contains(&(Xid(1), r)), "{positions:?}");
-
-            // If we move the client to tag 2 on the second screen then it should
-            // change position and be relative to that screen instead
-            s.move_client_to_tag(&Xid(1), "2");
-            let positions = s.visible_client_positions();
-
-            assert!(!positions.contains(&(Xid(1), r)), "{positions:?}");
-            assert!(
-                positions.contains(&(Xid(1), Rect::new(1050, 2050, 50, 50))),
-                "{positions:?}"
-            );
-        }
-
-        #[test]
-        fn floating_windows_are_returned_last() {
-            let mut s = test_xid_stack_set(5, 2);
-
-            for n in 1..6 {
-                s.insert(Xid(n));
-            }
-
-            s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
-            s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
-
-            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 2, 3]);
-        }
-
-        #[test]
-        fn newly_added_windows_are_below_floating() {
-            let mut s = test_xid_stack_set(5, 2);
-
-            for n in 1..6 {
-                s.insert(Xid(n));
-            }
-
-            s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
-            s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
-
-            s.insert(Xid(6));
-
-            assert_eq!(stack_order(&mut s), vec![1, 4, 5, 6, 2, 3]);
-        }
-
-        #[test]
-        fn floating_clients_dont_break_insert_focus() {
-            let mut s = test_xid_stack_set(1, 1);
-
-            s.insert_at(Position::Focus, Xid(0));
-            s.float_unchecked(Xid(0), Rect::new(0, 0, 42, 42));
-
-            assert_eq!(s.current_client(), Some(&Xid(0)));
-
-            // Each time we add a client it should be the focus
-            // and the floating window should be stacked above
-            // all others.
-            let mut expected = vec![0];
-            for n in 1..=5 {
-                s.insert_at(Position::Focus, Xid(n));
-                assert_eq!(s.current_client(), Some(&Xid(n)));
-
-                // Tiled position ordering is reversed in visible_client_positions
-                // in order to ensure that when we restack, the order returned
-                // is from bottom -> top of the stack to make `restack` simpler to
-                // implement.
-                expected.insert(expected.len() - 1, n);
-                assert_eq!(stack_order(&mut s), expected, "{:?}", s.current_stack());
-            }
-        }
     }
 
     fn focused_tags(ss: &StackSet<Xid>) -> Vec<&String> {

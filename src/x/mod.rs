@@ -23,7 +23,7 @@ pub mod query;
 pub mod mock;
 
 #[cfg(test)]
-pub use mock::MockXConn;
+pub use mock::{MockXConn, StubXConn};
 
 pub use atom::Atom;
 pub use event::XEvent;
@@ -222,7 +222,7 @@ pub trait XConnExt: XConn + Sized {
     {
         f(&mut state.client_set); // NOTE: mutating the existing state
 
-        let ss = state.client_set.position_and_snapshot();
+        let ss = state.position_and_snapshot(self);
         state.diff.update(ss);
 
         notify_killed(self, state)?;

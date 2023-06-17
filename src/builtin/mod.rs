@@ -6,4 +6,5 @@
 //!
 //! More advanced functionality is available via the `extensions` module.
 pub mod actions;
+pub mod hooks;
 pub mod layout;

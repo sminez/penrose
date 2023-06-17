@@ -56,10 +56,10 @@ pub trait Layout {
     /// When a layout is run it may optionally replace itself with a new [Layout]. If `Some(layout)`
     /// is returned from this method, it will be swapped out for the current one after the provided
     /// positions have been applied.
-    #[allow(clippy::type_complexity)]
+    #[allow(clippy::type_complexity, unused_variables)]
     fn layout_workspace(
         &mut self,
-        _tag: &str,
+        tag: &str,
         stack: &Option<Stack<Xid>>,
         r: Rect,
     ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
@@ -78,8 +78,8 @@ pub trait Layout {
     /// Generate screen positions for an empty [Stack].
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
-    #[allow(clippy::type_complexity)]
-    fn layout_empty(&mut self, _r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    #[allow(clippy::type_complexity, unused_variables)]
+    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         (None, vec![])
     }
 

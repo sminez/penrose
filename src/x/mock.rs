@@ -223,3 +223,11 @@ where
         self.mock_warp_pointer(id, x, y)
     }
 }
+
+/// A stub XConn implementation that doesn't implement _any_ methods.
+///
+/// Only usable for passing to test code that requires an XConn due to
+/// type signatures but is not making use of it.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct StubXConn;
+impl MockXConn for StubXConn {}

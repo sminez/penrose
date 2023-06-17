@@ -1,6 +1,6 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
-    pure::{Diff, StackSet, Workspace},
+    pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
     x::{
         manage_without_refresh,
         property::{MapState, WmState},
@@ -28,8 +28,8 @@ pub mod hooks;
 pub mod layout;
 
 use bindings::{KeyBindings, MouseBindings};
-use hooks::{EventHook, ManageHook, StateHook};
-use layout::LayoutStack;
+use hooks::{EventHook, LayoutHook, ManageHook, StateHook};
+use layout::{Layout, LayoutStack};
 
 /// An X11 ID for a given resource
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -178,6 +178,73 @@ where
     pub fn add_extension<E: Any>(&mut self, extension: E) {
         self.extensions.insert(Arc::new(RefCell::new(extension)));
     }
+
+    pub(crate) fn position_and_snapshot(&mut self, x: &X) -> Snapshot<Xid> {
+        let positions = self.visible_client_positions(x);
+        self.client_set.snapshot(positions)
+    }
+
+    /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
+    /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
+    /// from the layout.
+    pub(crate) fn visible_client_positions(&mut self, x: &X) -> Vec<(Xid, Rect)> {
+        let mut float_positions: Vec<(Xid, Rect)> = Vec::new();
+        let mut positions: Vec<(Xid, Rect)> = Vec::new();
+
+        // pop the layout hook off of `state` so that we can pass state into it
+        let mut hook = self.config.layout_hook.take();
+
+        let scs: Vec<ScreenClients> = self
+            .client_set
+            .screens
+            .iter()
+            .map(|s| s.screen_clients(&self.client_set.floating))
+            .collect();
+
+        for (i, sc) in scs.into_iter().enumerate() {
+            let ScreenClients {
+                floating,
+                tiling,
+                tag,
+                r_s,
+            } = sc;
+
+            // Sort out the floating client positions first
+            for (c, r_c) in floating.iter() {
+                let r_s = match hook {
+                    Some(ref mut h) => h.transform_initial(r_s, self, x),
+                    None => r_s,
+                };
+
+                float_positions.push((*c, r_c.applied_to(&r_s)));
+            }
+
+            // Next run layout functions for each workspace on a visible screen
+            let stack_positions = match hook {
+                Some(ref mut h) => {
+                    let r_s = h.transform_initial(r_s, self, x);
+                    let s = self.client_set.screens.iter_mut().nth(i).unwrap();
+                    let (_, initial) = s.workspace.layouts.layout_workspace(&tag, &tiling, r_s);
+                    h.transform_positions(r_s, initial, self, x)
+                }
+                None => {
+                    let s = self.client_set.screens.iter_mut().nth(i).unwrap();
+                    let (_, positions) = s.workspace.layouts.layout_workspace(&tag, &tiling, r_s);
+                    positions
+                }
+            };
+
+            positions.extend(stack_positions.into_iter().rev());
+        }
+
+        float_positions.reverse();
+        positions.extend(float_positions);
+
+        // Restore the layout hook
+        self.config.layout_hook = hook;
+
+        positions
+    }
 }
 
 /// The user specified config options for how the window manager should run
@@ -207,6 +274,8 @@ where
     pub manage_hook: Option<Box<dyn ManageHook<X>>>,
     /// A [StateHook] to run every time the on screen X state is refreshed
     pub refresh_hook: Option<Box<dyn StateHook<X>>>,
+    /// A [LayoutHook] to run when positioning clients on the screen
+    pub layout_hook: Option<Box<dyn LayoutHook<X>>>,
 }
 
 impl<X> fmt::Debug for Config<X>
@@ -245,6 +314,7 @@ where
             event_hook: None,
             manage_hook: None,
             refresh_hook: None,
+            layout_hook: None,
         }
     }
 }
@@ -304,6 +374,20 @@ where
         X: 'static,
     {
         self.refresh_hook = match self.refresh_hook.take() {
+            Some(h) => Some(hook.then_boxed(h)),
+            None => Some(hook.boxed()),
+        };
+    }
+
+    /// Set the layout_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
+    pub fn compose_or_set_layout_hook<H>(&mut self, hook: H)
+    where
+        H: LayoutHook<X> + 'static,
+        X: 'static,
+    {
+        self.layout_hook = match self.layout_hook.take() {
             Some(h) => Some(hook.then_boxed(h)),
             None => Some(hook.boxed()),
         };
@@ -529,4 +613,114 @@ fn client_should_be_manged<X: XConn>(id: Xid, x: &X) -> bool {
     // NOTE: This condition for determining what windows we should manage is
     //       taken from the `scan` function found in both dwm and XMonad.
     !override_redirect && (viewable || iconic)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pure::{test_xid_stack_set, Position};
+
+    fn stack_order(cs: &ClientSet) -> Vec<u32> {
+        let positions = cs.visible_client_positions();
+        positions.iter().map(|&(id, _)| *id).collect()
+    }
+
+    #[test]
+    fn floating_client_positions_are_respected() {
+        let mut s = test_xid_stack_set(5, 2);
+
+        for n in 0..4 {
+            s.insert(Xid(n));
+        }
+
+        let r = Rect::new(50, 50, 50, 50);
+        s.float_unchecked(Xid(1), r);
+
+        let positions = s.visible_client_positions();
+
+        assert!(positions.contains(&(Xid(1), r)), "{positions:?}")
+    }
+
+    #[test]
+    fn floating_clients_stay_on_their_assigned_screen() {
+        let mut s = test_xid_stack_set(5, 2);
+
+        for n in 0..4 {
+            s.insert(Xid(n));
+        }
+
+        let r = Rect::new(50, 50, 50, 50);
+        s.float_unchecked(Xid(1), r);
+
+        let positions = s.visible_client_positions();
+
+        assert!(positions.contains(&(Xid(1), r)), "{positions:?}");
+
+        // If we move the client to tag 2 on the second screen then it should
+        // change position and be relative to that screen instead
+        s.move_client_to_tag(&Xid(1), "2");
+        let positions = s.visible_client_positions();
+
+        assert!(!positions.contains(&(Xid(1), r)), "{positions:?}");
+        assert!(
+            positions.contains(&(Xid(1), Rect::new(1050, 2050, 50, 50))),
+            "{positions:?}"
+        );
+    }
+
+    #[test]
+    fn floating_windows_are_returned_last() {
+        let mut s = test_xid_stack_set(5, 2);
+
+        for n in 1..6 {
+            s.insert(Xid(n));
+        }
+
+        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
+        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+
+        assert_eq!(stack_order(&s), vec![1, 4, 5, 2, 3]);
+    }
+
+    #[test]
+    fn newly_added_windows_are_below_floating() {
+        let mut s = test_xid_stack_set(5, 2);
+
+        for n in 1..6 {
+            s.insert(Xid(n));
+        }
+
+        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
+        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+
+        s.insert(Xid(6));
+
+        assert_eq!(stack_order(&s), vec![1, 4, 5, 6, 2, 3]);
+    }
+
+    #[test]
+    fn floating_clients_dont_break_insert_focus() {
+        let mut s = test_xid_stack_set(1, 1);
+
+        s.insert_at(Position::Focus, Xid(0));
+        s.float_unchecked(Xid(0), Rect::new(0, 0, 42, 42));
+
+        assert_eq!(s.current_client(), Some(&Xid(0)));
+
+        // Each time we add a client it should be the focus
+        // and the floating window should be stacked above
+        // all others.
+        let mut expected = vec![0];
+        for n in 1..=5 {
+            s.insert_at(Position::Focus, Xid(n));
+            assert_eq!(s.current_client(), Some(&Xid(n)));
+
+            // Tiled position ordering is reversed in visible_client_positions
+            // in order to ensure that when we restack, the order returned
+            // is from bottom -> top of the stack to make `restack` simpler to
+            // implement.
+            expected.insert(expected.len() - 1, n);
+            assert_eq!(stack_order(&s), expected, "{:?}", s.current_stack());
+        }
+    }
 }
