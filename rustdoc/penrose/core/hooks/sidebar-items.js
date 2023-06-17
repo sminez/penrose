@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ComposedEventHook","ComposedManageHook","ComposedStateHook"],"trait":["EventHook","ManageHook","StateHook"]};
+window.SIDEBAR_ITEMS = {"struct":["ComposedEventHook","ComposedLayoutHook","ComposedManageHook","ComposedStateHook"],"trait":["EventHook","LayoutHook","ManageHook","StateHook"]};

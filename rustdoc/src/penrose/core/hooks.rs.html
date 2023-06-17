@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/hooks.rs`."><title>hooks.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" disabled href="../../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-be46fdc453a55015.css"><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html">
-                        <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/hooks.rs`."><title>hooks.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -248,9 +247,149 @@
 <a href="#247" id="247">247</a>
 <a href="#248" id="248">248</a>
 <a href="#249" id="249">249</a>
-</pre><pre class="rust"><code><span class="doccomment">//! Traits for writing and composing hooks
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Traits for writing and composing hooks
 </span><span class="kw">use crate</span>::{
-    core::State,
+    core::{layout::LayoutTransformer, State},
+    pure::geometry::Rect,
     x::{XConn, XEvent},
     <span class="prelude-ty">Result</span>, Xid,
 };
@@ -497,5 +636,142 @@
         (<span class="self">self</span>)(state, x)
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+
+<span class="doccomment">/// Logic to run before and after laying out clients
+</span><span class="kw">pub trait </span>LayoutHook&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
+{
+    <span class="attr">#[allow(unused_variables)]
+    </span><span class="doccomment">/// Optionally modify the screen dimensions being given to a [Layout]
+    </span><span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect, state: <span class="kw-2">&amp;</span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; Rect {
+        r
+    }
+
+    <span class="attr">#[allow(unused_variables)]
+    </span><span class="doccomment">/// Optionally modify the client positions returned by a [Layout]
+    </span><span class="kw">fn </span>transform_positions(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        r: Rect,
+        positions: Vec&lt;(Xid, Rect)&gt;,
+        state: <span class="kw-2">&amp;</span>State&lt;X&gt;,
+        x: <span class="kw-2">&amp;</span>X,
+    ) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        positions
+    }
+
+    <span class="doccomment">/// Compose this hook with another [StateHook].
+    </span><span class="kw">fn </span>then&lt;H&gt;(<span class="self">self</span>, next: H) -&gt; ComposedLayoutHook&lt;X&gt;
+    <span class="kw">where
+        </span>H: LayoutHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        <span class="self">Self</span>: Sized + <span class="lifetime">&#39;static</span>,
+    {
+        ComposedLayoutHook {
+            first: Box::new(<span class="self">self</span>),
+            second: Box::new(next),
+        }
+    }
+
+    <span class="doccomment">/// Convert to a trait object
+    </span><span class="kw">fn </span>boxed(<span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + <span class="lifetime">&#39;static</span>,
+    {
+        Box::new(<span class="self">self</span>)
+    }
+
+    <span class="doccomment">/// Compose this hook with a boxed [LayoutHook].
+    </span><span class="kw">fn </span>then_boxed(<span class="self">self</span>, next: Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt;) -&gt; Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + <span class="lifetime">&#39;static</span>,
+        X: <span class="lifetime">&#39;static</span>,
+    {
+        Box::new(ComposedLayoutHook {
+            first: Box::new(<span class="self">self</span>),
+            second: next,
+        })
+    }
+}
+
+<span class="kw">impl</span>&lt;X: XConn&gt; fmt::Debug <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;LayoutHook&quot;</span>).finish()
+    }
+}
+
+<span class="doccomment">/// The result of composing two state hooks using `then`
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ComposedLayoutHook&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
+{
+    first: Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt;,
+    second: Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt;,
+}
+
+<span class="kw">impl</span>&lt;X&gt; LayoutHook&lt;X&gt; <span class="kw">for </span>ComposedLayoutHook&lt;X&gt;
+<span class="kw">where
+    </span>X: XConn,
+{
+    <span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect, state: <span class="kw-2">&amp;</span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; Rect {
+        <span class="self">self</span>.second
+            .transform_initial(<span class="self">self</span>.first.transform_initial(r, state, x), state, x)
+    }
+
+    <span class="kw">fn </span>transform_positions(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        r: Rect,
+        positions: Vec&lt;(Xid, Rect)&gt;,
+        state: <span class="kw-2">&amp;</span>State&lt;X&gt;,
+        x: <span class="kw-2">&amp;</span>X,
+    ) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        <span class="self">self</span>.second.transform_positions(
+            r,
+            <span class="self">self</span>.first.transform_positions(r, positions, state, x),
+            state,
+            x,
+        )
+    }
+}
+
+<span class="kw">impl</span>&lt;F, G, X&gt; LayoutHook&lt;X&gt; <span class="kw">for </span>(F, G)
+<span class="kw">where
+    </span>F: FnMut(Rect, <span class="kw-2">&amp;</span>State&lt;X&gt;, <span class="kw-2">&amp;</span>X) -&gt; Rect,
+    G: FnMut(Rect, Vec&lt;(Xid, Rect)&gt;, <span class="kw-2">&amp;</span>State&lt;X&gt;, <span class="kw-2">&amp;</span>X) -&gt; Vec&lt;(Xid, Rect)&gt;,
+    X: XConn,
+{
+    <span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect, state: <span class="kw-2">&amp;</span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; Rect {
+        (<span class="self">self</span>.<span class="number">0</span>)(r, state, x)
+    }
+
+    <span class="kw">fn </span>transform_positions(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        r: Rect,
+        positions: Vec&lt;(Xid, Rect)&gt;,
+        state: <span class="kw-2">&amp;</span>State&lt;X&gt;,
+        x: <span class="kw-2">&amp;</span>X,
+    ) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        (<span class="self">self</span>.<span class="number">1</span>)(r, positions, state, x)
+    }
+}
+
+<span class="kw">impl</span>&lt;T, X&gt; LayoutHook&lt;X&gt; <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: LayoutTransformer,
+    X: XConn,
+{
+    <span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect, <span class="kw">_</span>: <span class="kw-2">&amp;</span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; Rect {
+        LayoutTransformer::transform_initial(<span class="self">self</span>, r)
+    }
+
+    <span class="kw">fn </span>transform_positions(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        r: Rect,
+        positions: Vec&lt;(Xid, Rect)&gt;,
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span>State&lt;X&gt;,
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span>X,
+    ) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        LayoutTransformer::transform_positions(<span class="self">self</span>, r, positions)
+    }
+}
+</code></pre></div></section></main></body></html>

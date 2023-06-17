@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" disabled href="../../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-be46fdc453a55015.css"><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html">
-                        <img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -531,9 +530,203 @@
 <a href="#530" id="530">530</a>
 <a href="#531" id="531">531</a>
 <a href="#532" id="532">532</a>
-</pre><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
-    pure::{Diff, StackSet, Workspace},
+    pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
     x::{
         manage_without_refresh,
         property::{MapState, WmState},
@@ -561,8 +754,8 @@
 <span class="kw">pub mod </span>layout;
 
 <span class="kw">use </span>bindings::{KeyBindings, MouseBindings};
-<span class="kw">use </span>hooks::{EventHook, ManageHook, StateHook};
-<span class="kw">use </span>layout::LayoutStack;
+<span class="kw">use </span>hooks::{EventHook, LayoutHook, ManageHook, StateHook};
+<span class="kw">use </span>layout::{Layout, LayoutStack};
 
 <span class="doccomment">/// An X11 ID for a given resource
 </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
@@ -711,6 +904,73 @@
     </span><span class="kw">pub fn </span>add_extension&lt;E: Any&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, extension: E) {
         <span class="self">self</span>.extensions.insert(Arc::new(RefCell::new(extension)));
     }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>position_and_snapshot(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: <span class="kw-2">&amp;</span>X) -&gt; Snapshot&lt;Xid&gt; {
+        <span class="kw">let </span>positions = <span class="self">self</span>.visible_client_positions(x);
+        <span class="self">self</span>.client_set.snapshot(positions)
+    }
+
+    <span class="doccomment">/// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
+    /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
+    /// from the layout.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>visible_client_positions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: <span class="kw-2">&amp;</span>X) -&gt; Vec&lt;(Xid, Rect)&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>float_positions: Vec&lt;(Xid, Rect)&gt; = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>positions: Vec&lt;(Xid, Rect)&gt; = Vec::new();
+
+        <span class="comment">// pop the layout hook off of `state` so that we can pass state into it
+        </span><span class="kw">let </span><span class="kw-2">mut </span>hook = <span class="self">self</span>.config.layout_hook.take();
+
+        <span class="kw">let </span>scs: Vec&lt;ScreenClients&gt; = <span class="self">self
+            </span>.client_set
+            .screens
+            .iter()
+            .map(|s| s.screen_clients(<span class="kw-2">&amp;</span><span class="self">self</span>.client_set.floating))
+            .collect();
+
+        <span class="kw">for </span>(i, sc) <span class="kw">in </span>scs.into_iter().enumerate() {
+            <span class="kw">let </span>ScreenClients {
+                floating,
+                tiling,
+                tag,
+                r_s,
+            } = sc;
+
+            <span class="comment">// Sort out the floating client positions first
+            </span><span class="kw">for </span>(c, r_c) <span class="kw">in </span>floating.iter() {
+                <span class="kw">let </span>r_s = <span class="kw">match </span>hook {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) =&gt; h.transform_initial(r_s, <span class="self">self</span>, x),
+                    <span class="prelude-val">None </span>=&gt; r_s,
+                };
+
+                float_positions.push((<span class="kw-2">*</span>c, r_c.applied_to(<span class="kw-2">&amp;</span>r_s)));
+            }
+
+            <span class="comment">// Next run layout functions for each workspace on a visible screen
+            </span><span class="kw">let </span>stack_positions = <span class="kw">match </span>hook {
+                <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) =&gt; {
+                    <span class="kw">let </span>r_s = h.transform_initial(r_s, <span class="self">self</span>, x);
+                    <span class="kw">let </span>s = <span class="self">self</span>.client_set.screens.iter_mut().nth(i).unwrap();
+                    <span class="kw">let </span>(<span class="kw">_</span>, initial) = s.workspace.layouts.layout_workspace(<span class="kw-2">&amp;</span>tag, <span class="kw-2">&amp;</span>tiling, r_s);
+                    h.transform_positions(r_s, initial, <span class="self">self</span>, x)
+                }
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">let </span>s = <span class="self">self</span>.client_set.screens.iter_mut().nth(i).unwrap();
+                    <span class="kw">let </span>(<span class="kw">_</span>, positions) = s.workspace.layouts.layout_workspace(<span class="kw-2">&amp;</span>tag, <span class="kw-2">&amp;</span>tiling, r_s);
+                    positions
+                }
+            };
+
+            positions.extend(stack_positions.into_iter().rev());
+        }
+
+        float_positions.reverse();
+        positions.extend(float_positions);
+
+        <span class="comment">// Restore the layout hook
+        </span><span class="self">self</span>.config.layout_hook = hook;
+
+        positions
+    }
 }
 
 <span class="doccomment">/// The user specified config options for how the window manager should run
@@ -740,6 +1000,8 @@
     </span><span class="kw">pub </span>manage_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>ManageHook&lt;X&gt;&gt;&gt;,
     <span class="doccomment">/// A [StateHook] to run every time the on screen X state is refreshed
     </span><span class="kw">pub </span>refresh_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>StateHook&lt;X&gt;&gt;&gt;,
+    <span class="doccomment">/// A [LayoutHook] to run when positioning clients on the screen
+    </span><span class="kw">pub </span>layout_hook: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>LayoutHook&lt;X&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;X&gt; fmt::Debug <span class="kw">for </span>Config&lt;X&gt;
@@ -778,6 +1040,7 @@
             event_hook: <span class="prelude-val">None</span>,
             manage_hook: <span class="prelude-val">None</span>,
             refresh_hook: <span class="prelude-val">None</span>,
+            layout_hook: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -837,6 +1100,20 @@
         X: <span class="lifetime">&#39;static</span>,
     {
         <span class="self">self</span>.refresh_hook = <span class="kw">match </span><span class="self">self</span>.refresh_hook.take() {
+            <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(hook.boxed()),
+        };
+    }
+
+    <span class="doccomment">/// Set the layout_hook or compose it with what is already set.
+    ///
+    /// The new hook will run before what was there before.
+    </span><span class="kw">pub fn </span>compose_or_set_layout_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
+    <span class="kw">where
+        </span>H: LayoutHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        X: <span class="lifetime">&#39;static</span>,
+    {
+        <span class="self">self</span>.layout_hook = <span class="kw">match </span><span class="self">self</span>.layout_hook.take() {
             <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(hook.boxed()),
         };
@@ -1063,5 +1340,114 @@
     //       taken from the `scan` function found in both dwm and XMonad.
     </span>!override_redirect &amp;&amp; (viewable || iconic)
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::pure::{test_xid_stack_set, Position};
+
+    <span class="kw">fn </span>stack_order(cs: <span class="kw-2">&amp;</span>ClientSet) -&gt; Vec&lt;u32&gt; {
+        <span class="kw">let </span>positions = cs.visible_client_positions();
+        positions.iter().map(|<span class="kw-2">&amp;</span>(id, <span class="kw">_</span>)| <span class="kw-2">*</span>id).collect()
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>floating_client_positions_are_respected() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_xid_stack_set(<span class="number">5</span>, <span class="number">2</span>);
+
+        <span class="kw">for </span>n <span class="kw">in </span><span class="number">0</span>..<span class="number">4 </span>{
+            s.insert(Xid(n));
+        }
+
+        <span class="kw">let </span>r = Rect::new(<span class="number">50</span>, <span class="number">50</span>, <span class="number">50</span>, <span class="number">50</span>);
+        s.float_unchecked(Xid(<span class="number">1</span>), r);
+
+        <span class="kw">let </span>positions = s.visible_client_positions();
+
+        <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>)
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>floating_clients_stay_on_their_assigned_screen() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_xid_stack_set(<span class="number">5</span>, <span class="number">2</span>);
+
+        <span class="kw">for </span>n <span class="kw">in </span><span class="number">0</span>..<span class="number">4 </span>{
+            s.insert(Xid(n));
+        }
+
+        <span class="kw">let </span>r = Rect::new(<span class="number">50</span>, <span class="number">50</span>, <span class="number">50</span>, <span class="number">50</span>);
+        s.float_unchecked(Xid(<span class="number">1</span>), r);
+
+        <span class="kw">let </span>positions = s.visible_client_positions();
+
+        <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>);
+
+        <span class="comment">// If we move the client to tag 2 on the second screen then it should
+        // change position and be relative to that screen instead
+        </span>s.move_client_to_tag(<span class="kw-2">&amp;</span>Xid(<span class="number">1</span>), <span class="string">&quot;2&quot;</span>);
+        <span class="kw">let </span>positions = s.visible_client_positions();
+
+        <span class="macro">assert!</span>(!positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>);
+        <span class="macro">assert!</span>(
+            positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), Rect::new(<span class="number">1050</span>, <span class="number">2050</span>, <span class="number">50</span>, <span class="number">50</span>))),
+            <span class="string">&quot;{positions:?}&quot;
+        </span>);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>floating_windows_are_returned_last() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_xid_stack_set(<span class="number">5</span>, <span class="number">2</span>);
+
+        <span class="kw">for </span>n <span class="kw">in </span><span class="number">1</span>..<span class="number">6 </span>{
+            s.insert(Xid(n));
+        }
+
+        s.float_unchecked(Xid(<span class="number">2</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">42</span>, <span class="number">42</span>));
+        s.float_unchecked(Xid(<span class="number">3</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">69</span>, <span class="number">69</span>));
+
+        <span class="macro">assert_eq!</span>(stack_order(<span class="kw-2">&amp;</span>s), <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">2</span>, <span class="number">3</span>]);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>newly_added_windows_are_below_floating() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_xid_stack_set(<span class="number">5</span>, <span class="number">2</span>);
+
+        <span class="kw">for </span>n <span class="kw">in </span><span class="number">1</span>..<span class="number">6 </span>{
+            s.insert(Xid(n));
+        }
+
+        s.float_unchecked(Xid(<span class="number">2</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">42</span>, <span class="number">42</span>));
+        s.float_unchecked(Xid(<span class="number">3</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">69</span>, <span class="number">69</span>));
+
+        s.insert(Xid(<span class="number">6</span>));
+
+        <span class="macro">assert_eq!</span>(stack_order(<span class="kw-2">&amp;</span>s), <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">2</span>, <span class="number">3</span>]);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>floating_clients_dont_break_insert_focus() {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_xid_stack_set(<span class="number">1</span>, <span class="number">1</span>);
+
+        s.insert_at(Position::Focus, Xid(<span class="number">0</span>));
+        s.float_unchecked(Xid(<span class="number">0</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">42</span>, <span class="number">42</span>));
+
+        <span class="macro">assert_eq!</span>(s.current_client(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Xid(<span class="number">0</span>)));
+
+        <span class="comment">// Each time we add a client it should be the focus
+        // and the floating window should be stacked above
+        // all others.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>expected = <span class="macro">vec!</span>[<span class="number">0</span>];
+        <span class="kw">for </span>n <span class="kw">in </span><span class="number">1</span>..=<span class="number">5 </span>{
+            s.insert_at(Position::Focus, Xid(n));
+            <span class="macro">assert_eq!</span>(s.current_client(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Xid(n)));
+
+            <span class="comment">// Tiled position ordering is reversed in visible_client_positions
+            // in order to ensure that when we restack, the order returned
+            // is from bottom -&gt; top of the stack to make `restack` simpler to
+            // implement.
+            </span>expected.insert(expected.len() - <span class="number">1</span>, n);
+            <span class="macro">assert_eq!</span>(stack_order(<span class="kw-2">&amp;</span>s), expected, <span class="string">&quot;{:?}&quot;</span>, s.current_stack());
+        }
+    }
+}
+</code></pre></div></section></main></body></html>
