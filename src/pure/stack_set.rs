@@ -660,7 +660,8 @@ where
 
     /// Iterate over each non-hidden [Workspace] in this [StackSet] in an arbitrary order.
     pub fn non_hidden_workspaces(&self) -> impl Iterator<Item = &Workspace<C>> {
-        self.screens.iter().map(|s| &s.workspace)
+        self.workspaces()
+            .filter(|w| !self.invisible_tags.contains(&w.tag))
     }
 
     /// Mutably iterate over each [Workspace] in this [StackSet] in an arbitrary order.
