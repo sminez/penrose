@@ -989,7 +989,7 @@
         </span>C: Into&lt;Color&gt;,
     {
         <span class="kw">let </span>color = color.into();
-        <span class="self">self</span>.set_client_attributes(id, <span class="kw-2">&amp;</span>[ClientAttr::BorderColor(color.rgb_u32())])
+        <span class="self">self</span>.set_client_attributes(id, <span class="kw-2">&amp;</span>[ClientAttr::BorderColor(color.argb_u32())])
     }
 
     <span class="doccomment">/// Set the initial window properties for a newly managed window.
@@ -1003,7 +1003,7 @@
         <span class="kw">let </span>conf = <span class="kw-2">&amp;</span>[ClientConfig::BorderPx(<span class="kw-2">*</span>border_width)];
         <span class="kw">let </span>attrs = <span class="kw-2">&amp;</span>[
             ClientAttr::ClientEventMask,
-            ClientAttr::BorderColor(normal_border.rgb_u32()),
+            ClientAttr::BorderColor(normal_border.argb_u32()),
         ];
 
         <span class="self">self</span>.set_wm_state(client, WmState::Iconic)<span class="question-mark">?</span>;

@@ -1029,8 +1029,8 @@
         <span class="kw">let </span>strings = |slice: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]| slice.iter().map(|s| s.to_string()).collect();
 
         Config {
-            normal_border: <span class="string">&quot;#3c3836&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
-            focused_border: <span class="string">&quot;#cc241d&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
+            normal_border: <span class="string">&quot;#3c3836ff&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
+            focused_border: <span class="string">&quot;#cc241dff&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
             border_width: <span class="number">2</span>,
             focus_follow_mouse: <span class="bool-val">true</span>,
             default_layouts: LayoutStack::default(),
