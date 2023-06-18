@@ -1983,12 +1983,12 @@
         <span class="self">self</span>.workspaces_mut().find(|w| w.tag == tag)
     }
 
-    <span class="doccomment">/// Switch to the next available [Layout] on the focused [Workspace]
+    <span class="doccomment">/// Switch to the next available [Layout][crate::core::layout::Layout] on the focused [Workspace]
     </span><span class="kw">pub fn </span>next_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.screens.focus.workspace.next_layout()
     }
 
-    <span class="doccomment">/// Switch to the previous available [Layout] on the focused [Workspace]
+    <span class="doccomment">/// Switch to the previous available [Layout][crate::core::layout::Layout] on the focused [Workspace]
     </span><span class="kw">pub fn </span>previous_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.screens.focus.workspace.previous_layout()
     }
