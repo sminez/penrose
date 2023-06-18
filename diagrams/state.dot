@@ -1,0 +1,34 @@
+digraph {
+  rankdir=LR
+  ranksep=0.25
+  size="12,12!"
+  pad="0.3"
+  
+  label="Penrose pure State"
+  fontname=ProFont
+  labelloc=t
+
+  node [ shape=record, fontname=ProFont ]
+
+  state [ label="<f0> client_set|<f1> config|<f2> extensions|<f3> ..." ]
+  state:f0 -> client_set:f0
+  
+  client_set [ label="<f0> screens|<f1> hidden_workspaces|<f2> floating_clients|<f3> ..." ]
+  client_set:f0 -> screens:f1
+
+  screens [ label="<f0> up|<f1> focus|<f2> down" ]
+  screens:f1 -> screen:f0
+
+  screen [ label="<f0> index|<f1> dimensions|<f2> workspace" ]
+  screen:f1 -> rect:f0
+  screen:f2 -> workspace
+
+  rect [ label="<f0> x|<f1> y|<f2> w|<f3> h" ]
+
+  workspace [ label="<f0> id|<f1> tag|<f2> layouts|<f3> clients" ]
+  workspace:f2 -> layouts:f1
+  workspace:f3 -> clients:f1
+
+  layouts [ label="<f0> up|<f1> focus|<f2> down" ]
+  clients [ label="<f0> up|<f1> focus|<f2> down" ]
+}

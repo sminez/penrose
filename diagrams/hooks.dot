@@ -1,0 +1,33 @@
+digraph {
+  ranksep=0.25
+  size="6,12!"
+  pad="0.3"
+
+  label="Execution of Hooks"
+  fontname=ProFont
+  labelloc=t
+
+  node [ shape=record, fontname=ProFont ]
+
+  "register signal handlers" -> "grab bindings" -> startup_hook
+
+  startup_hook [ style=filled ]
+  startup_hook -> "manage existing clients" -> "handle next event" -> event_hook
+  
+  event_hook [ style=filled ]
+  event_hook -> event_hook_outcome
+  
+  event_hook_outcome [ label="<f0> skip|{default handlers |{<f1> map_request|<f2> ...}}" ]
+  event_hook_outcome:f0 -> "handle next event"
+  
+  event_hook_outcome:f1 -> manage_hook -> refresh
+  event_hook_outcome:f2 -> refresh
+  # { rank=same; refresh, event_handlers }
+
+  refresh -> layout_hook -> "update X state" -> refresh_hook -> "handle next event"
+  manage_hook [ style=filled ]
+  layout_hook [ style=filled ]
+  refresh_hook [ style=filled ]
+
+}
+
