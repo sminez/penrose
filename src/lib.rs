@@ -278,6 +278,11 @@ impl Color {
     pub fn rgba_u32(&self) -> u32 {
         _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 0)
     }
+
+    /// 0xAARRGGBB representation of this Color
+    pub fn argb_u32(&self) -> u32 {
+        _f2u!(self.a, 24) + _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
+    }
 }
 
 impl From<u32> for Color {

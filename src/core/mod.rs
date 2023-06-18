@@ -303,8 +303,8 @@ where
         let strings = |slice: &[&str]| slice.iter().map(|s| s.to_string()).collect();
 
         Config {
-            normal_border: "#3c3836".try_into().expect("valid hex code"),
-            focused_border: "#cc241d".try_into().expect("valid hex code"),
+            normal_border: "#3c3836ff".try_into().expect("valid hex code"),
+            focused_border: "#cc241dff".try_into().expect("valid hex code"),
             border_width: 2,
             focus_follow_mouse: true,
             default_layouts: LayoutStack::default(),

@@ -282,7 +282,7 @@ pub trait XConnExt: XConn + Sized {
         C: Into<Color>,
     {
         let color = color.into();
-        self.set_client_attributes(id, &[ClientAttr::BorderColor(color.rgb_u32())])
+        self.set_client_attributes(id, &[ClientAttr::BorderColor(color.argb_u32())])
     }
 
     /// Set the initial window properties for a newly managed window.
@@ -296,7 +296,7 @@ pub trait XConnExt: XConn + Sized {
         let conf = &[ClientConfig::BorderPx(*border_width)];
         let attrs = &[
             ClientAttr::ClientEventMask,
-            ClientAttr::BorderColor(normal_border.rgb_u32()),
+            ClientAttr::BorderColor(normal_border.argb_u32()),
         ];
 
         self.set_wm_state(client, WmState::Iconic)?;
