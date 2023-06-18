@@ -18,7 +18,7 @@
 //! need to write some code and you *will* need to know Rust to some degree.
 //!
 //! For learning rust itself, there are some fantastic official [guides][4] available on
-//! [rust-lang.org][15] and if you are sticking to using the out of the box functionality provided
+//! rust-lang.org and if you are sticking to using the out of the box functionality provided
 //! by the penrose crate, working through [The Rust Book][5] before diving into penrose should be more
 //! than enough to get you started.
 //!

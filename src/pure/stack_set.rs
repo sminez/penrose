@@ -548,12 +548,12 @@ where
         self.workspaces_mut().find(|w| w.tag == tag)
     }
 
-    /// Switch to the next available [Layout] on the focused [Workspace]
+    /// Switch to the next available [Layout][crate::core::layout::Layout] on the focused [Workspace]
     pub fn next_layout(&mut self) {
         self.screens.focus.workspace.next_layout()
     }
 
-    /// Switch to the previous available [Layout] on the focused [Workspace]
+    /// Switch to the previous available [Layout][crate::core::layout::Layout] on the focused [Workspace]
     pub fn previous_layout(&mut self) {
         self.screens.focus.workspace.previous_layout()
     }

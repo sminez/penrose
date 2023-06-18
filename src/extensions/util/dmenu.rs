@@ -1,4 +1,5 @@
-//! A simple wrapper for suckless' [dmenu][1] tool for providing quick text based menus
+//! A simple wrapper for suckless' [dmenu](http://tools.suckless.org/dmenu/) tool for
+//! providing quick text based menus.
 //!
 //! See [`DMenuKind`] for dmenu type support options.
 use crate::{Color, Error, Result};
@@ -23,11 +24,11 @@ pub enum MenuMatch {
 pub enum DMenuKind {
     /// Suckless's version of dmenu
     ///
-    /// [1]: https://tools.suckless.org/dmenu/
+    /// <https://tools.suckless.org/dmenu/>
     Suckless,
     /// Newer `dmenu-rs`
     ///
-    /// [1]: https://github.com/Shizcow/dmenu-rs
+    /// <https://github.com/Shizcow/dmenu-rs>
     Rust,
 }
 
@@ -207,8 +208,8 @@ impl DMenuConfig {
     }
 }
 
-/// A wrapper around the suckless [dmenu][1] program for creating dynamic menus
-/// in penrose.
+/// A wrapper around the suckless [dmenu](http://tools.suckless.org/dmenu/) program
+/// for creating dynamic menus in penrose.
 #[derive(Debug, Clone)]
 pub struct DMenu {
     /// Holds the custom dmenu configuration for this instance.

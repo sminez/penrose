@@ -6,7 +6,7 @@ use crate::{
     Xid,
 };
 
-/// Simple gaps around the window placement of the enclosed [Layout].
+/// Simple gaps around the window placement of the enclosed [Layout][crate::core::layout::Layout].
 ///
 /// `outer_px` controls the width of the gap around the edge of the screen and `inner_px`
 /// controls the gap around each individual window. Set both equal to one another to have

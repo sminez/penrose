@@ -1,4 +1,93 @@
-//! Traits for writing and composing hooks
+//! Traits for writing and composing hooks.
+//!
+//! ## Hook points
+//!
+//! Penrose offers several differnt hook points where you are able to provide custom
+//! logic to execute as part of the main WindowManager event loop. Unlike logic you
+//! add as KeyEventHandlers, hooks will be run automatically by Penrose as and when
+//! the conditions for there execution arises. Each hook point requires a specific
+//! trait to be implemented and in the simplest case, functions with the correct
+//! type signature can be used directly (though you will likely want to implement
+//! traits directly if you are looking for more control over how your hook logic is
+//! run.
+//!
+//!
+//! ### Startup Hooks
+//!
+//! Startup hooks are implemented using the [`StateHook`] trait, allowing you access
+//! to the pure WindowManager internal [`State`] and the [`XConn`] in order to run
+//! any set up code you need which requires the the bindings to already have been
+//! grabbed but before any existing clients are parsed and managed by the WindowManager.
+//!
+//! > **NOTE**: Startup hooks are run to completion before entering the main event loop.
+//!
+//! ### Event Hooks
+//!
+//! The [`EventHook`] trait allows you to pre-process incoming [`XEvent`]s as they
+//! arrive from the X server, _before_ they are seen by the default event handling logic.
+//! This allows you to intercept or modify incoming events as you need and act
+//! accordingly. Maybe you want to keep track of changes to a specific property on clients
+//! or maybe you want to know if a specific client is being destroyed.
+//!
+//! This hook returns a `bool` indicating whether or not the default event handling logic
+//! needs to run after your hook has finished: to run the default handling you should return
+//! `true`, to skip the handling (and prevent the normal behviour for such an event) you
+//! can return `false`.
+//!
+//! > **NOTE**: Be careful about disabling default event handling! If you drop events
+//! >           that are required for the normal behaviour of the WindowManager then you
+//! >           will need to make sure that you track and maintain any required state
+//! >           that may now be missing.
+//!
+//! ### Manage Hooks
+//!
+//! [`ManageHook`]s let you run some additional logic to optionally modify the pure
+//! window manager state _after_ a newly managed client has been processed and stored, but
+//! before that change is applied to the X server. This allows you to modify how the new
+//! client is set up when it first appears, such as moving it to a specific workspace or
+//! marking it as floating in a specific position. There are some reference hooks in the
+//! [extensions module][0] that can serve as a starting point for looking at the sorts of
+//! things that are possible.
+//!
+//! > **NOTE**: ManageHooks should _not_ directly trigger a refresh of the X state!
+//! >           They are already called by the XConn immediately before refreshing so all
+//! >           triggering a refresh directly will do is run the refresh twice: once with
+//! >           the inital state of the client before your hook was applied and once after.
+//!
+//! ### Refresh Hooks
+//!
+//! Refresh hooks are implemented using the same [`StateHook`] trait used for Startup hooks.
+//! In this case however, your hook will be run each time the XConn refreshes the X state in
+//! response to changes being made to the internal state of the WindowManager.
+//! This is one of the more general purpose hooks available for you to make use of and can be
+//! used to run code any time something changes in the internal state of your window manager.
+//!
+//! ### Layout Hooks
+//!
+//! Finally we have [`LayoutHook`]s which operate a little differently, in that they have
+//! two methods to implement. Layout hooks are run _around_ whatever [Layout][1] is active
+//! for the focused workspace, allowing you to modify the screen dimensions available for the
+//! layout algorithm before it runs and editing the list of window positions it generates
+//! before they are applied. This lets you do things like prevent windows being positions on
+//! certain parts of the screen, or injecting/removing additional window positions.
+//!
+//! This is somewhat similar to the [`LayoutTransformer`] trait which is a wrapper around a
+//! specific Layout, but it doesn't allow for introspection of the underlying Layout or
+//! responding to Messages. On the plus side, layout hooks are registered and run centrally
+//! rather than needing to be applied to each Layout you want to add that behaviour to.
+//!
+//!
+//! ## Setting and composing hooks
+//!
+//! Each kind of hook has a corresponding `compose_or_set_*_hook` method on the [Config][2]
+//! struct. If multiple hooks of the same type are registered they are composed together as
+//! a stack, with the most recently added hook running first (keep this in mind if the hooks
+//! you are registering have any potential interactions in how they operate).
+//!
+//!   [0]: crate::extensions::hooks::manage
+//!   [1]: crate::core::layout::Layout
+//!   [2]: crate::core::Config
+
 use crate::{
     core::{layout::LayoutTransformer, State},
     pure::geometry::Rect,
@@ -255,13 +344,13 @@ where
     X: XConn,
 {
     #[allow(unused_variables)]
-    /// Optionally modify the screen dimensions being given to a [Layout]
+    /// Optionally modify the screen dimensions being given to a [Layout][crate::core::layout::Layout]
     fn transform_initial(&mut self, r: Rect, state: &State<X>, x: &X) -> Rect {
         r
     }
 
     #[allow(unused_variables)]
-    /// Optionally modify the client positions returned by a [Layout]
+    /// Optionally modify the client positions returned by a [Layout][crate::core::layout::Layout]
     fn transform_positions(
         &mut self,
         r: Rect,
@@ -272,7 +361,7 @@ where
         positions
     }
 
-    /// Compose this hook with another [StateHook].
+    /// Compose this hook with another [LayoutHook].
     fn then<H>(self, next: H) -> ComposedLayoutHook<X>
     where
         H: LayoutHook<X> + 'static,
