@@ -26,6 +26,19 @@ where
     }
 }
 
+impl<X> ManageHook<X> for Vec<Box<dyn ManageHook<X>>>
+where
+    X: XConn,
+{
+    fn call(&mut self, id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+        for hook in self.iter_mut() {
+            hook.call(id, state, x)?;
+        }
+
+        Ok(())
+    }
+}
+
 fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, _: &X) -> Result<()> {
     state.client_set.float_unchecked(client, r);
 

@@ -53,6 +53,44 @@ macro_rules! map {
     };
 }
 
+/// Compose together a set of ManageHook query/hook rules into a single ManageHook
+/// that can be added to your Config.
+///
+/// ```
+/// use penrose::{
+///     core::{hooks::ManageHook, Config},
+///     extensions::hooks::manage::SetWorkspace,
+///     x::query::ClassName,
+///     x11rb::RustConn,
+///     manage_hooks,
+/// };
+///
+///
+/// let my_manage_hook = manage_hooks! {
+///     ClassName("discord") => SetWorkspace("9"),
+///     ClassName("vlc") => SetWorkspace("5"),
+/// };
+///
+/// let config: Config<RustConn> = Config {
+///     manage_hook: Some(my_manage_hook),
+///     ..Default::default()
+/// };
+/// ```
+#[macro_export]
+macro_rules! manage_hooks {
+    { $($query:expr => $hook:expr),+, } => {
+        {
+            let mut _hooks = vec![];
+            $(
+                _hooks.push(
+                    $crate::core::hooks::ManageHook::boxed(($query, $hook))
+                );
+            )+
+            Box::new(_hooks)
+        }
+    };
+}
+
 // Helper for popping from the middle of a linked list
 #[doc(hidden)]
 #[macro_export]
