@@ -40,9 +40,7 @@ where
 }
 
 fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, _: &X) -> Result<()> {
-    state.client_set.float_unchecked(client, r);
-
-    Ok(())
+    state.client_set.float(client, r)
 }
 
 /// Perform no additional actions when managing a new client.

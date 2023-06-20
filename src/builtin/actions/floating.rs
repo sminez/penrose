@@ -4,6 +4,7 @@ use crate::{
     core::bindings::KeyEventHandler,
     x::{XConn, XConnExt},
 };
+use tracing::error;
 
 /// Resize a currently floating window by a given (width, height) delta
 ///
@@ -53,7 +54,11 @@ pub fn float_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 
         let r = x.client_geometry(id)?;
 
-        x.modify_and_refresh(state, |cs| cs.float_unchecked(id, r))
+        x.modify_and_refresh(state, |cs| {
+            if let Err(err) = cs.float(id, r) {
+                error!(%err, %id, "unable to float requested client window");
+            }
+        })
     })
 }
 
@@ -75,8 +80,10 @@ pub fn float_all<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
         let positions = state.visible_client_positions(x);
 
         x.modify_and_refresh(state, |cs| {
-            for &(c, r) in positions.iter() {
-                cs.float_unchecked(c, r);
+            for &(id, r) in positions.iter() {
+                if let Err(err) = cs.float(id, r) {
+                    error!(%err, %id, "unable to float requested client window");
+                }
             }
         })
     })

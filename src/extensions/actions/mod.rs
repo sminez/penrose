@@ -2,10 +2,9 @@
 use crate::{
     builtin::actions::{key_handler, modify_with},
     core::{bindings::KeyEventHandler, layout::LayoutStack, State},
-    pure::geometry::RelativeRect,
     util::spawn,
     x::{atom::Atom, property::Prop, XConn, XConnExt},
-    Result, Xid,
+    Error, Result, Xid,
 };
 use tracing::error;
 
@@ -45,8 +44,12 @@ pub fn set_fullscreen_state<X: XConn>(
     let currently_fullscreen = wstate.contains(&full_screen);
 
     if action == Add || (action == Toggle && !currently_fullscreen) {
-        let r = RelativeRect::fullscreen();
-        state.client_set.float_unchecked(id, r);
+        let r = state
+            .client_set
+            .screen_for_client(&id)
+            .ok_or_else(|| Error::UnknownClient)?
+            .r;
+        state.client_set.float(id, r)?;
         wstate.push(*full_screen);
     } else if action == Remove || (action == Toggle && currently_fullscreen) {
         state.client_set.sink(&id);
