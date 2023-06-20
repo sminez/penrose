@@ -54,14 +54,6 @@
 //! >           triggering a refresh directly will do is run the refresh twice: once with
 //! >           the inital state of the client before your hook was applied and once after.
 //!
-//! ### Refresh Hooks
-//!
-//! Refresh hooks are implemented using the same [`StateHook`] trait used for Startup hooks.
-//! In this case however, your hook will be run each time the XConn refreshes the X state in
-//! response to changes being made to the internal state of the WindowManager.
-//! This is one of the more general purpose hooks available for you to make use of and can be
-//! used to run code any time something changes in the internal state of your window manager.
-//!
 //! ### Layout Hooks
 //!
 //! Finally we have [`LayoutHook`]s which operate a little differently, in that they have
@@ -76,6 +68,13 @@
 //! responding to Messages. On the plus side, layout hooks are registered and run centrally
 //! rather than needing to be applied to each Layout you want to add that behaviour to.
 //!
+//! ### Refresh Hooks
+//!
+//! Refresh hooks are implemented using the same [`StateHook`] trait used for Startup hooks.
+//! In this case however, your hook will be run each time the XConn refreshes the X state in
+//! response to changes being made to the internal state of the WindowManager.
+//! This is one of the more general purpose hooks available for you to make use of and can be
+//! used to run code any time something changes in the internal state of your window manager.
 //!
 //! ## Setting and composing hooks
 //!
