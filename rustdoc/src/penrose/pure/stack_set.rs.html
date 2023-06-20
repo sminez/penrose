@@ -1691,20 +1691,6 @@
         })
     }
 
-    <span class="doccomment">/// Record a known client as floating, giving its preferred screen position.
-    ///
-    /// # Errors
-    /// This method with return [Error::UnknownClient] if the given client is
-    /// not already managed in this stack_set.
-    </span><span class="kw">pub fn </span>float(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: C, r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.contains(<span class="kw-2">&amp;</span>client) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownClient);
-        }
-        <span class="self">self</span>.float_unchecked(client, r);
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>float_unchecked&lt;R: RelativeTo&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: C, r: R) {
         <span class="kw">let </span>screen = <span class="self">self</span>.screen_for_client(<span class="kw-2">&amp;</span>client).expect(<span class="string">&quot;client to be known&quot;</span>);
         <span class="kw">let </span>r = r.relative_to(<span class="kw-2">&amp;</span>screen.r);
@@ -2170,6 +2156,20 @@
 }
 
 <span class="kw">impl </span>StackSet&lt;Xid&gt; {
+    <span class="doccomment">/// Record a known client as floating, giving its preferred screen position.
+    ///
+    /// # Errors
+    /// This method with return [Error::UnknownClient] if the given client is
+    /// not already managed in this stack_set.
+    </span><span class="kw">pub fn </span>float(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: Xid, r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.contains(<span class="kw-2">&amp;</span>client) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::UnknownClient(client));
+        }
+        <span class="self">self</span>.float_unchecked(client, r);
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_screens(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rects: Vec&lt;Rect&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>n_old = <span class="self">self</span>.screens.len();
         <span class="kw">let </span>n_new = rects.len();

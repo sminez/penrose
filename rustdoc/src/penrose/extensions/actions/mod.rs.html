@@ -129,14 +129,16 @@
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings
 </span><span class="kw">use crate</span>::{
     builtin::actions::{key_handler, modify_with},
     core::{bindings::KeyEventHandler, layout::LayoutStack, State},
-    pure::geometry::RelativeRect,
     util::spawn,
     x::{atom::Atom, property::Prop, XConn, XConnExt},
-    <span class="prelude-ty">Result</span>, Xid,
+    Error, <span class="prelude-ty">Result</span>, Xid,
 };
 <span class="kw">use </span>tracing::error;
 
@@ -176,8 +178,12 @@
     <span class="kw">let </span>currently_fullscreen = wstate.contains(<span class="kw-2">&amp;</span>full_screen);
 
     <span class="kw">if </span>action == Add || (action == Toggle &amp;&amp; !currently_fullscreen) {
-        <span class="kw">let </span>r = RelativeRect::fullscreen();
-        state.client_set.float_unchecked(id, r);
+        <span class="kw">let </span>r = state
+            .client_set
+            .screen_for_client(<span class="kw-2">&amp;</span>id)
+            .ok_or_else(|| Error::UnknownClient(id))<span class="question-mark">?
+            </span>.r;
+        state.client_set.float(id, r)<span class="question-mark">?</span>;
         wstate.push(<span class="kw-2">*</span>full_screen);
     } <span class="kw">else if </span>action == Remove || (action == Toggle &amp;&amp; currently_fullscreen) {
         state.client_set.sink(<span class="kw-2">&amp;</span>id);

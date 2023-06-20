@@ -493,8 +493,8 @@
     </span>Randr(String),
 
     <span class="doccomment">/// An operation was requested on a client window that is unknown
-    </span><span class="attr">#[error(<span class="string">&quot;The given client is not in this State&quot;</span>)]
-    </span>UnknownClient,
+    </span><span class="attr">#[error(<span class="string">&quot;Client {0} is not in found&quot;</span>)]
+    </span>UnknownClient(Xid),
 
     <span class="doccomment">/// A keybinding has been specified for an unknown key name for this machine.
     </span><span class="attr">#[error(<span class="string">&quot;&#39;{name}&#39; is not a known key name&quot;</span>)]

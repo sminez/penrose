@@ -1355,7 +1355,7 @@
             <span class="self">self</span>.geometry
                 .get(<span class="kw-2">&amp;</span>client)
                 .copied()
-                .ok_or(Error::UnknownClient)
+                .ok_or(Error::UnknownClient(client))
         }
     }
 

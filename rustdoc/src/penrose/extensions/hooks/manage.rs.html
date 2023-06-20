@@ -123,8 +123,6 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Manage hooks for common manage actions
 //!
 //! Manage hooks should _not_ trigger a refresh directly: that is handled by penrose
@@ -167,9 +165,7 @@
 }
 
 <span class="kw">fn </span>float&lt;X: XConn&gt;(client: Xid, r: Rect, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    state.client_set.float_unchecked(client, r);
-
-    <span class="prelude-val">Ok</span>(())
+    state.client_set.float(client, r)
 }
 
 <span class="doccomment">/// Perform no additional actions when managing a new client.
