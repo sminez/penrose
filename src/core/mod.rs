@@ -20,7 +20,7 @@ use std::{
     ops::Deref,
     sync::Arc,
 };
-use tracing::{error, info, span, trace, warn, Level};
+use tracing::{debug, error, info, span, trace, warn, Level};
 
 pub mod bindings;
 pub(crate) mod handle;
@@ -477,7 +477,7 @@ where
                     self.state.current_event = None;
                 }
 
-                Err(e) => error!(%e, "Error pulling next x event"),
+                Err(e) => self.handle_error(e),
             }
         }
     }
@@ -535,6 +535,19 @@ where
         }
 
         Ok(())
+    }
+
+    fn handle_error(&mut self, e: Error) {
+        match e {
+            // If we get an error from the XConn telling us that a client ID is unknown then
+            // we need to make sure that we remove any reference to it from our internal state
+            Error::UnknownClient(id) => {
+                debug!(%id, "XConn encountered an error due to an unknown client ID: removing client");
+                self.state.client_set.remove_client(&id);
+            }
+
+            _ => error!(%e, "Unhandled error pulling next x event"),
+        }
     }
 }
 

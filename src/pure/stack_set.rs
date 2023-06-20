@@ -256,20 +256,6 @@ where
         })
     }
 
-    /// Record a known client as floating, giving its preferred screen position.
-    ///
-    /// # Errors
-    /// This method with return [Error::UnknownClient] if the given client is
-    /// not already managed in this stack_set.
-    pub fn float(&mut self, client: C, r: Rect) -> Result<()> {
-        if !self.contains(&client) {
-            return Err(Error::UnknownClient);
-        }
-        self.float_unchecked(client, r);
-
-        Ok(())
-    }
-
     pub(crate) fn float_unchecked<R: RelativeTo>(&mut self, client: C, r: R) {
         let screen = self.screen_for_client(&client).expect("client to be known");
         let r = r.relative_to(&screen.r);
@@ -735,6 +721,20 @@ impl StackSet<Xid> {
 }
 
 impl StackSet<Xid> {
+    /// Record a known client as floating, giving its preferred screen position.
+    ///
+    /// # Errors
+    /// This method with return [Error::UnknownClient] if the given client is
+    /// not already managed in this stack_set.
+    pub fn float(&mut self, client: Xid, r: Rect) -> Result<()> {
+        if !self.contains(&client) {
+            return Err(Error::UnknownClient(client));
+        }
+        self.float_unchecked(client, r);
+
+        Ok(())
+    }
+
     pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
         let n_old = self.screens.len();
         let n_new = rects.len();

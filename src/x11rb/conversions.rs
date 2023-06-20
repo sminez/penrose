@@ -18,8 +18,9 @@ use x11rb::{
     connection::Connection,
     protocol::{
         xproto::{ClientMessageEvent, KeyButMask, ModMask},
-        Event,
+        ErrorKind, Event,
     },
+    x11_utils::X11Error,
 };
 
 pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Result<Option<XEvent>> {
@@ -137,7 +138,16 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
             is_root: event.window == *conn.root(),
         }))),
 
-        Event::Error(err) => Err(Error::X11rbX11Error(err)),
+        // Map known error codes that we know how to handle into penrose Errors
+        Event::Error(X11Error {
+            error_kind: ErrorKind::Window,
+            error_code: 3,
+            bad_value,
+            ..
+        }) => Err(Error::UnknownClient(Xid(bad_value))),
+
+        // Other errors are returned directly
+        Event::Error(e) => Err(Error::X11rbX11Error(e)),
 
         // NOTE: Ignoring other event types
         _ => Ok(None),

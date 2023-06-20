@@ -648,7 +648,7 @@ mod tests {
             self.geometry
                 .get(&client)
                 .copied()
-                .ok_or(Error::UnknownClient)
+                .ok_or(Error::UnknownClient(client))
         }
     }
 

@@ -163,8 +163,8 @@ pub enum Error {
     Randr(String),
 
     /// An operation was requested on a client window that is unknown
-    #[error("The given client is not in this State")]
-    UnknownClient,
+    #[error("Client {0} is not in found")]
+    UnknownClient(Xid),
 
     /// A keybinding has been specified for an unknown key name for this machine.
     #[error("'{name}' is not a known key name")]
