@@ -80,6 +80,7 @@ macro_rules! map {
 macro_rules! manage_hooks {
     { $($query:expr => $hook:expr),+, } => {
         {
+            use $crate::core::hooks::ManageHook as _;
             let mut _hooks = vec![];
             $(
                 _hooks.push(
