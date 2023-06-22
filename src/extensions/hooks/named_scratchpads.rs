@@ -138,11 +138,14 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
                 client: Some(id),
                 hook,
                 ..
-            }) if state.client_set.contains(id) => (*id, hook),
+            }) if state.client_set.contains(id) => {
+                debug!(%id, %name, "NamedScratchPad client exists in state");
+                (*id, hook)
+            }
 
             // No active client or client is no longer in state
             Some(nsp) => {
-                debug!(%nsp.prog, %name, "spawning NamedScratchPad program");
+                debug!(%nsp.prog, %name, ?nsp.client, "spawning NamedScratchPad program");
                 nsp.client = None;
                 return spawn(nsp.prog.as_ref());
             }
@@ -155,6 +158,8 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
         };
 
         debug!(
+            %id,
+            %name,
             current_tag = state.client_set.current_tag(),
             current_screen = state.client_set.current_screen().index(),
             "Toggling nsp client"
@@ -162,21 +167,21 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
 
         if state.client_set.current_workspace().contains(&id) {
             // Toggle off: hiding the client on our invisible workspace
-            debug!("current workspace contains target client: moving to NSP tag");
+            debug!(%id, "current workspace contains target client: moving to NSP tag");
             state.client_set.move_client_to_tag(&id, NSP_TAG);
         } else {
             // Toggle on / bring to current workspace
-            debug!("current workspace does not contain target client: moving to tag");
+            debug!(%id, "current workspace does not contain target client: moving to tag");
             state.client_set.move_client_to_current_tag(&id);
 
             if self.run_hook_on_toggle {
                 if let Err(e) = hook.call(id, state, x) {
-                    error!(%e, %name, "unable to run NSP manage hook during toggle");
+                    error!(%e, %name, %id, "unable to run NSP manage hook during toggle");
                 }
             }
         }
 
-        debug!("running refresh");
+        debug!(%id, %name, "running refresh following NamedScratchPad toggle");
         x.refresh(state)
     }
 }
