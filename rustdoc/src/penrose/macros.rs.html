@@ -115,6 +115,7 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utility macros
 
 /// Quickly create a [crate::Error::Custom]
@@ -197,6 +198,7 @@
 </span><span class="macro">macro_rules! </span>manage_hooks {
     { $(<span class="macro-nonterminal">$query</span>:expr =&gt; <span class="macro-nonterminal">$hook</span>:expr),+, } =&gt; {
         {
+            <span class="kw">use </span><span class="macro-nonterminal">$crate::core::hooks::ManageHook </span><span class="kw">as _</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>_hooks = <span class="macro">vec!</span>[];
             $(
                 _hooks.push(
