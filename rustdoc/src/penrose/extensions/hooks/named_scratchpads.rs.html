@@ -180,12 +180,38 @@
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Support for managing multiple floating scratchpad programs that can be
 //! toggled on or off on the active workspace.
 </span><span class="kw">use crate</span>::{
     core::{bindings::KeyEventHandler, hooks::ManageHook, State, WindowManager},
     util::spawn,
-    x::{Query, XConn, XConnExt},
+    x::{Query, XConn, XConnExt, XEvent},
     <span class="prelude-ty">Result</span>, Xid,
 };
 <span class="kw">use </span>std::{borrow::Cow, collections::HashMap, fmt};
@@ -277,6 +303,7 @@
         .add_invisible_workspace(NSP_TAG)
         .expect(<span class="string">&quot;named scratchpad tag to be unique&quot;</span>);
     wm.state.config.compose_or_set_manage_hook(manage_hook);
+    wm.state.config.compose_or_set_event_hook(event_hook);
 
     wm
 }
@@ -294,6 +321,26 @@
     }
 
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Remove destroyed clients from internal scratchpad state
+</span><span class="kw">pub fn </span>event_hook&lt;X: XConn + <span class="lifetime">&#39;static</span>&gt;(event: <span class="kw-2">&amp;</span>XEvent, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+    <span class="kw">let </span>destroyed = <span class="kw">match </span>event {
+        XEvent::Destroy(id) =&gt; id,
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+    };
+
+    <span class="kw">let </span>s = state.extension::&lt;NamedScratchPadState&lt;X&gt;&gt;()<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>sp <span class="kw">in </span>s.borrow_mut().<span class="number">0</span>.values_mut() {
+        <span class="kw">if </span>sp.client == <span class="prelude-val">Some</span>(<span class="kw-2">*</span>destroyed) {
+            <span class="macro">debug!</span>(%sp.name, %destroyed, <span class="string">&quot;scratchpad client destroyed&quot;</span>);
+            sp.client = <span class="prelude-val">None</span>;
+            <span class="kw">break</span>;
+        }
+    }
+
+    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
 }
 
 <span class="doccomment">/// Toggle the visibility of a NamedScratchPad.
@@ -320,11 +367,14 @@
                 client: <span class="prelude-val">Some</span>(id),
                 hook,
                 ..
-            }) <span class="kw">if </span>state.client_set.contains(id) =&gt; (<span class="kw-2">*</span>id, hook),
+            }) <span class="kw">if </span>state.client_set.contains(id) =&gt; {
+                <span class="macro">debug!</span>(%id, %name, <span class="string">&quot;NamedScratchPad client exists in state&quot;</span>);
+                (<span class="kw-2">*</span>id, hook)
+            }
 
             <span class="comment">// No active client or client is no longer in state
             </span><span class="prelude-val">Some</span>(nsp) =&gt; {
-                <span class="macro">debug!</span>(%nsp.prog, %name, <span class="string">&quot;spawning NamedScratchPad program&quot;</span>);
+                <span class="macro">debug!</span>(%nsp.prog, %name, <span class="question-mark">?</span>nsp.client, <span class="string">&quot;spawning NamedScratchPad program&quot;</span>);
                 nsp.client = <span class="prelude-val">None</span>;
                 <span class="kw">return </span>spawn(nsp.prog.as_ref());
             }
@@ -337,6 +387,8 @@
         };
 
         <span class="macro">debug!</span>(
+            %id,
+            %name,
             current_tag = state.client_set.current_tag(),
             current_screen = state.client_set.current_screen().index(),
             <span class="string">&quot;Toggling nsp client&quot;
@@ -344,21 +396,21 @@
 
         <span class="kw">if </span>state.client_set.current_workspace().contains(<span class="kw-2">&amp;</span>id) {
             <span class="comment">// Toggle off: hiding the client on our invisible workspace
-            </span><span class="macro">debug!</span>(<span class="string">&quot;current workspace contains target client: moving to NSP tag&quot;</span>);
+            </span><span class="macro">debug!</span>(%id, <span class="string">&quot;current workspace contains target client: moving to NSP tag&quot;</span>);
             state.client_set.move_client_to_tag(<span class="kw-2">&amp;</span>id, NSP_TAG);
         } <span class="kw">else </span>{
             <span class="comment">// Toggle on / bring to current workspace
-            </span><span class="macro">debug!</span>(<span class="string">&quot;current workspace does not contain target client: moving to tag&quot;</span>);
+            </span><span class="macro">debug!</span>(%id, <span class="string">&quot;current workspace does not contain target client: moving to tag&quot;</span>);
             state.client_set.move_client_to_current_tag(<span class="kw-2">&amp;</span>id);
 
             <span class="kw">if </span><span class="self">self</span>.run_hook_on_toggle {
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = hook.call(id, state, x) {
-                    <span class="macro">error!</span>(%e, %name, <span class="string">&quot;unable to run NSP manage hook during toggle&quot;</span>);
+                    <span class="macro">error!</span>(%e, %name, %id, <span class="string">&quot;unable to run NSP manage hook during toggle&quot;</span>);
                 }
             }
         }
 
-        <span class="macro">debug!</span>(<span class="string">&quot;running refresh&quot;</span>);
+        <span class="macro">debug!</span>(%id, %name, <span class="string">&quot;running refresh following NamedScratchPad toggle&quot;</span>);
         x.refresh(state)
     }
 }
