@@ -1,7 +1,0 @@
-error: proc macro panicked
- --> tests/validate_bindings/repeated-bindings-are-rejected.rs:5:5
-  |
-5 |     validate_user_bindings!(("M-a", "M-a")());
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  |
-  = help: message: 'M-a' is bound as a keybinding more than once
