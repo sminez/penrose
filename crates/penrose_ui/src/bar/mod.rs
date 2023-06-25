@@ -78,6 +78,8 @@ impl<X: XConn> StatusBar<X> {
         Ok(bar)
     }
 
+    /// Add this [`StatusBar`] into the given [`WindowManager`] along with the required
+    /// hooks for driving it from the main WindowManager event loop.
     pub fn add_to(self, mut wm: WindowManager<X>) -> WindowManager<X>
     where
         X: 'static,

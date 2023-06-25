@@ -5,6 +5,12 @@ use penrose::{
     x::{XConn, XEvent},
     Color, Xid,
 };
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
+use tracing::trace;
 
 pub mod debug;
 mod simple;
@@ -181,6 +187,43 @@ impl<X: XConn> Widget<X> for Text {
 /// On each refresh, the provided `get_text` function is called and the output is
 /// stored in a [Text] widget. Whenever the output changes, this widget will trigger
 /// a re-render of the status bar.
+///
+///
+/// ### A note on blocking code
+///
+/// Be aware that the `get_text` function you provide will be run on _every_ refresh
+/// of the internal window manager state, meaning that slow running functions will
+/// very quickly make your window manager sluggish and unresponsive! If you need to
+/// run logic that is slow or may take a variable amount of time (such as pulling
+/// data in over the network) then you will likely want to make use of the
+/// [`IntervalText`] struct instead.
+///
+/// # Example
+/// ```no_run
+/// use penrose::{util::spawn_for_output_with_args, Color};
+/// use penrose_ui::{bar::widgets::RefreshText, core::TextStyle};
+///
+/// // Use the pacman package manager to get a count of how many packages are
+/// // currently installed on the system.
+/// fn my_get_text() -> String {
+///     let n_packages = spawn_for_output_with_args("sh", &["-c", "pacman -Q | wc -l"])
+///         .unwrap_or_default()
+///         .trim()
+///         .to_string();
+///
+///     format!("#pacman packages: {n_packages}")
+/// }
+///
+/// let style = TextStyle {
+///     font: "mono".to_string(),
+///     point_size: 10,
+///     fg: 0xebdbb2ff.into(),
+///     bg: Some(0x282828ff.into()),
+///     padding: (2.0, 2.0),
+/// };
+///
+/// let my_widget = RefreshText::new(&style, my_get_text);
+/// ```
 pub struct RefreshText {
     inner: Text,
     get_text: Box<dyn Fn() -> String>,
@@ -221,5 +264,115 @@ impl<X: XConn> Widget<X> for RefreshText {
         self.inner.set_text(txt);
 
         Ok(())
+    }
+}
+
+/// A simple widget that does not care about window manager state and refreshes on a
+/// specified interval.
+///
+/// On the requested interval, the provided `get_text` function is called and the output is
+/// stored in a [`Text`] widget. Whenever the output changes, this widget will trigger
+/// a re-render of the status bar.
+///
+/// Unlike [`RefreshText`], your `get_text` function will only be run on the schedule you
+/// specify rather than every time the internal window manager state refreshes. This is
+/// useful for code that is slow to run such as network requests.
+///
+/// # Example
+/// ```no_run
+/// use penrose::{util::spawn_for_output_with_args, Color};
+/// use penrose_ui::{bar::widgets::IntervalText, core::TextStyle};
+/// use std::time::Duration;
+///
+/// // Make a curl request to wttr.in to fetch the current weather information
+/// // for our location.
+/// fn my_get_text() -> String {
+///     spawn_for_output_with_args("curl", &["-s", "http://wttr.in?format=3"])
+///         .unwrap_or_default()
+///         .trim()
+///         .to_string()
+/// }
+///
+/// let style = TextStyle {
+///     font: "mono".to_string(),
+///     point_size: 10,
+///     fg: 0xebdbb2ff.into(),
+///     bg: Some(0x282828ff.into()),
+///     padding: (2.0, 2.0),
+/// };
+///
+///
+/// let my_widget = IntervalText::new(
+///     &style,
+///     my_get_text,
+///     Duration::from_secs(60 * 5)
+/// );
+/// ```
+pub struct IntervalText {
+    inner: Arc<Mutex<Text>>,
+}
+
+impl IntervalText {
+    pub fn new<F>(style: &TextStyle, get_text: F, interval: Duration) -> Self
+    where
+        F: Fn() -> String + 'static + Send,
+    {
+        let inner = Arc::new(Mutex::new(Text::new("", style, false, false)));
+        let txt = Arc::clone(&inner);
+
+        thread::spawn(move || loop {
+            trace!("updating text for IntervalText widget");
+            let s = (get_text)();
+
+            {
+                let mut t = match txt.lock() {
+                    Ok(inner) => inner,
+                    Err(poisoned) => poisoned.into_inner(),
+                };
+                t.set_text(s);
+            }
+
+            thread::sleep(interval);
+        });
+
+        Self { inner }
+    }
+}
+
+impl<X: XConn> Widget<X> for IntervalText {
+    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+        let mut inner = match self.inner.lock() {
+            Ok(inner) => inner,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        Widget::<X>::draw(&mut *inner, ctx, s, f, w, h)
+    }
+
+    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+        let mut inner = match self.inner.lock() {
+            Ok(inner) => inner,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        Widget::<X>::current_extent(&mut *inner, ctx, h)
+    }
+
+    fn is_greedy(&self) -> bool {
+        let inner = match self.inner.lock() {
+            Ok(inner) => inner,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        Widget::<X>::is_greedy(&*inner)
+    }
+
+    fn require_draw(&self) -> bool {
+        let inner = match self.inner.lock() {
+            Ok(inner) => inner,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        Widget::<X>::require_draw(&*inner)
     }
 }
