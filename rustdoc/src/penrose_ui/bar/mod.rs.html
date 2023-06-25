@@ -298,6 +298,8 @@
 <a href="#298" id="298">298</a>
 <a href="#299" id="299">299</a>
 <a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
 </span><span class="kw">use crate</span>::{
     core::{Context, Draw},
@@ -378,7 +380,9 @@
         <span class="prelude-val">Ok</span>(bar)
     }
 
-    <span class="kw">pub fn </span>add_to(<span class="self">self</span>, <span class="kw-2">mut </span>wm: WindowManager&lt;X&gt;) -&gt; WindowManager&lt;X&gt;
+    <span class="doccomment">/// Add this [`StatusBar`] into the given [`WindowManager`] along with the required
+    /// hooks for driving it from the main WindowManager event loop.
+    </span><span class="kw">pub fn </span>add_to(<span class="self">self</span>, <span class="kw-2">mut </span>wm: WindowManager&lt;X&gt;) -&gt; WindowManager&lt;X&gt;
     <span class="kw">where
         </span>X: <span class="lifetime">&#39;static</span>,
     {
