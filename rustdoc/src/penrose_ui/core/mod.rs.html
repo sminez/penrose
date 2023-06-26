@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/core/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose_ui/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/core/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose_ui/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -255,7 +255,44 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Error, <span class="prelude-ty">Result</span>};
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
+</span><span class="kw">use crate</span>::{Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>cairo::{Matrix, Operator, XCBConnection, XCBDrawable, XCBSurface, XCBVisualType};
 <span class="kw">use </span>pango::{EllipsizeMode, FontDescription, SCALE};
 <span class="kw">use </span>pangocairo::functions::{create_layout, show_layout};
@@ -299,15 +336,22 @@
     </span><span class="kw">pub </span>padding: (f64, f64),
 }
 
-<span class="attr">#[derive(Debug)]
+<span class="doccomment">/// Your application should create a single [`Draw`] struct to manage the windows and surfaces it
+/// needs to render your UI. See the [`Context`] struct for how to draw to the surfaces you have
+/// created.
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Draw {
-    <span class="kw">pub </span>conn: XcbConn,
+    <span class="doccomment">/// The underlying [`XConn`] implementation used to communicate with the X server
+    </span><span class="kw">pub </span>conn: XcbConn,
     fonts: HashMap&lt;String, FontDescription&gt;,
     surfaces: HashMap&lt;Xid, XCBSurface&gt;,
 }
 
 <span class="kw">impl </span>Draw {
-    <span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    <span class="doccomment">/// Construct a new `Draw` instance backed with an [`XcbConn`].
+    ///
+    /// This method will error if it is unable to establish a connection with the X server.
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             conn: XcbConn::new()<span class="question-mark">?</span>,
             fonts: HashMap::new(),
@@ -315,7 +359,8 @@
         })
     }
 
-    <span class="kw">pub fn </span>new_window(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: WinType, r: Rect, managed: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Xid&gt; {
+    <span class="doccomment">/// Create a new X window and initialise a cairo surface for drawing.
+    </span><span class="kw">pub fn </span>new_window(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: WinType, r: Rect, managed: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Xid&gt; {
         <span class="macro">info!</span>(<span class="question-mark">?</span>ty, <span class="question-mark">?</span>r, %managed, <span class="string">&quot;creating new window&quot;</span>);
         <span class="kw">let </span>id = <span class="self">self</span>.conn.create_window(ty, r, managed)<span class="question-mark">?</span>;
 
@@ -372,12 +417,17 @@
         <span class="macro">panic!</span>(<span class="string">&quot;unable to find XCB visual type&quot;</span>)
     }
 
-    <span class="kw">pub fn </span>register_font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font_name: <span class="kw-2">&amp;</span>str) {
+    <span class="doccomment">/// Register a new font by name in the font cache so it can be used in a drawing [`Context`].
+    </span><span class="kw">pub fn </span>register_font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font_name: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span>description = FontDescription::from_string(font_name);
         <span class="self">self</span>.fonts.insert(font_name.into(), description);
     }
 
-    <span class="kw">pub fn </span>context_for(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Context&gt; {
+    <span class="doccomment">/// Retrieve the drawing [`Context`] for the given window [`Xid`].
+    ///
+    /// This method will error if the requested id does not already have an initialised surface.
+    /// See the [`new_window`] method for details.
+    </span><span class="kw">pub fn </span>context_for(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Context&gt; {
         <span class="kw">let </span>ctx = cairo::Context::new(
             <span class="self">self</span>.surfaces
                 .get(<span class="kw-2">&amp;</span>id)
@@ -391,7 +441,9 @@
         })
     }
 
-    <span class="kw">pub fn </span>temp_context(<span class="kw-2">&amp;</span><span class="self">self</span>, w: i32, h: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Context&gt; {
+    <span class="doccomment">/// Construct a disposable context of the specified dimensions without requiring a
+    /// window [`Xid`].
+    </span><span class="kw">pub fn </span>temp_context(<span class="kw-2">&amp;</span><span class="self">self</span>, w: i32, h: i32) -&gt; <span class="prelude-ty">Result</span>&lt;Context&gt; {
         <span class="kw">let </span>screen = <span class="kw-2">&amp;</span><span class="self">self</span>.conn.connection().setup().roots[<span class="number">0</span>];
         <span class="kw">let </span>surface = <span class="self">self</span>.surface(<span class="kw-2">*</span><span class="self">self</span>.conn.root(), screen, w, h)<span class="question-mark">?</span>;
         <span class="kw">let </span>surface = surface.create_similar(cairo::Content::Color, w, h)<span class="question-mark">?</span>;
@@ -404,7 +456,8 @@
         })
     }
 
-    <span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="doccomment">/// Flush any pending requests to the X server and map the specifed window to the screen.
+    </span><span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.surfaces.get(<span class="kw-2">&amp;</span>id) {
             s.flush()
         };
@@ -416,7 +469,8 @@
     }
 }
 
-<span class="attr">#[derive(Clone, Debug)]
+<span class="doccomment">/// A minimal drawing context for rendering text based UI elements to a cairo surface.
+</span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Context {
     ctx: cairo::Context,
     font: <span class="prelude-ty">Option</span>&lt;FontDescription&gt;,
@@ -424,7 +478,11 @@
 }
 
 <span class="kw">impl </span>Context {
-    <span class="kw">pub fn </span>font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font_name: <span class="kw-2">&amp;</span>str, point_size: i32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="doccomment">/// Set the current font by name.
+    ///
+    /// This method will error if the font has not previously been registered in the parent
+    /// [`Draw`] struct.
+    </span><span class="kw">pub fn </span>font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font_name: <span class="kw-2">&amp;</span>str, point_size: i32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>font = <span class="self">self
             </span>.fonts
             .get_mut(font_name)
@@ -439,12 +497,14 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: <span class="kw-2">&amp;</span>Color) {
+    <span class="doccomment">/// Set the active color for following draw operations.
+    </span><span class="kw">pub fn </span>color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: <span class="kw-2">&amp;</span>Color) {
         <span class="kw">let </span>(r, g, b, a) = color.rgba();
         <span class="self">self</span>.ctx.set_source_rgba(r, g, b, a);
     }
 
-    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="doccomment">/// Clear the underlying [`cairo::Context`].
+    </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.ctx.save()<span class="question-mark">?</span>;
         <span class="self">self</span>.ctx.set_operator(Operator::Clear);
         <span class="self">self</span>.ctx.paint()<span class="question-mark">?</span>;
@@ -453,30 +513,39 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>translate(<span class="kw-2">&amp;</span><span class="self">self</span>, dx: f64, dy: f64) {
+    <span class="doccomment">/// Translate the underlying [`cairo::Context`] by a specified offset
+    </span><span class="kw">pub fn </span>translate(<span class="kw-2">&amp;</span><span class="self">self</span>, dx: f64, dy: f64) {
         <span class="self">self</span>.ctx.translate(dx, dy)
     }
 
-    <span class="kw">pub fn </span>set_x_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, x: f64) {
+    <span class="doccomment">/// Set the x offset of the underlying [`cairo::Context`] without modifying the
+    /// current y position.
+    </span><span class="kw">pub fn </span>set_x_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, x: f64) {
         <span class="kw">let </span>(<span class="kw">_</span>, y_offset) = <span class="self">self</span>.ctx.matrix().transform_point(<span class="number">0.0</span>, <span class="number">0.0</span>);
         <span class="self">self</span>.ctx.set_matrix(Matrix::identity());
         <span class="self">self</span>.ctx.translate(x, y_offset);
     }
 
-    <span class="kw">pub fn </span>set_y_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, y: f64) {
+    <span class="doccomment">/// Set the y offset of the underlying [`cairo::Context`] without modifying the
+    /// current x position.
+    </span><span class="kw">pub fn </span>set_y_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, y: f64) {
         <span class="kw">let </span>(x_offset, <span class="kw">_</span>) = <span class="self">self</span>.ctx.matrix().transform_point(<span class="number">0.0</span>, <span class="number">0.0</span>);
         <span class="self">self</span>.ctx.set_matrix(Matrix::identity());
         <span class="self">self</span>.ctx.translate(x_offset, y);
     }
 
-    <span class="kw">pub fn </span>rectangle(<span class="kw-2">&amp;</span><span class="self">self</span>, x: f64, y: f64, w: f64, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="doccomment">/// Fill the specified area with the currently active color.
+    </span><span class="kw">pub fn </span>rectangle(<span class="kw-2">&amp;</span><span class="self">self</span>, x: f64, y: f64, w: f64, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.ctx.rectangle(x, y, w, h);
         <span class="self">self</span>.ctx.fill()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>text(<span class="kw-2">&amp;</span><span class="self">self</span>, txt: <span class="kw-2">&amp;</span>str, h_offset: f64, padding: (f64, f64)) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+    <span class="doccomment">/// Draw the specified text using the currently active font and color.
+    ///
+    /// Returns the width and height of the area taken up by the text.
+    </span><span class="kw">pub fn </span>text(<span class="kw-2">&amp;</span><span class="self">self</span>, txt: <span class="kw-2">&amp;</span>str, h_offset: f64, padding: (f64, f64)) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
         <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx).ok_or(Error::UnableToCreateLayout)<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>font) = <span class="self">self</span>.font {
             layout.set_font_description(<span class="prelude-val">Some</span>(font));
@@ -497,7 +566,9 @@
         <span class="prelude-val">Ok</span>((width, height))
     }
 
-    <span class="kw">pub fn </span>text_extent(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+    <span class="doccomment">/// Determine the width and height required to render a specific piece of text
+    /// using the current font without rendering it to the underlying [`cairo::Context`].
+    </span><span class="kw">pub fn </span>text_extent(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
         <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx).ok_or(Error::UnableToCreateLayout)<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>font) = <span class="self">self</span>.font {
             layout.set_font_description(<span class="prelude-val">Some</span>(font));
@@ -508,7 +579,8 @@
         <span class="prelude-val">Ok</span>((w <span class="kw">as </span>f64, h <span class="kw">as </span>f64))
     }
 
-    <span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="doccomment">/// Flush pending requests to the X server.
+    </span><span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.ctx.target().flush();
     }
 }
