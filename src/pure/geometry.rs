@@ -403,6 +403,38 @@ impl Rect {
             ))
         }
     }
+
+    /// Divides this rect into two columns along its midpoint.
+    pub fn split_at_mid_width(&self) -> (Self, Self) {
+        let new_width = self.w / 2;
+        (
+            Self {
+                w: new_width,
+                ..*self
+            },
+            Self {
+                x: self.x + new_width,
+                w: self.w - new_width,
+                ..*self
+            },
+        )
+    }
+
+    /// Divides this rect into two rows along its midpoint.
+    pub fn split_at_mid_height(&self) -> (Self, Self) {
+        let new_height = self.h / 2;
+        (
+            Self {
+                h: new_height,
+                ..*self
+            },
+            Self {
+                y: self.y + new_height,
+                h: self.h - new_height,
+                ..*self
+            },
+        )
+    }
 }
 
 #[cfg(test)]
