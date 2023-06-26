@@ -26,6 +26,7 @@ pub enum Position {
     Bottom,
 }
 
+/// A simple text based status bar that renders a user defined array of [`Widget`]s.
 pub struct StatusBar<X: XConn> {
     draw: Draw,
     position: Position,

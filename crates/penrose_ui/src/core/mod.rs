@@ -1,3 +1,4 @@
+//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
 use crate::{Error, Result};
 use cairo::{Matrix, Operator, XCBConnection, XCBDrawable, XCBSurface, XCBVisualType};
 use pango::{EllipsizeMode, FontDescription, SCALE};
@@ -42,14 +43,21 @@ pub struct TextStyle {
     pub padding: (f64, f64),
 }
 
+/// Your application should create a single [`Draw`] struct to manage the windows and surfaces it
+/// needs to render your UI. See the [`Context`] struct for how to draw to the surfaces you have
+/// created.
 #[derive(Debug)]
 pub struct Draw {
+    /// The underlying [`XConn`] implementation used to communicate with the X server
     pub conn: XcbConn,
     fonts: HashMap<String, FontDescription>,
     surfaces: HashMap<Xid, XCBSurface>,
 }
 
 impl Draw {
+    /// Construct a new `Draw` instance backed with an [`XcbConn`].
+    ///
+    /// This method will error if it is unable to establish a connection with the X server.
     pub fn new() -> Result<Self> {
         Ok(Self {
             conn: XcbConn::new()?,
@@ -58,6 +66,7 @@ impl Draw {
         })
     }
 
+    /// Create a new X window and initialise a cairo surface for drawing.
     pub fn new_window(&mut self, ty: WinType, r: Rect, managed: bool) -> Result<Xid> {
         info!(?ty, ?r, %managed, "creating new window");
         let id = self.conn.create_window(ty, r, managed)?;
@@ -115,11 +124,16 @@ impl Draw {
         panic!("unable to find XCB visual type")
     }
 
+    /// Register a new font by name in the font cache so it can be used in a drawing [`Context`].
     pub fn register_font(&mut self, font_name: &str) {
         let description = FontDescription::from_string(font_name);
         self.fonts.insert(font_name.into(), description);
     }
 
+    /// Retrieve the drawing [`Context`] for the given window [`Xid`].
+    ///
+    /// This method will error if the requested id does not already have an initialised surface.
+    /// See the [`new_window`] method for details.
     pub fn context_for(&self, id: Xid) -> Result<Context> {
         let ctx = cairo::Context::new(
             self.surfaces
@@ -134,6 +148,8 @@ impl Draw {
         })
     }
 
+    /// Construct a disposable context of the specified dimensions without requiring a
+    /// window [`Xid`].
     pub fn temp_context(&self, w: i32, h: i32) -> Result<Context> {
         let screen = &self.conn.connection().setup().roots[0];
         let surface = self.surface(*self.conn.root(), screen, w, h)?;
@@ -147,6 +163,7 @@ impl Draw {
         })
     }
 
+    /// Flush any pending requests to the X server and map the specifed window to the screen.
     pub fn flush(&self, id: Xid) -> Result<()> {
         if let Some(s) = self.surfaces.get(&id) {
             s.flush()
@@ -159,6 +176,7 @@ impl Draw {
     }
 }
 
+/// A minimal drawing context for rendering text based UI elements to a cairo surface.
 #[derive(Clone, Debug)]
 pub struct Context {
     ctx: cairo::Context,
@@ -167,6 +185,10 @@ pub struct Context {
 }
 
 impl Context {
+    /// Set the current font by name.
+    ///
+    /// This method will error if the font has not previously been registered in the parent
+    /// [`Draw`] struct.
     pub fn font(&mut self, font_name: &str, point_size: i32) -> Result<()> {
         let mut font = self
             .fonts
@@ -182,11 +204,13 @@ impl Context {
         Ok(())
     }
 
+    /// Set the active color for following draw operations.
     pub fn color(&mut self, color: &Color) {
         let (r, g, b, a) = color.rgba();
         self.ctx.set_source_rgba(r, g, b, a);
     }
 
+    /// Clear the underlying [`cairo::Context`].
     pub fn clear(&mut self) -> Result<()> {
         self.ctx.save()?;
         self.ctx.set_operator(Operator::Clear);
@@ -196,22 +220,28 @@ impl Context {
         Ok(())
     }
 
+    /// Translate the underlying [`cairo::Context`] by a specified offset
     pub fn translate(&self, dx: f64, dy: f64) {
         self.ctx.translate(dx, dy)
     }
 
+    /// Set the x offset of the underlying [`cairo::Context`] without modifying the
+    /// current y position.
     pub fn set_x_offset(&self, x: f64) {
         let (_, y_offset) = self.ctx.matrix().transform_point(0.0, 0.0);
         self.ctx.set_matrix(Matrix::identity());
         self.ctx.translate(x, y_offset);
     }
 
+    /// Set the y offset of the underlying [`cairo::Context`] without modifying the
+    /// current x position.
     pub fn set_y_offset(&self, y: f64) {
         let (x_offset, _) = self.ctx.matrix().transform_point(0.0, 0.0);
         self.ctx.set_matrix(Matrix::identity());
         self.ctx.translate(x_offset, y);
     }
 
+    /// Fill the specified area with the currently active color.
     pub fn rectangle(&self, x: f64, y: f64, w: f64, h: f64) -> Result<()> {
         self.ctx.rectangle(x, y, w, h);
         self.ctx.fill()?;
@@ -219,6 +249,9 @@ impl Context {
         Ok(())
     }
 
+    /// Draw the specified text using the currently active font and color.
+    ///
+    /// Returns the width and height of the area taken up by the text.
     pub fn text(&self, txt: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)> {
         let layout = create_layout(&self.ctx).ok_or(Error::UnableToCreateLayout)?;
         if let Some(ref font) = self.font {
@@ -240,6 +273,8 @@ impl Context {
         Ok((width, height))
     }
 
+    /// Determine the width and height required to render a specific piece of text
+    /// using the current font without rendering it to the underlying [`cairo::Context`].
     pub fn text_extent(&self, s: &str) -> Result<(f64, f64)> {
         let layout = create_layout(&self.ctx).ok_or(Error::UnableToCreateLayout)?;
         if let Some(ref font) = self.font {
@@ -251,6 +286,7 @@ impl Context {
         Ok((w as f64, h as f64))
     }
 
+    /// Flush pending requests to the X server.
     pub fn flush(&self) {
         self.ctx.target().flush();
     }

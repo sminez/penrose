@@ -6,6 +6,7 @@ use penrose::{
     Color, Xid,
 };
 use std::{
+    fmt,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -229,7 +230,17 @@ pub struct RefreshText {
     get_text: Box<dyn Fn() -> String>,
 }
 
+impl fmt::Debug for RefreshText {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RefreshText")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
 impl RefreshText {
+    /// Construct a new [`RefreshText`] using the specified styling and a function for
+    /// generating the widget contents.
     pub fn new<F>(style: &TextStyle, get_text: F) -> Self
     where
         F: Fn() -> String + 'static,
@@ -308,11 +319,15 @@ impl<X: XConn> Widget<X> for RefreshText {
 ///     Duration::from_secs(60 * 5)
 /// );
 /// ```
+#[derive(Debug)]
 pub struct IntervalText {
     inner: Arc<Mutex<Text>>,
 }
 
 impl IntervalText {
+    /// Construct a new [`IntervalText`] using the specified styling and a function for
+    /// generating the widget contents. The function for updating the widget contents
+    /// will be run in its own thread on the interval provided.
     pub fn new<F>(style: &TextStyle, get_text: F, interval: Duration) -> Self
     where
         F: Fn() -> String + 'static + Send,
