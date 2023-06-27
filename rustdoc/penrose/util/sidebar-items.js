@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["notify","spawn","spawn_for_output","spawn_for_output_with_args","spawn_with_args"]};
+window.SIDEBAR_ITEMS = {"fn":["notify","print_layout_result","spawn","spawn_for_output","spawn_for_output_with_args","spawn_with_args"]};
