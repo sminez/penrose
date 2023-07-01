@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["actions","hooks","util"]};
+window.SIDEBAR_ITEMS = {"mod":["actions","hooks","layout","util"]};
