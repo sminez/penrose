@@ -122,6 +122,8 @@
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Layout behaviour that is more specialised or complex than the builtin layouts.
 </span><span class="kw">use crate</span>::{
     core::layout::{Layout, Message},
@@ -137,6 +139,7 @@
 /// workspace being laid out, if there are more than 6 clients then the remaining clients are
 /// hidden.
 ///
+/// ```text
 /// .............................   .............................   .............................
 /// .                           .   .             .             .   .             .             .
 /// .                           .   .             .             .   .             .             .
@@ -164,6 +167,7 @@
 /// .             .             .   .             .             .   .             .         .   .
 /// .             .             .   .             .      5      .   .             .    6    .   .
 /// .............................   .............................   .............................
+/// ```
 </span><span class="attr">#[derive(Debug, Default, Copy, Clone)]
 </span><span class="kw">pub struct </span>Tatami;
 
