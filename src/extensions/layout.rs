@@ -1,5 +1,6 @@
 //! Layout behaviour that is more specialised or complex than the builtin layouts.
 use crate::{
+    builtin::layout::messages::{ExpandMain, ShrinkMain},
     core::layout::{Layout, Message},
     pure::{geometry::Rect, Stack},
     Xid,
@@ -42,13 +43,30 @@ use crate::{
 /// .             .             .   .             .      5      .   .             .    6    .   .
 /// .............................   .............................   .............................
 /// ```
-#[derive(Debug, Default, Copy, Clone)]
-pub struct Tatami;
+#[derive(Debug, Copy, Clone)]
+pub struct Tatami {
+    ratio: f32,
+    ratio_step: f32,
+}
 
 impl Tatami {
+    /// Create a new [Tatami] layout with the specified ratio for the main window.
+    pub fn new(ratio: f32, ratio_step: f32) -> Self {
+        Self { ratio, ratio_step }
+    }
+
     /// Create a new [Tatami] layout returned as a trait object ready to be added to your [LayoutStack].
-    pub fn boxed() -> Box<dyn Layout> {
-        Box::new(Tatami)
+    pub fn boxed(ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Tatami { ratio, ratio_step })
+    }
+}
+
+impl Default for Tatami {
+    fn default() -> Self {
+        Self {
+            ratio: 0.6,
+            ratio_step: 0.1,
+        }
     }
 }
 
@@ -63,6 +81,10 @@ impl Layout for Tatami {
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         let apply = |rs: &[Rect]| s.iter().zip(rs).map(|(&id, &r)| (id, r)).collect();
+        let split_main = || {
+            r.split_at_width((r.w as f32 * self.ratio) as u32)
+                .expect("valid split")
+        };
 
         // We only position the first 6 clients (after that we're out of patterns)
         let n = std::cmp::min(s.len(), 6);
@@ -72,25 +94,25 @@ impl Layout for Tatami {
             1 => apply(&[r]),
 
             2 => {
-                let (r1, r2) = r.split_at_mid_width();
+                let (r1, r2) = split_main();
                 apply(&[r1, r2])
             }
 
             3 => {
-                let (r1, r2) = r.split_at_mid_width();
+                let (r1, r2) = split_main();
                 let (r2, r3) = r2.split_at_mid_height();
                 apply(&[r1, r2, r3])
             }
 
             4 => {
-                let (r1, r2) = r.split_at_mid_width();
+                let (r1, r2) = split_main();
                 let (r2, r4) = r2.split_at_mid_height();
                 let (r2, r3) = r2.split_at_mid_width();
                 apply(&[r1, r2, r3, r4])
             }
 
             5 => {
-                let (r1, r2) = r.split_at_mid_width();
+                let (r1, r2) = split_main();
                 let rows = r2.as_rows(4);
                 let (r2, mut rmid, r5) = (rows[0], rows[1], rows[3]);
                 rmid.h += rows[2].h;
@@ -99,7 +121,7 @@ impl Layout for Tatami {
             }
 
             6 => {
-                let (r1, r2) = r.split_at_mid_width();
+                let (r1, r2) = split_main();
                 let cols = r2.as_columns(3);
                 let h = r1.h / 4;
                 let (mut r2, mut r4, mut r5) = (cols[0], cols[1], cols[2]);
@@ -119,8 +141,19 @@ impl Layout for Tatami {
         (None, positions)
     }
 
-    fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
-        // TODO: handle some of the standard messages that make sense for this layout
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        if let Some(&ExpandMain) = m.downcast_ref() {
+            self.ratio += self.ratio_step;
+            if self.ratio > 1.0 {
+                self.ratio = 1.0;
+            }
+        } else if let Some(&ShrinkMain) = m.downcast_ref() {
+            self.ratio -= self.ratio_step;
+            if self.ratio < 0.0 {
+                self.ratio = 0.0;
+            }
+        };
+
         None
     }
 }
