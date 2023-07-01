@@ -124,8 +124,42 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Layout behaviour that is more specialised or complex than the builtin layouts.
 </span><span class="kw">use crate</span>::{
+    builtin::layout::messages::{ExpandMain, ShrinkMain},
     core::layout::{Layout, Message},
     pure::{geometry::Rect, Stack},
     Xid,
@@ -168,13 +202,30 @@
 /// .             .             .   .             .      5      .   .             .    6    .   .
 /// .............................   .............................   .............................
 /// ```
-</span><span class="attr">#[derive(Debug, Default, Copy, Clone)]
-</span><span class="kw">pub struct </span>Tatami;
+</span><span class="attr">#[derive(Debug, Copy, Clone)]
+</span><span class="kw">pub struct </span>Tatami {
+    ratio: f32,
+    ratio_step: f32,
+}
 
 <span class="kw">impl </span>Tatami {
+    <span class="doccomment">/// Create a new [Tatami] layout with the specified ratio for the main window.
+    </span><span class="kw">pub fn </span>new(ratio: f32, ratio_step: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ ratio, ratio_step }
+    }
+
     <span class="doccomment">/// Create a new [Tatami] layout returned as a trait object ready to be added to your [LayoutStack].
-    </span><span class="kw">pub fn </span>boxed() -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
-        Box::new(Tatami)
+    </span><span class="kw">pub fn </span>boxed(ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::new(Tatami { ratio, ratio_step })
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>Tatami {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            ratio: <span class="number">0.6</span>,
+            ratio_step: <span class="number">0.1</span>,
+        }
     }
 }
 
@@ -189,6 +240,10 @@
 
     <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
         <span class="kw">let </span>apply = |rs: <span class="kw-2">&amp;</span>[Rect]| s.iter().zip(rs).map(|(<span class="kw-2">&amp;</span>id, <span class="kw-2">&amp;</span>r)| (id, r)).collect();
+        <span class="kw">let </span>split_main = || {
+            r.split_at_width((r.w <span class="kw">as </span>f32 * <span class="self">self</span>.ratio) <span class="kw">as </span>u32)
+                .expect(<span class="string">&quot;valid split&quot;</span>)
+        };
 
         <span class="comment">// We only position the first 6 clients (after that we&#39;re out of patterns)
         </span><span class="kw">let </span>n = std::cmp::min(s.len(), <span class="number">6</span>);
@@ -198,25 +253,25 @@
             <span class="number">1 </span>=&gt; apply(<span class="kw-2">&amp;</span>[r]),
 
             <span class="number">2 </span>=&gt; {
-                <span class="kw">let </span>(r1, r2) = r.split_at_mid_width();
+                <span class="kw">let </span>(r1, r2) = split_main();
                 apply(<span class="kw-2">&amp;</span>[r1, r2])
             }
 
             <span class="number">3 </span>=&gt; {
-                <span class="kw">let </span>(r1, r2) = r.split_at_mid_width();
+                <span class="kw">let </span>(r1, r2) = split_main();
                 <span class="kw">let </span>(r2, r3) = r2.split_at_mid_height();
                 apply(<span class="kw-2">&amp;</span>[r1, r2, r3])
             }
 
             <span class="number">4 </span>=&gt; {
-                <span class="kw">let </span>(r1, r2) = r.split_at_mid_width();
+                <span class="kw">let </span>(r1, r2) = split_main();
                 <span class="kw">let </span>(r2, r4) = r2.split_at_mid_height();
                 <span class="kw">let </span>(r2, r3) = r2.split_at_mid_width();
                 apply(<span class="kw-2">&amp;</span>[r1, r2, r3, r4])
             }
 
             <span class="number">5 </span>=&gt; {
-                <span class="kw">let </span>(r1, r2) = r.split_at_mid_width();
+                <span class="kw">let </span>(r1, r2) = split_main();
                 <span class="kw">let </span>rows = r2.as_rows(<span class="number">4</span>);
                 <span class="kw">let </span>(r2, <span class="kw-2">mut </span>rmid, r5) = (rows[<span class="number">0</span>], rows[<span class="number">1</span>], rows[<span class="number">3</span>]);
                 rmid.h += rows[<span class="number">2</span>].h;
@@ -225,7 +280,7 @@
             }
 
             <span class="number">6 </span>=&gt; {
-                <span class="kw">let </span>(r1, r2) = r.split_at_mid_width();
+                <span class="kw">let </span>(r1, r2) = split_main();
                 <span class="kw">let </span>cols = r2.as_columns(<span class="number">3</span>);
                 <span class="kw">let </span>h = r1.h / <span class="number">4</span>;
                 <span class="kw">let </span>(<span class="kw-2">mut </span>r2, <span class="kw-2">mut </span>r4, <span class="kw-2">mut </span>r5) = (cols[<span class="number">0</span>], cols[<span class="number">1</span>], cols[<span class="number">2</span>]);
@@ -245,9 +300,20 @@
         (<span class="prelude-val">None</span>, positions)
     }
 
-    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
-        <span class="comment">// TODO: handle some of the standard messages that make sense for this layout
-        </span><span class="prelude-val">None
+    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ExpandMain) = m.downcast_ref() {
+            <span class="self">self</span>.ratio += <span class="self">self</span>.ratio_step;
+            <span class="kw">if </span><span class="self">self</span>.ratio &gt; <span class="number">1.0 </span>{
+                <span class="self">self</span>.ratio = <span class="number">1.0</span>;
+            }
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ShrinkMain) = m.downcast_ref() {
+            <span class="self">self</span>.ratio -= <span class="self">self</span>.ratio_step;
+            <span class="kw">if </span><span class="self">self</span>.ratio &lt; <span class="number">0.0 </span>{
+                <span class="self">self</span>.ratio = <span class="number">0.0</span>;
+            }
+        };
+
+        <span class="prelude-val">None
     </span>}
 }
 </code></pre></div></section></main></body></html>
