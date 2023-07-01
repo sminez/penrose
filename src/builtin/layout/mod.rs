@@ -24,6 +24,20 @@ enum StackPosition {
 /// and [ExpandMain] messages to this layout. The number of clients in the main area can be
 /// increased or decreased by sending an [IncMain] message. To flip between the side and bottom
 /// behaviours you can send a [Rotate] message.
+///
+/// ..................................
+/// .                  .             .
+/// .                  .             .
+/// .                  .             .
+/// .                  ...............
+/// .                  .             .
+/// .                  .             .
+/// .                  .             .
+/// .                  ...............
+/// .                  .             .
+/// .                  .             .
+/// .                  .             .
+/// ..................................
 #[derive(Debug, Clone, Copy)]
 pub struct MainAndStack {
     pos: StackPosition,
@@ -34,6 +48,12 @@ pub struct MainAndStack {
 }
 
 impl MainAndStack {
+    /// Create a new default [MainAndStack] [Layout] as a trait object ready to be added to your
+    /// [LayoutStack][crate::core::layout::LayoutStack].
+    pub fn boxed_default() -> Box<dyn Layout> {
+        Box::new(Self::default())
+    }
+
     /// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows
     /// stacked to the right.
     pub fn side(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
@@ -213,6 +233,20 @@ impl Layout for MainAndStack {
 
 /// A simple monolce layout that gives the maximum available space to the currently
 /// focused client and unmaps all other windows.
+///
+/// ..................................
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// .                                .
+/// ..................................
 #[derive(Debug, Clone, Copy)]
 pub struct Monocle;
 
@@ -234,6 +268,82 @@ impl Layout for Monocle {
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         (None, vec![(s.focus, r)])
+    }
+
+    fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
+        None
+    }
+}
+
+/// A simple grid layout that places windows in the smallest nxn grid that will
+/// contain all window present on the workspace.
+///
+/// ..................................
+/// .          .          .          .
+/// .          .          .          .
+/// .          .          .          .
+/// ..................................
+/// .          .          .          .
+/// .          .          .          .
+/// .          .          .          .
+/// ..................................
+/// .          .          .          .
+/// .          .          .          .
+/// .          .          .          .
+/// ..................................
+///
+/// ### NOTE
+/// This will leave unused screen space if there are not a square number of
+/// windows present in the workspace being laid out:
+/// ..................................
+/// .          .          .          .
+/// .          .          .          .
+/// .          .          .          .
+/// ..................................
+/// .          .          .          .
+/// .          .          .          .
+/// .          .          .          .
+/// ..................................
+/// .          .          .
+/// .          .          .
+/// .          .          .
+/// .......................
+#[derive(Debug, Default, Copy, Clone)]
+pub struct Grid;
+
+impl Grid {
+    /// Create a new [Grid] [Layout] as a boxed trait object
+    pub fn boxed() -> Box<dyn Layout> {
+        Box::new(Grid)
+    }
+}
+
+impl Layout for Grid {
+    fn name(&self) -> String {
+        "Grid".to_string()
+    }
+
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Self::boxed()
+    }
+
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        let n = s.len();
+        let n_cols = (1..).skip_while(|&i| (i * i) < n).next().unwrap_or(1);
+        let n_rows = if n_cols * (n_cols - 1) >= n {
+            n_cols - 1
+        } else {
+            n_cols
+        };
+
+        let rects = r
+            .as_rows(n_rows as u32)
+            .into_iter()
+            .flat_map(|row| row.as_columns(n_cols as u32));
+
+        let positions = s.iter().zip(rects).map(|(&id, r)| (id, r)).collect();
+
+        (None, positions)
     }
 
     fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
