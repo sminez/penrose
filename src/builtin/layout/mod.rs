@@ -25,6 +25,7 @@ enum StackPosition {
 /// increased or decreased by sending an [IncMain] message. To flip between the side and bottom
 /// behaviours you can send a [Rotate] message.
 ///
+/// ```text
 /// ..................................
 /// .                  .             .
 /// .                  .             .
@@ -38,6 +39,7 @@ enum StackPosition {
 /// .                  .             .
 /// .                  .             .
 /// ..................................
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct MainAndStack {
     pos: StackPosition,
@@ -234,6 +236,7 @@ impl Layout for MainAndStack {
 /// A simple monolce layout that gives the maximum available space to the currently
 /// focused client and unmaps all other windows.
 ///
+/// ```text
 /// ..................................
 /// .                                .
 /// .                                .
@@ -247,6 +250,7 @@ impl Layout for MainAndStack {
 /// .                                .
 /// .                                .
 /// ..................................
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct Monocle;
 
@@ -278,6 +282,7 @@ impl Layout for Monocle {
 /// A simple grid layout that places windows in the smallest nxn grid that will
 /// contain all window present on the workspace.
 ///
+/// ```text
 /// ..................................
 /// .          .          .          .
 /// .          .          .          .
@@ -291,10 +296,12 @@ impl Layout for Monocle {
 /// .          .          .          .
 /// .          .          .          .
 /// ..................................
+/// ```
 ///
 /// ### NOTE
 /// This will leave unused screen space if there are not a square number of
 /// windows present in the workspace being laid out:
+/// ```text
 /// ..................................
 /// .          .          .          .
 /// .          .          .          .
@@ -308,6 +315,7 @@ impl Layout for Monocle {
 /// .          .          .
 /// .          .          .
 /// .......................
+/// ```
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Grid;
 
