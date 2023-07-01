@@ -13,6 +13,7 @@ use crate::{
 /// workspace being laid out, if there are more than 6 clients then the remaining clients are
 /// hidden.
 ///
+/// ```text
 /// .............................   .............................   .............................
 /// .                           .   .             .             .   .             .             .
 /// .                           .   .             .             .   .             .             .
@@ -40,6 +41,7 @@ use crate::{
 /// .             .             .   .             .             .   .             .         .   .
 /// .             .             .   .             .      5      .   .             .    6    .   .
 /// .............................   .............................   .............................
+/// ```
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Tatami;
 
