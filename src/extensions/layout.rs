@@ -1,6 +1,6 @@
 //! Layout behaviour that is more specialised or complex than the builtin layouts.
 use crate::{
-    core::layout::{Layout, LayoutStack, Message},
+    core::layout::{Layout, Message},
     pure::{geometry::Rect, Stack},
     Xid,
 };
