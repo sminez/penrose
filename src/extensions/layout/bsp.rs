@@ -7,11 +7,8 @@
 //! The Haskell Wiki has a more accessible article on how this concept works for binary
 //! trees (https://wiki.haskell.org/Zipper) as does Learn You A Haskell (http://learnyouahaskell.com/zippers)
 
-// TODO: need a method on the Zipper to stash the Context for replaying so we can focus the root,
-//       iterate through the nodes and then move back to the focused point.
-//       - might just be simpler to clone and unravel?
 use crate::{
-    // builtin::layout::messages::{ExpandMain, ShrinkMain},
+    builtin::layout::messages::{ExpandMain, Rotate, ShrinkMain},
     core::layout::{Layout, Message},
     pure::{geometry::Rect, Stack},
     Xid,
@@ -58,7 +55,33 @@ impl Node {
         }
     }
 
-    /// Rotate the orientation of a split node
+    /// Expand the size of the [Left] side of a split.
+    ///
+    /// For a [Leaf] this is a no-op.
+    pub fn expand_split(&mut self, step: f32) {
+        if let Split { ratio, .. } = self {
+            *ratio += step;
+            if *ratio > 1.0 {
+                *ratio = 1.0;
+            }
+        }
+    }
+
+    /// Shrink the size of the [Left] side of a split.
+    ///
+    /// For a [Leaf] this is a no-op.
+    pub fn shrink_split(&mut self, step: f32) {
+        if let Split { ratio, .. } = self {
+            *ratio -= step;
+            if *ratio < 1.0 {
+                *ratio = 1.0;
+            }
+        }
+    }
+
+    /// Rotate the orientation of a [Split] node
+    ///
+    /// For a [Leaf] this is a no-op.
     pub fn rotate(&mut self) {
         if let Split { hsplit, l, r, .. } = self {
             *hsplit = !*hsplit;
@@ -251,13 +274,15 @@ impl Zipper {
 pub struct BSP {
     zipper: Zipper,
     hsplit: bool,
+    ratio: f32,
+    ratio_step: f32,
 }
 
 impl BSP {
     /// Split the focused [Node] and then focus the [Right] side of the
     /// new child [Split].
     pub fn split(&mut self) {
-        self.zipper.n.split(0.5, self.hsplit);
+        self.zipper.n.split(self.ratio, self.hsplit);
         self.zipper.focus_right();
     }
 
@@ -272,6 +297,8 @@ impl Default for BSP {
         Self {
             zipper: Zipper::from_root(Leaf),
             hsplit: false,
+            ratio: 0.5,
+            ratio_step: 0.1,
         }
     }
 }
@@ -292,7 +319,15 @@ impl Layout for BSP {
         (None, positions)
     }
 
-    fn handle_message(&mut self, _: &Message) -> Option<Box<dyn Layout>> {
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        if let Some(&ExpandMain) = m.downcast_ref() {
+            self.zipper.n.expand_split(self.ratio_step)
+        } else if let Some(&ShrinkMain) = m.downcast_ref() {
+            self.zipper.n.shrink_split(self.ratio_step)
+        } else if let Some(&Rotate) = m.downcast_ref() {
+            self.zipper.n.rotate();
+        };
+
         None
     }
 }
@@ -302,6 +337,7 @@ mod tests {
     use super::*;
     use crate::util::print_layout_result;
 
+    // Not actually a test at the moment: just running under --nocapture to eyeball the output
     #[test]
     fn tree_zipper_traversal() {
         let mut bsp = BSP::default();
@@ -309,11 +345,10 @@ mod tests {
         bsp.split();
         bsp.toggle_orientation();
         bsp.split();
-        bsp.zipper.focus_up();
-        bsp.zipper.focus_up();
-
         print_layout_result(&mut bsp, 6, 40, 15);
 
+        bsp.zipper.focus_up();
+        bsp.zipper.focus_up();
         bsp.zipper.n.rotate();
         print_layout_result(&mut bsp, 6, 40, 15);
     }
