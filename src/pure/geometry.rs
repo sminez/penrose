@@ -404,6 +404,46 @@ impl Rect {
         }
     }
 
+    /// Divide this rect into two columns where the first takes up `perc%` of the
+    /// current width.
+    ///
+    /// Returns `None` if perc is not between 0.0 and 1.0
+    pub fn split_at_width_perc(&self, perc: f32) -> Option<(Self, Self)> {
+        if perc < 0.0 || perc > 1.0 {
+            None
+        } else {
+            let w = (self.w as f32 * perc) as u32;
+            Some((
+                Self { w, ..*self },
+                Self {
+                    x: self.x + w,
+                    w: self.w - w,
+                    ..*self
+                },
+            ))
+        }
+    }
+
+    /// Divide this rect into two rows where the first takes up `perc%` of the
+    /// current height.
+    ///
+    /// Returns `None` if perc is not between 0.0 and 1.0
+    pub fn split_at_height_perc(&self, perc: f32) -> Option<(Self, Self)> {
+        if perc < 0.0 || perc > 1.0 {
+            None
+        } else {
+            let h = (self.h as f32 * perc) as u32;
+            Some((
+                Self { h, ..*self },
+                Self {
+                    y: self.y + h,
+                    h: self.h - h,
+                    ..*self
+                },
+            ))
+        }
+    }
+
     /// Divides this rect into two columns along its midpoint.
     pub fn split_at_mid_width(&self) -> (Self, Self) {
         let new_width = self.w / 2;
