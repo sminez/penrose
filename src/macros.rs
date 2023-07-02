@@ -99,7 +99,7 @@ macro_rules! pop_where {
     ($self:ident, $lst:ident, $($pred:tt)+) => {{
         let placeholder = ::std::mem::take(&mut $self.$lst);
 
-        let mut remaining = ::std::collections::LinkedList::default();
+        let mut remaining = ::std::collections::VecDeque::default();
         let mut popped = None;
         let pred = $($pred)+;
 

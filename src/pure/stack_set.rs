@@ -11,7 +11,7 @@ use crate::{
 };
 use std::{
     cmp::Ordering,
-    collections::{HashMap, LinkedList},
+    collections::{HashMap, VecDeque},
     hash::Hash,
     mem::{swap, take},
 };
@@ -23,7 +23,7 @@ where
     C: Clone + PartialEq + Eq + Hash,
 {
     pub(crate) screens: Stack<Screen<C>>, // Workspaces visible on screens
-    pub(crate) hidden: LinkedList<Workspace<C>>, // Workspaces not currently on any screen
+    pub(crate) hidden: VecDeque<Workspace<C>>, // Workspaces not currently on any screen
     pub(crate) floating: HashMap<C, RelativeRect>, // Floating windows
     pub(crate) previous_tag: String,      // The last tag to be focused before the current one
     pub(crate) invisible_tags: Vec<String>, // Tags that should never be focused
@@ -71,7 +71,7 @@ where
             _ => (),
         }
 
-        let hidden: LinkedList<Workspace<C>> = workspaces
+        let hidden: VecDeque<Workspace<C>> = workspaces
             .split_off(screen_details.len())
             .into_iter()
             .collect();
@@ -790,7 +790,7 @@ impl StackSet<Xid> {
     fn take_from_hidden(&mut self, n: usize) -> Vec<Workspace<Xid>> {
         let next_id = self.workspaces().map(|w| w.id).max().unwrap_or(0) + 1;
         let mut tmp = Vec::with_capacity(self.hidden.len());
-        let mut hidden = LinkedList::new();
+        let mut hidden = VecDeque::new();
 
         // Filter out any hidden tags first
         for w in take(&mut self.hidden) {

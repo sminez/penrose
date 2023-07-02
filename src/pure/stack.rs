@@ -1,6 +1,6 @@
 use crate::pop_where;
 use std::{
-    collections::linked_list::{self, LinkedList},
+    collections::vec_deque::{self, VecDeque},
     fmt,
     iter::{once, IntoIterator},
     mem::{swap, take},
@@ -41,20 +41,21 @@ pub enum Position {
     Tail,
 }
 
-/// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark
-/// a single element that currently holds focus. By convention, the main element is
+/// A [Stack] can be thought of as a linked list with a hole punched in it to mark
+/// a single element that currently holds focus (though in practice it is implemented
+/// using a [VecDeque] for efficiency purposes). By convention, the main element is
 /// the first element in the stack (regardless of focus). Focusing operations do not
 /// reorder the elements of the stack or the resulting [Vec] that can be obtained
 /// from calling [Stack::flatten].
 ///
 /// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
-/// over a [LinkedList]. Many of the methods that mutate the structure of the Stack
+/// over a [VecDeque]. Many of the methods that mutate the structure of the Stack
 /// return back a mutable reference so that they are able to be chained.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
-    pub(crate) up: LinkedList<T>,
+    pub(crate) up: VecDeque<T>,
     pub(crate) focus: T,
-    pub(crate) down: LinkedList<T>,
+    pub(crate) down: VecDeque<T>,
 }
 
 impl<T: fmt::Display> fmt::Display for Stack<T> {
@@ -80,7 +81,7 @@ impl<T> Stack<T> {
         I: IntoIterator<Item = T>,
         J: IntoIterator<Item = T>,
     {
-        let mut reversed_up = LinkedList::new();
+        let mut reversed_up = VecDeque::new();
         for elem in up.into_iter() {
             reversed_up.push_front(elem);
         }
@@ -108,7 +109,7 @@ impl<T> Stack<T> {
         };
 
         Some(Self {
-            up: LinkedList::default(),
+            up: VecDeque::default(),
             focus,
             down: it.collect(),
         })
@@ -122,7 +123,7 @@ impl<T> Stack<T> {
         let focus = it.next().expect("at least one element");
 
         Self {
-            up: LinkedList::default(),
+            up: VecDeque::default(),
             focus,
             down: it.collect(),
         }
@@ -542,8 +543,8 @@ impl<T: PartialEq> Stack<T> {
 #[derive(Debug)]
 pub struct IntoIter<T> {
     focus: Option<T>,
-    up: LinkedList<T>,
-    down: LinkedList<T>,
+    up: VecDeque<T>,
+    down: VecDeque<T>,
 }
 
 impl<T> Iterator for IntoIter<T> {
@@ -573,9 +574,9 @@ impl<T> IntoIterator for Stack<T> {
 /// An iterator over a [Stack].
 #[derive(Debug)]
 pub struct Iter<'a, T> {
-    up: linked_list::Iter<'a, T>,
+    up: vec_deque::Iter<'a, T>,
     focus: Option<&'a T>,
-    down: linked_list::Iter<'a, T>,
+    down: vec_deque::Iter<'a, T>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -602,8 +603,8 @@ impl<'a, T> IntoIterator for &'a Stack<T> {
 #[derive(Debug)]
 pub struct IterMut<'a, T> {
     focus: Option<&'a mut T>,
-    up: linked_list::IterMut<'a, T>,
-    down: linked_list::IterMut<'a, T>,
+    up: vec_deque::IterMut<'a, T>,
+    down: vec_deque::IterMut<'a, T>,
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
