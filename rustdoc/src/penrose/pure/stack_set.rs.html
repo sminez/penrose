@@ -1446,7 +1446,7 @@
 };
 <span class="kw">use </span>std::{
     cmp::Ordering,
-    collections::{HashMap, LinkedList},
+    collections::{HashMap, VecDeque},
     hash::Hash,
     mem::{swap, take},
 };
@@ -1458,7 +1458,7 @@
     </span>C: Clone + PartialEq + Eq + Hash,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) screens: Stack&lt;Screen&lt;C&gt;&gt;, <span class="comment">// Workspaces visible on screens
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) hidden: LinkedList&lt;Workspace&lt;C&gt;&gt;, <span class="comment">// Workspaces not currently on any screen
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) hidden: VecDeque&lt;Workspace&lt;C&gt;&gt;, <span class="comment">// Workspaces not currently on any screen
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) floating: HashMap&lt;C, RelativeRect&gt;, <span class="comment">// Floating windows
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) previous_tag: String,      <span class="comment">// The last tag to be focused before the current one
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) invisible_tags: Vec&lt;String&gt;, <span class="comment">// Tags that should never be focused
@@ -1506,7 +1506,7 @@
             <span class="kw">_ </span>=&gt; (),
         }
 
-        <span class="kw">let </span>hidden: LinkedList&lt;Workspace&lt;C&gt;&gt; = workspaces
+        <span class="kw">let </span>hidden: VecDeque&lt;Workspace&lt;C&gt;&gt; = workspaces
             .split_off(screen_details.len())
             .into_iter()
             .collect();
@@ -2225,7 +2225,7 @@
     </span><span class="kw">fn </span>take_from_hidden(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; Vec&lt;Workspace&lt;Xid&gt;&gt; {
         <span class="kw">let </span>next_id = <span class="self">self</span>.workspaces().map(|w| w.id).max().unwrap_or(<span class="number">0</span>) + <span class="number">1</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>tmp = Vec::with_capacity(<span class="self">self</span>.hidden.len());
-        <span class="kw">let </span><span class="kw-2">mut </span>hidden = LinkedList::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>hidden = VecDeque::new();
 
         <span class="comment">// Filter out any hidden tags first
         </span><span class="kw">for </span>w <span class="kw">in </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.hidden) {

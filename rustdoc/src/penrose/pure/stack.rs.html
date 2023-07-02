@@ -994,9 +994,10 @@
 <a href="#994" id="994">994</a>
 <a href="#995" id="995">995</a>
 <a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pop_where;
 <span class="kw">use </span>std::{
-    collections::linked_list::{<span class="self">self</span>, LinkedList},
+    collections::vec_deque::{<span class="self">self</span>, VecDeque},
     fmt,
     iter::{once, IntoIterator},
     mem::{swap, take},
@@ -1037,20 +1038,21 @@
     </span>Tail,
 }
 
-<span class="doccomment">/// A [Stack] can be thought of as a [LinkedList] with a hole punched in it to mark
-/// a single element that currently holds focus. By convention, the main element is
+<span class="doccomment">/// A [Stack] can be thought of as a linked list with a hole punched in it to mark
+/// a single element that currently holds focus (though in practice it is implemented
+/// using a [VecDeque] for efficiency purposes). By convention, the main element is
 /// the first element in the stack (regardless of focus). Focusing operations do not
 /// reorder the elements of the stack or the resulting [Vec] that can be obtained
 /// from calling [Stack::flatten].
 ///
 /// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
-/// over a [LinkedList]. Many of the methods that mutate the structure of the Stack
+/// over a [VecDeque]. Many of the methods that mutate the structure of the Stack
 /// return back a mutable reference so that they are able to be chained.
 </span><span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Stack&lt;T&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) up: LinkedList&lt;T&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) up: VecDeque&lt;T&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) focus: T,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) down: LinkedList&lt;T&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) down: VecDeque&lt;T&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: fmt::Display&gt; fmt::Display <span class="kw">for </span>Stack&lt;T&gt; {
@@ -1076,7 +1078,7 @@
         </span>I: IntoIterator&lt;Item = T&gt;,
         J: IntoIterator&lt;Item = T&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>reversed_up = LinkedList::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>reversed_up = VecDeque::new();
         <span class="kw">for </span>elem <span class="kw">in </span>up.into_iter() {
             reversed_up.push_front(elem);
         }
@@ -1104,7 +1106,7 @@
         };
 
         <span class="prelude-val">Some</span>(<span class="self">Self </span>{
-            up: LinkedList::default(),
+            up: VecDeque::default(),
             focus,
             down: it.collect(),
         })
@@ -1118,7 +1120,7 @@
         <span class="kw">let </span>focus = it.next().expect(<span class="string">&quot;at least one element&quot;</span>);
 
         <span class="self">Self </span>{
-            up: LinkedList::default(),
+            up: VecDeque::default(),
             focus,
             down: it.collect(),
         }
@@ -1538,8 +1540,8 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>IntoIter&lt;T&gt; {
     focus: <span class="prelude-ty">Option</span>&lt;T&gt;,
-    up: LinkedList&lt;T&gt;,
-    down: LinkedList&lt;T&gt;,
+    up: VecDeque&lt;T&gt;,
+    down: VecDeque&lt;T&gt;,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Iterator <span class="kw">for </span>IntoIter&lt;T&gt; {
@@ -1569,9 +1571,9 @@
 <span class="doccomment">/// An iterator over a [Stack].
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    up: linked_list::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+    up: vec_deque::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
     focus: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;,
-    down: linked_list::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+    down: vec_deque::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
@@ -1598,8 +1600,8 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt; {
     focus: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T&gt;,
-    up: linked_list::IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-    down: linked_list::IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+    up: vec_deque::IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+    down: vec_deque::IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;a</span>, T&gt; {

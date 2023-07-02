@@ -217,7 +217,7 @@
     (<span class="macro-nonterminal">$self</span>:ident, <span class="macro-nonterminal">$lst</span>:ident, $(<span class="macro-nonterminal">$pred</span>:tt)+) =&gt; {{
         <span class="kw">let </span>placeholder = ::std::mem::take(<span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$self</span>.<span class="macro-nonterminal">$lst</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>remaining = ::std::collections::LinkedList::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>remaining = ::std::collections::VecDeque::default();
         <span class="kw">let </span><span class="kw-2">mut </span>popped = <span class="prelude-val">None</span>;
         <span class="kw">let </span>pred = $(<span class="macro-nonterminal">$pred</span>)+;
 
