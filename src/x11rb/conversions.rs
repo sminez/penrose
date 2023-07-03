@@ -149,7 +149,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         // Other errors are returned directly
         Event::Error(e) => Err(Error::X11rbX11Error(e)),
 
-        // NOTE: Ignoring other event types
+        // Ignoring other event types
         _ => Ok(None),
     }
 }

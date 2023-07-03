@@ -112,7 +112,7 @@ impl Workspaces {
         self.tags() == new_tags
     }
 
-    // NOTE: Called after tags_changed above so we assume that tags are matching
+    // Called after tags_changed above so we assume that tags are matching
     fn occupied_changed(&self, workspaces: &[WsMeta]) -> bool {
         self.workspaces
             .iter()

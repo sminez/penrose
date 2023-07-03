@@ -242,9 +242,9 @@ mod quickcheck_tests {
         res
     }
 
-    // NOTE: Not checking that clients on the new workspace are visible as this is driven entirely by
-    //       the positions returned by the Layout. In these tests, those are being specified manually
-    //       so there is nothing to test.
+    // Not checking that clients on the new workspace are visible as this is driven entirely by
+    // the positions returned by the Layout. In these tests, those are being specified manually
+    // so there is nothing to test.
     #[quickcheck]
     fn focusing_new_workspace_hides_old_clients_and_tag_in_diff(mut s: StackSet<Xid>) -> bool {
         let tag = match s.first_hidden_tag() {

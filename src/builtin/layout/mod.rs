@@ -53,7 +53,7 @@ impl MainAndStack {
     /// Create a new default [MainAndStack] [Layout] as a trait object ready to be added to your
     /// [LayoutStack][crate::core::layout::LayoutStack].
     pub fn boxed_default() -> Box<dyn Layout> {
-        Box::new(Self::default())
+        Box::<Self>::default()
     }
 
     /// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows
@@ -337,7 +337,7 @@ impl Layout for Grid {
 
     fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
         let n = s.len();
-        let n_cols = (1..).skip_while(|&i| (i * i) < n).next().unwrap_or(1);
+        let n_cols = (1..).find(|&i| (i * i) >= n).unwrap_or(1);
         let n_rows = if n_cols * (n_cols - 1) >= n {
             n_cols - 1
         } else {

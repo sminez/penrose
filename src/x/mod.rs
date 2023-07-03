@@ -220,7 +220,7 @@ pub trait XConnExt: XConn + Sized {
     where
         F: FnMut(&mut ClientSet),
     {
-        f(&mut state.client_set); // NOTE: mutating the existing state
+        f(&mut state.client_set); // mutating the existing state
 
         let ss = state.position_and_snapshot(self);
         state.diff.update(ss);

@@ -258,7 +258,7 @@ impl WmNormalHints {
 
     /// Apply these size hints to a given [Rect].
     ///
-    /// NOTE: currently only the max size is respected
+    /// > Currently only the max size is respected
     pub fn apply_to(&self, mut r: Rect) -> Rect {
         if let Some(max) = self.max {
             if r.is_larger_than(&max) {

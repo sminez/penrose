@@ -409,7 +409,7 @@ impl Rect {
     ///
     /// Returns `None` if perc is not between 0.0 and 1.0
     pub fn split_at_width_perc(&self, perc: f32) -> Option<(Self, Self)> {
-        if perc < 0.0 || perc > 1.0 {
+        if !(0.0..=1.0).contains(&perc) {
             None
         } else {
             let w = (self.w as f32 * perc) as u32;
@@ -429,7 +429,7 @@ impl Rect {
     ///
     /// Returns `None` if perc is not between 0.0 and 1.0
     pub fn split_at_height_perc(&self, perc: f32) -> Option<(Self, Self)> {
-        if perc < 0.0 || perc > 1.0 {
+        if !(0.0..=1.0).contains(&perc) {
             None
         } else {
             let h = (self.h as f32 * perc) as u32;

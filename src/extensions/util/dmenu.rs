@@ -64,8 +64,8 @@ pub struct DMenuConfig {
 
     /// Should dmenu treat the input as a password and render characters as '*'?
     ///
-    /// NOTE: This requires the [Password][1] patch in order to work.
-    /// or in the case of dmenu-rs it requires the password plugin.
+    /// > This requires the [Password][1] patch in order to work.
+    /// > or in the case of dmenu-rs it requires the password plugin.
     ///
     /// Default: false
     ///

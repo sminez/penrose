@@ -53,9 +53,9 @@ pub fn spawn_with_args<S: Into<String>>(cmd: S, args: &[&str]) -> Result<()> {
 
 /// Run an external command and return its output.
 ///
-/// NOTE: std::process::Command::output will not work within penrose due to the
-/// way that signal handling is set up. Use this function if you need to access the
-/// output of a process that you spawn.
+/// > [`std::process::Command::output`] will not work within penrose due to the
+/// > way that signal handling is set up. Use this function if you need to access the
+/// > output of a process that you spawn.
 pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
     let cmd = cmd.into();
     debug!(?cmd, "spawning subprocess for output");
@@ -82,9 +82,9 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
 
 /// Run an external command with arguments and return its output.
 ///
-/// NOTE: std::process::Command::output will not work within penrose due to the
-/// way that signal handling is set up. Use this function if you need to access the
-/// output of a process that you spawn.
+/// > [`std::process::Command::output`] will not work within penrose due to the
+/// > way that signal handling is set up. Use this function if you need to access the
+/// > output of a process that you spawn.
 pub fn spawn_for_output_with_args<S: Into<String>>(
     cmd: S,
     args: &[&str],

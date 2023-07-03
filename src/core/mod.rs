@@ -623,8 +623,8 @@ fn client_should_be_manged<X: XConn>(id: Xid, x: &X) -> bool {
     let viewable = map_state == MapState::Viewable;
     let iconic = wm_state == Some(WmState::Iconic);
 
-    // NOTE: This condition for determining what windows we should manage is
-    //       taken from the `scan` function found in both dwm and XMonad.
+    // This condition for determining what windows we should manage is
+    // taken from the `scan` function found in both dwm and XMonad.
     !override_redirect && (viewable || iconic)
 }
 
