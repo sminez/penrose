@@ -348,16 +348,19 @@ impl<T> Stack<T> {
 
     /// Reverse the ordering of a Stack (up becomes down) while maintaining
     /// focus.
+    #[inline]
     pub fn reverse(&mut self) -> &mut Self {
         swap(&mut self.up, &mut self.down);
 
         self
     }
 
+    #[inline]
     pub(crate) fn swap_focus(&mut self, new: &mut T) {
         swap(&mut self.focus, new);
     }
 
+    #[inline]
     fn rev_up(&mut self) -> &mut Self {
         let mut reversed = take(&mut self.up).into_iter().rev().collect();
         swap(&mut self.up, &mut reversed);
@@ -365,6 +368,7 @@ impl<T> Stack<T> {
         self
     }
 
+    #[inline]
     fn rev_down(&mut self) -> &mut Self {
         let mut reversed = take(&mut self.down).into_iter().rev().collect();
         swap(&mut self.down, &mut reversed);
@@ -535,6 +539,30 @@ impl<T: PartialEq> Stack<T> {
     pub fn contains(&self, t: &T) -> bool {
         &self.focus == t || self.up.contains(t) || self.down.contains(t)
     }
+
+    /// Attempt to focus a given element in the [Stack] if it is present.
+    ///
+    /// If the requested element is not found, the Stack will be left in
+    /// its original state.
+    pub fn focus_element(&mut self, t: &T) {
+        self.focus_element_by(|elem| elem == t)
+    }
+
+    /// Focus the first element found matching the given predicate function.
+    ///
+    /// If no matching elements are found, the Stack will be left in
+    /// its original state.
+    pub fn focus_element_by<F>(&mut self, f: F)
+    where
+        F: Fn(&T) -> bool,
+    {
+        for _ in 0..self.len() {
+            if f(&self.focus) {
+                return;
+            }
+            self.focus_down();
+        }
+    }
 }
 
 // Iteration
@@ -675,6 +703,19 @@ mod tests {
     #[test]
     fn focus_head(mut s: Stack<u8>, expected: Stack<u8>) {
         s.focus_head();
+
+        assert_eq!(s, expected);
+    }
+
+    #[test_case(stack!([1, 2], 3, [4, 5, 6]), |&e| e == 3, stack!([1, 2], 3, [4, 5, 6]); "current focus")]
+    #[test_case(stack!([1, 2], 3, [4, 5, 6]), |&e| e > 4, stack!([1, 2, 3, 4], 5, [6]); "in tail")]
+    #[test_case(stack!([1, 2], 3, [4, 5, 6]), |&e| e < 3 && e > 1, stack!([1], 2, [3, 4, 5, 6]); "in head")]
+    #[test_case(stack!([1, 2], 3, [4, 5, 6]), |&e| e < 3, stack!([], 1, [2, 3, 4, 5, 6]); "in head multiple matches")]
+    #[test_case(stack!([1, 2], 3, [4, 5, 6]), |&e| e == 42, stack!([1, 2], 3, [4, 5, 6]); "not found")]
+    #[test_case(stack!([1, 2], 3, [4, 5, 3, 6]), |&e| e == 42, stack!([1, 2], 3, [4, 5, 3, 6]); "not found with current focus duplicated")]
+    #[test]
+    fn focus_element_by(mut s: Stack<u8>, predicate: fn(&u8) -> bool, expected: Stack<u8>) {
+        s.focus_element_by(predicate);
 
         assert_eq!(s, expected);
     }
