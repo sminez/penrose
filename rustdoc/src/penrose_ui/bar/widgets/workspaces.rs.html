@@ -343,7 +343,7 @@
         <span class="self">self</span>.tags() == new_tags
     }
 
-    <span class="comment">// NOTE: Called after tags_changed above so we assume that tags are matching
+    <span class="comment">// Called after tags_changed above so we assume that tags are matching
     </span><span class="kw">fn </span>occupied_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, workspaces: <span class="kw-2">&amp;</span>[WsMeta]) -&gt; bool {
         <span class="self">self</span>.workspaces
             .iter()

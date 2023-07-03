@@ -927,7 +927,7 @@
     <span class="kw">where
         </span>F: FnMut(<span class="kw-2">&amp;mut </span>ClientSet),
     {
-        f(<span class="kw-2">&amp;mut </span>state.client_set); <span class="comment">// NOTE: mutating the existing state
+        f(<span class="kw-2">&amp;mut </span>state.client_set); <span class="comment">// mutating the existing state
 
         </span><span class="kw">let </span>ss = state.position_and_snapshot(<span class="self">self</span>);
         state.diff.update(ss);

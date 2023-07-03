@@ -341,7 +341,7 @@
         <span class="comment">// Other errors are returned directly
         </span>Event::Error(e) =&gt; <span class="prelude-val">Err</span>(Error::X11rbX11Error(e)),
 
-        <span class="comment">// NOTE: Ignoring other event types
+        <span class="comment">// Ignoring other event types
         </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
     }
 }

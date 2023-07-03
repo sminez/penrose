@@ -1138,7 +1138,7 @@
     ///
     /// Returns `None` if perc is not between 0.0 and 1.0
     </span><span class="kw">pub fn </span>split_at_width_perc(<span class="kw-2">&amp;</span><span class="self">self</span>, perc: f32) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>, <span class="self">Self</span>)&gt; {
-        <span class="kw">if </span>perc &lt; <span class="number">0.0 </span>|| perc &gt; <span class="number">1.0 </span>{
+        <span class="kw">if </span>!(<span class="number">0.0</span>..=<span class="number">1.0</span>).contains(<span class="kw-2">&amp;</span>perc) {
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
             <span class="kw">let </span>w = (<span class="self">self</span>.w <span class="kw">as </span>f32 * perc) <span class="kw">as </span>u32;
@@ -1158,7 +1158,7 @@
     ///
     /// Returns `None` if perc is not between 0.0 and 1.0
     </span><span class="kw">pub fn </span>split_at_height_perc(<span class="kw-2">&amp;</span><span class="self">self</span>, perc: f32) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>, <span class="self">Self</span>)&gt; {
-        <span class="kw">if </span>perc &lt; <span class="number">0.0 </span>|| perc &gt; <span class="number">1.0 </span>{
+        <span class="kw">if </span>!(<span class="number">0.0</span>..=<span class="number">1.0</span>).contains(<span class="kw-2">&amp;</span>perc) {
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
             <span class="kw">let </span>h = (<span class="self">self</span>.h <span class="kw">as </span>f32 * perc) <span class="kw">as </span>u32;

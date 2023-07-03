@@ -572,9 +572,9 @@
         res
     }
 
-    <span class="comment">// NOTE: Not checking that clients on the new workspace are visible as this is driven entirely by
-    //       the positions returned by the Layout. In these tests, those are being specified manually
-    //       so there is nothing to test.
+    <span class="comment">// Not checking that clients on the new workspace are visible as this is driven entirely by
+    // the positions returned by the Layout. In these tests, those are being specified manually
+    // so there is nothing to test.
     </span><span class="attr">#[quickcheck]
     </span><span class="kw">fn </span>focusing_new_workspace_hides_old_clients_and_tag_in_diff(<span class="kw-2">mut </span>s: StackSet&lt;Xid&gt;) -&gt; bool {
         <span class="kw">let </span>tag = <span class="kw">match </span>s.first_hidden_tag() {

@@ -430,7 +430,7 @@
     <span class="doccomment">/// Create a new default [MainAndStack] [Layout] as a trait object ready to be added to your
     /// [LayoutStack][crate::core::layout::LayoutStack].
     </span><span class="kw">pub fn </span>boxed_default() -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
-        Box::new(<span class="self">Self</span>::default())
+        Box::&lt;<span class="self">Self</span>&gt;::default()
     }
 
     <span class="doccomment">/// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows
@@ -714,7 +714,7 @@
 
     <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
         <span class="kw">let </span>n = s.len();
-        <span class="kw">let </span>n_cols = (<span class="number">1</span>..).skip_while(|<span class="kw-2">&amp;</span>i| (i * i) &lt; n).next().unwrap_or(<span class="number">1</span>);
+        <span class="kw">let </span>n_cols = (<span class="number">1</span>..).find(|<span class="kw-2">&amp;</span>i| (i * i) &gt;= n).unwrap_or(<span class="number">1</span>);
         <span class="kw">let </span>n_rows = <span class="kw">if </span>n_cols * (n_cols - <span class="number">1</span>) &gt;= n {
             n_cols - <span class="number">1
         </span>} <span class="kw">else </span>{

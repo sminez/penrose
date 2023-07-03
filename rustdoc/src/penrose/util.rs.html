@@ -227,9 +227,9 @@
 
 <span class="doccomment">/// Run an external command and return its output.
 ///
-/// NOTE: std::process::Command::output will not work within penrose due to the
-/// way that signal handling is set up. Use this function if you need to access the
-/// output of a process that you spawn.
+/// &gt; [`std::process::Command::output`] will not work within penrose due to the
+/// &gt; way that signal handling is set up. Use this function if you need to access the
+/// &gt; output of a process that you spawn.
 </span><span class="kw">pub fn </span>spawn_for_output&lt;S: Into&lt;String&gt;&gt;(cmd: S) -&gt; std::io::Result&lt;String&gt; {
     <span class="kw">let </span>cmd = cmd.into();
     <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">&quot;spawning subprocess for output&quot;</span>);
@@ -256,9 +256,9 @@
 
 <span class="doccomment">/// Run an external command with arguments and return its output.
 ///
-/// NOTE: std::process::Command::output will not work within penrose due to the
-/// way that signal handling is set up. Use this function if you need to access the
-/// output of a process that you spawn.
+/// &gt; [`std::process::Command::output`] will not work within penrose due to the
+/// &gt; way that signal handling is set up. Use this function if you need to access the
+/// &gt; output of a process that you spawn.
 </span><span class="kw">pub fn </span>spawn_for_output_with_args&lt;S: Into&lt;String&gt;&gt;(
     cmd: S,
     args: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str],

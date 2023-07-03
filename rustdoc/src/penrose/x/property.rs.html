@@ -646,7 +646,7 @@
 
     <span class="doccomment">/// Apply these size hints to a given [Rect].
     ///
-    /// NOTE: currently only the max size is respected
+    /// &gt; Currently only the max size is respected
     </span><span class="kw">pub fn </span>apply_to(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>r: Rect) -&gt; Rect {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(max) = <span class="self">self</span>.max {
             <span class="kw">if </span>r.is_larger_than(<span class="kw-2">&amp;</span>max) {

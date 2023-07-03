@@ -1362,8 +1362,8 @@
     <span class="kw">let </span>viewable = map_state == MapState::Viewable;
     <span class="kw">let </span>iconic = wm_state == <span class="prelude-val">Some</span>(WmState::Iconic);
 
-    <span class="comment">// NOTE: This condition for determining what windows we should manage is
-    //       taken from the `scan` function found in both dwm and XMonad.
+    <span class="comment">// This condition for determining what windows we should manage is
+    // taken from the `scan` function found in both dwm and XMonad.
     </span>!override_redirect &amp;&amp; (viewable || iconic)
 }
 
