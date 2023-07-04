@@ -602,6 +602,8 @@
 <a href="#602" id="602">602</a>
 <a href="#603" id="603">603</a>
 <a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in layouts.
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
@@ -613,7 +615,9 @@
 <span class="kw">pub mod </span>messages;
 <span class="kw">pub mod </span>transformers;
 
-<span class="attr">#[cfg(test)]
+<span class="comment">// NOTE: When adding new layouts to this module, they should have a corresponding quickcheck
+//       test added to ensure that the layout logic does not panic when given arbitrary inputs.
+</span><span class="attr">#[cfg(test)]
 </span><span class="kw">pub mod </span>quickcheck_tests;
 
 <span class="attr">#[derive(Debug, Clone, Copy)]
