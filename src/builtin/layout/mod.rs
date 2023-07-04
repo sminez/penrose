@@ -337,36 +337,34 @@ impl CenteredMain {
 
         if self.single_stack(n) {
             r.as_rows(n).iter().zip(s).map(|(r, c)| (*c, *r)).collect()
+        } else if n.saturating_sub(self.max_main) == 1 {
+            let (main, stack) = r
+                .split_at_width_perc(self.ratio)
+                .expect("split point to be valid");
+
+            main.as_rows(self.max_main)
+                .into_iter()
+                .chain(std::iter::once(stack))
+                .zip(s)
+                .map(|(r, c)| (*c, r))
+                .collect()
         } else {
             let n_right = n.saturating_sub(self.max_main) / 2;
             let n_left = n.saturating_sub(n_right).saturating_sub(self.max_main);
-            if n_left == 0 {
-                let (main, stack) = r
-                    .split_at_width_perc(self.ratio)
-                    .expect("split point to be valid");
+            let (left_and_main, right) = r
+                .split_at_width_perc(1.0 - self.ratio / 2.0)
+                .expect("split point to be valid");
+            let (left, main) = left_and_main
+                .split_at_width(right.w)
+                .expect("split point to be valid");
 
-                main.as_rows(self.max_main)
-                    .into_iter()
-                    .chain(stack.as_rows(n_right))
-                    .zip(s)
-                    .map(|(r, c)| (*c, r))
-                    .collect()
-            } else {
-                let (left_and_main, right) = r
-                    .split_at_width_perc(1.0 - self.ratio / 2.0)
-                    .expect("split point to be valid");
-                let (left, main) = left_and_main
-                    .split_at_width(right.w)
-                    .expect("split point to be valid");
-
-                main.as_rows(self.max_main)
-                    .into_iter()
-                    .chain(left.as_rows(n_left))
-                    .chain(right.as_rows(n_right))
-                    .zip(s)
-                    .map(|(r, c)| (*c, r))
-                    .collect()
-            }
+            main.as_rows(self.max_main)
+                .into_iter()
+                .chain(left.as_rows(n_left))
+                .chain(right.as_rows(n_right))
+                .zip(s)
+                .map(|(r, c)| (*c, r))
+                .collect()
         }
     }
 
@@ -381,36 +379,34 @@ impl CenteredMain {
                 .zip(s)
                 .map(|(r, c)| (*c, *r))
                 .collect()
+        } else if n.saturating_sub(self.max_main) == 1 {
+            let (main, stack) = r
+                .split_at_height_perc(1.0 - self.ratio)
+                .expect("split point to be valid");
+
+            main.as_columns(self.max_main)
+                .into_iter()
+                .chain(std::iter::once(stack))
+                .zip(s)
+                .map(|(r, c)| (*c, r))
+                .collect()
         } else {
             let n_top = n.saturating_sub(self.max_main) / 2;
             let n_bottom = n.saturating_sub(n_top).saturating_sub(self.max_main);
-            if n_bottom == 0 {
-                let (main, stack) = r
-                    .split_at_height_perc(1.0 - self.ratio)
-                    .expect("split point to be valid");
+            let (top_and_main, bottom) = r
+                .split_at_height_perc(1.0 - self.ratio / 2.0)
+                .expect("split point to be valid");
+            let (top, main) = top_and_main
+                .split_at_height(bottom.h)
+                .expect("split point to be valid");
 
-                main.as_columns(self.max_main)
-                    .into_iter()
-                    .chain(stack.as_columns(n_bottom))
-                    .zip(s)
-                    .map(|(r, c)| (*c, r))
-                    .collect()
-            } else {
-                let (top_and_main, bottom) = r
-                    .split_at_height_perc(1.0 - self.ratio / 2.0)
-                    .expect("split point to be valid");
-                let (top, main) = top_and_main
-                    .split_at_height(bottom.h)
-                    .expect("split point to be valid");
-
-                main.as_columns(self.max_main)
-                    .into_iter()
-                    .chain(top.as_columns(n_top))
-                    .chain(bottom.as_columns(n_bottom))
-                    .zip(s)
-                    .map(|(r, c)| (*c, r))
-                    .collect()
-            }
+            main.as_columns(self.max_main)
+                .into_iter()
+                .chain(top.as_columns(n_top))
+                .chain(bottom.as_columns(n_bottom))
+                .zip(s)
+                .map(|(r, c)| (*c, r))
+                .collect()
         }
     }
 }
