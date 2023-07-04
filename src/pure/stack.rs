@@ -430,6 +430,22 @@ impl<T> Stack<T> {
         self
     }
 
+    /// Focus the first element found matching the given predicate function.
+    ///
+    /// If no matching elements are found, the Stack will be left in
+    /// its original state.
+    pub fn focus_element_by<F>(&mut self, f: F)
+    where
+        F: Fn(&T) -> bool,
+    {
+        for _ in 0..self.len() {
+            if f(&self.focus) {
+                return;
+            }
+            self.focus_down();
+        }
+    }
+
     /// Swap the focused element with the one above, wrapping from top to bottom.
     /// The currently focused element is maintained by this operation.
     pub fn swap_up(&mut self) -> &mut Self {
@@ -546,22 +562,6 @@ impl<T: PartialEq> Stack<T> {
     /// its original state.
     pub fn focus_element(&mut self, t: &T) {
         self.focus_element_by(|elem| elem == t)
-    }
-
-    /// Focus the first element found matching the given predicate function.
-    ///
-    /// If no matching elements are found, the Stack will be left in
-    /// its original state.
-    pub fn focus_element_by<F>(&mut self, f: F)
-    where
-        F: Fn(&T) -> bool,
-    {
-        for _ in 0..self.len() {
-            if f(&self.focus) {
-                return;
-            }
-            self.focus_down();
-        }
     }
 }
 

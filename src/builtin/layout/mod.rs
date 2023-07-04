@@ -15,6 +15,15 @@ enum StackPosition {
     Bottom,
 }
 
+impl StackPosition {
+    fn rotate(&self) -> Self {
+        match self {
+            StackPosition::Side => StackPosition::Bottom,
+            StackPosition::Bottom => StackPosition::Side,
+        }
+    }
+}
+
 /// A simple [Layout] with main and secondary regions.
 ///
 /// - `MainAndStack::side` give a main region to the left and remaining clients to the right.
@@ -47,6 +56,18 @@ pub struct MainAndStack {
     ratio: f32,
     ratio_step: f32,
     mirrored: bool,
+}
+
+impl Default for MainAndStack {
+    fn default() -> Self {
+        Self {
+            pos: StackPosition::Side,
+            max_main: 1,
+            ratio: 0.6,
+            ratio_step: 0.1,
+            mirrored: false,
+        }
+    }
 }
 
 impl MainAndStack {
@@ -104,18 +125,16 @@ impl MainAndStack {
         }
     }
 
-    fn split(&self, d: u32) -> u32 {
-        let ratio = if self.mirrored {
+    fn ratio(&self) -> f32 {
+        if self.mirrored {
             1.0 - self.ratio
         } else {
             self.ratio
-        };
-
-        ((d as f32) * ratio) as u32
+        }
     }
 
     // In each of these four cases we no longer have a split point giving
-    // us two independent stacks.
+    // us independent stacks.
     fn all_windows_in_single_stack(&self, n: u32) -> bool {
         n <= self.max_main || self.max_main == 0 || self.ratio == 1.0 || self.ratio == 0.0
     }
@@ -127,8 +146,9 @@ impl MainAndStack {
             r.as_rows(n).iter().zip(s).map(|(r, c)| (*c, *r)).collect()
         } else {
             // We have two stacks so split the screen in two and then build a stack for each
-            let split = self.split(r.w);
-            let (mut main, mut stack) = r.split_at_width(split).expect("split point to be valid");
+            let (mut main, mut stack) = r
+                .split_at_width_perc(self.ratio())
+                .expect("split point to be valid");
             if self.mirrored {
                 (main, stack) = (stack, main);
             }
@@ -152,8 +172,9 @@ impl MainAndStack {
                 .map(|(r, c)| (*c, *r))
                 .collect()
         } else {
-            let split = self.split(r.h);
-            let (mut main, mut stack) = r.split_at_height(split).expect("split point to be valid");
+            let (mut main, mut stack) = r
+                .split_at_height_perc(self.ratio())
+                .expect("split point to be valid");
             if self.mirrored {
                 (main, stack) = (stack, main);
             }
@@ -164,18 +185,6 @@ impl MainAndStack {
                 .zip(s)
                 .map(|(r, c)| (*c, r))
                 .collect()
-        }
-    }
-}
-
-impl Default for MainAndStack {
-    fn default() -> Self {
-        Self {
-            pos: StackPosition::Side,
-            max_main: 1,
-            ratio: 0.6,
-            ratio_step: 0.1,
-            mirrored: false,
         }
     }
 }
@@ -223,10 +232,229 @@ impl Layout for MainAndStack {
         } else if let Some(&Mirror) = m.downcast_ref() {
             self.mirrored = !self.mirrored;
         } else if let Some(&Rotate) = m.downcast_ref() {
-            self.pos = match self.pos {
-                StackPosition::Side => StackPosition::Bottom,
-                StackPosition::Bottom => StackPosition::Side,
-            };
+            self.pos = self.pos.rotate();
+        }
+
+        None
+    }
+}
+
+/// A simple [Layout] with a main and secondary side regions.
+///
+/// - `CenteredMain::vertical` places the secondary regions to the left and right.
+/// - `CenteredMain::horizontal` places the secondary regions to the top and bottom.
+///
+/// The ratio between the main and secondary stack regions can be adjusted by sending [ShrinkMain]
+/// and [ExpandMain] messages to this layout. The number of clients in the main area can be
+/// increased or decreased by sending an [IncMain] message. To flip between the vertical and
+/// horizontal behaviours you can send a [Rotate] message.
+///
+/// ```text
+/// ...................................
+/// .                .                .
+/// .                .                .
+/// .                .                .
+/// ...................................
+/// .                                 .
+/// .                                 .
+/// .                                 .
+/// .                                 .
+/// .                                 .
+/// ...................................
+/// .                .                .
+/// .                .                .
+/// .                .                .
+/// ...................................
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct CenteredMain {
+    pos: StackPosition,
+    max_main: u32,
+    ratio: f32,
+    ratio_step: f32,
+}
+
+impl Default for CenteredMain {
+    fn default() -> Self {
+        Self {
+            pos: StackPosition::Side,
+            max_main: 1,
+            ratio: 0.6,
+            ratio_step: 0.1,
+        }
+    }
+}
+
+impl CenteredMain {
+    /// Create a new default [CenteredMain] [Layout] as a trait object ready to be added to your
+    /// [LayoutStack][crate::core::layout::LayoutStack].
+    pub fn boxed_default() -> Box<dyn Layout> {
+        Box::<Self>::default()
+    }
+
+    /// Create a new [CenteredMain] [Layout] with a vertical main area and remaining windows
+    /// tiled to the left and right.
+    pub fn vertical(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Self::vertical_unboxed(max_main, ratio, ratio_step))
+    }
+
+    /// Create a new [CenteredMain] [Layout] with a vertical main area and remaining windows
+    /// tiled to the left and right.
+    pub fn vertical_unboxed(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
+        Self {
+            pos: StackPosition::Side,
+            max_main,
+            ratio,
+            ratio_step,
+        }
+    }
+
+    /// Create a new [CenteredMain] [Layout] with a horizontal main area and remaining windows
+    /// tiled above and below.
+    pub fn horizontal(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Self::horizontal_unboxed(max_main, ratio, ratio_step))
+    }
+
+    /// Create a new [CenteredMain] [Layout] with a horizontal main area and remaining windows
+    /// tiled above and below.
+    pub fn horizontal_unboxed(max_main: u32, ratio: f32, ratio_step: f32) -> Self {
+        Self {
+            pos: StackPosition::Bottom,
+            max_main,
+            ratio,
+            ratio_step,
+        }
+    }
+
+    fn single_stack(&self, n: u32) -> bool {
+        n <= self.max_main || self.ratio == 1.0 || self.ratio == 0.0
+    }
+
+    // NOTE: There are subtle differences between this method and layout_horizontal
+    // >> Be careful when refactoring!
+    fn layout_vertical(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
+        let n = s.len() as u32;
+
+        if self.single_stack(n) {
+            r.as_rows(n).iter().zip(s).map(|(r, c)| (*c, *r)).collect()
+        } else {
+            let n_right = n.saturating_sub(self.max_main) / 2;
+            let n_left = n.saturating_sub(n_right).saturating_sub(self.max_main);
+            if n_left == 0 {
+                let (main, stack) = r
+                    .split_at_width_perc(self.ratio)
+                    .expect("split point to be valid");
+
+                main.as_rows(self.max_main)
+                    .into_iter()
+                    .chain(stack.as_rows(n_right))
+                    .zip(s)
+                    .map(|(r, c)| (*c, r))
+                    .collect()
+            } else {
+                let (left_and_main, right) = r
+                    .split_at_width_perc(1.0 - self.ratio / 2.0)
+                    .expect("split point to be valid");
+                let (left, main) = left_and_main
+                    .split_at_width(right.w)
+                    .expect("split point to be valid");
+
+                main.as_rows(self.max_main)
+                    .into_iter()
+                    .chain(left.as_rows(n_left))
+                    .chain(right.as_rows(n_right))
+                    .zip(s)
+                    .map(|(r, c)| (*c, r))
+                    .collect()
+            }
+        }
+    }
+
+    // NOTE: There are subtle differences between this method and layout_vertical
+    // >> Be careful when refactoring!
+    fn layout_horizontal(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
+        let n = s.len() as u32;
+
+        if self.single_stack(n) {
+            r.as_columns(n)
+                .iter()
+                .zip(s)
+                .map(|(r, c)| (*c, *r))
+                .collect()
+        } else {
+            let n_top = n.saturating_sub(self.max_main) / 2;
+            let n_bottom = n.saturating_sub(n_top).saturating_sub(self.max_main);
+            if n_bottom == 0 {
+                let (main, stack) = r
+                    .split_at_height_perc(1.0 - self.ratio)
+                    .expect("split point to be valid");
+
+                main.as_columns(self.max_main)
+                    .into_iter()
+                    .chain(stack.as_columns(n_bottom))
+                    .zip(s)
+                    .map(|(r, c)| (*c, r))
+                    .collect()
+            } else {
+                let (top_and_main, bottom) = r
+                    .split_at_height_perc(1.0 - self.ratio / 2.0)
+                    .expect("split point to be valid");
+                let (top, main) = top_and_main
+                    .split_at_height(bottom.h)
+                    .expect("split point to be valid");
+
+                main.as_columns(self.max_main)
+                    .into_iter()
+                    .chain(top.as_columns(n_top))
+                    .chain(bottom.as_columns(n_bottom))
+                    .zip(s)
+                    .map(|(r, c)| (*c, r))
+                    .collect()
+            }
+        }
+    }
+}
+
+impl Layout for CenteredMain {
+    fn name(&self) -> String {
+        match self.pos {
+            StackPosition::Side => "Center|".to_owned(),
+            StackPosition::Bottom => "Center-".to_owned(),
+        }
+    }
+
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Box::new(*self)
+    }
+
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        let positions = match self.pos {
+            StackPosition::Side => self.layout_vertical(s, r),
+            StackPosition::Bottom => self.layout_horizontal(s, r),
+        };
+
+        (None, positions)
+    }
+
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        if let Some(&ExpandMain) = m.downcast_ref() {
+            self.ratio += self.ratio_step;
+            if self.ratio > 1.0 {
+                self.ratio = 1.0;
+            }
+        } else if let Some(&ShrinkMain) = m.downcast_ref() {
+            self.ratio -= self.ratio_step;
+            if self.ratio < 0.0 {
+                self.ratio = 0.0;
+            }
+        } else if let Some(&IncMain(n)) = m.downcast_ref() {
+            if n < 0 {
+                self.max_main = self.max_main.saturating_sub((-n) as u32);
+            } else {
+                self.max_main += n as u32;
+            }
+        } else if let Some(&Rotate) = m.downcast_ref() {
+            self.pos = self.pos.rotate();
         }
 
         None
