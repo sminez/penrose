@@ -9,6 +9,8 @@ use crate::{
 pub mod messages;
 pub mod transformers;
 
+// NOTE: When adding new layouts to this module, they should have a corresponding quickcheck
+//       test added to ensure that the layout logic does not panic when given arbitrary inputs.
 #[cfg(test)]
 pub mod quickcheck_tests;
 
