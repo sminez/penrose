@@ -599,10 +599,6 @@
 <a href="#599" id="599">599</a>
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in layouts.
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
@@ -942,36 +938,34 @@
 
         <span class="kw">if </span><span class="self">self</span>.single_stack(n) {
             r.as_rows(n).iter().zip(s).map(|(r, c)| (<span class="kw-2">*</span>c, <span class="kw-2">*</span>r)).collect()
+        } <span class="kw">else if </span>n.saturating_sub(<span class="self">self</span>.max_main) == <span class="number">1 </span>{
+            <span class="kw">let </span>(main, stack) = r
+                .split_at_width_perc(<span class="self">self</span>.ratio)
+                .expect(<span class="string">&quot;split point to be valid&quot;</span>);
+
+            main.as_rows(<span class="self">self</span>.max_main)
+                .into_iter()
+                .chain(std::iter::once(stack))
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, r))
+                .collect()
         } <span class="kw">else </span>{
             <span class="kw">let </span>n_right = n.saturating_sub(<span class="self">self</span>.max_main) / <span class="number">2</span>;
             <span class="kw">let </span>n_left = n.saturating_sub(n_right).saturating_sub(<span class="self">self</span>.max_main);
-            <span class="kw">if </span>n_left == <span class="number">0 </span>{
-                <span class="kw">let </span>(main, stack) = r
-                    .split_at_width_perc(<span class="self">self</span>.ratio)
-                    .expect(<span class="string">&quot;split point to be valid&quot;</span>);
+            <span class="kw">let </span>(left_and_main, right) = r
+                .split_at_width_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio / <span class="number">2.0</span>)
+                .expect(<span class="string">&quot;split point to be valid&quot;</span>);
+            <span class="kw">let </span>(left, main) = left_and_main
+                .split_at_width(right.w)
+                .expect(<span class="string">&quot;split point to be valid&quot;</span>);
 
-                main.as_rows(<span class="self">self</span>.max_main)
-                    .into_iter()
-                    .chain(stack.as_rows(n_right))
-                    .zip(s)
-                    .map(|(r, c)| (<span class="kw-2">*</span>c, r))
-                    .collect()
-            } <span class="kw">else </span>{
-                <span class="kw">let </span>(left_and_main, right) = r
-                    .split_at_width_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio / <span class="number">2.0</span>)
-                    .expect(<span class="string">&quot;split point to be valid&quot;</span>);
-                <span class="kw">let </span>(left, main) = left_and_main
-                    .split_at_width(right.w)
-                    .expect(<span class="string">&quot;split point to be valid&quot;</span>);
-
-                main.as_rows(<span class="self">self</span>.max_main)
-                    .into_iter()
-                    .chain(left.as_rows(n_left))
-                    .chain(right.as_rows(n_right))
-                    .zip(s)
-                    .map(|(r, c)| (<span class="kw-2">*</span>c, r))
-                    .collect()
-            }
+            main.as_rows(<span class="self">self</span>.max_main)
+                .into_iter()
+                .chain(left.as_rows(n_left))
+                .chain(right.as_rows(n_right))
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, r))
+                .collect()
         }
     }
 
@@ -986,36 +980,34 @@
                 .zip(s)
                 .map(|(r, c)| (<span class="kw-2">*</span>c, <span class="kw-2">*</span>r))
                 .collect()
+        } <span class="kw">else if </span>n.saturating_sub(<span class="self">self</span>.max_main) == <span class="number">1 </span>{
+            <span class="kw">let </span>(main, stack) = r
+                .split_at_height_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio)
+                .expect(<span class="string">&quot;split point to be valid&quot;</span>);
+
+            main.as_columns(<span class="self">self</span>.max_main)
+                .into_iter()
+                .chain(std::iter::once(stack))
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, r))
+                .collect()
         } <span class="kw">else </span>{
             <span class="kw">let </span>n_top = n.saturating_sub(<span class="self">self</span>.max_main) / <span class="number">2</span>;
             <span class="kw">let </span>n_bottom = n.saturating_sub(n_top).saturating_sub(<span class="self">self</span>.max_main);
-            <span class="kw">if </span>n_bottom == <span class="number">0 </span>{
-                <span class="kw">let </span>(main, stack) = r
-                    .split_at_height_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio)
-                    .expect(<span class="string">&quot;split point to be valid&quot;</span>);
+            <span class="kw">let </span>(top_and_main, bottom) = r
+                .split_at_height_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio / <span class="number">2.0</span>)
+                .expect(<span class="string">&quot;split point to be valid&quot;</span>);
+            <span class="kw">let </span>(top, main) = top_and_main
+                .split_at_height(bottom.h)
+                .expect(<span class="string">&quot;split point to be valid&quot;</span>);
 
-                main.as_columns(<span class="self">self</span>.max_main)
-                    .into_iter()
-                    .chain(stack.as_columns(n_bottom))
-                    .zip(s)
-                    .map(|(r, c)| (<span class="kw-2">*</span>c, r))
-                    .collect()
-            } <span class="kw">else </span>{
-                <span class="kw">let </span>(top_and_main, bottom) = r
-                    .split_at_height_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio / <span class="number">2.0</span>)
-                    .expect(<span class="string">&quot;split point to be valid&quot;</span>);
-                <span class="kw">let </span>(top, main) = top_and_main
-                    .split_at_height(bottom.h)
-                    .expect(<span class="string">&quot;split point to be valid&quot;</span>);
-
-                main.as_columns(<span class="self">self</span>.max_main)
-                    .into_iter()
-                    .chain(top.as_columns(n_top))
-                    .chain(bottom.as_columns(n_bottom))
-                    .zip(s)
-                    .map(|(r, c)| (<span class="kw-2">*</span>c, r))
-                    .collect()
-            }
+            main.as_columns(<span class="self">self</span>.max_main)
+                .into_iter()
+                .chain(top.as_columns(n_top))
+                .chain(bottom.as_columns(n_bottom))
+                .zip(s)
+                .map(|(r, c)| (<span class="kw-2">*</span>c, r))
+                .collect()
         }
     }
 }
