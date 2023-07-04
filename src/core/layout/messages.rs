@@ -1,7 +1,11 @@
 use std::any::Any;
 use std::fmt;
 
-/// A dynamically typed message to be sent to a [crate::core::layout::Layout] for processing
+/// A dynamically typed message to be sent to a [Layout][0] for processing.
+///
+/// See the [IntoMessage] trait for how to mark a type as being usable as a [Message].
+///
+///   [0]: crate::core::layout::Layout
 pub struct Message(Box<dyn Any>);
 
 impl fmt::Debug for Message {
@@ -17,7 +21,18 @@ impl Message {
     }
 }
 
-/// Marker trait for a type that can be sent as a [crate::core::layout::Message]
+/// Marker trait for a type that can be sent as a [Message].
+///
+/// The [impl_message][0] macro can be used to easily implement this trait and mark
+/// a type as being usable as a layout message:
+/// ```
+/// use penrose::impl_message;
+///
+/// struct MyMessage;
+/// impl_message!(MyMessage);
+/// ```
+///
+///   [0] crate::impl_message
 pub trait IntoMessage: Any {
     /// Wrap this value as a dynamically typed message for sending to a layout
     fn into_message(self) -> Message
