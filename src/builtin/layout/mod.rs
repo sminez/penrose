@@ -9,6 +9,9 @@ use crate::{
 pub mod messages;
 pub mod transformers;
 
+#[cfg(test)]
+pub mod quickcheck_tests;
+
 #[derive(Debug, Clone, Copy)]
 enum StackPosition {
     Side,
