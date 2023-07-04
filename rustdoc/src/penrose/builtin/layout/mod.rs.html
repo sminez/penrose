@@ -599,6 +599,9 @@
 <a href="#599" id="599">599</a>
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in layouts.
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
@@ -609,6 +612,9 @@
 
 <span class="kw">pub mod </span>messages;
 <span class="kw">pub mod </span>transformers;
+
+<span class="attr">#[cfg(test)]
+</span><span class="kw">pub mod </span>quickcheck_tests;
 
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">enum </span>StackPosition {
