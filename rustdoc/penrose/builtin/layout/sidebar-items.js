@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["messages","transformers"],"struct":["Grid","MainAndStack","Monocle"]};
+window.SIDEBAR_ITEMS = {"mod":["messages","transformers"],"struct":["CenteredMain","Grid","MainAndStack","Monocle"]};

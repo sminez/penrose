@@ -1468,6 +1468,22 @@
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Focus the first element found matching the given predicate function.
+    ///
+    /// If no matching elements are found, the Stack will be left in
+    /// its original state.
+    </span><span class="kw">pub fn </span>focus_element_by&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F)
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>T) -&gt; bool,
+    {
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.len() {
+            <span class="kw">if </span>f(<span class="kw-2">&amp;</span><span class="self">self</span>.focus) {
+                <span class="kw">return</span>;
+            }
+            <span class="self">self</span>.focus_down();
+        }
+    }
+
     <span class="doccomment">/// Swap the focused element with the one above, wrapping from top to bottom.
     /// The currently focused element is maintained by this operation.
     </span><span class="kw">pub fn </span>swap_up(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
@@ -1584,22 +1600,6 @@
     /// its original state.
     </span><span class="kw">pub fn </span>focus_element(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>T) {
         <span class="self">self</span>.focus_element_by(|elem| elem == t)
-    }
-
-    <span class="doccomment">/// Focus the first element found matching the given predicate function.
-    ///
-    /// If no matching elements are found, the Stack will be left in
-    /// its original state.
-    </span><span class="kw">pub fn </span>focus_element_by&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F)
-    <span class="kw">where
-        </span>F: Fn(<span class="kw-2">&amp;</span>T) -&gt; bool,
-    {
-        <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.len() {
-            <span class="kw">if </span>f(<span class="kw-2">&amp;</span><span class="self">self</span>.focus) {
-                <span class="kw">return</span>;
-            }
-            <span class="self">self</span>.focus_down();
-        }
     }
 }
 

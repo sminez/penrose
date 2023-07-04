@@ -209,6 +209,49 @@ messages as can the proportions of the screen assigned to each area.</p>
 right, top or bottom of the screen. There are also a couple of <code>Messages</code> that can
 be sent to switch between the different behaviours if you want to modify a single
 layout rather than register several different ones.</p>
+<h3 id="centered-main"><a class="header" href="#centered-main">Centered Main</a></h3>
+<pre><code>+-----------+-----------+
+|           |           |
+|           |           |
++-----------+-----------+
+|                       |
+|                       |
++-----------+-----------+
+|           |           |
+|           |           |
++-----------+-----------+
+</code></pre>
+<p>There is also a modified version of the <code>MainAndStack</code> layout called <code>CenteredMain</code>
+which provides two secondary areas, one either side of the main area. As with its
+counterpart, you can rotate between having the secondary areas to the side or above
+and below the main area by sending a <code>Rotate Message</code></p>
+<h3 id="grid"><a class="header" href="#grid">Grid</a></h3>
+<pre><code>+-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+</code></pre>
+<p>The <code>Grid</code> layout will tile windows in the smallest <strong>nxn</strong> grid that can hold the
+number of windows present on the workspace.</p>
+<p>Please be aware that if there are not a square number of windows to be tiled, this
+layout will leave gaps:</p>
+<pre><code>+-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |
+|       |       |
++-------+-------+
+</code></pre>
 <h2 id="messages"><a class="header" href="#messages">Messages</a></h2>
 <p>As mentioned above, there are a handful of built in messages that work with the
 <code>MainAndStack</code> layout which are also generally applicable to other layouts with a
