@@ -52,6 +52,58 @@ right, top or bottom of the screen. There are also a couple of `Messages` that c
 be sent to switch between the different behaviours if you want to modify a single
 layout rather than register several different ones.
 
+### Centered Main
+
+```
++-----------+-----------+
+|           |           |
+|           |           |
++-----------+-----------+
+|                       |
+|                       |
++-----------+-----------+
+|           |           |
+|           |           |
++-----------+-----------+
+```
+
+There is also a modified version of the `MainAndStack` layout called `CenteredMain`
+which provides two secondary areas, one either side of the main area. As with its
+counterpart, you can rotate between having the secondary areas to the side or above
+and below the main area by sending a `Rotate Message`
+
+### Grid
+```
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+```
+
+The `Grid` layout will tile windows in the smallest **nxn** grid that can hold the
+number of windows present on the workspace.
+
+Please be aware that if there are not a square number of windows to be tiled, this
+layout will leave gaps:
+```
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |       |
+|       |       |       |
++-------+-------+-------+
+|       |       |
+|       |       |
++-------+-------+
+```
+
 
 ## Messages
 
