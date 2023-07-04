@@ -49,55 +49,119 @@
 <a href="#49" id="49">49</a>
 <a href="#50" id="50">50</a>
 <a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in layout messages.
 //!
-//! It is not a hard requirement for [crate::core::layout::Layout] implementations to handle each
+//! It is not a hard requirement for [Layout][0] implementations to handle each
 //! of the messages provided by this module but wherever possible you should
 //! attempt to do so if the semantics of the message make sense for the
 //! layout you are writing.
+//!
+//!   [0]: crate::core::layout::Layout
 
-</span><span class="macro">macro_rules! </span>msg {
+/// Mark a type as being usable as a [Message][0] for sending to a [Layout][1]
+/// ```
+/// use penrose::impl_message;
+///
+/// struct MyMessageType {
+///     important_data: u8
+/// }
+///
+/// impl_message!(MyMessageType);
+/// ```
+///
+///   [0]: crate::core::layout::Message
+///   [1]: crate::core::layout::Layout
+</span><span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>impl_message {
     (<span class="macro-nonterminal">$m</span>:ident) =&gt; {
         <span class="kw">impl </span><span class="macro-nonterminal">$crate::core::layout::IntoMessage </span><span class="kw">for </span><span class="macro-nonterminal">$m </span>{}
     };
 }
 
-<span class="doccomment">/// Alter the number of clients contained in the main area of the [crate::core::layout::Layout].
+<span class="doccomment">/// Alter the number of clients contained in the main area of the [Layout][0].
+///
+///   [0]: crate::core::layout::Layout
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>IncMain(<span class="kw">pub </span>i8);
-<span class="macro">msg!</span>(IncMain);
+<span class="macro">impl_message!</span>(IncMain);
 
-<span class="doccomment">/// Expand the size of the main area of the [crate::core::layout::Layout].
+<span class="doccomment">/// Expand the size of the main area of the [Layout][0].
+///
+///   [0]: crate::core::layout::Layout
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>ExpandMain;
-<span class="macro">msg!</span>(ExpandMain);
+<span class="macro">impl_message!</span>(ExpandMain);
 
-<span class="doccomment">/// Shrink the size of the main area of the [crate::core::layout::Layout]
+<span class="doccomment">/// Shrink the size of the main area of the [Layout][0]
+///
+///   [0]: crate::core::layout::Layout
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>ShrinkMain;
-<span class="macro">msg!</span>(ShrinkMain);
+<span class="macro">impl_message!</span>(ShrinkMain);
 
-<span class="doccomment">/// Rotate the [crate::core::layout::Layout] to a new orientation
+<span class="doccomment">/// Rotate the [Layout][0] to a new orientation
+///
+///   [0]: crate::core::layout::Layout
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Rotate;
-<span class="macro">msg!</span>(Rotate);
+<span class="macro">impl_message!</span>(Rotate);
 
-<span class="doccomment">/// Mirror the [crate::core::layout::Layout] over either the horizontal or vertical axis.
+<span class="doccomment">/// Mirror the [Layout][0] over either the horizontal or vertical axis.
+///
+///   [0]: crate::core::layout::Layout
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Mirror;
-<span class="macro">msg!</span>(Mirror);
+<span class="macro">impl_message!</span>(Mirror);
 
-<span class="doccomment">/// Unwrap a [crate::core::layout::LayoutTransformer] to return the underlying [crate::core::layout::Layout].
+<span class="doccomment">/// Unwrap a [LayoutTransformer][0] to return the underlying [Layout][1].
 ///
-/// Handling of this message is provided automatically by the [crate::core::layout::LayoutTransformer]
-/// trait.
+/// Handling of this message is provided automatically by the [LayoutTransformer][0] trait.
+///
+///   [0]: crate::core::layout::LayoutTransformer
+///   [1]: crate::core::layout::Layout
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>UnwrapTransformer;
-<span class="macro">msg!</span>(UnwrapTransformer);
+<span class="macro">impl_message!</span>(UnwrapTransformer);
 
-<span class="doccomment">/// A [crate::core::layout::Message] sent when a [crate::core::layout::Layout] is no longer visible (e.g.
-/// Layout changed on a visible [crate::pure::Workspace] or the workspace itself becoming hidden).
+<span class="doccomment">/// A [Message][0] sent when a [Layout][1] is no longer visible (e.g. Layout changed on a visible
+/// [Workspace][2] or the workspace itself becoming hidden).
+///
+///   [0]: crate::core::layout::Message
+///   [1]: crate::core::layout::Layout
+///   [2]: crate::pure::Workspace
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Hide;
-<span class="macro">msg!</span>(Hide);
+<span class="macro">impl_message!</span>(Hide);
 </code></pre></div></section></main></body></html>
