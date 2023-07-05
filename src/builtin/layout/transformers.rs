@@ -12,18 +12,13 @@ simple_transformer!(
     "Reflected"
 );
 
-fn reflect_horizontal(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-    let mid = r.x + r.w / 2;
+fn reflect_horizontal(r_s: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+    let offset = (r_s.x + r_s.w / 2) * 2;
 
     positions
         .into_iter()
         .map(|(id, mut r)| {
-            r.x = if r.x <= mid {
-                2 * (mid - r.x) - r.w
-            } else {
-                2 * mid - r.x - r.w
-            };
-
+            r.x = offset.saturating_sub(r.x).saturating_sub(r.w);
             (id, r)
         })
         .collect()
@@ -37,17 +32,12 @@ simple_transformer!(
 );
 
 fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-    let mid = r.y + r.h / 2;
+    let offset = (r.y + r.h / 2) * 2;
 
     positions
         .into_iter()
         .map(|(id, mut r)| {
-            r.y = if r.y <= mid {
-                2 * (mid - r.y) - r.h
-            } else {
-                2 * mid - r.y - r.h
-            };
-
+            r.y = offset.saturating_sub(r.y).saturating_sub(r.h);
             (id, r)
         })
         .collect()

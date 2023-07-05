@@ -4,7 +4,10 @@
 //! layouts, only that they do not panic and crash the window manager when asked to
 //! layout unexpected inputs.
 use crate::{
-    builtin::layout::{CenteredMain, Grid, MainAndStack, Monocle},
+    builtin::layout::{
+        transformers::{ReflectHorizontal, ReflectVertical},
+        CenteredMain, Grid, MainAndStack, Monocle,
+    },
     core::layout::Layout,
     pure::{geometry::Rect, Stack},
     stack, Xid,
@@ -114,6 +117,28 @@ mod centered_main {
     fn horizontal_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = CenteredMain::horizontal_unboxed(n, ratio, 0.1).layout(&stack, r);
+
+        !positions.is_empty()
+    }
+}
+
+mod transformers {
+    use super::*;
+
+    #[quickcheck]
+    fn reflect_h_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+        let ratio = ((ratio % 10) as f32) / 10.0;
+        let (_, positions) =
+            ReflectHorizontal::wrap(MainAndStack::side(n, ratio, 0.1)).layout(&stack, r);
+
+        !positions.is_empty()
+    }
+
+    #[quickcheck]
+    fn reflect_v_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+        let ratio = ((ratio % 10) as f32) / 10.0;
+        let (_, positions) =
+            ReflectVertical::wrap(MainAndStack::side(n, ratio, 0.1)).layout(&stack, r);
 
         !positions.is_empty()
     }
