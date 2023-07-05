@@ -357,7 +357,7 @@ impl CenteredMain {
             let n_right = n.saturating_sub(self.max_main) / 2;
             let n_left = n.saturating_sub(n_right).saturating_sub(self.max_main);
             let (left_and_main, right) = r
-                .split_at_width_perc(1.0 - self.ratio / 2.0)
+                .split_at_width_perc(0.5 + self.ratio / 2.0)
                 .expect("split point to be valid");
             let (left, main) = left_and_main
                 .split_at_width(right.w)
@@ -399,7 +399,7 @@ impl CenteredMain {
             let n_top = n.saturating_sub(self.max_main) / 2;
             let n_bottom = n.saturating_sub(n_top).saturating_sub(self.max_main);
             let (top_and_main, bottom) = r
-                .split_at_height_perc(1.0 - self.ratio / 2.0)
+                .split_at_height_perc(0.5 + self.ratio / 2.0)
                 .expect("split point to be valid");
             let (top, main) = top_and_main
                 .split_at_height(bottom.h)

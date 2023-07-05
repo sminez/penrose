@@ -127,8 +127,8 @@ impl RelativeTo for RelativeRect {
 impl RelativeTo for Rect {
     fn relative_to(&self, r: &Rect) -> RelativeRect {
         RelativeRect::new(
-            (self.x - r.x) as f64 / r.w as f64,
-            (self.y - r.y) as f64 / r.h as f64,
+            (self.x.saturating_sub(r.x)) as f64 / r.w as f64,
+            (self.y.saturating_sub(r.y)) as f64 / r.h as f64,
             self.w as f64 / r.w as f64,
             self.h as f64 / r.h as f64,
         )
