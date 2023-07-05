@@ -963,7 +963,7 @@
             <span class="kw">let </span>n_right = n.saturating_sub(<span class="self">self</span>.max_main) / <span class="number">2</span>;
             <span class="kw">let </span>n_left = n.saturating_sub(n_right).saturating_sub(<span class="self">self</span>.max_main);
             <span class="kw">let </span>(left_and_main, right) = r
-                .split_at_width_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio / <span class="number">2.0</span>)
+                .split_at_width_perc(<span class="number">0.5 </span>+ <span class="self">self</span>.ratio / <span class="number">2.0</span>)
                 .expect(<span class="string">&quot;split point to be valid&quot;</span>);
             <span class="kw">let </span>(left, main) = left_and_main
                 .split_at_width(right.w)
@@ -1005,7 +1005,7 @@
             <span class="kw">let </span>n_top = n.saturating_sub(<span class="self">self</span>.max_main) / <span class="number">2</span>;
             <span class="kw">let </span>n_bottom = n.saturating_sub(n_top).saturating_sub(<span class="self">self</span>.max_main);
             <span class="kw">let </span>(top_and_main, bottom) = r
-                .split_at_height_perc(<span class="number">1.0 </span>- <span class="self">self</span>.ratio / <span class="number">2.0</span>)
+                .split_at_height_perc(<span class="number">0.5 </span>+ <span class="self">self</span>.ratio / <span class="number">2.0</span>)
                 .expect(<span class="string">&quot;split point to be valid&quot;</span>);
             <span class="kw">let </span>(top, main) = top_and_main
                 .split_at_height(bottom.h)

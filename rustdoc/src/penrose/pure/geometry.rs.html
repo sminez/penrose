@@ -856,8 +856,8 @@
 </span><span class="kw">impl </span>RelativeTo <span class="kw">for </span>Rect {
     <span class="kw">fn </span>relative_to(<span class="kw-2">&amp;</span><span class="self">self</span>, r: <span class="kw-2">&amp;</span>Rect) -&gt; RelativeRect {
         RelativeRect::new(
-            (<span class="self">self</span>.x - r.x) <span class="kw">as </span>f64 / r.w <span class="kw">as </span>f64,
-            (<span class="self">self</span>.y - r.y) <span class="kw">as </span>f64 / r.h <span class="kw">as </span>f64,
+            (<span class="self">self</span>.x.saturating_sub(r.x)) <span class="kw">as </span>f64 / r.w <span class="kw">as </span>f64,
+            (<span class="self">self</span>.y.saturating_sub(r.y)) <span class="kw">as </span>f64 / r.h <span class="kw">as </span>f64,
             <span class="self">self</span>.w <span class="kw">as </span>f64 / r.w <span class="kw">as </span>f64,
             <span class="self">self</span>.h <span class="kw">as </span>f64 / r.h <span class="kw">as </span>f64,
         )
