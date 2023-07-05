@@ -173,16 +173,6 @@
 <a href="#173" id="173">173</a>
 <a href="#174" id="174">174</a>
 <a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in layout transformers.
 </span><span class="kw">use crate</span>::{
     core::layout::{Layout, LayoutTransformer},
@@ -197,18 +187,13 @@
     <span class="string">&quot;Reflected&quot;
 </span>);
 
-<span class="kw">fn </span>reflect_horizontal(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
-    <span class="kw">let </span>mid = r.x + r.w / <span class="number">2</span>;
+<span class="kw">fn </span>reflect_horizontal(r_s: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+    <span class="kw">let </span>offset = (r_s.x + r_s.w / <span class="number">2</span>) * <span class="number">2</span>;
 
     positions
         .into_iter()
         .map(|(id, <span class="kw-2">mut </span>r)| {
-            r.x = <span class="kw">if </span>r.x &lt;= mid {
-                <span class="number">2 </span>* (mid - r.x) - r.w
-            } <span class="kw">else </span>{
-                <span class="number">2 </span>* mid - r.x - r.w
-            };
-
+            r.x = offset.saturating_sub(r.x).saturating_sub(r.w);
             (id, r)
         })
         .collect()
@@ -222,17 +207,12 @@
 </span>);
 
 <span class="kw">fn </span>reflect_vertical(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
-    <span class="kw">let </span>mid = r.y + r.h / <span class="number">2</span>;
+    <span class="kw">let </span>offset = (r.y + r.h / <span class="number">2</span>) * <span class="number">2</span>;
 
     positions
         .into_iter()
         .map(|(id, <span class="kw-2">mut </span>r)| {
-            r.y = <span class="kw">if </span>r.y &lt;= mid {
-                <span class="number">2 </span>* (mid - r.y) - r.h
-            } <span class="kw">else </span>{
-                <span class="number">2 </span>* mid - r.y - r.h
-            };
-
+            r.y = offset.saturating_sub(r.y).saturating_sub(r.h);
             (id, r)
         })
         .collect()
