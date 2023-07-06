@@ -37,6 +37,14 @@ pub trait Layout {
     /// Clone directly)
     fn boxed_clone(&self) -> Box<dyn Layout>;
 
+    /// Convert to a trait object.
+    fn boxed(self) -> Box<dyn Layout>
+    where
+        Self: Sized + 'static,
+    {
+        Box::new(self)
+    }
+
     /// Generate screen positions for clients on a given [crate::pure::Workspace].
     ///
     /// If you do not need to know the details of the workspace being laid out, you should can use the

@@ -130,6 +130,24 @@ impl<T> Workspace<T> {
     pub fn previous_layout(&mut self) {
         self.layouts.focus_up();
     }
+
+    /// Replace the current [LayoutStack] with a new one, returning the layouts that
+    /// were previously active.
+    pub fn set_available_layouts(&mut self, mut layouts: LayoutStack) -> LayoutStack {
+        std::mem::swap(&mut self.layouts, &mut layouts);
+
+        layouts
+    }
+
+    /// Attempt to set the active [Layout][0] by name if it is available.
+    ///
+    /// > Note that some layouts have a dynamically set name and this method will fail to
+    /// > locate such a layout if the current name does not match what you have provided.
+    ///
+    ///   [0]: crate::core::layout::Layout
+    pub fn set_layout_by_name(&mut self, name: &str) {
+        self.layouts.focus_element_by(|l| l.name() == name)
+    }
 }
 
 impl<T: PartialEq> Workspace<T> {

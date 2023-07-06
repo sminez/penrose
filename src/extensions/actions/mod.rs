@@ -77,13 +77,18 @@ pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     })
 }
 
-/// Jump to, or create, a [crate::pure::Workspace]
+/// Jump to, or create a [Workspace][0].
 ///
 /// Call 'get_name' to obtain a Workspace name and check to see if there is currently a Workspace
 /// with that name being managed by the WindowManager. If there is no existing workspace with the
 /// given name, create it with the supplied available layouts. If a matching Workspace _does_
 /// already exist then simply switch focus to it. This action is most useful when combined with the
 /// DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.
+///
+/// > If you just want to dynamically select an existing workspace then you can use
+/// [switch_to_workspace] to select from known workspace names.
+///
+///   [0]: crate::pure::Workspace
 pub fn create_or_switch_to_workspace<X>(
     get_name: fn() -> Option<String>,
     layouts: LayoutStack,
@@ -97,6 +102,25 @@ where
             // so we can just focus it.
             _ = cs.add_workspace(&name, layouts.clone());
 
+            cs.focus_tag(&name);
+        }
+    })
+}
+
+/// Jump to a [Workspace][0] by name.
+///
+/// Call 'select_name' to select a Workspace name and switch focus to it if it exists.
+///
+///   [0]: crate::pure::Workspace
+pub fn switch_to_workspace<X>(
+    select_name: fn(&[String]) -> Option<String>,
+) -> Box<dyn KeyEventHandler<X>>
+where
+    X: XConn,
+{
+    modify_with(move |cs| {
+        let tags = cs.ordered_tags();
+        if let Some(name) = select_name(&tags) {
             cs.focus_tag(&name);
         }
     })

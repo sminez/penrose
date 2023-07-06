@@ -25,6 +25,10 @@ where
     }
 }
 
+/// A summary of the information required to update the X server state from
+/// our own internal pure [State][0]
+///
+///   [0]: crate::core::State
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Snapshot<C>
 where
@@ -55,6 +59,9 @@ where
     }
 }
 
+/// The internal diff state from the last time that we refreshed pure [State][0].
+///
+///   [0]: crate::core::State
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Diff<C>
 where
@@ -140,7 +147,6 @@ where
             .collect()
     }
 
-    #[cfg(test)]
     pub fn current_visible_tags(&self) -> HashSet<&str> {
         once(self.after.focused.tag.as_ref())
             .chain(self.after.visible.iter().map(|s| s.tag.as_ref()))
