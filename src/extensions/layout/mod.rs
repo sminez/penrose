@@ -6,10 +6,139 @@ use crate::{
     Xid,
 };
 
+mod combinators;
+
+pub use combinators::Conditional;
+
 // NOTE: When adding new layouts to this module, they should have a corresponding quickcheck
 //       test added to ensure that the layout logic does not panic when given arbitrary inputs.
 #[cfg(test)]
 pub mod quickcheck_tests;
+
+/// Inspired by the Fibonacci layout available for dwm:
+///   https://dwm.suckless.org/patches/fibonacci/
+///
+/// The ratio between the main and secondary regions can be adjusted by sending [ShrinkMain]
+/// and [ExpandMain] messages to this layout.
+///
+/// ```text
+/// ....................................
+/// .                  .               .
+/// .                  .               .
+/// .                  .               .
+/// .                  .               .
+/// .                  .               .
+/// .                  .................
+/// .                  .       .       .
+/// .                  .       .       .
+/// .                  .       .........
+/// .                  .       .   .   .
+/// .                  .       .   .   .
+/// ....................................
+/// ```
+#[derive(Debug, Copy, Clone)]
+pub struct Fibonacci {
+    cutoff: u32,
+    ratio: f32,
+    ratio_step: f32,
+}
+
+impl Default for Fibonacci {
+    fn default() -> Self {
+        Self {
+            cutoff: 40,
+            ratio: 0.5,
+            ratio_step: 0.1,
+        }
+    }
+}
+
+impl Fibonacci {
+    /// Create a new [Fibonacci] layout with a specified cutoff for the minimum
+    /// dimensions allowed for a client.
+    pub fn new(cutoff: u32, ratio: f32, ratio_step: f32) -> Self {
+        Fibonacci {
+            cutoff,
+            ratio,
+            ratio_step,
+        }
+    }
+
+    /// Create a new [Fibonacci] layout as with `new` but returned as a trait
+    /// object ready to be added to your layout stack.
+    pub fn boxed(cutoff: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
+        Box::new(Fibonacci::new(cutoff, ratio, ratio_step))
+    }
+
+    /// Create a new default [Fibonacci] layout as a trait object ready to be added to
+    /// your layout stack.
+    pub fn boxed_default() -> Box<dyn Layout> {
+        Box::<Self>::default()
+    }
+}
+
+impl Layout for Fibonacci {
+    fn name(&self) -> String {
+        "Fibo".to_string()
+    }
+
+    fn boxed_clone(&self) -> Box<dyn Layout> {
+        Box::new(*self)
+    }
+
+    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+        let n = s.len();
+        let mut positions = Vec::with_capacity(n);
+        let (mut r1, mut r2) = r
+            .split_at_width_perc(self.ratio)
+            .expect("self.ratio is in bounds due to logic in self.handle_message");
+
+        for (i, id) in s.iter().enumerate() {
+            let at_cutoff = i == n - 1 || r1.w <= self.cutoff || r1.h <= self.cutoff;
+            if at_cutoff {
+                if i % 2 == 0 {
+                    r1.w += r2.w;
+                } else {
+                    r1.h += r2.h;
+                }
+            }
+
+            positions.push((*id, r1));
+
+            if at_cutoff {
+                break;
+            }
+
+            if i % 2 == 0 {
+                (r1, r2) = r2
+                    .split_at_height_perc(self.ratio)
+                    .expect("self.ratio is in bounds due to logic in self.handle_message");
+            } else {
+                (r1, r2) = r2
+                    .split_at_width_perc(self.ratio)
+                    .expect("self.ratio is in bounds due to logic in self.handle_message");
+            }
+        }
+
+        (None, positions)
+    }
+
+    fn handle_message(&mut self, m: &Message) -> Option<Box<dyn Layout>> {
+        if let Some(&ExpandMain) = m.downcast_ref() {
+            self.ratio += self.ratio_step;
+            if self.ratio > 1.0 {
+                self.ratio = 1.0;
+            }
+        } else if let Some(&ShrinkMain) = m.downcast_ref() {
+            self.ratio -= self.ratio_step;
+            if self.ratio < 0.0 {
+                self.ratio = 0.0;
+            }
+        };
+
+        None
+    }
+}
 
 /// Inspired by the Tatami layout available for dwm:
 ///   https://dwm.suckless.org/patches/tatami/
