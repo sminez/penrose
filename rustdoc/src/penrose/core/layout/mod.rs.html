@@ -206,6 +206,14 @@
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Layouts for positioning client windows on the screen within a given workspace.
 </span><span class="kw">use crate</span>::{
     builtin::layout::MainAndStack,
@@ -244,6 +252,14 @@
     <span class="doccomment">/// Provide a clone of this [Layout] wrapped as a trait object. (Trait objects can not require
     /// Clone directly)
     </span><span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt;;
+
+    <span class="doccomment">/// Convert to a trait object.
+    </span><span class="kw">fn </span>boxed(<span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: Sized + <span class="lifetime">&#39;static</span>,
+    {
+        Box::new(<span class="self">self</span>)
+    }
 
     <span class="doccomment">/// Generate screen positions for clients on a given [crate::pure::Workspace].
     ///

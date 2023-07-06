@@ -328,6 +328,12 @@
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
 <a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A diff of changes to pure State
 </span><span class="kw">use </span><span class="kw">crate</span>::pure::{geometry::Rect, screen::Screen};
 <span class="kw">use </span>std::{collections::HashSet, hash::Hash, iter::once, mem::swap};
@@ -355,7 +361,11 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+<span class="doccomment">/// A summary of the information required to update the X server state from
+/// our own internal pure [State][0]
+///
+///   [0]: crate::core::State
+</span><span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Snapshot&lt;C&gt;
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
@@ -385,7 +395,10 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+<span class="doccomment">/// The internal diff state from the last time that we refreshed pure [State][0].
+///
+///   [0]: crate::core::State
+</span><span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Diff&lt;C&gt;
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
@@ -470,8 +483,7 @@
             .collect()
     }
 
-    <span class="attr">#[cfg(test)]
-    </span><span class="kw">pub fn </span>current_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
+    <span class="kw">pub fn </span>current_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
         once(<span class="self">self</span>.after.focused.tag.as_ref())
             .chain(<span class="self">self</span>.after.visible.iter().map(|s| s.tag.as_ref()))
             .collect()

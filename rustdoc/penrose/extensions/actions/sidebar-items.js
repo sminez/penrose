@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["FullScreenAction"],"fn":["create_or_switch_to_workspace","dmenu_focus_client","dmenu_focus_tag","focus_or_spawn","launch_dmenu","set_fullscreen_state","toggle_fullscreen"]};
+window.SIDEBAR_ITEMS = {"enum":["FullScreenAction"],"fn":["create_or_switch_to_workspace","dmenu_focus_client","dmenu_focus_tag","focus_or_spawn","launch_dmenu","set_fullscreen_state","switch_to_workspace","toggle_fullscreen"]};

@@ -213,6 +213,24 @@
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::{IntoMessage, LayoutStack},
     pure::Stack,
@@ -344,6 +362,24 @@
     <span class="doccomment">/// Switch to the previous available layout for this workspace.
     </span><span class="kw">pub fn </span>previous_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.layouts.focus_up();
+    }
+
+    <span class="doccomment">/// Replace the current [LayoutStack] with a new one, returning the layouts that
+    /// were previously active.
+    </span><span class="kw">pub fn </span>set_available_layouts(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>layouts: LayoutStack) -&gt; LayoutStack {
+        std::mem::swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.layouts, <span class="kw-2">&amp;mut </span>layouts);
+
+        layouts
+    }
+
+    <span class="doccomment">/// Attempt to set the active [Layout][0] by name if it is available.
+    ///
+    /// &gt; Note that some layouts have a dynamically set name and this method will fail to
+    /// &gt; locate such a layout if the current name does not match what you have provided.
+    ///
+    ///   [0]: crate::core::layout::Layout
+    </span><span class="kw">pub fn </span>set_layout_by_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) {
+        <span class="self">self</span>.layouts.focus_element_by(|l| l.name() == name)
     }
 }
 

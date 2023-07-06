@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Tatami"]};
+window.SIDEBAR_ITEMS = {"struct":["Conditional","Fibonacci","Tatami"]};
