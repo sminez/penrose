@@ -334,6 +334,7 @@
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A diff of changes to pure State
 </span><span class="kw">use </span><span class="kw">crate</span>::pure::{geometry::Rect, screen::Screen};
 <span class="kw">use </span>std::{collections::HashSet, hash::Hash, iter::once, mem::swap};
@@ -483,7 +484,8 @@
             .collect()
     }
 
-    <span class="kw">pub fn </span>current_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>current_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
         once(<span class="self">self</span>.after.focused.tag.as_ref())
             .chain(<span class="self">self</span>.after.visible.iter().map(|s| s.tag.as_ref()))
             .collect()

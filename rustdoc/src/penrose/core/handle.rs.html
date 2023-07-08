@@ -189,8 +189,6 @@
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! XEvent handlers for use in the main event loop;
 </span><span class="kw">use crate</span>::{
     core::{
@@ -270,9 +268,7 @@
     state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
     x: <span class="kw-2">&amp;</span>X,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">if </span>state.client_set.floating.contains_key(id) {
-        <span class="kw">let _ </span>= state.client_set.float(<span class="kw-2">*</span>id, <span class="kw-2">*</span>r); <span class="comment">// Update the new floating position
-    </span>} <span class="kw">else if </span>state.client_set.contains(id) {
+    <span class="kw">if </span>state.client_set.contains(id) &amp;&amp; !state.client_set.floating.contains_key(id) {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(()); <span class="comment">// Managed tiled clients aren&#39;t allowed to configure themselves
     </span>}
 

@@ -1036,6 +1036,7 @@
 <a href="#1036" id="1036">1036</a>
 <a href="#1037" id="1037">1037</a>
 <a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pop_where;
 <span class="kw">use </span>std::{
     collections::vec_deque::{<span class="self">self</span>, VecDeque},
@@ -1089,7 +1090,8 @@
 /// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
 /// over a [VecDeque]. Many of the methods that mutate the structure of the Stack
 /// return back a mutable reference so that they are able to be chained.
-</span><span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Stack&lt;T&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) up: VecDeque&lt;T&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) focus: T,

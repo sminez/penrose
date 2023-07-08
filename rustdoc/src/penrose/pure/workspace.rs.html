@@ -446,7 +446,7 @@
     <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates&quot;</span>)]
     <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates sorted&quot;</span>)]
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>check_workspace_invariants(tags: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], duplicates: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]&gt;) {
+    </span><span class="kw">fn </span>check_workspace_invariants_works(tags: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], duplicates: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]&gt;) {
         <span class="kw">let </span>workspaces: Vec&lt;Workspace&lt;u8&gt;&gt; = tags
             .iter()
             .enumerate()

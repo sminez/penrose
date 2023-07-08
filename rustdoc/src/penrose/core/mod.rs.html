@@ -732,11 +732,6 @@
 <a href="#732" id="732">732</a>
 <a href="#733" id="733">733</a>
 <a href="#734" id="734">734</a>
-<a href="#735" id="735">735</a>
-<a href="#736" id="736">736</a>
-<a href="#737" id="737">737</a>
-<a href="#738" id="738">738</a>
-<a href="#739" id="739">739</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
@@ -950,11 +945,6 @@
 
             <span class="comment">// Sort out the floating client positions first
             </span><span class="kw">for </span>(c, r_c) <span class="kw">in </span>floating.iter() {
-                <span class="kw">let </span>r_s = <span class="kw">match </span>hook {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) =&gt; h.transform_initial(r_s, <span class="self">self</span>, x),
-                    <span class="prelude-val">None </span>=&gt; r_s,
-                };
-
                 float_positions.push((<span class="kw-2">*</span>c, r_c.applied_to(<span class="kw-2">&amp;</span>r_s)));
             }
 
