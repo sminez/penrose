@@ -77,9 +77,7 @@ pub(crate) fn configure_request<X: XConn>(
     state: &mut State<X>,
     x: &X,
 ) -> Result<()> {
-    if state.client_set.floating.contains_key(id) {
-        let _ = state.client_set.float(*id, *r); // Update the new floating position
-    } else if state.client_set.contains(id) {
+    if state.client_set.contains(id) && !state.client_set.floating.contains_key(id) {
         return Ok(()); // Managed tiled clients aren't allowed to configure themselves
     }
 

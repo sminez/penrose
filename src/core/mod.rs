@@ -211,11 +211,6 @@ where
 
             // Sort out the floating client positions first
             for (c, r_c) in floating.iter() {
-                let r_s = match hook {
-                    Some(ref mut h) => h.transform_initial(r_s, self, x),
-                    None => r_s,
-                };
-
                 float_positions.push((*c, r_c.applied_to(&r_s)));
             }
 

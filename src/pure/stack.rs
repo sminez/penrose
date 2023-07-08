@@ -51,6 +51,7 @@ pub enum Position {
 /// This is a [zipper](https://en.wikipedia.org/wiki/Zipper_(data_structure))
 /// over a [VecDeque]. Many of the methods that mutate the structure of the Stack
 /// return back a mutable reference so that they are able to be chained.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Stack<T> {
     pub(crate) up: VecDeque<T>,

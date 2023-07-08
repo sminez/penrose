@@ -213,7 +213,7 @@ mod tests {
     #[test_case(&["1", "2", "3", "2", "3"], Some(&["2", "3"]); "multiple duplicates")]
     #[test_case(&["3", "2", "1", "2", "3"], Some(&["2", "3"]); "multiple duplicates sorted")]
     #[test]
-    fn check_workspace_invariants(tags: &[&str], duplicates: Option<&[&str]>) {
+    fn check_workspace_invariants_works(tags: &[&str], duplicates: Option<&[&str]>) {
         let workspaces: Vec<Workspace<u8>> = tags
             .iter()
             .enumerate()

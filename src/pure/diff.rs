@@ -147,6 +147,7 @@ where
             .collect()
     }
 
+    #[allow(dead_code)]
     pub fn current_visible_tags(&self) -> HashSet<&str> {
         once(self.after.focused.tag.as_ref())
             .chain(self.after.visible.iter().map(|s| s.tag.as_ref()))
