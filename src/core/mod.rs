@@ -527,6 +527,8 @@ where
             RandrNotify => handle::detect_screens(state, x)?,
             ScreenChange => handle::screen_change(state, x)?,
             UnmapNotify(xid) => handle::unmap_notify(*xid, state, x)?,
+
+            _ => (), // XEvent is non-exhaustive
         }
 
         Ok(())

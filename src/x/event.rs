@@ -16,6 +16,7 @@ use std::convert::TryFrom;
 /// should be applicable for all back ends.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum XEvent {
     /// A message has been sent to a particular client
     ClientMessage(ClientMessage),
@@ -45,6 +46,8 @@ pub enum XEvent {
     PropertyNotify(PropertyEvent),
     /// A randr action has occured (new outputs, resolution change etc)
     RandrNotify,
+    /// A window is requesting that it be resized
+    ResizeRequest(ResizeRequestEvent),
     /// Focus has moved to a different screen
     ScreenChange,
     /// A client is being unmapped
@@ -70,6 +73,7 @@ impl std::fmt::Display for XEvent {
             MouseEvent(_) => write!(f, "MouseEvent"),
             PropertyNotify(_) => write!(f, "PropertyNotify"),
             RandrNotify => write!(f, "RandrNotify"),
+            ResizeRequest(_) => write!(f, "ResizeRequest"),
             ScreenChange => write!(f, "ScreenChange"),
             UnmapNotify(_) => write!(f, "UnmapNotify"),
         }
@@ -313,4 +317,16 @@ pub struct PropertyEvent {
     pub atom: String,
     /// Is this window the root window?
     pub is_root: bool,
+}
+
+/// A client is being resized
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ResizeRequestEvent {
+    /// The ID of the window that is being resized
+    pub id: Xid,
+    /// The new width
+    pub width: u32,
+    /// The new height
+    pub height: u32,
 }

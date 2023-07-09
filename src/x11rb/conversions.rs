@@ -5,7 +5,7 @@ use crate::{
     x::{
         event::{
             ClientEventMask, ClientMessage, ClientMessageData, ConfigureEvent, ExposeEvent,
-            PointerChange, PropertyEvent,
+            PointerChange, PropertyEvent, ResizeRequestEvent,
         },
         XConn, XEvent,
     },
@@ -117,6 +117,12 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
                 event.height as u32,
             ),
             is_root: event.window == *conn.root(),
+        }))),
+
+        Event::ResizeRequest(event) => Ok(Some(XEvent::ResizeRequest(ResizeRequestEvent {
+            id: Xid(event.window),
+            width: event.width as u32,
+            height: event.height as u32,
         }))),
 
         Event::Expose(event) => Ok(Some(XEvent::Expose(ExposeEvent {
