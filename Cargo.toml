@@ -31,22 +31,22 @@ x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional = true }
 # penrose_proc = { version = "0.1.3", path = "crates/penrose_proc" }
 
-bitflags = "1.3"
-nix = "0.25"
-strum = { version = "0.24", features = ["derive"] }
-strum_macros = "0.24"
+bitflags = "2.3"
+nix = "0.26"
+strum = { version = "0.25", features = ["derive"] }
+strum_macros = "0.25"
 thiserror = "1.0"
 tracing = { version = "0.1", features = ["attributes", "log"] }
 
 serde = { version = "1.0", features = ["derive"], optional = true }
-x11rb = { version = "0.11", features = ["randr"], optional = true }
-anymap = "0.12.1"
+x11rb = { version = "0.12", features = ["randr"], optional = true }
+anymap = "0.12"
 
 [dev-dependencies]
-paste = "1.0.9"
+paste = "1.0.13"
 penrose_ui = { path = "crates/penrose_ui" }
-serde_json = "1.0.86"
+serde_json = "1.0.100"
 simple_test_case = "1.1.0"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }

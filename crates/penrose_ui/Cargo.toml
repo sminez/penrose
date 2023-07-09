@@ -12,10 +12,10 @@ description = "UI elements for the penrose window manager library"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cairo-rs = { version = "0.15.6", features = ["xcb"] }
-pangocairo = { version = "0.15.1" }
-pango = { version = "0.15.6" }
+cairo-rs = { version = "0.17.10", features = ["xcb"] }
+pangocairo = { version = "0.17.10" }
+pango = { version = "0.17.10" }
 penrose = { version = "0.3", path = "../../" }
 tracing = { version = "0.1", features = ["attributes", "log"] }
-thiserror = "1.0.37"
-x11rb = { version = "0.11", features = ["randr", "render"] }
+thiserror = "1.0"
+x11rb = { version = "0.12", features = ["randr", "render"] }

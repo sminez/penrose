@@ -31,7 +31,7 @@ pub enum Prop {
 bitflags! {
     /// Possible flags that can be set in a WmHints client property
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    #[derive(Default)]
+    #[derive(Default, Debug, PartialEq, Eq, Hash, Clone)]
     pub struct WmHintsFlags: u32 {
         /// Input hint is set
         const INPUT_HINT         = 0b0000000001;
@@ -56,7 +56,7 @@ bitflags! {
 bitflags! {
     /// Possible flags that can be set in a WmNormalHints client property
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    #[derive(Default)]
+    #[derive(Default, Debug, PartialEq, Eq, Hash, Clone)]
     pub struct WmNormalHintsFlags: u32 {
         /// User-specified x, y
         const U_POSITION    = 0b0000000001;

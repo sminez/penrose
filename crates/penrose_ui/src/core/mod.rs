@@ -253,7 +253,7 @@ impl Context {
     ///
     /// Returns the width and height of the area taken up by the text.
     pub fn text(&self, txt: &str, h_offset: f64, padding: (f64, f64)) -> Result<(f64, f64)> {
-        let layout = create_layout(&self.ctx).ok_or(Error::UnableToCreateLayout)?;
+        let layout = create_layout(&self.ctx);
         if let Some(ref font) = self.font {
             layout.set_font_description(Some(font));
         }
@@ -276,7 +276,7 @@ impl Context {
     /// Determine the width and height required to render a specific piece of text
     /// using the current font without rendering it to the underlying [`cairo::Context`].
     pub fn text_extent(&self, s: &str) -> Result<(f64, f64)> {
-        let layout = create_layout(&self.ctx).ok_or(Error::UnableToCreateLayout)?;
+        let layout = create_layout(&self.ctx);
         if let Some(ref font) = self.font {
             layout.set_font_description(Some(font));
         }

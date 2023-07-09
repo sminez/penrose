@@ -61,8 +61,8 @@ pub struct Stack<T> {
 
 impl<T: fmt::Display> fmt::Display for Stack<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let up: Vec<String> = self.up.iter().rev().map(|t| format!("{t}")).collect();
-        let down: Vec<String> = self.down.iter().map(|t| format!("{t}")).collect();
+        let up: Vec<String> = self.up.iter().rev().map(|t| t.to_string()).collect();
+        let down: Vec<String> = self.down.iter().map(|t| t.to_string()).collect();
 
         write!(
             f,
