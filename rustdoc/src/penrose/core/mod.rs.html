@@ -732,6 +732,8 @@
 <a href="#732" id="732">732</a>
 <a href="#733" id="733">733</a>
 <a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
@@ -1261,7 +1263,9 @@
             </span>RandrNotify =&gt; handle::detect_screens(state, x)<span class="question-mark">?</span>,
             ScreenChange =&gt; handle::screen_change(state, x)<span class="question-mark">?</span>,
             UnmapNotify(xid) =&gt; handle::unmap_notify(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
-        }
+
+            <span class="kw">_ </span>=&gt; (), <span class="comment">// XEvent is non-exhaustive
+        </span>}
 
         <span class="prelude-val">Ok</span>(())
     }
