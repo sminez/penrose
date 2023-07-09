@@ -33,6 +33,7 @@ use penrose::{x::XConn, Color, Xid};
 
 pub mod bar;
 pub mod core;
+pub mod systray;
 
 pub use crate::core::{Context, Draw, TextStyle};
 pub use bar::{Position, StatusBar};
