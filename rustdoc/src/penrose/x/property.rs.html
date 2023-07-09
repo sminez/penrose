@@ -419,7 +419,7 @@
 <span class="macro">bitflags! </span>{
     <span class="doccomment">/// Possible flags that can be set in a WmHints client property
     </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
-    #[derive(Default)]
+    #[derive(Default, Debug, PartialEq, Eq, Hash, Clone)]
     </span><span class="kw">pub struct </span>WmHintsFlags: u32 {
         <span class="doccomment">/// Input hint is set
         </span><span class="kw">const </span>INPUT_HINT         = <span class="number">0b0000000001</span>;
@@ -444,7 +444,7 @@
 <span class="macro">bitflags! </span>{
     <span class="doccomment">/// Possible flags that can be set in a WmNormalHints client property
     </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
-    #[derive(Default)]
+    #[derive(Default, Debug, PartialEq, Eq, Hash, Clone)]
     </span><span class="kw">pub struct </span>WmNormalHintsFlags: u32 {
         <span class="doccomment">/// User-specified x, y
         </span><span class="kw">const </span>U_POSITION    = <span class="number">0b0000000001</span>;

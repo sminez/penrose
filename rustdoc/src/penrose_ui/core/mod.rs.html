@@ -546,7 +546,7 @@
     ///
     /// Returns the width and height of the area taken up by the text.
     </span><span class="kw">pub fn </span>text(<span class="kw-2">&amp;</span><span class="self">self</span>, txt: <span class="kw-2">&amp;</span>str, h_offset: f64, padding: (f64, f64)) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
-        <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx).ok_or(Error::UnableToCreateLayout)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>font) = <span class="self">self</span>.font {
             layout.set_font_description(<span class="prelude-val">Some</span>(font));
         }
@@ -569,7 +569,7 @@
     <span class="doccomment">/// Determine the width and height required to render a specific piece of text
     /// using the current font without rendering it to the underlying [`cairo::Context`].
     </span><span class="kw">pub fn </span>text_extent(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
-        <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx).ok_or(Error::UnableToCreateLayout)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layout = create_layout(<span class="kw-2">&amp;</span><span class="self">self</span>.ctx);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>font) = <span class="self">self</span>.font {
             layout.set_font_description(<span class="prelude-val">Some</span>(font));
         }
