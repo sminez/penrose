@@ -31,7 +31,7 @@ x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 penrose_keysyms = { version = "0.1.1", path = "crates/penrose_keysyms", optional = true }
 # penrose_proc = { version = "0.1.3", path = "crates/penrose_proc" }
 
-bitflags = "2.3"
+bitflags = { version = "2.3", features = ["serde"] }
 nix = "0.26"
 strum = { version = "0.25", features = ["derive"] }
 strum_macros = "0.25"
