@@ -171,7 +171,7 @@ place to read up on how to do these sorts of things whether you use Arch Linux o
 Version=1.0
 Name=Penrose Session
 Comment=Use this session to run penrose as your desktop environment
-Exec=/home/roger/my_penrose_config/target/release/my_penrose_config &> ~/.penrose.log
+Exec=sh -c "/home/roger/my_penrose_config/target/release/my_penrose_config &> ~/.penrose.log"
 Icon=
 Type=Application
 DesktopNames=Penrose
