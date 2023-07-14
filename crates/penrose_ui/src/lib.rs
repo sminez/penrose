@@ -9,11 +9,9 @@
 //!
 //! ## Getting started
 //! The main functionality of this crate is provided through the [`Draw`] nad [`Context`] structs
-//! which allow for simple graphics rendering backed by the [pango][1] and [cairo][2] libraries.
+//! which allow for simple graphics rendering backed by the xlib and fontconfig libraries.
 //!
 //! [0]: https://github.com/sminez/penrose
-//! [1]: https://pango.gnome.org/
-//! [2]: https://www.cairographics.org/
 #![warn(
     clippy::complexity,
     clippy::correctness,
@@ -30,6 +28,7 @@
 )]
 
 use penrose::{x::XConn, Color, Xid};
+use std::ffi::NulError;
 
 pub mod bar;
 pub mod core;
@@ -42,16 +41,20 @@ use bar::widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces};
 /// Error variants from penrose_ui library.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    /// An error was returned by the cairo crate when attempting to render graphics
-    #[error(transparent)]
-    Cairo(#[from] cairo::Error),
-
     /// Creation of a [`Color`] from a string hex code was invalid
     #[error("Invalid Hex color code: {code}")]
     InvalidHexColor {
         /// The invalid string that was intended as a color hex code
         code: String,
     },
+
+    /// The specified character can not be rendered by any font on this system
+    #[error("Unable to find a fallback font for '{0}'")]
+    NoFallbackFontForChar(char),
+
+    /// A string being passed to underlying C APIs contained an internal null byte
+    #[error(transparent)]
+    NulError(#[from] NulError),
 
     /// Unable to parse an integer from a provided string.
     #[error(transparent)]
@@ -61,23 +64,28 @@ pub enum Error {
     #[error(transparent)]
     Penrose(#[from] penrose::Error),
 
-    /// We were unable to create a text layout using pango
-    #[error("unable to create pango layout")]
-    UnableToCreateLayout,
+    /// Unable to allocate a requested color
+    #[error("Unable to allocate the requested color using Xft")]
+    UnableToAllocateColor,
+
+    /// Unable to open a requested font
+    #[error("Unable to open '{0}' as a font using Xft")]
+    UnableToOpenFont(String),
+
+    /// Unable to open a font using an Xft font pattern
+    #[error("Unable to open font from FcPattern using Xft")]
+    UnableToOpenFontPattern,
+
+    /// Unable to parse an Xft font pattern
+    #[error("Unable to parse '{0}' as an Xft font patten")]
+    UnableToParseFontPattern(String),
 
     /// An attempt was made to work with a surface for a window that was not initialised
     /// by the [`Draw`] instance being used.
-    #[error("no cairo surface for {id}")]
+    #[error("no surface for {id}")]
     UnintialisedSurface {
         /// The window id requested
         id: Xid,
-    },
-
-    /// An attempt was made to use a font that has not been registered
-    #[error("'{font}' is has not been registered as a font")]
-    UnknownFont {
-        /// The unknown font name that was requested
-        font: String,
     },
 }
 
@@ -100,7 +108,8 @@ pub fn status_bar<X: XConn>(
         position,
         height,
         style.bg.unwrap_or_else(|| 0x000000.into()),
-        &[&style.font],
+        &style.font,
+        style.point_size,
         vec![
             Box::new(Workspaces::new(style, highlight, empty_ws)),
             Box::new(CurrentLayout::new(style)),
@@ -108,7 +117,7 @@ pub fn status_bar<X: XConn>(
                 max_active_window_chars,
                 &TextStyle {
                     bg: Some(highlight),
-                    padding: (6.0, 4.0),
+                    padding: (6, 4),
                     ..style.clone()
                 },
                 true,
@@ -116,7 +125,7 @@ pub fn status_bar<X: XConn>(
             )),
             Box::new(RootWindowName::new(
                 &TextStyle {
-                    padding: (4.0, 2.0),
+                    padding: (4, 2),
                     ..style.clone()
                 },
                 false,

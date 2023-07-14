@@ -1,8 +1,5 @@
 //! A lightweight and configurable status bar for penrose
-use crate::{
-    core::{Context, Draw},
-    Result,
-};
+use crate::{core::Draw, Result};
 use penrose::{
     core::{State, WindowManager},
     pure::geometry::Rect,
@@ -11,7 +8,7 @@ use penrose::{
 };
 use std::fmt;
 use tracing::{debug, error, info};
-use x11rb::protocol::xproto::ConnectionExt as _;
+use x11rb::protocol::xproto::ConnectionExt;
 
 pub mod widgets;
 
@@ -31,9 +28,8 @@ pub struct StatusBar<X: XConn> {
     draw: Draw,
     position: Position,
     widgets: Vec<Box<dyn Widget<X>>>,
-    screens: Vec<(Xid, f64)>,
-    hpx: u32,
-    h: f64,
+    screens: Vec<(Xid, u32)>,
+    h: u32,
     bg: Color,
     active_screen: usize,
 }
@@ -44,7 +40,7 @@ impl<X: XConn> fmt::Debug for StatusBar<X> {
             .field("position", &self.position)
             .field("widgets", &stringify!(self.widgets))
             .field("screens", &self.screens)
-            .field("hpx", &self.hpx)
+            .field("h", &self.h)
             .field("bg", &self.bg)
             .field("active_screen", &self.active_screen)
             .finish()
@@ -58,25 +54,22 @@ impl<X: XConn> StatusBar<X> {
         position: Position,
         h: u32,
         bg: impl Into<Color>,
-        fonts: &[&str],
+        font: &str,
+        point_size: u8,
         widgets: Vec<Box<dyn Widget<X>>>,
     ) -> Result<Self> {
-        let draw = Draw::new()?;
+        let bg = bg.into();
+        let draw = Draw::new(font, point_size, bg)?;
 
-        let mut bar = Self {
+        Ok(Self {
             draw,
             position,
             widgets,
             screens: vec![],
-            hpx: h,
-            h: h as f64,
-            bg: bg.into(),
+            h,
+            bg,
             active_screen: 0,
-        };
-
-        fonts.iter().for_each(|f| bar.draw.register_font(f));
-
-        Ok(bar)
+        })
     }
 
     /// Add this [`StatusBar`] into the given [`WindowManager`] along with the required
@@ -103,13 +96,13 @@ impl<X: XConn> StatusBar<X> {
             .map(|&Rect { x, y, w, h }| {
                 let y = match self.position {
                     Position::Top => y,
-                    Position::Bottom => h - self.hpx,
+                    Position::Bottom => h - self.h,
                 };
 
                 debug!("creating new window");
                 let id = self.draw.new_window(
                     WinType::InputOutput(Atom::NetWindowTypeDock),
-                    Rect::new(x, y, w, self.hpx),
+                    Rect::new(x, y, w, self.h),
                     false,
                 )?;
 
@@ -125,9 +118,9 @@ impl<X: XConn> StatusBar<X> {
                 debug!("flushing");
                 self.draw.flush(id)?;
 
-                Ok((id, w as f64))
+                Ok((id, w))
             })
-            .collect::<Result<Vec<(Xid, f64)>>>()?;
+            .collect::<Result<Vec<(Xid, u32)>>>()?;
 
         Ok(())
     }
@@ -138,50 +131,41 @@ impl<X: XConn> StatusBar<X> {
             let screen_has_focus = self.active_screen == i;
             let mut ctx = self.draw.context_for(id)?;
 
-            ctx.clear()?;
+            ctx.fill_rect(Rect::new(0, 0, w, self.h), self.bg)?;
 
-            ctx.color(&self.bg);
-            ctx.rectangle(0.0, 0.0, w, self.h)?;
+            let mut extents = Vec::with_capacity(self.widgets.len());
+            let mut greedy_indices = vec![];
 
-            let extents = self.layout(&mut ctx, w)?;
-            let mut x = 0.0;
+            for (i, w) in self.widgets.iter_mut().enumerate() {
+                extents.push(w.current_extent(&mut ctx, self.h)?);
+                if w.is_greedy() {
+                    greedy_indices.push(i)
+                }
+            }
+
+            let total = extents.iter().map(|(w, _)| w).sum::<u32>();
+            let n_greedy = greedy_indices.len();
+
+            if total < w && n_greedy > 0 {
+                let per_greedy = (w - total) / n_greedy as u32;
+                for i in greedy_indices.iter() {
+                    let (w, h) = extents[*i];
+                    extents[*i] = (w + per_greedy, h);
+                }
+            }
+
+            let mut x = 0;
             for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
                 wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, self.h)?;
                 x += w;
                 ctx.flush();
-                ctx.set_x_offset(x);
+                ctx.set_x_offset(x as i32);
             }
 
             self.draw.flush(id)?;
         }
 
         Ok(())
-    }
-
-    fn layout(&mut self, ctx: &mut Context, w: f64) -> Result<Vec<(f64, f64)>> {
-        let mut extents = Vec::with_capacity(self.widgets.len());
-        let mut greedy_indices = vec![];
-
-        for (i, w) in self.widgets.iter_mut().enumerate() {
-            extents.push(w.current_extent(ctx, self.h)?);
-            if w.is_greedy() {
-                greedy_indices.push(i)
-            }
-        }
-
-        let total = extents.iter().map(|(w, _)| w).sum::<f64>();
-        let n_greedy = greedy_indices.len();
-
-        if total < w && n_greedy > 0 {
-            let per_greedy = (w - total) / n_greedy as f64;
-            for i in greedy_indices.iter() {
-                let (w, h) = extents[*i];
-                extents[*i] = (w + per_greedy, h);
-            }
-        }
-
-        // Allowing overflow to happen
-        Ok(extents)
     }
 
     fn redraw_if_needed(&mut self) -> Result<()> {

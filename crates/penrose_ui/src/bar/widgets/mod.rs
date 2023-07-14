@@ -2,6 +2,7 @@
 use crate::{Context, Result, TextStyle};
 use penrose::{
     core::State,
+    pure::geometry::Rect,
     x::{XConn, XEvent},
     Color, Xid,
 };
@@ -30,15 +31,15 @@ where
     /// Render the current state of the widget to the status bar window.
     fn draw(
         &mut self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         screen: usize,
         screen_has_focus: bool,
-        w: f64,
-        h: f64,
+        w: u32,
+        h: u32,
     ) -> Result<()>;
 
     /// Current required width and height for this widget due to its content
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)>;
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)>;
 
     /// Does this widget currently require re-rendering? (should be reset to false when 'draw' is called)
     fn require_draw(&self) -> bool;
@@ -81,13 +82,13 @@ where
 pub struct Text {
     txt: String,
     font: String,
-    point_size: i32,
+    point_size: u8,
     fg: Color,
     bg: Option<Color>,
-    padding: (f64, f64),
+    padding: (u32, u32),
     is_greedy: bool,
     right_justified: bool,
-    extent: Option<(f64, f64)>,
+    extent: Option<(u32, u32)>,
     require_draw: bool,
 }
 
@@ -135,24 +136,23 @@ impl Text {
 }
 
 impl<X: XConn> Widget<X> for Text {
-    fn draw(&mut self, ctx: &mut Context, _: usize, _: bool, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut Context<'_>, _: usize, _: bool, w: u32, h: u32) -> Result<()> {
         if let Some(color) = self.bg {
-            ctx.color(&color);
-            ctx.rectangle(0.0, 0.0, w, h)?;
+            ctx.fill_rect(Rect::new(0, 0, w, h), color)?;
         }
 
         let (ew, eh) = <Self as Widget<X>>::current_extent(self, ctx, h)?;
-        ctx.font(&self.font, self.point_size)?;
-        ctx.color(&self.fg);
+        // ctx.font(&self.font, self.point_size)?;
+        // ctx.color(&self.fg);
 
-        let offset = w - ew;
-        let right_justify = self.right_justified && self.is_greedy && offset > 0.0;
+        let offset = w as i32 - ew as i32;
+        let right_justify = self.right_justified && self.is_greedy && offset > 0;
         if right_justify {
-            ctx.translate(offset, 0.0);
-            ctx.text(&self.txt, h - eh, self.padding)?;
-            ctx.translate(-offset, 0.0);
+            ctx.translate(offset, 0);
+            ctx.draw_text(&self.txt, h - eh, self.padding, self.fg)?;
+            ctx.translate(-offset, 0);
         } else {
-            ctx.text(&self.txt, h - eh, self.padding)?;
+            ctx.draw_text(&self.txt, h - eh, self.padding, self.fg)?;
         }
 
         self.require_draw = false;
@@ -160,15 +160,16 @@ impl<X: XConn> Widget<X> for Text {
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, _h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, _h: u32) -> Result<(u32, u32)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
                 let (l, r) = self.padding;
-                ctx.font(&self.font, self.point_size)?;
+                // ctx.font(&self.font, self.point_size)?;
                 let (w, h) = ctx.text_extent(&self.txt)?;
                 let extent = (w + l + r, h);
                 self.extent = Some(extent);
+
                 Ok(extent)
             }
         }
@@ -253,11 +254,11 @@ impl RefreshText {
 }
 
 impl<X: XConn> Widget<X> for RefreshText {
-    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
         Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         Widget::<X>::current_extent(&mut self.inner, ctx, h)
     }
 
@@ -355,7 +356,7 @@ impl IntervalText {
 }
 
 impl<X: XConn> Widget<X> for IntervalText {
-    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
         let mut inner = match self.inner.lock() {
             Ok(inner) => inner,
             Err(poisoned) => poisoned.into_inner(),
@@ -364,7 +365,7 @@ impl<X: XConn> Widget<X> for IntervalText {
         Widget::<X>::draw(&mut *inner, ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         let mut inner = match self.inner.lock() {
             Ok(inner) => inner,
             Err(poisoned) => poisoned.into_inner(),

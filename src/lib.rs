@@ -227,13 +227,10 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 /// A simple RGBA based color
 pub struct Color {
-    r: f64,
-    g: f64,
-    b: f64,
-    a: f64,
+    rgba_hex: u32,
 }
 
 // helper for methods in Color
@@ -241,27 +238,29 @@ macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
 
 impl Color {
     /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
-    pub fn new_from_hex(hex: u32) -> Self {
-        let floats: Vec<f64> = hex
-            .to_be_bytes()
-            .iter()
-            .map(|n| *n as f64 / 255.0)
-            .collect();
-
-        let (r, g, b, a) = (floats[0], floats[1], floats[2], floats[3]);
-        Self { r, g, b, a }
+    pub fn new_from_hex(rgba_hex: u32) -> Self {
+        Self { rgba_hex }
     }
 
     /// The RGB information of this color as 0.0-1.0 range floats representing
     /// proportions of 255 for each of R, G, B
     pub fn rgb(&self) -> (f64, f64, f64) {
-        (self.r, self.g, self.b)
+        let (r, g, b, _) = self.rgba();
+
+        (r, g, b)
     }
 
     /// The RGBA information of this color as 0.0-1.0 range floats representing
     /// proportions of 255 for each of R, G, B, A
     pub fn rgba(&self) -> (f64, f64, f64, f64) {
-        (self.r, self.g, self.b, self.a)
+        let floats: Vec<f64> = self
+            .rgba_hex
+            .to_be_bytes()
+            .iter()
+            .map(|n| *n as f64 / 255.0)
+            .collect();
+
+        (floats[0], floats[1], floats[2], floats[3])
     }
 
     /// Render this color as a #RRGGBB hew color string
@@ -269,19 +268,27 @@ impl Color {
         format!("#{:x}", self.rgb_u32())
     }
 
+    // TODO: Do this with bit operations not floats
+    //
     /// 0xRRGGBB representation of this Color (no alpha information)
     pub fn rgb_u32(&self) -> u32 {
-        _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
+        let (r, g, b, _) = self.rgba();
+
+        _f2u!(r, 16) + _f2u!(g, 8) + _f2u!(b, 0)
     }
 
     /// 0xRRGGBBAA representation of this Color
     pub fn rgba_u32(&self) -> u32 {
-        _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 0)
+        self.rgba_hex
     }
 
+    // TODO: Do this with bit operations not floats
+    //
     /// 0xAARRGGBB representation of this Color
     pub fn argb_u32(&self) -> u32 {
-        _f2u!(self.a, 24) + _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
+        let (r, g, b, a) = self.rgba();
+
+        _f2u!(a, 24) + _f2u!(r, 16) + _f2u!(g, 8) + _f2u!(b, 0)
     }
 }
 
@@ -294,14 +301,18 @@ impl From<u32> for Color {
 impl From<(f64, f64, f64)> for Color {
     fn from(rgb: (f64, f64, f64)) -> Self {
         let (r, g, b) = rgb;
-        Self { r, g, b, a: 1.0 }
+        let rgba_hex = _f2u!(r, 24) + _f2u!(g, 16) + _f2u!(b, 8) + _f2u!(1.0, 0);
+
+        Self { rgba_hex }
     }
 }
 
 impl From<(f64, f64, f64, f64)> for Color {
     fn from(rgba: (f64, f64, f64, f64)) -> Self {
         let (r, g, b, a) = rgba;
-        Self { r, g, b, a }
+        let rgba_hex = _f2u!(r, 24) + _f2u!(g, 16) + _f2u!(b, 8) + _f2u!(a, 0);
+
+        Self { rgba_hex }
     }
 }
 

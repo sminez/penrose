@@ -25,11 +25,11 @@ impl RootWindowName {
 }
 
 impl<X: XConn> Widget<X> for RootWindowName {
-    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
         Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         Widget::<X>::current_extent(&mut self.inner, ctx, h)
     }
 
@@ -92,15 +92,15 @@ impl ActiveWindowName {
 }
 
 impl<X: XConn> Widget<X> for ActiveWindowName {
-    fn draw(&mut self, ctx: &mut Context, s: usize, focused: bool, w: f64, h: f64) -> Result<()> {
-        if focused {
-            Widget::<X>::draw(&mut self.inner, ctx, s, focused, w, h)
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
+        if f {
+            Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
         } else {
             Ok(())
         }
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         Widget::<X>::current_extent(&mut self.inner, ctx, h)
     }
 
@@ -157,11 +157,11 @@ impl CurrentLayout {
 }
 
 impl<X: XConn> Widget<X> for CurrentLayout {
-    fn draw(&mut self, ctx: &mut Context, s: usize, f: bool, w: f64, h: f64) -> Result<()> {
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
         Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         Widget::<X>::current_extent(&mut self.inner, ctx, h)
     }
 
