@@ -91,7 +91,10 @@ impl Draw {
         })
     }
 
-    /// Create a new X window with an initialised surface for drawing
+    /// Create a new X window with an initialised surface for drawing.
+    ///
+    /// Destroying this window should be carried out using the `destroy_window_and_surface` method
+    /// so that the associated graphics state is also cleaned up correctly.
     pub fn new_window(&mut self, ty: WinType, r: Rect, managed: bool) -> Result<Xid> {
         info!(?ty, ?r, %managed, "creating new window");
         let id = self.conn.create_window(ty, r, managed)?;
@@ -110,6 +113,20 @@ impl Draw {
         self.surfaces.insert(id, Surface { r, gc, drawable });
 
         Ok(id)
+    }
+
+    /// Destroy the specified window along with any surface and graphics context state held
+    /// within this draw.
+    pub fn destroy_window_and_surface(&mut self, id: Xid) -> Result<()> {
+        self.conn.destroy_window(id)?;
+        if let Some(s) = self.surfaces.remove(&id) {
+            unsafe {
+                XFreePixmap(self.dpy, s.drawable);
+                XFreeGC(self.dpy, s.gc);
+            }
+        }
+
+        Ok(())
     }
 
     /// Register a new font by name in the font cache so it can be used in a drawing [`Context`].

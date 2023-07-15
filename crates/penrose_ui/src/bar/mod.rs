@@ -236,10 +236,13 @@ pub fn event_hook<X: XConn + 'static>(
 
     if matches!(event, RandrNotify) || matches!(event, ConfigureNotify(e) if e.is_root) {
         info!("screens have changed: recreating status bars");
+        let screens: Vec<_> = bar.screens.drain(0..).collect();
 
-        for &(id, _) in bar.screens.iter() {
+        for (id, _) in screens {
             info!(%id, "removing previous status bar");
-            bar.draw.conn.destroy_window(id)?;
+            if let Err(e) = bar.draw.destroy_window_and_surface(id) {
+                error!(%e, "error when removing previous status bar state");
+            }
         }
 
         if let Err(e) = bar.init_for_screens() {
