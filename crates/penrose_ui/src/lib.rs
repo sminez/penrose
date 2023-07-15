@@ -11,6 +11,16 @@
 //! The main functionality of this crate is provided through the [`Draw`] nad [`Context`] structs
 //! which allow for simple graphics rendering backed by the xlib and fontconfig libraries.
 //!
+//! ## A note on the use of unsafe code
+//! Given the aims of this crate and the desire to pull in as few dependencies as possible, it
+//! makes heavy use of `unsafe` to wrap C FFI calls. Please make sure that you read the available
+//! documentation and `SAFETY` comments in the source code to understand what is happening under
+//! the hood if you have any concerns about this.
+//!
+//! > The `unsafe` nature of FFI code tends to be around correct management of memory and checking
+//! > for null pointers. If there are aspects of the unsafe code in this crate that you suspect are
+//! > unsound please do raise an issue in GitHub detailing the
+//!
 //! [0]: https://github.com/sminez/penrose
 #![warn(
     clippy::complexity,
@@ -20,7 +30,8 @@
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rustdoc::all
+    rustdoc::all,
+    clippy::undocumented_unsafe_blocks
 )]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",

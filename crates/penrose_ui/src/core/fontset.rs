@@ -143,8 +143,12 @@ pub(crate) struct Font {
 
 impl Font {
     fn try_new_from_name(dpy: *mut Display, name: &str) -> Result<Self> {
+        let c_name = CString::new(name)?;
+
+        // SAFETY:
+        // - Null pointers are checked and explicitly converted to Rust Errors
+        // - Raw pointer dereferences are only carried out after checking for null pointers
         let (xfont, pattern, h) = unsafe {
-            let c_name = CString::new(name)?;
             let xfont = XftFontOpenName(dpy, SCREEN, c_name.as_ptr());
             if xfont.is_null() {
                 return Err(Error::UnableToOpenFont(name.to_string()));
@@ -165,6 +169,9 @@ impl Font {
     }
 
     fn try_new_from_pattern(dpy: *mut Display, pattern: *mut FcPattern) -> Result<Self> {
+        // SAFETY:
+        // - Null pointers are checked and explicitly converted to Rust Errors
+        // - Raw pointer dereferences are only carried out after checking for null pointers
         let (xfont, h) = unsafe {
             let xfont = XftFontOpenPattern(dpy, pattern);
             if xfont.is_null() {
@@ -180,10 +187,15 @@ impl Font {
     }
 
     fn contains_char(&self, dpy: *mut Display, c: char) -> bool {
+        // SAFETY: self.xfont is known to be non-null
         unsafe { XftCharExists(dpy, self.xfont, c as u32) == 1 }
     }
 
     pub(crate) fn get_exts(&self, dpy: *mut Display, txt: &str) -> Result<(u32, u32)> {
+        // SAFETY:
+        // - allocation failures are explicitly handled
+        // - invalid C strings are converted to Rust Errors
+        // - self.xfont is known to be non-null
         unsafe {
             // https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
             let layout = Layout::new::<XGlyphInfo>();
@@ -214,6 +226,12 @@ impl Font {
     }
 
     fn fc_font_match(&self, dpy: *mut Display, c: char) -> Result<*mut FcPattern> {
+        // SAFETY:
+        // - allocation failures are explicitly handled
+        // - Null pointers are checked and explicitly converted to Rust Errors
+        // - valid constant values from the fontconfig_sys crate are used for C string parameters
+        // - null pointer parameter for FcConfigSubstutute config param (first argument) is valid
+        //   as documented here: https://man.archlinux.org/man/extra/fontconfig/FcConfigSubstitute.3.en
         unsafe {
             let charset = FcCharSetCreate();
             FcCharSetAddChar(charset, c as u32);

@@ -62,6 +62,7 @@ pub struct Draw {
 
 impl Drop for Draw {
     fn drop(&mut self) {
+        // SAFETY: all pointers being freed are known to be non-null
         unsafe {
             for (_, s) in self.surfaces.drain() {
                 XFreePixmap(self.dpy, s.drawable);
@@ -77,6 +78,8 @@ impl Draw {
     /// This method will error if it is unable to establish a connection with the X server.
     pub fn new(font: &str, point_size: u8, bg: Color) -> Result<Self> {
         let conn = RustConn::new()?;
+        // SAFETY:
+        //   - passing NULL as the argument here is valid as documented here: https://man.archlinux.org/man/extra/libx11/XOpenDisplay.3.en
         let dpy = unsafe { XOpenDisplay(std::ptr::null()) };
         let mut colors = HashMap::new();
         colors.insert(bg, XColor::try_new(dpy, &bg)?);
@@ -101,6 +104,7 @@ impl Draw {
 
         debug!("initialising graphics context and pixmap");
         let root = *self.conn.root() as Window;
+        // SAFETY: self.dpy is non-null and screen index 0 is always valid
         let (drawable, gc) = unsafe {
             let depth = XDefaultDepth(self.dpy, SCREEN) as u32;
             let drawable = XCreatePixmap(self.dpy, root, r.w, r.h, depth);
@@ -120,6 +124,7 @@ impl Draw {
     pub fn destroy_window_and_surface(&mut self, id: Xid) -> Result<()> {
         self.conn.destroy_window(id)?;
         if let Some(s) = self.surfaces.remove(&id) {
+            // SAFETY: the pointerse being freed are known to be non-null
             unsafe {
                 XFreePixmap(self.dpy, s.drawable);
                 XFreeGC(self.dpy, s.gc);
@@ -164,6 +169,7 @@ impl Draw {
             let Rect { x, y, w, h } = s.r;
             let (x, y) = (x as i32, y as i32);
 
+            // SAFETY: the pointers for self.dpy, s.drawable, s.gc are known to be non-null
             unsafe {
                 XCopyArea(self.dpy, s.drawable, *id as u64, s.gc, x, y, w, h, x, y);
                 XSync(self.dpy, False);
@@ -231,6 +237,9 @@ impl<'a> Context<'a> {
         let xcol = self.get_or_try_init_xcolor(color)?;
         let (x, y) = (self.dx + x as i32, self.dy + y as i32);
 
+        // SAFETY:
+        //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null
+        //   - xcol is known to be non-null so dereferencing is safe
         unsafe {
             XSetForeground(self.dpy, self.s.gc, (*xcol).pixel);
             XDrawRectangle(self.dpy, self.s.drawable, self.s.gc, x, y, w, h);
@@ -244,6 +253,9 @@ impl<'a> Context<'a> {
         let xcol = self.get_or_try_init_xcolor(color)?;
         let (x, y) = (self.dx + x as i32, self.dy + y as i32);
 
+        // SAFETY:
+        //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null
+        //   - xcol is known to be non-null so dereferencing is safe
         unsafe {
             XSetForeground(self.dpy, self.s.gc, (*xcol).pixel);
             XFillRectangle(self.dpy, self.s.drawable, self.s.gc, x, y, w, h);
@@ -264,6 +276,8 @@ impl<'a> Context<'a> {
         padding: (u32, u32),
         c: Color,
     ) -> Result<(u32, u32)> {
+        // SAFETY:
+        //   - the pointers for self.dpy and s.drawable are known to be non-null
         let d = unsafe {
             XftDrawCreate(
                 self.dpy,
@@ -286,6 +300,9 @@ impl<'a> Context<'a> {
             let chunk_y = unsafe { y + h_offset as i32 + (*fnt.xfont).ascent };
             let c_str = CString::new(chunk)?;
 
+            // SAFETY:
+            // - fnt.xfont is known to be non-null
+            // - the string character pointer and length have been obtained from a Rust CString
             unsafe {
                 XftDrawStringUtf8(
                     d,
@@ -326,6 +343,8 @@ impl<'a> Context<'a> {
             drawable,
         } = *self.s;
 
+        // SAFETY:
+        //   - the pointers for self.dpy, drawable and gc are known to be non-null
         unsafe {
             XCopyArea(self.dpy, drawable, self.id, gc, 0, 0, w, h, 0, 0);
             XSync(self.dpy, False);
@@ -339,12 +358,14 @@ struct XColor(*mut XftColor);
 impl Drop for XColor {
     fn drop(&mut self) {
         let layout = Layout::new::<XftColor>();
+        // SAFETY: the memory being deallocated was allocated on creation of the XColor
         unsafe { dealloc(self.0 as *mut u8, layout) }
     }
 }
 
 impl XColor {
     fn try_new(dpy: *mut Display, c: &Color) -> Result<Self> {
+        // SAFETY: this private method is only called with a non-null dpy pointer
         let inner = unsafe { try_xftcolor_from_name(dpy, &c.as_rgb_hex_string())? };
 
         Ok(Self(inner))

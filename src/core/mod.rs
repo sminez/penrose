@@ -441,6 +441,8 @@ where
     /// explicitly before calling this method or as part of a startup hook.
     pub fn run(mut self) -> Result<()> {
         info!("registering SIGCHILD signal handler");
+        // SAFETY: there is no previous signal handler so we are safe to set our own without needing
+        //         to worry about UB from the previous handler being invalid.
         if let Err(e) = unsafe { signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
             panic!("unable to set signal handler: {}", e);
         }
