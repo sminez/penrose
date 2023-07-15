@@ -216,7 +216,7 @@ impl<'a> Context<'a> {
     /// Render a rectangular border using the supplied color.
     pub fn draw_rect(&mut self, Rect { x, y, w, h }: Rect, color: Color) -> Result<()> {
         let xcol = self.get_or_try_init_xcolor(color)?;
-        let (x, y) = (x as i32, y as i32);
+        let (x, y) = (self.dx + x as i32, self.dy + y as i32);
 
         unsafe {
             XSetForeground(self.dpy, self.s.gc, (*xcol).pixel);
@@ -229,7 +229,7 @@ impl<'a> Context<'a> {
     /// Render a filled rectangle using the supplied color.
     pub fn fill_rect(&mut self, Rect { x, y, w, h }: Rect, color: Color) -> Result<()> {
         let xcol = self.get_or_try_init_xcolor(color)?;
-        let (x, y) = (x as i32, y as i32);
+        let (x, y) = (self.dx + x as i32, self.dy + y as i32);
 
         unsafe {
             XSetForeground(self.dpy, self.s.gc, (*xcol).pixel);
@@ -261,7 +261,7 @@ impl<'a> Context<'a> {
         };
 
         let (lpad, rpad) = (padding.0 as i32, padding.1);
-        let (mut x, y) = (lpad + self.dx, self.dy + h_offset as i32);
+        let (mut x, y) = (lpad + self.dx, self.dy);
         let (mut total_w, mut total_h) = (x as u32, 0);
         let xcol = self.get_or_try_init_xcolor(c)?;
 
@@ -270,7 +270,7 @@ impl<'a> Context<'a> {
             let (chunk_w, chunk_h) = fnt.get_exts(self.dpy, chunk)?;
 
             // SAFETY: fnt pointer is non-null
-            let chunk_y = unsafe { y + (h_offset + chunk_h) as i32 / 2 + (*fnt.xfont).ascent };
+            let chunk_y = unsafe { y + h_offset as i32 + (*fnt.xfont).ascent };
             let c_str = CString::new(chunk)?;
 
             unsafe {

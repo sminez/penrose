@@ -142,9 +142,6 @@ impl<X: XConn> Widget<X> for Text {
         }
 
         let (ew, eh) = <Self as Widget<X>>::current_extent(self, ctx, h)?;
-        // ctx.font(&self.font, self.point_size)?;
-        // ctx.color(&self.fg);
-
         let offset = w as i32 - ew as i32;
         let right_justify = self.right_justified && self.is_greedy && offset > 0;
         if right_justify {
@@ -165,7 +162,6 @@ impl<X: XConn> Widget<X> for Text {
             Some(extent) => Ok(extent),
             None => {
                 let (l, r) = self.padding;
-                // ctx.font(&self.font, self.point_size)?;
                 let (w, h) = ctx.text_extent(&self.txt)?;
                 let extent = (w + l + r, h);
                 self.extent = Some(extent);
