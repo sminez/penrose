@@ -214,7 +214,7 @@ impl<X: XConn> Widget<X> for Text {
 ///     padding: (2, 2),
 /// };
 ///
-/// let my_widget = RefreshText::new(&style, my_get_text);
+/// let my_widget = RefreshText::new(style, my_get_text);
 /// ```
 pub struct RefreshText {
     inner: Text,
@@ -303,7 +303,7 @@ impl<X: XConn> Widget<X> for RefreshText {
 ///
 ///
 /// let my_widget = IntervalText::new(
-///     &style,
+///     style,
 ///     my_get_text,
 ///     Duration::from_secs(60 * 5)
 /// );
