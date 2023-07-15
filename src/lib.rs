@@ -233,9 +233,6 @@ pub struct Color {
     rgba_hex: u32,
 }
 
-// helper for methods in Color
-macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
-
 impl Color {
     /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
     pub fn new_from_hex(rgba_hex: u32) -> Self {
@@ -268,13 +265,9 @@ impl Color {
         format!("#{:x}", self.rgb_u32())
     }
 
-    // TODO: Do this with bit operations not floats
-    //
     /// 0xRRGGBB representation of this Color (no alpha information)
     pub fn rgb_u32(&self) -> u32 {
-        let (r, g, b, _) = self.rgba();
-
-        _f2u!(r, 16) + _f2u!(g, 8) + _f2u!(b, 0)
+        self.rgba_hex >> 8
     }
 
     /// 0xRRGGBBAA representation of this Color
@@ -282,13 +275,9 @@ impl Color {
         self.rgba_hex
     }
 
-    // TODO: Do this with bit operations not floats
-    //
     /// 0xAARRGGBB representation of this Color
     pub fn argb_u32(&self) -> u32 {
-        let (r, g, b, a) = self.rgba();
-
-        _f2u!(a, 24) + _f2u!(r, 16) + _f2u!(g, 8) + _f2u!(b, 0)
+        ((self.rgba_hex & 0x000000FF) << 24) + (self.rgba_hex >> 8)
     }
 }
 
@@ -297,6 +286,8 @@ impl From<u32> for Color {
         Self::new_from_hex(hex)
     }
 }
+
+macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
 
 impl From<(f64, f64, f64)> for Color {
     fn from(rgb: (f64, f64, f64)) -> Self {
