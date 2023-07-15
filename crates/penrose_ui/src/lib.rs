@@ -96,7 +96,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// WM_NAME property of the root window.
 pub fn status_bar<X: XConn>(
     height: u32,
-    style: &TextStyle,
+    font: &str,
+    point_size: u8,
+    style: TextStyle,
     highlight: impl Into<Color>,
     empty_ws: impl Into<Color>,
     position: Position,
@@ -108,25 +110,25 @@ pub fn status_bar<X: XConn>(
         position,
         height,
         style.bg.unwrap_or_else(|| 0x000000.into()),
-        &style.font,
-        style.point_size,
+        font,
+        point_size,
         vec![
             Box::new(Workspaces::new(style, highlight, empty_ws)),
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 max_active_window_chars,
-                &TextStyle {
+                TextStyle {
                     bg: Some(highlight),
                     padding: (6, 4),
-                    ..style.clone()
+                    ..style
                 },
                 true,
                 false,
             )),
             Box::new(RootWindowName::new(
-                &TextStyle {
+                TextStyle {
                     padding: (4, 2),
-                    ..style.clone()
+                    ..style
                 },
                 false,
                 true,

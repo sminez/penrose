@@ -28,13 +28,9 @@ use fontset::Fontset;
 
 pub(crate) const SCREEN: i32 = 0;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 /// A set of styling options for a text string
 pub struct TextStyle {
-    /// Font name to use for rendering
-    pub font: String,
-    /// Point size to render the font at
-    pub point_size: u8,
     /// Foreground color in 0xRRGGBB format
     pub fg: Color,
     /// Optional background color in 0xRRGGBB format (default to current background if None)

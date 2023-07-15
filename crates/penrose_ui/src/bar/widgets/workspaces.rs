@@ -57,8 +57,6 @@ fn focused_workspaces<X: XConn>(state: &State<X>) -> Vec<String> {
 pub struct Workspaces {
     workspaces: Vec<WsMeta>,
     focused_ws: Vec<String>, // focused ws per screen
-    font: String,
-    point_size: u8,
     extent: Option<(u32, u32)>,
     fg_1: Color,
     fg_2: Color,
@@ -69,12 +67,10 @@ pub struct Workspaces {
 
 impl Workspaces {
     /// Construct a new WorkspaceWidget
-    pub fn new(style: &TextStyle, highlight: impl Into<Color>, empty_fg: impl Into<Color>) -> Self {
+    pub fn new(style: TextStyle, highlight: impl Into<Color>, empty_fg: impl Into<Color>) -> Self {
         Self {
             workspaces: vec![],
             focused_ws: vec![], // set in startup hook
-            font: style.font.clone(),
-            point_size: style.point_size,
             extent: None,
             fg_1: style.fg,
             fg_2: empty_fg.into(),

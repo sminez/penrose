@@ -81,8 +81,6 @@ where
 #[derive(Clone, Debug, PartialEq)]
 pub struct Text {
     txt: String,
-    font: String,
-    point_size: u8,
     fg: Color,
     bg: Option<Color>,
     padding: (u32, u32),
@@ -96,14 +94,12 @@ impl Text {
     /// Construct a new [Text]
     pub fn new(
         txt: impl Into<String>,
-        style: &TextStyle,
+        style: TextStyle,
         is_greedy: bool,
         right_justified: bool,
     ) -> Self {
         Self {
             txt: txt.into(),
-            font: style.font.clone(),
-            point_size: style.point_size,
             fg: style.fg,
             bg: style.bg,
             padding: style.padding,
@@ -213,11 +209,9 @@ impl<X: XConn> Widget<X> for Text {
 /// }
 ///
 /// let style = TextStyle {
-///     font: "mono".to_string(),
-///     point_size: 10,
 ///     fg: 0xebdbb2ff.into(),
 ///     bg: Some(0x282828ff.into()),
-///     padding: (2.0, 2.0),
+///     padding: (2, 2),
 /// };
 ///
 /// let my_widget = RefreshText::new(&style, my_get_text);
@@ -238,7 +232,7 @@ impl fmt::Debug for RefreshText {
 impl RefreshText {
     /// Construct a new [`RefreshText`] using the specified styling and a function for
     /// generating the widget contents.
-    pub fn new<F>(style: &TextStyle, get_text: F) -> Self
+    pub fn new<F>(style: TextStyle, get_text: F) -> Self
     where
         F: Fn() -> String + 'static,
     {
@@ -302,11 +296,9 @@ impl<X: XConn> Widget<X> for RefreshText {
 /// }
 ///
 /// let style = TextStyle {
-///     font: "mono".to_string(),
-///     point_size: 10,
 ///     fg: 0xebdbb2ff.into(),
 ///     bg: Some(0x282828ff.into()),
-///     padding: (2.0, 2.0),
+///     padding: (2, 2),
 /// };
 ///
 ///
@@ -325,7 +317,7 @@ impl IntervalText {
     /// Construct a new [`IntervalText`] using the specified styling and a function for
     /// generating the widget contents. The function for updating the widget contents
     /// will be run in its own thread on the interval provided.
-    pub fn new<F>(style: &TextStyle, get_text: F, interval: Duration) -> Self
+    pub fn new<F>(style: TextStyle, get_text: F, interval: Duration) -> Self
     where
         F: Fn() -> String + 'static + Send,
     {

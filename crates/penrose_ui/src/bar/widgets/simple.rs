@@ -17,7 +17,7 @@ pub struct RootWindowName {
 
 impl RootWindowName {
     /// Create a new RootWindowName widget
-    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
+    pub fn new(style: TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
             inner: Text::new("penrose", style, is_greedy, right_justified),
         }
@@ -69,12 +69,7 @@ impl ActiveWindowName {
     /// Create a new ActiveWindowName widget with a maximum character count.
     ///
     /// max_chars can not be lower than 3.
-    pub fn new(
-        max_chars: usize,
-        style: &TextStyle,
-        is_greedy: bool,
-        right_justified: bool,
-    ) -> Self {
+    pub fn new(max_chars: usize, style: TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
             inner: Text::new("", style, is_greedy, right_justified),
             max_chars: max_chars.max(3),
@@ -149,7 +144,7 @@ pub struct CurrentLayout {
 
 impl CurrentLayout {
     /// Create a new CurrentLayout widget
-    pub fn new(style: &TextStyle) -> Self {
+    pub fn new(style: TextStyle) -> Self {
         Self {
             inner: Text::new("", style, false, false),
         }

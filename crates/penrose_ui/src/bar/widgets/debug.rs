@@ -14,7 +14,7 @@ pub struct ActiveWindowId {
 
 impl ActiveWindowId {
     /// Create a new ActiveWindowId widget.
-    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
+    pub fn new(style: TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
             inner: Text::new("", style, is_greedy, right_justified),
         }
@@ -60,7 +60,7 @@ pub struct StateSummary {
 
 impl StateSummary {
     /// Create a new StateSummary widget.
-    pub fn new(style: &TextStyle) -> Self {
+    pub fn new(style: TextStyle) -> Self {
         Self {
             inner: Text::new("", style, false, false),
             cfg: CurrentStateConfig {

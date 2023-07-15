@@ -7,7 +7,7 @@ use std::fs;
 ///
 /// If the given battery name is not found on this system, this widget will
 /// render as an empty string.
-pub fn battery_summary(bat: &'static str, style: &TextStyle) -> RefreshText {
+pub fn battery_summary(bat: &'static str, style: TextStyle) -> RefreshText {
     RefreshText::new(style, move || battery_text(bat).unwrap_or_default())
 }
 
@@ -44,7 +44,7 @@ fn read_sys_file(bat: &str, fname: &str) -> Option<String> {
 /// Display the current date and time in YYYY-MM-DD HH:MM format
 ///
 /// This widget shells out to the `date` tool to generate its output
-pub fn current_date_and_time(style: &TextStyle) -> RefreshText {
+pub fn current_date_and_time(style: TextStyle) -> RefreshText {
     RefreshText::new(style, || {
         spawn_for_output_with_args("date", &["+%F %R"])
             .unwrap_or_default()
@@ -55,7 +55,7 @@ pub fn current_date_and_time(style: &TextStyle) -> RefreshText {
 
 /// Display the ESSID currently connected to and the signal quality as
 /// a percentage.
-pub fn wifi_network(style: &TextStyle) -> RefreshText {
+pub fn wifi_network(style: TextStyle) -> RefreshText {
     RefreshText::new(style, move || wifi_text().unwrap_or_default())
 }
 
@@ -98,7 +98,7 @@ fn signal_quality(interface: &str) -> Option<String> {
 }
 
 /// Display the current volume level as reported by `amixer`
-pub fn amixer_volume(channel: &'static str, style: &TextStyle) -> RefreshText {
+pub fn amixer_volume(channel: &'static str, style: TextStyle) -> RefreshText {
     RefreshText::new(style, move || amixer_text(channel).unwrap_or_default())
 }
 
