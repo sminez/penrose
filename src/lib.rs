@@ -65,7 +65,7 @@
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
 )]
 
-#[cfg(feature = "x11rb-xcb")]
+#[cfg(feature = "x11rb")]
 use ::x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
     x11_utils::X11Error,
@@ -81,7 +81,7 @@ mod macros;
 pub mod pure;
 pub mod util;
 pub mod x;
-#[cfg(feature = "x11rb-xcb")]
+#[cfg(feature = "x11rb")]
 pub mod x11rb;
 
 #[doc(inline)]
@@ -198,27 +198,27 @@ pub enum Error {
     //       set of common error variants that they can be mapped to without
     //       needing to extend the enum conditionally when flags are enabled
     /// An error that occurred while connecting to an X11 server
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbConnect(#[from] ConnectError),
 
     /// An error that occurred on an already established X11 connection
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbConnection(#[from] ConnectionError),
 
     /// An error that occurred with some request.
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbReplyError(#[from] ReplyError),
 
     /// An error caused by some request or by the exhaustion of IDs.
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbReplyOrIdError(#[from] ReplyOrIdError),
 
     /// Representation of an X11 error packet that was sent by the server.
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error("X11 error: {0:?}")]
     X11rbX11Error(X11Error),
 }

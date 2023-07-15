@@ -44,9 +44,11 @@ use x11rb::{
     },
     rust_connection::RustConnection,
     wrapper::ConnectionExt as _,
-    xcb_ffi::XCBConnection,
     CURRENT_TIME,
 };
+
+#[cfg(feature = "x11rb-xcb")]
+use x11rb::xcb_ffi::XCBConnection;
 
 pub mod conversions;
 
@@ -109,9 +111,11 @@ impl Conn<RustConnection> {
     }
 }
 
+#[cfg(feature = "x11rb-xcb")]
 /// An C based connection to the X server using an [XCBConnection].
 pub type XcbConn = Conn<XCBConnection>;
 
+#[cfg(feature = "x11rb-xcb")]
 impl Conn<XCBConnection> {
     /// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::xcb_ffi::XCBConnection].
@@ -222,6 +226,13 @@ where
         self.flush();
 
         Ok(id)
+    }
+
+    /// Destroy the window identified by the given `Xid`.
+    pub fn destroy_window(&self, id: Xid) -> Result<()> {
+        self.conn.destroy_window(*id)?;
+
+        Ok(())
     }
 }
 

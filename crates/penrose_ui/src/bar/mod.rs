@@ -8,7 +8,6 @@ use penrose::{
 };
 use std::fmt;
 use tracing::{debug, error, info};
-use x11rb::protocol::xproto::ConnectionExt;
 
 pub mod widgets;
 
@@ -240,7 +239,7 @@ pub fn event_hook<X: XConn + 'static>(
 
         for &(id, _) in bar.screens.iter() {
             info!(%id, "removing previous status bar");
-            bar.draw.conn.connection().destroy_window(*id)?;
+            bar.draw.conn.destroy_window(id)?;
         }
 
         if let Err(e) = bar.init_for_screens() {
