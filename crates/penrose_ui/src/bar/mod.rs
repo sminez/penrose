@@ -155,6 +155,7 @@ impl<X: XConn> StatusBar<X> {
             for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
                 wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, self.h)?;
                 x += w;
+                ctx.flush();
                 ctx.set_x_offset(x as i32);
             }
 
