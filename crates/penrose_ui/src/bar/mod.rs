@@ -130,8 +130,6 @@ impl<X: XConn> StatusBar<X> {
             let screen_has_focus = self.active_screen == i;
             let mut ctx = self.draw.context_for(id)?;
 
-            ctx.fill_rect(Rect::new(0, 0, w, self.h), self.bg)?;
-
             let mut extents = Vec::with_capacity(self.widgets.len());
             let mut greedy_indices = vec![];
 
@@ -157,7 +155,6 @@ impl<X: XConn> StatusBar<X> {
             for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
                 wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, self.h)?;
                 x += w;
-                ctx.flush();
                 ctx.set_x_offset(x as i32);
             }
 
