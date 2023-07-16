@@ -4,6 +4,7 @@ use crate::{
     pure::{geometry::Rect, Stack},
     Xid,
 };
+use std::fmt;
 
 /// Conditionally run one of two layouts based on a predicate function.
 ///
@@ -13,13 +14,23 @@ use crate::{
 ///   - When the screen size being laid out is smaller than a given threshold
 ///   - When there are more than a given number of clients that need to be laid out
 ///   - Based on the absolute position of the screen being laid out.
-#[derive(Debug)]
 pub struct Conditional {
     name: String,
     left: Box<dyn Layout>,
     right: Box<dyn Layout>,
     should_use_left: fn(&Stack<Xid>, Rect) -> bool,
     left_is_active: bool,
+}
+
+impl fmt::Debug for Conditional {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Conditional")
+            .field("name", &self.name)
+            .field("left", &self.left.name())
+            .field("right", &self.right.name())
+            .field("left_is_active", &self.left_is_active)
+            .finish()
+    }
 }
 
 impl Conditional {
