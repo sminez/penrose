@@ -84,12 +84,24 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Higher order combinators for Layouts that allow for composing their behaviour
 </span><span class="kw">use crate</span>::{
     core::layout::{Layout, Message},
     pure::{geometry::Rect, Stack},
     Xid,
 };
+<span class="kw">use </span>std::fmt;
 
 <span class="doccomment">/// Conditionally run one of two layouts based on a predicate function.
 ///
@@ -99,13 +111,23 @@
 ///   - When the screen size being laid out is smaller than a given threshold
 ///   - When there are more than a given number of clients that need to be laid out
 ///   - Based on the absolute position of the screen being laid out.
-</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Conditional {
     name: String,
     left: Box&lt;<span class="kw">dyn </span>Layout&gt;,
     right: Box&lt;<span class="kw">dyn </span>Layout&gt;,
     should_use_left: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, Rect) -&gt; bool,
     left_is_active: bool,
+}
+
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Conditional {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;Conditional&quot;</span>)
+            .field(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name)
+            .field(<span class="string">&quot;left&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.left.name())
+            .field(<span class="string">&quot;right&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.right.name())
+            .field(<span class="string">&quot;left_is_active&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.left_is_active)
+            .finish()
+    }
 }
 
 <span class="kw">impl </span>Conditional {
