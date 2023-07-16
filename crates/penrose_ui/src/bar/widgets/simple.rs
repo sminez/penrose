@@ -6,6 +6,7 @@ use crate::{
 };
 use penrose::{
     core::State,
+    pure::geometry::Rect,
     x::{event::PropertyEvent, Atom, XConn, XConnExt, XEvent},
 };
 
@@ -91,7 +92,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
         if f {
             Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
         } else {
-            Ok(())
+            ctx.fill_bg(Rect::new(0, 0, w, h))
         }
     }
 
