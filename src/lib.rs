@@ -58,14 +58,15 @@
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rustdoc::all
+    rustdoc::all,
+    clippy::undocumented_unsafe_blocks
 )]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
 )]
 
-#[cfg(feature = "x11rb-xcb")]
+#[cfg(feature = "x11rb")]
 use ::x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
     x11_utils::X11Error,
@@ -81,7 +82,7 @@ mod macros;
 pub mod pure;
 pub mod util;
 pub mod x;
-#[cfg(feature = "x11rb-xcb")]
+#[cfg(feature = "x11rb")]
 pub mod x11rb;
 
 #[doc(inline)]
@@ -198,27 +199,27 @@ pub enum Error {
     //       set of common error variants that they can be mapped to without
     //       needing to extend the enum conditionally when flags are enabled
     /// An error that occurred while connecting to an X11 server
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbConnect(#[from] ConnectError),
 
     /// An error that occurred on an already established X11 connection
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbConnection(#[from] ConnectionError),
 
     /// An error that occurred with some request.
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbReplyError(#[from] ReplyError),
 
     /// An error caused by some request or by the exhaustion of IDs.
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error(transparent)]
     X11rbReplyOrIdError(#[from] ReplyOrIdError),
 
     /// Representation of an X11 error packet that was sent by the server.
-    #[cfg(feature = "x11rb-xcb")]
+    #[cfg(feature = "x11rb")]
     #[error("X11 error: {0:?}")]
     X11rbX11Error(X11Error),
 }
@@ -227,41 +228,37 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 /// A simple RGBA based color
 pub struct Color {
-    r: f64,
-    g: f64,
-    b: f64,
-    a: f64,
+    rgba_hex: u32,
 }
-
-// helper for methods in Color
-macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
 
 impl Color {
     /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
-    pub fn new_from_hex(hex: u32) -> Self {
-        let floats: Vec<f64> = hex
-            .to_be_bytes()
-            .iter()
-            .map(|n| *n as f64 / 255.0)
-            .collect();
-
-        let (r, g, b, a) = (floats[0], floats[1], floats[2], floats[3]);
-        Self { r, g, b, a }
+    pub fn new_from_hex(rgba_hex: u32) -> Self {
+        Self { rgba_hex }
     }
 
     /// The RGB information of this color as 0.0-1.0 range floats representing
     /// proportions of 255 for each of R, G, B
     pub fn rgb(&self) -> (f64, f64, f64) {
-        (self.r, self.g, self.b)
+        let (r, g, b, _) = self.rgba();
+
+        (r, g, b)
     }
 
     /// The RGBA information of this color as 0.0-1.0 range floats representing
     /// proportions of 255 for each of R, G, B, A
     pub fn rgba(&self) -> (f64, f64, f64, f64) {
-        (self.r, self.g, self.b, self.a)
+        let floats: Vec<f64> = self
+            .rgba_hex
+            .to_be_bytes()
+            .iter()
+            .map(|n| *n as f64 / 255.0)
+            .collect();
+
+        (floats[0], floats[1], floats[2], floats[3])
     }
 
     /// Render this color as a #RRGGBB hew color string
@@ -271,17 +268,17 @@ impl Color {
 
     /// 0xRRGGBB representation of this Color (no alpha information)
     pub fn rgb_u32(&self) -> u32 {
-        _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
+        self.rgba_hex >> 8
     }
 
     /// 0xRRGGBBAA representation of this Color
     pub fn rgba_u32(&self) -> u32 {
-        _f2u!(self.r, 24) + _f2u!(self.g, 16) + _f2u!(self.b, 8) + _f2u!(self.a, 0)
+        self.rgba_hex
     }
 
     /// 0xAARRGGBB representation of this Color
     pub fn argb_u32(&self) -> u32 {
-        _f2u!(self.a, 24) + _f2u!(self.r, 16) + _f2u!(self.g, 8) + _f2u!(self.b, 0)
+        ((self.rgba_hex & 0x000000FF) << 24) + (self.rgba_hex >> 8)
     }
 }
 
@@ -291,17 +288,23 @@ impl From<u32> for Color {
     }
 }
 
+macro_rules! _f2u { { $f:expr, $s:expr } => { (($f * 255.0) as u32) << $s } }
+
 impl From<(f64, f64, f64)> for Color {
     fn from(rgb: (f64, f64, f64)) -> Self {
         let (r, g, b) = rgb;
-        Self { r, g, b, a: 1.0 }
+        let rgba_hex = _f2u!(r, 24) + _f2u!(g, 16) + _f2u!(b, 8) + _f2u!(1.0, 0);
+
+        Self { rgba_hex }
     }
 }
 
 impl From<(f64, f64, f64, f64)> for Color {
     fn from(rgba: (f64, f64, f64, f64)) -> Self {
         let (r, g, b, a) = rgba;
-        Self { r, g, b, a }
+        let rgba_hex = _f2u!(r, 24) + _f2u!(g, 16) + _f2u!(b, 8) + _f2u!(a, 0);
+
+        Self { rgba_hex }
     }
 }
 

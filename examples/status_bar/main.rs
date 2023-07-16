@@ -107,14 +107,12 @@ fn main() -> Result<()> {
     let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
     let style = TextStyle {
-        font: FONT.to_string(),
-        point_size: 8,
         fg: WHITE.into(),
         bg: Some(BLACK.into()),
-        padding: (2.0, 2.0),
+        padding: (2, 2),
     };
 
-    let bar = status_bar(BAR_HEIGHT_PX, &style, BLUE, GREY, Position::Top).unwrap();
+    let bar = status_bar(BAR_HEIGHT_PX, FONT, 8, style, BLUE, GREY, Position::Top).unwrap();
 
     let wm = bar.add_to(WindowManager::new(
         config,

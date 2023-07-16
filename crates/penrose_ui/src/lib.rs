@@ -9,11 +9,15 @@
 //!
 //! ## Getting started
 //! The main functionality of this crate is provided through the [`Draw`] nad [`Context`] structs
-//! which allow for simple graphics rendering backed by the [pango][1] and [cairo][2] libraries.
+//! which allow for simple graphics rendering backed by the xlib and fontconfig libraries.
+//!
+//! ## A note on the use of unsafe code
+//! Given the aims of this crate and the desire to pull in as few dependencies as possible, it
+//! makes heavy use of `unsafe` to wrap C FFI calls. Please make sure that you read the available
+//! documentation and `SAFETY` comments in the source code to understand what is happening under
+//! the hood if you have any concerns about this.
 //!
 //! [0]: https://github.com/sminez/penrose
-//! [1]: https://pango.gnome.org/
-//! [2]: https://www.cairographics.org/
 #![warn(
     clippy::complexity,
     clippy::correctness,
@@ -22,7 +26,8 @@
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rustdoc::all
+    rustdoc::all,
+    clippy::undocumented_unsafe_blocks
 )]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
@@ -30,6 +35,7 @@
 )]
 
 use penrose::{x::XConn, Color, Xid};
+use std::ffi::NulError;
 
 pub mod bar;
 pub mod core;
@@ -42,16 +48,20 @@ use bar::widgets::{ActiveWindowName, CurrentLayout, RootWindowName, Workspaces};
 /// Error variants from penrose_ui library.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    /// An error was returned by the cairo crate when attempting to render graphics
-    #[error(transparent)]
-    Cairo(#[from] cairo::Error),
-
     /// Creation of a [`Color`] from a string hex code was invalid
     #[error("Invalid Hex color code: {code}")]
     InvalidHexColor {
         /// The invalid string that was intended as a color hex code
         code: String,
     },
+
+    /// The specified character can not be rendered by any font on this system
+    #[error("Unable to find a fallback font for '{0}'")]
+    NoFallbackFontForChar(char),
+
+    /// A string being passed to underlying C APIs contained an internal null byte
+    #[error(transparent)]
+    NulError(#[from] NulError),
 
     /// Unable to parse an integer from a provided string.
     #[error(transparent)]
@@ -61,23 +71,28 @@ pub enum Error {
     #[error(transparent)]
     Penrose(#[from] penrose::Error),
 
-    /// We were unable to create a text layout using pango
-    #[error("unable to create pango layout")]
-    UnableToCreateLayout,
+    /// Unable to allocate a requested color
+    #[error("Unable to allocate the requested color using Xft")]
+    UnableToAllocateColor,
+
+    /// Unable to open a requested font
+    #[error("Unable to open '{0}' as a font using Xft")]
+    UnableToOpenFont(String),
+
+    /// Unable to open a font using an Xft font pattern
+    #[error("Unable to open font from FcPattern using Xft")]
+    UnableToOpenFontPattern,
+
+    /// Unable to parse an Xft font pattern
+    #[error("Unable to parse '{0}' as an Xft font patten")]
+    UnableToParseFontPattern(String),
 
     /// An attempt was made to work with a surface for a window that was not initialised
     /// by the [`Draw`] instance being used.
-    #[error("no cairo surface for {id}")]
+    #[error("no surface for {id}")]
     UnintialisedSurface {
         /// The window id requested
         id: Xid,
-    },
-
-    /// An attempt was made to use a font that has not been registered
-    #[error("'{font}' is has not been registered as a font")]
-    UnknownFont {
-        /// The unknown font name that was requested
-        font: String,
     },
 }
 
@@ -88,7 +103,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// WM_NAME property of the root window.
 pub fn status_bar<X: XConn>(
     height: u32,
-    style: &TextStyle,
+    font: &str,
+    point_size: u8,
+    style: TextStyle,
     highlight: impl Into<Color>,
     empty_ws: impl Into<Color>,
     position: Position,
@@ -100,24 +117,25 @@ pub fn status_bar<X: XConn>(
         position,
         height,
         style.bg.unwrap_or_else(|| 0x000000.into()),
-        &[&style.font],
+        font,
+        point_size,
         vec![
             Box::new(Workspaces::new(style, highlight, empty_ws)),
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 max_active_window_chars,
-                &TextStyle {
+                TextStyle {
                     bg: Some(highlight),
-                    padding: (6.0, 4.0),
-                    ..style.clone()
+                    padding: (6, 4),
+                    ..style
                 },
                 true,
                 false,
             )),
             Box::new(RootWindowName::new(
-                &TextStyle {
-                    padding: (4.0, 2.0),
-                    ..style.clone()
+                TextStyle {
+                    padding: (4, 2),
+                    ..style
                 },
                 false,
                 true,

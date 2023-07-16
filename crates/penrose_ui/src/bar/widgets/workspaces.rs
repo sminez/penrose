@@ -6,17 +6,18 @@ use crate::{
 };
 use penrose::{
     core::{ClientSpace, State},
+    pure::geometry::Rect,
     x::XConn,
     Color,
 };
 
-const PADDING: f64 = 3.0;
+const PADDING: u32 = 3;
 
 #[derive(Clone, Debug, PartialEq)]
 struct WsMeta {
     tag: String,
     occupied: bool,
-    extent: (f64, f64),
+    extent: (u32, u32),
 }
 
 impl WsMeta {
@@ -34,7 +35,7 @@ impl From<&ClientSpace> for WsMeta {
         Self {
             tag: w.tag().to_owned(),
             occupied: !w.is_empty(),
-            extent: (0.0, 0.0),
+            extent: (0, 0),
         }
     }
 }
@@ -56,9 +57,7 @@ fn focused_workspaces<X: XConn>(state: &State<X>) -> Vec<String> {
 pub struct Workspaces {
     workspaces: Vec<WsMeta>,
     focused_ws: Vec<String>, // focused ws per screen
-    font: String,
-    point_size: i32,
-    extent: Option<(f64, f64)>,
+    extent: Option<(u32, u32)>,
     fg_1: Color,
     fg_2: Color,
     bg_1: Color,
@@ -68,12 +67,10 @@ pub struct Workspaces {
 
 impl Workspaces {
     /// Construct a new WorkspaceWidget
-    pub fn new(style: &TextStyle, highlight: impl Into<Color>, empty_fg: impl Into<Color>) -> Self {
+    pub fn new(style: TextStyle, highlight: impl Into<Color>, empty_fg: impl Into<Color>) -> Self {
         Self {
             workspaces: vec![],
             focused_ws: vec![], // set in startup hook
-            font: style.font.clone(),
-            point_size: style.point_size,
             extent: None,
             fg_1: style.fg,
             fg_2: empty_fg.into(),
@@ -126,7 +123,7 @@ impl Workspaces {
         screen: usize,
         screen_has_focus: bool,
         occupied: bool,
-    ) -> (&Color, Option<&Color>) {
+    ) -> (Color, Color) {
         let focused_on_this_screen = match &self.focused_ws.get(screen) {
             &Some(focused_tag) => tag == focused_tag,
             None => false,
@@ -136,21 +133,17 @@ impl Workspaces {
         let focused_other = focused && !focused_on_this_screen;
 
         if focused_on_this_screen && screen_has_focus {
-            let fg = if occupied { &self.fg_1 } else { &self.fg_2 };
+            let fg = if occupied { self.fg_1 } else { self.fg_2 };
 
-            (fg, Some(&self.bg_1))
+            (fg, self.bg_1)
         } else if focused {
-            let fg = if focused_other {
-                &self.bg_1
-            } else {
-                &self.fg_1
-            };
+            let fg = if focused_other { self.bg_1 } else { self.fg_1 };
 
-            (fg, Some(&self.fg_2))
+            (fg, self.fg_2)
         } else {
-            let fg = if occupied { &self.fg_1 } else { &self.fg_2 };
+            let fg = if occupied { self.fg_1 } else { self.fg_2 };
 
-            (fg, None)
+            (fg, self.bg_2)
         }
     }
 }
@@ -158,28 +151,21 @@ impl Workspaces {
 impl<X: XConn> Widget<X> for Workspaces {
     fn draw(
         &mut self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         screen: usize,
         screen_has_focus: bool,
-        w: f64,
-        h: f64,
+        w: u32,
+        h: u32,
     ) -> Result<()> {
-        ctx.color(&self.bg_2);
-        ctx.rectangle(0.0, 0.0, w, h)?;
-        ctx.font(&self.font, self.point_size)?;
-        ctx.translate(PADDING, 0.0);
+        ctx.fill_rect(Rect::new(0, 0, w, h), self.bg_2)?;
+        ctx.translate(PADDING as i32, 0);
         let (_, eh) = <Self as Widget<X>>::current_extent(self, ctx, h)?;
 
         for ws in self.workspaces.iter() {
             let (fg, bg) = self.ws_colors(&ws.tag, screen, screen_has_focus, ws.occupied);
-            if let Some(c) = bg {
-                ctx.color(c);
-                ctx.rectangle(0.0, 0.0, ws.extent.0, h)?;
-            }
-
-            ctx.color(fg);
-            ctx.text(&ws.tag, h - eh, (PADDING, PADDING))?;
-            ctx.translate(ws.extent.0, 0.0);
+            ctx.fill_rect(Rect::new(0, 0, ws.extent.0, h), bg)?;
+            ctx.draw_text(&ws.tag, h - eh, (PADDING, PADDING), fg)?;
+            ctx.translate(ws.extent.0 as i32, 0);
         }
 
         self.require_draw = false;
@@ -187,18 +173,17 @@ impl<X: XConn> Widget<X> for Workspaces {
         Ok(())
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, _h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, _h: u32) -> Result<(u32, u32)> {
         match self.extent {
             Some(extent) => Ok(extent),
             None => {
-                let mut total = 0.0;
-                let mut h_max = 0.0;
+                let mut total = 0;
+                let mut h_max = 0;
                 for ws in self.workspaces.iter_mut() {
-                    ctx.font(&self.font, self.point_size)?;
                     let (w, h) = ctx.text_extent(&ws.tag)?;
-                    total += w + PADDING + PADDING;
+                    total += w + 2 * PADDING;
                     h_max = if h > h_max { h } else { h_max };
-                    ws.extent = (w + PADDING + PADDING, h);
+                    ws.extent = (w + 2 * PADDING, h);
                 }
 
                 let ext = (total + PADDING, h_max);

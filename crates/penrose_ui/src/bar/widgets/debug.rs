@@ -14,7 +14,7 @@ pub struct ActiveWindowId {
 
 impl ActiveWindowId {
     /// Create a new ActiveWindowId widget.
-    pub fn new(style: &TextStyle, is_greedy: bool, right_justified: bool) -> Self {
+    pub fn new(style: TextStyle, is_greedy: bool, right_justified: bool) -> Self {
         Self {
             inner: Text::new("", style, is_greedy, right_justified),
         }
@@ -22,11 +22,11 @@ impl ActiveWindowId {
 }
 
 impl<X: XConn> Widget<X> for ActiveWindowId {
-    fn draw(&mut self, ctx: &mut Context, s: usize, focused: bool, w: f64, h: f64) -> Result<()> {
-        Widget::<X>::draw(&mut self.inner, ctx, s, focused, w, h)
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
+        Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         Widget::<X>::current_extent(&mut self.inner, ctx, h)
     }
 
@@ -60,7 +60,7 @@ pub struct StateSummary {
 
 impl StateSummary {
     /// Create a new StateSummary widget.
-    pub fn new(style: &TextStyle) -> Self {
+    pub fn new(style: TextStyle) -> Self {
         Self {
             inner: Text::new("", style, false, false),
             cfg: CurrentStateConfig {
@@ -72,11 +72,11 @@ impl StateSummary {
 }
 
 impl<X: XConn> Widget<X> for StateSummary {
-    fn draw(&mut self, ctx: &mut Context, s: usize, focused: bool, w: f64, h: f64) -> Result<()> {
-        Widget::<X>::draw(&mut self.inner, ctx, s, focused, w, h)
+    fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
+        Widget::<X>::draw(&mut self.inner, ctx, s, f, w, h)
     }
 
-    fn current_extent(&mut self, ctx: &mut Context, h: f64) -> Result<(f64, f64)> {
+    fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
         Widget::<X>::current_extent(&mut self.inner, ctx, h)
     }
 

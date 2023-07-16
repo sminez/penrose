@@ -30,7 +30,7 @@ jobs:
         rust-version: ${{ matrix.rust }}
 
     - name: Install C deps
-      run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
+      run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libxft-dev --fix-missing
 
     - name: Run tests
       run: cargo test --workspace --features ${{ matrix.features }} --verbose
@@ -55,7 +55,7 @@ jobs:
     - uses: hecrj/setup-rust-action@v1
       with:
         components: clippy
-    - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
+    - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libxft-dev --fix-missing
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -70,5 +70,5 @@ jobs:
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: nightly
-    - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libpango1.0-dev libcairo2-dev --fix-missing
+    - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libxft-dev --fix-missing
     - run: cargo rustdoc --all-features
