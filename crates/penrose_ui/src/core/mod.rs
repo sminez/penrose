@@ -348,6 +348,11 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
+    /// Fill the specified area with this Context's background color
+    pub fn fill_bg(&mut self, r: Rect) -> Result<()> {
+        self.fill_rect(r, self.bg)
+    }
+
     /// Render the provided text at the current context offset using the supplied color.
     pub fn draw_text(
         &mut self,

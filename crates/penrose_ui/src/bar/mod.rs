@@ -130,8 +130,6 @@ impl<X: XConn> StatusBar<X> {
             let screen_has_focus = self.active_screen == i;
             let mut ctx = self.draw.context_for(id)?;
 
-            ctx.fill_rect(Rect::new(0, 0, w, self.h), self.bg)?;
-
             let mut extents = Vec::with_capacity(self.widgets.len());
             let mut greedy_indices = vec![];
 
