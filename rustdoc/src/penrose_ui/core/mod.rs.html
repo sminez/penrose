@@ -478,6 +478,11 @@
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
 <a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
 //!
 //! If you are only interested in adding functionality to the penrose [StatusBar][0] then you
@@ -826,6 +831,11 @@
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Fill the specified area with this Context&#39;s background color
+    </span><span class="kw">pub fn </span>fill_bg(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.fill_rect(r, <span class="self">self</span>.bg)
     }
 
     <span class="doccomment">/// Render the provided text at the current context offset using the supplied color.

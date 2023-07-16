@@ -175,6 +175,7 @@
 <a href="#175" id="175">175</a>
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Simple text based widgets built on top of Text
 </span><span class="kw">use crate</span>::{
     bar::widgets::{Text, TextStyle, Widget},
@@ -183,6 +184,7 @@
 };
 <span class="kw">use </span>penrose::{
     core::State,
+    pure::geometry::Rect,
     x::{event::PropertyEvent, Atom, XConn, XConnExt, XEvent},
 };
 
@@ -268,7 +270,7 @@
         <span class="kw">if </span>f {
             Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, ctx, s, f, w, h)
         } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(())
+            ctx.fill_bg(Rect::new(<span class="number">0</span>, <span class="number">0</span>, w, h))
         }
     }
 

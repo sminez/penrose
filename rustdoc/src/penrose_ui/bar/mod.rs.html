@@ -285,8 +285,6 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
 </span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
@@ -418,8 +416,6 @@
         <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>(id, w)) <span class="kw">in </span><span class="self">self</span>.screens.clone().iter().enumerate() {
             <span class="kw">let </span>screen_has_focus = <span class="self">self</span>.active_screen == i;
             <span class="kw">let </span><span class="kw-2">mut </span>ctx = <span class="self">self</span>.draw.context_for(id)<span class="question-mark">?</span>;
-
-            ctx.fill_rect(Rect::new(<span class="number">0</span>, <span class="number">0</span>, w, <span class="self">self</span>.h), <span class="self">self</span>.bg)<span class="question-mark">?</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>extents = Vec::with_capacity(<span class="self">self</span>.widgets.len());
             <span class="kw">let </span><span class="kw-2">mut </span>greedy_indices = <span class="macro">vec!</span>[];
