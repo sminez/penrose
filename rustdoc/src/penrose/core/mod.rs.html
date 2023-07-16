@@ -734,6 +734,8 @@
 <a href="#734" id="734">734</a>
 <a href="#735" id="735">735</a>
 <a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
@@ -1177,7 +1179,9 @@
     /// explicitly before calling this method or as part of a startup hook.
     </span><span class="kw">pub fn </span>run(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">info!</span>(<span class="string">&quot;registering SIGCHILD signal handler&quot;</span>);
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
+        <span class="comment">// SAFETY: there is no previous signal handler so we are safe to set our own without needing
+        //         to worry about UB from the previous handler being invalid.
+        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
             <span class="macro">panic!</span>(<span class="string">&quot;unable to set signal handler: {}&quot;</span>, e);
         }
 

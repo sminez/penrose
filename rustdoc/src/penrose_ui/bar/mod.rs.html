@@ -287,25 +287,8 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
-</span><span class="kw">use crate</span>::{
-    core::{Context, Draw},
-    <span class="prelude-ty">Result</span>,
-};
+</span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
     core::{State, WindowManager},
     pure::geometry::Rect,
@@ -314,7 +297,6 @@
 };
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>tracing::{debug, error, info};
-<span class="kw">use </span>x11rb::protocol::xproto::ConnectionExt <span class="kw">as _</span>;
 
 <span class="kw">pub mod </span>widgets;
 
@@ -334,9 +316,8 @@
     draw: Draw,
     position: Position,
     widgets: Vec&lt;Box&lt;<span class="kw">dyn </span>Widget&lt;X&gt;&gt;&gt;,
-    screens: Vec&lt;(Xid, f64)&gt;,
-    hpx: u32,
-    h: f64,
+    screens: Vec&lt;(Xid, u32)&gt;,
+    h: u32,
     bg: Color,
     active_screen: usize,
 }
@@ -347,7 +328,7 @@
             .field(<span class="string">&quot;position&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.position)
             .field(<span class="string">&quot;widgets&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">stringify!</span>(<span class="self">self</span>.widgets))
             .field(<span class="string">&quot;screens&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.screens)
-            .field(<span class="string">&quot;hpx&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.hpx)
+            .field(<span class="string">&quot;h&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.h)
             .field(<span class="string">&quot;bg&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.bg)
             .field(<span class="string">&quot;active_screen&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.active_screen)
             .finish()
@@ -361,25 +342,22 @@
         position: Position,
         h: u32,
         bg: <span class="kw">impl </span>Into&lt;Color&gt;,
-        fonts: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str],
+        font: <span class="kw-2">&amp;</span>str,
+        point_size: u8,
         widgets: Vec&lt;Box&lt;<span class="kw">dyn </span>Widget&lt;X&gt;&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>draw = Draw::new()<span class="question-mark">?</span>;
+        <span class="kw">let </span>bg = bg.into();
+        <span class="kw">let </span>draw = Draw::new(font, point_size, bg)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>bar = <span class="self">Self </span>{
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             draw,
             position,
             widgets,
             screens: <span class="macro">vec!</span>[],
-            hpx: h,
-            h: h <span class="kw">as </span>f64,
-            bg: bg.into(),
+            h,
+            bg,
             active_screen: <span class="number">0</span>,
-        };
-
-        fonts.iter().for_each(|f| bar.draw.register_font(f));
-
-        <span class="prelude-val">Ok</span>(bar)
+        })
     }
 
     <span class="doccomment">/// Add this [`StatusBar`] into the given [`WindowManager`] along with the required
@@ -406,13 +384,13 @@
             .map(|<span class="kw-2">&amp;</span>Rect { x, y, w, h }| {
                 <span class="kw">let </span>y = <span class="kw">match </span><span class="self">self</span>.position {
                     Position::Top =&gt; y,
-                    Position::Bottom =&gt; h - <span class="self">self</span>.hpx,
+                    Position::Bottom =&gt; h - <span class="self">self</span>.h,
                 };
 
                 <span class="macro">debug!</span>(<span class="string">&quot;creating new window&quot;</span>);
                 <span class="kw">let </span>id = <span class="self">self</span>.draw.new_window(
                     WinType::InputOutput(Atom::NetWindowTypeDock),
-                    Rect::new(x, y, w, <span class="self">self</span>.hpx),
+                    Rect::new(x, y, w, <span class="self">self</span>.h),
                     <span class="bool-val">false</span>,
                 )<span class="question-mark">?</span>;
 
@@ -428,9 +406,9 @@
                 <span class="macro">debug!</span>(<span class="string">&quot;flushing&quot;</span>);
                 <span class="self">self</span>.draw.flush(id)<span class="question-mark">?</span>;
 
-                <span class="prelude-val">Ok</span>((id, w <span class="kw">as </span>f64))
+                <span class="prelude-val">Ok</span>((id, w))
             })
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;(Xid, f64)&gt;&gt;&gt;()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;(Xid, u32)&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -441,50 +419,41 @@
             <span class="kw">let </span>screen_has_focus = <span class="self">self</span>.active_screen == i;
             <span class="kw">let </span><span class="kw-2">mut </span>ctx = <span class="self">self</span>.draw.context_for(id)<span class="question-mark">?</span>;
 
-            ctx.clear()<span class="question-mark">?</span>;
+            ctx.fill_rect(Rect::new(<span class="number">0</span>, <span class="number">0</span>, w, <span class="self">self</span>.h), <span class="self">self</span>.bg)<span class="question-mark">?</span>;
 
-            ctx.color(<span class="kw-2">&amp;</span><span class="self">self</span>.bg);
-            ctx.rectangle(<span class="number">0.0</span>, <span class="number">0.0</span>, w, <span class="self">self</span>.h)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>extents = Vec::with_capacity(<span class="self">self</span>.widgets.len());
+            <span class="kw">let </span><span class="kw-2">mut </span>greedy_indices = <span class="macro">vec!</span>[];
 
-            <span class="kw">let </span>extents = <span class="self">self</span>.layout(<span class="kw-2">&amp;mut </span>ctx, w)<span class="question-mark">?</span>;
-            <span class="kw">let </span><span class="kw-2">mut </span>x = <span class="number">0.0</span>;
+            <span class="kw">for </span>(i, w) <span class="kw">in </span><span class="self">self</span>.widgets.iter_mut().enumerate() {
+                extents.push(w.current_extent(<span class="kw-2">&amp;mut </span>ctx, <span class="self">self</span>.h)<span class="question-mark">?</span>);
+                <span class="kw">if </span>w.is_greedy() {
+                    greedy_indices.push(i)
+                }
+            }
+
+            <span class="kw">let </span>total = extents.iter().map(|(w, <span class="kw">_</span>)| w).sum::&lt;u32&gt;();
+            <span class="kw">let </span>n_greedy = greedy_indices.len();
+
+            <span class="kw">if </span>total &lt; w &amp;&amp; n_greedy &gt; <span class="number">0 </span>{
+                <span class="kw">let </span>per_greedy = (w - total) / n_greedy <span class="kw">as </span>u32;
+                <span class="kw">for </span>i <span class="kw">in </span>greedy_indices.iter() {
+                    <span class="kw">let </span>(w, h) = extents[<span class="kw-2">*</span>i];
+                    extents[<span class="kw-2">*</span>i] = (w + per_greedy, h);
+                }
+            }
+
+            <span class="kw">let </span><span class="kw-2">mut </span>x = <span class="number">0</span>;
             <span class="kw">for </span>(wd, (w, <span class="kw">_</span>)) <span class="kw">in </span><span class="self">self</span>.widgets.iter_mut().zip(extents) {
                 wd.draw(<span class="kw-2">&amp;mut </span>ctx, <span class="self">self</span>.active_screen, screen_has_focus, w, <span class="self">self</span>.h)<span class="question-mark">?</span>;
                 x += w;
                 ctx.flush();
-                ctx.set_x_offset(x);
+                ctx.set_x_offset(x <span class="kw">as </span>i32);
             }
 
             <span class="self">self</span>.draw.flush(id)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, w: f64) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;(f64, f64)&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>extents = Vec::with_capacity(<span class="self">self</span>.widgets.len());
-        <span class="kw">let </span><span class="kw-2">mut </span>greedy_indices = <span class="macro">vec!</span>[];
-
-        <span class="kw">for </span>(i, w) <span class="kw">in </span><span class="self">self</span>.widgets.iter_mut().enumerate() {
-            extents.push(w.current_extent(ctx, <span class="self">self</span>.h)<span class="question-mark">?</span>);
-            <span class="kw">if </span>w.is_greedy() {
-                greedy_indices.push(i)
-            }
-        }
-
-        <span class="kw">let </span>total = extents.iter().map(|(w, <span class="kw">_</span>)| w).sum::&lt;f64&gt;();
-        <span class="kw">let </span>n_greedy = greedy_indices.len();
-
-        <span class="kw">if </span>total &lt; w &amp;&amp; n_greedy &gt; <span class="number">0 </span>{
-            <span class="kw">let </span>per_greedy = (w - total) / n_greedy <span class="kw">as </span>f64;
-            <span class="kw">for </span>i <span class="kw">in </span>greedy_indices.iter() {
-                <span class="kw">let </span>(w, h) = extents[<span class="kw-2">*</span>i];
-                extents[<span class="kw-2">*</span>i] = (w + per_greedy, h);
-            }
-        }
-
-        <span class="comment">// Allowing overflow to happen
-        </span><span class="prelude-val">Ok</span>(extents)
     }
 
     <span class="kw">fn </span>redraw_if_needed(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -556,10 +525,13 @@
 
     <span class="kw">if </span><span class="macro">matches!</span>(event, RandrNotify) || <span class="macro">matches!</span>(event, ConfigureNotify(e) <span class="kw">if </span>e.is_root) {
         <span class="macro">info!</span>(<span class="string">&quot;screens have changed: recreating status bars&quot;</span>);
+        <span class="kw">let </span>screens: Vec&lt;<span class="kw">_</span>&gt; = bar.screens.drain(<span class="number">0</span>..).collect();
 
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(id, <span class="kw">_</span>) <span class="kw">in </span>bar.screens.iter() {
+        <span class="kw">for </span>(id, <span class="kw">_</span>) <span class="kw">in </span>screens {
             <span class="macro">info!</span>(%id, <span class="string">&quot;removing previous status bar&quot;</span>);
-            bar.draw.conn.connection().destroy_window(<span class="kw-2">*</span>id)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = bar.draw.destroy_window_and_surface(id) {
+                <span class="macro">error!</span>(%e, <span class="string">&quot;error when removing previous status bar state&quot;</span>);
+            }
         }
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = bar.init_for_screens() {

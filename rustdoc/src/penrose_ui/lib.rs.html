@@ -125,6 +125,24 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Penrose-ui: a bare bones toolkit for adding UI elements to Penrose
 //!
 //! ## A note on the intended purpose of this crate
@@ -136,11 +154,15 @@
 //!
 //! ## Getting started
 //! The main functionality of this crate is provided through the [`Draw`] nad [`Context`] structs
-//! which allow for simple graphics rendering backed by the [pango][1] and [cairo][2] libraries.
+//! which allow for simple graphics rendering backed by the xlib and fontconfig libraries.
+//!
+//! ## A note on the use of unsafe code
+//! Given the aims of this crate and the desire to pull in as few dependencies as possible, it
+//! makes heavy use of `unsafe` to wrap C FFI calls. Please make sure that you read the available
+//! documentation and `SAFETY` comments in the source code to understand what is happening under
+//! the hood if you have any concerns about this.
 //!
 //! [0]: https://github.com/sminez/penrose
-//! [1]: https://pango.gnome.org/
-//! [2]: https://www.cairographics.org/
 </span><span class="attr">#![warn(
     clippy::complexity,
     clippy::correctness,
@@ -149,7 +171,8 @@
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rustdoc::all
+    rustdoc::all,
+    clippy::undocumented_unsafe_blocks
 )]
 #![doc(
     html_logo_url = <span class="string">&quot;https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg&quot;</span>,
@@ -157,6 +180,7 @@
 </span>)]
 
 </span><span class="kw">use </span>penrose::{x::XConn, Color, Xid};
+<span class="kw">use </span>std::ffi::NulError;
 
 <span class="kw">pub mod </span>bar;
 <span class="kw">pub mod </span>core;
@@ -169,16 +193,20 @@
 <span class="doccomment">/// Error variants from penrose_ui library.
 </span><span class="attr">#[derive(thiserror::Error, Debug)]
 </span><span class="kw">pub enum </span>Error {
-    <span class="doccomment">/// An error was returned by the cairo crate when attempting to render graphics
-    </span><span class="attr">#[error(transparent)]
-    </span>Cairo(<span class="attr">#[from] </span>cairo::Error),
-
     <span class="doccomment">/// Creation of a [`Color`] from a string hex code was invalid
     </span><span class="attr">#[error(<span class="string">&quot;Invalid Hex color code: {code}&quot;</span>)]
     </span>InvalidHexColor {
         <span class="doccomment">/// The invalid string that was intended as a color hex code
         </span>code: String,
     },
+
+    <span class="doccomment">/// The specified character can not be rendered by any font on this system
+    </span><span class="attr">#[error(<span class="string">&quot;Unable to find a fallback font for &#39;{0}&#39;&quot;</span>)]
+    </span>NoFallbackFontForChar(char),
+
+    <span class="doccomment">/// A string being passed to underlying C APIs contained an internal null byte
+    </span><span class="attr">#[error(transparent)]
+    </span>NulError(<span class="attr">#[from] </span>NulError),
 
     <span class="doccomment">/// Unable to parse an integer from a provided string.
     </span><span class="attr">#[error(transparent)]
@@ -188,23 +216,28 @@
     </span><span class="attr">#[error(transparent)]
     </span>Penrose(<span class="attr">#[from] </span>penrose::Error),
 
-    <span class="doccomment">/// We were unable to create a text layout using pango
-    </span><span class="attr">#[error(<span class="string">&quot;unable to create pango layout&quot;</span>)]
-    </span>UnableToCreateLayout,
+    <span class="doccomment">/// Unable to allocate a requested color
+    </span><span class="attr">#[error(<span class="string">&quot;Unable to allocate the requested color using Xft&quot;</span>)]
+    </span>UnableToAllocateColor,
+
+    <span class="doccomment">/// Unable to open a requested font
+    </span><span class="attr">#[error(<span class="string">&quot;Unable to open &#39;{0}&#39; as a font using Xft&quot;</span>)]
+    </span>UnableToOpenFont(String),
+
+    <span class="doccomment">/// Unable to open a font using an Xft font pattern
+    </span><span class="attr">#[error(<span class="string">&quot;Unable to open font from FcPattern using Xft&quot;</span>)]
+    </span>UnableToOpenFontPattern,
+
+    <span class="doccomment">/// Unable to parse an Xft font pattern
+    </span><span class="attr">#[error(<span class="string">&quot;Unable to parse &#39;{0}&#39; as an Xft font patten&quot;</span>)]
+    </span>UnableToParseFontPattern(String),
 
     <span class="doccomment">/// An attempt was made to work with a surface for a window that was not initialised
     /// by the [`Draw`] instance being used.
-    </span><span class="attr">#[error(<span class="string">&quot;no cairo surface for {id}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">&quot;no surface for {id}&quot;</span>)]
     </span>UnintialisedSurface {
         <span class="doccomment">/// The window id requested
         </span>id: Xid,
-    },
-
-    <span class="doccomment">/// An attempt was made to use a font that has not been registered
-    </span><span class="attr">#[error(<span class="string">&quot;&#39;{font}&#39; is has not been registered as a font&quot;</span>)]
-    </span>UnknownFont {
-        <span class="doccomment">/// The unknown font name that was requested
-        </span>font: String,
     },
 }
 
@@ -215,7 +248,9 @@
 /// WM_NAME property of the root window.
 </span><span class="kw">pub fn </span>status_bar&lt;X: XConn&gt;(
     height: u32,
-    style: <span class="kw-2">&amp;</span>TextStyle,
+    font: <span class="kw-2">&amp;</span>str,
+    point_size: u8,
+    style: TextStyle,
     highlight: <span class="kw">impl </span>Into&lt;Color&gt;,
     empty_ws: <span class="kw">impl </span>Into&lt;Color&gt;,
     position: Position,
@@ -227,24 +262,25 @@
         position,
         height,
         style.bg.unwrap_or_else(|| <span class="number">0x000000</span>.into()),
-        <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>style.font],
+        font,
+        point_size,
         <span class="macro">vec!</span>[
             Box::new(Workspaces::new(style, highlight, empty_ws)),
             Box::new(CurrentLayout::new(style)),
             Box::new(ActiveWindowName::new(
                 max_active_window_chars,
-                <span class="kw-2">&amp;</span>TextStyle {
+                TextStyle {
                     bg: <span class="prelude-val">Some</span>(highlight),
-                    padding: (<span class="number">6.0</span>, <span class="number">4.0</span>),
-                    ..style.clone()
+                    padding: (<span class="number">6</span>, <span class="number">4</span>),
+                    ..style
                 },
                 <span class="bool-val">true</span>,
                 <span class="bool-val">false</span>,
             )),
             Box::new(RootWindowName::new(
-                <span class="kw-2">&amp;</span>TextStyle {
-                    padding: (<span class="number">4.0</span>, <span class="number">2.0</span>),
-                    ..style.clone()
+                TextStyle {
+                    padding: (<span class="number">4</span>, <span class="number">2</span>),
+                    ..style
                 },
                 <span class="bool-val">false</span>,
                 <span class="bool-val">true</span>,

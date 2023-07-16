@@ -698,6 +698,17 @@
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helpers and utilities for using x11rb as a back end for penrose
 //!
 //! Docs for the `X11` core protocol can be found [here][1]. x11rb is a thin facade over this. For
@@ -744,9 +755,11 @@
     },
     rust_connection::RustConnection,
     wrapper::ConnectionExt <span class="kw">as _</span>,
-    xcb_ffi::XCBConnection,
     CURRENT_TIME,
 };
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+</span><span class="kw">use </span>x11rb::xcb_ffi::XCBConnection;
 
 <span class="kw">pub mod </span>conversions;
 
@@ -809,10 +822,12 @@
     }
 }
 
-<span class="doccomment">/// An C based connection to the X server using an [XCBConnection].
+<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+</span><span class="doccomment">/// An C based connection to the X server using an [XCBConnection].
 </span><span class="kw">pub type </span>XcbConn = Conn&lt;XCBConnection&gt;;
 
-<span class="kw">impl </span>Conn&lt;XCBConnection&gt; {
+<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+</span><span class="kw">impl </span>Conn&lt;XCBConnection&gt; {
     <span class="doccomment">/// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::xcb_ffi::XCBConnection].
     </span><span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
@@ -922,6 +937,13 @@
         <span class="self">self</span>.flush();
 
         <span class="prelude-val">Ok</span>(id)
+    }
+
+    <span class="doccomment">/// Destroy the window identified by the given `Xid`.
+    </span><span class="kw">pub fn </span>destroy_window(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.conn.destroy_window(<span class="kw-2">*</span>id)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

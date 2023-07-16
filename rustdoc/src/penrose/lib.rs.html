@@ -328,6 +328,9 @@
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
 <a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Penrose: a library for building your very own tiling window manager
 //!
 //! Penrose is inspired by similar projects such as [dwm][1], [xmonad][2] and [qtile][3] which
@@ -388,14 +391,15 @@
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rustdoc::all
+    rustdoc::all,
+    clippy::undocumented_unsafe_blocks
 )]
 #![doc(
     html_logo_url = <span class="string">&quot;https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg&quot;</span>,
     issue_tracker_base_url = <span class="string">&quot;https://github.com/sminez/penrose/issues/&quot;
 </span>)]
 
-#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
 </span><span class="kw">use </span>::x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
     x11_utils::X11Error,
@@ -411,7 +415,7 @@
 <span class="kw">pub mod </span>pure;
 <span class="kw">pub mod </span>util;
 <span class="kw">pub mod </span>x;
-<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
 </span><span class="kw">pub mod </span>x11rb;
 
 <span class="attr">#[doc(inline)]
@@ -528,27 +532,27 @@
     //       set of common error variants that they can be mapped to without
     //       needing to extend the enum conditionally when flags are enabled
     </span><span class="doccomment">/// An error that occurred while connecting to an X11 server
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
     #[error(transparent)]
     </span>X11rbConnect(<span class="attr">#[from] </span>ConnectError),
 
     <span class="doccomment">/// An error that occurred on an already established X11 connection
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
     #[error(transparent)]
     </span>X11rbConnection(<span class="attr">#[from] </span>ConnectionError),
 
     <span class="doccomment">/// An error that occurred with some request.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
     #[error(transparent)]
     </span>X11rbReplyError(<span class="attr">#[from] </span>ReplyError),
 
     <span class="doccomment">/// An error caused by some request or by the exhaustion of IDs.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
     #[error(transparent)]
     </span>X11rbReplyOrIdError(<span class="attr">#[from] </span>ReplyOrIdError),
 
     <span class="doccomment">/// Representation of an X11 error packet that was sent by the server.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
     #[error(<span class="string">&quot;X11 error: {0:?}&quot;</span>)]
     </span>X11rbX11Error(X11Error),
 }
@@ -557,41 +561,37 @@
 </span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = std::result::Result&lt;T, Error&gt;;
 
 <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 </span><span class="doccomment">/// A simple RGBA based color
 </span><span class="kw">pub struct </span>Color {
-    r: f64,
-    g: f64,
-    b: f64,
-    a: f64,
+    rgba_hex: u32,
 }
-
-<span class="comment">// helper for methods in Color
-</span><span class="macro">macro_rules! </span>_f2u { { <span class="macro-nonterminal">$f</span>:expr, <span class="macro-nonterminal">$s</span>:expr } =&gt; { ((<span class="macro-nonterminal">$f </span>* <span class="number">255.0</span>) <span class="kw">as </span>u32) &lt;&lt; <span class="macro-nonterminal">$s </span>} }
 
 <span class="kw">impl </span>Color {
     <span class="doccomment">/// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
-    </span><span class="kw">pub fn </span>new_from_hex(hex: u32) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>floats: Vec&lt;f64&gt; = hex
-            .to_be_bytes()
-            .iter()
-            .map(|n| <span class="kw-2">*</span>n <span class="kw">as </span>f64 / <span class="number">255.0</span>)
-            .collect();
-
-        <span class="kw">let </span>(r, g, b, a) = (floats[<span class="number">0</span>], floats[<span class="number">1</span>], floats[<span class="number">2</span>], floats[<span class="number">3</span>]);
-        <span class="self">Self </span>{ r, g, b, a }
+    </span><span class="kw">pub fn </span>new_from_hex(rgba_hex: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ rgba_hex }
     }
 
     <span class="doccomment">/// The RGB information of this color as 0.0-1.0 range floats representing
     /// proportions of 255 for each of R, G, B
     </span><span class="kw">pub fn </span>rgb(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (f64, f64, f64) {
-        (<span class="self">self</span>.r, <span class="self">self</span>.g, <span class="self">self</span>.b)
+        <span class="kw">let </span>(r, g, b, <span class="kw">_</span>) = <span class="self">self</span>.rgba();
+
+        (r, g, b)
     }
 
     <span class="doccomment">/// The RGBA information of this color as 0.0-1.0 range floats representing
     /// proportions of 255 for each of R, G, B, A
     </span><span class="kw">pub fn </span>rgba(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (f64, f64, f64, f64) {
-        (<span class="self">self</span>.r, <span class="self">self</span>.g, <span class="self">self</span>.b, <span class="self">self</span>.a)
+        <span class="kw">let </span>floats: Vec&lt;f64&gt; = <span class="self">self
+            </span>.rgba_hex
+            .to_be_bytes()
+            .iter()
+            .map(|n| <span class="kw-2">*</span>n <span class="kw">as </span>f64 / <span class="number">255.0</span>)
+            .collect();
+
+        (floats[<span class="number">0</span>], floats[<span class="number">1</span>], floats[<span class="number">2</span>], floats[<span class="number">3</span>])
     }
 
     <span class="doccomment">/// Render this color as a #RRGGBB hew color string
@@ -601,17 +601,17 @@
 
     <span class="doccomment">/// 0xRRGGBB representation of this Color (no alpha information)
     </span><span class="kw">pub fn </span>rgb_u32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="macro">_f2u!</span>(<span class="self">self</span>.r, <span class="number">16</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.g, <span class="number">8</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.b, <span class="number">0</span>)
-    }
+        <span class="self">self</span>.rgba_hex &gt;&gt; <span class="number">8
+    </span>}
 
     <span class="doccomment">/// 0xRRGGBBAA representation of this Color
     </span><span class="kw">pub fn </span>rgba_u32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="macro">_f2u!</span>(<span class="self">self</span>.r, <span class="number">24</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.g, <span class="number">16</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.b, <span class="number">8</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.a, <span class="number">0</span>)
+        <span class="self">self</span>.rgba_hex
     }
 
     <span class="doccomment">/// 0xAARRGGBB representation of this Color
     </span><span class="kw">pub fn </span>argb_u32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="macro">_f2u!</span>(<span class="self">self</span>.a, <span class="number">24</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.r, <span class="number">16</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.g, <span class="number">8</span>) + <span class="macro">_f2u!</span>(<span class="self">self</span>.b, <span class="number">0</span>)
+        ((<span class="self">self</span>.rgba_hex &amp; <span class="number">0x000000FF</span>) &lt;&lt; <span class="number">24</span>) + (<span class="self">self</span>.rgba_hex &gt;&gt; <span class="number">8</span>)
     }
 }
 
@@ -621,17 +621,23 @@
     }
 }
 
+<span class="macro">macro_rules! </span>_f2u { { <span class="macro-nonterminal">$f</span>:expr, <span class="macro-nonterminal">$s</span>:expr } =&gt; { ((<span class="macro-nonterminal">$f </span>* <span class="number">255.0</span>) <span class="kw">as </span>u32) &lt;&lt; <span class="macro-nonterminal">$s </span>} }
+
 <span class="kw">impl </span>From&lt;(f64, f64, f64)&gt; <span class="kw">for </span>Color {
     <span class="kw">fn </span>from(rgb: (f64, f64, f64)) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(r, g, b) = rgb;
-        <span class="self">Self </span>{ r, g, b, a: <span class="number">1.0 </span>}
+        <span class="kw">let </span>rgba_hex = <span class="macro">_f2u!</span>(r, <span class="number">24</span>) + <span class="macro">_f2u!</span>(g, <span class="number">16</span>) + <span class="macro">_f2u!</span>(b, <span class="number">8</span>) + <span class="macro">_f2u!</span>(<span class="number">1.0</span>, <span class="number">0</span>);
+
+        <span class="self">Self </span>{ rgba_hex }
     }
 }
 
 <span class="kw">impl </span>From&lt;(f64, f64, f64, f64)&gt; <span class="kw">for </span>Color {
     <span class="kw">fn </span>from(rgba: (f64, f64, f64, f64)) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(r, g, b, a) = rgba;
-        <span class="self">Self </span>{ r, g, b, a }
+        <span class="kw">let </span>rgba_hex = <span class="macro">_f2u!</span>(r, <span class="number">24</span>) + <span class="macro">_f2u!</span>(g, <span class="number">16</span>) + <span class="macro">_f2u!</span>(b, <span class="number">8</span>) + <span class="macro">_f2u!</span>(a, <span class="number">0</span>);
+
+        <span class="self">Self </span>{ rgba_hex }
     }
 }
 

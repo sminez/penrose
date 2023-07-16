@@ -380,21 +380,11 @@
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Self rendering building blocks for text based UI elements
 </span><span class="kw">use crate</span>::{Context, <span class="prelude-ty">Result</span>, TextStyle};
 <span class="kw">use </span>penrose::{
     core::State,
+    pure::geometry::Rect,
     x::{XConn, XEvent},
     Color, Xid,
 };
@@ -423,15 +413,15 @@
     <span class="doccomment">/// Render the current state of the widget to the status bar window.
     </span><span class="kw">fn </span>draw(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ctx: <span class="kw-2">&amp;mut </span>Context,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
         screen: usize,
         screen_has_focus: bool,
-        w: f64,
-        h: f64,
+        w: u32,
+        h: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
     <span class="doccomment">/// Current required width and height for this widget due to its content
-    </span><span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt;;
+    </span><span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt;;
 
     <span class="doccomment">/// Does this widget currently require re-rendering? (should be reset to false when &#39;draw&#39; is called)
     </span><span class="kw">fn </span>require_draw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
@@ -473,14 +463,12 @@
 </span><span class="attr">#[derive(Clone, Debug, PartialEq)]
 </span><span class="kw">pub struct </span>Text {
     txt: String,
-    font: String,
-    point_size: i32,
     fg: Color,
     bg: <span class="prelude-ty">Option</span>&lt;Color&gt;,
-    padding: (f64, f64),
+    padding: (u32, u32),
     is_greedy: bool,
     right_justified: bool,
-    extent: <span class="prelude-ty">Option</span>&lt;(f64, f64)&gt;,
+    extent: <span class="prelude-ty">Option</span>&lt;(u32, u32)&gt;,
     require_draw: bool,
 }
 
@@ -488,14 +476,12 @@
     <span class="doccomment">/// Construct a new [Text]
     </span><span class="kw">pub fn </span>new(
         txt: <span class="kw">impl </span>Into&lt;String&gt;,
-        style: <span class="kw-2">&amp;</span>TextStyle,
+        style: TextStyle,
         is_greedy: bool,
         right_justified: bool,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             txt: txt.into(),
-            font: style.font.clone(),
-            point_size: style.point_size,
             fg: style.fg,
             bg: style.bg,
             padding: style.padding,
@@ -528,24 +514,20 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>Text {
-    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, <span class="kw">_</span>: usize, <span class="kw">_</span>: bool, w: f64, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw">_</span>: usize, <span class="kw">_</span>: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(color) = <span class="self">self</span>.bg {
-            ctx.color(<span class="kw-2">&amp;</span>color);
-            ctx.rectangle(<span class="number">0.0</span>, <span class="number">0.0</span>, w, h)<span class="question-mark">?</span>;
+            ctx.fill_rect(Rect::new(<span class="number">0</span>, <span class="number">0</span>, w, h), color)<span class="question-mark">?</span>;
         }
 
         <span class="kw">let </span>(ew, eh) = &lt;<span class="self">Self </span><span class="kw">as </span>Widget&lt;X&gt;&gt;::current_extent(<span class="self">self</span>, ctx, h)<span class="question-mark">?</span>;
-        ctx.font(<span class="kw-2">&amp;</span><span class="self">self</span>.font, <span class="self">self</span>.point_size)<span class="question-mark">?</span>;
-        ctx.color(<span class="kw-2">&amp;</span><span class="self">self</span>.fg);
-
-        <span class="kw">let </span>offset = w - ew;
-        <span class="kw">let </span>right_justify = <span class="self">self</span>.right_justified &amp;&amp; <span class="self">self</span>.is_greedy &amp;&amp; offset &gt; <span class="number">0.0</span>;
+        <span class="kw">let </span>offset = w <span class="kw">as </span>i32 - ew <span class="kw">as </span>i32;
+        <span class="kw">let </span>right_justify = <span class="self">self</span>.right_justified &amp;&amp; <span class="self">self</span>.is_greedy &amp;&amp; offset &gt; <span class="number">0</span>;
         <span class="kw">if </span>right_justify {
-            ctx.translate(offset, <span class="number">0.0</span>);
-            ctx.text(<span class="kw-2">&amp;</span><span class="self">self</span>.txt, h - eh, <span class="self">self</span>.padding)<span class="question-mark">?</span>;
-            ctx.translate(-offset, <span class="number">0.0</span>);
+            ctx.translate(offset, <span class="number">0</span>);
+            ctx.draw_text(<span class="kw-2">&amp;</span><span class="self">self</span>.txt, h - eh, <span class="self">self</span>.padding, <span class="self">self</span>.fg)<span class="question-mark">?</span>;
+            ctx.translate(-offset, <span class="number">0</span>);
         } <span class="kw">else </span>{
-            ctx.text(<span class="kw-2">&amp;</span><span class="self">self</span>.txt, h - eh, <span class="self">self</span>.padding)<span class="question-mark">?</span>;
+            ctx.draw_text(<span class="kw-2">&amp;</span><span class="self">self</span>.txt, h - eh, <span class="self">self</span>.padding, <span class="self">self</span>.fg)<span class="question-mark">?</span>;
         }
 
         <span class="self">self</span>.require_draw = <span class="bool-val">false</span>;
@@ -553,15 +535,15 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, _h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, _h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         <span class="kw">match </span><span class="self">self</span>.extent {
             <span class="prelude-val">Some</span>(extent) =&gt; <span class="prelude-val">Ok</span>(extent),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">let </span>(l, r) = <span class="self">self</span>.padding;
-                ctx.font(<span class="kw-2">&amp;</span><span class="self">self</span>.font, <span class="self">self</span>.point_size)<span class="question-mark">?</span>;
                 <span class="kw">let </span>(w, h) = ctx.text_extent(<span class="kw-2">&amp;</span><span class="self">self</span>.txt)<span class="question-mark">?</span>;
                 <span class="kw">let </span>extent = (w + l + r, h);
                 <span class="self">self</span>.extent = <span class="prelude-val">Some</span>(extent);
+
                 <span class="prelude-val">Ok</span>(extent)
             }
         }
@@ -609,14 +591,12 @@
 /// }
 ///
 /// let style = TextStyle {
-///     font: &quot;mono&quot;.to_string(),
-///     point_size: 10,
 ///     fg: 0xebdbb2ff.into(),
 ///     bg: Some(0x282828ff.into()),
-///     padding: (2.0, 2.0),
+///     padding: (2, 2),
 /// };
 ///
-/// let my_widget = RefreshText::new(&amp;style, my_get_text);
+/// let my_widget = RefreshText::new(style, my_get_text);
 /// ```
 </span><span class="kw">pub struct </span>RefreshText {
     inner: Text,
@@ -634,7 +614,7 @@
 <span class="kw">impl </span>RefreshText {
     <span class="doccomment">/// Construct a new [`RefreshText`] using the specified styling and a function for
     /// generating the widget contents.
-    </span><span class="kw">pub fn </span>new&lt;F&gt;(style: <span class="kw-2">&amp;</span>TextStyle, get_text: F) -&gt; <span class="self">Self
+    </span><span class="kw">pub fn </span>new&lt;F&gt;(style: TextStyle, get_text: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: Fn() -&gt; String + <span class="lifetime">&#39;static</span>,
     {
@@ -646,11 +626,11 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>RefreshText {
-    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, s: usize, f: bool, w: f64, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, ctx, s, f, w, h)
     }
 
-    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         Widget::&lt;X&gt;::current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, ctx, h)
     }
 
@@ -698,16 +678,14 @@
 /// }
 ///
 /// let style = TextStyle {
-///     font: &quot;mono&quot;.to_string(),
-///     point_size: 10,
 ///     fg: 0xebdbb2ff.into(),
 ///     bg: Some(0x282828ff.into()),
-///     padding: (2.0, 2.0),
+///     padding: (2, 2),
 /// };
 ///
 ///
 /// let my_widget = IntervalText::new(
-///     &amp;style,
+///     style,
 ///     my_get_text,
 ///     Duration::from_secs(60 * 5)
 /// );
@@ -721,7 +699,7 @@
     <span class="doccomment">/// Construct a new [`IntervalText`] using the specified styling and a function for
     /// generating the widget contents. The function for updating the widget contents
     /// will be run in its own thread on the interval provided.
-    </span><span class="kw">pub fn </span>new&lt;F&gt;(style: <span class="kw-2">&amp;</span>TextStyle, get_text: F, interval: Duration) -&gt; <span class="self">Self
+    </span><span class="kw">pub fn </span>new&lt;F&gt;(style: TextStyle, get_text: F, interval: Duration) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: Fn() -&gt; String + <span class="lifetime">&#39;static </span>+ Send,
     {
@@ -748,7 +726,7 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>IntervalText {
-    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, s: usize, f: bool, w: f64, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
             <span class="prelude-val">Ok</span>(inner) =&gt; inner,
             <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
@@ -757,7 +735,7 @@
         Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut *</span>inner, ctx, s, f, w, h)
     }
 
-    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context, h: f64) -&gt; <span class="prelude-ty">Result</span>&lt;(f64, f64)&gt; {
+    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
             <span class="prelude-val">Ok</span>(inner) =&gt; inner,
             <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),

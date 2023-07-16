@@ -132,7 +132,7 @@
 ///
 /// If the given battery name is not found on this system, this widget will
 /// render as an empty string.
-</span><span class="kw">pub fn </span>battery_summary(bat: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, style: <span class="kw-2">&amp;</span>TextStyle) -&gt; RefreshText {
+</span><span class="kw">pub fn </span>battery_summary(bat: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, <span class="kw">move </span>|| battery_text(bat).unwrap_or_default())
 }
 
@@ -169,7 +169,7 @@
 <span class="doccomment">/// Display the current date and time in YYYY-MM-DD HH:MM format
 ///
 /// This widget shells out to the `date` tool to generate its output
-</span><span class="kw">pub fn </span>current_date_and_time(style: <span class="kw-2">&amp;</span>TextStyle) -&gt; RefreshText {
+</span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, || {
         spawn_for_output_with_args(<span class="string">&quot;date&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;+%F %R&quot;</span>])
             .unwrap_or_default()
@@ -180,7 +180,7 @@
 
 <span class="doccomment">/// Display the ESSID currently connected to and the signal quality as
 /// a percentage.
-</span><span class="kw">pub fn </span>wifi_network(style: <span class="kw-2">&amp;</span>TextStyle) -&gt; RefreshText {
+</span><span class="kw">pub fn </span>wifi_network(style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, <span class="kw">move </span>|| wifi_text().unwrap_or_default())
 }
 
@@ -223,7 +223,7 @@
 </span>}
 
 <span class="doccomment">/// Display the current volume level as reported by `amixer`
-</span><span class="kw">pub fn </span>amixer_volume(channel: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, style: <span class="kw-2">&amp;</span>TextStyle) -&gt; RefreshText {
+</span><span class="kw">pub fn </span>amixer_volume(channel: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, <span class="kw">move </span>|| amixer_text(channel).unwrap_or_default())
 }
 

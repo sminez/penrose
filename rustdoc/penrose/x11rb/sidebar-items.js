@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["conversions"],"struct":["Conn"],"type":["RustConn","XcbConn"]};
+window.SIDEBAR_ITEMS = {"mod":["conversions"],"struct":["Conn"],"type":["RustConn"]};
