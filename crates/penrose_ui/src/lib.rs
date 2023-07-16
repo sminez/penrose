@@ -17,10 +17,6 @@
 //! documentation and `SAFETY` comments in the source code to understand what is happening under
 //! the hood if you have any concerns about this.
 //!
-//! > The `unsafe` nature of FFI code tends to be around correct management of memory and checking
-//! > for null pointers. If there are aspects of the unsafe code in this crate that you suspect are
-//! > unsound please do raise an issue in GitHub detailing the
-//!
 //! [0]: https://github.com/sminez/penrose
 #![warn(
     clippy::complexity,

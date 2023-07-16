@@ -1,4 +1,16 @@
 //! The core [`Draw`] and [`Context`] structs for rendering UI elements.
+//!
+//! If you are only interested in adding functionality to the penrose [StatusBar][0] then you
+//! do not need to worry about the use and implementation of `Draw` and `Context`: the abstractions
+//! provided by the [Widget][1] trait should be sufficient for your needs. If however you wish
+//! to build your own minimal text based UI from scratch then your might find these structs useful.
+//!
+//! > **NOTE**: As mentioned in the crate level docs, this crate is definitely not intended as a
+//! > fully general purpose graphics API. You are unlikely to find full support for operations that
+//! > are not required for implementing a simple text based status bar.
+//!
+//!   [0]: crate::StatusBar
+//!   [1]: crate::bar::widgets::Widget
 use crate::{Error, Result};
 use penrose::{
     pure::geometry::Rect,
@@ -29,13 +41,16 @@ use fontset::Fontset;
 pub(crate) const SCREEN: i32 = 0;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-/// A set of styling options for a text string
+/// A set of styling options for a text string that is to be rendered using [Draw].
+///
+/// The font itself is specified on the [Draw] instance when it is created or by using the
+/// `set_font` method.
 pub struct TextStyle {
-    /// Foreground color in 0xRRGGBB format
+    /// The foreground color to be used for rendering the text itself.
     pub fg: Color,
-    /// Optional background color in 0xRRGGBB format (default to current background if None)
+    /// The background color for the region behind the text (defaults to the [Draw] background if None).
     pub bg: Option<Color>,
-    /// Pixel padding around this piece of text
+    /// Padding in pixels around the text to the left and right.
     pub padding: (u32, u32),
 }
 
@@ -46,13 +61,65 @@ struct Surface {
     r: Rect,
 }
 
-/// Your application should create a single [`Draw`] struct to manage the windows and surfaces it
-/// needs to render your UI. See the [`Context`] struct for how to draw to the surfaces you have
-/// created.
+/// A minimal back end for rendering simple text based UIs.
+///
+/// > **NOTE**: Your application should create a single [Draw] struct to manage the windows and
+/// > surfaces it needs to render your UI. See the [Context] struct for how to draw to the surfaces
+/// > you have created.
+///
+/// # Fonts
+/// ### Specifying fonts
+/// Font names need to be in a form that can be parsed by `xft`. The simplest way to find the valid
+/// font names on your system is via the `fc-list` program like so:
+/// ```sh
+/// $ fc-list -f '%{family}\n' | sort -u
+/// ```
+/// [Draw] will automtically append `:size={point_size}` to the font name when loading the font via
+/// xft. The [Arch wiki page on fonts][0] is a useful resource on how X11 fonts work if you are
+/// interested in futher reading.
+///
+/// ### Font fallback for missing glyphs
+/// [Draw] makes use of [fontconfig][1] to locate appropriate fallback fonts on your system when a
+/// glyph is encountered that the primary font does not support. If you wish to modify how fallback
+/// fonts are selected you will need to modify your [font-conf][2] (the Arch wiki has a [good page][3]
+/// on how to do this if you are looking for a reference).
+///
+/// # Example usage
+/// > Please see the crate [examples directory][4] for more examples.
+/// ```no_run
+/// use penrose::{
+///     pure::geometry::Rect,
+///     x::{Atom, WinType},
+///     Color,
+/// };
+/// use penrose_ui::Draw;
+/// use std::{thread::sleep, time::Duration};
+///
+/// let fg = Color::try_from("#EBDBB2").unwrap();
+/// let bg = Color::try_from("#282828").unwrap();
+/// let mut drw = Draw::new("mono", 12, bg).unwrap();
+/// let w = drw.new_window(
+///     WinType::InputOutput(Atom::NetWindowTypeDock),
+///     Rect::new(0, 0, 300, 50),
+///     false,
+/// ).unwrap();
+///
+/// let mut ctx = drw.context_for(w).unwrap();
+/// ctx.draw_text("Hello from penrose_ui!", 0, (10, 0), fg).unwrap();
+/// ctx.flush();
+/// drw.flush(w).unwrap();
+///
+/// sleep(Duration::from_secs(2));
+/// ```
+///
+///  [0]: https://wiki.archlinux.org/title/Fonts
+///  [1]: https://www.freedesktop.org/wiki/Software/fontconfig/
+///  [2]: https://man.archlinux.org/man/fonts-conf.5
+///  [3]: https://wiki.archlinux.org/title/Font_configuration#Set_default_or_fallback_fonts
+///  [4]: https://github.com/sminez/penrose/tree/develop/crates/penrose_ui/examples
 #[derive(Debug)]
 pub struct Draw {
-    /// The underlying [`XConn`] implementation used to communicate with the X server
-    pub conn: RustConn,
+    pub(crate) conn: RustConn,
     dpy: *mut Display,
     fs: Fontset,
     bg: Color,
@@ -73,15 +140,20 @@ impl Drop for Draw {
 }
 
 impl Draw {
-    /// Construct a new `Draw` instance backed with an [`RustConn`].
+    /// Construct a new [Draw] instance using the specified font and background color.
     ///
+    /// ### Font names
+    /// See the top level docs for [Draw] for details on how fonts are specified.
+    ///
+    /// ### Errors
     /// This method will error if it is unable to establish a connection with the X server.
-    pub fn new(font: &str, point_size: u8, bg: Color) -> Result<Self> {
+    pub fn new(font: &str, point_size: u8, bg: impl Into<Color>) -> Result<Self> {
         let conn = RustConn::new()?;
         // SAFETY:
         //   - passing NULL as the argument here is valid as documented here: https://man.archlinux.org/man/extra/libx11/XOpenDisplay.3.en
         let dpy = unsafe { XOpenDisplay(std::ptr::null()) };
         let mut colors = HashMap::new();
+        let bg = bg.into();
         colors.insert(bg, XColor::try_new(dpy, &bg)?);
 
         Ok(Self {
@@ -134,17 +206,18 @@ impl Draw {
         Ok(())
     }
 
-    /// Register a new font by name in the font cache so it can be used in a drawing [`Context`].
-    pub fn set_font(&mut self, font: &str) -> Result<()> {
-        self.fs = Fontset::try_new(self.dpy, font)?;
+    /// Set the font being used for rendering text and clear the existing cache of fallback fonts
+    /// for characters that are not supported by the primary font.
+    pub fn set_font(&mut self, font: &str, point_size: u8) -> Result<()> {
+        self.fs = Fontset::try_new(self.dpy, &format!("{font}:size={point_size}"))?;
 
         Ok(())
     }
 
-    /// Retrieve the drawing [`Context`] for the given window [`Xid`].
+    /// Retrieve the drawing [Context] for the given window `Xid`.
     ///
     /// This method will error if the requested id does not already have an initialised surface.
-    /// See the [`new_window`] method for details.
+    /// See the `new_window` method for details.
     pub fn context_for(&mut self, id: Xid) -> Result<Context<'_>> {
         let s = self
             .surfaces
@@ -184,6 +257,17 @@ impl Draw {
 }
 
 /// A minimal drawing context for rendering text based UI elements
+///
+/// A [Context] provides you with a backing pixmap for rendering your UI using simple offset and
+/// rendering operations. By default, the context will be positioned in the top left corner of
+/// the parent window created by your [Draw]. You can use the `translate` and `set/reset` offset
+/// methods to modify where the next drawing operation will take place.
+///
+/// > It is worthwhile looking at the implementation of the [StatusBar][0] struct and how it
+/// > handles rendering child widgets for a real example of how to make use of the offseting
+/// > functionality of this struct.
+///
+///   [0]: crate::StatusBar
 #[derive(Debug)]
 pub struct Context<'a> {
     id: u64,
@@ -264,10 +348,6 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    // TODO: Need to bounds checks
-    // https://keithp.com/~keithp/talks/xtc2001/xft.pdf
-    // https://keithp.com/~keithp/render/Xft.tutorial
-    //
     /// Render the provided text at the current context offset using the supplied color.
     pub fn draw_text(
         &mut self,
@@ -336,6 +416,9 @@ impl<'a> Context<'a> {
     }
 
     /// Flush pending requests to the X server.
+    ///
+    /// This method does not need to be called explicitly if the flush method for
+    /// the parent [Draw] is being called as well.
     pub fn flush(&self) {
         let Surface {
             r: Rect { w, h, .. },
