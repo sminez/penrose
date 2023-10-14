@@ -564,6 +564,38 @@ where
         self.screens.focus_up();
     }
 
+    /// Move focus to the next [Workspace] tag ordered by their id (creation order)
+    pub fn next_tag(&mut self) {
+        let tags = self.ordered_tags();
+        if tags.is_empty() {
+            return;
+        }
+        let i = tags
+            .iter()
+            .position(|a| a == self.current_tag())
+            .unwrap_or_default();
+
+        let new_i = (i + 1) % tags.len();
+        let new_tag = &tags[new_i];
+        self.focus_tag(new_tag);
+    }
+
+    /// Move focus to previous [Workspace] tag ordered by their id (creation order)
+    pub fn previous_tag(&mut self) {
+        let tags = self.ordered_tags();
+        if tags.is_empty() {
+            return;
+        }
+        let i = tags
+            .iter()
+            .position(|a| a == self.current_tag())
+            .unwrap_or_default();
+
+        let new_i = if i == 0 { tags.len() - 1 } else { i - 1 };
+        let new_tag = &tags[new_i];
+        self.focus_tag(new_tag);
+    }
+
     /// Drag the focused workspace onto the next [Screen], holding focus
     pub fn drag_workspace_forward(&mut self) {
         if self.screens.len() == 1 {
@@ -1285,6 +1317,25 @@ pub mod tests {
         let res = ss.update_screens(vec![]);
 
         assert!(matches!(res, Err(Error::NoScreens)));
+    }
+
+    #[test_case(true, 1, 1; "forward")]
+    #[test_case(false, 1, 3; "backward")]
+    #[test_case(true, 4, 0; "forward loop to start")]
+    #[test]
+    fn tag_cycle_focuses_correct_tag(forward: bool, count: usize, expected_index: usize) {
+        let mut s = test_stack_set(4, 2);
+
+        for _ in 0..count {
+            if forward {
+                s.next_tag()
+            } else {
+                s.previous_tag()
+            }
+        }
+        let tags = s.ordered_tags();
+
+        assert_eq!(s.current_tag(), tags[expected_index]);
     }
 }
 
