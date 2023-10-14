@@ -91,6 +91,11 @@ pub use crate::core::Xid;
 /// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// An operation requiring the client to be on a screen was requested on a client window that
+    /// is not currently visible
+    #[error("Client {0} is not currently visible")]
+    ClientIsNotVisible(Xid),
+
     /// A custom error message from user code or extensions
     #[error("{0}")]
     Custom(String),

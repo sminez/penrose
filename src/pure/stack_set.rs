@@ -726,10 +726,19 @@ impl StackSet<Xid> {
     /// # Errors
     /// This method with return [Error::UnknownClient] if the given client is
     /// not already managed in this stack_set.
+    ///
+    /// This method with return [Error::ClientIsNotVisible] if the given client is
+    /// not currently mapped to a screen. This is required to determine the correct
+    /// relative positioning for the floating client as is it is moved between
+    /// screens.
     pub fn float(&mut self, client: Xid, r: Rect) -> Result<()> {
         if !self.contains(&client) {
             return Err(Error::UnknownClient(client));
         }
+        if self.screen_for_client(&client).is_none() {
+            return Err(Error::ClientIsNotVisible(client));
+        }
+
         self.float_unchecked(client, r);
 
         Ok(())
