@@ -573,7 +573,7 @@ where
         let i = tags
             .iter()
             .position(|a| a == self.current_tag())
-            .unwrap_or_default();
+            .expect("current tag is a known tag");
 
         let new_i = (i + 1) % tags.len();
         let new_tag = &tags[new_i];
@@ -589,7 +589,7 @@ where
         let i = tags
             .iter()
             .position(|a| a == self.current_tag())
-            .unwrap_or_default();
+            .expect("current tag is a known tag");
 
         let new_i = if i == 0 { tags.len() - 1 } else { i - 1 };
         let new_tag = &tags[new_i];
