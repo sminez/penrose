@@ -439,6 +439,21 @@ where
     /// Any provided startup hooks will be run after setting signal handlers and grabbing
     /// key / mouse bindings from the X server. Any set up you need to do should be run
     /// explicitly before calling this method or as part of a startup hook.
+    ///
+    /// ## Existing clients
+    /// An attempt will be made to pull any existing clients already present into the current
+    /// WindowManager state. This is done on a "best effort" basis to manage existing clients on
+    /// the workspaces they were present on previously. If you are planning on making use of this
+    /// functionality for more than recovering from a crash it is advised that you add EWMH hooks
+    /// to your Config so that there is more information available to correctly position your
+    /// existing clients.
+    /// Startup hooks are run before this takes place so that there is an opportunity to handle
+    /// restoring any state being held outside of the main WindowManager data structures.
+    ///
+    /// > **NOTE**: This is not guaranteed to preserve the stacking order or correctly handle any
+    /// > clients that were on invisible workspaces / workspaces that no longer exist and that the
+    /// > workspace containing the previously active client will be placed on the first available
+    /// > screen.
     pub fn run(mut self) -> Result<()> {
         info!("registering SIGCHILD signal handler");
         // SAFETY: there is no previous signal handler so we are safe to set our own without needing
@@ -587,6 +602,22 @@ fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> 
             manage_without_refresh(id, Some(tag), state, x)?;
         }
     }
+
+    // If EWMH is enabled then we should have this property set to tell us what the previously
+    // active client was. If that client is not in the client set or the property is not set we
+    // default to forcing focus to the first available tag and whatever active client we have there
+    // as that is where we will have placed all existing clients.
+    match x.get_prop(state.root, Atom::NetActiveWindow.as_ref()) {
+        Ok(Some(Prop::Window(ids))) if state.client_set.contains(&ids[0]) => {
+            let id = ids[0];
+            info!(%id, "focusing _NET_ACTIVE_WINDOW client");
+            state.client_set.focus_client(&id);
+        }
+        _ => {
+            info!(%first_tag, "unable to determine an active window: focusing first tag");
+            state.client_set.focus_tag(&first_tag);
+        }
+    };
 
     info!("triggering refresh");
     x.refresh(state)
