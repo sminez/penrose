@@ -69,15 +69,18 @@ user code if desired.
 
 ## Are you accepting contributions for open issues?
 
-Short answer: yes!
+Short answer: please discuss on the issue in question
 
 Long answer:
 
-Any issues marked with `good first issue` should have sufficient detail to
-allow you to get started working with the current state of develop. Please
-comment on the issue asking to pick it up before starting work and I can assign
-it to you. Depending on how old the issue is, it may need to be updated before
-you can get going.
+Typically issues in the GitHub issue tracker are already being worked on or are
+blocked for some particular reason that should be clear from the issue. If you
+would like to work on an open issue that looks to be stalled please add a
+comment to the issue in question registering your interest.
+
+If you would like to raise a bug report or make a feature request then please
+open a new issue and get confirmation that the change / approach to the fix is
+somethat that is likely to be accepted before starting work.
 <br><br>
 
 
