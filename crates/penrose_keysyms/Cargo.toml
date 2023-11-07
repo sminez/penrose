@@ -1,6 +1,6 @@
 [package]
 name = "penrose_keysyms"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
 edition = "2018"
 license = "MIT"

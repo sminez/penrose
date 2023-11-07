@@ -1,6 +1,6 @@
 [package]
 name = "penrose"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license = "MIT"
@@ -31,7 +31,7 @@ x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 anymap = "0.12"
 bitflags = { version = "2.3", features = ["serde"] }
 nix = { version = "0.26", default-features = false, features = ["signal"] }
-penrose_keysyms = { version = "0.3.3", path = "crates/penrose_keysyms", optional = true }
+penrose_keysyms = { version = "0.3.4", path = "crates/penrose_keysyms", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 strum = { version = "0.25", features = ["derive"] }
 strum_macros = "0.25"
