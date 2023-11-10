@@ -240,7 +240,7 @@ pub struct Color {
 }
 
 impl Color {
-    /// Create a new Color from a hex encoded u32: 0xRRGGBB or 0xRRGGBBAA
+    /// Create a new Color from a hex encoded u32: 0xRRGGBBAA
     pub fn new_from_hex(rgba_hex: u32) -> Self {
         Self { rgba_hex }
     }
@@ -268,7 +268,7 @@ impl Color {
 
     /// Render this color as a #RRGGBB hew color string
     pub fn as_rgb_hex_string(&self) -> String {
-        format!("#{:x}", self.rgb_u32())
+        format!("#{:0>6X}", self.rgb_u32())
     }
 
     /// 0xRRGGBB representation of this Color (no alpha information)
@@ -334,5 +334,21 @@ impl TryFrom<&str> for Color {
         } else {
             Err(Error::InvalidHexColor { hex_code: s.into() })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use simple_test_case::test_case;
+
+    #[test_case(0xAABBCCDD, "#AABBCC"; "r g and b are correct")]
+    #[test_case(0x001122FF, "#001122"; "leading 0s are preserved")]
+    #[test_case(0x00000000, "#000000"; "black works")]
+    #[test]
+    fn as_rgb_hex_string_is_correct(rgba_hex: u32, expected: &str) {
+        let c: Color = rgba_hex.into();
+
+        assert_eq!(&c.as_rgb_hex_string(), expected);
     }
 }
