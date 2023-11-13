@@ -1451,20 +1451,6 @@
 <a href="#1451" id="1451">1451</a>
 <a href="#1452" id="1452">1452</a>
 <a href="#1453" id="1453">1453</a>
-<a href="#1454" id="1454">1454</a>
-<a href="#1455" id="1455">1455</a>
-<a href="#1456" id="1456">1456</a>
-<a href="#1457" id="1457">1457</a>
-<a href="#1458" id="1458">1458</a>
-<a href="#1459" id="1459">1459</a>
-<a href="#1460" id="1460">1460</a>
-<a href="#1461" id="1461">1461</a>
-<a href="#1462" id="1462">1462</a>
-<a href="#1463" id="1463">1463</a>
-<a href="#1464" id="1464">1464</a>
-<a href="#1465" id="1465">1465</a>
-<a href="#1466" id="1466">1466</a>
-<a href="#1467" id="1467">1467</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -1803,13 +1789,7 @@
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.screens.iter_mut().find(|s| s.index == screen) {
-            s.workspace.stack = <span class="prelude-val">Some</span>(<span class="kw">match </span>take(<span class="kw-2">&amp;mut </span>s.workspace.stack) {
-                <span class="prelude-val">None </span>=&gt; <span class="macro">stack!</span>(c),
-                <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>s) =&gt; {
-                    s.insert_at(Position::Focus, c);
-                    s
-                }
-            });
+            s.workspace.insert_as_focus(c)
         }
     }
 
@@ -1850,15 +1830,7 @@
     /// NOTE: This will silently fail if the tag is not in the StackSet which
     ///       is why the method is not in the public API
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_as_focus_for(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tag: <span class="kw-2">&amp;</span>str, c: C) {
-        <span class="self">self</span>.modify_workspace(tag, |w| {
-            w.stack = <span class="prelude-val">Some</span>(<span class="kw">match </span>take(<span class="kw-2">&amp;mut </span>w.stack) {
-                <span class="prelude-val">None </span>=&gt; <span class="macro">stack!</span>(c),
-                <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>s) =&gt; {
-                    s.insert_at(Position::Focus, c);
-                    s
-                }
-            });
-        });
+        <span class="self">self</span>.modify_workspace(tag, |w| w.insert_as_focus(c));
     }
 
     <span class="doccomment">/// Is the given tag present in the [StackSet]?

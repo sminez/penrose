@@ -231,12 +231,22 @@
 <a href="#231" id="231">231</a>
 <a href="#232" id="232">232</a>
 <a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::{IntoMessage, LayoutStack},
-    pure::Stack,
-    Error, <span class="prelude-ty">Result</span>,
+    pure::{Position, Stack},
+    stack, Error, <span class="prelude-ty">Result</span>,
 };
-<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::{fmt, mem::take};
 
 <span class="doccomment">/// A wrapper around a [Stack] of windows belonging to a single &quot;workspace&quot; or virtual
 /// desktop. When this workspace is active on a given screen, the windows contained in
@@ -336,6 +346,16 @@
         <span class="self">self</span>.stack = new_stack;
 
         <span class="prelude-val">Some</span>(focus)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_as_focus(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: T) {
+        <span class="self">self</span>.stack = <span class="prelude-val">Some</span>(<span class="kw">match </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack) {
+            <span class="prelude-val">None </span>=&gt; <span class="macro">stack!</span>(c),
+            <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>s) =&gt; {
+                s.insert_at(Position::Focus, c);
+                s
+            }
+        });
     }
 
     <span class="doccomment">/// Pass the given message on to the currently focused layout.
