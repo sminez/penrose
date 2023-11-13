@@ -1,9 +1,9 @@
 use crate::{
     core::layout::{IntoMessage, LayoutStack},
-    pure::Stack,
-    Error, Result,
+    pure::{Position, Stack},
+    stack, Error, Result,
 };
-use std::fmt;
+use std::{fmt, mem::take};
 
 /// A wrapper around a [Stack] of windows belonging to a single "workspace" or virtual
 /// desktop. When this workspace is active on a given screen, the windows contained in
@@ -103,6 +103,16 @@ impl<T> Workspace<T> {
         self.stack = new_stack;
 
         Some(focus)
+    }
+
+    pub(crate) fn insert_as_focus(&mut self, c: T) {
+        self.stack = Some(match take(&mut self.stack) {
+            None => stack!(c),
+            Some(mut s) => {
+                s.insert_at(Position::Focus, c);
+                s
+            }
+        });
     }
 
     /// Pass the given message on to the currently focused layout.

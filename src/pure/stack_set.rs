@@ -336,13 +336,7 @@ where
         };
 
         if let Some(s) = self.screens.iter_mut().find(|s| s.index == screen) {
-            s.workspace.stack = Some(match take(&mut s.workspace.stack) {
-                None => stack!(c),
-                Some(mut s) => {
-                    s.insert_at(Position::Focus, c);
-                    s
-                }
-            });
+            s.workspace.insert_as_focus(c)
         }
     }
 
@@ -383,15 +377,7 @@ where
     /// NOTE: This will silently fail if the tag is not in the StackSet which
     ///       is why the method is not in the public API
     pub(crate) fn insert_as_focus_for(&mut self, tag: &str, c: C) {
-        self.modify_workspace(tag, |w| {
-            w.stack = Some(match take(&mut w.stack) {
-                None => stack!(c),
-                Some(mut s) => {
-                    s.insert_at(Position::Focus, c);
-                    s
-                }
-            });
-        });
+        self.modify_workspace(tag, |w| w.insert_as_focus(c));
     }
 
     /// Is the given tag present in the [StackSet]?
