@@ -323,6 +323,29 @@ where
         self.insert_as_focus_for(tag, c)
     }
 
+    /// Move the focused client of the current [Workspace] to the focused position
+    /// of the workspace on [Screen] `screen`.
+    pub fn move_focused_to_screen(&mut self, screen: usize) {
+        if self.screens.focus.index == screen {
+            return;
+        }
+
+        let c = match self.screens.focus.workspace.remove_focused() {
+            None => return,
+            Some(c) => c,
+        };
+
+        if let Some(s) = self.screens.iter_mut().find(|s| s.index == screen) {
+            s.workspace.stack = Some(match take(&mut s.workspace.stack) {
+                None => stack!(c),
+                Some(mut s) => {
+                    s.insert_at(Position::Focus, c);
+                    s
+                }
+            });
+        }
+    }
+
     /// Move the given client to the focused position of the [Workspace] matching
     /// the provided `tag`. If the client is already on the target workspace it is
     /// moved to the focused position.
