@@ -16,7 +16,7 @@
 //!
 //! Startup hooks are implemented using the [`StateHook`] trait, allowing you access
 //! to the pure WindowManager internal [`State`] and the [`XConn`] in order to run
-//! any set up code you need which requires the the bindings to already have been
+//! any set up code you need which requires the bindings to already have been
 //! grabbed but before any existing clients are parsed and managed by the WindowManager.
 //!
 //! > **NOTE**: Startup hooks are run to completion before entering the main event loop.
