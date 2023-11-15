@@ -5,7 +5,7 @@
 //! Penrose offers several different hook points where you are able to provide custom
 //! logic to execute as part of the main WindowManager event loop. Unlike logic you
 //! add as KeyEventHandlers, hooks will be run automatically by Penrose as and when
-//! the conditions for there execution arises. Each hook point requires a specific
+//! the conditions for their execution arises. Each hook point requires a specific
 //! trait to be implemented and in the simplest case, functions with the correct
 //! type signature can be used directly (though you will likely want to implement
 //! traits directly if you are looking for more control over how your hook logic is
