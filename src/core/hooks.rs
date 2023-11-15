@@ -60,7 +60,7 @@
 //! two methods to implement. Layout hooks are run _around_ whatever [Layout][1] is active
 //! for the focused workspace, allowing you to modify the screen dimensions available for the
 //! layout algorithm before it runs and editing the list of window positions it generates
-//! before they are applied. This lets you do things like prevent windows being positions on
+//! before they are applied. This lets you do things like prevent windows being positioned on
 //! certain parts of the screen, or injecting/removing additional window positions.
 //!
 //! This is somewhat similar to the [`LayoutTransformer`] trait which is a wrapper around a
