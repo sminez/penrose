@@ -2,7 +2,7 @@
 //!
 //! ## Hook points
 //!
-//! Penrose offers several differnt hook points where you are able to provide custom
+//! Penrose offers several different hook points where you are able to provide custom
 //! logic to execute as part of the main WindowManager event loop. Unlike logic you
 //! add as KeyEventHandlers, hooks will be run automatically by Penrose as and when
 //! the conditions for there execution arises. Each hook point requires a specific
