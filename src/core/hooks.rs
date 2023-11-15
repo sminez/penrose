@@ -52,7 +52,7 @@
 //! > **NOTE**: ManageHooks should _not_ directly trigger a refresh of the X state!
 //! >           They are already called by the XConn immediately before refreshing so all
 //! >           triggering a refresh directly will do is run the refresh twice: once with
-//! >           the inital state of the client before your hook was applied and once after.
+//! >           the initial state of the client before your hook was applied and once after.
 //!
 //! ### Layout Hooks
 //!
