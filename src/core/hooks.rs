@@ -31,7 +31,7 @@
 //!
 //! This hook returns a `bool` indicating whether or not the default event handling logic
 //! needs to run after your hook has finished: to run the default handling you should return
-//! `true`, to skip the handling (and prevent the normal behviour for such an event) you
+//! `true`, to skip the handling (and prevent the normal behaviour for such an event) you
 //! can return `false`.
 //!
 //! > **NOTE**: Be careful about disabling default event handling! If you drop events
