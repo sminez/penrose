@@ -1,9 +1,9 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Traits for writing and composing hooks."><title>penrose::core::hooks - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="logo"></a><h2 class="location"><a href="#">Module hooks</a></h2><div class="sidebar-elems"><section><ul class="block"><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../../index.html">penrose</a>::<wbr><a href="../index.html">core</a>::<wbr><a class="mod" href="#">hooks</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../../src/penrose/core/hooks.rs.html#1-476">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Traits for writing and composing hooks.</p>
 <h3 id="hook-points"><a href="#hook-points">Hook points</a></h3>
-<p>Penrose offers several differnt hook points where you are able to provide custom
+<p>Penrose offers several different hook points where you are able to provide custom
 logic to execute as part of the main WindowManager event loop. Unlike logic you
 add as KeyEventHandlers, hooks will be run automatically by Penrose as and when
-the conditions for there execution arises. Each hook point requires a specific
+the conditions for their execution arises. Each hook point requires a specific
 trait to be implemented and in the simplest case, functions with the correct
 type signature can be used directly (though you will likely want to implement
 traits directly if you are looking for more control over how your hook logic is
@@ -11,7 +11,7 @@ run.</p>
 <h4 id="startup-hooks"><a href="#startup-hooks">Startup Hooks</a></h4>
 <p>Startup hooks are implemented using the <a href="trait.StateHook.html" title="trait penrose::core::hooks::StateHook"><code>StateHook</code></a> trait, allowing you access
 to the pure WindowManager internal <a href="../struct.State.html" title="struct penrose::core::State"><code>State</code></a> and the <a href="../../x/trait.XConn.html" title="trait penrose::x::XConn"><code>XConn</code></a> in order to run
-any set up code you need which requires the the bindings to already have been
+any set up code you need which requires the bindings to already have been
 grabbed but before any existing clients are parsed and managed by the WindowManager.</p>
 <blockquote>
 <p><strong>NOTE</strong>: Startup hooks are run to completion before entering the main event loop.</p>
@@ -24,7 +24,7 @@ accordingly. Maybe you want to keep track of changes to a specific property on c
 or maybe you want to know if a specific client is being destroyed.</p>
 <p>This hook returns a <code>bool</code> indicating whether or not the default event handling logic
 needs to run after your hook has finished: to run the default handling you should return
-<code>true</code>, to skip the handling (and prevent the normal behviour for such an event) you
+<code>true</code>, to skip the handling (and prevent the normal behaviour for such an event) you
 can return <code>false</code>.</p>
 <blockquote>
 <p><strong>NOTE</strong>: Be careful about disabling default event handling! If you drop events
@@ -44,14 +44,14 @@ things that are possible.</p>
 <p><strong>NOTE</strong>: ManageHooks should <em>not</em> directly trigger a refresh of the X state!
 They are already called by the XConn immediately before refreshing so all
 triggering a refresh directly will do is run the refresh twice: once with
-the inital state of the client before your hook was applied and once after.</p>
+the initial state of the client before your hook was applied and once after.</p>
 </blockquote>
 <h4 id="layout-hooks"><a href="#layout-hooks">Layout Hooks</a></h4>
 <p>Finally we have <a href="trait.LayoutHook.html" title="trait penrose::core::hooks::LayoutHook"><code>LayoutHook</code></a>s which operate a little differently, in that they have
 two methods to implement. Layout hooks are run <em>around</em> whatever <a href="../layout/trait.Layout.html" title="trait penrose::core::layout::Layout">Layout</a> is active
 for the focused workspace, allowing you to modify the screen dimensions available for the
 layout algorithm before it runs and editing the list of window positions it generates
-before they are applied. This lets you do things like prevent windows being positions on
+before they are applied. This lets you do things like prevent windows being positioned on
 certain parts of the screen, or injecting/removing additional window positions.</p>
 <p>This is somewhat similar to the <a href="../layout/trait.LayoutTransformer.html" title="trait penrose::core::layout::LayoutTransformer"><code>LayoutTransformer</code></a> trait which is a wrapper around a
 specific Layout, but it doesn’t allow for introspection of the underlying Layout or
