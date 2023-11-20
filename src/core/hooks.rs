@@ -2,10 +2,10 @@
 //!
 //! ## Hook points
 //!
-//! Penrose offers several differnt hook points where you are able to provide custom
+//! Penrose offers several different hook points where you are able to provide custom
 //! logic to execute as part of the main WindowManager event loop. Unlike logic you
 //! add as KeyEventHandlers, hooks will be run automatically by Penrose as and when
-//! the conditions for there execution arises. Each hook point requires a specific
+//! the conditions for their execution arises. Each hook point requires a specific
 //! trait to be implemented and in the simplest case, functions with the correct
 //! type signature can be used directly (though you will likely want to implement
 //! traits directly if you are looking for more control over how your hook logic is
@@ -16,7 +16,7 @@
 //!
 //! Startup hooks are implemented using the [`StateHook`] trait, allowing you access
 //! to the pure WindowManager internal [`State`] and the [`XConn`] in order to run
-//! any set up code you need which requires the the bindings to already have been
+//! any set up code you need which requires the bindings to already have been
 //! grabbed but before any existing clients are parsed and managed by the WindowManager.
 //!
 //! > **NOTE**: Startup hooks are run to completion before entering the main event loop.
@@ -31,7 +31,7 @@
 //!
 //! This hook returns a `bool` indicating whether or not the default event handling logic
 //! needs to run after your hook has finished: to run the default handling you should return
-//! `true`, to skip the handling (and prevent the normal behviour for such an event) you
+//! `true`, to skip the handling (and prevent the normal behaviour for such an event) you
 //! can return `false`.
 //!
 //! > **NOTE**: Be careful about disabling default event handling! If you drop events
@@ -52,7 +52,7 @@
 //! > **NOTE**: ManageHooks should _not_ directly trigger a refresh of the X state!
 //! >           They are already called by the XConn immediately before refreshing so all
 //! >           triggering a refresh directly will do is run the refresh twice: once with
-//! >           the inital state of the client before your hook was applied and once after.
+//! >           the initial state of the client before your hook was applied and once after.
 //!
 //! ### Layout Hooks
 //!
@@ -60,7 +60,7 @@
 //! two methods to implement. Layout hooks are run _around_ whatever [Layout][1] is active
 //! for the focused workspace, allowing you to modify the screen dimensions available for the
 //! layout algorithm before it runs and editing the list of window positions it generates
-//! before they are applied. This lets you do things like prevent windows being positions on
+//! before they are applied. This lets you do things like prevent windows being positioned on
 //! certain parts of the screen, or injecting/removing additional window positions.
 //!
 //! This is somewhat similar to the [`LayoutTransformer`] trait which is a wrapper around a
