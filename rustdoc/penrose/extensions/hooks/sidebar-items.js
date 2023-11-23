@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["ewmh","manage","named_scratchpads","startup","window_swallowing"]};
+window.SIDEBAR_ITEMS = {"mod":["default_workspaces","ewmh","manage","named_scratchpads","startup","window_swallowing"]};

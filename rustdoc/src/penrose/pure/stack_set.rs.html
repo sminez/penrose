@@ -1451,6 +1451,17 @@
 <a href="#1451" id="1451">1451</a>
 <a href="#1452" id="1452">1452</a>
 <a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -2004,6 +2015,17 @@
     <span class="doccomment">/// Switch to the previous available [Layout][crate::core::layout::Layout] on the focused [Workspace]
     </span><span class="kw">pub fn </span>previous_layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.screens.focus.workspace.previous_layout()
+    }
+
+    <span class="doccomment">/// Attempt to set the current [Layout][crate::core::layout::Layout] by name.
+    ///
+    /// This is a no-op if the requested layout is already active or if no layout with the given name
+    /// is available for the active workspace.
+    </span><span class="kw">pub fn </span>set_layout_by_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layout: <span class="kw">impl </span>AsRef&lt;str&gt;) {
+        <span class="self">self</span>.screens
+            .focus
+            .workspace
+            .set_layout_by_name(layout.as_ref())
     }
 
     <span class="doccomment">/// Move focus to the next [Screen]
