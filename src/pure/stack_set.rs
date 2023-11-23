@@ -553,6 +553,17 @@ where
         self.screens.focus.workspace.previous_layout()
     }
 
+    /// Attempt to set the current [Layout][crate::core::layout::Layout] by name.
+    ///
+    /// This is a no-op if the requested layout is already active or if no layout with the given name
+    /// is available for the active workspace.
+    pub fn set_layout_by_name(&mut self, layout: impl AsRef<str>) {
+        self.screens
+            .focus
+            .workspace
+            .set_layout_by_name(layout.as_ref())
+    }
+
     /// Move focus to the next [Screen]
     pub fn next_screen(&mut self) {
         if self.screens.len() == 1 {

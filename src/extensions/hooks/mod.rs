@@ -1,4 +1,5 @@
 //! Hook implementations and helpers for adding to your Penrose window manager
+pub mod default_workspaces;
 pub mod ewmh;
 pub mod manage;
 pub mod named_scratchpads;
