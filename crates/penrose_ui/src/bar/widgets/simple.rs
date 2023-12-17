@@ -126,7 +126,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
                 XEvent::PropertyNotify(PropertyEvent { id, atom, .. })
                     if id == focused && name_props.contains(&atom.as_ref()) =>
                 {
-                    self.inner.set_text(x.window_title(*id)?)
+                    self.set_text(x.window_title(*id)?)
                 }
 
                 _ => (),
