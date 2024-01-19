@@ -141,6 +141,23 @@ where
     }
 }
 
+impl<X> EventHook<X> for Vec<Box<dyn EventHook<X>>>
+where
+    X: XConn,
+{
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
+        let mut call_next = true;
+        for hook in self.iter_mut() {
+            call_next = hook.call(event, state, x)?;
+            if !call_next {
+                return Ok(false);
+            }
+        }
+
+        Ok(call_next)
+    }
+}
+
 impl<X: XConn> fmt::Debug for Box<dyn EventHook<X>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EventHook").finish()
@@ -224,6 +241,19 @@ where
     }
 }
 
+impl<X> ManageHook<X> for Vec<Box<dyn ManageHook<X>>>
+where
+    X: XConn,
+{
+    fn call(&mut self, id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+        for hook in self.iter_mut() {
+            hook.call(id, state, x)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<X: XConn> fmt::Debug for Box<dyn ManageHook<X>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ManageHook").finish()
@@ -298,6 +328,19 @@ where
             first: Box::new(self),
             second: next,
         })
+    }
+}
+
+impl<X> StateHook<X> for Vec<Box<dyn StateHook<X>>>
+where
+    X: XConn,
+{
+    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+        for hook in self.iter_mut() {
+            hook.call(state, x)?;
+        }
+
+        Ok(())
     }
 }
 
