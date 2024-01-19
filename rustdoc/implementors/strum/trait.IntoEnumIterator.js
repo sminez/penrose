@@ -1,4 +1,0 @@
-(function() {var implementors = {
-"penrose":[["impl IntoEnumIterator for <a class=\"enum\" href=\"penrose/x/atom/enum.Atom.html\" title=\"enum penrose::x::atom::Atom\">Atom</a>"],["impl IntoEnumIterator for <a class=\"enum\" href=\"penrose/core/bindings/enum.ModifierKey.html\" title=\"enum penrose::core::bindings::ModifierKey\">ModifierKey</a>"]],
-"penrose_keysyms":[["impl IntoEnumIterator for <a class=\"enum\" href=\"penrose_keysyms/enum.XKeySym.html\" title=\"enum penrose_keysyms::XKeySym\">XKeySym</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
