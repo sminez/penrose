@@ -19,4 +19,4 @@ yeslogic-fontconfig-sys = "4.0"
 x11 = { version = "2.21", features = ["xft", "xlib"] }
 
 [dev-dependencies]
-anyhow = "1.0.71"
+anyhow = "1.0.79"

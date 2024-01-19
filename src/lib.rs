@@ -81,6 +81,8 @@ pub mod extensions;
 mod macros;
 pub mod pure;
 pub mod util;
+// #[cfg(feature = "wayland")]
+pub mod wayland;
 pub mod x;
 #[cfg(feature = "x11rb")]
 pub mod x11rb;

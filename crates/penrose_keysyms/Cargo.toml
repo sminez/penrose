@@ -14,4 +14,4 @@ keywords = [ "windowmanager", "window", "manager", "x11", "keysym" ]
 
 [dependencies]
 strum = { version = "0.25.0", features = ["derive"] }
-strum_macros = "0.25.1"
+strum_macros = "0.25.3"
