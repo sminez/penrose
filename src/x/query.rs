@@ -98,3 +98,67 @@ where
         }
     }
 }
+
+/// A meta [Query] for combining two queries with a logical AND.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct AndQuery<Q1, Q2>(pub Q1, pub Q2);
+
+impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for AndQuery<Q1, Q2> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        Ok(self.0.run(id, x)? && self.1.run(id, x)?)
+    }
+}
+
+/// A meta [Query] for combining two queries with a logical OR.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct OrQuery<Q1, Q2>(pub Q1, pub Q2);
+
+impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for OrQuery<Q1, Q2> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        Ok(self.0.run(id, x)? || self.1.run(id, x)?)
+    }
+}
+
+/// A meta [Query] for applying a logical NOT to a query.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct NotQuery<Q>(pub Q);
+
+impl<X: XConn, Q: Query<X>> Query<X> for NotQuery<Q> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        Ok(!self.0.run(id, x)?)
+    }
+}
+
+/// A meta [Query] for combining multiple queries with a logical OR.
+pub struct AnyQuery<X>(pub Vec<Box<dyn Query<X>>>);
+
+impl<X: XConn> fmt::Debug for AnyQuery<X> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AnyQuery").finish()
+    }
+}
+
+impl<X: XConn> Query<X> for AnyQuery<X> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        self.0
+            .iter()
+            .try_fold(false, |acc, query| Ok(acc || query.run(id, x)?))
+    }
+}
+
+/// A meta [Query] for combining multiple queries with a logical AND.
+pub struct AllQuery<X>(pub Vec<Box<dyn Query<X>>>);
+
+impl<X: XConn> fmt::Debug for AllQuery<X> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AllQuery").finish()
+    }
+}
+
+impl<X: XConn> Query<X> for AllQuery<X> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        self.0
+            .iter()
+            .try_fold(true, |acc, query| Ok(acc && query.run(id, x)?))
+    }
+}
