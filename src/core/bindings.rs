@@ -271,6 +271,8 @@ pub enum ModifierKey {
     Shift,
     /// Meta / super / windows
     Meta,
+    /// AltGraph (AltGr)
+    AltGraph,
 }
 
 impl ModifierKey {
@@ -286,6 +288,7 @@ impl From<ModifierKey> for u16 {
             ModifierKey::Ctrl => 1 << 2,
             ModifierKey::Alt => 1 << 3,
             ModifierKey::Meta => 1 << 6,
+            ModifierKey::AltGraph => 1 << 7,
         }) as u16
     }
 }
@@ -299,6 +302,7 @@ impl TryFrom<&str> for ModifierKey {
             "A" => Ok(Self::Alt),
             "S" => Ok(Self::Shift),
             "M" => Ok(Self::Meta),
+            "G" => Ok(Self::AltGraph),
             _ => Err(Error::UnknownModifier { name: s.to_owned() }),
         }
     }
