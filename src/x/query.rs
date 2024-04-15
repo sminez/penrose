@@ -167,21 +167,21 @@ trait QueryExt<X>: Query<X>
 where
     X: XConn,
 {
-    fn and(self, other: impl Query<X>) -> impl Query<X>
+    fn and(self, other: impl Query<X>) -> AndQuery<Self, impl Query<X>>
     where
         Self: Sized,
     {
         AndQuery(self, other)
     }
 
-    fn or(self, other: impl Query<X>) -> impl Query<X>
+    fn or(self, other: impl Query<X>) -> OrQuery<Self, impl Query<X>>
     where
         Self: Sized,
     {
         OrQuery(self, other)
     }
 
-    fn not(self) -> impl Query<X>
+    fn not(self) -> NotQuery<impl Query<X>>
     where
         Self: Sized,
     {
@@ -195,4 +195,3 @@ where
     Q: Query<X>,
 {
 }
-
