@@ -162,3 +162,37 @@ impl<X: XConn> Query<X> for AllQuery<X> {
             .try_fold(true, |acc, query| Ok(acc && query.run(id, x)?))
     }
 }
+
+trait QueryExt<X>: Query<X>
+where
+    X: XConn,
+{
+    fn and(self, other: impl Query<X>) -> impl Query<X>
+    where
+        Self: Sized,
+    {
+        AndQuery(self, other)
+    }
+
+    fn or(self, other: impl Query<X>) -> impl Query<X>
+    where
+        Self: Sized,
+    {
+        OrQuery(self, other)
+    }
+
+    fn not(self) -> impl Query<X>
+    where
+        Self: Sized,
+    {
+        NotQuery(self)
+    }
+}
+
+impl<X, Q> QueryExt<X> for Q
+where
+    X: XConn,
+    Q: Query<X>,
+{
+}
+
