@@ -13,8 +13,8 @@ pub fn battery_summary(bat: &'static str, style: TextStyle) -> RefreshText {
 
 fn battery_text(bat: &str) -> Option<String> {
     let status = read_sys_file(bat, "status")?;
-    let energy_now: u32 = read_sys_file(bat, "energy_now")?.parse().ok()?;
-    let energy_full: u32 = read_sys_file(bat, "energy_full")?.parse().ok()?;
+    let energy_now: u32 = read_sys_file(bat, "charge_now")?.parse().ok()?;
+    let energy_full: u32 = read_sys_file(bat, "charge_full")?.parse().ok()?;
 
     let charge = energy_now * 100 / energy_full;
 
@@ -118,7 +118,7 @@ fn amixer_text(channel: &str) -> Option<String> {
         .lines()
         .last()?
         .split_whitespace()
-        .nth(3)?
+        .find(|s| s.ends_with("%]"))?
         .replace(|c| "[]%".contains(c), "");
 
     Some(format!(" {vol}%"))
