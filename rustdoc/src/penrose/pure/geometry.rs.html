@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/geometry.rs`."><title>geometry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/geometry.rs`."><title>geometry.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -728,12 +730,12 @@
 <a href="#728" id="728">728</a>
 <a href="#729" id="729">729</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Geometry primitives
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::cmp::max;
 
 <span class="doccomment">/// An x,y coordinate pair
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>Point {
     <span class="doccomment">/// An absolute x coordinate relative to the root window
@@ -784,7 +786,7 @@
 
 <span class="doccomment">/// An X window / screen position: top left corner + extent as percentages
 /// of the current screen containing the window.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Clone, Copy)]
 </span><span class="kw">pub struct </span>RelativeRect {
     x: f64,
@@ -865,7 +867,7 @@
 }
 
 <span class="doccomment">/// An X window / screen position: top left corner + extent
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, Clone, Copy, Hash)]
 </span><span class="kw">pub struct </span>Rect {
     <span class="doccomment">/// The x-coordinate of the top left corner of this rect
@@ -1241,19 +1243,19 @@
         );
     }
 
-    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">&quot;even both&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">21</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">&quot;even width&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">11</span>, <span class="number">20</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">&quot;even height&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">11</span>, <span class="number">21</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">&quot;odd both&quot;</span>)]
+    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">"even both"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">21</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">"even width"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">11</span>, <span class="number">20</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">"even height"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">11</span>, <span class="number">21</span>), p(<span class="number">5</span>, <span class="number">10</span>); <span class="string">"odd both"</span>)]
     #[test]
     </span><span class="kw">fn </span>midpoint_works(r: Rect, p: Point) {
         <span class="macro">assert_eq!</span>(r.midpoint(), p);
     }
 
-    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="number">1</span>, <span class="number">8</span>, <span class="number">18</span>; <span class="string">&quot;small border&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="number">1000</span>, <span class="number">1</span>, <span class="number">1</span>; <span class="string">&quot;massive border&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="number">5</span>, <span class="number">1</span>, <span class="number">10</span>; <span class="string">&quot;border half of width&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">10</span>), <span class="number">5</span>, <span class="number">10</span>, <span class="number">1</span>; <span class="string">&quot;border half of height&quot;</span>)]
+    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="number">1</span>, <span class="number">8</span>, <span class="number">18</span>; <span class="string">"small border"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="number">1000</span>, <span class="number">1</span>, <span class="number">1</span>; <span class="string">"massive border"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>), <span class="number">5</span>, <span class="number">1</span>, <span class="number">10</span>; <span class="string">"border half of width"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">10</span>), <span class="number">5</span>, <span class="number">10</span>, <span class="number">1</span>; <span class="string">"border half of height"</span>)]
     #[test]
     </span><span class="kw">fn </span>shrink_in_works(r: Rect, b: u32, w: u32, h: u32) {
         <span class="kw">let </span>res = r.shrink_in(b);
@@ -1268,9 +1270,9 @@
         )
     }
 
-    <span class="attr">#[test_case(<span class="number">1.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">45</span>, <span class="number">40</span>); <span class="string">&quot;scale up&quot;</span>)]
-    #[test_case(<span class="number">0.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">15</span>, <span class="number">40</span>); <span class="string">&quot;scale down&quot;</span>)]
-    #[test_case(<span class="number">1.0</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">&quot;unchanged&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">1.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">45</span>, <span class="number">40</span>); <span class="string">"scale up"</span>)]
+    #[test_case(<span class="number">0.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">15</span>, <span class="number">40</span>); <span class="string">"scale down"</span>)]
+    #[test_case(<span class="number">1.0</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">"unchanged"</span>)]
     #[test]
     </span><span class="kw">fn </span>scale_w(factor: f64, expected: Rect) {
         <span class="kw">let </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
@@ -1278,9 +1280,9 @@
         <span class="macro">assert_eq!</span>(r.scale_w(factor), expected);
     }
 
-    <span class="attr">#[test_case(<span class="number">1.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">60</span>); <span class="string">&quot;scale up&quot;</span>)]
-    #[test_case(<span class="number">0.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">20</span>); <span class="string">&quot;scale down&quot;</span>)]
-    #[test_case(<span class="number">1.0</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">&quot;unchanged&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">1.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">60</span>); <span class="string">"scale up"</span>)]
+    #[test_case(<span class="number">0.5</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">20</span>); <span class="string">"scale down"</span>)]
+    #[test_case(<span class="number">1.0</span>, r(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>); <span class="string">"unchanged"</span>)]
     #[test]
     </span><span class="kw">fn </span>scale_h(factor: f64, expected: Rect) {
         <span class="kw">let </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
@@ -1289,10 +1291,10 @@
     }
 
     <span class="comment">// no case for increase by i32::MAX as this overflows (documented).
-    </span><span class="attr">#[test_case(<span class="number">1</span>, <span class="number">2</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">11</span>, <span class="number">22</span>); <span class="string">&quot;increase&quot;</span>)]
-    #[test_case(-<span class="number">1</span>, -<span class="number">2</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">9</span>, <span class="number">18</span>); <span class="string">&quot;decrease&quot;</span>)]
-    #[test_case(-<span class="number">100</span>, -<span class="number">100</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">1</span>); <span class="string">&quot;clamp at 1x1&quot;</span>)]
-    #[test_case(-i32::MAX, -i32::MAX, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">1</span>); <span class="string">&quot;decrease by max&quot;</span>)]
+    </span><span class="attr">#[test_case(<span class="number">1</span>, <span class="number">2</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">11</span>, <span class="number">22</span>); <span class="string">"increase"</span>)]
+    #[test_case(-<span class="number">1</span>, -<span class="number">2</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">9</span>, <span class="number">18</span>); <span class="string">"decrease"</span>)]
+    #[test_case(-<span class="number">100</span>, -<span class="number">100</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">1</span>); <span class="string">"clamp at 1x1"</span>)]
+    #[test_case(-i32::MAX, -i32::MAX, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">1</span>); <span class="string">"decrease by max"</span>)]
     #[test]
     </span><span class="kw">fn </span>resize_works(dw: i32, dh: i32, expected: Rect) {
         <span class="kw">let </span><span class="kw-2">mut </span>r = Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>);
@@ -1302,10 +1304,10 @@
     }
 
     <span class="comment">// no case for increase by i32::MAX as this overflows (documented).
-    </span><span class="attr">#[test_case(<span class="number">1</span>, <span class="number">2</span>, r(<span class="number">11</span>, <span class="number">22</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">&quot;increase&quot;</span>)]
-    #[test_case(-<span class="number">1</span>, -<span class="number">2</span>, r(<span class="number">9</span>, <span class="number">18</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">&quot;decrease&quot;</span>)]
-    #[test_case(-<span class="number">100</span>, -<span class="number">100</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">&quot;clamp at 0x0&quot;</span>)]
-    #[test_case(-i32::MAX, -i32::MAX, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">&quot;decrease by max&quot;</span>)]
+    </span><span class="attr">#[test_case(<span class="number">1</span>, <span class="number">2</span>, r(<span class="number">11</span>, <span class="number">22</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">"increase"</span>)]
+    #[test_case(-<span class="number">1</span>, -<span class="number">2</span>, r(<span class="number">9</span>, <span class="number">18</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">"decrease"</span>)]
+    #[test_case(-<span class="number">100</span>, -<span class="number">100</span>, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">"clamp at 0x0"</span>)]
+    #[test_case(-i32::MAX, -i32::MAX, r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">20</span>); <span class="string">"decrease by max"</span>)]
     #[test]
     </span><span class="kw">fn </span>reposition_works(dw: i32, dh: i32, expected: Rect) {
         <span class="kw">let </span><span class="kw-2">mut </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">10</span>, <span class="number">20</span>);
@@ -1323,12 +1325,12 @@
         <span class="macro">assert!</span>(!r1.contains(<span class="kw-2">&amp;</span>r2));
     }
 
-    <span class="attr">#[test_case(p(<span class="number">0</span>, <span class="number">0</span>), <span class="bool-val">false</span>; <span class="string">&quot;outside&quot;</span>)]
-    #[test_case(p(<span class="number">30</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;inside&quot;</span>)]
-    #[test_case(p(<span class="number">10</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;top left&quot;</span>)]
-    #[test_case(p(<span class="number">40</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">&quot;top right&quot;</span>)]
-    #[test_case(p(<span class="number">10</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">&quot;bottom left&quot;</span>)]
-    #[test_case(p(<span class="number">40</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">&quot;bottom right&quot;</span>)]
+    <span class="attr">#[test_case(p(<span class="number">0</span>, <span class="number">0</span>), <span class="bool-val">false</span>; <span class="string">"outside"</span>)]
+    #[test_case(p(<span class="number">30</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">"inside"</span>)]
+    #[test_case(p(<span class="number">10</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">"top left"</span>)]
+    #[test_case(p(<span class="number">40</span>, <span class="number">20</span>), <span class="bool-val">true</span>; <span class="string">"top right"</span>)]
+    #[test_case(p(<span class="number">10</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">"bottom left"</span>)]
+    #[test_case(p(<span class="number">40</span>, <span class="number">60</span>), <span class="bool-val">true</span>; <span class="string">"bottom right"</span>)]
     #[test]
     </span><span class="kw">fn </span>contains_point(p: Point, expected: bool) {
         <span class="kw">let </span>r = Rect::new(<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>);
@@ -1336,10 +1338,10 @@
         <span class="macro">assert_eq!</span>(r.contains_point(p), expected);
     }
 
-    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>), <span class="prelude-val">Some</span>(r(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>)); <span class="string">&quot;fits&quot;</span>)]
-    #[test_case(r(<span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>), <span class="prelude-val">Some</span>(r(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>)); <span class="string">&quot;fits overlaping&quot;</span>)]
-    #[test_case(r(<span class="number">100</span>, <span class="number">100</span>, <span class="number">10</span>, <span class="number">10</span>), <span class="prelude-val">Some</span>(r(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>)); <span class="string">&quot;fits but not contained&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="prelude-val">None</span>; <span class="string">&quot;doesn&#39;t fit&quot;</span>)]
+    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>), <span class="prelude-val">Some</span>(r(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>)); <span class="string">"fits"</span>)]
+    #[test_case(r(<span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>), <span class="prelude-val">Some</span>(r(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>)); <span class="string">"fits overlaping"</span>)]
+    #[test_case(r(<span class="number">100</span>, <span class="number">100</span>, <span class="number">10</span>, <span class="number">10</span>), <span class="prelude-val">Some</span>(r(<span class="number">5</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">10</span>)); <span class="string">"fits but not contained"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="prelude-val">None</span>; <span class="string">"doesn't fit"</span>)]
     #[test]
     </span><span class="kw">fn </span>centered_in(inner: Rect, expected: <span class="prelude-ty">Option</span>&lt;Rect&gt;) {
         <span class="kw">let </span>outer = Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">20</span>);
@@ -1349,12 +1351,12 @@
         <span class="macro">assert_eq!</span>(res, expected);
     }
 
-    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">&quot;simple single&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">&quot;simple even&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">&quot;simple odd&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">&quot;awkward single&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">&quot;awkward even&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">&quot;awkward odd&quot;</span>)]
+    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">"simple single"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">"simple even"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">"simple odd"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">"awkward single"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">"awkward even"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">"awkward odd"</span>)]
     #[test]
     </span><span class="kw">fn </span>as_rows(r: Rect, n_rows: u32) {
         <span class="kw">let </span>rects = r.as_rows(n_rows);
@@ -1364,12 +1366,12 @@
         <span class="macro">assert!</span>(rects.iter().all(|r| r.h == h));
     }
 
-    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">&quot;simple single&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">&quot;simple even&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">&quot;simple odd&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">&quot;awkward single&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">&quot;awkward even&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">&quot;awkward odd&quot;</span>)]
+    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">1</span>; <span class="string">"simple single"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">4</span>; <span class="string">"simple even"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>), <span class="number">7</span>; <span class="string">"simple odd"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">1</span>; <span class="string">"awkward single"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">4</span>; <span class="string">"awkward even"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">79</span>, <span class="number">57</span>), <span class="number">7</span>; <span class="string">"awkward odd"</span>)]
     #[test]
     </span><span class="kw">fn </span>as_columns(r: Rect, n_cols: u32) {
         <span class="kw">let </span>rects = r.as_rows(n_cols);
@@ -1379,10 +1381,10 @@
         <span class="macro">assert!</span>(rects.iter().all(|r| r.w == w));
     }
 
-    <span class="attr">#[test_case(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">&quot;half width&quot;</span>)]
-    #[test_case(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">&quot;offset half width&quot;</span>)]
-    #[test_case(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">&quot;at width&quot;</span>)]
-    #[test_case(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of range&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">"half width"</span>)]
+    #[test_case(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">"offset half width"</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">"at width"</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">"out of range"</span>)]
     #[test]
     </span><span class="kw">fn </span>split_at_width(offset: u32, p: u32, expected: <span class="prelude-ty">Option</span>&lt;(u32, u32)&gt;) {
         <span class="kw">let </span>r = Rect::new(offset, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>);
@@ -1399,10 +1401,10 @@
         }
     }
 
-    <span class="attr">#[test_case(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">&quot;half height&quot;</span>)]
-    #[test_case(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">&quot;offset half height&quot;</span>)]
-    #[test_case(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">&quot;at height&quot;</span>)]
-    #[test_case(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of range&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">0</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">50</span>, <span class="number">50</span>)); <span class="string">"half height"</span>)]
+    #[test_case(<span class="number">10</span>, <span class="number">50</span>, <span class="prelude-val">Some</span>((<span class="number">60</span>, <span class="number">40</span>)); <span class="string">"offset half height"</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">100</span>, <span class="prelude-val">None</span>; <span class="string">"at height"</span>)]
+    #[test_case(<span class="number">0</span>, <span class="number">200</span>, <span class="prelude-val">None</span>; <span class="string">"out of range"</span>)]
     #[test]
     </span><span class="kw">fn </span>split_at_height(offset: u32, p: u32, expected: <span class="prelude-ty">Option</span>&lt;(u32, u32)&gt;) {
         <span class="kw">let </span>r = Rect::new(<span class="number">0</span>, offset, <span class="number">100</span>, <span class="number">100</span>);
@@ -1419,10 +1421,10 @@
         }
     }
 
-    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>); <span class="string">&quot;fullscreen&quot;</span>)]
-    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with same xy&quot;</span>)]
-    #[test_case(r(<span class="number">10</span>, <span class="number">10</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with different xy&quot;</span>)]
-    #[test_case(r(<span class="number">110</span>, <span class="number">110</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">100</span>, <span class="number">100</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">&quot;subregion with different xy and parent not at origin&quot;</span>)]
+    <span class="attr">#[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>); <span class="string">"fullscreen"</span>)]
+    #[test_case(r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">"subregion with same xy"</span>)]
+    #[test_case(r(<span class="number">10</span>, <span class="number">10</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">"subregion with different xy"</span>)]
+    #[test_case(r(<span class="number">110</span>, <span class="number">110</span>, <span class="number">50</span>, <span class="number">50</span>), r(<span class="number">100</span>, <span class="number">100</span>, <span class="number">200</span>, <span class="number">100</span>), rr(<span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.25</span>, <span class="number">0.5</span>); <span class="string">"subregion with different xy and parent not at origin"</span>)]
     #[test]
     </span><span class="kw">fn </span>relative_to_rect(child: Rect, parent: Rect, expected: RelativeRect) {
         <span class="kw">let </span>relative = child.relative_to(<span class="kw-2">&amp;</span>parent);

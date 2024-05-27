@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x11rb/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x11rb/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -758,7 +760,7 @@
     CURRENT_TIME,
 };
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"x11rb-xcb"</span>)]
 </span><span class="kw">use </span>x11rb::xcb_ffi::XCBConnection;
 
 <span class="kw">pub mod </span>conversions;
@@ -822,11 +824,11 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"x11rb-xcb"</span>)]
 </span><span class="doccomment">/// An C based connection to the X server using an [XCBConnection].
 </span><span class="kw">pub type </span>XcbConn = Conn&lt;XCBConnection&gt;;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb-xcb&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"x11rb-xcb"</span>)]
 </span><span class="kw">impl </span>Conn&lt;XCBConnection&gt; {
     <span class="doccomment">/// Construct an X11rbConnection  backed by the [x11rb][crate::x11rb] backend using
     /// [x11rb::xcb_ffi::XCBConnection].
@@ -848,7 +850,7 @@
 
         <span class="kw">let </span>extension_info = conn.extension_information(randr::X11_EXTENSION_NAME)<span class="question-mark">?</span>;
         <span class="kw">if </span>extension_info.is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Randr(<span class="string">&quot;RandR not supported&quot;</span>.to_string()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Randr(<span class="string">"RandR not supported"</span>.to_string()));
         }
 
         <span class="kw">let </span>randr_ver = conn
@@ -857,7 +859,7 @@
         <span class="kw">let </span>(maj, min) = (randr_ver.major_version, randr_ver.minor_version);
         <span class="kw">if </span>(maj, min) != RANDR_VER {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Randr(<span class="macro">format!</span>(
-                <span class="string">&quot;penrose requires RandR version &gt;= {}.{}: detected {}.{}\nplease update RandR to a newer version&quot;</span>,
+                <span class="string">"penrose requires RandR version &gt;= {}.{}: detected {}.{}\nplease update RandR to a newer version"</span>,
                 RANDR_VER.<span class="number">0</span>, RANDR_VER.<span class="number">1</span>, maj, min
             )));
         }
@@ -927,7 +929,7 @@
             <span class="kw-2">&amp;</span>win_aux,
         )<span class="question-mark">?</span>;
 
-        <span class="comment">// Input only windows don&#39;t need mapping
+        <span class="comment">// Input only windows don't need mapping
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(atom) = ty {
             <span class="kw">let </span>net_name = Atom::NetWmWindowType.as_ref();
             <span class="self">self</span>.set_prop(id, net_name, Prop::Atom(<span class="macro">vec!</span>[atom.as_ref().into()]))<span class="question-mark">?</span>;
@@ -995,9 +997,9 @@
     <span class="kw">fn </span>grab(<span class="kw-2">&amp;</span><span class="self">self</span>, key_codes: <span class="kw-2">&amp;</span>[KeyCode], mouse_states: <span class="kw-2">&amp;</span>[MouseState]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="comment">// Release any grabbed keys that we currently have before attempting to grab
         // the requested key codes.
-        // NOTE: The &#39;0&#39; here is XCB_GRAB_ANY
+        // NOTE: The '0' here is XCB_GRAB_ANY
         </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.conn.ungrab_key(<span class="number">0</span>, <span class="self">self</span>.root, ModMask::ANY) {
-            <span class="macro">error!</span>(%e, <span class="string">&quot;unable to ungrab keys&quot;</span>);
+            <span class="macro">error!</span>(%e, <span class="string">"unable to ungrab keys"</span>);
         };
 
         <span class="comment">// We need to explicitly grab NumLock as an additional modifier and then drop it later on
@@ -1010,12 +1012,12 @@
         <span class="kw">for </span>m <span class="kw">in </span>modifiers.iter() {
             <span class="kw">for </span>k <span class="kw">in </span>key_codes.iter() {
                 <span class="self">self</span>.conn.grab_key(
-                    <span class="bool-val">false</span>,               <span class="comment">// don&#39;t pass grabbed events through to the client
+                    <span class="bool-val">false</span>,               <span class="comment">// don't pass grabbed events through to the client
                     </span><span class="self">self</span>.root,           <span class="comment">// the window to grab: in this case the root window
                     </span>(k.mask | m).into(), <span class="comment">// modifiers to grab
                     </span>k.code,              <span class="comment">// keycode to grab
-                    </span>mode,                <span class="comment">// don&#39;t lock pointer input while grabbing
-                    </span>mode,                <span class="comment">// don&#39;t lock keyboard input while grabbing
+                    </span>mode,                <span class="comment">// don't lock pointer input while grabbing
+                    </span>mode,                <span class="comment">// don't lock keyboard input while grabbing
                 </span>)<span class="question-mark">?</span>;
             }
         }
@@ -1024,13 +1026,13 @@
             <span class="kw">for </span>state <span class="kw">in </span>mouse_states.iter() {
                 <span class="kw">let </span>button = state.button().into();
                 <span class="self">self</span>.conn.grab_button(
-                    <span class="bool-val">false</span>,                     <span class="comment">// don&#39;t pass grabbed events through to the client
+                    <span class="bool-val">false</span>,                     <span class="comment">// don't pass grabbed events through to the client
                     </span><span class="self">self</span>.root,                 <span class="comment">// the window to grab: in this case the root window
                     </span>mask,                      <span class="comment">// which events are reported to the client
-                    </span>mode,                      <span class="comment">// don&#39;t lock pointer input while grabbing
-                    </span>mode,                      <span class="comment">// don&#39;t lock keyboard input while grabbing
-                    </span>x11rb::NONE,               <span class="comment">// don&#39;t confine the cursor to a specific window
-                    </span>x11rb::NONE,               <span class="comment">// don&#39;t change the cursor type
+                    </span>mode,                      <span class="comment">// don't lock pointer input while grabbing
+                    </span>mode,                      <span class="comment">// don't lock keyboard input while grabbing
+                    </span>x11rb::NONE,               <span class="comment">// don't confine the cursor to a specific window
+                    </span>x11rb::NONE,               <span class="comment">// don't change the cursor type
                     </span>button,                    <span class="comment">// the button to grab
                     </span>(state.mask() | m).into(), <span class="comment">// modifiers to grab
                 </span>)<span class="question-mark">?</span>;
@@ -1143,7 +1145,7 @@
         };
 
         <span class="kw">let </span>p = <span class="kw">match </span>prop_type.as_ref() {
-            <span class="string">&quot;ATOM&quot; </span>=&gt; Prop::Atom(
+            <span class="string">"ATOM" </span>=&gt; Prop::Atom(
                 r.value32()
                     .ok_or_else(|| Error::InvalidPropertyData {
                         id,
@@ -1154,7 +1156,7 @@
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt;&gt;()<span class="question-mark">?</span>,
             ),
 
-            <span class="string">&quot;CARDINAL&quot; </span>=&gt; Prop::Cardinal(
+            <span class="string">"CARDINAL" </span>=&gt; Prop::Cardinal(
                 r.value32()
                     .ok_or_else(|| Error::InvalidPropertyData {
                         id,
@@ -1164,7 +1166,7 @@
                     </span>.collect(),
             ),
 
-            <span class="string">&quot;STRING&quot; </span>| <span class="string">&quot;UTF8_STRING&quot; </span>=&gt; {
+            <span class="string">"STRING" </span>| <span class="string">"UTF8_STRING" </span>=&gt; {
                 <span class="kw">if </span>r.format != <span class="number">8 </span>{
                     <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidPropertyData {
                         id,
@@ -1174,15 +1176,15 @@
                 } <span class="kw">else </span>{
                     Prop::UTF8String(
                         String::from_utf8(r.value)<span class="question-mark">?
-                            </span>.trim_matches(<span class="string">&#39;\0&#39;</span>)
-                            .split(<span class="string">&#39;\0&#39;</span>)
+                            </span>.trim_matches(<span class="string">'\0'</span>)
+                            .split(<span class="string">'\0'</span>)
                             .map(|s| s.to_string())
                             .collect(),
                     )
                 }
             }
 
-            <span class="string">&quot;WINDOW&quot; </span>=&gt; Prop::Window(
+            <span class="string">"WINDOW" </span>=&gt; Prop::Window(
                 r.value32()
                     .ok_or_else(|| Error::InvalidPropertyData {
                         id,
@@ -1193,7 +1195,7 @@
                     .collect(),
             ),
 
-            <span class="string">&quot;WM_HINTS&quot; </span>=&gt; Prop::WmHints(WmHints::try_from_bytes(
+            <span class="string">"WM_HINTS" </span>=&gt; Prop::WmHints(WmHints::try_from_bytes(
                 <span class="kw-2">&amp;</span>r.value32()
                     .ok_or_else(|| Error::InvalidPropertyData {
                         id,
@@ -1203,7 +1205,7 @@
                     </span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
             )<span class="question-mark">?</span>),
 
-            <span class="string">&quot;WM_SIZE_HINTS&quot; </span>=&gt; Prop::WmNormalHints(WmNormalHints::try_from_bytes(
+            <span class="string">"WM_SIZE_HINTS" </span>=&gt; Prop::WmNormalHints(WmNormalHints::try_from_bytes(
                 <span class="kw-2">&amp;</span>r.value32()
                     .ok_or_else(|| Error::InvalidPropertyData {
                         id,
@@ -1221,7 +1223,7 @@
                 <span class="number">32 </span>=&gt; r.value32().unwrap().collect(),
                 <span class="kw">_ </span>=&gt; {
                     <span class="macro">error!</span>(
-                        <span class="string">&quot;prop type for {} was {} which claims to have a data format of {}&quot;</span>,
+                        <span class="string">"prop type for {} was {} which claims to have a data format of {}"</span>,
                         prop_name, prop_type, r.type_
                     );
 
@@ -1257,14 +1259,14 @@
             MapState::UNMAPPED =&gt; x::property::MapState::Unmapped,
             MapState::UNVIEWABLE =&gt; x::property::MapState::UnViewable,
             MapState::VIEWABLE =&gt; x::property::MapState::Viewable,
-            s =&gt; <span class="macro">panic!</span>(<span class="string">&quot;got invalid map state from x server: {s:?}&quot;</span>),
+            s =&gt; <span class="macro">panic!</span>(<span class="string">"got invalid map state from x server: {s:?}"</span>),
         };
 
         <span class="kw">let </span>window_class = <span class="kw">match </span>win_attrs.class {
             WindowClass::COPY_FROM_PARENT =&gt; x::property::WindowClass::CopyFromParent,
             WindowClass::INPUT_OUTPUT =&gt; x::property::WindowClass::InputOutput,
             WindowClass::INPUT_ONLY =&gt; x::property::WindowClass::InputOnly,
-            c =&gt; <span class="macro">panic!</span>(<span class="string">&quot;got invalid window class from x server: {c:?}&quot;</span>),
+            c =&gt; <span class="macro">panic!</span>(<span class="string">"got invalid window class from x server: {c:?}"</span>),
         };
 
         <span class="prelude-val">Ok</span>(WindowAttributes::new(
@@ -1311,7 +1313,7 @@
                     <span class="kw-2">*</span>id,
                     a,
                     AtomEnum::STRING,
-                    strs.join(<span class="string">&quot;\0&quot;</span>).as_bytes(),
+                    strs.join(<span class="string">"\0"</span>).as_bytes(),
                 )<span class="question-mark">?</span>;
 
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -1331,7 +1333,7 @@
 
             <span class="comment">// FIXME: handle changing WmHints and WmNormalHints correctly in change_prop
             </span>Prop::Bytes(<span class="kw">_</span>) | Prop::WmHints(<span class="kw">_</span>) | Prop::WmNormalHints(<span class="kw">_</span>) =&gt; {
-                <span class="macro">panic!</span>(<span class="string">&quot;unable to change Prop, WmHints or WmNormalHints properties&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"unable to change Prop, WmHints or WmNormalHints properties"</span>);
             }
         };
 

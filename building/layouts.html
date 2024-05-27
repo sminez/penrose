@@ -214,7 +214,7 @@ customisation you want to give the user while the window manager is running:</p>
     fn handle_message(&amp;mut self, m: &amp;Message) -&gt; Option&lt;Box&lt;dyn Layout&gt;&gt;;
 }
 <span class="boring">}</span></code></pre></pre>
-<p>On the &quot;laying out windows&quot; front (you know, the main one) you have three choices:</p>
+<p>On the "laying out windows" front (you know, the main one) you have three choices:</p>
 <ul>
 <li>Specify how to layout a possibly empty workspace based on the specific tag being laid out</li>
 <li>Specify how to layout a given (non-empty) stack of clients for any workspace</li>
@@ -249,7 +249,7 @@ pub struct Monocle;
 
 impl Layout for Monocle {
     fn name(&amp;self) -&gt; String {
-        &quot;Mono&quot;.to_owned()
+        "Mono".to_owned()
     }
 
     fn boxed_clone(&amp;self) -&gt; Box&lt;dyn Layout&gt; {
@@ -269,7 +269,7 @@ impl Layout for Monocle {
 full screen and everything else gets unmapped) but the overall boilerplate is kept to a minimum, which
 is nice.</p>
 <blockquote>
-<p><strong>NOTE</strong>: The <code>builtin</code> module has some good examples of what a &quot;real&quot; layout looks like (not to dunk
+<p><strong>NOTE</strong>: The <code>builtin</code> module has some good examples of what a "real" layout looks like (not to dunk
 on <code>Monocle</code> but...come on). Why not take a look at <code>MainAndStack</code> as a starting point for how to write
 something a little more interesting?</p>
 </blockquote>
@@ -347,7 +347,7 @@ impl Layout for MyAwesomeLayout {
 
 const AWESOMENESS_THRESHOLD: usize = 42;
 
-// Now, we modify our impl for MyLayout to &quot;level up&quot; once we hit the threshold
+// Now, we modify our impl for MyLayout to "level up" once we hit the threshold
 impl Layout for MyLayout {
     // TODO: still need to write the layout at some point...
 
@@ -393,7 +393,7 @@ fn my_transformer(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid,
     // Write your transformation implementation here
 }
 
-simple_transformer!(&quot;MyTransform&quot;, MyTransformer, my_transformer);
+simple_transformer!("MyTransform", MyTransformer, my_transformer);
 <span class="boring">}</span></code></pre></pre>
 
                     </main>

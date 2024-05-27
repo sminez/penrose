@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_keysyms/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="penrose_keysyms" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_keysyms/src/lib.rs`."><title>lib.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="penrose_keysyms" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../penrose_keysyms/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2753,2049 +2755,2049 @@
 #[derive(AsRefStr, EnumString, EnumIter, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>XKeySym {
     <span class="doccomment">/// XK_BackSpace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;BackSpace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"BackSpace"</span>)]
     </span>XK_BackSpace,
     <span class="doccomment">/// XK_Tab
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Tab&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Tab"</span>)]
     </span>XK_Tab,
     <span class="doccomment">/// XK_Linefeed
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Linefeed&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Linefeed"</span>)]
     </span>XK_Linefeed,
     <span class="doccomment">/// XK_Clear
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Clear&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Clear"</span>)]
     </span>XK_Clear,
     <span class="doccomment">/// XK_Return
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Return&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Return"</span>)]
     </span>XK_Return,
     <span class="doccomment">/// XK_Pause
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Pause&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Pause"</span>)]
     </span>XK_Pause,
     <span class="doccomment">/// XK_Scroll_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Scroll_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Scroll_Lock"</span>)]
     </span>XK_Scroll_Lock,
     <span class="doccomment">/// XK_Sys_Req
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Sys_Req&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Sys_Req"</span>)]
     </span>XK_Sys_Req,
     <span class="doccomment">/// XK_Escape
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Escape&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Escape"</span>)]
     </span>XK_Escape,
     <span class="doccomment">/// XK_Delete
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Delete&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Delete"</span>)]
     </span>XK_Delete,
     <span class="doccomment">/// XK_Home
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Home&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Home"</span>)]
     </span>XK_Home,
     <span class="doccomment">/// XK_Left
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Left&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Left"</span>)]
     </span>XK_Left,
     <span class="doccomment">/// XK_Up
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Up&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Up"</span>)]
     </span>XK_Up,
     <span class="doccomment">/// XK_Right
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Right&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Right"</span>)]
     </span>XK_Right,
     <span class="doccomment">/// XK_Down
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Down&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Down"</span>)]
     </span>XK_Down,
     <span class="doccomment">/// XK_Prior
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Prior&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Prior"</span>)]
     </span>XK_Prior,
     <span class="doccomment">/// XK_Page_Up
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Page_Up&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Page_Up"</span>)]
     </span>XK_Page_Up,
     <span class="doccomment">/// XK_Next
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Next&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Next"</span>)]
     </span>XK_Next,
     <span class="doccomment">/// XK_Page_Down
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Page_Down&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Page_Down"</span>)]
     </span>XK_Page_Down,
     <span class="doccomment">/// XK_End
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;End&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"End"</span>)]
     </span>XK_End,
     <span class="doccomment">/// XK_Begin
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Begin&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Begin"</span>)]
     </span>XK_Begin,
     <span class="doccomment">/// XK_Select
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Select&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Select"</span>)]
     </span>XK_Select,
     <span class="doccomment">/// XK_Print
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Print&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Print"</span>)]
     </span>XK_Print,
     <span class="doccomment">/// XK_Execute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Execute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Execute"</span>)]
     </span>XK_Execute,
     <span class="doccomment">/// XK_Insert
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Insert&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Insert"</span>)]
     </span>XK_Insert,
     <span class="doccomment">/// XK_Undo
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Undo&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Undo"</span>)]
     </span>XK_Undo,
     <span class="doccomment">/// XK_Redo
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Redo&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Redo"</span>)]
     </span>XK_Redo,
     <span class="doccomment">/// XK_Menu
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Menu&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Menu"</span>)]
     </span>XK_Menu,
     <span class="doccomment">/// XK_Find
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Find&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Find"</span>)]
     </span>XK_Find,
     <span class="doccomment">/// XK_Cancel
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Cancel&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Cancel"</span>)]
     </span>XK_Cancel,
     <span class="doccomment">/// XK_Help
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Help&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Help"</span>)]
     </span>XK_Help,
     <span class="doccomment">/// XK_Break
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Break&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Break"</span>)]
     </span>XK_Break,
     <span class="doccomment">/// XK_Mode_switch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Mode_switch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Mode_switch"</span>)]
     </span>XK_Mode_switch,
     <span class="doccomment">/// XK_script_switch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;script_switch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"script_switch"</span>)]
     </span>XK_script_switch,
     <span class="doccomment">/// XK_Num_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Num_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Num_Lock"</span>)]
     </span>XK_Num_Lock,
     <span class="doccomment">/// XK_KP_Space
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Space&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Space"</span>)]
     </span>XK_KP_Space,
     <span class="doccomment">/// XK_KP_Tab
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Tab&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Tab"</span>)]
     </span>XK_KP_Tab,
     <span class="doccomment">/// XK_KP_Enter
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Enter&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Enter"</span>)]
     </span>XK_KP_Enter,
     <span class="doccomment">/// XK_KP_F1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_F1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_F1"</span>)]
     </span>XK_KP_F1,
     <span class="doccomment">/// XK_KP_F2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_F2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_F2"</span>)]
     </span>XK_KP_F2,
     <span class="doccomment">/// XK_KP_F3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_F3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_F3"</span>)]
     </span>XK_KP_F3,
     <span class="doccomment">/// XK_KP_F4
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_F4&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_F4"</span>)]
     </span>XK_KP_F4,
     <span class="doccomment">/// XK_KP_Home
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Home&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Home"</span>)]
     </span>XK_KP_Home,
     <span class="doccomment">/// XK_KP_Left
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Left&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Left"</span>)]
     </span>XK_KP_Left,
     <span class="doccomment">/// XK_KP_Up
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Up&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Up"</span>)]
     </span>XK_KP_Up,
     <span class="doccomment">/// XK_KP_Right
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Right&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Right"</span>)]
     </span>XK_KP_Right,
     <span class="doccomment">/// XK_KP_Down
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Down&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Down"</span>)]
     </span>XK_KP_Down,
     <span class="doccomment">/// XK_KP_Prior
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Prior&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Prior"</span>)]
     </span>XK_KP_Prior,
     <span class="doccomment">/// XK_KP_Page_Up
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Page_Up&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Page_Up"</span>)]
     </span>XK_KP_Page_Up,
     <span class="doccomment">/// XK_KP_Next
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Next&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Next"</span>)]
     </span>XK_KP_Next,
     <span class="doccomment">/// XK_KP_Page_Down
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Page_Down&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Page_Down"</span>)]
     </span>XK_KP_Page_Down,
     <span class="doccomment">/// XK_KP_End
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_End&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_End"</span>)]
     </span>XK_KP_End,
     <span class="doccomment">/// XK_KP_Begin
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Begin&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Begin"</span>)]
     </span>XK_KP_Begin,
     <span class="doccomment">/// XK_KP_Insert
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Insert&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Insert"</span>)]
     </span>XK_KP_Insert,
     <span class="doccomment">/// XK_KP_Delete
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Delete&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Delete"</span>)]
     </span>XK_KP_Delete,
     <span class="doccomment">/// XK_KP_Equal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Equal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Equal"</span>)]
     </span>XK_KP_Equal,
     <span class="doccomment">/// XK_KP_Multiply
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Multiply&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Multiply"</span>)]
     </span>XK_KP_Multiply,
     <span class="doccomment">/// XK_KP_Add
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Add&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Add"</span>)]
     </span>XK_KP_Add,
     <span class="doccomment">/// XK_KP_Separator
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Separator&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Separator"</span>)]
     </span>XK_KP_Separator,
     <span class="doccomment">/// XK_KP_Subtract
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Subtract&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Subtract"</span>)]
     </span>XK_KP_Subtract,
     <span class="doccomment">/// XK_KP_Decimal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Decimal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Decimal"</span>)]
     </span>XK_KP_Decimal,
     <span class="doccomment">/// XK_KP_Divide
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_Divide&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_Divide"</span>)]
     </span>XK_KP_Divide,
     <span class="doccomment">/// XK_KP_0
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_0&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_0"</span>)]
     </span>XK_KP_0,
     <span class="doccomment">/// XK_KP_1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_1"</span>)]
     </span>XK_KP_1,
     <span class="doccomment">/// XK_KP_2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_2"</span>)]
     </span>XK_KP_2,
     <span class="doccomment">/// XK_KP_3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_3"</span>)]
     </span>XK_KP_3,
     <span class="doccomment">/// XK_KP_4
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_4&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_4"</span>)]
     </span>XK_KP_4,
     <span class="doccomment">/// XK_KP_5
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_5&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_5"</span>)]
     </span>XK_KP_5,
     <span class="doccomment">/// XK_KP_6
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_6&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_6"</span>)]
     </span>XK_KP_6,
     <span class="doccomment">/// XK_KP_7
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_7&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_7"</span>)]
     </span>XK_KP_7,
     <span class="doccomment">/// XK_KP_8
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_8&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_8"</span>)]
     </span>XK_KP_8,
     <span class="doccomment">/// XK_KP_9
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;KP_9&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"KP_9"</span>)]
     </span>XK_KP_9,
     <span class="doccomment">/// XK_F1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F1"</span>)]
     </span>XK_F1,
     <span class="doccomment">/// XK_F2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F2"</span>)]
     </span>XK_F2,
     <span class="doccomment">/// XK_F3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F3"</span>)]
     </span>XK_F3,
     <span class="doccomment">/// XK_F4
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F4&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F4"</span>)]
     </span>XK_F4,
     <span class="doccomment">/// XK_F5
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F5&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F5"</span>)]
     </span>XK_F5,
     <span class="doccomment">/// XK_F6
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F6&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F6"</span>)]
     </span>XK_F6,
     <span class="doccomment">/// XK_F7
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F7&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F7"</span>)]
     </span>XK_F7,
     <span class="doccomment">/// XK_F8
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F8&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F8"</span>)]
     </span>XK_F8,
     <span class="doccomment">/// XK_F9
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F9&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F9"</span>)]
     </span>XK_F9,
     <span class="doccomment">/// XK_F10
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F10&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F10"</span>)]
     </span>XK_F10,
     <span class="doccomment">/// XK_F11
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F11&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F11"</span>)]
     </span>XK_F11,
     <span class="doccomment">/// XK_L1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L1"</span>)]
     </span>XK_L1,
     <span class="doccomment">/// XK_F12
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F12&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F12"</span>)]
     </span>XK_F12,
     <span class="doccomment">/// XK_L2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L2"</span>)]
     </span>XK_L2,
     <span class="doccomment">/// XK_F13
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F13&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F13"</span>)]
     </span>XK_F13,
     <span class="doccomment">/// XK_L3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L3"</span>)]
     </span>XK_L3,
     <span class="doccomment">/// XK_F14
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F14&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F14"</span>)]
     </span>XK_F14,
     <span class="doccomment">/// XK_L4
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L4&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L4"</span>)]
     </span>XK_L4,
     <span class="doccomment">/// XK_F15
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F15&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F15"</span>)]
     </span>XK_F15,
     <span class="doccomment">/// XK_L5
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L5&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L5"</span>)]
     </span>XK_L5,
     <span class="doccomment">/// XK_F16
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F16&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F16"</span>)]
     </span>XK_F16,
     <span class="doccomment">/// XK_L6
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L6&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L6"</span>)]
     </span>XK_L6,
     <span class="doccomment">/// XK_F17
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F17&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F17"</span>)]
     </span>XK_F17,
     <span class="doccomment">/// XK_L7
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L7&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L7"</span>)]
     </span>XK_L7,
     <span class="doccomment">/// XK_F18
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F18&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F18"</span>)]
     </span>XK_F18,
     <span class="doccomment">/// XK_L8
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L8&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L8"</span>)]
     </span>XK_L8,
     <span class="doccomment">/// XK_F19
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F19&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F19"</span>)]
     </span>XK_F19,
     <span class="doccomment">/// XK_L9
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L9&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L9"</span>)]
     </span>XK_L9,
     <span class="doccomment">/// XK_F20
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F20&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F20"</span>)]
     </span>XK_F20,
     <span class="doccomment">/// XK_L10
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L10&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L10"</span>)]
     </span>XK_L10,
     <span class="doccomment">/// XK_F21
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F21&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F21"</span>)]
     </span>XK_F21,
     <span class="doccomment">/// XK_R1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R1"</span>)]
     </span>XK_R1,
     <span class="doccomment">/// XK_F22
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F22&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F22"</span>)]
     </span>XK_F22,
     <span class="doccomment">/// XK_R2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R2"</span>)]
     </span>XK_R2,
     <span class="doccomment">/// XK_F23
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F23&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F23"</span>)]
     </span>XK_F23,
     <span class="doccomment">/// XK_R3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R3"</span>)]
     </span>XK_R3,
     <span class="doccomment">/// XK_F24
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F24&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F24"</span>)]
     </span>XK_F24,
     <span class="doccomment">/// XK_R4
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R4&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R4"</span>)]
     </span>XK_R4,
     <span class="doccomment">/// XK_F25
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F25&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F25"</span>)]
     </span>XK_F25,
     <span class="doccomment">/// XK_R5
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R5&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R5"</span>)]
     </span>XK_R5,
     <span class="doccomment">/// XK_F26
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F26&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F26"</span>)]
     </span>XK_F26,
     <span class="doccomment">/// XK_R6
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R6&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R6"</span>)]
     </span>XK_R6,
     <span class="doccomment">/// XK_F27
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F27&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F27"</span>)]
     </span>XK_F27,
     <span class="doccomment">/// XK_R7
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R7&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R7"</span>)]
     </span>XK_R7,
     <span class="doccomment">/// XK_F28
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F28&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F28"</span>)]
     </span>XK_F28,
     <span class="doccomment">/// XK_R8
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R8&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R8"</span>)]
     </span>XK_R8,
     <span class="doccomment">/// XK_F29
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F29&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F29"</span>)]
     </span>XK_F29,
     <span class="doccomment">/// XK_R9
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R9&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R9"</span>)]
     </span>XK_R9,
     <span class="doccomment">/// XK_F30
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F30&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F30"</span>)]
     </span>XK_F30,
     <span class="doccomment">/// XK_R10
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R10&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R10"</span>)]
     </span>XK_R10,
     <span class="doccomment">/// XK_F31
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F31&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F31"</span>)]
     </span>XK_F31,
     <span class="doccomment">/// XK_R11
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R11&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R11"</span>)]
     </span>XK_R11,
     <span class="doccomment">/// XK_F32
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F32&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F32"</span>)]
     </span>XK_F32,
     <span class="doccomment">/// XK_R12
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R12&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R12"</span>)]
     </span>XK_R12,
     <span class="doccomment">/// XK_F33
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F33&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F33"</span>)]
     </span>XK_F33,
     <span class="doccomment">/// XK_R13
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R13&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R13"</span>)]
     </span>XK_R13,
     <span class="doccomment">/// XK_F34
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F34&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F34"</span>)]
     </span>XK_F34,
     <span class="doccomment">/// XK_R14
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R14&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R14"</span>)]
     </span>XK_R14,
     <span class="doccomment">/// XK_F35
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F35&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F35"</span>)]
     </span>XK_F35,
     <span class="doccomment">/// XK_R15
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R15&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R15"</span>)]
     </span>XK_R15,
     <span class="doccomment">/// XK_Shift_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Shift_L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Shift_L"</span>)]
     </span>XK_Shift_L,
     <span class="doccomment">/// XK_Shift_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Shift_R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Shift_R"</span>)]
     </span>XK_Shift_R,
     <span class="doccomment">/// XK_Control_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Control_L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Control_L"</span>)]
     </span>XK_Control_L,
     <span class="doccomment">/// XK_Control_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Control_R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Control_R"</span>)]
     </span>XK_Control_R,
     <span class="doccomment">/// XK_Caps_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Caps_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Caps_Lock"</span>)]
     </span>XK_Caps_Lock,
     <span class="doccomment">/// XK_Shift_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Shift_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Shift_Lock"</span>)]
     </span>XK_Shift_Lock,
     <span class="doccomment">/// XK_Meta_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Meta_L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Meta_L"</span>)]
     </span>XK_Meta_L,
     <span class="doccomment">/// XK_Meta_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Meta_R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Meta_R"</span>)]
     </span>XK_Meta_R,
     <span class="doccomment">/// XK_Alt_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Alt_L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Alt_L"</span>)]
     </span>XK_Alt_L,
     <span class="doccomment">/// XK_Alt_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Alt_R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Alt_R"</span>)]
     </span>XK_Alt_R,
     <span class="doccomment">/// XK_Super_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Super_L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Super_L"</span>)]
     </span>XK_Super_L,
     <span class="doccomment">/// XK_Super_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Super_R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Super_R"</span>)]
     </span>XK_Super_R,
     <span class="doccomment">/// XK_Hyper_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Hyper_L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Hyper_L"</span>)]
     </span>XK_Hyper_L,
     <span class="doccomment">/// XK_Hyper_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Hyper_R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Hyper_R"</span>)]
     </span>XK_Hyper_R,
     <span class="doccomment">/// XK_ISO_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Lock"</span>)]
     </span>XK_ISO_Lock,
     <span class="doccomment">/// XK_ISO_Level2_Latch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level2_Latch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level2_Latch"</span>)]
     </span>XK_ISO_Level2_Latch,
     <span class="doccomment">/// XK_ISO_Level3_Shift
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level3_Shift&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level3_Shift"</span>)]
     </span>XK_ISO_Level3_Shift,
     <span class="doccomment">/// XK_ISO_Level3_Latch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level3_Latch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level3_Latch"</span>)]
     </span>XK_ISO_Level3_Latch,
     <span class="doccomment">/// XK_ISO_Level3_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level3_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level3_Lock"</span>)]
     </span>XK_ISO_Level3_Lock,
     <span class="doccomment">/// XK_ISO_Level5_Shift
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level5_Shift&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level5_Shift"</span>)]
     </span>XK_ISO_Level5_Shift,
     <span class="doccomment">/// XK_ISO_Level5_Latch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level5_Latch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level5_Latch"</span>)]
     </span>XK_ISO_Level5_Latch,
     <span class="doccomment">/// XK_ISO_Level5_Lock
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Level5_Lock&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Level5_Lock"</span>)]
     </span>XK_ISO_Level5_Lock,
     <span class="doccomment">/// XK_ISO_Left_Tab
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Left_Tab&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Left_Tab"</span>)]
     </span>XK_ISO_Left_Tab,
     <span class="doccomment">/// XK_ISO_Partial_Space_Left
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Partial_Space_Left&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Partial_Space_Left"</span>)]
     </span>XK_ISO_Partial_Space_Left,
     <span class="doccomment">/// XK_ISO_Partial_Space_Right
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Partial_Space_Right&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Partial_Space_Right"</span>)]
     </span>XK_ISO_Partial_Space_Right,
     <span class="doccomment">/// XK_ISO_Set_Margin_Left
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Set_Margin_Left&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Set_Margin_Left"</span>)]
     </span>XK_ISO_Set_Margin_Left,
     <span class="doccomment">/// XK_ISO_Set_Margin_Right
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Set_Margin_Right&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Set_Margin_Right"</span>)]
     </span>XK_ISO_Set_Margin_Right,
     <span class="doccomment">/// XK_ISO_Continuous_Underline
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Continuous_Underline&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Continuous_Underline"</span>)]
     </span>XK_ISO_Continuous_Underline,
     <span class="doccomment">/// XK_ISO_Discontinuous_Underline
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Discontinuous_Underline&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Discontinuous_Underline"</span>)]
     </span>XK_ISO_Discontinuous_Underline,
     <span class="doccomment">/// XK_ISO_Emphasize
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Emphasize&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Emphasize"</span>)]
     </span>XK_ISO_Emphasize,
     <span class="doccomment">/// XK_ISO_Center_Object
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Center_Object&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Center_Object"</span>)]
     </span>XK_ISO_Center_Object,
     <span class="doccomment">/// XK_ISO_Enter
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ISO_Enter&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ISO_Enter"</span>)]
     </span>XK_ISO_Enter,
     <span class="doccomment">/// XK_Terminate_Server
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Terminate_Server&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Terminate_Server"</span>)]
     </span>XK_Terminate_Server,
     <span class="doccomment">/// XK_ch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ch"</span>)]
     </span>XK_ch,
     <span class="doccomment">/// XK_Ch
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ch&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ch"</span>)]
     </span>XK_Ch,
     <span class="doccomment">/// XK_CH
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;CH&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"CH"</span>)]
     </span>XK_CH,
     <span class="doccomment">/// XK_c_h
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;c_h&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"c_h"</span>)]
     </span>XK_c_h,
     <span class="doccomment">/// XK_C_h
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;C_h&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"C_h"</span>)]
     </span>XK_C_h,
     <span class="doccomment">/// XK_C_H
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;C_H&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"C_H"</span>)]
     </span>XK_C_H,
     <span class="doccomment">/// XK_3270_Duplicate
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Duplicate&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Duplicate"</span>)]
     </span>XK_3270_Duplicate,
     <span class="doccomment">/// XK_3270_FieldMark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_FieldMark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_FieldMark"</span>)]
     </span>XK_3270_FieldMark,
     <span class="doccomment">/// XK_3270_Right2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Right2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Right2"</span>)]
     </span>XK_3270_Right2,
     <span class="doccomment">/// XK_3270_Left2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Left2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Left2"</span>)]
     </span>XK_3270_Left2,
     <span class="doccomment">/// XK_3270_BackTab
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_BackTab&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_BackTab"</span>)]
     </span>XK_3270_BackTab,
     <span class="doccomment">/// XK_3270_EraseEOF
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_EraseEOF&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_EraseEOF"</span>)]
     </span>XK_3270_EraseEOF,
     <span class="doccomment">/// XK_3270_EraseInput
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_EraseInput&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_EraseInput"</span>)]
     </span>XK_3270_EraseInput,
     <span class="doccomment">/// XK_3270_Reset
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Reset&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Reset"</span>)]
     </span>XK_3270_Reset,
     <span class="doccomment">/// XK_3270_Quit
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Quit&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Quit"</span>)]
     </span>XK_3270_Quit,
     <span class="doccomment">/// XK_3270_PA1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_PA1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_PA1"</span>)]
     </span>XK_3270_PA1,
     <span class="doccomment">/// XK_3270_PA2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_PA2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_PA2"</span>)]
     </span>XK_3270_PA2,
     <span class="doccomment">/// XK_3270_PA3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_PA3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_PA3"</span>)]
     </span>XK_3270_PA3,
     <span class="doccomment">/// XK_3270_Test
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Test&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Test"</span>)]
     </span>XK_3270_Test,
     <span class="doccomment">/// XK_3270_Attn
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Attn&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Attn"</span>)]
     </span>XK_3270_Attn,
     <span class="doccomment">/// XK_3270_CursorBlink
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_CursorBlink&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_CursorBlink"</span>)]
     </span>XK_3270_CursorBlink,
     <span class="doccomment">/// XK_3270_AltCursor
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_AltCursor&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_AltCursor"</span>)]
     </span>XK_3270_AltCursor,
     <span class="doccomment">/// XK_3270_KeyClick
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_KeyClick&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_KeyClick"</span>)]
     </span>XK_3270_KeyClick,
     <span class="doccomment">/// XK_3270_Jump
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Jump&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Jump"</span>)]
     </span>XK_3270_Jump,
     <span class="doccomment">/// XK_3270_Ident
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Ident&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Ident"</span>)]
     </span>XK_3270_Ident,
     <span class="doccomment">/// XK_3270_Rule
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Rule&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Rule"</span>)]
     </span>XK_3270_Rule,
     <span class="doccomment">/// XK_3270_Copy
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Copy&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Copy"</span>)]
     </span>XK_3270_Copy,
     <span class="doccomment">/// XK_3270_Play
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Play&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Play"</span>)]
     </span>XK_3270_Play,
     <span class="doccomment">/// XK_3270_Setup
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Setup&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Setup"</span>)]
     </span>XK_3270_Setup,
     <span class="doccomment">/// XK_3270_Record
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Record&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Record"</span>)]
     </span>XK_3270_Record,
     <span class="doccomment">/// XK_3270_DeleteWord
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_DeleteWord&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_DeleteWord"</span>)]
     </span>XK_3270_DeleteWord,
     <span class="doccomment">/// XK_3270_ExSelect
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_ExSelect&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_ExSelect"</span>)]
     </span>XK_3270_ExSelect,
     <span class="doccomment">/// XK_3270_CursorSelect
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_CursorSelect&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_CursorSelect"</span>)]
     </span>XK_3270_CursorSelect,
     <span class="doccomment">/// XK_3270_Enter
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3270_Enter&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3270_Enter"</span>)]
     </span>XK_3270_Enter,
     <span class="doccomment">/// XK_space
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;space&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"space"</span>)]
     </span>XK_space,
     <span class="doccomment">/// XK_exclam
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;exclam&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"exclam"</span>)]
     </span>XK_exclam,
     <span class="doccomment">/// XK_quotedbl
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;quotedbl&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"quotedbl"</span>)]
     </span>XK_quotedbl,
     <span class="doccomment">/// XK_numbersign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;numbersign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"numbersign"</span>)]
     </span>XK_numbersign,
     <span class="doccomment">/// XK_dollar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;dollar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"dollar"</span>)]
     </span>XK_dollar,
     <span class="doccomment">/// XK_percent
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;percent&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"percent"</span>)]
     </span>XK_percent,
     <span class="doccomment">/// XK_ampersand
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ampersand&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ampersand"</span>)]
     </span>XK_ampersand,
     <span class="doccomment">/// XK_apostrophe
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;apostrophe&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"apostrophe"</span>)]
     </span>XK_apostrophe,
     <span class="doccomment">/// XK_quoteright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;quoteright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"quoteright"</span>)]
     </span>XK_quoteright,
     <span class="doccomment">/// XK_parenleft
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;parenleft&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"parenleft"</span>)]
     </span>XK_parenleft,
     <span class="doccomment">/// XK_parenright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;parenright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"parenright"</span>)]
     </span>XK_parenright,
     <span class="doccomment">/// XK_asterisk
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;asterisk&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"asterisk"</span>)]
     </span>XK_asterisk,
     <span class="doccomment">/// XK_plus
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;plus&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"plus"</span>)]
     </span>XK_plus,
     <span class="doccomment">/// XK_comma
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;comma&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"comma"</span>)]
     </span>XK_comma,
     <span class="doccomment">/// XK_minus
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;minus&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"minus"</span>)]
     </span>XK_minus,
     <span class="doccomment">/// XK_period
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;period&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"period"</span>)]
     </span>XK_period,
     <span class="doccomment">/// XK_slash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;slash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"slash"</span>)]
     </span>XK_slash,
     <span class="doccomment">/// XK_0
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;0&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"0"</span>)]
     </span>XK_0,
     <span class="doccomment">/// XK_1
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;1&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"1"</span>)]
     </span>XK_1,
     <span class="doccomment">/// XK_2
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;2&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"2"</span>)]
     </span>XK_2,
     <span class="doccomment">/// XK_3
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;3&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"3"</span>)]
     </span>XK_3,
     <span class="doccomment">/// XK_4
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;4&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"4"</span>)]
     </span>XK_4,
     <span class="doccomment">/// XK_5
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;5&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"5"</span>)]
     </span>XK_5,
     <span class="doccomment">/// XK_6
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;6&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"6"</span>)]
     </span>XK_6,
     <span class="doccomment">/// XK_7
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;7&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"7"</span>)]
     </span>XK_7,
     <span class="doccomment">/// XK_8
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;8&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"8"</span>)]
     </span>XK_8,
     <span class="doccomment">/// XK_9
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;9&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"9"</span>)]
     </span>XK_9,
     <span class="doccomment">/// XK_colon
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;colon&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"colon"</span>)]
     </span>XK_colon,
     <span class="doccomment">/// XK_semicolon
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;semicolon&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"semicolon"</span>)]
     </span>XK_semicolon,
     <span class="doccomment">/// XK_less
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;less&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"less"</span>)]
     </span>XK_less,
     <span class="doccomment">/// XK_equal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;equal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"equal"</span>)]
     </span>XK_equal,
     <span class="doccomment">/// XK_greater
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;greater&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"greater"</span>)]
     </span>XK_greater,
     <span class="doccomment">/// XK_question
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;question&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"question"</span>)]
     </span>XK_question,
     <span class="doccomment">/// XK_at
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;at&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"at"</span>)]
     </span>XK_at,
     <span class="doccomment">/// XK_A
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;A&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"A"</span>)]
     </span>XK_A,
     <span class="doccomment">/// XK_B
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;B&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"B"</span>)]
     </span>XK_B,
     <span class="doccomment">/// XK_C
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;C&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"C"</span>)]
     </span>XK_C,
     <span class="doccomment">/// XK_D
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;D&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"D"</span>)]
     </span>XK_D,
     <span class="doccomment">/// XK_E
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;E&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"E"</span>)]
     </span>XK_E,
     <span class="doccomment">/// XK_F
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;F&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"F"</span>)]
     </span>XK_F,
     <span class="doccomment">/// XK_G
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;G&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"G"</span>)]
     </span>XK_G,
     <span class="doccomment">/// XK_H
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;H&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"H"</span>)]
     </span>XK_H,
     <span class="doccomment">/// XK_I
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;I&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"I"</span>)]
     </span>XK_I,
     <span class="doccomment">/// XK_J
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;J&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"J"</span>)]
     </span>XK_J,
     <span class="doccomment">/// XK_K
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;K&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"K"</span>)]
     </span>XK_K,
     <span class="doccomment">/// XK_L
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;L&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"L"</span>)]
     </span>XK_L,
     <span class="doccomment">/// XK_M
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;M&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"M"</span>)]
     </span>XK_M,
     <span class="doccomment">/// XK_N
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;N&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"N"</span>)]
     </span>XK_N,
     <span class="doccomment">/// XK_O
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;O&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"O"</span>)]
     </span>XK_O,
     <span class="doccomment">/// XK_P
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;P&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"P"</span>)]
     </span>XK_P,
     <span class="doccomment">/// XK_Q
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Q&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Q"</span>)]
     </span>XK_Q,
     <span class="doccomment">/// XK_R
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;R&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"R"</span>)]
     </span>XK_R,
     <span class="doccomment">/// XK_S
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;S&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"S"</span>)]
     </span>XK_S,
     <span class="doccomment">/// XK_T
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;T&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"T"</span>)]
     </span>XK_T,
     <span class="doccomment">/// XK_U
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;U&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"U"</span>)]
     </span>XK_U,
     <span class="doccomment">/// XK_V
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;V&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"V"</span>)]
     </span>XK_V,
     <span class="doccomment">/// XK_W
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;W&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"W"</span>)]
     </span>XK_W,
     <span class="doccomment">/// XK_X
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;X&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"X"</span>)]
     </span>XK_X,
     <span class="doccomment">/// XK_Y
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Y&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Y"</span>)]
     </span>XK_Y,
     <span class="doccomment">/// XK_Z
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Z&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Z"</span>)]
     </span>XK_Z,
     <span class="doccomment">/// XK_bracketleft
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;bracketleft&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"bracketleft"</span>)]
     </span>XK_bracketleft,
     <span class="doccomment">/// XK_backslash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;backslash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"backslash"</span>)]
     </span>XK_backslash,
     <span class="doccomment">/// XK_bracketright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;bracketright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"bracketright"</span>)]
     </span>XK_bracketright,
     <span class="doccomment">/// XK_asciicircum
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;asciicircum&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"asciicircum"</span>)]
     </span>XK_asciicircum,
     <span class="doccomment">/// XK_underscore
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;underscore&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"underscore"</span>)]
     </span>XK_underscore,
     <span class="doccomment">/// XK_grave
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;grave&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"grave"</span>)]
     </span>XK_grave,
     <span class="doccomment">/// XK_quoteleft
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;quoteleft&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"quoteleft"</span>)]
     </span>XK_quoteleft,
     <span class="doccomment">/// XK_a
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;a&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"a"</span>)]
     </span>XK_a,
     <span class="doccomment">/// XK_b
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;b&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"b"</span>)]
     </span>XK_b,
     <span class="doccomment">/// XK_c
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;c&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"c"</span>)]
     </span>XK_c,
     <span class="doccomment">/// XK_d
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;d&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"d"</span>)]
     </span>XK_d,
     <span class="doccomment">/// XK_e
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;e&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"e"</span>)]
     </span>XK_e,
     <span class="doccomment">/// XK_f
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;f&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"f"</span>)]
     </span>XK_f,
     <span class="doccomment">/// XK_g
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;g&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"g"</span>)]
     </span>XK_g,
     <span class="doccomment">/// XK_h
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;h&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"h"</span>)]
     </span>XK_h,
     <span class="doccomment">/// XK_i
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;i&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"i"</span>)]
     </span>XK_i,
     <span class="doccomment">/// XK_j
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;j&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"j"</span>)]
     </span>XK_j,
     <span class="doccomment">/// XK_k
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;k&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"k"</span>)]
     </span>XK_k,
     <span class="doccomment">/// XK_l
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;l&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"l"</span>)]
     </span>XK_l,
     <span class="doccomment">/// XK_m
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;m&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"m"</span>)]
     </span>XK_m,
     <span class="doccomment">/// XK_n
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;n&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"n"</span>)]
     </span>XK_n,
     <span class="doccomment">/// XK_o
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;o&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"o"</span>)]
     </span>XK_o,
     <span class="doccomment">/// XK_p
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;p&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"p"</span>)]
     </span>XK_p,
     <span class="doccomment">/// XK_q
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;q&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"q"</span>)]
     </span>XK_q,
     <span class="doccomment">/// XK_r
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;r&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"r"</span>)]
     </span>XK_r,
     <span class="doccomment">/// XK_s
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;s&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"s"</span>)]
     </span>XK_s,
     <span class="doccomment">/// XK_t
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;t&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"t"</span>)]
     </span>XK_t,
     <span class="doccomment">/// XK_u
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;u&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"u"</span>)]
     </span>XK_u,
     <span class="doccomment">/// XK_v
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;v&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"v"</span>)]
     </span>XK_v,
     <span class="doccomment">/// XK_w
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;w&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"w"</span>)]
     </span>XK_w,
     <span class="doccomment">/// XK_x
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;x&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"x"</span>)]
     </span>XK_x,
     <span class="doccomment">/// XK_y
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;y&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"y"</span>)]
     </span>XK_y,
     <span class="doccomment">/// XK_z
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;z&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"z"</span>)]
     </span>XK_z,
     <span class="doccomment">/// XK_braceleft
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;braceleft&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"braceleft"</span>)]
     </span>XK_braceleft,
     <span class="doccomment">/// XK_bar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;bar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"bar"</span>)]
     </span>XK_bar,
     <span class="doccomment">/// XK_braceright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;braceright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"braceright"</span>)]
     </span>XK_braceright,
     <span class="doccomment">/// XK_asciitilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;asciitilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"asciitilde"</span>)]
     </span>XK_asciitilde,
     <span class="doccomment">/// XK_nobreakspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;nobreakspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"nobreakspace"</span>)]
     </span>XK_nobreakspace,
     <span class="doccomment">/// XK_exclamdown
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;exclamdown&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"exclamdown"</span>)]
     </span>XK_exclamdown,
     <span class="doccomment">/// XK_cent
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;cent&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"cent"</span>)]
     </span>XK_cent,
     <span class="doccomment">/// XK_sterling
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;sterling&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"sterling"</span>)]
     </span>XK_sterling,
     <span class="doccomment">/// XK_currency
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;currency&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"currency"</span>)]
     </span>XK_currency,
     <span class="doccomment">/// XK_yen
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;yen&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"yen"</span>)]
     </span>XK_yen,
     <span class="doccomment">/// XK_brokenbar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;brokenbar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"brokenbar"</span>)]
     </span>XK_brokenbar,
     <span class="doccomment">/// XK_section
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;section&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"section"</span>)]
     </span>XK_section,
     <span class="doccomment">/// XK_diaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;diaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"diaeresis"</span>)]
     </span>XK_diaeresis,
     <span class="doccomment">/// XK_copyright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;copyright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"copyright"</span>)]
     </span>XK_copyright,
     <span class="doccomment">/// XK_ordfeminine
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ordfeminine&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ordfeminine"</span>)]
     </span>XK_ordfeminine,
     <span class="doccomment">/// XK_guillemotleft
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;guillemotleft&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"guillemotleft"</span>)]
     </span>XK_guillemotleft,
     <span class="doccomment">/// XK_notsign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;notsign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"notsign"</span>)]
     </span>XK_notsign,
     <span class="doccomment">/// XK_hyphen
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;hyphen&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"hyphen"</span>)]
     </span>XK_hyphen,
     <span class="doccomment">/// XK_registered
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;registered&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"registered"</span>)]
     </span>XK_registered,
     <span class="doccomment">/// XK_macron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;macron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"macron"</span>)]
     </span>XK_macron,
     <span class="doccomment">/// XK_degree
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;degree&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"degree"</span>)]
     </span>XK_degree,
     <span class="doccomment">/// XK_plusminus
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;plusminus&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"plusminus"</span>)]
     </span>XK_plusminus,
     <span class="doccomment">/// XK_acute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;acute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"acute"</span>)]
     </span>XK_acute,
     <span class="doccomment">/// XK_mu
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;mu&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"mu"</span>)]
     </span>XK_mu,
     <span class="doccomment">/// XK_paragraph
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;paragraph&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"paragraph"</span>)]
     </span>XK_paragraph,
     <span class="doccomment">/// XK_periodcentered
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;periodcentered&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"periodcentered"</span>)]
     </span>XK_periodcentered,
     <span class="doccomment">/// XK_cedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;cedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"cedilla"</span>)]
     </span>XK_cedilla,
     <span class="doccomment">/// XK_masculine
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;masculine&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"masculine"</span>)]
     </span>XK_masculine,
     <span class="doccomment">/// XK_guillemotright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;guillemotright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"guillemotright"</span>)]
     </span>XK_guillemotright,
     <span class="doccomment">/// XK_onequarter
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;onequarter&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"onequarter"</span>)]
     </span>XK_onequarter,
     <span class="doccomment">/// XK_onehalf
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;onehalf&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"onehalf"</span>)]
     </span>XK_onehalf,
     <span class="doccomment">/// XK_threequarters
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;threequarters&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"threequarters"</span>)]
     </span>XK_threequarters,
     <span class="doccomment">/// XK_questiondown
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;questiondown&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"questiondown"</span>)]
     </span>XK_questiondown,
     <span class="doccomment">/// XK_Aacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Aacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Aacute"</span>)]
     </span>XK_Aacute,
     <span class="doccomment">/// XK_Atilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Atilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Atilde"</span>)]
     </span>XK_Atilde,
     <span class="doccomment">/// XK_Adiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Adiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Adiaeresis"</span>)]
     </span>XK_Adiaeresis,
     <span class="doccomment">/// XK_Aring
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Aring&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Aring"</span>)]
     </span>XK_Aring,
     <span class="doccomment">/// XK_AE
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;AE&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"AE"</span>)]
     </span>XK_AE,
     <span class="doccomment">/// XK_Ccedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ccedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ccedilla"</span>)]
     </span>XK_Ccedilla,
     <span class="doccomment">/// XK_Eacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Eacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Eacute"</span>)]
     </span>XK_Eacute,
     <span class="doccomment">/// XK_Ediaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ediaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ediaeresis"</span>)]
     </span>XK_Ediaeresis,
     <span class="doccomment">/// XK_Iacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Iacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Iacute"</span>)]
     </span>XK_Iacute,
     <span class="doccomment">/// XK_Idiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Idiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Idiaeresis"</span>)]
     </span>XK_Idiaeresis,
     <span class="doccomment">/// XK_ETH
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ETH&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ETH"</span>)]
     </span>XK_ETH,
     <span class="doccomment">/// XK_Eth
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Eth&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Eth"</span>)]
     </span>XK_Eth,
     <span class="doccomment">/// XK_Ntilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ntilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ntilde"</span>)]
     </span>XK_Ntilde,
     <span class="doccomment">/// XK_Oacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Oacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Oacute"</span>)]
     </span>XK_Oacute,
     <span class="doccomment">/// XK_Otilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Otilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Otilde"</span>)]
     </span>XK_Otilde,
     <span class="doccomment">/// XK_Odiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Odiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Odiaeresis"</span>)]
     </span>XK_Odiaeresis,
     <span class="doccomment">/// XK_multiply
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;multiply&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"multiply"</span>)]
     </span>XK_multiply,
     <span class="doccomment">/// XK_Oslash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Oslash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Oslash"</span>)]
     </span>XK_Oslash,
     <span class="doccomment">/// XK_Ooblique
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ooblique&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ooblique"</span>)]
     </span>XK_Ooblique,
     <span class="doccomment">/// XK_Uacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Uacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Uacute"</span>)]
     </span>XK_Uacute,
     <span class="doccomment">/// XK_Udiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Udiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Udiaeresis"</span>)]
     </span>XK_Udiaeresis,
     <span class="doccomment">/// XK_Yacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Yacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Yacute"</span>)]
     </span>XK_Yacute,
     <span class="doccomment">/// XK_ssharp
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ssharp&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ssharp"</span>)]
     </span>XK_ssharp,
     <span class="doccomment">/// XK_aacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;aacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"aacute"</span>)]
     </span>XK_aacute,
     <span class="doccomment">/// XK_atilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;atilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"atilde"</span>)]
     </span>XK_atilde,
     <span class="doccomment">/// XK_adiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;adiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"adiaeresis"</span>)]
     </span>XK_adiaeresis,
     <span class="doccomment">/// XK_aring
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;aring&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"aring"</span>)]
     </span>XK_aring,
     <span class="doccomment">/// XK_ae
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ae&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ae"</span>)]
     </span>XK_ae,
     <span class="doccomment">/// XK_ccedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ccedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ccedilla"</span>)]
     </span>XK_ccedilla,
     <span class="doccomment">/// XK_eacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;eacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"eacute"</span>)]
     </span>XK_eacute,
     <span class="doccomment">/// XK_ediaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ediaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ediaeresis"</span>)]
     </span>XK_ediaeresis,
     <span class="doccomment">/// XK_iacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;iacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"iacute"</span>)]
     </span>XK_iacute,
     <span class="doccomment">/// XK_idiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;idiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"idiaeresis"</span>)]
     </span>XK_idiaeresis,
     <span class="doccomment">/// XK_eth
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;eth&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"eth"</span>)]
     </span>XK_eth,
     <span class="doccomment">/// XK_ntilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ntilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ntilde"</span>)]
     </span>XK_ntilde,
     <span class="doccomment">/// XK_oacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;oacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"oacute"</span>)]
     </span>XK_oacute,
     <span class="doccomment">/// XK_otilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;otilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"otilde"</span>)]
     </span>XK_otilde,
     <span class="doccomment">/// XK_odiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;odiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"odiaeresis"</span>)]
     </span>XK_odiaeresis,
     <span class="doccomment">/// XK_division
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;division&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"division"</span>)]
     </span>XK_division,
     <span class="doccomment">/// XK_oslash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;oslash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"oslash"</span>)]
     </span>XK_oslash,
     <span class="doccomment">/// XK_ooblique
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ooblique&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ooblique"</span>)]
     </span>XK_ooblique,
     <span class="doccomment">/// XK_uacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;uacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"uacute"</span>)]
     </span>XK_uacute,
     <span class="doccomment">/// XK_udiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;udiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"udiaeresis"</span>)]
     </span>XK_udiaeresis,
     <span class="doccomment">/// XK_yacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;yacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"yacute"</span>)]
     </span>XK_yacute,
     <span class="doccomment">/// XK_ydiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ydiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ydiaeresis"</span>)]
     </span>XK_ydiaeresis,
     <span class="doccomment">/// XK_Aogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Aogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Aogonek"</span>)]
     </span>XK_Aogonek,
     <span class="doccomment">/// XK_breve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;breve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"breve"</span>)]
     </span>XK_breve,
     <span class="doccomment">/// XK_Lstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Lstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Lstroke"</span>)]
     </span>XK_Lstroke,
     <span class="doccomment">/// XK_Lcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Lcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Lcaron"</span>)]
     </span>XK_Lcaron,
     <span class="doccomment">/// XK_Sacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Sacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Sacute"</span>)]
     </span>XK_Sacute,
     <span class="doccomment">/// XK_Scaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Scaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Scaron"</span>)]
     </span>XK_Scaron,
     <span class="doccomment">/// XK_Scedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Scedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Scedilla"</span>)]
     </span>XK_Scedilla,
     <span class="doccomment">/// XK_Tcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Tcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Tcaron"</span>)]
     </span>XK_Tcaron,
     <span class="doccomment">/// XK_Zacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Zacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Zacute"</span>)]
     </span>XK_Zacute,
     <span class="doccomment">/// XK_Zcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Zcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Zcaron"</span>)]
     </span>XK_Zcaron,
     <span class="doccomment">/// XK_aogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;aogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"aogonek"</span>)]
     </span>XK_aogonek,
     <span class="doccomment">/// XK_ogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ogonek"</span>)]
     </span>XK_ogonek,
     <span class="doccomment">/// XK_lstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lstroke"</span>)]
     </span>XK_lstroke,
     <span class="doccomment">/// XK_lcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lcaron"</span>)]
     </span>XK_lcaron,
     <span class="doccomment">/// XK_sacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;sacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"sacute"</span>)]
     </span>XK_sacute,
     <span class="doccomment">/// XK_caron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;caron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"caron"</span>)]
     </span>XK_caron,
     <span class="doccomment">/// XK_scaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;scaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"scaron"</span>)]
     </span>XK_scaron,
     <span class="doccomment">/// XK_scedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;scedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"scedilla"</span>)]
     </span>XK_scedilla,
     <span class="doccomment">/// XK_tcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;tcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"tcaron"</span>)]
     </span>XK_tcaron,
     <span class="doccomment">/// XK_zacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;zacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"zacute"</span>)]
     </span>XK_zacute,
     <span class="doccomment">/// XK_doubleacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;doubleacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"doubleacute"</span>)]
     </span>XK_doubleacute,
     <span class="doccomment">/// XK_zcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;zcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"zcaron"</span>)]
     </span>XK_zcaron,
     <span class="doccomment">/// XK_Racute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Racute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Racute"</span>)]
     </span>XK_Racute,
     <span class="doccomment">/// XK_Abreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Abreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Abreve"</span>)]
     </span>XK_Abreve,
     <span class="doccomment">/// XK_Lacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Lacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Lacute"</span>)]
     </span>XK_Lacute,
     <span class="doccomment">/// XK_Cacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Cacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Cacute"</span>)]
     </span>XK_Cacute,
     <span class="doccomment">/// XK_Ccaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ccaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ccaron"</span>)]
     </span>XK_Ccaron,
     <span class="doccomment">/// XK_Eogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Eogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Eogonek"</span>)]
     </span>XK_Eogonek,
     <span class="doccomment">/// XK_Ecaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ecaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ecaron"</span>)]
     </span>XK_Ecaron,
     <span class="doccomment">/// XK_Dcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Dcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Dcaron"</span>)]
     </span>XK_Dcaron,
     <span class="doccomment">/// XK_Dstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Dstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Dstroke"</span>)]
     </span>XK_Dstroke,
     <span class="doccomment">/// XK_Nacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Nacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Nacute"</span>)]
     </span>XK_Nacute,
     <span class="doccomment">/// XK_Ncaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ncaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ncaron"</span>)]
     </span>XK_Ncaron,
     <span class="doccomment">/// XK_Odoubleacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Odoubleacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Odoubleacute"</span>)]
     </span>XK_Odoubleacute,
     <span class="doccomment">/// XK_Rcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Rcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Rcaron"</span>)]
     </span>XK_Rcaron,
     <span class="doccomment">/// XK_Uring
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Uring&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Uring"</span>)]
     </span>XK_Uring,
     <span class="doccomment">/// XK_Udoubleacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Udoubleacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Udoubleacute"</span>)]
     </span>XK_Udoubleacute,
     <span class="doccomment">/// XK_Tcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Tcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Tcedilla"</span>)]
     </span>XK_Tcedilla,
     <span class="doccomment">/// XK_racute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;racute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"racute"</span>)]
     </span>XK_racute,
     <span class="doccomment">/// XK_abreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;abreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"abreve"</span>)]
     </span>XK_abreve,
     <span class="doccomment">/// XK_lacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lacute"</span>)]
     </span>XK_lacute,
     <span class="doccomment">/// XK_cacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;cacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"cacute"</span>)]
     </span>XK_cacute,
     <span class="doccomment">/// XK_ccaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ccaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ccaron"</span>)]
     </span>XK_ccaron,
     <span class="doccomment">/// XK_eogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;eogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"eogonek"</span>)]
     </span>XK_eogonek,
     <span class="doccomment">/// XK_ecaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ecaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ecaron"</span>)]
     </span>XK_ecaron,
     <span class="doccomment">/// XK_dcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;dcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"dcaron"</span>)]
     </span>XK_dcaron,
     <span class="doccomment">/// XK_dstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;dstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"dstroke"</span>)]
     </span>XK_dstroke,
     <span class="doccomment">/// XK_nacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;nacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"nacute"</span>)]
     </span>XK_nacute,
     <span class="doccomment">/// XK_ncaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ncaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ncaron"</span>)]
     </span>XK_ncaron,
     <span class="doccomment">/// XK_odoubleacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;odoubleacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"odoubleacute"</span>)]
     </span>XK_odoubleacute,
     <span class="doccomment">/// XK_rcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rcaron"</span>)]
     </span>XK_rcaron,
     <span class="doccomment">/// XK_uring
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;uring&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"uring"</span>)]
     </span>XK_uring,
     <span class="doccomment">/// XK_udoubleacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;udoubleacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"udoubleacute"</span>)]
     </span>XK_udoubleacute,
     <span class="doccomment">/// XK_tcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;tcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"tcedilla"</span>)]
     </span>XK_tcedilla,
     <span class="doccomment">/// XK_Hstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Hstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Hstroke"</span>)]
     </span>XK_Hstroke,
     <span class="doccomment">/// XK_Gbreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Gbreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Gbreve"</span>)]
     </span>XK_Gbreve,
     <span class="doccomment">/// XK_hstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;hstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"hstroke"</span>)]
     </span>XK_hstroke,
     <span class="doccomment">/// XK_idotless
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;idotless&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"idotless"</span>)]
     </span>XK_idotless,
     <span class="doccomment">/// XK_gbreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;gbreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"gbreve"</span>)]
     </span>XK_gbreve,
     <span class="doccomment">/// XK_Ubreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ubreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ubreve"</span>)]
     </span>XK_Ubreve,
     <span class="doccomment">/// XK_ubreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ubreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ubreve"</span>)]
     </span>XK_ubreve,
     <span class="doccomment">/// XK_kra
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;kra&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"kra"</span>)]
     </span>XK_kra,
     <span class="doccomment">/// XK_kappa
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;kappa&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"kappa"</span>)]
     </span>XK_kappa,
     <span class="doccomment">/// XK_Rcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Rcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Rcedilla"</span>)]
     </span>XK_Rcedilla,
     <span class="doccomment">/// XK_Itilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Itilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Itilde"</span>)]
     </span>XK_Itilde,
     <span class="doccomment">/// XK_Lcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Lcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Lcedilla"</span>)]
     </span>XK_Lcedilla,
     <span class="doccomment">/// XK_Emacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Emacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Emacron"</span>)]
     </span>XK_Emacron,
     <span class="doccomment">/// XK_Gcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Gcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Gcedilla"</span>)]
     </span>XK_Gcedilla,
     <span class="doccomment">/// XK_Tslash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Tslash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Tslash"</span>)]
     </span>XK_Tslash,
     <span class="doccomment">/// XK_rcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rcedilla"</span>)]
     </span>XK_rcedilla,
     <span class="doccomment">/// XK_itilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;itilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"itilde"</span>)]
     </span>XK_itilde,
     <span class="doccomment">/// XK_lcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lcedilla"</span>)]
     </span>XK_lcedilla,
     <span class="doccomment">/// XK_emacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;emacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"emacron"</span>)]
     </span>XK_emacron,
     <span class="doccomment">/// XK_gcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;gcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"gcedilla"</span>)]
     </span>XK_gcedilla,
     <span class="doccomment">/// XK_tslash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;tslash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"tslash"</span>)]
     </span>XK_tslash,
     <span class="doccomment">/// XK_ENG
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ENG&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ENG"</span>)]
     </span>XK_ENG,
     <span class="doccomment">/// XK_eng
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;eng&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"eng"</span>)]
     </span>XK_eng,
     <span class="doccomment">/// XK_Amacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Amacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Amacron"</span>)]
     </span>XK_Amacron,
     <span class="doccomment">/// XK_Iogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Iogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Iogonek"</span>)]
     </span>XK_Iogonek,
     <span class="doccomment">/// XK_Imacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Imacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Imacron"</span>)]
     </span>XK_Imacron,
     <span class="doccomment">/// XK_Ncedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ncedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ncedilla"</span>)]
     </span>XK_Ncedilla,
     <span class="doccomment">/// XK_Omacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Omacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Omacron"</span>)]
     </span>XK_Omacron,
     <span class="doccomment">/// XK_Kcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Kcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Kcedilla"</span>)]
     </span>XK_Kcedilla,
     <span class="doccomment">/// XK_Uogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Uogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Uogonek"</span>)]
     </span>XK_Uogonek,
     <span class="doccomment">/// XK_Utilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Utilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Utilde"</span>)]
     </span>XK_Utilde,
     <span class="doccomment">/// XK_Umacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Umacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Umacron"</span>)]
     </span>XK_Umacron,
     <span class="doccomment">/// XK_amacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;amacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"amacron"</span>)]
     </span>XK_amacron,
     <span class="doccomment">/// XK_iogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;iogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"iogonek"</span>)]
     </span>XK_iogonek,
     <span class="doccomment">/// XK_imacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;imacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"imacron"</span>)]
     </span>XK_imacron,
     <span class="doccomment">/// XK_ncedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ncedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ncedilla"</span>)]
     </span>XK_ncedilla,
     <span class="doccomment">/// XK_omacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;omacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"omacron"</span>)]
     </span>XK_omacron,
     <span class="doccomment">/// XK_kcedilla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;kcedilla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"kcedilla"</span>)]
     </span>XK_kcedilla,
     <span class="doccomment">/// XK_uogonek
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;uogonek&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"uogonek"</span>)]
     </span>XK_uogonek,
     <span class="doccomment">/// XK_utilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;utilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"utilde"</span>)]
     </span>XK_utilde,
     <span class="doccomment">/// XK_umacron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;umacron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"umacron"</span>)]
     </span>XK_umacron,
     <span class="doccomment">/// XK_Wacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Wacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Wacute"</span>)]
     </span>XK_Wacute,
     <span class="doccomment">/// XK_wacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;wacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"wacute"</span>)]
     </span>XK_wacute,
     <span class="doccomment">/// XK_Wdiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Wdiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Wdiaeresis"</span>)]
     </span>XK_Wdiaeresis,
     <span class="doccomment">/// XK_wdiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;wdiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"wdiaeresis"</span>)]
     </span>XK_wdiaeresis,
     <span class="doccomment">/// XK_OE
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;OE&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"OE"</span>)]
     </span>XK_OE,
     <span class="doccomment">/// XK_oe
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;oe&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"oe"</span>)]
     </span>XK_oe,
     <span class="doccomment">/// XK_Ydiaeresis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ydiaeresis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ydiaeresis"</span>)]
     </span>XK_Ydiaeresis,
     <span class="doccomment">/// XK_overline
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;overline&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"overline"</span>)]
     </span>XK_overline,
     <span class="doccomment">/// XK_prolongedsound
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;prolongedsound&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"prolongedsound"</span>)]
     </span>XK_prolongedsound,
     <span class="doccomment">/// XK_voicedsound
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;voicedsound&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"voicedsound"</span>)]
     </span>XK_voicedsound,
     <span class="doccomment">/// XK_semivoicedsound
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;semivoicedsound&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"semivoicedsound"</span>)]
     </span>XK_semivoicedsound,
     <span class="doccomment">/// XK_numerosign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;numerosign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"numerosign"</span>)]
     </span>XK_numerosign,
     <span class="doccomment">/// XK_leftradical
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftradical&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftradical"</span>)]
     </span>XK_leftradical,
     <span class="doccomment">/// XK_topleftradical
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;topleftradical&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"topleftradical"</span>)]
     </span>XK_topleftradical,
     <span class="doccomment">/// XK_horizconnector
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;horizconnector&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"horizconnector"</span>)]
     </span>XK_horizconnector,
     <span class="doccomment">/// XK_topintegral
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;topintegral&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"topintegral"</span>)]
     </span>XK_topintegral,
     <span class="doccomment">/// XK_botintegral
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;botintegral&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"botintegral"</span>)]
     </span>XK_botintegral,
     <span class="doccomment">/// XK_vertconnector
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;vertconnector&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"vertconnector"</span>)]
     </span>XK_vertconnector,
     <span class="doccomment">/// XK_topleftsqbracket
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;topleftsqbracket&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"topleftsqbracket"</span>)]
     </span>XK_topleftsqbracket,
     <span class="doccomment">/// XK_botleftsqbracket
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;botleftsqbracket&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"botleftsqbracket"</span>)]
     </span>XK_botleftsqbracket,
     <span class="doccomment">/// XK_toprightsqbracket
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;toprightsqbracket&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"toprightsqbracket"</span>)]
     </span>XK_toprightsqbracket,
     <span class="doccomment">/// XK_botrightsqbracket
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;botrightsqbracket&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"botrightsqbracket"</span>)]
     </span>XK_botrightsqbracket,
     <span class="doccomment">/// XK_topleftparens
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;topleftparens&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"topleftparens"</span>)]
     </span>XK_topleftparens,
     <span class="doccomment">/// XK_botleftparens
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;botleftparens&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"botleftparens"</span>)]
     </span>XK_botleftparens,
     <span class="doccomment">/// XK_toprightparens
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;toprightparens&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"toprightparens"</span>)]
     </span>XK_toprightparens,
     <span class="doccomment">/// XK_botrightparens
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;botrightparens&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"botrightparens"</span>)]
     </span>XK_botrightparens,
     <span class="doccomment">/// XK_leftmiddlecurlybrace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftmiddlecurlybrace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftmiddlecurlybrace"</span>)]
     </span>XK_leftmiddlecurlybrace,
     <span class="doccomment">/// XK_rightmiddlecurlybrace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightmiddlecurlybrace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightmiddlecurlybrace"</span>)]
     </span>XK_rightmiddlecurlybrace,
     <span class="doccomment">/// XK_lessthanequal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lessthanequal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lessthanequal"</span>)]
     </span>XK_lessthanequal,
     <span class="doccomment">/// XK_notequal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;notequal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"notequal"</span>)]
     </span>XK_notequal,
     <span class="doccomment">/// XK_greaterthanequal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;greaterthanequal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"greaterthanequal"</span>)]
     </span>XK_greaterthanequal,
     <span class="doccomment">/// XK_integral
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;integral&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"integral"</span>)]
     </span>XK_integral,
     <span class="doccomment">/// XK_therefore
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;therefore&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"therefore"</span>)]
     </span>XK_therefore,
     <span class="doccomment">/// XK_variation
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;variation&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"variation"</span>)]
     </span>XK_variation,
     <span class="doccomment">/// XK_infinity
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;infinity&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"infinity"</span>)]
     </span>XK_infinity,
     <span class="doccomment">/// XK_nabla
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;nabla&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"nabla"</span>)]
     </span>XK_nabla,
     <span class="doccomment">/// XK_approximate
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;approximate&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"approximate"</span>)]
     </span>XK_approximate,
     <span class="doccomment">/// XK_similarequal
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;similarequal&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"similarequal"</span>)]
     </span>XK_similarequal,
     <span class="doccomment">/// XK_ifonlyif
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ifonlyif&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ifonlyif"</span>)]
     </span>XK_ifonlyif,
     <span class="doccomment">/// XK_implies
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;implies&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"implies"</span>)]
     </span>XK_implies,
     <span class="doccomment">/// XK_identical
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;identical&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"identical"</span>)]
     </span>XK_identical,
     <span class="doccomment">/// XK_radical
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;radical&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"radical"</span>)]
     </span>XK_radical,
     <span class="doccomment">/// XK_includedin
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;includedin&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"includedin"</span>)]
     </span>XK_includedin,
     <span class="doccomment">/// XK_includes
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;includes&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"includes"</span>)]
     </span>XK_includes,
     <span class="doccomment">/// XK_intersection
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;intersection&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"intersection"</span>)]
     </span>XK_intersection,
     <span class="doccomment">/// XK_union
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;union&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"union"</span>)]
     </span>XK_union,
     <span class="doccomment">/// XK_logicaland
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;logicaland&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"logicaland"</span>)]
     </span>XK_logicaland,
     <span class="doccomment">/// XK_logicalor
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;logicalor&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"logicalor"</span>)]
     </span>XK_logicalor,
     <span class="doccomment">/// XK_partialderivative
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;partialderivative&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"partialderivative"</span>)]
     </span>XK_partialderivative,
     <span class="doccomment">/// XK_function
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;function&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"function"</span>)]
     </span>XK_function,
     <span class="doccomment">/// XK_leftarrow
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftarrow&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftarrow"</span>)]
     </span>XK_leftarrow,
     <span class="doccomment">/// XK_uparrow
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;uparrow&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"uparrow"</span>)]
     </span>XK_uparrow,
     <span class="doccomment">/// XK_rightarrow
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightarrow&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightarrow"</span>)]
     </span>XK_rightarrow,
     <span class="doccomment">/// XK_downarrow
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;downarrow&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"downarrow"</span>)]
     </span>XK_downarrow,
     <span class="doccomment">/// XK_blank
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;blank&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"blank"</span>)]
     </span>XK_blank,
     <span class="doccomment">/// XK_soliddiamond
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;soliddiamond&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"soliddiamond"</span>)]
     </span>XK_soliddiamond,
     <span class="doccomment">/// XK_checkerboard
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;checkerboard&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"checkerboard"</span>)]
     </span>XK_checkerboard,
     <span class="doccomment">/// XK_ht
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ht&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ht"</span>)]
     </span>XK_ht,
     <span class="doccomment">/// XK_ff
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ff&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ff"</span>)]
     </span>XK_ff,
     <span class="doccomment">/// XK_cr
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;cr&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"cr"</span>)]
     </span>XK_cr,
     <span class="doccomment">/// XK_lf
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lf&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lf"</span>)]
     </span>XK_lf,
     <span class="doccomment">/// XK_nl
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;nl&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"nl"</span>)]
     </span>XK_nl,
     <span class="doccomment">/// XK_vt
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;vt&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"vt"</span>)]
     </span>XK_vt,
     <span class="doccomment">/// XK_lowrightcorner
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lowrightcorner&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lowrightcorner"</span>)]
     </span>XK_lowrightcorner,
     <span class="doccomment">/// XK_uprightcorner
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;uprightcorner&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"uprightcorner"</span>)]
     </span>XK_uprightcorner,
     <span class="doccomment">/// XK_upleftcorner
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;upleftcorner&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"upleftcorner"</span>)]
     </span>XK_upleftcorner,
     <span class="doccomment">/// XK_lowleftcorner
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lowleftcorner&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lowleftcorner"</span>)]
     </span>XK_lowleftcorner,
     <span class="doccomment">/// XK_crossinglines
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;crossinglines&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"crossinglines"</span>)]
     </span>XK_crossinglines,
     <span class="doccomment">/// XK_leftt
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftt&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftt"</span>)]
     </span>XK_leftt,
     <span class="doccomment">/// XK_rightt
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightt&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightt"</span>)]
     </span>XK_rightt,
     <span class="doccomment">/// XK_bott
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;bott&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"bott"</span>)]
     </span>XK_bott,
     <span class="doccomment">/// XK_topt
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;topt&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"topt"</span>)]
     </span>XK_topt,
     <span class="doccomment">/// XK_vertbar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;vertbar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"vertbar"</span>)]
     </span>XK_vertbar,
     <span class="doccomment">/// XK_emspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;emspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"emspace"</span>)]
     </span>XK_emspace,
     <span class="doccomment">/// XK_enspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;enspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"enspace"</span>)]
     </span>XK_enspace,
     <span class="doccomment">/// XK_em3space
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;em3space&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"em3space"</span>)]
     </span>XK_em3space,
     <span class="doccomment">/// XK_em4space
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;em4space&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"em4space"</span>)]
     </span>XK_em4space,
     <span class="doccomment">/// XK_digitspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;digitspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"digitspace"</span>)]
     </span>XK_digitspace,
     <span class="doccomment">/// XK_punctspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;punctspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"punctspace"</span>)]
     </span>XK_punctspace,
     <span class="doccomment">/// XK_thinspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;thinspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"thinspace"</span>)]
     </span>XK_thinspace,
     <span class="doccomment">/// XK_hairspace
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;hairspace&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"hairspace"</span>)]
     </span>XK_hairspace,
     <span class="doccomment">/// XK_emdash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;emdash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"emdash"</span>)]
     </span>XK_emdash,
     <span class="doccomment">/// XK_endash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;endash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"endash"</span>)]
     </span>XK_endash,
     <span class="doccomment">/// XK_signifblank
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;signifblank&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"signifblank"</span>)]
     </span>XK_signifblank,
     <span class="doccomment">/// XK_ellipsis
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ellipsis&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ellipsis"</span>)]
     </span>XK_ellipsis,
     <span class="doccomment">/// XK_doubbaselinedot
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;doubbaselinedot&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"doubbaselinedot"</span>)]
     </span>XK_doubbaselinedot,
     <span class="doccomment">/// XK_onethird
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;onethird&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"onethird"</span>)]
     </span>XK_onethird,
     <span class="doccomment">/// XK_twothirds
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;twothirds&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"twothirds"</span>)]
     </span>XK_twothirds,
     <span class="doccomment">/// XK_onefifth
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;onefifth&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"onefifth"</span>)]
     </span>XK_onefifth,
     <span class="doccomment">/// XK_twofifths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;twofifths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"twofifths"</span>)]
     </span>XK_twofifths,
     <span class="doccomment">/// XK_threefifths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;threefifths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"threefifths"</span>)]
     </span>XK_threefifths,
     <span class="doccomment">/// XK_fourfifths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;fourfifths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"fourfifths"</span>)]
     </span>XK_fourfifths,
     <span class="doccomment">/// XK_onesixth
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;onesixth&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"onesixth"</span>)]
     </span>XK_onesixth,
     <span class="doccomment">/// XK_fivesixths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;fivesixths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"fivesixths"</span>)]
     </span>XK_fivesixths,
     <span class="doccomment">/// XK_careof
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;careof&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"careof"</span>)]
     </span>XK_careof,
     <span class="doccomment">/// XK_figdash
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;figdash&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"figdash"</span>)]
     </span>XK_figdash,
     <span class="doccomment">/// XK_leftanglebracket
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftanglebracket&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftanglebracket"</span>)]
     </span>XK_leftanglebracket,
     <span class="doccomment">/// XK_decimalpoint
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;decimalpoint&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"decimalpoint"</span>)]
     </span>XK_decimalpoint,
     <span class="doccomment">/// XK_rightanglebracket
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightanglebracket&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightanglebracket"</span>)]
     </span>XK_rightanglebracket,
     <span class="doccomment">/// XK_marker
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;marker&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"marker"</span>)]
     </span>XK_marker,
     <span class="doccomment">/// XK_oneeighth
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;oneeighth&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"oneeighth"</span>)]
     </span>XK_oneeighth,
     <span class="doccomment">/// XK_threeeighths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;threeeighths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"threeeighths"</span>)]
     </span>XK_threeeighths,
     <span class="doccomment">/// XK_fiveeighths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;fiveeighths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"fiveeighths"</span>)]
     </span>XK_fiveeighths,
     <span class="doccomment">/// XK_seveneighths
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;seveneighths&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"seveneighths"</span>)]
     </span>XK_seveneighths,
     <span class="doccomment">/// XK_trademark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;trademark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"trademark"</span>)]
     </span>XK_trademark,
     <span class="doccomment">/// XK_signaturemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;signaturemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"signaturemark"</span>)]
     </span>XK_signaturemark,
     <span class="doccomment">/// XK_leftopentriangle
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftopentriangle&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftopentriangle"</span>)]
     </span>XK_leftopentriangle,
     <span class="doccomment">/// XK_rightopentriangle
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightopentriangle&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightopentriangle"</span>)]
     </span>XK_rightopentriangle,
     <span class="doccomment">/// XK_emopenrectangle
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;emopenrectangle&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"emopenrectangle"</span>)]
     </span>XK_emopenrectangle,
     <span class="doccomment">/// XK_leftsinglequotemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftsinglequotemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftsinglequotemark"</span>)]
     </span>XK_leftsinglequotemark,
     <span class="doccomment">/// XK_rightsinglequotemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightsinglequotemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightsinglequotemark"</span>)]
     </span>XK_rightsinglequotemark,
     <span class="doccomment">/// XK_leftdoublequotemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftdoublequotemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftdoublequotemark"</span>)]
     </span>XK_leftdoublequotemark,
     <span class="doccomment">/// XK_rightdoublequotemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightdoublequotemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightdoublequotemark"</span>)]
     </span>XK_rightdoublequotemark,
     <span class="doccomment">/// XK_prescription
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;prescription&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"prescription"</span>)]
     </span>XK_prescription,
     <span class="doccomment">/// XK_permille
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;permille&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"permille"</span>)]
     </span>XK_permille,
     <span class="doccomment">/// XK_minutes
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;minutes&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"minutes"</span>)]
     </span>XK_minutes,
     <span class="doccomment">/// XK_seconds
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;seconds&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"seconds"</span>)]
     </span>XK_seconds,
     <span class="doccomment">/// XK_latincross
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;latincross&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"latincross"</span>)]
     </span>XK_latincross,
     <span class="doccomment">/// XK_hexagram
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;hexagram&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"hexagram"</span>)]
     </span>XK_hexagram,
     <span class="doccomment">/// XK_emfilledrect
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;emfilledrect&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"emfilledrect"</span>)]
     </span>XK_emfilledrect,
     <span class="doccomment">/// XK_openstar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;openstar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"openstar"</span>)]
     </span>XK_openstar,
     <span class="doccomment">/// XK_leftpointer
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftpointer&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftpointer"</span>)]
     </span>XK_leftpointer,
     <span class="doccomment">/// XK_rightpointer
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightpointer&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightpointer"</span>)]
     </span>XK_rightpointer,
     <span class="doccomment">/// XK_club
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;club&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"club"</span>)]
     </span>XK_club,
     <span class="doccomment">/// XK_diamond
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;diamond&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"diamond"</span>)]
     </span>XK_diamond,
     <span class="doccomment">/// XK_heart
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;heart&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"heart"</span>)]
     </span>XK_heart,
     <span class="doccomment">/// XK_maltesecross
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;maltesecross&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"maltesecross"</span>)]
     </span>XK_maltesecross,
     <span class="doccomment">/// XK_dagger
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;dagger&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"dagger"</span>)]
     </span>XK_dagger,
     <span class="doccomment">/// XK_doubledagger
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;doubledagger&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"doubledagger"</span>)]
     </span>XK_doubledagger,
     <span class="doccomment">/// XK_checkmark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;checkmark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"checkmark"</span>)]
     </span>XK_checkmark,
     <span class="doccomment">/// XK_ballotcross
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ballotcross&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ballotcross"</span>)]
     </span>XK_ballotcross,
     <span class="doccomment">/// XK_musicalsharp
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;musicalsharp&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"musicalsharp"</span>)]
     </span>XK_musicalsharp,
     <span class="doccomment">/// XK_musicalflat
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;musicalflat&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"musicalflat"</span>)]
     </span>XK_musicalflat,
     <span class="doccomment">/// XK_malesymbol
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;malesymbol&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"malesymbol"</span>)]
     </span>XK_malesymbol,
     <span class="doccomment">/// XK_femalesymbol
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;femalesymbol&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"femalesymbol"</span>)]
     </span>XK_femalesymbol,
     <span class="doccomment">/// XK_telephone
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;telephone&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"telephone"</span>)]
     </span>XK_telephone,
     <span class="doccomment">/// XK_telephonerecorder
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;telephonerecorder&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"telephonerecorder"</span>)]
     </span>XK_telephonerecorder,
     <span class="doccomment">/// XK_phonographcopyright
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;phonographcopyright&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"phonographcopyright"</span>)]
     </span>XK_phonographcopyright,
     <span class="doccomment">/// XK_caret
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;caret&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"caret"</span>)]
     </span>XK_caret,
     <span class="doccomment">/// XK_singlelowquotemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;singlelowquotemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"singlelowquotemark"</span>)]
     </span>XK_singlelowquotemark,
     <span class="doccomment">/// XK_doublelowquotemark
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;doublelowquotemark&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"doublelowquotemark"</span>)]
     </span>XK_doublelowquotemark,
     <span class="doccomment">/// XK_cursor
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;cursor&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"cursor"</span>)]
     </span>XK_cursor,
     <span class="doccomment">/// XK_leftcaret
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftcaret&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftcaret"</span>)]
     </span>XK_leftcaret,
     <span class="doccomment">/// XK_rightcaret
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightcaret&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightcaret"</span>)]
     </span>XK_rightcaret,
     <span class="doccomment">/// XK_downcaret
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;downcaret&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"downcaret"</span>)]
     </span>XK_downcaret,
     <span class="doccomment">/// XK_upcaret
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;upcaret&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"upcaret"</span>)]
     </span>XK_upcaret,
     <span class="doccomment">/// XK_overbar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;overbar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"overbar"</span>)]
     </span>XK_overbar,
     <span class="doccomment">/// XK_downtack
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;downtack&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"downtack"</span>)]
     </span>XK_downtack,
     <span class="doccomment">/// XK_upshoe
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;upshoe&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"upshoe"</span>)]
     </span>XK_upshoe,
     <span class="doccomment">/// XK_downstile
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;downstile&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"downstile"</span>)]
     </span>XK_downstile,
     <span class="doccomment">/// XK_underbar
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;underbar&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"underbar"</span>)]
     </span>XK_underbar,
     <span class="doccomment">/// XK_jot
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;jot&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"jot"</span>)]
     </span>XK_jot,
     <span class="doccomment">/// XK_quad
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;quad&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"quad"</span>)]
     </span>XK_quad,
     <span class="doccomment">/// XK_uptack
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;uptack&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"uptack"</span>)]
     </span>XK_uptack,
     <span class="doccomment">/// XK_upstile
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;upstile&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"upstile"</span>)]
     </span>XK_upstile,
     <span class="doccomment">/// XK_downshoe
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;downshoe&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"downshoe"</span>)]
     </span>XK_downshoe,
     <span class="doccomment">/// XK_rightshoe
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;rightshoe&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"rightshoe"</span>)]
     </span>XK_rightshoe,
     <span class="doccomment">/// XK_leftshoe
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;leftshoe&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"leftshoe"</span>)]
     </span>XK_leftshoe,
     <span class="doccomment">/// XK_lefttack
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;lefttack&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"lefttack"</span>)]
     </span>XK_lefttack,
     <span class="doccomment">/// XK_righttack
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;righttack&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"righttack"</span>)]
     </span>XK_righttack,
     <span class="doccomment">/// XK_Korean_Won
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Korean_Won&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Korean_Won"</span>)]
     </span>XK_Korean_Won,
     <span class="doccomment">/// XK_Ibreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ibreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ibreve"</span>)]
     </span>XK_Ibreve,
     <span class="doccomment">/// XK_Zstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Zstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Zstroke"</span>)]
     </span>XK_Zstroke,
     <span class="doccomment">/// XK_Gcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Gcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Gcaron"</span>)]
     </span>XK_Gcaron,
     <span class="doccomment">/// XK_Ocaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ocaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ocaron"</span>)]
     </span>XK_Ocaron,
     <span class="doccomment">/// XK_Obarred
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Obarred&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Obarred"</span>)]
     </span>XK_Obarred,
     <span class="doccomment">/// XK_ibreve
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ibreve&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ibreve"</span>)]
     </span>XK_ibreve,
     <span class="doccomment">/// XK_zstroke
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;zstroke&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"zstroke"</span>)]
     </span>XK_zstroke,
     <span class="doccomment">/// XK_gcaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;gcaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"gcaron"</span>)]
     </span>XK_gcaron,
     <span class="doccomment">/// XK_ocaron
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ocaron&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ocaron"</span>)]
     </span>XK_ocaron,
     <span class="doccomment">/// XK_obarred
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;obarred&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"obarred"</span>)]
     </span>XK_obarred,
     <span class="doccomment">/// XK_SCHWA
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;SCHWA&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"SCHWA"</span>)]
     </span>XK_SCHWA,
     <span class="doccomment">/// XK_schwa
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;schwa&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"schwa"</span>)]
     </span>XK_schwa,
     <span class="doccomment">/// XK_EZH
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;EZH&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"EZH"</span>)]
     </span>XK_EZH,
     <span class="doccomment">/// XK_ezh
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ezh&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ezh"</span>)]
     </span>XK_ezh,
     <span class="doccomment">/// XK_Abreveacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Abreveacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Abreveacute"</span>)]
     </span>XK_Abreveacute,
     <span class="doccomment">/// XK_abreveacute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;abreveacute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"abreveacute"</span>)]
     </span>XK_abreveacute,
     <span class="doccomment">/// XK_Abrevetilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Abrevetilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Abrevetilde"</span>)]
     </span>XK_Abrevetilde,
     <span class="doccomment">/// XK_abrevetilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;abrevetilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"abrevetilde"</span>)]
     </span>XK_abrevetilde,
     <span class="doccomment">/// XK_Etilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Etilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Etilde"</span>)]
     </span>XK_Etilde,
     <span class="doccomment">/// XK_etilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;etilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"etilde"</span>)]
     </span>XK_etilde,
     <span class="doccomment">/// XK_Ytilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;Ytilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"Ytilde"</span>)]
     </span>XK_Ytilde,
     <span class="doccomment">/// XK_ytilde
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ytilde&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ytilde"</span>)]
     </span>XK_ytilde,
     <span class="doccomment">/// XK_EcuSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;EcuSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"EcuSign"</span>)]
     </span>XK_EcuSign,
     <span class="doccomment">/// XK_ColonSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;ColonSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"ColonSign"</span>)]
     </span>XK_ColonSign,
     <span class="doccomment">/// XK_CruzeiroSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;CruzeiroSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"CruzeiroSign"</span>)]
     </span>XK_CruzeiroSign,
     <span class="doccomment">/// XK_FFrancSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;FFrancSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"FFrancSign"</span>)]
     </span>XK_FFrancSign,
     <span class="doccomment">/// XK_LiraSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;LiraSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"LiraSign"</span>)]
     </span>XK_LiraSign,
     <span class="doccomment">/// XK_MillSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;MillSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"MillSign"</span>)]
     </span>XK_MillSign,
     <span class="doccomment">/// XK_NairaSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;NairaSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"NairaSign"</span>)]
     </span>XK_NairaSign,
     <span class="doccomment">/// XK_PesetaSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;PesetaSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"PesetaSign"</span>)]
     </span>XK_PesetaSign,
     <span class="doccomment">/// XK_RupeeSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;RupeeSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"RupeeSign"</span>)]
     </span>XK_RupeeSign,
     <span class="doccomment">/// XK_WonSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;WonSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"WonSign"</span>)]
     </span>XK_WonSign,
     <span class="doccomment">/// XK_NewSheqelSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;NewSheqelSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"NewSheqelSign"</span>)]
     </span>XK_NewSheqelSign,
     <span class="doccomment">/// XK_DongSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;DongSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"DongSign"</span>)]
     </span>XK_DongSign,
     <span class="doccomment">/// XK_EuroSign
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;EuroSign&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"EuroSign"</span>)]
     </span>XK_EuroSign,
 
     <span class="doccomment">/// XF86XK_MonBrightnessUp
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86MonBrightnessUp&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86MonBrightnessUp"</span>)]
     </span>XF86XK_MonBrightnessUp,
 
     <span class="doccomment">/// XF86XK_MonBrightnessDown
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86MonBrightnessDown&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86MonBrightnessDown"</span>)]
     </span>XF86XK_MonBrightnessDown,
 
     <span class="doccomment">/// XF86XK_KbdLightOnOff
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86KbdLightOnOff&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86KbdLightOnOff"</span>)]
     </span>XF86XK_KbdLightOnOff,
 
     <span class="doccomment">/// XF86XK_KbdBrightnessUp
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86KbdBrightnessUp&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86KbdBrightnessUp"</span>)]
     </span>XF86XK_KbdBrightnessUp,
 
     <span class="doccomment">/// XF86XK_KbdBrightnessDown
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86KbdBrightnessDown&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86KbdBrightnessDown"</span>)]
     </span>XF86XK_KbdBrightnessDown,
 
     <span class="doccomment">/// XF86XK_MonBrightnessCycle
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86MonBrightnessCycle&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86MonBrightnessCycle"</span>)]
     </span>XF86XK_MonBrightnessCycle,
 
     <span class="doccomment">/// XF86XK_Standby
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86Standby&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86Standby"</span>)]
     </span>XF86XK_Standby,
 
     <span class="doccomment">/// XF86XK_AudioLowerVolume
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioLowerVolume&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioLowerVolume"</span>)]
     </span>XF86XK_AudioLowerVolume,
     <span class="doccomment">/// XF86XK_AudioMute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioMute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioMute"</span>)]
     </span>XF86XK_AudioMute,
     <span class="doccomment">/// XF86XK_AudioRaiseVolume
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioRaiseVolume&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioRaiseVolume"</span>)]
     </span>XF86XK_AudioRaiseVolume,
     <span class="doccomment">/// XF86XK_AudioPlay
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioPlay&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioPlay"</span>)]
     </span>XF86XK_AudioPlay,
     <span class="doccomment">/// XF86XK_AudioStop
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioStop&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioStop"</span>)]
     </span>XF86XK_AudioStop,
     <span class="doccomment">/// XF86XK_AudioPrev
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioPrev&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioPrev"</span>)]
     </span>XF86XK_AudioPrev,
     <span class="doccomment">/// XF86XK_AudioNext
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioNext&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioNext"</span>)]
     </span>XF86XK_AudioNext,
     <span class="doccomment">/// XF86XK_AudioMicMute
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86AudioMicMute&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86AudioMicMute"</span>)]
     </span>XF86XK_AudioMicMute,
     <span class="doccomment">/// XF86XK_DisplayOff
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86DisplayOff&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86DisplayOff"</span>)]
     </span>XF86XK_DisplayOff,
     <span class="doccomment">/// XF86XK_TouchpadToggle
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86TouchpadToggle&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86TouchpadToggle"</span>)]
     </span>XF86XK_TouchpadToggle,
     <span class="doccomment">/// XF86XK_Calculator
-    </span><span class="attr">#[strum(serialize = <span class="string">&quot;XF86Calculator&quot;</span>)]
+    </span><span class="attr">#[strum(serialize = <span class="string">"XF86Calculator"</span>)]
     </span>XF86XK_Calculator,
 }
 

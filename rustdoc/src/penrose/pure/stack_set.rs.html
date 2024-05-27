@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/stack_set.rs`."><title>stack_set.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/stack_set.rs`."><title>stack_set.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1617,13 +1619,13 @@
         <span class="kw">loop </span>{
             <span class="self">self</span>.screens.focus_down();
             <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.screens.focus.workspace.tag {
-                <span class="comment">// we&#39;ve found and focused the tag
+                <span class="comment">// we've found and focused the tag
                 </span>t <span class="kw">if </span>t == tag =&gt; {
                     <span class="self">self</span>.update_previous_tag(current_tag);
                     <span class="kw">return </span><span class="bool-val">true</span>;
                 }
 
-                <span class="comment">// we&#39;ve looped so this tag isn&#39;t visible
+                <span class="comment">// we've looped so this tag isn't visible
                 </span>t <span class="kw">if </span>t == <span class="kw-2">&amp;</span>current_tag =&gt; <span class="kw">return </span><span class="bool-val">false</span>,
 
                 <span class="comment">// try the next tag
@@ -1721,7 +1723,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>float_unchecked&lt;R: RelativeTo&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: C, r: R) {
-        <span class="kw">let </span>screen = <span class="self">self</span>.screen_for_client(<span class="kw-2">&amp;</span>client).expect(<span class="string">&quot;client to be known&quot;</span>);
+        <span class="kw">let </span>screen = <span class="self">self</span>.screen_for_client(<span class="kw-2">&amp;</span>client).expect(<span class="string">"client to be known"</span>);
         <span class="kw">let </span>r = r.relative_to(<span class="kw-2">&amp;</span>screen.r);
         <span class="self">self</span>.floating.insert(client, r);
     }
@@ -1970,7 +1972,7 @@
             </span>.workspaces()
             .map(|w| w.id)
             .max()
-            .expect(<span class="string">&quot;at least one workspace&quot;</span>)
+            .expect(<span class="string">"at least one workspace"</span>)
             + <span class="number">1</span>;
         <span class="kw">let </span>ws = Workspace::new(id, tag, layouts, <span class="prelude-val">None</span>);
         <span class="self">self</span>.hidden.push_front(ws);
@@ -2054,7 +2056,7 @@
             <span class="kw">return</span>;
         }
 
-        <span class="comment">// We stash the previous tag so that we can restore it after we&#39;ve
+        <span class="comment">// We stash the previous tag so that we can restore it after we've
         // cycled the screens and pulled over tag we were on before.
         </span><span class="kw">let </span>true_previous_tag = <span class="self">self</span>.previous_tag.clone();
         <span class="self">self</span>.next_screen();
@@ -2068,7 +2070,7 @@
             <span class="kw">return</span>;
         }
 
-        <span class="comment">// We stash the previous tag so that we can restore it after we&#39;ve
+        <span class="comment">// We stash the previous tag so that we can restore it after we've
         // cycled the screens and pulled over tag we were on before.
         </span><span class="kw">let </span>true_previous_tag = <span class="self">self</span>.previous_tag.clone();
         <span class="self">self</span>.previous_screen();
@@ -2339,7 +2341,7 @@
     }
 }
 
-<span class="macro">macro_rules! </span>defer_to_current_stack {
+<span class="macro">macro_rules!</span> defer_to_current_stack {
     ($(
         $(<span class="attr">#[<span class="macro-nonterminal">$doc_str</span>:meta]</span>)*
         <span class="macro-nonterminal">$method</span>:ident
@@ -2440,13 +2442,13 @@
             HashMap::new(),
         ) {
             <span class="prelude-val">Ok</span>(s) =&gt; s,
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{e}&quot;</span>),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">"{e}"</span>),
         }
     }
 
-    <span class="attr">#[test_case(<span class="string">&quot;1&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>; <span class="string">&quot;current focused workspace&quot;</span>)]
-    <span class="attr">#[test_case(<span class="string">&quot;2&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>; <span class="string">&quot;visible on other screen&quot;</span>)]
-    <span class="attr">#[test_case(<span class="string">&quot;3&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>; <span class="string">&quot;currently hidden&quot;</span>)]
+    <span class="attr">#[test_case(<span class="string">"1"</span>, <span class="kw-2">&amp;</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]</span>; <span class="string">"current focused workspace"</span>)]
+    <span class="attr">#[test_case(<span class="string">"2"</span>, <span class="kw-2">&amp;</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]</span>; <span class="string">"visible on other screen"</span>)]
+    <span class="attr">#[test_case(<span class="string">"3"</span>, <span class="kw-2">&amp;</span>[<span class="string">"3"</span>, <span class="string">"2"</span>]</span>; <span class="string">"currently hidden"</span>)]
     <span class="attr">#[test]
     </span><span class="kw">fn </span>focus_tag_sets_correct_visible_workspaces(target: <span class="kw-2">&amp;</span>str, vis: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">2</span>);
@@ -2459,22 +2461,22 @@
         <span class="macro">assert_eq!</span>(visible_tags, vis);
     }
 
-    <span class="attr">#[test_case(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;1&quot;</span>), <span class="prelude-val">Some</span>(<span class="string">&quot;3&quot;</span>); <span class="string">&quot;initial focus&quot;</span>)]
-    #[test_case(<span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;2&quot;</span>), <span class="prelude-val">Some</span>(<span class="string">&quot;2&quot;</span>); <span class="string">&quot;other screen&quot;</span>)]
-    #[test_case(<span class="number">2</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>; <span class="string">&quot;out of bounds&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="string">"1"</span>), <span class="prelude-val">Some</span>(<span class="string">"3"</span>); <span class="string">"initial focus"</span>)]
+    #[test_case(<span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="string">"2"</span>), <span class="prelude-val">Some</span>(<span class="string">"2"</span>); <span class="string">"other screen"</span>)]
+    #[test_case(<span class="number">2</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>; <span class="string">"out of bounds"</span>)]
     #[test]
     </span><span class="kw">fn </span>tag_for_screen_works(index: usize, before: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;, after: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">2</span>);
 
         <span class="macro">assert_eq!</span>(s.tag_for_screen(index), before);
-        s.focus_tag(<span class="string">&quot;3&quot;</span>);
+        s.focus_tag(<span class="string">"3"</span>);
         <span class="macro">assert_eq!</span>(s.tag_for_screen(index), after);
     }
 
-    <span class="attr">#[test_case(<span class="number">5</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;1&quot;</span>); <span class="string">&quot;in down&quot;</span>)]
-    #[test_case(<span class="number">6</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;2&quot;</span>); <span class="string">&quot;focus&quot;</span>)]
-    #[test_case(<span class="number">9</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;3&quot;</span>); <span class="string">&quot;in up&quot;</span>)]
-    #[test_case(<span class="number">42</span>, <span class="prelude-val">None</span>; <span class="string">&quot;unknown&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">5</span>, <span class="prelude-val">Some</span>(<span class="string">"1"</span>); <span class="string">"in down"</span>)]
+    #[test_case(<span class="number">6</span>, <span class="prelude-val">Some</span>(<span class="string">"2"</span>); <span class="string">"focus"</span>)]
+    #[test_case(<span class="number">9</span>, <span class="prelude-val">Some</span>(<span class="string">"3"</span>); <span class="string">"in up"</span>)]
+    #[test_case(<span class="number">42</span>, <span class="prelude-val">None</span>; <span class="string">"unknown"</span>)]
     #[test]
     </span><span class="kw">fn </span>tag_for_client_works(client: u8, expected: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
         <span class="kw">let </span>s = test_stack_set_with_stacks(
@@ -2489,11 +2491,11 @@
         <span class="macro">assert_eq!</span>(s.tag_for_client(<span class="kw-2">&amp;</span>client), expected);
     }
 
-    <span class="attr">#[test_case(<span class="prelude-val">None</span>; <span class="string">&quot;empty current stack&quot;</span>)]
-    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">1</span>)); <span class="string">&quot;current stack with one element&quot;</span>)]
-    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>)); <span class="string">&quot;current stack with up&quot;</span>)]
-    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">3</span>]</span>)); <span class="string">&quot;current stack with down&quot;</span>)]
-    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>, [<span class="number">3</span>])); <span class="string">&quot;current stack with up and down&quot;</span>)]
+    <span class="attr">#[test_case(<span class="prelude-val">None</span>; <span class="string">"empty current stack"</span>)]
+    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">1</span>)); <span class="string">"current stack with one element"</span>)]
+    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>)); <span class="string">"current stack with up"</span>)]
+    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">3</span>]</span>)); <span class="string">"current stack with down"</span>)]
+    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>, [<span class="number">3</span>])); <span class="string">"current stack with up and down"</span>)]
     <span class="attr">#[test]
     </span><span class="kw">fn </span>insert(stack: <span class="prelude-ty">Option</span>&lt;Stack&lt;u8&gt;&gt;) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set_with_stacks(<span class="macro">vec!</span>[stack], <span class="number">1</span>);
@@ -2539,7 +2541,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>tags: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = s.workspaces().map(|w| w.tag.as_str()).collect();
         tags.sort();
 
-        <span class="macro">assert_eq!</span>(tags, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;4&quot;</span>, <span class="string">&quot;5&quot;</span>])
+        <span class="macro">assert_eq!</span>(tags, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>, <span class="string">"4"</span>, <span class="string">"5"</span>])
     }
 
     <span class="attr">#[test]
@@ -2548,7 +2550,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>tags: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = s.workspaces_mut().map(|w| w.tag.as_str()).collect();
         tags.sort();
 
-        <span class="macro">assert_eq!</span>(tags, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;4&quot;</span>, <span class="string">&quot;5&quot;</span>])
+        <span class="macro">assert_eq!</span>(tags, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>, <span class="string">"4"</span>, <span class="string">"5"</span>])
     }
 
     <span class="attr">#[test]
@@ -2560,10 +2562,10 @@
         <span class="macro">assert_eq!</span>(clients, <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>])
     }
 
-    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">&quot;current stack with one element&quot;</span>)]
-    #[test_case(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>); <span class="string">&quot;current stack with up&quot;</span>)]
-    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">3</span>]</span>); <span class="string">&quot;current stack with down&quot;</span>)]
-    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>, [<span class="number">3</span>]); <span class="string">&quot;current stack with up and down&quot;</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>); <span class="string">"current stack with one element"</span>)]
+    #[test_case(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>); <span class="string">"current stack with up"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">3</span>]</span>); <span class="string">"current stack with down"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">2</span>]</span>, <span class="number">1</span>, [<span class="number">3</span>]); <span class="string">"current stack with up and down"</span>)]
     <span class="attr">#[test]
     </span><span class="kw">fn </span>contains(stack: Stack&lt;u8&gt;) {
         <span class="kw">let </span>s = test_stack_set_with_stacks(<span class="macro">vec!</span>[<span class="prelude-val">Some</span>(stack)], <span class="number">1</span>);
@@ -2583,12 +2585,12 @@
         };
 
         <span class="macro">assert_eq!</span>(clients(<span class="kw-2">&amp;</span>s), <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
-        s.focus_tag(<span class="string">&quot;2&quot;</span>);
+        s.focus_tag(<span class="string">"2"</span>);
         <span class="macro">assert_eq!</span>(clients(<span class="kw-2">&amp;</span>s), <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
     }
 
-    <span class="attr">#[test_case(<span class="bool-val">true</span>, <span class="number">1</span>; <span class="string">&quot;forward&quot;</span>)]
-    #[test_case(<span class="bool-val">false</span>, <span class="number">2</span>; <span class="string">&quot;backward&quot;</span>)]
+    <span class="attr">#[test_case(<span class="bool-val">true</span>, <span class="number">1</span>; <span class="string">"forward"</span>)]
+    #[test_case(<span class="bool-val">false</span>, <span class="number">2</span>; <span class="string">"backward"</span>)]
     #[test]
     </span><span class="kw">fn </span>screen_change_focuses_new_screen(forward: bool, expected_index: usize) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">3</span>);
@@ -2604,18 +2606,18 @@
         <span class="macro">assert_eq!</span>(s.current_screen().index(), expected_index);
     }
 
-    <span class="attr">#[test_case(<span class="number">1</span>, <span class="bool-val">true</span>, <span class="string">&quot;1&quot;</span>; <span class="string">&quot;single screen forward&quot;</span>)]
-    #[test_case(<span class="number">1</span>, <span class="bool-val">false</span>, <span class="string">&quot;1&quot;</span>; <span class="string">&quot;single screen backward&quot;</span>)]
-    #[test_case(<span class="number">2</span>, <span class="bool-val">true</span>, <span class="string">&quot;3&quot;</span>; <span class="string">&quot;two screens forward&quot;</span>)]
-    #[test_case(<span class="number">2</span>, <span class="bool-val">false</span>, <span class="string">&quot;3&quot;</span>; <span class="string">&quot;two screens backward&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">1</span>, <span class="bool-val">true</span>, <span class="string">"1"</span>; <span class="string">"single screen forward"</span>)]
+    #[test_case(<span class="number">1</span>, <span class="bool-val">false</span>, <span class="string">"1"</span>; <span class="string">"single screen backward"</span>)]
+    #[test_case(<span class="number">2</span>, <span class="bool-val">true</span>, <span class="string">"3"</span>; <span class="string">"two screens forward"</span>)]
+    #[test_case(<span class="number">2</span>, <span class="bool-val">false</span>, <span class="string">"3"</span>; <span class="string">"two screens backward"</span>)]
     #[test]
     </span><span class="kw">fn </span>screen_change_sets_expected_previous_tag(n_screens: usize, forward: bool, tag: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, n_screens);
 
-        s.focus_tag(<span class="string">&quot;3&quot;</span>);
+        s.focus_tag(<span class="string">"3"</span>);
 
-        <span class="macro">assert_eq!</span>(s.current_tag(), <span class="string">&quot;3&quot;</span>);
-        <span class="macro">assert_eq!</span>(s.previous_tag, <span class="string">&quot;1&quot;</span>);
+        <span class="macro">assert_eq!</span>(s.current_tag(), <span class="string">"3"</span>);
+        <span class="macro">assert_eq!</span>(s.previous_tag, <span class="string">"1"</span>);
 
         <span class="kw">if </span>forward {
             s.next_screen();
@@ -2626,13 +2628,13 @@
         <span class="macro">assert_eq!</span>(s.previous_tag, tag);
     }
 
-    <span class="attr">#[test_case(<span class="bool-val">true</span>, <span class="number">1</span>; <span class="string">&quot;forward&quot;</span>)]
-    #[test_case(<span class="bool-val">false</span>, <span class="number">2</span>; <span class="string">&quot;backward&quot;</span>)]
+    <span class="attr">#[test_case(<span class="bool-val">true</span>, <span class="number">1</span>; <span class="string">"forward"</span>)]
+    #[test_case(<span class="bool-val">false</span>, <span class="number">2</span>; <span class="string">"backward"</span>)]
     #[test]
     </span><span class="kw">fn </span>drag_workspace_focuses_new_screen(forward: bool, expected_index: usize) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">3</span>);
 
-        <span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">&quot;1&quot;</span>);
+        <span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">"1"</span>);
         <span class="macro">assert_eq!</span>(s.screens.focus.index, <span class="number">0</span>);
 
         <span class="kw">if </span>forward {
@@ -2641,26 +2643,26 @@
             s.drag_workspace_backward();
         }
 
-        <span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">&quot;1&quot;</span>);
+        <span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">"1"</span>);
         <span class="macro">assert_eq!</span>(s.screens.focus.index, expected_index);
     }
 
-    <span class="attr">#[test_case(<span class="number">1</span>, <span class="bool-val">true</span>; <span class="string">&quot;single screen forward&quot;</span>)]
-    #[test_case(<span class="number">1</span>, <span class="bool-val">false</span>; <span class="string">&quot;single screen backward&quot;</span>)]
-    #[test_case(<span class="number">2</span>, <span class="bool-val">true</span>; <span class="string">&quot;two screens forward&quot;</span>)]
-    #[test_case(<span class="number">2</span>, <span class="bool-val">false</span>; <span class="string">&quot;two screens backward&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">1</span>, <span class="bool-val">true</span>; <span class="string">"single screen forward"</span>)]
+    #[test_case(<span class="number">1</span>, <span class="bool-val">false</span>; <span class="string">"single screen backward"</span>)]
+    #[test_case(<span class="number">2</span>, <span class="bool-val">true</span>; <span class="string">"two screens forward"</span>)]
+    #[test_case(<span class="number">2</span>, <span class="bool-val">false</span>; <span class="string">"two screens backward"</span>)]
     #[test]
     </span><span class="kw">fn </span>drag_workspace_maintains_previous_tag(n_screens: usize, forward: bool) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, n_screens);
-        s.focus_tag(<span class="string">&quot;3&quot;</span>);
+        s.focus_tag(<span class="string">"3"</span>);
 
         <span class="comment">// This state is technically invalid for us to get in to but the point is
         // to check that we definitely leave the previous tag alone during this
-        // operation and don&#39;t end up with it anywhere it shouldn&#39;t be.
-        </span>s.previous_tag = <span class="string">&quot;PREVIOUS&quot;</span>.to_owned();
+        // operation and don't end up with it anywhere it shouldn't be.
+        </span>s.previous_tag = <span class="string">"PREVIOUS"</span>.to_owned();
 
-        <span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">&quot;3&quot;</span>);
-        <span class="macro">assert_eq!</span>(s.previous_tag, <span class="string">&quot;PREVIOUS&quot;</span>);
+        <span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">"3"</span>);
+        <span class="macro">assert_eq!</span>(s.previous_tag, <span class="string">"PREVIOUS"</span>);
 
         <span class="kw">if </span>forward {
             s.drag_workspace_forward();
@@ -2668,10 +2670,10 @@
             s.drag_workspace_backward();
         }
 
-        <span class="comment">// We&#39;re keeping the same tag focused so we shouldn&#39;t have modified the
+        <span class="comment">// We're keeping the same tag focused so we shouldn't have modified the
         // previous tag state at all regardless of screen count.
-        </span><span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">&quot;3&quot;</span>);
-        <span class="macro">assert_eq!</span>(s.previous_tag, <span class="string">&quot;PREVIOUS&quot;</span>);
+        </span><span class="macro">assert_eq!</span>(s.screens.focus.workspace.tag, <span class="string">"3"</span>);
+        <span class="macro">assert_eq!</span>(s.previous_tag, <span class="string">"PREVIOUS"</span>);
     }
 
     <span class="attr">#[test]
@@ -2687,13 +2689,13 @@
         <span class="macro">assert_eq!</span>(s.current_client(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">4</span>));
     }
 
-    <span class="attr">#[test_case(<span class="number">1</span>, <span class="string">&quot;1&quot;</span>; <span class="string">&quot;current focus to current tag&quot;</span>)]
-    #[test_case(<span class="number">2</span>, <span class="string">&quot;1&quot;</span>; <span class="string">&quot;from current tag to current tag&quot;</span>)]
-    #[test_case(<span class="number">6</span>, <span class="string">&quot;1&quot;</span>; <span class="string">&quot;from other tag to current tag&quot;</span>)]
-    #[test_case(<span class="number">6</span>, <span class="string">&quot;2&quot;</span>; <span class="string">&quot;from other tag to same tag&quot;</span>)]
-    #[test_case(<span class="number">0</span>, <span class="string">&quot;2&quot;</span>; <span class="string">&quot;from current tag to other tag&quot;</span>)]
-    #[test_case(<span class="number">7</span>, <span class="string">&quot;3&quot;</span>; <span class="string">&quot;from other tag to other tag&quot;</span>)]
-    #[test_case(<span class="number">7</span>, <span class="string">&quot;4&quot;</span>; <span class="string">&quot;from other tag to empty tag&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">1</span>, <span class="string">"1"</span>; <span class="string">"current focus to current tag"</span>)]
+    #[test_case(<span class="number">2</span>, <span class="string">"1"</span>; <span class="string">"from current tag to current tag"</span>)]
+    #[test_case(<span class="number">6</span>, <span class="string">"1"</span>; <span class="string">"from other tag to current tag"</span>)]
+    #[test_case(<span class="number">6</span>, <span class="string">"2"</span>; <span class="string">"from other tag to same tag"</span>)]
+    #[test_case(<span class="number">0</span>, <span class="string">"2"</span>; <span class="string">"from current tag to other tag"</span>)]
+    #[test_case(<span class="number">7</span>, <span class="string">"3"</span>; <span class="string">"from other tag to other tag"</span>)]
+    #[test_case(<span class="number">7</span>, <span class="string">"4"</span>; <span class="string">"from other tag to empty tag"</span>)]
     #[test]
     </span><span class="kw">fn </span>move_client_to_tag(client: u8, tag: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set_with_stacks(
@@ -2715,12 +2717,12 @@
         ss.screens.iter().map(|s| <span class="kw-2">&amp;</span>s.workspace.tag).collect()
     }
 
-    <span class="attr">#[test_case(<span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>]</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>]; <span class="string">&quot;single to single&quot;</span>)]
-    <span class="attr">#[test_case(<span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>]</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]; <span class="string">&quot;single to multiple no padding&quot;</span>)]
-    <span class="attr">#[test_case(<span class="number">1</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>]</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;WS-3&quot;</span>]; <span class="string">&quot;single to multiple with padding&quot;</span>)]
-    <span class="attr">#[test_case(<span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>]; <span class="string">&quot;multiple to single&quot;</span>)]
-    <span class="attr">#[test_case(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]; <span class="string">&quot;multiple to same count&quot;</span>)]
-    <span class="attr">#[test_case(<span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>, <span class="macro">vec!</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;WS-3&quot;</span>]; <span class="string">&quot;multiple to more with padding&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>]</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>]; <span class="string">"single to single"</span>)]
+    <span class="attr">#[test_case(<span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>]</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]; <span class="string">"single to multiple no padding"</span>)]
+    <span class="attr">#[test_case(<span class="number">1</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>]</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"WS-3"</span>]; <span class="string">"single to multiple with padding"</span>)]
+    <span class="attr">#[test_case(<span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>]; <span class="string">"multiple to single"</span>)]
+    <span class="attr">#[test_case(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]; <span class="string">"multiple to same count"</span>)]
+    <span class="attr">#[test_case(<span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>]</span>, <span class="macro">vec!</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"WS-3"</span>]; <span class="string">"multiple to more with padding"</span>)]
     <span class="attr">#[test]
     </span><span class="kw">fn </span>update_screens(
         n_before: usize,
@@ -2731,15 +2733,15 @@
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>ss: StackSet&lt;Xid&gt; = StackSet::try_new(
             LayoutStack::default(),
-            [<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>],
+            [<span class="string">"1"</span>, <span class="string">"2"</span>],
             <span class="macro">vec!</span>[Rect::default(); n_before],
         )
-        .expect(<span class="string">&quot;enough workspaces to cover the number of initial screens&quot;</span>);
+        .expect(<span class="string">"enough workspaces to cover the number of initial screens"</span>);
 
         <span class="comment">// Invisible workspaces should never have focus: backfilling from the currently
         // hidden workspaces needs to not put this on a screen.
-        </span>ss.add_invisible_workspace(<span class="string">&quot;INVISIBLE&quot;</span>)
-            .expect(<span class="string">&quot;no tag collisions&quot;</span>);
+        </span>ss.add_invisible_workspace(<span class="string">"INVISIBLE"</span>)
+            .expect(<span class="string">"no tag collisions"</span>);
 
         <span class="comment">// Focus the last screen so that if we truncate we should fall back to
         // the first screen now that we are out of bounds
@@ -2754,7 +2756,7 @@
         <span class="macro">assert_eq!</span>(ss.screens.focus.index, focus_after);
         <span class="macro">assert_eq!</span>(focused_tags(<span class="kw-2">&amp;</span>ss), tags_after);
 
-        <span class="comment">// Shouldn&#39;t have dropped any workspaces, only padded if needed.
+        <span class="comment">// Shouldn't have dropped any workspaces, only padded if needed.
         // The +1 here is for the invisible workspace
         </span><span class="kw">let </span>expected = std::cmp::max(<span class="number">2</span>, n_after) + <span class="number">1</span>;
         <span class="macro">assert_eq!</span>(ss.workspaces().count(), expected);
@@ -2763,8 +2765,8 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>update_screens_with_empty_vec_is_an_error() {
         <span class="kw">let </span><span class="kw-2">mut </span>ss: StackSet&lt;Xid&gt; =
-            StackSet::try_new(LayoutStack::default(), [<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>], <span class="macro">vec!</span>[Rect::default(); <span class="number">2</span>])
-                .expect(<span class="string">&quot;enough workspaces to cover the number of screens&quot;</span>);
+            StackSet::try_new(LayoutStack::default(), [<span class="string">"1"</span>, <span class="string">"2"</span>], <span class="macro">vec!</span>[Rect::default(); <span class="number">2</span>])
+                .expect(<span class="string">"enough workspaces to cover the number of screens"</span>);
 
         <span class="kw">let </span>res = ss.update_screens(<span class="macro">vec!</span>[]);
 
@@ -2815,7 +2817,7 @@
         <span class="kw">pub fn </span>last_tag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
             <span class="self">self</span>.workspaces()
                 .last()
-                .expect(<span class="string">&quot;at least one workspace&quot;</span>)
+                .expect(<span class="string">"at least one workspace"</span>)
                 .tag
                 .clone()
         }
@@ -2888,7 +2890,7 @@
 
         <span class="kw">let </span>expected = s
             .tag_for_client(<span class="kw-2">&amp;</span>target)
-            .expect(<span class="string">&quot;client is known so tag is Some&quot;</span>)
+            .expect(<span class="string">"client is known so tag is Some"</span>)
             .to_owned();
 
         s.focus_client(<span class="kw-2">&amp;</span>target);

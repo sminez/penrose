@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/x/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -716,7 +718,7 @@
     x::{atom::AUTO_FLOAT_WINDOW_TYPES, event::ClientMessage, property::WmState},
     Color, <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::collections::{HashMap, HashSet};
 <span class="kw">use </span>tracing::{error, trace};
@@ -739,7 +741,7 @@
 
 <span class="doccomment">/// A window type to be specified when creating a new window in the X server
 </span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>WinType {
     <span class="doccomment">/// A simple hidden stub window for facilitating other API calls
     </span>CheckWin,
@@ -752,7 +754,7 @@
 
 <span class="doccomment">/// On screen configuration options for X clients (not all are curently implemented)
 </span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>ClientConfig {
     <span class="doccomment">/// The border width in pixels
     </span>BorderPx(u32),
@@ -769,7 +771,7 @@
 }
 
 <span class="doccomment">/// Attributes for an X11 client window (not all are curently implemented)
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 </span><span class="kw">pub enum </span>ClientAttr {
     <span class="doccomment">/// Border color as an argb hex value
@@ -865,7 +867,7 @@
     <span class="doccomment">/// Establish the window manager state for the given client window and refresh the
     /// current X state.
     </span><span class="kw">fn </span>manage(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">trace!</span>(%id, <span class="string">&quot;managing new client&quot;</span>);
+        <span class="macro">trace!</span>(%id, <span class="string">"managing new client"</span>);
         manage_without_refresh(id, <span class="prelude-val">None</span>, state, <span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.refresh(state)
     }
@@ -873,7 +875,7 @@
     <span class="doccomment">/// Remove the window manager state for the given client window and refresh the
     /// current X state.
     </span><span class="kw">fn </span>unmanage(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">trace!</span>(<span class="question-mark">?</span>client, <span class="string">&quot;removing client&quot;</span>);
+        <span class="macro">trace!</span>(<span class="question-mark">?</span>client, <span class="string">"removing client"</span>);
         <span class="self">self</span>.modify_and_refresh(state, |cs| {
             cs.remove_client(<span class="kw-2">&amp;</span>client);
         })
@@ -944,9 +946,9 @@
 
         </span><span class="kw">let </span><span class="kw-2">mut </span>hook = state.config.refresh_hook.take();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) = hook {
-            <span class="macro">trace!</span>(<span class="string">&quot;running user refresh hook&quot;</span>);
+            <span class="macro">trace!</span>(<span class="string">"running user refresh hook"</span>);
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = h.call(state, <span class="self">self</span>) {
-                <span class="macro">error!</span>(%e, <span class="string">&quot;error returned from user refresh hook&quot;</span>);
+                <span class="macro">error!</span>(%e, <span class="string">"error returned from user refresh hook"</span>);
             }
         }
         state.config.refresh_hook = hook;
@@ -962,17 +964,17 @@
 
     <span class="doccomment">/// Check whether or not the given client should be assigned floating status or not.
     </span><span class="kw">fn </span>client_should_float(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid, floating_classes: <span class="kw-2">&amp;</span>[String]) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-        <span class="macro">trace!</span>(%client, <span class="string">&quot;fetching WmClass prop&quot;</span>);
+        <span class="macro">trace!</span>(%client, <span class="string">"fetching WmClass prop"</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(Prop::UTF8String(strs)) = <span class="self">self</span>.get_prop(client, Atom::WmClass.as_ref())<span class="question-mark">? </span>{
             <span class="kw">if </span>strs.iter().any(|c| floating_classes.contains(c)) {
-                <span class="macro">trace!</span>(%client, <span class="question-mark">?</span>floating_classes, <span class="string">&quot;window has a floating class: setting to floating state&quot;</span>);
+                <span class="macro">trace!</span>(%client, <span class="question-mark">?</span>floating_classes, <span class="string">"window has a floating class: setting to floating state"</span>);
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
             }
         }
 
         <span class="kw">let </span>float_types: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = AUTO_FLOAT_WINDOW_TYPES.iter().map(|a| a.as_ref()).collect();
 
-        <span class="macro">trace!</span>(%client, <span class="string">&quot;fetching NetWmWindowType prop&quot;</span>);
+        <span class="macro">trace!</span>(%client, <span class="string">"fetching NetWmWindowType prop"</span>);
         <span class="kw">let </span>p = <span class="self">self</span>.get_prop(client, Atom::NetWmWindowType.as_ref())<span class="question-mark">?</span>;
         <span class="kw">let </span>should_float = <span class="kw">if let </span><span class="prelude-val">Some</span>(Prop::Atom(atoms)) = p {
             atoms.iter().any(|a| float_types.contains(<span class="kw-2">&amp;</span>a.as_ref()))
@@ -1015,11 +1017,11 @@
     </span><span class="kw">fn </span>position_client(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid, <span class="kw-2">mut </span>r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>p = Atom::WmNormalHints.as_ref();
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::WmNormalHints(hints))) = <span class="self">self</span>.get_prop(client, p) {
-            <span class="macro">trace!</span>(%client, <span class="question-mark">?</span>hints, <span class="string">&quot;client has WmNormalHints: applying size hints&quot;</span>);
+            <span class="macro">trace!</span>(%client, <span class="question-mark">?</span>hints, <span class="string">"client has WmNormalHints: applying size hints"</span>);
             r = hints.apply_to(r);
         }
 
-        <span class="macro">trace!</span>(%client, <span class="question-mark">?</span>r, <span class="string">&quot;positioning client&quot;</span>);
+        <span class="macro">trace!</span>(%client, <span class="question-mark">?</span>r, <span class="string">"positioning client"</span>);
         <span class="self">self</span>.set_client_config(client, <span class="kw-2">&amp;</span>[ClientConfig::Position(r)])
     }
 
@@ -1041,9 +1043,9 @@
     }
 
     <span class="doccomment">/// Restack the given windows in, each one above the last.
-    </span><span class="kw">fn </span>restack&lt;<span class="lifetime">&#39;a</span>, I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>ids: I) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+    </span><span class="kw">fn </span>restack&lt;<span class="lifetime">'a</span>, I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>ids: I) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
     <span class="kw">where
-        </span>I: Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Xid&gt;,
+        </span>I: Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Xid&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>previous = <span class="kw">match </span>ids.next() {
             <span class="prelude-val">Some</span>(id) =&gt; <span class="kw-2">*</span>id,
@@ -1095,7 +1097,7 @@
             </span>.into_iter()
             .map(|s| {
                 <span class="self">self</span>.get_prop(id, <span class="kw-2">&amp;</span>s)
-                    .map(|opt| (s, opt.expect(<span class="string">&quot;prop to be set&quot;</span>)))
+                    .map(|opt| (s, opt.expect(<span class="string">"prop to be set"</span>)))
             })
             .collect()
     }
@@ -1106,7 +1108,7 @@
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw-2">mut </span>strs)) =&gt; <span class="prelude-val">Ok</span>(strs.remove(<span class="number">0</span>)),
             <span class="kw">_ </span>=&gt; <span class="kw">match </span>query::str_prop(Atom::NetWmName, id, <span class="self">self</span>)<span class="question-mark">? </span>{
                 <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>strs) =&gt; <span class="prelude-val">Ok</span>(strs.remove(<span class="number">0</span>)),
-                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">&quot;&quot;</span>.to_owned()),
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="string">""</span>.to_owned()),
             },
         }
     }
@@ -1120,11 +1122,11 @@
         }
     }
 
-    <span class="doccomment">/// Request a window&#39;s PID via the _NET_WM_PID property.
+    <span class="doccomment">/// Request a window's PID via the _NET_WM_PID property.
     ///
     /// **NOTE**: Not all programs set this property.
     </span><span class="kw">fn </span>window_pid(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Cardinal(vals))) = <span class="self">self</span>.get_prop(id, <span class="string">&quot;_NET_WM_PID&quot;</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Cardinal(vals))) = <span class="self">self</span>.get_prop(id, <span class="string">"_NET_WM_PID"</span>) {
             <span class="prelude-val">Some</span>(vals[<span class="number">0</span>])
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -1156,7 +1158,7 @@
     state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
     x: <span class="kw-2">&amp;</span>X,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="macro">trace!</span>(%id, <span class="string">&quot;fetching WmTransientFor prop&quot;</span>);
+    <span class="macro">trace!</span>(%id, <span class="string">"fetching WmTransientFor prop"</span>);
     <span class="kw">let </span>(owned_tag, transient_for) = <span class="kw">match </span>x.get_prop(id, Atom::WmTransientFor.as_ref())<span class="question-mark">? </span>{
         <span class="prelude-val">Some</span>(Prop::Window(ids)) =&gt; {
             <span class="kw">let </span>parent = ids[<span class="number">0</span>];
@@ -1183,15 +1185,15 @@
     <span class="kw">if </span>should_float {
         <span class="kw">let </span>r = floating_client_position(id, transient_for, state, x)<span class="question-mark">?</span>;
         <span class="kw">if </span>state.client_set.float(id, r).is_err() {
-            <span class="macro">error!</span>(%id, <span class="string">&quot;attempted to float client which was not in state&quot;</span>);
+            <span class="macro">error!</span>(%id, <span class="string">"attempted to float client which was not in state"</span>);
         }
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>hook = state.config.manage_hook.take();
     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) = hook {
-        <span class="macro">trace!</span>(<span class="string">&quot;running user manage hook&quot;</span>);
+        <span class="macro">trace!</span>(<span class="string">"running user manage hook"</span>);
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = h.call(id, state, x) {
-            <span class="macro">error!</span>(%e, <span class="string">&quot;error returned from user manage hook&quot;</span>);
+            <span class="macro">error!</span>(%e, <span class="string">"error returned from user manage hook"</span>);
         }
     }
     state.config.manage_hook = hook;
@@ -1200,7 +1202,7 @@
 }
 
 <span class="doccomment">/// When positioning a floating client we try to position them in priority order of:
-///   - centered in their parent&#39;s screen (if transient)
+///   - centered in their parent's screen (if transient)
 ///   - centered in the focused screen
 </span><span class="kw">fn </span>floating_client_position&lt;X: XConn&gt;(
     id: Xid,
@@ -1240,7 +1242,7 @@
     }
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>focused) = state.client_set.current_client() {
-        <span class="macro">trace!</span>(<span class="question-mark">?</span>focused, <span class="string">&quot;setting border for focused client&quot;</span>);
+        <span class="macro">trace!</span>(<span class="question-mark">?</span>focused, <span class="string">"setting border for focused client"</span>);
         x.set_client_border_color(focused, state.config.focused_border)<span class="question-mark">?</span>;
     }
 
@@ -1263,10 +1265,10 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="macro">trace!</span>(<span class="string">&quot;checking if focus should change&quot;</span>);
+    <span class="macro">trace!</span>(<span class="string">"checking if focus should change"</span>);
     <span class="kw">if </span>!<span class="macro">matches!</span>(state.current_event, <span class="prelude-val">Some</span>(XEvent::Enter(<span class="kw">_</span>))) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = state.diff.focused_client() {
-            <span class="macro">trace!</span>(<span class="string">&quot;focused client changed&quot;</span>);
+            <span class="macro">trace!</span>(<span class="string">"focused client changed"</span>);
             <span class="comment">// NOTE: Some of the behaviour here is based on looking at whether or
             //       not the focused client has changed position as part of this
             //       diff. That is going to cause issues if and when mouse based
@@ -1278,12 +1280,12 @@
                 <span class="macro">trace!</span>(
                     focus_changed,
                     focused_client_moved,
-                    <span class="string">&quot;warping to focused client&quot;
+                    <span class="string">"warping to focused client"
                 </span>);
                 x.warp_pointer_to_window(id)<span class="question-mark">?</span>;
             }
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(index) = state.diff.newly_focused_screen() {
-            <span class="macro">trace!</span>(index, <span class="string">&quot;screen changed: warping to screen&quot;</span>);
+            <span class="macro">trace!</span>(index, <span class="string">"screen changed: warping to screen"</span>);
             x.warp_pointer_to_screen(state, index)<span class="question-mark">?</span>;
         }
     }
@@ -1293,17 +1295,17 @@
 
 <span class="kw">fn </span>set_window_visibility&lt;X: XConn&gt;(x: <span class="kw-2">&amp;</span>X, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">for </span><span class="kw-2">&amp;</span>c <span class="kw">in </span>state.diff.visible_clients() {
-        <span class="macro">trace!</span>(<span class="question-mark">?</span>c, <span class="string">&quot;revealing client&quot;</span>);
+        <span class="macro">trace!</span>(<span class="question-mark">?</span>c, <span class="string">"revealing client"</span>);
         x.reveal(c, <span class="kw-2">&amp;</span>state.client_set, <span class="kw-2">&amp;mut </span>state.mapped)<span class="question-mark">?</span>;
     }
 
     <span class="kw">for </span><span class="kw-2">&amp;</span>c <span class="kw">in </span>state.diff.hidden_clients() {
-        <span class="macro">trace!</span>(<span class="question-mark">?</span>c, <span class="string">&quot;hiding client&quot;</span>);
+        <span class="macro">trace!</span>(<span class="question-mark">?</span>c, <span class="string">"hiding client"</span>);
         x.hide(c, <span class="kw-2">&amp;mut </span>state.mapped, <span class="kw-2">&amp;mut </span>state.pending_unmap)<span class="question-mark">?</span>;
     }
 
     <span class="kw">for </span><span class="kw-2">&amp;</span>c <span class="kw">in </span>state.diff.withdrawn_clients() {
-        <span class="macro">trace!</span>(<span class="question-mark">?</span>c, <span class="string">&quot;setting withdrawn state for client&quot;</span>);
+        <span class="macro">trace!</span>(<span class="question-mark">?</span>c, <span class="string">"setting withdrawn state for client"</span>);
         x.set_wm_state(c, WmState::Withdrawn)<span class="question-mark">?</span>;
     }
 
@@ -1364,52 +1366,52 @@
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">20</span>, <span class="number">20</span>),
         <span class="number">0</span>,
         Rect::new(<span class="number">502</span>, <span class="number">374</span>, <span class="number">20</span>, <span class="number">20</span>);
-        <span class="string">&quot;fit inside parent&quot;
+        <span class="string">"fit inside parent"
     </span>)]
     #[test_case(
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>),
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">200</span>, <span class="number">200</span>),
         <span class="number">0</span>,
         Rect::new(<span class="number">412</span>, <span class="number">284</span>, <span class="number">200</span>, <span class="number">200</span>);
-        <span class="string">&quot;larger than parent&quot;
+        <span class="string">"larger than parent"
     </span>)]
     #[test_case(
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">200</span>),
         Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">2000</span>, <span class="number">2000</span>),
         <span class="number">1</span>,
         Rect::new(<span class="number">2072</span>, <span class="number">80</span>, <span class="number">2000</span>, <span class="number">2000</span>);
-        <span class="string">&quot;larger than parent screen&quot;
+        <span class="string">"larger than parent screen"
     </span>)]
     #[test]
     </span><span class="kw">fn </span>manage_without_refresh_transient(parent: Rect, child: Rect, screen: usize, expected: Rect) {
         <span class="kw">let </span>conn = TransientXConn {
-            transient_ids: <span class="macro">map! </span>{
+            transient_ids: <span class="macro">map!</span> {
                 Xid(<span class="number">1</span>) =&gt; Xid(<span class="number">2</span>),
             },
-            geometry: <span class="macro">map! </span>{
+            geometry: <span class="macro">map!</span> {
                 Xid(<span class="number">1</span>) =&gt; child,
                 Xid(<span class="number">2</span>) =&gt; parent,
             },
         };
-        <span class="kw">let </span><span class="kw-2">mut </span>state = State::try_new(Default::default(), <span class="kw-2">&amp;</span>conn).expect(<span class="string">&quot;test state&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>state = State::try_new(Default::default(), <span class="kw-2">&amp;</span>conn).expect(<span class="string">"test state"</span>);
         state.client_set.focus_screen(screen);
         state.client_set.insert(Xid(<span class="number">2</span>));
         state.client_set.focus_screen(<span class="number">0</span>);
 
-        manage_without_refresh(Xid(<span class="number">1</span>), <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>conn).expect(<span class="string">&quot;refresh&quot;</span>);
+        manage_without_refresh(Xid(<span class="number">1</span>), <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>conn).expect(<span class="string">"refresh"</span>);
 
         <span class="macro">assert!</span>(
             state.client_set.contains(<span class="kw-2">&amp;</span>Xid(<span class="number">1</span>)),
-            <span class="string">&quot;state contains managed transient&quot;
+            <span class="string">"state contains managed transient"
         </span>);
 
         <span class="kw">let </span>rel_rect = state.client_set.floating.get(<span class="kw-2">&amp;</span>Xid(<span class="number">1</span>));
-        <span class="macro">assert!</span>(rel_rect.is_some(), <span class="string">&quot;transient client is floating&quot;</span>);
+        <span class="macro">assert!</span>(rel_rect.is_some(), <span class="string">"transient client is floating"</span>);
 
         <span class="kw">let </span>r_screen = [TEST_SCREEN, TEST_SCREEN_2][screen];
         <span class="kw">let </span>r = rel_rect.unwrap().applied_to(<span class="kw-2">&amp;</span>r_screen);
 
-        <span class="macro">assert_eq!</span>(r, expected, <span class="string">&quot;client position is as expected&quot;</span>);
+        <span class="macro">assert_eq!</span>(r, expected, <span class="string">"client position is as expected"</span>);
     }
 }
 </code></pre></div></section></main></body></html>

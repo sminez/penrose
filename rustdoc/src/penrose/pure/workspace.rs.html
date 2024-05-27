@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/workspace.rs`."><title>workspace.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/workspace.rs`."><title>workspace.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -248,7 +250,7 @@
 };
 <span class="kw">use </span>std::{fmt, mem::take};
 
-<span class="doccomment">/// A wrapper around a [Stack] of windows belonging to a single &quot;workspace&quot; or virtual
+<span class="doccomment">/// A wrapper around a [Stack] of windows belonging to a single "workspace" or virtual
 /// desktop. When this workspace is active on a given screen, the windows contained in
 /// its stack will be positioned using the active layout of its [LayoutStack].
 </span><span class="attr">#[derive(Debug, Clone)]
@@ -271,7 +273,7 @@
 }
 
 <span class="kw">impl</span>&lt;T: fmt::Display&gt; fmt::Display <span class="kw">for </span>Workspace&lt;T&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>stack = <span class="self">self
             </span>.stack
             .as_ref()
@@ -280,7 +282,7 @@
 
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;Workspace({}, {}):\n  - layouts: {}\n  - stack: {}&quot;</span>,
+            <span class="string">"Workspace({}, {}):\n  - layouts: {}\n  - stack: {}"</span>,
             <span class="self">self</span>.id, <span class="self">self</span>.tag, <span class="self">self</span>.layouts, stack
         )
     }
@@ -304,7 +306,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_default(id: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             id,
-            tag: <span class="macro">format!</span>(<span class="string">&quot;WS-{id}&quot;</span>),
+            tag: <span class="macro">format!</span>(<span class="string">"WS-{id}"</span>),
             ..<span class="self">Self</span>::default()
         }
     }
@@ -449,22 +451,22 @@
     <span class="kw">use </span><span class="kw">crate</span>::stack;
     <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>])), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">true</span>; <span class="string">&quot;known in stack&quot;</span>)]
-    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">5</span>)), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">false</span>; <span class="string">&quot;known focus only&quot;</span>)]
-    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>])), <span class="prelude-val">None</span>, <span class="bool-val">true</span>; <span class="string">&quot;unknown&quot;</span>)]
-    <span class="attr">#[test_case(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>; <span class="string">&quot;empty stack&quot;</span>)]
+    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>])), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">true</span>; <span class="string">"known in stack"</span>)]
+    <span class="attr">#[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>(<span class="number">5</span>)), <span class="prelude-val">Some</span>(<span class="number">5</span>), <span class="bool-val">false</span>; <span class="string">"known focus only"</span>)]
+    #[test_case(<span class="prelude-val">Some</span>(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>])), <span class="prelude-val">None</span>, <span class="bool-val">true</span>; <span class="string">"unknown"</span>)]
+    <span class="attr">#[test_case(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>; <span class="string">"empty stack"</span>)]
     #[test]
     </span><span class="kw">fn </span>remove_returns_as_expected(stack: <span class="prelude-ty">Option</span>&lt;Stack&lt;u8&gt;&gt;, maybe_t: <span class="prelude-ty">Option</span>&lt;u8&gt;, is_some: bool) {
-        <span class="kw">let </span><span class="kw-2">mut </span>w = Workspace::new(<span class="number">0</span>, <span class="string">&quot;test&quot;</span>, LayoutStack::default(), stack);
+        <span class="kw">let </span><span class="kw-2">mut </span>w = Workspace::new(<span class="number">0</span>, <span class="string">"test"</span>, LayoutStack::default(), stack);
 
         <span class="macro">assert_eq!</span>(w.remove(<span class="kw-2">&amp;</span><span class="number">5</span>), maybe_t);
         <span class="macro">assert_eq!</span>(w.stack.is_some(), is_some);
     }
 
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">None</span>; <span class="string">&quot;no duplicate tags&quot;</span>)]
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>]); <span class="string">&quot;single duplicate&quot;</span>)]
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates&quot;</span>)]
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>]); <span class="string">&quot;multiple duplicates sorted&quot;</span>)]
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>]</span>, <span class="prelude-val">None</span>; <span class="string">"no duplicate tags"</span>)]
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>, <span class="string">"2"</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">"2"</span>]); <span class="string">"single duplicate"</span>)]
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">"2"</span>, <span class="string">"3"</span>]); <span class="string">"multiple duplicates"</span>)]
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="string">"3"</span>, <span class="string">"2"</span>, <span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>]</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[<span class="string">"2"</span>, <span class="string">"3"</span>]); <span class="string">"multiple duplicates sorted"</span>)]
     <span class="attr">#[test]
     </span><span class="kw">fn </span>check_workspace_invariants_works(tags: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], duplicates: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]&gt;) {
         <span class="kw">let </span>workspaces: Vec&lt;Workspace&lt;u8&gt;&gt; = tags
@@ -479,7 +481,7 @@
             <span class="prelude-val">None </span>=&gt; <span class="macro">assert!</span>(res.is_ok()),
             <span class="prelude-val">Some</span>(expected_tags) =&gt; <span class="kw">match </span>res {
                 <span class="prelude-val">Err</span>(Error::NonUniqueTags { tags }) =&gt; <span class="macro">assert_eq!</span>(tags, expected_tags),
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected NonUniqueTags, got {res:?}&quot;</span>),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"expected NonUniqueTags, got {res:?}"</span>),
             },
         }
     }

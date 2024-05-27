@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/core/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose_ui/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose_ui"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/core/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose_ui/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -557,7 +559,7 @@
 /// Font names need to be in a form that can be parsed by `xft`. The simplest way to find the valid
 /// font names on your system is via the `fc-list` program like so:
 /// ```sh
-/// $ fc-list -f &#39;%{family}\n&#39; | sort -u
+/// $ fc-list -f '%{family}\n' | sort -u
 /// ```
 /// [Draw] will automtically append `:size={point_size}` to the font name when loading the font via
 /// xft. The [Arch wiki page on fonts][0] is a useful resource on how X11 fonts work if you are
@@ -580,9 +582,9 @@
 /// use penrose_ui::Draw;
 /// use std::{thread::sleep, time::Duration};
 ///
-/// let fg = Color::try_from(&quot;#EBDBB2&quot;).unwrap();
-/// let bg = Color::try_from(&quot;#282828&quot;).unwrap();
-/// let mut drw = Draw::new(&quot;mono&quot;, 12, bg).unwrap();
+/// let fg = Color::try_from("#EBDBB2").unwrap();
+/// let bg = Color::try_from("#282828").unwrap();
+/// let mut drw = Draw::new("mono", 12, bg).unwrap();
 /// let w = drw.new_window(
 ///     WinType::InputOutput(Atom::NetWindowTypeDock),
 ///     Rect::new(0, 0, 300, 50),
@@ -590,7 +592,7 @@
 /// ).unwrap();
 ///
 /// let mut ctx = drw.context_for(w).unwrap();
-/// ctx.draw_text(&quot;Hello from penrose_ui!&quot;, 0, (10, 0), fg).unwrap();
+/// ctx.draw_text("Hello from penrose_ui!", 0, (10, 0), fg).unwrap();
 /// ctx.flush();
 /// drw.flush(w).unwrap();
 ///
@@ -644,7 +646,7 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             conn,
             dpy,
-            fs: Fontset::try_new(dpy, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{font}:size={point_size}&quot;</span>))<span class="question-mark">?</span>,
+            fs: Fontset::try_new(dpy, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{font}:size={point_size}"</span>))<span class="question-mark">?</span>,
             surfaces: HashMap::new(),
             bg,
             colors,
@@ -656,10 +658,10 @@
     /// Destroying this window should be carried out using the `destroy_window_and_surface` method
     /// so that the associated graphics state is also cleaned up correctly.
     </span><span class="kw">pub fn </span>new_window(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: WinType, r: Rect, managed: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Xid&gt; {
-        <span class="macro">info!</span>(<span class="question-mark">?</span>ty, <span class="question-mark">?</span>r, %managed, <span class="string">&quot;creating new window&quot;</span>);
+        <span class="macro">info!</span>(<span class="question-mark">?</span>ty, <span class="question-mark">?</span>r, %managed, <span class="string">"creating new window"</span>);
         <span class="kw">let </span>id = <span class="self">self</span>.conn.create_window(ty, r, managed)<span class="question-mark">?</span>;
 
-        <span class="macro">debug!</span>(<span class="string">&quot;initialising graphics context and pixmap&quot;</span>);
+        <span class="macro">debug!</span>(<span class="string">"initialising graphics context and pixmap"</span>);
         <span class="kw">let </span>root = <span class="kw-2">*</span><span class="self">self</span>.conn.root() <span class="kw">as </span>Window;
         <span class="comment">// SAFETY: self.dpy is non-null and screen index 0 is always valid
         </span><span class="kw">let </span>(drawable, gc) = <span class="kw">unsafe </span>{
@@ -694,7 +696,7 @@
     <span class="doccomment">/// Set the font being used for rendering text and clear the existing cache of fallback fonts
     /// for characters that are not supported by the primary font.
     </span><span class="kw">pub fn </span>set_font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font: <span class="kw-2">&amp;</span>str, point_size: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.fs = Fontset::try_new(<span class="self">self</span>.dpy, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{font}:size={point_size}&quot;</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.fs = Fontset::try_new(<span class="self">self</span>.dpy, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{font}:size={point_size}"</span>))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -703,7 +705,7 @@
     ///
     /// This method will error if the requested id does not already have an initialised surface.
     /// See the `new_window` method for details.
-    </span><span class="kw">pub fn </span>context_for(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Context&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+    </span><span class="kw">pub fn </span>context_for(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;Context&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="kw">let </span>s = <span class="self">self
             </span>.surfaces
             .get(<span class="kw-2">&amp;</span>id)
@@ -754,18 +756,18 @@
 ///
 ///   [0]: crate::StatusBar
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Context&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>Context&lt;<span class="lifetime">'a</span>&gt; {
     id: u64,
     dx: i32,
     dy: i32,
     dpy: <span class="kw-2">*mut </span>Display,
-    s: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Surface,
+    s: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Surface,
     bg: Color,
-    fs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Fontset,
-    colors: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>HashMap&lt;Color, XColor&gt;,
+    fs: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Fontset,
+    colors: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HashMap&lt;Color, XColor&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Context&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Context&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Clear the underlying surface, restoring it to the background color.
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.fill_rect(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="self">self</span>.s.r.w, <span class="self">self</span>.s.r.h), <span class="self">self</span>.bg)
@@ -833,7 +835,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Fill the specified area with this Context&#39;s background color
+    <span class="doccomment">/// Fill the specified area with this Context's background color
     </span><span class="kw">pub fn </span>fill_bg(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.fill_rect(r, <span class="self">self</span>.bg)
     }

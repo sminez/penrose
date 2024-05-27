@@ -208,7 +208,7 @@ use penrose_ui::bar::widgets::{RefreshText, TextStyle};
 
 pub fn current_date_and_time(style: &amp;TextStyle) -&gt; RefreshText {
     RefreshText::new(style, || {
-        spawn_for_output_with_args(&quot;date&quot;, &amp;[&quot;+%F %R&quot;])
+        spawn_for_output_with_args("date", &amp;["+%F %R"])
             .unwrap_or_default()
             .trim()
             .to_string()
@@ -235,7 +235,7 @@ tool can be used to set the root window name to whatever string you like and typ
 this is used by spawning a shell script that updates the root window name with system
 stats on an interval:</p>
 <pre><code class="language-sh"># Set the root window name to the current date and time
-$ xsetroot -name &quot;$(date '+%F %R')&quot;
+$ xsetroot -name "$(date '+%F %R')"
 </code></pre>
 <h3 id="activewindowname"><a class="header" href="#activewindowname">ActiveWindowName</a></h3>
 <p>In a similar way, <a href="https://sminez.github.io/penrose/rustdoc/penrose_ui/bar/widgets/struct.ActiveWindowName.html">ActiveWindowName</a> will display the title of the currently focused

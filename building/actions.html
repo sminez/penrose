@@ -216,17 +216,17 @@ use std::process::exit;
 
 pub fn power_menu&lt;X: XConn&gt;() -&gt; KeyEventHandler&lt;X&gt; {
     key_handler(|state, _| {
-        let options = vec![&quot;lock&quot;, &quot;logout&quot;, &quot;restart-wm&quot;, &quot;shutdown&quot;, &quot;reboot&quot;];
-        let menu = DMenu::new(&quot;&gt;&gt;&gt; &quot;, options, DMenuConfig::default());
+        let options = vec!["lock", "logout", "restart-wm", "shutdown", "reboot"];
+        let menu = DMenu::new("&gt;&gt;&gt; ", options, DMenuConfig::default());
         let screen_index = state.client_set.current_screen().index();
 
         if let Ok(MenuMatch::Line(_, choice)) = menu.run(screen_index) {
             match choice.as_ref() {
-                &quot;lock&quot; =&gt; spawn(&quot;xflock4&quot;),
-                &quot;logout&quot; =&gt; spawn(&quot;pkill -fi penrose&quot;),
-                &quot;shutdown&quot; =&gt; spawn(&quot;sudo shutdown -h now&quot;),
-                &quot;reboot&quot; =&gt; spawn(&quot;sudo reboot&quot;),
-                &quot;restart-wm&quot; =&gt; exit(0), // Wrapper script then handles restarting us
+                "lock" =&gt; spawn("xflock4"),
+                "logout" =&gt; spawn("pkill -fi penrose"),
+                "shutdown" =&gt; spawn("sudo shutdown -h now"),
+                "reboot" =&gt; spawn("sudo reboot"),
+                "restart-wm" =&gt; exit(0), // Wrapper script then handles restarting us
                 _ =&gt; unimplemented!(),
             }
         } else {
@@ -244,7 +244,7 @@ complete in order for the event loop to continue running.</p>
 to reposition and select windows on the screen. There are <a href="https://sminez.github.io/penrose/rustdoc/penrose/pure/struct.StackSet.html">a large number of methods</a> available
 for modifying the current state of your windows and the <a href="https://sminez.github.io/penrose/rustdoc/penrose/builtin/actions/fn.modify_with.html">modify_with</a> helper gives you an
 easy way to call them directly. If you think back to the minimal example window manager we covered
-in the &quot;getting started&quot; section, we saw this in use for most of the key bindings. Paraphrasing
+in the "getting started" section, we saw this in use for most of the key bindings. Paraphrasing
 a little, it looks like this:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {

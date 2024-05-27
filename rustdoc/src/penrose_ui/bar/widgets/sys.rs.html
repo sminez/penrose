@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/bar/widgets/sys.rs`."><title>sys.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../penrose_ui/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose_ui"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/bar/widgets/sys.rs`."><title>sys.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../penrose_ui/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -132,36 +134,36 @@
 ///
 /// If the given battery name is not found on this system, this widget will
 /// render as an empty string.
-</span><span class="kw">pub fn </span>battery_summary(bat: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, style: TextStyle) -&gt; RefreshText {
+</span><span class="kw">pub fn </span>battery_summary(bat: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, <span class="kw">move </span>|| battery_text(bat).unwrap_or_default())
 }
 
 <span class="kw">fn </span>battery_text(bat: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>status = read_sys_file(bat, <span class="string">&quot;status&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>energy_now: u32 = read_sys_file(bat, <span class="string">&quot;energy_now&quot;</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
-    <span class="kw">let </span>energy_full: u32 = read_sys_file(bat, <span class="string">&quot;energy_full&quot;</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
+    <span class="kw">let </span>status = read_sys_file(bat, <span class="string">"status"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>energy_now: u32 = read_sys_file(bat, <span class="string">"charge_now"</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
+    <span class="kw">let </span>energy_full: u32 = read_sys_file(bat, <span class="string">"charge_full"</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
 
     <span class="kw">let </span>charge = energy_now * <span class="number">100 </span>/ energy_full;
 
-    <span class="kw">let </span>icon = <span class="kw">if </span>status == <span class="string">&quot;Charging&quot; </span>{
-        <span class="string">&quot;&quot;
-    </span>} <span class="kw">else if </span>charge &gt;= <span class="number">90 </span>|| status == <span class="string">&quot;Full&quot; </span>{
-        <span class="string">&quot;&quot;
+    <span class="kw">let </span>icon = <span class="kw">if </span>status == <span class="string">"Charging" </span>{
+        <span class="string">""
+    </span>} <span class="kw">else if </span>charge &gt;= <span class="number">90 </span>|| status == <span class="string">"Full" </span>{
+        <span class="string">""
     </span>} <span class="kw">else if </span>charge &gt;= <span class="number">70 </span>{
-        <span class="string">&quot;&quot;
+        <span class="string">""
     </span>} <span class="kw">else if </span>charge &gt;= <span class="number">50 </span>{
-        <span class="string">&quot;&quot;
+        <span class="string">""
     </span>} <span class="kw">else if </span>charge &gt;= <span class="number">20 </span>{
-        <span class="string">&quot;&quot;
+        <span class="string">""
     </span>} <span class="kw">else </span>{
-        <span class="string">&quot;&quot;
+        <span class="string">""
     </span>};
 
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;{icon} {charge}%&quot;</span>))
+    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{icon} {charge}%"</span>))
 }
 
 <span class="kw">fn </span>read_sys_file(bat: <span class="kw-2">&amp;</span>str, fname: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    fs::read_to_string(<span class="macro">format!</span>(<span class="string">&quot;/sys/class/power_supply/{bat}/{fname}&quot;</span>))
+    fs::read_to_string(<span class="macro">format!</span>(<span class="string">"/sys/class/power_supply/{bat}/{fname}"</span>))
         .ok()
         .map(|s| s.trim().to_string())
 }
@@ -171,7 +173,7 @@
 /// This widget shells out to the `date` tool to generate its output
 </span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, || {
-        spawn_for_output_with_args(<span class="string">&quot;date&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;+%F %R&quot;</span>])
+        spawn_for_output_with_args(<span class="string">"date"</span>, <span class="kw-2">&amp;</span>[<span class="string">"+%F %R"</span>])
             .unwrap_or_default()
             .trim()
             .to_string()
@@ -188,32 +190,32 @@
     <span class="kw">let </span>(interface, essid) = interface_and_essid()<span class="question-mark">?</span>;
     <span class="kw">let </span>signal = signal_quality(<span class="kw-2">&amp;</span>interface)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;&lt;{essid} {signal}%&gt;&quot;</span>))
+    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"&lt;{essid} {signal}%&gt;"</span>))
 }
 
 <span class="comment">// Read the interface name and essid via iwgetid.
-//   Output format is &#39;$interface    ESSID:&quot;$essid&quot;&#39;
+//   Output format is '$interface    ESSID:"$essid"'
 </span><span class="kw">fn </span>interface_and_essid() -&gt; <span class="prelude-ty">Option</span>&lt;(String, String)&gt; {
-    <span class="kw">let </span>raw = spawn_for_output(<span class="string">&quot;iwgetid&quot;</span>).ok()<span class="question-mark">?</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>iter = raw.split(<span class="string">&#39;:&#39;</span>);
+    <span class="kw">let </span>raw = spawn_for_output(<span class="string">"iwgetid"</span>).ok()<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>iter = raw.split(<span class="string">':'</span>);
 
     <span class="comment">// Not using split_whitespace here as the essid may contain whitespace
     </span><span class="kw">let </span>interface = iter.next()<span class="question-mark">?</span>.split_whitespace().next()<span class="question-mark">?</span>.to_owned();
-    <span class="kw">let </span>essid = iter.next()<span class="question-mark">?</span>.split(<span class="string">&#39;&quot;&#39;</span>).nth(<span class="number">1</span>)<span class="question-mark">?</span>.to_string();
+    <span class="kw">let </span>essid = iter.next()<span class="question-mark">?</span>.split(<span class="string">'"'</span>).nth(<span class="number">1</span>)<span class="question-mark">?</span>.to_string();
 
     <span class="prelude-val">Some</span>((interface, essid))
 }
 
 <span class="comment">// Parsing the format described here: https://hewlettpackard.github.io/wireless-tools/Linux.Wireless.Extensions.html
 </span><span class="kw">fn </span>signal_quality(interface: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>raw = fs::read_to_string(<span class="string">&quot;/proc/net/wireless&quot;</span>).ok()<span class="question-mark">?</span>;
+    <span class="kw">let </span>raw = fs::read_to_string(<span class="string">"/proc/net/wireless"</span>).ok()<span class="question-mark">?</span>;
 
     <span class="kw">for </span>line <span class="kw">in </span>raw.lines() {
         <span class="kw">if </span>line.starts_with(interface) {
             <span class="kw">return </span><span class="prelude-val">Some</span>(
                 line.split_whitespace()
                     .nth(<span class="number">2</span>)<span class="question-mark">?
-                    </span>.strip_suffix(<span class="string">&#39;.&#39;</span>)<span class="question-mark">?
+                    </span>.strip_suffix(<span class="string">'.'</span>)<span class="question-mark">?
                     </span>.to_owned(),
             );
         }
@@ -223,7 +225,7 @@
 </span>}
 
 <span class="doccomment">/// Display the current volume level as reported by `amixer`
-</span><span class="kw">pub fn </span>amixer_volume(channel: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, style: TextStyle) -&gt; RefreshText {
+</span><span class="kw">pub fn </span>amixer_volume(channel: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, style: TextStyle) -&gt; RefreshText {
     RefreshText::new(style, <span class="kw">move </span>|| amixer_text(channel).unwrap_or_default())
 }
 
@@ -231,21 +233,21 @@
 //
 // Expected output format:
 //   $ amixer sget Master
-//     Simple mixer control &#39;Master&#39;,0
+//     Simple mixer control 'Master',0
 //       Capabilities: pvolume pvolume-joined pswitch pswitch-joined
 //       Playback channels: Mono
 //       Limits: Playback 0 - 127
 //       Mono: Playback 0 [0%] [-63.50dB] [on]
 </span><span class="kw">fn </span>amixer_text(channel: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>raw = spawn_for_output(<span class="macro">format!</span>(<span class="string">&quot;amixer sget {channel}&quot;</span>)).ok()<span class="question-mark">?</span>;
+    <span class="kw">let </span>raw = spawn_for_output(<span class="macro">format!</span>(<span class="string">"amixer sget {channel}"</span>)).ok()<span class="question-mark">?</span>;
 
     <span class="kw">let </span>vol = raw
         .lines()
         .last()<span class="question-mark">?
         </span>.split_whitespace()
-        .nth(<span class="number">3</span>)<span class="question-mark">?
-        </span>.replace(|c| <span class="string">&quot;[]%&quot;</span>.contains(c), <span class="string">&quot;&quot;</span>);
+        .find(|s| s.ends_with(<span class="string">"%]"</span>))<span class="question-mark">?
+        </span>.replace(|c| <span class="string">"[]%"</span>.contains(c), <span class="string">""</span>);
 
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot; {vol}%&quot;</span>))
+    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">" {vol}%"</span>))
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/hooks/named_scratchpads.rs`."><title>named_scratchpads.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/hooks/named_scratchpads.rs`."><title>named_scratchpads.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -219,26 +221,26 @@
 
 <span class="doccomment">/// The tag used for a placeholder Workspace that holds scratchpad windows when
 /// they are currently hidden.
-</span><span class="kw">pub const </span>NSP_TAG: <span class="kw-2">&amp;</span>str = <span class="string">&quot;NSP&quot;</span>;
+</span><span class="kw">pub const </span>NSP_TAG: <span class="kw-2">&amp;</span>str = <span class="string">"NSP"</span>;
 
 <span class="doccomment">/// A toggle-able client program that can be shown and hidden via a keybinding.
 </span><span class="kw">pub struct </span>NamedScratchPad&lt;X&gt;
 <span class="kw">where
     </span>X: XConn,
 {
-    name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
-    prog: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+    name: Cow&lt;<span class="lifetime">'static</span>, str&gt;,
+    prog: Cow&lt;<span class="lifetime">'static</span>, str&gt;,
     client: <span class="prelude-ty">Option</span>&lt;Xid&gt;,
     query: Box&lt;<span class="kw">dyn </span>Query&lt;X&gt;&gt;,
     hook: Box&lt;<span class="kw">dyn </span>ManageHook&lt;X&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; fmt::Debug <span class="kw">for </span>NamedScratchPad&lt;X&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;NamedScratchpad&quot;</span>)
-            .field(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name)
-            .field(<span class="string">&quot;prog&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.prog)
-            .field(<span class="string">&quot;client&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.client)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"NamedScratchpad"</span>)
+            .field(<span class="string">"name"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name)
+            .field(<span class="string">"prog"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.prog)
+            .field(<span class="string">"client"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.client)
             .finish()
     }
 }
@@ -249,15 +251,15 @@
 {
     <span class="doccomment">/// Create a new named scratchpad.
     </span><span class="kw">pub fn </span>new&lt;Q, H&gt;(
-        name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
-        prog: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
+        prog: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
         query: Q,
         manage_hook: H,
         run_hook_on_toggle: bool,
     ) -&gt; (<span class="self">Self</span>, ToggleNamedScratchPad)
     <span class="kw">where
-        </span>Q: Query&lt;X&gt; + <span class="lifetime">&#39;static</span>,
-        H: ManageHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
+        </span>Q: Query&lt;X&gt; + <span class="lifetime">'static</span>,
+        H: ManageHook&lt;X&gt; + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span>name = name.into();
         <span class="kw">let </span>nsp = <span class="self">Self </span>{
@@ -279,7 +281,7 @@
 }
 
 <span class="comment">// Private wrapper type to ensure that only this module can access this state extension
-</span><span class="kw">struct </span>NamedScratchPadState&lt;X: XConn&gt;(HashMap&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;, NamedScratchPad&lt;X&gt;&gt;);
+</span><span class="kw">struct </span>NamedScratchPadState&lt;X: XConn&gt;(HashMap&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;, NamedScratchPad&lt;X&gt;&gt;);
 
 <span class="doccomment">/// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].
 ///
@@ -290,7 +292,7 @@
     scratchpads: Vec&lt;NamedScratchPad&lt;X&gt;&gt;,
 ) -&gt; WindowManager&lt;X&gt;
 <span class="kw">where
-    </span>X: XConn + <span class="lifetime">&#39;static</span>,
+    </span>X: XConn + <span class="lifetime">'static</span>,
 {
     <span class="kw">let </span>state: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = scratchpads
         .into_iter()
@@ -301,7 +303,7 @@
     wm.state
         .client_set
         .add_invisible_workspace(NSP_TAG)
-        .expect(<span class="string">&quot;named scratchpad tag to be unique&quot;</span>);
+        .expect(<span class="string">"named scratchpad tag to be unique"</span>);
     wm.state.config.compose_or_set_manage_hook(manage_hook);
     wm.state.config.compose_or_set_event_hook(event_hook);
 
@@ -309,12 +311,12 @@
 }
 
 <span class="doccomment">/// Store clients matching NamedScratchPad queries and run the associated [ManageHook].
-</span><span class="kw">pub fn </span>manage_hook&lt;X: XConn + <span class="lifetime">&#39;static</span>&gt;(id: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">pub fn </span>manage_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(id: Xid, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>s = state.extension::&lt;NamedScratchPadState&lt;X&gt;&gt;()<span class="question-mark">?</span>;
 
     <span class="kw">for </span>sp <span class="kw">in </span>s.borrow_mut().<span class="number">0</span>.values_mut() {
         <span class="kw">if </span>sp.client.is_none() &amp;&amp; sp.query.run(id, x)<span class="question-mark">? </span>{
-            <span class="macro">debug!</span>(scratchpad=sp.name.as_ref(), %id, <span class="string">&quot;matched query for named scratchpad&quot;</span>);
+            <span class="macro">debug!</span>(scratchpad=sp.name.as_ref(), %id, <span class="string">"matched query for named scratchpad"</span>);
             sp.client = <span class="prelude-val">Some</span>(id);
             <span class="kw">return </span>sp.hook.call(id, state, x);
         }
@@ -324,7 +326,7 @@
 }
 
 <span class="doccomment">/// Remove destroyed clients from internal scratchpad state
-</span><span class="kw">pub fn </span>event_hook&lt;X: XConn + <span class="lifetime">&#39;static</span>&gt;(event: <span class="kw-2">&amp;</span>XEvent, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+</span><span class="kw">pub fn </span>event_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(event: <span class="kw-2">&amp;</span>XEvent, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
     <span class="kw">let </span>destroyed = <span class="kw">match </span>event {
         XEvent::Destroy(id) =&gt; id,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
@@ -334,7 +336,7 @@
 
     <span class="kw">for </span>sp <span class="kw">in </span>s.borrow_mut().<span class="number">0</span>.values_mut() {
         <span class="kw">if </span>sp.client == <span class="prelude-val">Some</span>(<span class="kw-2">*</span>destroyed) {
-            <span class="macro">debug!</span>(%sp.name, %destroyed, <span class="string">&quot;scratchpad client destroyed&quot;</span>);
+            <span class="macro">debug!</span>(%sp.name, %destroyed, <span class="string">"scratchpad client destroyed"</span>);
             sp.client = <span class="prelude-val">None</span>;
             <span class="kw">break</span>;
         }
@@ -345,17 +347,17 @@
 
 <span class="doccomment">/// Toggle the visibility of a NamedScratchPad.
 ///
-/// This will spawn the requested client program if it isn&#39;t currently running or
+/// This will spawn the requested client program if it isn't currently running or
 /// move it to the focused workspace. If the scratchpad is currently visible it
 /// will be hidden.
 </span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>ToggleNamedScratchPad {
-    name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+    name: Cow&lt;<span class="lifetime">'static</span>, str&gt;,
     run_hook_on_toggle: bool,
 }
 
-<span class="kw">impl</span>&lt;X: XConn + <span class="lifetime">&#39;static</span>&gt; KeyEventHandler&lt;X&gt; <span class="kw">for </span>ToggleNamedScratchPad {
-    <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(state, x))]
+<span class="kw">impl</span>&lt;X: XConn + <span class="lifetime">'static</span>&gt; KeyEventHandler&lt;X&gt; <span class="kw">for </span>ToggleNamedScratchPad {
+    <span class="attr">#[tracing::instrument(level = <span class="string">"debug"</span>, skip(state, x))]
     </span><span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>_s = state.extension::&lt;NamedScratchPadState&lt;X&gt;&gt;()<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>s = _s.borrow_mut();
@@ -368,20 +370,20 @@
                 hook,
                 ..
             }) <span class="kw">if </span>state.client_set.contains(id) =&gt; {
-                <span class="macro">debug!</span>(%id, %name, <span class="string">&quot;NamedScratchPad client exists in state&quot;</span>);
+                <span class="macro">debug!</span>(%id, %name, <span class="string">"NamedScratchPad client exists in state"</span>);
                 (<span class="kw-2">*</span>id, hook)
             }
 
             <span class="comment">// No active client or client is no longer in state
             </span><span class="prelude-val">Some</span>(nsp) =&gt; {
-                <span class="macro">debug!</span>(%nsp.prog, %name, <span class="question-mark">?</span>nsp.client, <span class="string">&quot;spawning NamedScratchPad program&quot;</span>);
+                <span class="macro">debug!</span>(%nsp.prog, %name, <span class="question-mark">?</span>nsp.client, <span class="string">"spawning NamedScratchPad program"</span>);
                 nsp.client = <span class="prelude-val">None</span>;
                 <span class="kw">return </span>spawn(nsp.prog.as_ref());
             }
 
-            <span class="comment">// The user created a ToggleNamedScratchPad but didn&#39;t register the scratchpad
+            <span class="comment">// The user created a ToggleNamedScratchPad but didn't register the scratchpad
             </span><span class="prelude-val">None </span>=&gt; {
-                <span class="macro">warn!</span>(%name, <span class="string">&quot;toggle called for unknown scratchpad: did you remember to call add_named_scratchpads?&quot;</span>);
+                <span class="macro">warn!</span>(%name, <span class="string">"toggle called for unknown scratchpad: did you remember to call add_named_scratchpads?"</span>);
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
         };
@@ -391,26 +393,26 @@
             %name,
             current_tag = state.client_set.current_tag(),
             current_screen = state.client_set.current_screen().index(),
-            <span class="string">&quot;Toggling nsp client&quot;
+            <span class="string">"Toggling nsp client"
         </span>);
 
         <span class="kw">if </span>state.client_set.current_workspace().contains(<span class="kw-2">&amp;</span>id) {
             <span class="comment">// Toggle off: hiding the client on our invisible workspace
-            </span><span class="macro">debug!</span>(%id, <span class="string">&quot;current workspace contains target client: moving to NSP tag&quot;</span>);
+            </span><span class="macro">debug!</span>(%id, <span class="string">"current workspace contains target client: moving to NSP tag"</span>);
             state.client_set.move_client_to_tag(<span class="kw-2">&amp;</span>id, NSP_TAG);
         } <span class="kw">else </span>{
             <span class="comment">// Toggle on / bring to current workspace
-            </span><span class="macro">debug!</span>(%id, <span class="string">&quot;current workspace does not contain target client: moving to tag&quot;</span>);
+            </span><span class="macro">debug!</span>(%id, <span class="string">"current workspace does not contain target client: moving to tag"</span>);
             state.client_set.move_client_to_current_tag(<span class="kw-2">&amp;</span>id);
 
             <span class="kw">if </span><span class="self">self</span>.run_hook_on_toggle {
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = hook.call(id, state, x) {
-                    <span class="macro">error!</span>(%e, %name, %id, <span class="string">&quot;unable to run NSP manage hook during toggle&quot;</span>);
+                    <span class="macro">error!</span>(%e, %name, %id, <span class="string">"unable to run NSP manage hook during toggle"</span>);
                 }
             }
         }
 
-        <span class="macro">debug!</span>(%id, %name, <span class="string">&quot;running refresh following NamedScratchPad toggle&quot;</span>);
+        <span class="macro">debug!</span>(%id, %name, <span class="string">"running refresh following NamedScratchPad toggle"</span>);
         x.refresh(state)
     }
 }

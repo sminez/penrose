@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util.rs`."><title>util.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/util.rs`."><title>util.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -232,7 +234,7 @@
 /// &gt; output of a process that you spawn.
 </span><span class="kw">pub fn </span>spawn_for_output&lt;S: Into&lt;String&gt;&gt;(cmd: S) -&gt; std::io::Result&lt;String&gt; {
     <span class="kw">let </span>cmd = cmd.into();
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">&quot;spawning subprocess for output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">"spawning subprocess for output"</span>);
     <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = cmd.split_whitespace().collect();
     <span class="kw">let </span>result = <span class="kw">if </span>parts.len() &gt; <span class="number">1 </span>{
         Command::new(parts[<span class="number">0</span>])
@@ -243,13 +245,13 @@
         Command::new(parts[<span class="number">0</span>]).stdout(Stdio::piped()).spawn()
     };
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">&quot;reading output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">"reading output"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>child = result<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>buff = String::new();
     child
         .stdout
         .take()
-        .expect(<span class="string">&quot;to have output&quot;</span>)
+        .expect(<span class="string">"to have output"</span>)
         .read_to_string(<span class="kw-2">&amp;mut </span>buff)
         .map(|<span class="kw">_</span>| buff)
 }
@@ -265,13 +267,13 @@
 ) -&gt; std::io::Result&lt;String&gt; {
     <span class="kw">let </span>cmd = cmd.into();
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">&quot;spawning subprocess for output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">"spawning subprocess for output"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>child = Command::new(<span class="kw-2">&amp;</span>cmd)
         .stdout(Stdio::piped())
         .args(args)
         .spawn()<span class="question-mark">?</span>;
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">&quot;reading output&quot;</span>);
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">"reading output"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>buff = String::new();
     child
         .stdout
@@ -283,7 +285,7 @@
 
 <span class="doccomment">/// Use `notify-send` to display a message to the user
 </span><span class="kw">pub fn </span>notify(msg: <span class="kw-2">&amp;</span>str) -&gt; std::io::Result&lt;()&gt; {
-    Command::new(<span class="string">&quot;notify-send&quot;</span>).arg(msg).output().map(|<span class="kw">_</span>| ())
+    Command::new(<span class="string">"notify-send"</span>).arg(msg).output().map(|<span class="kw">_</span>| ())
 }
 
 <span class="doccomment">/// Run a given [`Layout`] for a stack of n clients and print a simple ASCII rendering
@@ -295,7 +297,7 @@
 /// layout with a screen size of (40, 15) and 4 clients.
 ///
 /// ### A note on screen dimensions
-/// In order to print out the ASCII representation of your layout, the &quot;screen&quot; dimensions
+/// In order to print out the ASCII representation of your layout, the "screen" dimensions
 /// being used will be significantly smaller than a typical real-life monitor. You may
 /// observe some unexpected behaviour from your layout when running this function if you
 /// have any hard coded values relating to screen size or individual client sizes.
@@ -326,24 +328,24 @@
     screen_width: u32,
     screen_height: u32,
 ) {
-    <span class="kw">let </span>s: Stack&lt;Xid&gt; = Stack::try_from_iter((<span class="number">0</span>..n_clients).map(Into::into)).expect(<span class="string">&quot;non-empty&quot;</span>);
+    <span class="kw">let </span>s: Stack&lt;Xid&gt; = Stack::try_from_iter((<span class="number">0</span>..n_clients).map(Into::into)).expect(<span class="string">"non-empty"</span>);
     <span class="kw">let </span>(<span class="kw">_</span>, positions) = l.layout(<span class="kw-2">&amp;</span>s, Rect::new(<span class="number">0</span>, <span class="number">0</span>, screen_width, screen_height));
 
-    <span class="kw">let </span><span class="kw-2">mut </span>screen = <span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="string">&#39; &#39;</span>; (screen_width + <span class="number">1</span>) <span class="kw">as </span>usize]; (screen_height + <span class="number">1</span>) <span class="kw">as </span>usize];
+    <span class="kw">let </span><span class="kw-2">mut </span>screen = <span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="string">' '</span>; (screen_width + <span class="number">1</span>) <span class="kw">as </span>usize]; (screen_height + <span class="number">1</span>) <span class="kw">as </span>usize];
     <span class="kw">for </span>(<span class="kw">_</span>, Rect { x, y, w, h }) <span class="kw">in </span>positions.into_iter() {
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..=w {
-            screen[y <span class="kw">as </span>usize][(x + i) <span class="kw">as </span>usize] = <span class="string">&#39;.&#39;</span>;
-            screen[(y + h) <span class="kw">as </span>usize][(x + i) <span class="kw">as </span>usize] = <span class="string">&#39;.&#39;</span>;
+            screen[y <span class="kw">as </span>usize][(x + i) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
+            screen[(y + h) <span class="kw">as </span>usize][(x + i) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
         }
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..=h {
-            screen[(y + i) <span class="kw">as </span>usize][x <span class="kw">as </span>usize] = <span class="string">&#39;.&#39;</span>;
-            screen[(y + i) <span class="kw">as </span>usize][(x + w) <span class="kw">as </span>usize] = <span class="string">&#39;.&#39;</span>;
+            screen[(y + i) <span class="kw">as </span>usize][x <span class="kw">as </span>usize] = <span class="string">'.'</span>;
+            screen[(y + i) <span class="kw">as </span>usize][(x + w) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
         }
     }
 
     <span class="kw">for </span>row <span class="kw">in </span>screen.into_iter() {
         <span class="kw">let </span>chars: String = row.into_iter().collect();
-        <span class="macro">println!</span>(<span class="string">&quot;{chars}&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"{chars}"</span>);
     }
 }
 </code></pre></div></section></main></body></html>

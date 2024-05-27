@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -416,16 +418,16 @@
     clippy::undocumented_unsafe_blocks
 )]
 #![doc(
-    html_logo_url = <span class="string">&quot;https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg&quot;</span>,
-    issue_tracker_base_url = <span class="string">&quot;https://github.com/sminez/penrose/issues/&quot;
+    html_logo_url = <span class="string">"https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg"</span>,
+    issue_tracker_base_url = <span class="string">"https://github.com/sminez/penrose/issues/"
 </span>)]
 
-#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
+#[cfg(feature = <span class="string">"x11rb"</span>)]
 </span><span class="kw">use </span>::x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
     x11_utils::X11Error,
 };
-<span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::any::TypeId;
 
@@ -436,7 +438,7 @@
 <span class="kw">pub mod </span>pure;
 <span class="kw">pub mod </span>util;
 <span class="kw">pub mod </span>x;
-<span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"x11rb"</span>)]
 </span><span class="kw">pub mod </span>x11rb;
 
 <span class="attr">#[doc(inline)]
@@ -447,15 +449,15 @@
 </span><span class="kw">pub enum </span>Error {
     <span class="doccomment">/// An operation requiring the client to be on a screen was requested on a client window that
     /// is not currently visible
-    </span><span class="attr">#[error(<span class="string">&quot;Client {0} is not currently visible&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Client {0} is not currently visible"</span>)]
     </span>ClientIsNotVisible(Xid),
 
     <span class="doccomment">/// A custom error message from user code or extensions
-    </span><span class="attr">#[error(<span class="string">&quot;{0}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"{0}"</span>)]
     </span>Custom(String),
 
     <span class="doccomment">/// There were not enough workspaces to cover the number of connected screens
-    </span><span class="attr">#[error(<span class="string">&quot;Only {n_ws} workspaces were provided but at least {n_screens} are required&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Only {n_ws} workspaces were provided but at least {n_screens} are required"</span>)]
     </span>InsufficientWorkspaces {
         <span class="doccomment">/// Number of provided workspaces
         </span>n_ws: usize,
@@ -464,21 +466,21 @@
     },
 
     <span class="doccomment">/// Data received as part of a client message had an invalid format
-    </span><span class="attr">#[error(<span class="string">&quot;invalid client message data: format={format}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"invalid client message data: format={format}"</span>)]
     </span>InvalidClientMessage {
         <span class="doccomment">/// The format received
         </span>format: u8,
     },
 
     <span class="doccomment">/// Attempt to create a `Color` from an invalid hex string
-    </span><span class="attr">#[error(<span class="string">&quot;Invalid Hex color code: &#39;{hex_code}&#39;&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Invalid Hex color code: '{hex_code}'"</span>)]
     </span>InvalidHexColor {
         <span class="doccomment">/// The string that was used
         </span>hex_code: String,
     },
 
     <span class="doccomment">/// A window hints message was received but unable to be parsed
-    </span><span class="attr">#[error(<span class="string">&quot;Invalid window hints message: {reason}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Invalid window hints message: {reason}"</span>)]
     </span>InvalidHints {
         <span class="doccomment">/// Why parsing failed
         </span>reason: String,
@@ -493,7 +495,7 @@
     </span>InvalidUtf8(<span class="attr">#[from] </span>std::string::FromUtf8Error),
 
     <span class="doccomment">/// Data received from the X server when requesting a window property was invalid
-    </span><span class="attr">#[error(<span class="string">&quot;{ty} property &#39;{prop}&#39; for {id} contained invalid data&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"{ty} property '{prop}' for {id} contained invalid data"</span>)]
     </span>InvalidPropertyData {
         <span class="doccomment">/// The window that was queried
         </span>id: Xid,
@@ -504,14 +506,14 @@
     },
 
     <span class="doccomment">/// Duplicate tags were provided for one or more workspaces
-    </span><span class="attr">#[error(<span class="string">&quot;The following tags have been used multiple times for different workspaces: {tags:?}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"The following tags have been used multiple times for different workspaces: {tags:?}"</span>)]
     </span>NonUniqueTags {
         <span class="doccomment">/// The set of non-unique tags
         </span>tags: Vec&lt;String&gt;,
     },
 
     <span class="doccomment">/// Penrose is running without any screens to connect to
-    </span><span class="attr">#[error(<span class="string">&quot;There are no screens available&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"There are no screens available"</span>)]
     </span>NoScreens,
 
     <span class="doccomment">/// ParseIntError
@@ -519,36 +521,36 @@
     </span>ParseInt(<span class="attr">#[from] </span>std::num::ParseIntError),
 
     <span class="doccomment">/// There was a problem initialising randr
-    </span><span class="attr">#[error(<span class="string">&quot;Error initialising randr: {0}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Error initialising randr: {0}"</span>)]
     </span>Randr(String),
 
     <span class="doccomment">/// An operation was requested on a client window that is unknown
-    </span><span class="attr">#[error(<span class="string">&quot;Client {0} is not in found&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Client {0} is not in found"</span>)]
     </span>UnknownClient(Xid),
 
     <span class="doccomment">/// A keybinding has been specified for an unknown key name for this machine.
-    </span><span class="attr">#[error(<span class="string">&quot;&#39;{name}&#39; is not a known key name&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"'{name}' is not a known key name"</span>)]
     </span>UnknownKeyName {
         <span class="doccomment">/// The name of the unknown key
         </span>name: String,
     },
 
     <span class="doccomment">/// An unknown character has been used to specify a modifier key
-    </span><span class="attr">#[error(<span class="string">&quot;&#39;{name}&#39; is not a known modifier key&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"'{name}' is not a known modifier key"</span>)]
     </span>UnknownModifier {
         <span class="doccomment">/// The unrecognised modifier name
         </span>name: String,
     },
 
     <span class="doccomment">/// An unknown mouse button was pressed
-    </span><span class="attr">#[error(<span class="string">&quot;{button} is not a supported mouse button&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"{button} is not a supported mouse button"</span>)]
     </span>UnknownMouseButton {
         <span class="doccomment">/// The button ID that was pressed
         </span>button: u8,
     },
 
     <span class="doccomment">/// An attempt was made to fetch a state extension for a type that has not been stored
-    </span><span class="attr">#[error(<span class="string">&quot;{type_id:?} was requested as a state extension but not found&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"{type_id:?} was requested as a state extension but not found"</span>)]
     </span>UnknownStateExtension {
         <span class="doccomment">/// The type ID of the type that was requested
         </span>type_id: TypeId,
@@ -558,35 +560,35 @@
     //       set of common error variants that they can be mapped to without
     //       needing to extend the enum conditionally when flags are enabled
     </span><span class="doccomment">/// An error that occurred while connecting to an X11 server
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"x11rb"</span>)]
     #[error(transparent)]
     </span>X11rbConnect(<span class="attr">#[from] </span>ConnectError),
 
     <span class="doccomment">/// An error that occurred on an already established X11 connection
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"x11rb"</span>)]
     #[error(transparent)]
     </span>X11rbConnection(<span class="attr">#[from] </span>ConnectionError),
 
     <span class="doccomment">/// An error that occurred with some request.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"x11rb"</span>)]
     #[error(transparent)]
     </span>X11rbReplyError(<span class="attr">#[from] </span>ReplyError),
 
     <span class="doccomment">/// An error caused by some request or by the exhaustion of IDs.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"x11rb"</span>)]
     #[error(transparent)]
     </span>X11rbReplyOrIdError(<span class="attr">#[from] </span>ReplyOrIdError),
 
     <span class="doccomment">/// Representation of an X11 error packet that was sent by the server.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;x11rb&quot;</span>)]
-    #[error(<span class="string">&quot;X11 error: {0:?}&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"x11rb"</span>)]
+    #[error(<span class="string">"X11 error: {0:?}"</span>)]
     </span>X11rbX11Error(X11Error),
 }
 
 <span class="doccomment">/// A Result where the error type is a penrose [Error]
 </span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = std::result::Result&lt;T, Error&gt;;
 
-<span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+<span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 </span><span class="doccomment">/// A simple RGBA based color
 </span><span class="kw">pub struct </span>Color {
@@ -622,7 +624,7 @@
 
     <span class="doccomment">/// Render this color as a #RRGGBB hew color string
     </span><span class="kw">pub fn </span>as_rgb_hex_string(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="macro">format!</span>(<span class="string">&quot;#{:0&gt;6X}&quot;</span>, <span class="self">self</span>.rgb_u32())
+        <span class="macro">format!</span>(<span class="string">"#{:0&gt;6X}"</span>, <span class="self">self</span>.rgb_u32())
     }
 
     <span class="doccomment">/// 0xRRGGBB representation of this Color (no alpha information)
@@ -647,7 +649,7 @@
     }
 }
 
-<span class="macro">macro_rules! </span>_f2u { { <span class="macro-nonterminal">$f</span>:expr, <span class="macro-nonterminal">$s</span>:expr } =&gt; { ((<span class="macro-nonterminal">$f </span>* <span class="number">255.0</span>) <span class="kw">as </span>u32) &lt;&lt; <span class="macro-nonterminal">$s </span>} }
+<span class="macro">macro_rules!</span> _f2u { { <span class="macro-nonterminal">$f</span>:expr, <span class="macro-nonterminal">$s</span>:expr } =&gt; { ((<span class="macro-nonterminal">$f </span>* <span class="number">255.0</span>) <span class="kw">as </span>u32) &lt;&lt; <span class="macro-nonterminal">$s </span>} }
 
 <span class="kw">impl </span>From&lt;(f64, f64, f64)&gt; <span class="kw">for </span>Color {
     <span class="kw">fn </span>from(rgb: (f64, f64, f64)) -&gt; <span class="self">Self </span>{
@@ -679,7 +681,7 @@
     <span class="kw">type </span>Error = Error;
 
     <span class="kw">fn </span>try_from(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>hex = u32::from_str_radix(s.strip_prefix(<span class="string">&#39;#&#39;</span>).unwrap_or(s), <span class="number">16</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>hex = u32::from_str_radix(s.strip_prefix(<span class="string">'#'</span>).unwrap_or(s), <span class="number">16</span>)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>s.len() == <span class="number">7 </span>{
             <span class="prelude-val">Ok</span>(<span class="self">Self</span>::new_from_hex((hex &lt;&lt; <span class="number">8</span>) + <span class="number">0xFF</span>))
@@ -696,9 +698,9 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>simple_test_case::test_case;
 
-    <span class="attr">#[test_case(<span class="number">0xAABBCCDD</span>, <span class="string">&quot;#AABBCC&quot;</span>; <span class="string">&quot;r g and b are correct&quot;</span>)]
-    #[test_case(<span class="number">0x001122FF</span>, <span class="string">&quot;#001122&quot;</span>; <span class="string">&quot;leading 0s are preserved&quot;</span>)]
-    #[test_case(<span class="number">0x00000000</span>, <span class="string">&quot;#000000&quot;</span>; <span class="string">&quot;black works&quot;</span>)]
+    <span class="attr">#[test_case(<span class="number">0xAABBCCDD</span>, <span class="string">"#AABBCC"</span>; <span class="string">"r g and b are correct"</span>)]
+    #[test_case(<span class="number">0x001122FF</span>, <span class="string">"#001122"</span>; <span class="string">"leading 0s are preserved"</span>)]
+    #[test_case(<span class="number">0x00000000</span>, <span class="string">"#000000"</span>; <span class="string">"black works"</span>)]
     #[test]
     </span><span class="kw">fn </span>as_rgb_hex_string_is_correct(rgba_hex: u32, expected: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span>c: Color = rgba_hex.into();

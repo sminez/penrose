@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/dmenu.rs`."><title>dmenu.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/util/dmenu.rs`."><title>dmenu.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -411,7 +413,7 @@
 <a href="#411" id="411">411</a>
 <a href="#412" id="412">412</a>
 <a href="#413" id="413">413</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! A simple wrapper for suckless&#39; [dmenu](http://tools.suckless.org/dmenu/) tool for
+</pre></div><pre class="rust"><code><span class="doccomment">//! A simple wrapper for suckless' [dmenu](http://tools.suckless.org/dmenu/) tool for
 //! providing quick text based menus.
 //!
 //! See [`DMenuKind`] for dmenu type support options.
@@ -426,7 +428,7 @@
 </span><span class="kw">pub enum </span>MenuMatch {
     <span class="doccomment">/// The selected line along its line number (0 indexed)
     </span>Line(usize, String),
-    <span class="doccomment">/// Nothing matched and this was the user&#39;s input when they hit Return
+    <span class="doccomment">/// Nothing matched and this was the user's input when they hit Return
     </span>UserInput(String),
     <span class="doccomment">/// The user exited out of matching or had nothing typed
     </span>NoMatch,
@@ -435,7 +437,7 @@
 <span class="doccomment">/// Two different derivatives of dmenu
 </span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>DMenuKind {
-    <span class="doccomment">/// Suckless&#39;s version of dmenu
+    <span class="doccomment">/// Suckless's version of dmenu
     ///
     /// &lt;https://tools.suckless.org/dmenu/&gt;
     </span>Suckless,
@@ -456,9 +458,9 @@
 ///     password_input: true,
 ///     ignore_case: false,
 ///     n_lines: 0,
-///     custom_font: Some(&quot;JetBrains Nerd Font Mono&quot;.to_owned()),
+///     custom_font: Some("JetBrains Nerd Font Mono".to_owned()),
 ///     kind: DMenuKind::Rust,
-///     custom_prompt: Some(&quot; &quot;.to_owned()),
+///     custom_prompt: Some(" ".to_owned()),
 ///     ..DMenuConfig::default()
 /// };
 /// ```
@@ -475,7 +477,7 @@
     /// Default: false
     </span><span class="kw">pub </span>show_on_bottom: bool,
 
-    <span class="doccomment">/// Should dmenu treat the input as a password and render characters as &#39;*&#39;?
+    <span class="doccomment">/// Should dmenu treat the input as a password and render characters as '*'?
     ///
     /// &gt; This requires the [Password][1] patch in order to work.
     /// &gt; or in the case of dmenu-rs it requires the password plugin.
@@ -573,47 +575,47 @@
             ..
         } = <span class="self">self</span>;
 
-        <span class="comment">// Only some command line options require the &quot;--&quot; for the rust version.
+        <span class="comment">// Only some command line options require the "--" for the rust version.
         </span><span class="kw">let </span>prefix = <span class="kw">match </span>kind {
-            DMenuKind::Suckless =&gt; <span class="string">&quot;-&quot;</span>,
-            DMenuKind::Rust =&gt; <span class="string">&quot;--&quot;</span>,
+            DMenuKind::Suckless =&gt; <span class="string">"-"</span>,
+            DMenuKind::Rust =&gt; <span class="string">"--"</span>,
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="macro">vec!</span>[<span class="string">&quot;-m&quot;</span>.to_owned(), screen_index.to_string()];
+        <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="macro">vec!</span>[<span class="string">"-m"</span>.to_owned(), screen_index.to_string()];
 
-        flags.push(<span class="macro">format!</span>(<span class="string">&quot;{prefix}nb&quot;</span>));
+        flags.push(<span class="macro">format!</span>(<span class="string">"{prefix}nb"</span>));
         flags.push(bg_color.as_rgb_hex_string());
 
-        flags.push(<span class="macro">format!</span>(<span class="string">&quot;{prefix}nf&quot;</span>));
+        flags.push(<span class="macro">format!</span>(<span class="string">"{prefix}nf"</span>));
         flags.push(fg_color.as_rgb_hex_string());
 
-        flags.push(<span class="macro">format!</span>(<span class="string">&quot;{prefix}sb&quot;</span>));
+        flags.push(<span class="macro">format!</span>(<span class="string">"{prefix}sb"</span>));
         flags.push(selected_color.as_rgb_hex_string());
 
         <span class="kw">if </span><span class="kw-2">*</span>n_lines &gt; <span class="number">0 </span>{
-            flags.push(<span class="string">&quot;-l&quot;</span>.to_owned());
+            flags.push(<span class="string">"-l"</span>.to_owned());
             flags.push(n_lines.to_string());
         }
 
         <span class="kw">if </span><span class="kw-2">*</span>show_on_bottom {
-            flags.push(<span class="string">&quot;-b&quot;</span>.to_owned());
+            flags.push(<span class="string">"-b"</span>.to_owned());
         }
 
         <span class="kw">if </span><span class="kw-2">*</span>password_input {
-            flags.push(<span class="string">&quot;-P&quot;</span>.to_owned());
+            flags.push(<span class="string">"-P"</span>.to_owned());
         }
 
         <span class="kw">if </span><span class="kw-2">*</span>ignore_case {
-            flags.push(<span class="string">&quot;-i&quot;</span>.to_owned());
+            flags.push(<span class="string">"-i"</span>.to_owned());
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(font) = custom_font {
-            flags.push(<span class="macro">format!</span>(<span class="string">&quot;{prefix}fn&quot;</span>));
+            flags.push(<span class="macro">format!</span>(<span class="string">"{prefix}fn"</span>));
             flags.push(font.to_owned());
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(prompt) = custom_prompt {
-            flags.push(<span class="string">&quot;-p&quot;</span>.to_owned());
+            flags.push(<span class="string">"-p"</span>.to_owned());
             flags.push(prompt.to_owned());
         }
 
@@ -646,7 +648,7 @@
     /// via the `dmenu_run` wrapper script.
     </span><span class="kw">pub fn </span>run(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>args = <span class="self">self</span>.config.flags(<span class="self">self</span>.screen_index);
-        <span class="kw">let </span>spawned_process = Command::new(<span class="string">&quot;dmenu_run&quot;</span>).args(args).spawn();
+        <span class="kw">let </span>spawned_process = Command::new(<span class="string">"dmenu_run"</span>).args(args).spawn();
 
         <span class="kw">match </span>spawned_process {
             <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>process) =&gt; <span class="kw">match </span>process.wait() {
@@ -665,12 +667,12 @@
     /// let screen_index = 0;
     /// let dmenu = DMenu::new(&amp;DMenuConfig::default(), screen_index);
     ///
-    /// let choices = vec![&quot;some&quot;, &quot;choices&quot;, &quot;to&quot;, &quot;pick&quot;, &quot;from&quot;];
+    /// let choices = vec!["some", "choices", "to", "pick", "from"];
     ///
     /// match dmenu.build_menu(choices).unwrap() {
-    ///     MenuMatch::Line(i, s) =&gt; println!(&quot;matched &#39;{}&#39; on line &#39;{}&#39;&quot;, s, i),
-    ///     MenuMatch::UserInput(s) =&gt; println!(&quot;user input: &#39;{}&#39;&quot;, s),
-    ///     MenuMatch::NoMatch =&gt; println!(&quot;no match&quot;),
+    ///     MenuMatch::Line(i, s) =&gt; println!("matched '{}' on line '{}'", s, i),
+    ///     MenuMatch::UserInput(s) =&gt; println!("user input: '{}'", s),
+    ///     MenuMatch::NoMatch =&gt; println!("no match"),
     /// }
     /// ```
     </span><span class="comment">// #[allow(clippy::pattern_type_mismatch)]
@@ -691,7 +693,7 @@
             .enumerate()
             .find(|(i, s)| {
                 <span class="kw">if </span><span class="self">self</span>.config.show_line_numbers {
-                    <span class="macro">format!</span>(<span class="string">&quot;{i:&lt;3} {s}&quot;</span>) == choice
+                    <span class="macro">format!</span>(<span class="string">"{i:&lt;3} {s}"</span>) == choice
                 } <span class="kw">else </span>{
                     <span class="kw-2">*</span>s == choice
                 }
@@ -701,7 +703,7 @@
                 |(i, <span class="kw">_</span>)| {
                     MenuMatch::Line(
                         i,
-                        choices.get(i).expect(<span class="string">&quot;Indexing choices panicked&quot;</span>).clone(),
+                        choices.get(i).expect(<span class="string">"Indexing choices panicked"</span>).clone(),
                     )
                 },
             );
@@ -715,20 +717,20 @@
             choices
                 .iter()
                 .enumerate()
-                .map(|(i, s)| <span class="macro">format!</span>(<span class="string">&quot;{i:&lt;3} {s}&quot;</span>))
+                .map(|(i, s)| <span class="macro">format!</span>(<span class="string">"{i:&lt;3} {s}"</span>))
                 .collect::&lt;Vec&lt;String&gt;&gt;()
-                .join(<span class="string">&quot;\n&quot;</span>)
+                .join(<span class="string">"\n"</span>)
                 .as_bytes()
                 .to_vec()
         } <span class="kw">else </span>{
-            choices.join(<span class="string">&quot;\n&quot;</span>).as_bytes().to_vec()
+            choices.join(<span class="string">"\n"</span>).as_bytes().to_vec()
         }
     }
 
     <span class="doccomment">/// Launch a shell process with all arguments to dmenu
     </span><span class="kw">fn </span>raw_user_choice_from_dmenu(<span class="kw-2">&amp;</span><span class="self">self</span>, choices: <span class="kw-2">&amp;</span>[String]) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
         <span class="kw">let </span>args = <span class="self">self</span>.config.flags(<span class="self">self</span>.screen_index);
-        <span class="kw">let </span><span class="kw-2">mut </span>proc = Command::new(<span class="string">&quot;dmenu&quot;</span>)
+        <span class="kw">let </span><span class="kw-2">mut </span>proc = Command::new(<span class="string">"dmenu"</span>)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .args(args)
@@ -740,14 +742,14 @@
             </span><span class="kw">let </span><span class="kw-2">mut </span>stdin = proc
                 .stdin
                 .take()
-                .ok_or_else(|| Error::Custom(<span class="string">&quot;unable to open stdin&quot;</span>.to_owned()))<span class="question-mark">?</span>;
+                .ok_or_else(|| Error::Custom(<span class="string">"unable to open stdin"</span>.to_owned()))<span class="question-mark">?</span>;
 
             stdin.write_all(<span class="kw-2">&amp;</span><span class="self">self</span>.choices_as_input_bytes(choices))<span class="question-mark">?</span>;
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>raw = String::new();
         proc.stdout
-            .ok_or_else(|| Error::Custom(<span class="string">&quot;failed to spawn dmenu&quot;</span>.to_owned()))<span class="question-mark">?
+            .ok_or_else(|| Error::Custom(<span class="string">"failed to spawn dmenu"</span>.to_owned()))<span class="question-mark">?
             </span>.read_to_string(<span class="kw-2">&amp;mut </span>raw)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(raw)
@@ -759,15 +761,15 @@
     <span class="kw">use super</span>::{DMenuConfig, DMenuKind};
 
     <span class="doccomment">/// Flags [ nb, nf, sb, and nf] need to be modified for the different
-    /// versions of dmenu. Classic Suckless dmenu uses a single dash &quot;-&quot;, dmenu-rs
-    /// uses the more modern cli style of double dashes &quot;--&quot;.
+    /// versions of dmenu. Classic Suckless dmenu uses a single dash "-", dmenu-rs
+    /// uses the more modern cli style of double dashes "--".
     /// This test depends on the order the flags are loaded into the array, so if the order
     /// is changed in the flags function, these tests will fail. There is a better way, but
     /// this works for now.
     </span><span class="attr">#[test]
     </span><span class="kw">fn </span>dmenu_suckless_config_test() {
         <span class="kw">let </span>dc = DMenuConfig {
-            custom_font: <span class="prelude-val">Some</span>(<span class="string">&quot;mono&quot;</span>.to_owned()),
+            custom_font: <span class="prelude-val">Some</span>(<span class="string">"mono"</span>.to_owned()),
             ..DMenuConfig::default()
         };
 
@@ -777,30 +779,30 @@
 
         <span class="kw">for </span>(i, flag) <span class="kw">in </span>flags.into_iter().enumerate() {
             <span class="kw">if </span>i == <span class="number">2 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;-nb&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"-nb"</span>.to_owned());
             }
             <span class="kw">if </span>i == <span class="number">4 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;-nf&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"-nf"</span>.to_owned());
             }
             <span class="kw">if </span>i == <span class="number">6 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;-sb&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"-sb"</span>.to_owned());
             }
             <span class="kw">if </span>i == <span class="number">10 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;-fn&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"-fn"</span>.to_owned());
             }
         }
     }
 
     <span class="doccomment">/// Flags [ nb, nf, sb, and nf] need to be modified for the different
-    /// versions of dmenu. Classic Suckless dmenu uses a single dash &quot;-&quot;, dmenu-rs
-    /// uses the more modern cli style of double dashes &quot;--&quot;.
+    /// versions of dmenu. Classic Suckless dmenu uses a single dash "-", dmenu-rs
+    /// uses the more modern cli style of double dashes "--".
     /// This test depends on the order the flags are loaded into the array, so if the order
     /// is changed in the flags function, these tests will fail. There is a better way, but
     /// this works for now.
     </span><span class="attr">#[test]
     </span><span class="kw">fn </span>dmenu_rs_config_test() {
         <span class="kw">let </span>dc = DMenuConfig {
-            custom_font: <span class="prelude-val">Some</span>(<span class="string">&quot;mono&quot;</span>.to_owned()),
+            custom_font: <span class="prelude-val">Some</span>(<span class="string">"mono"</span>.to_owned()),
             kind: DMenuKind::Rust,
             ..DMenuConfig::default()
         };
@@ -810,16 +812,16 @@
 
         <span class="kw">for </span>(i, flag) <span class="kw">in </span>flags.into_iter().enumerate() {
             <span class="kw">if </span>i == <span class="number">2 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;--nb&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"--nb"</span>.to_owned());
             }
             <span class="kw">if </span>i == <span class="number">4 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;--nf&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"--nf"</span>.to_owned());
             }
             <span class="kw">if </span>i == <span class="number">6 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;--sb&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"--sb"</span>.to_owned());
             }
             <span class="kw">if </span>i == <span class="number">10 </span>{
-                <span class="macro">assert_eq!</span>(flag, <span class="string">&quot;--fn&quot;</span>.to_owned());
+                <span class="macro">assert_eq!</span>(flag, <span class="string">"--fn"</span>.to_owned());
             }
         }
     }

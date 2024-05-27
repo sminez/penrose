@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/bindings.rs`."><title>bindings.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/bindings.rs`."><title>bindings.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -397,9 +399,9 @@
     x::XConn,
     Error, <span class="prelude-ty">Result</span>,
 };
-<span class="attr">#[cfg(feature = <span class="string">&quot;keysyms&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"keysyms"</span>)]
 </span><span class="kw">use </span>penrose_keysyms::XKeySym;
-<span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::{collections::HashMap, convert::TryFrom, fmt, process::Command};
 <span class="kw">use </span>strum::{EnumIter, IntoEnumIterator};
@@ -416,7 +418,7 @@
 /// This function will panic if it is unable to fetch keycodes using the xmodmap
 /// binary on your system or if the output of `xmodmap -pke` is not valid
 </span><span class="kw">pub fn </span>keycodes_from_xmodmap() -&gt; <span class="prelude-ty">Result</span>&lt;HashMap&lt;String, u8&gt;&gt; {
-    <span class="kw">let </span>output = Command::new(<span class="string">&quot;xmodmap&quot;</span>).arg(<span class="string">&quot;-pke&quot;</span>).output()<span class="question-mark">?</span>;
+    <span class="kw">let </span>output = Command::new(<span class="string">"xmodmap"</span>).arg(<span class="string">"-pke"</span>).output()<span class="question-mark">?</span>;
     <span class="kw">let </span>m = String::from_utf8(output.stdout)<span class="question-mark">?
         </span>.lines()
         .flat_map(|l| {
@@ -424,9 +426,9 @@
             </span><span class="kw">let </span>key_code: u8 = <span class="kw">match </span>words.nth(<span class="number">1</span>) {
                 <span class="prelude-val">Some</span>(word) =&gt; <span class="kw">match </span>word.parse() {
                     <span class="prelude-val">Ok</span>(val) =&gt; val,
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}&quot;</span>, e),
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">"{}"</span>, e),
                 },
-                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected output format from xmodmap -pke&quot;</span>),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">"unexpected output format from xmodmap -pke"</span>),
             };
             words.skip(<span class="number">1</span>).map(<span class="kw">move </span>|name| (name.into(), key_code))
         })
@@ -436,7 +438,7 @@
 }
 
 <span class="kw">fn </span>parse_binding(pattern: <span class="kw-2">&amp;</span>str, known_codes: <span class="kw-2">&amp;</span>HashMap&lt;String, u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;KeyCode&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = pattern.split(<span class="string">&#39;-&#39;</span>).collect();
+    <span class="kw">let </span><span class="kw-2">mut </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = pattern.split(<span class="string">'-'</span>).collect();
     <span class="kw">let </span>name = parts.remove(parts.len() - <span class="number">1</span>);
 
     <span class="kw">match </span>known_codes.get(name) {
@@ -446,7 +448,7 @@
                 .map(|<span class="kw-2">&amp;</span>s| ModifierKey::try_from(s))
                 .try_fold(<span class="number">0</span>, |acc, v| v.map(|inner| acc | u16::from(inner)))<span class="question-mark">?</span>;
 
-            <span class="macro">trace!</span>(<span class="question-mark">?</span>pattern, mask, code, <span class="string">&quot;parsed keybinding&quot;</span>);
+            <span class="macro">trace!</span>(<span class="question-mark">?</span>pattern, mask, code, <span class="string">"parsed keybinding"</span>);
             <span class="prelude-val">Ok</span>(KeyCode { mask, code: <span class="kw-2">*</span>code })
         }
 
@@ -485,8 +487,8 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; fmt::Debug <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;KeyEventHandler&quot;</span>).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"KeyEventHandler"</span>).finish()
     }
 }
 
@@ -513,8 +515,8 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; fmt::Debug <span class="kw">for </span>Box&lt;<span class="kw">dyn </span>MouseEventHandler&lt;X&gt;&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;KeyEventHandler&quot;</span>).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"KeyEventHandler"</span>).finish()
     }
 }
 
@@ -560,7 +562,7 @@
     </span>Right,
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;keysyms&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"keysyms"</span>)]
 </span><span class="kw">impl </span>TryFrom&lt;XKeySym&gt; <span class="kw">for </span>KeyPress {
     <span class="kw">type </span>Error = std::string::FromUtf8Error;
 
@@ -590,7 +592,7 @@
 
 <span class="doccomment">/// A key press and held modifiers
 </span><span class="attr">#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>KeyCode {
     <span class="doccomment">/// The held modifier mask
     </span><span class="kw">pub </span>mask: KeyCodeMask,
@@ -610,7 +612,7 @@
 
 <span class="doccomment">/// Known mouse buttons for binding actions
 </span><span class="attr">#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>MouseButton {
     <span class="doccomment">/// 1
     </span>Left,
@@ -653,7 +655,7 @@
 
 <span class="doccomment">/// Known modifier keys for bindings
 </span><span class="attr">#[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>ModifierKey {
     <span class="doccomment">/// Control
     </span>Ctrl,
@@ -687,10 +689,10 @@
 
     <span class="kw">fn </span>try_from(s: <span class="kw-2">&amp;</span>str) -&gt; std::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
         <span class="kw">match </span>s {
-            <span class="string">&quot;C&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Ctrl),
-            <span class="string">&quot;A&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Alt),
-            <span class="string">&quot;S&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Shift),
-            <span class="string">&quot;M&quot; </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Meta),
+            <span class="string">"C" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Ctrl),
+            <span class="string">"A" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Alt),
+            <span class="string">"S" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Shift),
+            <span class="string">"M" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Meta),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(Error::UnknownModifier { name: s.to_owned() }),
         }
     }
@@ -698,7 +700,7 @@
 
 <span class="doccomment">/// A mouse state specification indicating the button and modifiers held
 </span><span class="attr">#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>MouseState {
     <span class="doccomment">/// The [MouseButton] being held
     </span><span class="kw">pub </span>button: MouseButton,
@@ -736,7 +738,7 @@
 
 <span class="doccomment">/// The types of mouse events represented by a MouseEvent
 </span><span class="attr">#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>MouseEventKind {
     <span class="doccomment">/// A button was pressed
     </span>Press,
@@ -748,7 +750,7 @@
 
 <span class="doccomment">/// A mouse movement or button event
 </span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>MouseEvent {
     <span class="doccomment">/// The ID of the window that was contained the click
     </span><span class="kw">pub </span>id: Xid,

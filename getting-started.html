@@ -186,7 +186,7 @@ manager. It's not a pre-built window manager that you then configure via a confi
 terms what that means is that it's time to get our hands dirty with writing some code!</p>
 <h2 id="step-0-getting-set-up-with-rust"><a class="header" href="#step-0-getting-set-up-with-rust">Step 0: Getting set up with Rust</a></h2>
 <p>If you have Rust on your system already, congrats! You can skip this section.</p>
-<p>For everyone else, head on over to <a href="https://www.rust-lang.org/">rust-lang.org</a> and click on the big &quot;Get Started button&quot;
+<p>For everyone else, head on over to <a href="https://www.rust-lang.org/">rust-lang.org</a> and click on the big "Get Started button"
 which will advise you to curl a setup script straight into <strong>sh</strong>. If you'd prefer to see what
 you are about to run, the following should do the trick:</p>
 <pre><code class="language-bash">$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs &gt; rustup.sh
@@ -200,7 +200,7 @@ $ ./rustup.sh
 </code></pre>
 <p>Now simply sit back and wait for while Rust is installed on your system.</p>
 <h2 id="initialising-your-window-manager-crate"><a class="header" href="#initialising-your-window-manager-crate">Initialising your window manager crate</a></h2>
-<p>&quot;Crates&quot; are Rust's term for what you might be more used to calling a package or project.
+<p>"Crates" are Rust's term for what you might be more used to calling a package or project.
 Either way, for your window manager you are going to want to make a new <em>binary</em> crate like so:</p>
 <pre><code class="language-bash">$ cargo new --bin my_penrose_config
 $ cd my_penrose_config
@@ -212,7 +212,7 @@ $ exa -T  # or just plain old 'ls' if you prefer
 </code></pre>
 <p>If you open up <code>main.rs</code> you should see a simple hello world program:</p>
 <pre><pre class="playground"><code class="language-rust">fn main() {
-    println!(&quot;Hello, world!&quot;);
+    println!("Hello, world!");
 }</code></pre></pre>
 <p>We can run this using <code>cargo run</code> to check everything is good to go:</p>
 <pre><code class="language-bash">$ cargo run
@@ -269,33 +269,33 @@ fn raw_key_bindings() -&gt; HashMap&lt;String, Box&lt;dyn KeyEventHandler&lt;Rus
     let mut raw_bindings = map! {
         map_keys: |k: &amp;str| k.to_string();
 
-        &quot;M-j&quot; =&gt; modify_with(|cs| cs.focus_down()),
-        &quot;M-k&quot; =&gt; modify_with(|cs| cs.focus_up()),
-        &quot;M-S-j&quot; =&gt; modify_with(|cs| cs.swap_down()),
-        &quot;M-S-k&quot; =&gt; modify_with(|cs| cs.swap_up()),
-        &quot;M-S-q&quot; =&gt; modify_with(|cs| cs.kill_focused()),
-        &quot;M-Tab&quot; =&gt; modify_with(|cs| cs.toggle_tag()),
-        &quot;M-bracketright&quot; =&gt; modify_with(|cs| cs.next_screen()),
-        &quot;M-bracketleft&quot; =&gt; modify_with(|cs| cs.previous_screen()),
-        &quot;M-grave&quot; =&gt; modify_with(|cs| cs.next_layout()),
-        &quot;M-S-grave&quot; =&gt; modify_with(|cs| cs.previous_layout()),
-        &quot;M-S-Up&quot; =&gt; send_layout_message(|| IncMain(1)),
-        &quot;M-S-Down&quot; =&gt; send_layout_message(|| IncMain(-1)),
-        &quot;M-S-Right&quot; =&gt; send_layout_message(|| ExpandMain),
-        &quot;M-S-Left&quot; =&gt; send_layout_message(|| ShrinkMain),
-        &quot;M-semicolon&quot; =&gt; spawn(&quot;dmenu_run&quot;),
-        &quot;M-Return&quot; =&gt; spawn(&quot;st&quot;),
-        &quot;M-A-Escape&quot; =&gt; exit(),
+        "M-j" =&gt; modify_with(|cs| cs.focus_down()),
+        "M-k" =&gt; modify_with(|cs| cs.focus_up()),
+        "M-S-j" =&gt; modify_with(|cs| cs.swap_down()),
+        "M-S-k" =&gt; modify_with(|cs| cs.swap_up()),
+        "M-S-q" =&gt; modify_with(|cs| cs.kill_focused()),
+        "M-Tab" =&gt; modify_with(|cs| cs.toggle_tag()),
+        "M-bracketright" =&gt; modify_with(|cs| cs.next_screen()),
+        "M-bracketleft" =&gt; modify_with(|cs| cs.previous_screen()),
+        "M-grave" =&gt; modify_with(|cs| cs.next_layout()),
+        "M-S-grave" =&gt; modify_with(|cs| cs.previous_layout()),
+        "M-S-Up" =&gt; send_layout_message(|| IncMain(1)),
+        "M-S-Down" =&gt; send_layout_message(|| IncMain(-1)),
+        "M-S-Right" =&gt; send_layout_message(|| ExpandMain),
+        "M-S-Left" =&gt; send_layout_message(|| ShrinkMain),
+        "M-semicolon" =&gt; spawn("dmenu_run"),
+        "M-Return" =&gt; spawn("st"),
+        "M-A-Escape" =&gt; exit(),
     };
 
-    for tag in &amp;[&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;] {
+    for tag in &amp;["1", "2", "3", "4", "5", "6", "7", "8", "9"] {
         raw_bindings.extend([
             (
-                format!(&quot;M-{tag}&quot;),
+                format!("M-{tag}"),
                 modify_with(move |client_set| client_set.focus_tag(tag)),
             ),
             (
-                format!(&quot;M-S-{tag}&quot;),
+                format!("M-S-{tag}"),
                 modify_with(move |client_set| client_set.move_focused_to_tag(tag)),
             ),
         ]);
@@ -306,7 +306,7 @@ fn raw_key_bindings() -&gt; HashMap&lt;String, Box&lt;dyn KeyEventHandler&lt;Rus
 
 fn main() -&gt; Result&lt;()&gt; {
     tracing_subscriber::fmt()
-        .with_env_filter(&quot;info&quot;)
+        .with_env_filter("info")
         .finish()
         .init();
 
@@ -326,7 +326,7 @@ mod tests {
         let res = parse_keybindings_with_xmodmap(raw_key_bindings());
 
         if let Err(e) = res {
-            panic!(&quot;{e}&quot;);
+            panic!("{e}");
         }
     }
 }</code></pre></pre>
@@ -369,7 +369,7 @@ in your <code>~/.xinitrc</code>:</p>
 </code></pre>
 <p>Then, you can simply type <code>startx</code> after logging in and your window manager will start up, with the
 log output available in my your home directory as <code>.penrose.log</code>!</p>
-<p>If logging in and starting your graphical session from a TTY is &quot;too hipster&quot; for you (which, lets be
+<p>If logging in and starting your graphical session from a TTY is "too hipster" for you (which, lets be
 honest, it is), you might want to look at installing and running a <a href="https://wiki.archlinux.org/title/Display_manager#Run_~/.xinitrc_as_a_session">display manager</a> and using
 something like <a href="https://wiki.archlinux.org/title/Display_manager#Run_~/.xinitrc_as_a_session">xinit-session</a> to make this a little nicer. Alternatively, dropping something like
 the following into <code>/usr/share/xsessions</code> should also do the trick. The <a href="https://wiki.archlinux.org/title/Display_manager#Session_configuration">arch wiki</a> is a fantastic
@@ -378,7 +378,7 @@ place to read up on how to do these sorts of things whether you use Arch Linux o
 Version=1.0
 Name=Penrose Session
 Comment=Use this session to run penrose as your desktop environment
-Exec=sh -c &quot;/home/roger/my_penrose_config/target/release/my_penrose_config &amp;&gt; ~/.penrose.log&quot;
+Exec=sh -c "/home/roger/my_penrose_config/target/release/my_penrose_config &amp;&gt; ~/.penrose.log"
 Icon=
 Type=Application
 DesktopNames=Penrose

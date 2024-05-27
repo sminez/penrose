@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/bar/widgets/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../penrose_ui/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose_ui"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/bar/widgets/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../penrose_ui/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -413,7 +415,7 @@
     <span class="doccomment">/// Render the current state of the widget to the status bar window.
     </span><span class="kw">fn </span>draw(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;,
         screen: usize,
         screen_has_focus: bool,
         w: u32,
@@ -421,9 +423,9 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
     <span class="doccomment">/// Current required width and height for this widget due to its content
-    </span><span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt;;
+    </span><span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt;;
 
-    <span class="doccomment">/// Does this widget currently require re-rendering? (should be reset to false when &#39;draw&#39; is called)
+    <span class="doccomment">/// Does this widget currently require re-rendering? (should be reset to false when 'draw' is called)
     </span><span class="kw">fn </span>require_draw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 
     <span class="doccomment">/// If true, this widget will expand to fill remaining available space after layout has been
@@ -514,7 +516,7 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>Text {
-    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw">_</span>: usize, <span class="kw">_</span>: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, <span class="kw">_</span>: usize, <span class="kw">_</span>: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(color) = <span class="self">self</span>.bg {
             ctx.fill_rect(Rect::new(<span class="number">0</span>, <span class="number">0</span>, w, h), color)<span class="question-mark">?</span>;
         }
@@ -535,7 +537,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, _h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
+    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, _h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         <span class="kw">match </span><span class="self">self</span>.extent {
             <span class="prelude-val">Some</span>(extent) =&gt; <span class="prelude-val">Ok</span>(extent),
             <span class="prelude-val">None </span>=&gt; {
@@ -582,12 +584,12 @@
 /// // Use the pacman package manager to get a count of how many packages are
 /// // currently installed on the system.
 /// fn my_get_text() -&gt; String {
-///     let n_packages = spawn_for_output_with_args(&quot;sh&quot;, &amp;[&quot;-c&quot;, &quot;pacman -Q | wc -l&quot;])
+///     let n_packages = spawn_for_output_with_args("sh", &amp;["-c", "pacman -Q | wc -l"])
 ///         .unwrap_or_default()
 ///         .trim()
 ///         .to_string();
 ///
-///     format!(&quot;#pacman packages: {n_packages}&quot;)
+///     format!("#pacman packages: {n_packages}")
 /// }
 ///
 /// let style = TextStyle {
@@ -604,9 +606,9 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>RefreshText {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;RefreshText&quot;</span>)
-            .field(<span class="string">&quot;inner&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"RefreshText"</span>)
+            .field(<span class="string">"inner"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner)
             .finish()
     }
 }
@@ -616,21 +618,21 @@
     /// generating the widget contents.
     </span><span class="kw">pub fn </span>new&lt;F&gt;(style: TextStyle, get_text: F) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>F: Fn() -&gt; String + <span class="lifetime">&#39;static</span>,
+        </span>F: Fn() -&gt; String + <span class="lifetime">'static</span>,
     {
         <span class="self">Self </span>{
-            inner: Text::new(<span class="string">&quot;&quot;</span>, style, <span class="bool-val">false</span>, <span class="bool-val">false</span>),
+            inner: Text::new(<span class="string">""</span>, style, <span class="bool-val">false</span>, <span class="bool-val">false</span>),
             get_text: Box::new(get_text),
         }
     }
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>RefreshText {
-    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, ctx, s, f, w, h)
     }
 
-    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
+    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         Widget::&lt;X&gt;::current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, ctx, h)
     }
 
@@ -671,7 +673,7 @@
 /// // Make a curl request to wttr.in to fetch the current weather information
 /// // for our location.
 /// fn my_get_text() -&gt; String {
-///     spawn_for_output_with_args(&quot;curl&quot;, &amp;[&quot;-s&quot;, &quot;http://wttr.in?format=3&quot;])
+///     spawn_for_output_with_args("curl", &amp;["-s", "http://wttr.in?format=3"])
 ///         .unwrap_or_default()
 ///         .trim()
 ///         .to_string()
@@ -701,13 +703,13 @@
     /// will be run in its own thread on the interval provided.
     </span><span class="kw">pub fn </span>new&lt;F&gt;(style: TextStyle, get_text: F, interval: Duration) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>F: Fn() -&gt; String + <span class="lifetime">&#39;static </span>+ Send,
+        </span>F: Fn() -&gt; String + <span class="lifetime">'static </span>+ Send,
     {
-        <span class="kw">let </span>inner = Arc::new(Mutex::new(Text::new(<span class="string">&quot;&quot;</span>, style, <span class="bool-val">false</span>, <span class="bool-val">false</span>)));
+        <span class="kw">let </span>inner = Arc::new(Mutex::new(Text::new(<span class="string">""</span>, style, <span class="bool-val">false</span>, <span class="bool-val">false</span>)));
         <span class="kw">let </span>txt = Arc::clone(<span class="kw-2">&amp;</span>inner);
 
         thread::spawn(<span class="kw">move </span>|| <span class="kw">loop </span>{
-            <span class="macro">trace!</span>(<span class="string">&quot;updating text for IntervalText widget&quot;</span>);
+            <span class="macro">trace!</span>(<span class="string">"updating text for IntervalText widget"</span>);
             <span class="kw">let </span>s = (get_text)();
 
             {
@@ -726,7 +728,7 @@
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>IntervalText {
-    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
             <span class="prelude-val">Ok</span>(inner) =&gt; inner,
             <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
@@ -735,7 +737,7 @@
         Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut *</span>inner, ctx, s, f, w, h)
     }
 
-    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
+    <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
             <span class="prelude-val">Ok</span>(inner) =&gt; inner,
             <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),

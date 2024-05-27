@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../penrose/index.html"><img src="https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg" alt="penrose"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -779,7 +781,7 @@
 };
 <span class="kw">use </span>anymap::{any::Any, AnyMap};
 <span class="kw">use </span>nix::sys::signal::{signal, SigHandler, Signal};
-<span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::{
     any::TypeId,
@@ -801,13 +803,13 @@
 <span class="kw">use </span>layout::{Layout, LayoutStack};
 
 <span class="doccomment">/// An X11 ID for a given resource
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 </span><span class="kw">pub struct </span>Xid(<span class="kw">pub</span>(<span class="kw">crate</span>) u32);
 
 <span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>Xid {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -921,7 +923,7 @@
             <span class="self">self</span>.add_extension(E::default());
         }
 
-        <span class="self">self</span>.extension().expect(<span class="string">&quot;to have defaulted if missing&quot;</span>)
+        <span class="self">self</span>.extension().expect(<span class="string">"to have defaulted if missing"</span>)
     }
 
     <span class="doccomment">/// Remove a shared state extension entirely.
@@ -931,7 +933,7 @@
     </span><span class="kw">pub fn </span>remove_extension&lt;E: Any&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;E&gt; {
         <span class="kw">let </span>arc: Arc&lt;RefCell&lt;E&gt;&gt; = <span class="self">self</span>.extensions.remove()<span class="question-mark">?</span>;
 
-        <span class="comment">// If there is only one strong reference to this state then we&#39;ll be able to
+        <span class="comment">// If there is only one strong reference to this state then we'll be able to
         // try_unwrap it and return the underlying `E`. If not the this fails so we
         // need to store it back in the extensions anymap.
         </span><span class="kw">match </span>Arc::try_unwrap(arc) {
@@ -1046,15 +1048,15 @@
 <span class="kw">where
     </span>X: XConn,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;Config&quot;</span>)
-            .field(<span class="string">&quot;normal_border&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.normal_border)
-            .field(<span class="string">&quot;focused_border&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.focused_border)
-            .field(<span class="string">&quot;border_width&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.border_width)
-            .field(<span class="string">&quot;focus_follow_mouse&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.focus_follow_mouse)
-            .field(<span class="string">&quot;default_layouts&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.default_layouts)
-            .field(<span class="string">&quot;tags&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.tags)
-            .field(<span class="string">&quot;floating_classes&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.floating_classes)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"Config"</span>)
+            .field(<span class="string">"normal_border"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.normal_border)
+            .field(<span class="string">"focused_border"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.focused_border)
+            .field(<span class="string">"border_width"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.border_width)
+            .field(<span class="string">"focus_follow_mouse"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.focus_follow_mouse)
+            .field(<span class="string">"default_layouts"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.default_layouts)
+            .field(<span class="string">"tags"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.tags)
+            .field(<span class="string">"floating_classes"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.floating_classes)
             .finish()
     }
 }
@@ -1067,13 +1069,13 @@
         <span class="kw">let </span>strings = |slice: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]| slice.iter().map(|s| s.to_string()).collect();
 
         Config {
-            normal_border: <span class="string">&quot;#3c3836ff&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
-            focused_border: <span class="string">&quot;#cc241dff&quot;</span>.try_into().expect(<span class="string">&quot;valid hex code&quot;</span>),
+            normal_border: <span class="string">"#3c3836ff"</span>.try_into().expect(<span class="string">"valid hex code"</span>),
+            focused_border: <span class="string">"#cc241dff"</span>.try_into().expect(<span class="string">"valid hex code"</span>),
             border_width: <span class="number">2</span>,
             focus_follow_mouse: <span class="bool-val">true</span>,
             default_layouts: LayoutStack::default(),
-            tags: strings(<span class="kw-2">&amp;</span>[<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;4&quot;</span>, <span class="string">&quot;5&quot;</span>, <span class="string">&quot;6&quot;</span>, <span class="string">&quot;7&quot;</span>, <span class="string">&quot;8&quot;</span>, <span class="string">&quot;9&quot;</span>]),
-            floating_classes: strings(<span class="kw-2">&amp;</span>[<span class="string">&quot;dmenu&quot;</span>, <span class="string">&quot;dunst&quot;</span>]),
+            tags: strings(<span class="kw-2">&amp;</span>[<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>, <span class="string">"4"</span>, <span class="string">"5"</span>, <span class="string">"6"</span>, <span class="string">"7"</span>, <span class="string">"8"</span>, <span class="string">"9"</span>]),
+            floating_classes: strings(<span class="kw-2">&amp;</span>[<span class="string">"dmenu"</span>, <span class="string">"dunst"</span>]),
             startup_hook: <span class="prelude-val">None</span>,
             event_hook: <span class="prelude-val">None</span>,
             manage_hook: <span class="prelude-val">None</span>,
@@ -1092,8 +1094,8 @@
     /// The new hook will run before what was there before.
     </span><span class="kw">pub fn </span>compose_or_set_startup_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
     <span class="kw">where
-        </span>H: StateHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
-        X: <span class="lifetime">&#39;static</span>,
+        </span>H: StateHook&lt;X&gt; + <span class="lifetime">'static</span>,
+        X: <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.startup_hook = <span class="kw">match </span><span class="self">self</span>.startup_hook.take() {
             <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
@@ -1106,8 +1108,8 @@
     /// The new hook will run before what was there before.
     </span><span class="kw">pub fn </span>compose_or_set_event_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
     <span class="kw">where
-        </span>H: EventHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
-        X: <span class="lifetime">&#39;static</span>,
+        </span>H: EventHook&lt;X&gt; + <span class="lifetime">'static</span>,
+        X: <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.event_hook = <span class="kw">match </span><span class="self">self</span>.event_hook.take() {
             <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
@@ -1120,8 +1122,8 @@
     /// The new hook will run before what was there before.
     </span><span class="kw">pub fn </span>compose_or_set_manage_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
     <span class="kw">where
-        </span>H: ManageHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
-        X: <span class="lifetime">&#39;static</span>,
+        </span>H: ManageHook&lt;X&gt; + <span class="lifetime">'static</span>,
+        X: <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.manage_hook = <span class="kw">match </span><span class="self">self</span>.manage_hook.take() {
             <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
@@ -1134,8 +1136,8 @@
     /// The new hook will run before what was there before.
     </span><span class="kw">pub fn </span>compose_or_set_refresh_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
     <span class="kw">where
-        </span>H: StateHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
-        X: <span class="lifetime">&#39;static</span>,
+        </span>H: StateHook&lt;X&gt; + <span class="lifetime">'static</span>,
+        X: <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.refresh_hook = <span class="kw">match </span><span class="self">self</span>.refresh_hook.take() {
             <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
@@ -1148,8 +1150,8 @@
     /// The new hook will run before what was there before.
     </span><span class="kw">pub fn </span>compose_or_set_layout_hook&lt;H&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hook: H)
     <span class="kw">where
-        </span>H: LayoutHook&lt;X&gt; + <span class="lifetime">&#39;static</span>,
-        X: <span class="lifetime">&#39;static</span>,
+        </span>H: LayoutHook&lt;X&gt; + <span class="lifetime">'static</span>,
+        X: <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.layout_hook = <span class="kw">match </span><span class="self">self</span>.layout_hook.take() {
             <span class="prelude-val">Some</span>(h) =&gt; <span class="prelude-val">Some</span>(hook.then_boxed(h)),
@@ -1211,7 +1213,7 @@
     ///
     /// ## Existing clients
     /// An attempt will be made to pull any existing clients already present into the current
-    /// WindowManager state. This is done on a &quot;best effort&quot; basis to manage existing clients on
+    /// WindowManager state. This is done on a "best effort" basis to manage existing clients on
     /// the workspaces they were present on previously. If you are planning on making use of this
     /// functionality for more than recovering from a crash it is advised that you add EWMH hooks
     /// to your Config so that there is more information available to correctly position your
@@ -1224,19 +1226,19 @@
     /// &gt; workspace containing the previously active client will be placed on the first available
     /// &gt; screen.
     </span><span class="kw">pub fn </span>run(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">info!</span>(<span class="string">&quot;registering SIGCHILD signal handler&quot;</span>);
+        <span class="macro">info!</span>(<span class="string">"registering SIGCHILD signal handler"</span>);
         <span class="comment">// SAFETY: there is no previous signal handler so we are safe to set our own without needing
         //         to worry about UB from the previous handler being invalid.
         </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ signal(Signal::SIGCHLD, SigHandler::SigIgn) } {
-            <span class="macro">panic!</span>(<span class="string">&quot;unable to set signal handler: {}&quot;</span>, e);
+            <span class="macro">panic!</span>(<span class="string">"unable to set signal handler: {}"</span>, e);
         }
 
         handle::mapping_notify(<span class="kw-2">&amp;</span><span class="self">self</span>.key_bindings, <span class="kw-2">&amp;</span><span class="self">self</span>.mouse_bindings, <span class="kw-2">&amp;</span><span class="self">self</span>.x)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>h) = <span class="self">self</span>.state.config.startup_hook.take() {
-            <span class="macro">trace!</span>(<span class="string">&quot;running user startup hook&quot;</span>);
+            <span class="macro">trace!</span>(<span class="string">"running user startup hook"</span>);
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = h.call(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state, <span class="kw-2">&amp;</span><span class="self">self</span>.x) {
-                <span class="macro">error!</span>(%e, <span class="string">&quot;error returned from user startup hook&quot;</span>);
+                <span class="macro">error!</span>(%e, <span class="string">"error returned from user startup hook"</span>);
             }
         }
 
@@ -1245,13 +1247,13 @@
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="self">self</span>.x.next_event() {
                 <span class="prelude-val">Ok</span>(event) =&gt; {
-                    <span class="kw">let </span>span = <span class="macro">span!</span>(target: <span class="string">&quot;penrose&quot;</span>, Level::INFO, <span class="string">&quot;XEvent&quot;</span>, %event);
+                    <span class="kw">let </span>span = <span class="macro">span!</span>(target: <span class="string">"penrose"</span>, Level::INFO, <span class="string">"XEvent"</span>, %event);
                     <span class="kw">let </span>_enter = span.enter();
-                    <span class="macro">trace!</span>(details = <span class="question-mark">?</span>event, <span class="string">&quot;event details&quot;</span>);
+                    <span class="macro">trace!</span>(details = <span class="question-mark">?</span>event, <span class="string">"event details"</span>);
                     <span class="self">self</span>.state.current_event = <span class="prelude-val">Some</span>(event.clone());
 
                     <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.handle_xevent(event) {
-                        <span class="macro">error!</span>(%e, <span class="string">&quot;Error handling XEvent&quot;</span>);
+                        <span class="macro">error!</span>(%e, <span class="string">"Error handling XEvent"</span>);
                     }
                     <span class="self">self</span>.x.flush();
 
@@ -1276,11 +1278,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hook = state.config.event_hook.take();
         <span class="kw">let </span>should_run = <span class="kw">match </span>hook {
             <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) =&gt; {
-                <span class="macro">trace!</span>(<span class="string">&quot;running user event hook&quot;</span>);
+                <span class="macro">trace!</span>(<span class="string">"running user event hook"</span>);
                 <span class="kw">match </span>h.call(<span class="kw-2">&amp;</span>event, state, x) {
                     <span class="prelude-val">Ok</span>(should_run) =&gt; should_run,
                     <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">error!</span>(%e, <span class="string">&quot;error returned from user event hook&quot;</span>);
+                        <span class="macro">error!</span>(%e, <span class="string">"error returned from user event hook"</span>);
                         <span class="bool-val">true
                     </span>}
                 }
@@ -1291,7 +1293,7 @@
         state.config.event_hook = hook;
 
         <span class="kw">if </span>!should_run {
-            <span class="macro">trace!</span>(<span class="string">&quot;User event hook returned false: skipping default handling&quot;</span>);
+            <span class="macro">trace!</span>(<span class="string">"User event hook returned false: skipping default handling"</span>);
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
@@ -1325,27 +1327,27 @@
             <span class="comment">// If we get an error from the XConn telling us that a client ID is unknown then
             // we need to make sure that we remove any reference to it from our internal state
             </span>Error::UnknownClient(id) =&gt; {
-                <span class="macro">debug!</span>(%id, <span class="string">&quot;XConn encountered an error due to an unknown client ID: removing client&quot;</span>);
+                <span class="macro">debug!</span>(%id, <span class="string">"XConn encountered an error due to an unknown client ID: removing client"</span>);
                 <span class="self">self</span>.state.client_set.remove_client(<span class="kw-2">&amp;</span>id);
             }
 
-            <span class="kw">_ </span>=&gt; <span class="macro">error!</span>(%e, <span class="string">&quot;Unhandled error pulling next x event&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">error!</span>(%e, <span class="string">"Unhandled error pulling next x event"</span>),
         }
     }
 }
 
-<span class="comment">// A &quot;best effort&quot; attempt to manage existing clients on the workspaces they were present
+<span class="comment">// A "best effort" attempt to manage existing clients on the workspaces they were present
 // on previously. This is not guaranteed to preserve the stack order or correctly handle
 // any clients that were on invisible workspaces / workspaces that no longer exist.
 //
 // NOTE: the check for if each client is already in state is in case a startup hook has
 //       pre-managed clients for us. In that case we want to avoid stomping on
 //       anything that they have set up.
-</span><span class="attr">#[tracing::instrument(level = <span class="string">&quot;info&quot;</span>, skip(state, x))]
+</span><span class="attr">#[tracing::instrument(level = <span class="string">"info"</span>, skip(state, x))]
 </span><span class="kw">fn </span>manage_existing_clients&lt;X: XConn&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="macro">info!</span>(<span class="string">&quot;managing existing clients&quot;</span>);
+    <span class="macro">info!</span>(<span class="string">"managing existing clients"</span>);
 
-    <span class="comment">// We&#39;re not guaranteed that workspace indices are _always_ continuous from 0..n
+    <span class="comment">// We're not guaranteed that workspace indices are _always_ continuous from 0..n
     // so we explicitly map tags to indices instead.
     // We also exclude hidden workspaces as those can contain windows which are
     // externally managed by a user written extension, which can lead to malformed
@@ -1367,7 +1369,7 @@
 
             <span class="kw">let </span>tag = ws_map.get(<span class="kw-2">&amp;</span>workspace_id).unwrap_or(<span class="kw-2">&amp;</span>first_tag);
             <span class="kw">let </span>title = x.window_title(id)<span class="question-mark">?</span>;
-            <span class="macro">info!</span>(%id, %title, %tag, <span class="string">&quot;attempting to manage existing client&quot;</span>);
+            <span class="macro">info!</span>(%id, %title, %tag, <span class="string">"attempting to manage existing client"</span>);
             manage_without_refresh(id, <span class="prelude-val">Some</span>(tag), state, x)<span class="question-mark">?</span>;
         }
     }
@@ -1379,16 +1381,16 @@
     </span><span class="kw">match </span>x.get_prop(state.root, Atom::NetActiveWindow.as_ref()) {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Window(ids))) <span class="kw">if </span>state.client_set.contains(<span class="kw-2">&amp;</span>ids[<span class="number">0</span>]) =&gt; {
             <span class="kw">let </span>id = ids[<span class="number">0</span>];
-            <span class="macro">info!</span>(%id, <span class="string">&quot;focusing _NET_ACTIVE_WINDOW client&quot;</span>);
+            <span class="macro">info!</span>(%id, <span class="string">"focusing _NET_ACTIVE_WINDOW client"</span>);
             state.client_set.focus_client(<span class="kw-2">&amp;</span>id);
         }
         <span class="kw">_ </span>=&gt; {
-            <span class="macro">info!</span>(%first_tag, <span class="string">&quot;unable to determine an active window: focusing first tag&quot;</span>);
+            <span class="macro">info!</span>(%first_tag, <span class="string">"unable to determine an active window: focusing first tag"</span>);
             state.client_set.focus_tag(<span class="kw-2">&amp;</span>first_tag);
         }
     };
 
-    <span class="macro">info!</span>(<span class="string">&quot;triggering refresh&quot;</span>);
+    <span class="macro">info!</span>(<span class="string">"triggering refresh"</span>);
     x.refresh(state)
 }
 
@@ -1398,7 +1400,7 @@
     <span class="kw">let </span>attrs = <span class="kw">match </span>x.get_window_attributes(id) {
         <span class="prelude-val">Ok</span>(attrs) =&gt; attrs,
         <span class="kw">_ </span>=&gt; {
-            <span class="macro">warn!</span>(%id, <span class="string">&quot;unable to pull window attributes for client: skipping.&quot;</span>);
+            <span class="macro">warn!</span>(%id, <span class="string">"unable to pull window attributes for client: skipping."</span>);
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
     };
@@ -1406,12 +1408,12 @@
     <span class="kw">let </span>wm_state = <span class="kw">match </span>x.get_wm_state(id) {
         <span class="prelude-val">Ok</span>(state) =&gt; state,
         <span class="kw">_ </span>=&gt; {
-            <span class="macro">warn!</span>(%id, <span class="string">&quot;unable to pull wm state for client: skipping.&quot;</span>);
+            <span class="macro">warn!</span>(%id, <span class="string">"unable to pull wm state for client: skipping."</span>);
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
     };
 
-    <span class="macro">info!</span>(%id, <span class="question-mark">?</span>attrs, <span class="question-mark">?</span>wm_state, <span class="string">&quot;processing client&quot;</span>);
+    <span class="macro">info!</span>(%id, <span class="question-mark">?</span>attrs, <span class="question-mark">?</span>wm_state, <span class="string">"processing client"</span>);
 
     <span class="kw">let </span>WindowAttributes {
         override_redirect,
@@ -1450,7 +1452,7 @@
 
         <span class="kw">let </span>positions = s.visible_client_positions();
 
-        <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>)
+        <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">"{positions:?}"</span>)
     }
 
     <span class="attr">#[test]
@@ -1466,17 +1468,17 @@
 
         <span class="kw">let </span>positions = s.visible_client_positions();
 
-        <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>);
+        <span class="macro">assert!</span>(positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">"{positions:?}"</span>);
 
         <span class="comment">// If we move the client to tag 2 on the second screen then it should
         // change position and be relative to that screen instead
-        </span>s.move_client_to_tag(<span class="kw-2">&amp;</span>Xid(<span class="number">1</span>), <span class="string">&quot;2&quot;</span>);
+        </span>s.move_client_to_tag(<span class="kw-2">&amp;</span>Xid(<span class="number">1</span>), <span class="string">"2"</span>);
         <span class="kw">let </span>positions = s.visible_client_positions();
 
-        <span class="macro">assert!</span>(!positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">&quot;{positions:?}&quot;</span>);
+        <span class="macro">assert!</span>(!positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), r)), <span class="string">"{positions:?}"</span>);
         <span class="macro">assert!</span>(
             positions.contains(<span class="kw-2">&amp;</span>(Xid(<span class="number">1</span>), Rect::new(<span class="number">1050</span>, <span class="number">2050</span>, <span class="number">50</span>, <span class="number">50</span>))),
-            <span class="string">&quot;{positions:?}&quot;
+            <span class="string">"{positions:?}"
         </span>);
     }
 
@@ -1532,7 +1534,7 @@
             // is from bottom -&gt; top of the stack to make `restack` simpler to
             // implement.
             </span>expected.insert(expected.len() - <span class="number">1</span>, n);
-            <span class="macro">assert_eq!</span>(stack_order(<span class="kw-2">&amp;</span>s), expected, <span class="string">&quot;{:?}&quot;</span>, s.current_stack());
+            <span class="macro">assert_eq!</span>(stack_order(<span class="kw-2">&amp;</span>s), expected, <span class="string">"{:?}"</span>, s.current_stack());
         }
     }
 }
