@@ -419,15 +419,16 @@ where
         // be present on it, but handling things this way means we avoid having any unwrapping or
         // raw indexing into vecs.
         if let Some(new_tag) = it.nth(1).or(tags.first()) {
-            self.focus_tag(new_tag)
+            self.pull_tag_to_screen(new_tag)
         }
     }
 
     /// Move focus to the [Workspace] after the currently focused workspace as defined by their
     /// position in [StackSet::ordered_workspaces].
     ///
-    /// As with the behaviour of [StackSet::focus_tag], if the next tag is on another screen then
-    /// focus will move to that screen rather than pulling the workspace to the active screen.
+    /// As with the behaviour of [StackSet::pull_tag_to_screen], if the next tag is on another
+    /// screen then it will be pulled to the active screen rather than focus moving to the screen
+    /// where the tag is currently located.
     pub fn focus_next_workspace(&mut self) {
         self.focus_adjacent_workspace(self.ordered_tags())
     }
@@ -435,8 +436,9 @@ where
     /// Move focus to the [Workspace] before the currently focused workspace as defined by their
     /// position in [StackSet::ordered_workspaces].
     ///
-    /// As with the behaviour of [StackSet::focus_tag], if the next tag is on another screen then
-    /// focus will move to that screen rather than pulling the workspace to the active screen.
+    /// As with the behaviour of [StackSet::pull_tag_to_screen], if the next tag is on another
+    /// screen then it will be pulled to the active screen rather than focus moving to the screen
+    /// where the tag is currently located.
     pub fn focus_previous_workspace(&mut self) {
         let mut tags = self.ordered_tags();
         tags.reverse();
