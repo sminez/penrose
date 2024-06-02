@@ -287,6 +287,16 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
 </span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
@@ -422,10 +432,15 @@
             <span class="kw">let </span><span class="kw-2">mut </span>extents = Vec::with_capacity(<span class="self">self</span>.widgets.len());
             <span class="kw">let </span><span class="kw-2">mut </span>greedy_indices = <span class="macro">vec!</span>[];
 
-            <span class="kw">for </span>(i, w) <span class="kw">in </span><span class="self">self</span>.widgets.iter_mut().enumerate() {
+            <span class="kw">for </span>(j, w) <span class="kw">in </span><span class="self">self
+                </span>.widgets
+                .iter_mut()
+                .filter(|w| w.required_for_screen(i))
+                .enumerate()
+            {
                 extents.push(w.current_extent(<span class="kw-2">&amp;mut </span>ctx, <span class="self">self</span>.h)<span class="question-mark">?</span>);
                 <span class="kw">if </span>w.is_greedy() {
-                    greedy_indices.push(i)
+                    greedy_indices.push(j)
                 }
             }
 
@@ -441,7 +456,12 @@
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>x = <span class="number">0</span>;
-            <span class="kw">for </span>(wd, (w, <span class="kw">_</span>)) <span class="kw">in </span><span class="self">self</span>.widgets.iter_mut().zip(extents) {
+            <span class="kw">for </span>(wd, (w, <span class="kw">_</span>)) <span class="kw">in </span><span class="self">self
+                </span>.widgets
+                .iter_mut()
+                .filter(|w| w.required_for_screen(i))
+                .zip(extents)
+            {
                 wd.draw(<span class="kw-2">&amp;mut </span>ctx, <span class="self">self</span>.active_screen, screen_has_focus, w, <span class="self">self</span>.h)<span class="question-mark">?</span>;
                 x += w;
                 ctx.flush();

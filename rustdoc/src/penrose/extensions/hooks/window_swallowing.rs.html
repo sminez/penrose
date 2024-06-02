@@ -199,6 +199,10 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Window swallowing in the style of XMonad.Hooks.WindowSwallowing
 //!
 //! When a client window is opened from a parent that matches a given query, its takes
@@ -224,7 +228,8 @@
 <span class="kw">impl </span>WindowSwallowingState {
     <span class="kw">fn </span>stash_state&lt;X: XConn&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
         <span class="self">self</span>.stack_before_close = state.client_set.current_stack().cloned();
-        <span class="self">self</span>.floating_before_close = state.client_set.floating.clone();
+        <span class="self">self</span>.floating_before_close
+            .clone_from(<span class="kw-2">&amp;</span>state.client_set.floating);
 
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
     }
@@ -266,7 +271,10 @@
 
         <span class="macro">info!</span>(%parent, %child, <span class="string">"restoring swallowed parent in place of child"</span>);
         transfer_floating_state(child, parent, <span class="kw-2">&amp;mut </span><span class="self">self</span>.floating_before_close);
-        state.client_set.floating = <span class="self">self</span>.floating_before_close.clone();
+        state
+            .client_set
+            .floating
+            .clone_from(<span class="kw-2">&amp;</span><span class="self">self</span>.floating_before_close);
         old_stack.focus = parent;
         state.client_set.modify_occupied(|<span class="kw">_</span>| old_stack);
         x.refresh(state)<span class="question-mark">?</span>;

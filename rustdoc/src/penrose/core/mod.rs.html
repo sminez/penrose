@@ -911,7 +911,7 @@
     </span><span class="kw">pub fn </span>extension&lt;E: Any&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;RefCell&lt;E&gt;&gt;&gt; {
         <span class="self">self</span>.extensions
             .get()
-            .map(Arc::clone)
+            .cloned()
             .ok_or(Error::UnknownStateExtension {
                 type_id: TypeId::of::&lt;E&gt;(),
             })
