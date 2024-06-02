@@ -23,7 +23,8 @@ struct WindowSwallowingState {
 impl WindowSwallowingState {
     fn stash_state<X: XConn>(&mut self, state: &mut State<X>) -> Result<bool> {
         self.stack_before_close = state.client_set.current_stack().cloned();
-        self.floating_before_close = state.client_set.floating.clone();
+        self.floating_before_close
+            .clone_from(&state.client_set.floating);
 
         Ok(true)
     }
@@ -65,7 +66,10 @@ impl WindowSwallowingState {
 
         info!(%parent, %child, "restoring swallowed parent in place of child");
         transfer_floating_state(child, parent, &mut self.floating_before_close);
-        state.client_set.floating = self.floating_before_close.clone();
+        state
+            .client_set
+            .floating
+            .clone_from(&self.floating_before_close);
         old_stack.focus = parent;
         state.client_set.modify_occupied(|_| old_stack);
         x.refresh(state)?;

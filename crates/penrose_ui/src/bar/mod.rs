@@ -133,10 +133,15 @@ impl<X: XConn> StatusBar<X> {
             let mut extents = Vec::with_capacity(self.widgets.len());
             let mut greedy_indices = vec![];
 
-            for (i, w) in self.widgets.iter_mut().enumerate() {
+            for (j, w) in self
+                .widgets
+                .iter_mut()
+                .filter(|w| w.required_for_screen(i))
+                .enumerate()
+            {
                 extents.push(w.current_extent(&mut ctx, self.h)?);
                 if w.is_greedy() {
-                    greedy_indices.push(i)
+                    greedy_indices.push(j)
                 }
             }
 
@@ -152,7 +157,12 @@ impl<X: XConn> StatusBar<X> {
             }
 
             let mut x = 0;
-            for (wd, (w, _)) in self.widgets.iter_mut().zip(extents) {
+            for (wd, (w, _)) in self
+                .widgets
+                .iter_mut()
+                .filter(|w| w.required_for_screen(i))
+                .zip(extents)
+            {
                 wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, self.h)?;
                 x += w;
                 ctx.flush();

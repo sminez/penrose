@@ -1193,7 +1193,7 @@ pub mod tests {
         // This state is technically invalid for us to get in to but the point is
         // to check that we definitely leave the previous tag alone during this
         // operation and don't end up with it anywhere it shouldn't be.
-        s.previous_tag = "PREVIOUS".to_owned();
+        "PREVIOUS".clone_into(&mut s.previous_tag);
 
         assert_eq!(s.screens.focus.workspace.tag, "3");
         assert_eq!(s.previous_tag, "PREVIOUS");

@@ -140,7 +140,7 @@ where
     pub fn extension<E: Any>(&self) -> Result<Arc<RefCell<E>>> {
         self.extensions
             .get()
-            .map(Arc::clone)
+            .cloned()
             .ok_or(Error::UnknownStateExtension {
                 type_id: TypeId::of::<E>(),
             })

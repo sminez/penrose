@@ -49,6 +49,16 @@ where
     /// space will be split evenly between all widgets.
     fn is_greedy(&self) -> bool;
 
+    /// Whether or not this widget should be displayed on the given screen index.
+    ///
+    /// By default all widgets are displayed on all screens but this allows widgets to
+    /// conditionally render on a subset of screens (e.g. a systray widget only displaying
+    /// on the primary screen).
+    #[allow(unused_variables)]
+    fn required_for_screen(&self, idx: usize) -> bool {
+        true
+    }
+
     #[allow(unused_variables)]
     /// A startup hook to be run in order to initialise this Widget
     fn on_startup(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
@@ -378,5 +388,67 @@ impl<X: XConn> Widget<X> for IntervalText {
         };
 
         Widget::<X>::require_draw(&*inner)
+    }
+}
+
+/// A simple percentage based spacer widget that can be conditionally applied to
+/// specific screens.
+#[derive(Debug)]
+pub struct Spacer {
+    screen_indices: Vec<usize>,
+    perc: f32,
+    w: u32,
+}
+
+impl Spacer {
+    /// Construct a new spacer for rendering on the specified screens.
+    ///
+    /// It will consume `perc`% of the width of any screen it is rendered on.
+    ///
+    /// # Panics
+    /// This method will panic if `perc` is not in the range `0.0..=1.0`.
+    pub fn new(screen_indices: Vec<usize>, perc: f32) -> Self {
+        if !(0.0..=1.0).contains(&perc) {
+            panic!("{perc} is an invalid percentage");
+        }
+
+        Self {
+            screen_indices,
+            perc,
+            w: 0,
+        }
+    }
+}
+
+impl<X: XConn> Widget<X> for Spacer {
+    fn draw(&mut self, ctx: &mut Context<'_>, _: usize, _: bool, w: u32, h: u32) -> Result<()> {
+        ctx.fill_bg(Rect::new(0, 0, w, h))
+    }
+
+    fn current_extent(&mut self, _: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
+        Ok((self.w, h))
+    }
+
+    fn is_greedy(&self) -> bool {
+        false
+    }
+
+    fn require_draw(&self) -> bool {
+        false
+    }
+
+    fn required_for_screen(&self, idx: usize) -> bool {
+        self.screen_indices.contains(&idx)
+    }
+
+    fn on_startup(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+        self.w = state
+            .client_set
+            .screens()
+            .next()
+            .map(|s| (s.geometry().w as f32 * self.perc) as u32)
+            .unwrap();
+
+        Ok(())
     }
 }
