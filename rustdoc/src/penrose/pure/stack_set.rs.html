@@ -1541,6 +1541,8 @@
 <a href="#1539" id="1539">1539</a>
 <a href="#1540" id="1540">1540</a>
 <a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -1962,15 +1964,16 @@
         // be present on it, but handling things this way means we avoid having any unwrapping or
         // raw indexing into vecs.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(new_tag) = it.nth(<span class="number">1</span>).or(tags.first()) {
-            <span class="self">self</span>.focus_tag(new_tag)
+            <span class="self">self</span>.pull_tag_to_screen(new_tag)
         }
     }
 
     <span class="doccomment">/// Move focus to the [Workspace] after the currently focused workspace as defined by their
     /// position in [StackSet::ordered_workspaces].
     ///
-    /// As with the behaviour of [StackSet::focus_tag], if the next tag is on another screen then
-    /// focus will move to that screen rather than pulling the workspace to the active screen.
+    /// As with the behaviour of [StackSet::pull_tag_to_screen], if the next tag is on another
+    /// screen then it will be pulled to the active screen rather than focus moving to the screen
+    /// where the tag is currently located.
     </span><span class="kw">pub fn </span>focus_next_workspace(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.focus_adjacent_workspace(<span class="self">self</span>.ordered_tags())
     }
@@ -1978,8 +1981,9 @@
     <span class="doccomment">/// Move focus to the [Workspace] before the currently focused workspace as defined by their
     /// position in [StackSet::ordered_workspaces].
     ///
-    /// As with the behaviour of [StackSet::focus_tag], if the next tag is on another screen then
-    /// focus will move to that screen rather than pulling the workspace to the active screen.
+    /// As with the behaviour of [StackSet::pull_tag_to_screen], if the next tag is on another
+    /// screen then it will be pulled to the active screen rather than focus moving to the screen
+    /// where the tag is currently located.
     </span><span class="kw">pub fn </span>focus_previous_workspace(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>tags = <span class="self">self</span>.ordered_tags();
         tags.reverse();
