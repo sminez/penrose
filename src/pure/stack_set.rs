@@ -1516,17 +1516,25 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn cycling_workspaces_always_changes_workspace(mut s: StackSet<Xid>, next: bool) -> bool {
+    fn focus_next_workspace_always_changes_workspace(mut s: StackSet<Xid>) -> bool {
         if s.ordered_tags().len() == 1 {
             return true; // need at least two tags to cycle
         };
 
         let current_tag = s.current_tag().to_string();
-        if next {
-            s.focus_next_workspace()
-        } else {
-            s.focus_previous_workspace()
+        s.focus_next_workspace();
+
+        s.current_tag() != current_tag
+    }
+
+    #[quickcheck]
+    fn focus_previous_workspace_always_changes_workspace(mut s: StackSet<Xid>) -> bool {
+        if s.ordered_tags().len() == 1 {
+            return true; // need at least two tags to cycle
         };
+
+        let current_tag = s.current_tag().to_string();
+        s.focus_previous_workspace();
 
         s.current_tag() != current_tag
     }
