@@ -412,6 +412,37 @@ where
         wss.into_iter()
     }
 
+    fn focus_adjacent_workspace(&mut self, tags: Vec<String>) {
+        let cur_tag = self.current_tag();
+        let mut it = tags.iter().skip_while(|t| *t != cur_tag);
+        // We should never be without at least our focused tag as a Screen requires a Workspace to
+        // be present on it, but handling things this way means we avoid having any unwrapping or
+        // raw indexing into vecs.
+        if let Some(new_tag) = it.nth(1).or(tags.first()) {
+            self.focus_tag(new_tag)
+        }
+    }
+
+    /// Move focus to the [Workspace] after the currently focused workspace as defined by their
+    /// position in [StackSet::ordered_workspaces].
+    ///
+    /// As with the behaviour of [StackSet::focus_tag], if the next tag is on another screen then
+    /// focus will move to that screen rather than pulling the workspace to the active screen.
+    pub fn focus_next_workspace(&mut self) {
+        self.focus_adjacent_workspace(self.ordered_tags())
+    }
+
+    /// Move focus to the [Workspace] before the currently focused workspace as defined by their
+    /// position in [StackSet::ordered_workspaces].
+    ///
+    /// As with the behaviour of [StackSet::focus_tag], if the next tag is on another screen then
+    /// focus will move to that screen rather than pulling the workspace to the active screen.
+    pub fn focus_previous_workspace(&mut self) {
+        let mut tags = self.ordered_tags();
+        tags.reverse();
+        self.focus_adjacent_workspace(tags)
+    }
+
     /// Find the tag of the [Workspace] currently displayed on [Screen] `index`.
     ///
     /// Returns [None] if the index is out of bounds
@@ -1210,6 +1241,28 @@ pub mod tests {
         assert_eq!(s.previous_tag, "PREVIOUS");
     }
 
+    #[test_case("2", true, "3"; "forward non-wrapping")]
+    #[test_case("5", true, "1"; "forward wrapping")]
+    #[test_case("3", false, "2"; "backward non-wrapping")]
+    #[test_case("1", false, "5"; "backward wrapping")]
+    #[test]
+    fn focus_next_prev_workspace_identifies_the_correct_tag(
+        initial_tag: &str,
+        next: bool,
+        expected_tag: &str,
+    ) {
+        let mut s = test_stack_set(5, 3);
+        s.focus_tag(initial_tag);
+
+        if next {
+            s.focus_next_workspace();
+        } else {
+            s.focus_previous_workspace();
+        }
+
+        assert_eq!(s.current_tag(), expected_tag);
+    }
+
     #[test]
     fn floating_layer_clients_hold_focus() {
         let mut s = test_stack_set(5, 3);
@@ -1460,5 +1513,21 @@ mod quickcheck_tests {
         s.focus_tag(&tag);
 
         s.current_client() == Some(&c)
+    }
+
+    #[quickcheck]
+    fn cycling_workspaces_always_changes_workspace(mut s: StackSet<Xid>, next: bool) -> bool {
+        if s.ordered_tags().len() == 1 {
+            return true; // need at least two tags to cycle
+        };
+
+        let current_tag = s.current_tag().to_string();
+        if next {
+            s.focus_next_workspace()
+        } else {
+            s.focus_previous_workspace()
+        };
+
+        s.current_tag() != current_tag
     }
 }
