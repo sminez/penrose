@@ -217,10 +217,10 @@ where
             // Next run layout functions for each workspace on a visible screen
             let stack_positions = match hook {
                 Some(ref mut h) => {
-                    let r_s = h.transform_initial(r_s, self, x);
+                    let r_s = h.transform_initial_for_screen(i, r_s, self, x);
                     let s = self.client_set.screens.iter_mut().nth(i).unwrap();
                     let (_, initial) = s.workspace.layouts.layout_workspace(&tag, &tiling, r_s);
-                    h.transform_positions(r_s, initial, self, x)
+                    h.transform_positions_for_screen(i, r_s, initial, self, x)
                 }
                 None => {
                     let s = self.client_set.screens.iter_mut().nth(i).unwrap();

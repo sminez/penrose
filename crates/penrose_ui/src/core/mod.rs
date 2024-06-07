@@ -121,10 +121,11 @@ struct Surface {
 pub struct Draw {
     pub(crate) conn: RustConn,
     dpy: *mut Display,
-    fs: Fontset,
+    fss: HashMap<String, Fontset>,
     bg: Color,
     surfaces: HashMap<Xid, Surface>,
     colors: HashMap<Color, XColor>,
+    active_font: String,
 }
 
 impl Drop for Draw {
@@ -137,6 +138,10 @@ impl Drop for Draw {
             }
         }
     }
+}
+
+fn font_key(font: &str, point_size: u8) -> String {
+    format!("{font}:size={point_size}")
 }
 
 impl Draw {
@@ -156,13 +161,19 @@ impl Draw {
         let bg = bg.into();
         colors.insert(bg, XColor::try_new(dpy, &bg)?);
 
+        let k = font_key(font, point_size);
+        let fs = Fontset::try_new(dpy, &k)?;
+        let mut fss = HashMap::new();
+        fss.insert(k.clone(), fs);
+
         Ok(Self {
             conn,
             dpy,
-            fs: Fontset::try_new(dpy, &format!("{font}:size={point_size}"))?,
+            fss,
             surfaces: HashMap::new(),
             bg,
             colors,
+            active_font: k,
         })
     }
 
@@ -206,10 +217,22 @@ impl Draw {
         Ok(())
     }
 
+    pub(crate) fn add_font(&mut self, font: &str, point_size: u8) -> Result<()> {
+        let k = font_key(font, point_size);
+        let fs = Fontset::try_new(self.dpy, &k)?;
+        self.fss.insert(k, fs);
+
+        Ok(())
+    }
+
     /// Set the font being used for rendering text and clear the existing cache of fallback fonts
     /// for characters that are not supported by the primary font.
     pub fn set_font(&mut self, font: &str, point_size: u8) -> Result<()> {
-        self.fs = Fontset::try_new(self.dpy, &format!("{font}:size={point_size}"))?;
+        let k = font_key(font, point_size);
+        if !self.fss.contains_key(&k) {
+            self.add_font(font, point_size)?;
+        }
+        self.active_font = k;
 
         Ok(())
     }
@@ -231,7 +254,10 @@ impl Draw {
             dpy: self.dpy,
             s,
             bg: self.bg,
-            fs: &mut self.fs,
+            fs: self
+                .fss
+                .get_mut(&self.active_font)
+                .expect("active_font to be present"),
             colors: &mut self.colors,
         })
     }

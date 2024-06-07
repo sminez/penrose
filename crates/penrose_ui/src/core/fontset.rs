@@ -10,6 +10,7 @@ use std::{
     collections::HashMap,
     ffi::CString,
 };
+use tracing::error;
 use x11::{
     xft::{
         FcPattern, FcResult, XftCharExists, XftFont, XftFontClose, XftFontMatch, XftFontOpenName,
@@ -99,8 +100,7 @@ impl Fontset {
             }
 
             Err(e) => {
-                // TODO: add tracing to this crate
-                println!("ERROR: {e}");
+                error!("Unable to determine fallback font for {c}: {e}");
                 FontMatch::Primary
             }
         };

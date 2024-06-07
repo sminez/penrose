@@ -22,28 +22,80 @@ pub enum Position {
     Bottom,
 }
 
+/// A group of [Widget]s and associated point size to use for rendering a [StatusBar] on a single
+/// screen.
+pub struct PerScreen<X: XConn> {
+    point_size: u8,
+    h: u32,
+    ws: Vec<Box<dyn Widget<X>>>,
+}
+
+impl<X: XConn> fmt::Debug for PerScreen<X> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PerScreen")
+            .field("point_size", &self.point_size)
+            .field("h", &self.h)
+            .finish()
+    }
+}
+
+impl<X: XConn> PerScreen<X> {
+    /// Construct a new per-screen set of widgets with an associated point size for the font.
+    pub fn new(point_size: u8, h: u32, ws: Vec<Box<dyn Widget<X>>>) -> Self {
+        Self { point_size, ws, h }
+    }
+}
+
+#[derive(Debug)]
+enum Widgets<X: XConn> {
+    Shared(PerScreen<X>),
+    PerScreen(Vec<PerScreen<X>>),
+}
+
+impl<X: XConn> Widgets<X> {
+    fn for_screen_mut(&mut self, ix: usize) -> &mut PerScreen<X> {
+        match self {
+            Self::Shared(ps) => ps,
+            Self::PerScreen(pss) => {
+                let ix = if ix >= pss.len() { pss.len() - 1 } else { ix };
+                &mut pss[ix]
+            }
+        }
+    }
+
+    fn for_each_mut<F>(&mut self, n_screens: usize, mut f: F)
+    where
+        F: FnMut(&mut Box<dyn Widget<X>>),
+    {
+        match self {
+            Self::Shared(ps) => ps.ws.iter_mut().for_each(f),
+            Self::PerScreen(pss) => pss
+                .iter_mut()
+                .take(n_screens) // avoid checking widgets that are not in use
+                .for_each(|ps| ps.ws.iter_mut().for_each(&mut f)),
+        }
+    }
+
+    fn require_draw(&self, n_screens: usize) -> bool {
+        match self {
+            Self::Shared(ps) => ps.ws.iter().any(|w| w.require_draw()),
+            Self::PerScreen(pss) => pss
+                .iter()
+                .take(n_screens) // avoid checking widgets that are not in use
+                .any(|ps| ps.ws.iter().any(|w| w.require_draw())),
+        }
+    }
+}
+
 /// A simple text based status bar that renders a user defined array of [`Widget`]s.
+#[derive(Debug)]
 pub struct StatusBar<X: XConn> {
     draw: Draw,
     position: Position,
-    widgets: Vec<Box<dyn Widget<X>>>,
+    widgets: Widgets<X>,
     screens: Vec<(Xid, u32)>,
-    h: u32,
-    bg: Color,
     active_screen: usize,
-}
-
-impl<X: XConn> fmt::Debug for StatusBar<X> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("StatusBar")
-            .field("position", &self.position)
-            .field("widgets", &stringify!(self.widgets))
-            .field("screens", &self.screens)
-            .field("h", &self.h)
-            .field("bg", &self.bg)
-            .field("active_screen", &self.active_screen)
-            .finish()
-    }
+    font: String,
 }
 
 impl<X: XConn> StatusBar<X> {
@@ -63,11 +115,37 @@ impl<X: XConn> StatusBar<X> {
         Ok(Self {
             draw,
             position,
-            widgets,
+            widgets: Widgets::Shared(PerScreen::new(point_size, h, widgets)),
             screens: vec![],
-            h,
-            bg,
             active_screen: 0,
+            font: font.to_string(),
+        })
+    }
+
+    /// Try to create a new status bar using a different arrangement of widgets for each screen.
+    ///
+    /// If more screens are attached than available widget arrangements, the last widget
+    /// arrangement will be used as a fallback.
+    pub fn try_new_per_screen(
+        position: Position,
+        bg: impl Into<Color>,
+        font: &str,
+        widgets: Vec<PerScreen<X>>,
+    ) -> Result<Self> {
+        let bg = bg.into();
+        let point_size = widgets[0].point_size;
+        let mut draw = Draw::new(font, point_size, bg)?;
+        for &PerScreen { point_size, .. } in widgets.iter() {
+            draw.add_font(font, point_size)?;
+        }
+
+        Ok(Self {
+            draw,
+            position,
+            widgets: Widgets::PerScreen(widgets),
+            screens: vec![],
+            active_screen: 0,
+            font: font.to_string(),
         })
     }
 
@@ -92,16 +170,18 @@ impl<X: XConn> StatusBar<X> {
 
         self.screens = screen_details
             .iter()
-            .map(|&Rect { x, y, w, h }| {
+            .enumerate()
+            .map(|(i, &Rect { x, y, w, h })| {
+                let bar_h = self.widgets.for_screen_mut(i).h;
                 let y = match self.position {
                     Position::Top => y,
-                    Position::Bottom => h - self.h,
+                    Position::Bottom => h - bar_h,
                 };
 
                 debug!("creating new window");
                 let id = self.draw.new_window(
                     WinType::InputOutput(Atom::NetWindowTypeDock),
-                    Rect::new(x, y, w, self.h),
+                    Rect::new(x, y, w, bar_h),
                     false,
                 )?;
 
@@ -124,59 +204,61 @@ impl<X: XConn> StatusBar<X> {
         Ok(())
     }
 
-    /// Re-render all widgets in this status bar
+    /// Re-render all widgets in this status bar for a single screen.
+    /// Will panic if `i` is out of bounds
+    fn redraw_screen(&mut self, i: usize) -> Result<()> {
+        let (id, w) = self.screens[i];
+        let screen_has_focus = self.active_screen == i;
+        let ps = self.widgets.for_screen_mut(i);
+
+        self.draw.set_font(&self.font, ps.point_size)?;
+        let mut ctx = self.draw.context_for(id)?;
+
+        let mut extents = Vec::new();
+        let mut greedy_indices = Vec::new();
+
+        for (j, w) in ps.ws.iter_mut().enumerate() {
+            extents.push(w.current_extent(&mut ctx, ps.h)?);
+            if w.is_greedy() {
+                greedy_indices.push(j)
+            }
+        }
+
+        let total = extents.iter().map(|(w, _)| w).sum::<u32>();
+        let n_greedy = greedy_indices.len();
+
+        if total < w && n_greedy > 0 {
+            let per_greedy = (w - total) / n_greedy as u32;
+            for i in greedy_indices.iter() {
+                let (w, h) = extents[*i];
+                extents[*i] = (w + per_greedy, h);
+            }
+        }
+
+        let mut x = 0;
+        for (wd, (w, _)) in ps.ws.iter_mut().zip(extents) {
+            wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, ps.h)?;
+            x += w;
+            ctx.flush();
+            ctx.set_x_offset(x as i32);
+        }
+
+        self.draw.flush(id)?;
+
+        Ok(())
+    }
+
+    /// Re-render all widgets in this status bar for each screen it is displayed on
     pub fn redraw(&mut self) -> Result<()> {
-        for (i, &(id, w)) in self.screens.clone().iter().enumerate() {
-            let screen_has_focus = self.active_screen == i;
-            let mut ctx = self.draw.context_for(id)?;
-
-            let mut extents = Vec::with_capacity(self.widgets.len());
-            let mut greedy_indices = vec![];
-
-            for (j, w) in self
-                .widgets
-                .iter_mut()
-                .filter(|w| w.required_for_screen(i))
-                .enumerate()
-            {
-                extents.push(w.current_extent(&mut ctx, self.h)?);
-                if w.is_greedy() {
-                    greedy_indices.push(j)
-                }
-            }
-
-            let total = extents.iter().map(|(w, _)| w).sum::<u32>();
-            let n_greedy = greedy_indices.len();
-
-            if total < w && n_greedy > 0 {
-                let per_greedy = (w - total) / n_greedy as u32;
-                for i in greedy_indices.iter() {
-                    let (w, h) = extents[*i];
-                    extents[*i] = (w + per_greedy, h);
-                }
-            }
-
-            let mut x = 0;
-            for (wd, (w, _)) in self
-                .widgets
-                .iter_mut()
-                .filter(|w| w.required_for_screen(i))
-                .zip(extents)
-            {
-                wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, self.h)?;
-                x += w;
-                ctx.flush();
-                ctx.set_x_offset(x as i32);
-            }
-
-            self.draw.flush(id)?;
+        for i in 0..self.screens.len() {
+            self.redraw_screen(i)?;
         }
 
         Ok(())
     }
 
     fn redraw_if_needed(&mut self) -> Result<()> {
-        if self.widgets.iter().any(|w| w.require_draw()) {
+        if self.widgets.require_draw(self.screens.len()) {
             self.redraw()?;
             for (id, _) in self.screens.iter() {
                 self.draw.flush(*id)?;
@@ -198,11 +280,12 @@ pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
     }
 
     info!("running startup widget hooks");
-    for w in bar.widgets.iter_mut() {
+    let n_screens = bar.screens.len();
+    bar.widgets.for_each_mut(n_screens, |w| {
         if let Err(e) = w.on_startup(state, x) {
             error!(%e, "error running widget startup hook");
         };
-    }
+    });
 
     if let Err(e) = bar.redraw() {
         error!(%e, "error redrawing status bar");
@@ -217,12 +300,12 @@ pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
     let mut bar = s.borrow_mut();
 
     bar.active_screen = state.client_set.current_screen().index();
-
-    for w in bar.widgets.iter_mut() {
+    let n_screens = bar.screens.len();
+    bar.widgets.for_each_mut(n_screens, |w| {
         if let Err(e) = w.on_refresh(state, x) {
             error!(%e, "error running widget refresh hook");
         }
-    }
+    });
 
     if let Err(e) = bar.redraw_if_needed() {
         error!(%e, "error redrawing status bar");
@@ -260,12 +343,12 @@ pub fn event_hook<X: XConn + 'static>(
     }
 
     bar.active_screen = state.client_set.current_screen().index();
-
-    for w in bar.widgets.iter_mut() {
+    let n_screens = bar.screens.len();
+    bar.widgets.for_each_mut(n_screens, |w| {
         if let Err(e) = w.on_event(event, state, x) {
             error!(%e, "error running widget event hook");
         };
-    }
+    });
 
     if let Err(e) = bar.redraw_if_needed() {
         error!(%e, "error redrawing status bar");
@@ -283,11 +366,13 @@ pub fn manage_hook<X: XConn + 'static>(
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
-    for w in bar.widgets.iter_mut() {
+    bar.active_screen = state.client_set.current_screen().index();
+    let n_screens = bar.screens.len();
+    bar.widgets.for_each_mut(n_screens, |w| {
         if let Err(e) = w.on_new_client(id, state, x) {
             error!(%e, "error running widget manage hook");
         }
-    }
+    });
 
     if let Err(e) = bar.redraw_if_needed() {
         error!(%e, "error redrawing status bar");

@@ -386,9 +386,40 @@ where
     X: XConn,
 {
     #[allow(unused_variables)]
+    /// Optionally modify the screen dimensions being given to a
+    /// [Layout][crate::core::layout::Layout] on a particular screen index.
+    ///
+    /// By default this just calls through to [LayoutHook::transform_initial].
+    fn transform_initial_for_screen(
+        &mut self,
+        screen_index: usize,
+        r: Rect,
+        state: &State<X>,
+        x: &X,
+    ) -> Rect {
+        self.transform_initial(r, state, x)
+    }
+
+    #[allow(unused_variables)]
     /// Optionally modify the screen dimensions being given to a [Layout][crate::core::layout::Layout]
     fn transform_initial(&mut self, r: Rect, state: &State<X>, x: &X) -> Rect {
         r
+    }
+
+    #[allow(unused_variables)]
+    /// Optionally modify the client positions returned by a [Layout][crate::core::layout::Layout]
+    /// on a particular screen index.
+    ///
+    /// By default this just calls through to [LayoutHook::transform_positions].
+    fn transform_positions_for_screen(
+        &mut self,
+        screen_index: usize,
+        r: Rect,
+        positions: Vec<(Xid, Rect)>,
+        state: &State<X>,
+        x: &X,
+    ) -> Vec<(Xid, Rect)> {
+        self.transform_positions(r, positions, state, x)
     }
 
     #[allow(unused_variables)]
@@ -456,9 +487,43 @@ impl<X> LayoutHook<X> for ComposedLayoutHook<X>
 where
     X: XConn,
 {
+    fn transform_initial_for_screen(
+        &mut self,
+        screen_index: usize,
+        r: Rect,
+        state: &State<X>,
+        x: &X,
+    ) -> Rect {
+        self.second.transform_initial_for_screen(
+            screen_index,
+            self.first
+                .transform_initial_for_screen(screen_index, r, state, x),
+            state,
+            x,
+        )
+    }
+
     fn transform_initial(&mut self, r: Rect, state: &State<X>, x: &X) -> Rect {
         self.second
             .transform_initial(self.first.transform_initial(r, state, x), state, x)
+    }
+
+    fn transform_positions_for_screen(
+        &mut self,
+        screen_index: usize,
+        r: Rect,
+        positions: Vec<(Xid, Rect)>,
+        state: &State<X>,
+        x: &X,
+    ) -> Vec<(Xid, Rect)> {
+        self.second.transform_positions_for_screen(
+            screen_index,
+            r,
+            self.first
+                .transform_positions_for_screen(screen_index, r, positions, state, x),
+            state,
+            x,
+        )
     }
 
     fn transform_positions(
