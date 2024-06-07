@@ -279,6 +279,7 @@
     collections::HashMap,
     ffi::CString,
 };
+<span class="kw">use </span>tracing::error;
 <span class="kw">use </span>x11::{
     xft::{
         FcPattern, FcResult, XftCharExists, XftFont, XftFontClose, XftFontMatch, XftFontOpenName,
@@ -368,8 +369,7 @@
             }
 
             <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="comment">// TODO: add tracing to this crate
-                </span><span class="macro">println!</span>(<span class="string">"ERROR: {e}"</span>);
+                <span class="macro">error!</span>(<span class="string">"Unable to determine fallback font for {c}: {e}"</span>);
                 FontMatch::Primary
             }
         };
