@@ -13,7 +13,7 @@
 //!   [1]: crate::bar::widgets::Widget
 use crate::{Error, Result};
 use penrose::{
-    pure::geometry::Rect,
+    pure::geometry::{Point, Rect},
     x::{WinType, XConn},
     x11rb::RustConn,
     Color, Xid,
@@ -28,10 +28,10 @@ use tracing::{debug, info};
 use x11::{
     xft::{XftColor, XftColorAllocName, XftDrawCreate, XftDrawStringUtf8},
     xlib::{
-        CapButt, Display, Drawable, False, JoinMiter, LineSolid, Window, XCopyArea, XCreateGC,
-        XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual, XDrawRectangle,
-        XFillRectangle, XFreeGC, XFreePixmap, XOpenDisplay, XSetForeground, XSetLineAttributes,
-        XSync, GC,
+        CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
+        XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
+        XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap, XOpenDisplay, XPoint,
+        XSetForeground, XSetLineAttributes, XSync, GC,
     },
 };
 
@@ -369,6 +369,36 @@ impl<'a> Context<'a> {
         unsafe {
             XSetForeground(self.dpy, self.s.gc, (*xcol).pixel);
             XFillRectangle(self.dpy, self.s.drawable, self.s.gc, x, y, w, h);
+        }
+
+        Ok(())
+    }
+
+    /// Render a filled rectangle using the supplied color.
+    pub fn fill_polygon(&mut self, points: &[Point], color: Color) -> Result<()> {
+        let xcol = self.get_or_try_init_xcolor(color)?;
+        let mut xpoints: Vec<XPoint> = points
+            .iter()
+            .map(|&Point { x, y }| XPoint {
+                x: self.dx as i16 + x as i16,
+                y: self.dy as i16 + y as i16,
+            })
+            .collect();
+
+        // SAFETY:
+        //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null
+        //   - xcol is known to be non-null so dereferencing is safe
+        unsafe {
+            XSetForeground(self.dpy, self.s.gc, (*xcol).pixel);
+            XFillPolygon(
+                self.dpy,
+                self.s.drawable,
+                self.s.gc,
+                &mut xpoints[0] as *mut _,
+                points.len() as i32,
+                Complex, // we could be smarter here but for now this works
+                CoordModeOrigin,
+            );
         }
 
         Ok(())
