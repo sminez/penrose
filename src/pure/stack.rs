@@ -1007,33 +1007,33 @@ mod quickcheck_tests {
         rotate_down == reverse . rotate_up . reverse
     );
 
-    // Two methods that should act as both left and right inverses of one another
-    macro_rules! are_inverse {
-        ($test:ident => $a:ident <> $b:ident) => {
-            paste::paste! {
+    mod inverses {
+        use super::*;
+
+        // Two methods that should act as left and right inverses of one another
+        macro_rules! are_inverse {
+            ($test:ident => $a:ident <> $b:ident) => {
                 #[quickcheck]
-                fn [<inverse _ $test _ left_right>](mut stack: Stack<u8>) -> bool {
+                fn $test(mut stack: Stack<u8>) -> bool {
                     let original = stack.clone();
                     stack.$a().$b();
 
                     stack == original
                 }
+            };
+        }
 
-                #[quickcheck]
-                fn [<inverse _ $test _ right_left>](mut stack: Stack<u8>) -> bool {
-                    let original = stack.clone();
-                    stack.$b().$a();
+        // Self inverses
+        are_inverse!(reverse  => reverse  <> reverse);
+        are_inverse!(rev_up   => rev_up   <> rev_up);
+        are_inverse!(rev_down => rev_down <> rev_down);
 
-                    stack == original
-                }
-            }
-        };
+        // Inverse pairs
+        are_inverse!(focus_up_down  => focus_up    <> focus_down);
+        are_inverse!(focus_down_up  => focus_down  <> focus_up);
+        are_inverse!(swap_up_down   => swap_up     <> swap_down);
+        are_inverse!(swap_down_up   => swap_down   <> swap_up);
+        are_inverse!(rotate_up_down => rotate_up   <> rotate_down);
+        are_inverse!(rotate_down_up => rotate_down <> rotate_up);
     }
-
-    are_inverse!(reverse  => reverse   <> reverse);
-    are_inverse!(rev_up   => rev_up    <> rev_up);
-    are_inverse!(rev_down => rev_down  <> rev_down);
-    are_inverse!(focus    => focus_up  <> focus_down);
-    are_inverse!(swap     => swap_up   <> swap_down);
-    are_inverse!(rotate   => rotate_up <> rotate_down);
 }
