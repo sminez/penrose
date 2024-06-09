@@ -2048,34 +2048,34 @@
         rotate_down == reverse . rotate_up . reverse
     );
 
-    <span class="comment">// Two methods that should act as both left and right inverses of one another
-    </span><span class="macro">macro_rules!</span> are_inverse {
-        (<span class="macro-nonterminal">$test</span>:ident =&gt; <span class="macro-nonterminal">$a</span>:ident &lt;&gt; <span class="macro-nonterminal">$b</span>:ident) =&gt; {
-            <span class="macro">paste::paste!</span> {
+    <span class="kw">mod </span>inverses {
+        <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+        <span class="comment">// Two methods that should act as left and right inverses of one another
+        </span><span class="macro">macro_rules!</span> are_inverse {
+            (<span class="macro-nonterminal">$test</span>:ident =&gt; <span class="macro-nonterminal">$a</span>:ident &lt;&gt; <span class="macro-nonterminal">$b</span>:ident) =&gt; {
                 <span class="attr">#[quickcheck]
-                </span><span class="kw">fn </span>[&lt;inverse <span class="kw">_ </span><span class="macro-nonterminal">$test </span><span class="kw">_ </span>left_right&gt;](<span class="kw-2">mut </span>stack: Stack&lt;u8&gt;) -&gt; bool {
+                </span><span class="kw">fn </span><span class="macro-nonterminal">$test</span>(<span class="kw-2">mut </span>stack: Stack&lt;u8&gt;) -&gt; bool {
                     <span class="kw">let </span>original = stack.clone();
                     stack.<span class="macro-nonterminal">$a</span>().<span class="macro-nonterminal">$b</span>();
 
                     stack == original
                 }
+            };
+        }
 
-                <span class="attr">#[quickcheck]
-                </span><span class="kw">fn </span>[&lt;inverse <span class="kw">_ </span><span class="macro-nonterminal">$test </span><span class="kw">_ </span>right_left&gt;](<span class="kw-2">mut </span>stack: Stack&lt;u8&gt;) -&gt; bool {
-                    <span class="kw">let </span>original = stack.clone();
-                    stack.<span class="macro-nonterminal">$b</span>().<span class="macro-nonterminal">$a</span>();
+        <span class="comment">// Self inverses
+        </span><span class="macro">are_inverse!</span>(reverse  =&gt; reverse  &lt;&gt; reverse);
+        <span class="macro">are_inverse!</span>(rev_up   =&gt; rev_up   &lt;&gt; rev_up);
+        <span class="macro">are_inverse!</span>(rev_down =&gt; rev_down &lt;&gt; rev_down);
 
-                    stack == original
-                }
-            }
-        };
+        <span class="comment">// Inverse pairs
+        </span><span class="macro">are_inverse!</span>(focus_up_down  =&gt; focus_up    &lt;&gt; focus_down);
+        <span class="macro">are_inverse!</span>(focus_down_up  =&gt; focus_down  &lt;&gt; focus_up);
+        <span class="macro">are_inverse!</span>(swap_up_down   =&gt; swap_up     &lt;&gt; swap_down);
+        <span class="macro">are_inverse!</span>(swap_down_up   =&gt; swap_down   &lt;&gt; swap_up);
+        <span class="macro">are_inverse!</span>(rotate_up_down =&gt; rotate_up   &lt;&gt; rotate_down);
+        <span class="macro">are_inverse!</span>(rotate_down_up =&gt; rotate_down &lt;&gt; rotate_up);
     }
-
-    <span class="macro">are_inverse!</span>(reverse  =&gt; reverse   &lt;&gt; reverse);
-    <span class="macro">are_inverse!</span>(rev_up   =&gt; rev_up    &lt;&gt; rev_up);
-    <span class="macro">are_inverse!</span>(rev_down =&gt; rev_down  &lt;&gt; rev_down);
-    <span class="macro">are_inverse!</span>(focus    =&gt; focus_up  &lt;&gt; focus_down);
-    <span class="macro">are_inverse!</span>(swap     =&gt; swap_up   &lt;&gt; swap_down);
-    <span class="macro">are_inverse!</span>(rotate   =&gt; rotate_up &lt;&gt; rotate_down);
 }
 </code></pre></div></section></main></body></html>
