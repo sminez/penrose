@@ -9,8 +9,10 @@ use penrose::{
 use std::fmt;
 use tracing::{debug, error, info};
 
+pub mod schedule;
 pub mod widgets;
 
+use schedule::{run_update_schedules, UpdateSchedule};
 use widgets::Widget;
 
 /// The position of a status bar
@@ -151,10 +153,29 @@ impl<X: XConn> StatusBar<X> {
 
     /// Add this [`StatusBar`] into the given [`WindowManager`] along with the required
     /// hooks for driving it from the main WindowManager event loop.
-    pub fn add_to(self, mut wm: WindowManager<X>) -> WindowManager<X>
+    ///
+    /// If any [UpdateSchedule]s are requested by [Widgets] then they will be extracted and run as
+    /// part of calling this method.
+    pub fn add_to(mut self, mut wm: WindowManager<X>) -> WindowManager<X>
     where
         X: 'static,
     {
+        let schedules: Vec<UpdateSchedule> = match &mut self.widgets {
+            Widgets::Shared(ps) => ps
+                .ws
+                .iter_mut()
+                .filter_map(|w| w.update_schedule())
+                .collect(),
+            Widgets::PerScreen(pss) => pss
+                .iter_mut()
+                .flat_map(|ps| ps.ws.iter_mut().filter_map(|w| w.update_schedule()))
+                .collect(),
+        };
+
+        if !schedules.is_empty() {
+            run_update_schedules(schedules);
+        }
+
         wm.state.add_extension(self);
         wm.state.config.compose_or_set_event_hook(event_hook);
         wm.state.config.compose_or_set_manage_hook(manage_hook);
