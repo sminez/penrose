@@ -381,9 +381,8 @@
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Self rendering building blocks for text based UI elements
-</span><span class="kw">use crate</span>::{Context, <span class="prelude-ty">Result</span>, TextStyle};
+</span><span class="kw">use crate</span>::{bar::schedule::UpdateSchedule, Context, <span class="prelude-ty">Result</span>, TextStyle};
 <span class="kw">use </span>penrose::{
     core::State,
     pure::geometry::Rect,
@@ -392,19 +391,17 @@
 };
 <span class="kw">use </span>std::{
     fmt,
-    sync::{Arc, Mutex},
-    thread,
+    sync::{Arc, Mutex, MutexGuard},
     time::Duration,
 };
-<span class="kw">use </span>tracing::trace;
 
 <span class="kw">pub mod </span>debug;
+<span class="kw">pub mod </span>sys;
+
 <span class="kw">mod </span>simple;
-<span class="kw">mod </span>sys;
 <span class="kw">mod </span>workspaces;
 
 <span class="kw">pub use </span>simple::{ActiveWindowName, CurrentLayout, RootWindowName};
-<span class="kw">pub use </span>sys::{amixer_volume, battery_summary, current_date_and_time, wifi_network};
 <span class="kw">pub use </span>workspaces::Workspaces;
 
 <span class="doccomment">/// A status bar widget that can be rendered using a [Context]
@@ -432,6 +429,12 @@
     /// computed. If multiple greedy widgets are present in a given StatusBar then the available
     /// space will be split evenly between all widgets.
     </span><span class="kw">fn </span>is_greedy(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+
+    <span class="doccomment">/// An [UpdateSchedule] to allow for external updates to this Widget's state independently of
+    /// the window manager event loop.
+    </span><span class="kw">fn </span>update_schedule(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;UpdateSchedule&gt; {
+        <span class="prelude-val">None
+    </span>}
 
     <span class="attr">#[allow(unused_variables)]
     </span><span class="doccomment">/// A startup hook to be run in order to initialise this Widget
@@ -672,11 +675,13 @@
 ///
 /// // Make a curl request to wttr.in to fetch the current weather information
 /// // for our location.
-/// fn my_get_text() -&gt; String {
-///     spawn_for_output_with_args("curl", &amp;["-s", "http://wttr.in?format=3"])
+/// fn my_get_text() -&gt; Option&lt;String&gt; {
+///     let s = spawn_for_output_with_args("curl", &amp;["-s", "http://wttr.in?format=3"])
 ///         .unwrap_or_default()
 ///         .trim()
-///         .to_string()
+///         .to_string();
+///
+///     Some(s)
 /// }
 ///
 /// let style = TextStyle {
@@ -692,9 +697,19 @@
 ///     Duration::from_secs(60 * 5)
 /// );
 /// ```
-</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>IntervalText {
     inner: Arc&lt;Mutex&lt;Text&gt;&gt;,
+    interval: Duration,
+    get_text: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Fn() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; + Send + <span class="lifetime">'static</span>&gt;&gt;,
+}
+
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>IntervalText {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"RefreshText"</span>)
+            .field(<span class="string">"inner"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner)
+            .field(<span class="string">"interval"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.interval)
+            .finish()
+    }
 }
 
 <span class="kw">impl </span>IntervalText {
@@ -703,65 +718,48 @@
     /// will be run in its own thread on the interval provided.
     </span><span class="kw">pub fn </span>new&lt;F&gt;(style: TextStyle, get_text: F, interval: Duration) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>F: Fn() -&gt; String + <span class="lifetime">'static </span>+ Send,
+        </span>F: Fn() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span>inner = Arc::new(Mutex::new(Text::new(<span class="string">""</span>, style, <span class="bool-val">false</span>, <span class="bool-val">false</span>)));
-        <span class="kw">let </span>txt = Arc::clone(<span class="kw-2">&amp;</span>inner);
 
-        thread::spawn(<span class="kw">move </span>|| <span class="kw">loop </span>{
-            <span class="macro">trace!</span>(<span class="string">"updating text for IntervalText widget"</span>);
-            <span class="kw">let </span>s = (get_text)();
+        <span class="self">Self </span>{
+            inner,
+            interval,
+            get_text: <span class="prelude-val">Some</span>(Box::new(get_text)),
+        }
+    }
 
-            {
-                <span class="kw">let </span><span class="kw-2">mut </span>t = <span class="kw">match </span>txt.lock() {
-                    <span class="prelude-val">Ok</span>(inner) =&gt; inner,
-                    <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
-                };
-                t.set_text(s);
-            }
-
-            thread::sleep(interval);
-        });
-
-        <span class="self">Self </span>{ inner }
+    <span class="kw">fn </span>inner_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MutexGuard&lt;<span class="lifetime">'_</span>, Text&gt; {
+        <span class="kw">match </span><span class="self">self</span>.inner.lock() {
+            <span class="prelude-val">Ok</span>(inner) =&gt; inner,
+            <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
+        }
     }
 }
 
 <span class="kw">impl</span>&lt;X: XConn&gt; Widget&lt;X&gt; <span class="kw">for </span>IntervalText {
     <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, s: usize, f: bool, w: u32, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
-            <span class="prelude-val">Ok</span>(inner) =&gt; inner,
-            <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
-        };
-
-        Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut *</span>inner, ctx, s, f, w, h)
+        Widget::&lt;X&gt;::draw(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.inner_guard(), ctx, s, f, w, h)
     }
 
     <span class="kw">fn </span>current_extent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, h: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
-            <span class="prelude-val">Ok</span>(inner) =&gt; inner,
-            <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
-        };
-
-        Widget::&lt;X&gt;::current_extent(<span class="kw-2">&amp;mut *</span>inner, ctx, h)
+        Widget::&lt;X&gt;::current_extent(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.inner_guard(), ctx, h)
     }
 
     <span class="kw">fn </span>is_greedy(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
-            <span class="prelude-val">Ok</span>(inner) =&gt; inner,
-            <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
-        };
-
-        Widget::&lt;X&gt;::is_greedy(<span class="kw-2">&amp;*</span>inner)
+        Widget::&lt;X&gt;::is_greedy(<span class="kw-2">&amp;*</span><span class="self">self</span>.inner_guard())
     }
 
     <span class="kw">fn </span>require_draw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>inner = <span class="kw">match </span><span class="self">self</span>.inner.lock() {
-            <span class="prelude-val">Ok</span>(inner) =&gt; inner,
-            <span class="prelude-val">Err</span>(poisoned) =&gt; poisoned.into_inner(),
-        };
+        Widget::&lt;X&gt;::require_draw(<span class="kw-2">&amp;*</span><span class="self">self</span>.inner_guard())
+    }
 
-        Widget::&lt;X&gt;::require_draw(<span class="kw-2">&amp;*</span>inner)
+    <span class="kw">fn </span>update_schedule(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;UpdateSchedule&gt; {
+        <span class="prelude-val">Some</span>(UpdateSchedule::new(
+            <span class="self">self</span>.interval,
+            <span class="self">self</span>.get_text.take().unwrap(),
+            <span class="self">self</span>.inner.clone(),
+        ))
     }
 }
 </code></pre></div></section></main></body></html>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Position"],"fn":["event_hook","manage_hook","refresh_hook","startup_hook"],"mod":["widgets"],"struct":["PerScreen","StatusBar"]};
+window.SIDEBAR_ITEMS = {"enum":["Position"],"fn":["event_hook","manage_hook","refresh_hook","startup_hook"],"mod":["schedule","widgets"],"struct":["PerScreen","StatusBar"]};

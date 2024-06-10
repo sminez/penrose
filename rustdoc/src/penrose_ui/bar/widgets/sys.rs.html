@@ -125,129 +125,279 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! System monitor widgets
-</span><span class="kw">use </span><span class="kw">crate</span>::bar::widgets::{RefreshText, TextStyle};
-<span class="kw">use </span>penrose::util::{spawn_for_output, spawn_for_output_with_args};
-<span class="kw">use </span>std::fs;
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! System monitor widgets and utility functions
 
-<span class="doccomment">/// Display the current charge level and status of a named battery.
-///
-/// If the given battery name is not found on this system, this widget will
-/// render as an empty string.
-</span><span class="kw">pub fn </span>battery_summary(bat: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, style: TextStyle) -&gt; RefreshText {
-    RefreshText::new(style, <span class="kw">move </span>|| battery_text(bat).unwrap_or_default())
-}
+/// Helper functions for obtaining system information for use in status bar widgets
+</span><span class="kw">pub mod </span>helpers {
+    <span class="kw">use </span>penrose::util::{spawn_for_output, spawn_for_output_with_args};
+    <span class="kw">use </span>std::fs;
 
-<span class="kw">fn </span>battery_text(bat: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>status = read_sys_file(bat, <span class="string">"status"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>energy_now: u32 = read_sys_file(bat, <span class="string">"charge_now"</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
-    <span class="kw">let </span>energy_full: u32 = read_sys_file(bat, <span class="string">"charge_full"</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
+    <span class="doccomment">/// Fetch the requested battery's charge as a percentage of its total along with an indicator
+    /// of whether it is charging or discharging.
+    ///
+    /// This will return `None` if it is unable to read or parse the required system files for the
+    /// requested battery.
+    </span><span class="kw">pub fn </span>battery_text(bat: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span>status = read_sys_file(bat, <span class="string">"status"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>energy_now: u32 = read_sys_file(bat, <span class="string">"charge_now"</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
+        <span class="kw">let </span>energy_full: u32 = read_sys_file(bat, <span class="string">"charge_full"</span>)<span class="question-mark">?</span>.parse().ok()<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>charge = energy_now * <span class="number">100 </span>/ energy_full;
+        <span class="kw">let </span>charge = energy_now * <span class="number">100 </span>/ energy_full;
 
-    <span class="kw">let </span>icon = <span class="kw">if </span>status == <span class="string">"Charging" </span>{
-        <span class="string">""
-    </span>} <span class="kw">else if </span>charge &gt;= <span class="number">90 </span>|| status == <span class="string">"Full" </span>{
-        <span class="string">""
-    </span>} <span class="kw">else if </span>charge &gt;= <span class="number">70 </span>{
-        <span class="string">""
-    </span>} <span class="kw">else if </span>charge &gt;= <span class="number">50 </span>{
-        <span class="string">""
-    </span>} <span class="kw">else if </span>charge &gt;= <span class="number">20 </span>{
-        <span class="string">""
-    </span>} <span class="kw">else </span>{
-        <span class="string">""
-    </span>};
+        <span class="kw">let </span>icon = <span class="kw">if </span>status == <span class="string">"Charging" </span>{
+            <span class="string">""
+        </span>} <span class="kw">else if </span>charge &gt;= <span class="number">90 </span>|| status == <span class="string">"Full" </span>{
+            <span class="string">""
+        </span>} <span class="kw">else if </span>charge &gt;= <span class="number">70 </span>{
+            <span class="string">""
+        </span>} <span class="kw">else if </span>charge &gt;= <span class="number">50 </span>{
+            <span class="string">""
+        </span>} <span class="kw">else if </span>charge &gt;= <span class="number">20 </span>{
+            <span class="string">""
+        </span>} <span class="kw">else </span>{
+            <span class="string">""
+        </span>};
 
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{icon} {charge}%"</span>))
-}
-
-<span class="kw">fn </span>read_sys_file(bat: <span class="kw-2">&amp;</span>str, fname: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    fs::read_to_string(<span class="macro">format!</span>(<span class="string">"/sys/class/power_supply/{bat}/{fname}"</span>))
-        .ok()
-        .map(|s| s.trim().to_string())
-}
-
-<span class="doccomment">/// Display the current date and time in YYYY-MM-DD HH:MM format
-///
-/// This widget shells out to the `date` tool to generate its output
-</span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle) -&gt; RefreshText {
-    RefreshText::new(style, || {
-        spawn_for_output_with_args(<span class="string">"date"</span>, <span class="kw-2">&amp;</span>[<span class="string">"+%F %R"</span>])
-            .unwrap_or_default()
-            .trim()
-            .to_string()
-    })
-}
-
-<span class="doccomment">/// Display the ESSID currently connected to and the signal quality as
-/// a percentage.
-</span><span class="kw">pub fn </span>wifi_network(style: TextStyle) -&gt; RefreshText {
-    RefreshText::new(style, <span class="kw">move </span>|| wifi_text().unwrap_or_default())
-}
-
-<span class="kw">fn </span>wifi_text() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>(interface, essid) = interface_and_essid()<span class="question-mark">?</span>;
-    <span class="kw">let </span>signal = signal_quality(<span class="kw-2">&amp;</span>interface)<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"&lt;{essid} {signal}%&gt;"</span>))
-}
-
-<span class="comment">// Read the interface name and essid via iwgetid.
-//   Output format is '$interface    ESSID:"$essid"'
-</span><span class="kw">fn </span>interface_and_essid() -&gt; <span class="prelude-ty">Option</span>&lt;(String, String)&gt; {
-    <span class="kw">let </span>raw = spawn_for_output(<span class="string">"iwgetid"</span>).ok()<span class="question-mark">?</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>iter = raw.split(<span class="string">':'</span>);
-
-    <span class="comment">// Not using split_whitespace here as the essid may contain whitespace
-    </span><span class="kw">let </span>interface = iter.next()<span class="question-mark">?</span>.split_whitespace().next()<span class="question-mark">?</span>.to_owned();
-    <span class="kw">let </span>essid = iter.next()<span class="question-mark">?</span>.split(<span class="string">'"'</span>).nth(<span class="number">1</span>)<span class="question-mark">?</span>.to_string();
-
-    <span class="prelude-val">Some</span>((interface, essid))
-}
-
-<span class="comment">// Parsing the format described here: https://hewlettpackard.github.io/wireless-tools/Linux.Wireless.Extensions.html
-</span><span class="kw">fn </span>signal_quality(interface: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>raw = fs::read_to_string(<span class="string">"/proc/net/wireless"</span>).ok()<span class="question-mark">?</span>;
-
-    <span class="kw">for </span>line <span class="kw">in </span>raw.lines() {
-        <span class="kw">if </span>line.starts_with(interface) {
-            <span class="kw">return </span><span class="prelude-val">Some</span>(
-                line.split_whitespace()
-                    .nth(<span class="number">2</span>)<span class="question-mark">?
-                    </span>.strip_suffix(<span class="string">'.'</span>)<span class="question-mark">?
-                    </span>.to_owned(),
-            );
-        }
+        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"{icon} {charge}%"</span>))
     }
 
-    <span class="prelude-val">None
-</span>}
+    <span class="kw">fn </span>read_sys_file(bat: <span class="kw-2">&amp;</span>str, fname: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        fs::read_to_string(<span class="macro">format!</span>(<span class="string">"/sys/class/power_supply/{bat}/{fname}"</span>))
+            .ok()
+            .map(|s| s.trim().to_string())
+    }
 
-<span class="doccomment">/// Display the current volume level as reported by `amixer`
-</span><span class="kw">pub fn </span>amixer_volume(channel: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, style: TextStyle) -&gt; RefreshText {
-    RefreshText::new(style, <span class="kw">move </span>|| amixer_text(channel).unwrap_or_default())
+    <span class="doccomment">/// Fetch the current date and time in `YYYY-MM-DD HH:MM` format using the `date` command line
+    /// program.
+    ///
+    /// Will return `None` if there are errors in calling `date`.
+    </span><span class="kw">pub fn </span>date_text() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="prelude-val">Some</span>(
+            spawn_for_output_with_args(<span class="string">"date"</span>, <span class="kw-2">&amp;</span>[<span class="string">"+%F %R"</span>])
+                .ok()<span class="question-mark">?
+                </span>.trim()
+                .to_string(),
+        )
+    }
+
+    <span class="doccomment">/// Fetch the active ESSID and associated signal quality for the active wifi network.
+    ///
+    /// Makes use of the `iwgetid` command line program and will return `None` if there are errors
+    /// in calling it or reading required system files to determine the signal quality.
+    </span><span class="kw">pub fn </span>wifi_text() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span>(interface, essid) = interface_and_essid()<span class="question-mark">?</span>;
+        <span class="kw">let </span>signal = signal_quality(<span class="kw-2">&amp;</span>interface)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"&lt;{essid} {signal}%&gt;"</span>))
+    }
+
+    <span class="comment">// Read the interface name and essid via iwgetid.
+    //   Output format is '$interface    ESSID:"$essid"'
+    </span><span class="kw">fn </span>interface_and_essid() -&gt; <span class="prelude-ty">Option</span>&lt;(String, String)&gt; {
+        <span class="kw">let </span>raw = spawn_for_output(<span class="string">"iwgetid"</span>).ok()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = raw.split(<span class="string">':'</span>);
+
+        <span class="comment">// Not using split_whitespace here as the essid may contain whitespace
+        </span><span class="kw">let </span>interface = iter.next()<span class="question-mark">?</span>.split_whitespace().next()<span class="question-mark">?</span>.to_owned();
+        <span class="kw">let </span>essid = iter.next()<span class="question-mark">?</span>.split(<span class="string">'"'</span>).nth(<span class="number">1</span>)<span class="question-mark">?</span>.to_string();
+
+        <span class="prelude-val">Some</span>((interface, essid))
+    }
+
+    <span class="comment">// Parsing the format described here: https://hewlettpackard.github.io/wireless-tools/Linux.Wireless.Extensions.html
+    </span><span class="kw">fn </span>signal_quality(interface: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span>raw = fs::read_to_string(<span class="string">"/proc/net/wireless"</span>).ok()<span class="question-mark">?</span>;
+
+        <span class="kw">for </span>line <span class="kw">in </span>raw.lines() {
+            <span class="kw">if </span>line.starts_with(interface) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(
+                    line.split_whitespace()
+                        .nth(<span class="number">2</span>)<span class="question-mark">?
+                        </span>.strip_suffix(<span class="string">'.'</span>)<span class="question-mark">?
+                        </span>.to_owned(),
+                );
+            }
+        }
+
+        <span class="prelude-val">None
+    </span>}
+
+    <span class="doccomment">/// Parse the current volume as a percentage from amixer.
+    ///
+    /// Expected output format:
+    ///   $ amixer sget Master
+    ///     Simple mixer control 'Master',0
+    ///       Capabilities: pvolume pvolume-joined pswitch pswitch-joined
+    ///       Playback channels: Mono
+    ///       Limits: Playback 0 - 127
+    ///       Mono: Playback 0 [0%] [-63.50dB] [on]
+    </span><span class="kw">pub fn </span>amixer_text(channel: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span>raw = spawn_for_output(<span class="macro">format!</span>(<span class="string">"amixer sget {channel}"</span>)).ok()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>vol = raw
+            .lines()
+            .last()<span class="question-mark">?
+            </span>.split_whitespace()
+            .find(|s| s.ends_with(<span class="string">"%]"</span>))<span class="question-mark">?
+            </span>.replace(|c| <span class="string">"[]%"</span>.contains(c), <span class="string">""</span>);
+
+        <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">" {vol}%"</span>))
+    }
 }
 
-<span class="comment">// Parse the current volume as a percentage from amixer.
-//
-// Expected output format:
-//   $ amixer sget Master
-//     Simple mixer control 'Master',0
-//       Capabilities: pvolume pvolume-joined pswitch pswitch-joined
-//       Playback channels: Mono
-//       Limits: Playback 0 - 127
-//       Mono: Playback 0 [0%] [-63.50dB] [on]
-</span><span class="kw">fn </span>amixer_text(channel: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>raw = spawn_for_output(<span class="macro">format!</span>(<span class="string">"amixer sget {channel}"</span>)).ok()<span class="question-mark">?</span>;
+<span class="doccomment">/// System information widgets provided as [RefreshText] widgets.
+///
+/// These will update themselves every time that the window manager refreshes its internal state.
+/// To update on a specified interval instead, see the [interval] module instead.
+</span><span class="kw">pub mod </span>refresh {
+    <span class="kw">use </span><span class="kw">crate</span>::bar::widgets::{sys::helpers, RefreshText, TextStyle};
 
-    <span class="kw">let </span>vol = raw
-        .lines()
-        .last()<span class="question-mark">?
-        </span>.split_whitespace()
-        .find(|s| s.ends_with(<span class="string">"%]"</span>))<span class="question-mark">?
-        </span>.replace(|c| <span class="string">"[]%"</span>.contains(c), <span class="string">""</span>);
+    <span class="doccomment">/// Display the current charge level and status of a named battery.
+    ///
+    /// If the given battery name is not found on this system, this widget will
+    /// render as an empty string.
+    </span><span class="kw">pub fn </span>battery_summary(bat: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, style: TextStyle) -&gt; RefreshText {
+        RefreshText::new(style, <span class="kw">move </span>|| {
+            helpers::battery_text(bat).unwrap_or_default()
+        })
+    }
 
-    <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">" {vol}%"</span>))
+    <span class="doccomment">/// Display the current date and time in YYYY-MM-DD HH:MM format
+    ///
+    /// This widget shells out to the `date` tool to generate its output
+    </span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle) -&gt; RefreshText {
+        RefreshText::new(style, || helpers::date_text().unwrap_or_default())
+    }
+
+    <span class="doccomment">/// Display the ESSID currently connected to and the signal quality as
+    /// a percentage.
+    </span><span class="kw">pub fn </span>wifi_network(style: TextStyle) -&gt; RefreshText {
+        RefreshText::new(style, <span class="kw">move </span>|| helpers::wifi_text().unwrap_or_default())
+    }
+
+    <span class="doccomment">/// Display the current volume level as reported by `amixer`
+    </span><span class="kw">pub fn </span>amixer_volume(channel: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, style: TextStyle) -&gt; RefreshText {
+        RefreshText::new(style, <span class="kw">move </span>|| {
+            helpers::amixer_text(channel).unwrap_or_default()
+        })
+    }
+}
+
+<span class="doccomment">/// System information widgets provided as [IntervalText] widgets.
+///
+/// These will update themselves based on the interval provided. To update when the window manager
+/// refreshes its internal state, see the [refresh] module instead.
+</span><span class="kw">pub mod </span>interval {
+    <span class="kw">use </span><span class="kw">crate</span>::bar::widgets::{sys::helpers, IntervalText, TextStyle};
+    <span class="kw">use </span>std::time::Duration;
+
+    <span class="doccomment">/// Display the current charge level and status of a named battery.
+    ///
+    /// If the given battery name is not found on this system, this widget will
+    /// render as an empty string.
+    </span><span class="kw">pub fn </span>battery_summary(
+        bat: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        style: TextStyle,
+        interval: Duration,
+    ) -&gt; IntervalText {
+        IntervalText::new(style, <span class="kw">move </span>|| helpers::battery_text(bat), interval)
+    }
+
+    <span class="doccomment">/// Display the current date and time in YYYY-MM-DD HH:MM format
+    ///
+    /// This widget shells out to the `date` tool to generate its output
+    </span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle, interval: Duration) -&gt; IntervalText {
+        IntervalText::new(style, helpers::date_text, interval)
+    }
+
+    <span class="doccomment">/// Display the ESSID currently connected to and the signal quality as
+    /// a percentage.
+    </span><span class="kw">pub fn </span>wifi_network(style: TextStyle, interval: Duration) -&gt; IntervalText {
+        IntervalText::new(style, helpers::wifi_text, interval)
+    }
+
+    <span class="doccomment">/// Display the current volume level as reported by `amixer`
+    </span><span class="kw">pub fn </span>amixer_volume(
+        channel: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        style: TextStyle,
+        interval: Duration,
+    ) -&gt; IntervalText {
+        IntervalText::new(style, <span class="kw">move </span>|| helpers::amixer_text(channel), interval)
+    }
 }
 </code></pre></div></section></main></body></html>

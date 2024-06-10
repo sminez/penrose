@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["amixer_text","battery_text","date_text","wifi_text"]};

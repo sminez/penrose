@@ -382,6 +382,27 @@
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
 </span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
@@ -393,8 +414,10 @@
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>tracing::{debug, error, info};
 
+<span class="kw">pub mod </span>schedule;
 <span class="kw">pub mod </span>widgets;
 
+<span class="kw">use </span>schedule::{run_update_schedules, UpdateSchedule};
 <span class="kw">use </span>widgets::Widget;
 
 <span class="doccomment">/// The position of a status bar
@@ -535,10 +558,29 @@
 
     <span class="doccomment">/// Add this [`StatusBar`] into the given [`WindowManager`] along with the required
     /// hooks for driving it from the main WindowManager event loop.
-    </span><span class="kw">pub fn </span>add_to(<span class="self">self</span>, <span class="kw-2">mut </span>wm: WindowManager&lt;X&gt;) -&gt; WindowManager&lt;X&gt;
+    ///
+    /// If any [UpdateSchedule]s are requested by [Widgets] then they will be extracted and run as
+    /// part of calling this method.
+    </span><span class="kw">pub fn </span>add_to(<span class="kw-2">mut </span><span class="self">self</span>, <span class="kw-2">mut </span>wm: WindowManager&lt;X&gt;) -&gt; WindowManager&lt;X&gt;
     <span class="kw">where
         </span>X: <span class="lifetime">'static</span>,
     {
+        <span class="kw">let </span>schedules: Vec&lt;UpdateSchedule&gt; = <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.widgets {
+            Widgets::Shared(ps) =&gt; ps
+                .ws
+                .iter_mut()
+                .filter_map(|w| w.update_schedule())
+                .collect(),
+            Widgets::PerScreen(pss) =&gt; pss
+                .iter_mut()
+                .flat_map(|ps| ps.ws.iter_mut().filter_map(|w| w.update_schedule()))
+                .collect(),
+        };
+
+        <span class="kw">if </span>!schedules.is_empty() {
+            run_update_schedules(schedules);
+        }
+
         wm.state.add_extension(<span class="self">self</span>);
         wm.state.config.compose_or_set_event_hook(event_hook);
         wm.state.config.compose_or_set_manage_hook(manage_hook);
