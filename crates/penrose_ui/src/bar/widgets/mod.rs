@@ -1,5 +1,5 @@
 //! Self rendering building blocks for text based UI elements
-use crate::{Context, Result, TextStyle};
+use crate::{bar::schedule::UpdateSchedule, Context, Result, TextStyle};
 use penrose::{
     core::State,
     pure::geometry::Rect,
@@ -8,19 +8,17 @@ use penrose::{
 };
 use std::{
     fmt,
-    sync::{Arc, Mutex},
-    thread,
+    sync::{Arc, Mutex, MutexGuard},
     time::Duration,
 };
-use tracing::trace;
 
 pub mod debug;
+pub mod sys;
+
 mod simple;
-mod sys;
 mod workspaces;
 
 pub use simple::{ActiveWindowName, CurrentLayout, RootWindowName};
-pub use sys::{amixer_volume, battery_summary, current_date_and_time, wifi_network};
 pub use workspaces::Workspaces;
 
 /// A status bar widget that can be rendered using a [Context]
@@ -48,6 +46,12 @@ where
     /// computed. If multiple greedy widgets are present in a given StatusBar then the available
     /// space will be split evenly between all widgets.
     fn is_greedy(&self) -> bool;
+
+    /// An [UpdateSchedule] to allow for external updates to this Widget's state independently of
+    /// the window manager event loop.
+    fn update_schedule(&mut self) -> Option<UpdateSchedule> {
+        None
+    }
 
     #[allow(unused_variables)]
     /// A startup hook to be run in order to initialise this Widget
@@ -288,11 +292,13 @@ impl<X: XConn> Widget<X> for RefreshText {
 ///
 /// // Make a curl request to wttr.in to fetch the current weather information
 /// // for our location.
-/// fn my_get_text() -> String {
-///     spawn_for_output_with_args("curl", &["-s", "http://wttr.in?format=3"])
+/// fn my_get_text() -> Option<String> {
+///     let s = spawn_for_output_with_args("curl", &["-s", "http://wttr.in?format=3"])
 ///         .unwrap_or_default()
 ///         .trim()
-///         .to_string()
+///         .to_string();
+///
+///     Some(s)
 /// }
 ///
 /// let style = TextStyle {
@@ -308,9 +314,19 @@ impl<X: XConn> Widget<X> for RefreshText {
 ///     Duration::from_secs(60 * 5)
 /// );
 /// ```
-#[derive(Debug)]
 pub struct IntervalText {
     inner: Arc<Mutex<Text>>,
+    interval: Duration,
+    get_text: Option<Box<dyn Fn() -> Option<String> + Send + 'static>>,
+}
+
+impl fmt::Debug for IntervalText {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RefreshText")
+            .field("inner", &self.inner)
+            .field("interval", &self.interval)
+            .finish()
+    }
 }
 
 impl IntervalText {
@@ -319,64 +335,47 @@ impl IntervalText {
     /// will be run in its own thread on the interval provided.
     pub fn new<F>(style: TextStyle, get_text: F, interval: Duration) -> Self
     where
-        F: Fn() -> String + 'static + Send,
+        F: Fn() -> Option<String> + Send + 'static,
     {
         let inner = Arc::new(Mutex::new(Text::new("", style, false, false)));
-        let txt = Arc::clone(&inner);
 
-        thread::spawn(move || loop {
-            trace!("updating text for IntervalText widget");
-            let s = (get_text)();
+        Self {
+            inner,
+            interval,
+            get_text: Some(Box::new(get_text)),
+        }
+    }
 
-            {
-                let mut t = match txt.lock() {
-                    Ok(inner) => inner,
-                    Err(poisoned) => poisoned.into_inner(),
-                };
-                t.set_text(s);
-            }
-
-            thread::sleep(interval);
-        });
-
-        Self { inner }
+    fn inner_guard(&self) -> MutexGuard<'_, Text> {
+        match self.inner.lock() {
+            Ok(inner) => inner,
+            Err(poisoned) => poisoned.into_inner(),
+        }
     }
 }
 
 impl<X: XConn> Widget<X> for IntervalText {
     fn draw(&mut self, ctx: &mut Context<'_>, s: usize, f: bool, w: u32, h: u32) -> Result<()> {
-        let mut inner = match self.inner.lock() {
-            Ok(inner) => inner,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-
-        Widget::<X>::draw(&mut *inner, ctx, s, f, w, h)
+        Widget::<X>::draw(&mut *self.inner_guard(), ctx, s, f, w, h)
     }
 
     fn current_extent(&mut self, ctx: &mut Context<'_>, h: u32) -> Result<(u32, u32)> {
-        let mut inner = match self.inner.lock() {
-            Ok(inner) => inner,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-
-        Widget::<X>::current_extent(&mut *inner, ctx, h)
+        Widget::<X>::current_extent(&mut *self.inner_guard(), ctx, h)
     }
 
     fn is_greedy(&self) -> bool {
-        let inner = match self.inner.lock() {
-            Ok(inner) => inner,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-
-        Widget::<X>::is_greedy(&*inner)
+        Widget::<X>::is_greedy(&*self.inner_guard())
     }
 
     fn require_draw(&self) -> bool {
-        let inner = match self.inner.lock() {
-            Ok(inner) => inner,
-            Err(poisoned) => poisoned.into_inner(),
-        };
+        Widget::<X>::require_draw(&*self.inner_guard())
+    }
 
-        Widget::<X>::require_draw(&*inner)
+    fn update_schedule(&mut self) -> Option<UpdateSchedule> {
+        Some(UpdateSchedule::new(
+            self.interval,
+            self.get_text.take().unwrap(),
+            self.inner.clone(),
+        ))
     }
 }

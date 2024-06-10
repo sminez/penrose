@@ -22,12 +22,12 @@
     clippy::complexity,
     clippy::correctness,
     clippy::style,
+    clippy::undocumented_unsafe_blocks,
     future_incompatible,
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rustdoc::all,
-    clippy::undocumented_unsafe_blocks
+    rustdoc::all
 )]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/sminez/penrose/develop/icon.svg",
