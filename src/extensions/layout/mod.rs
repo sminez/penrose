@@ -16,7 +16,7 @@ pub use combinators::Conditional;
 pub mod quickcheck_tests;
 
 /// Inspired by the Fibonacci layout available for dwm:
-///   https://dwm.suckless.org/patches/fibonacci/
+///   <https://dwm.suckless.org/patches/fibonacci/>
 ///
 /// The ratio between the main and secondary regions can be adjusted by sending [ShrinkMain]
 /// and [ExpandMain] messages to this layout.
@@ -141,7 +141,7 @@ impl Layout for Fibonacci {
 }
 
 /// Inspired by the Tatami layout available for dwm:
-///   https://dwm.suckless.org/patches/tatami/
+///   <https://dwm.suckless.org/patches/tatami/>
 ///
 /// This is very much a "for looks" layout rather than something particularly practical. It
 /// provides a set of 6 specific layouts depending on the number of clients present on the
@@ -189,7 +189,7 @@ impl Tatami {
         Self { ratio, ratio_step }
     }
 
-    /// Create a new [Tatami] layout returned as a trait object ready to be added to your [LayoutStack].
+    /// Create a new [Tatami] layout returned as a trait object ready to be added to your layout stack.
     pub fn boxed(ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
         Box::new(Tatami { ratio, ratio_step })
     }

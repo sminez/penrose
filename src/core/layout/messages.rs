@@ -23,7 +23,7 @@ impl Message {
 
 /// Marker trait for a type that can be sent as a [Message].
 ///
-/// The [impl_message][0] macro can be used to easily implement this trait and mark
+/// The [impl_message][crate::impl_message] macro can be used to easily implement this trait and mark
 /// a type as being usable as a layout message:
 /// ```
 /// use penrose::impl_message;
@@ -31,8 +31,6 @@ impl Message {
 /// struct MyMessage;
 /// impl_message!(MyMessage);
 /// ```
-///
-///   [0] crate::impl_message
 pub trait IntoMessage: Any {
     /// Wrap this value as a dynamically typed message for sending to a layout
     fn into_message(self) -> Message

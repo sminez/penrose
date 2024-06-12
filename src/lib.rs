@@ -32,12 +32,12 @@
 //! ## Digging into the API
 //!
 //! The suggested reading order for getting to grips with the penrose API is to first look at the
-//! [pure][7] data structures that represent the logical state of your window manager before digging
-//! in to the [core][8] module which contains the majority of the functionality you are likely to
+//! [pure] data structures that represent the logical state of your window manager before digging
+//! in to the [core] module which contains the majority of the functionality you are likely to
 //! want to work with. If you are interested in the lower level X11 interactions (or need to make
-//! requests to the X server directly) you should check out the [x][9] module and its associated
-//! traits. To add functionality and flexability to your window manager, there are the [builtin][10]
-//! and [extensions][11] modules which offer capabilities built on top of the rest of penrose.
+//! requests to the X server directly) you should check out the [x] module and its associated
+//! traits. To add functionality and flexability to your window manager, there are the [builtin]
+//! and [extensions] modules which offer capabilities built on top of the rest of penrose.
 //!
 //! [1]: https://dwm.suckless.org/
 //! [2]: https://xmonad.org/
@@ -45,11 +45,6 @@
 //! [4]: https://www.rust-lang.org/learn
 //! [5]: https://doc.rust-lang.org/book/
 //! [6]: https://github.com/sminez/penrose/tree/develop/examples
-//! [7]: crate::pure
-//! [8]: crate::core
-//! [9]: crate::x
-//! [10]: crate::builtin
-//! [11]: crate::extensions
 #![warn(
     clippy::complexity,
     clippy::correctness,
