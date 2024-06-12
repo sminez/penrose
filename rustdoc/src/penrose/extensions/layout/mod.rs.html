@@ -311,7 +311,7 @@
 </span><span class="kw">pub mod </span>quickcheck_tests;
 
 <span class="doccomment">/// Inspired by the Fibonacci layout available for dwm:
-///   https://dwm.suckless.org/patches/fibonacci/
+///   &lt;https://dwm.suckless.org/patches/fibonacci/&gt;
 ///
 /// The ratio between the main and secondary regions can be adjusted by sending [ShrinkMain]
 /// and [ExpandMain] messages to this layout.
@@ -436,7 +436,7 @@
 }
 
 <span class="doccomment">/// Inspired by the Tatami layout available for dwm:
-///   https://dwm.suckless.org/patches/tatami/
+///   &lt;https://dwm.suckless.org/patches/tatami/&gt;
 ///
 /// This is very much a "for looks" layout rather than something particularly practical. It
 /// provides a set of 6 specific layouts depending on the number of clients present on the
@@ -484,7 +484,7 @@
         <span class="self">Self </span>{ ratio, ratio_step }
     }
 
-    <span class="doccomment">/// Create a new [Tatami] layout returned as a trait object ready to be added to your [LayoutStack].
+    <span class="doccomment">/// Create a new [Tatami] layout returned as a trait object ready to be added to your layout stack.
     </span><span class="kw">pub fn </span>boxed(ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
         Box::new(Tatami { ratio, ratio_step })
     }
