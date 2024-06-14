@@ -541,6 +541,25 @@
 <a href="#539" id="539">539</a>
 <a href="#540" id="540">540</a>
 <a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
 //!
 //! If you are only interested in adding functionality to the penrose [StatusBar][0] then you
@@ -569,7 +588,7 @@
 };
 <span class="kw">use </span>tracing::{debug, info};
 <span class="kw">use </span>x11::{
-    xft::{XftColor, XftColorAllocName, XftDrawCreate, XftDrawStringUtf8},
+    xft::{XftColor, XftColorAllocName, XftDraw, XftDrawCreate, XftDrawDestroy, XftDrawStringUtf8},
     xlib::{
         CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
         XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
@@ -962,6 +981,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(u32, u32)&gt; {
         <span class="comment">// SAFETY:
         //   - the pointers for self.dpy and s.drawable are known to be non-null
+        //   - we wrap the returned pointer in DropXftDraw to ensure that we correctly destroy
+        //     the XftDraw we create here (see below)
         </span><span class="kw">let </span>d = <span class="kw">unsafe </span>{
             XftDrawCreate(
                 <span class="self">self</span>.dpy,
@@ -970,6 +991,8 @@
                 XDefaultColormap(<span class="self">self</span>.dpy, SCREEN),
             )
         };
+
+        <span class="kw">let </span>_drop_draw = DropXftDraw { ptr: d };
 
         <span class="kw">let </span>(lpad, rpad) = (padding.<span class="number">0 </span><span class="kw">as </span>i32, padding.<span class="number">1</span>);
         <span class="kw">let </span>(<span class="kw-2">mut </span>x, y) = (lpad + <span class="self">self</span>.dx, <span class="self">self</span>.dy);
@@ -1004,7 +1027,22 @@
             total_h = max(total_h, chunk_h);
         }
 
-        <span class="prelude-val">Ok</span>((total_w + rpad, total_h))
+        <span class="kw">return </span><span class="prelude-val">Ok</span>((total_w + rpad, total_h));
+
+        <span class="comment">// There are multiple error paths here where we need to make sure that we correctly destroy
+        // the XftDraw we created. Rather than complicate the error handling we use a Drop wrapper
+        // to ensure that we run XftDrawDestroy when the function returns.
+
+        </span><span class="kw">struct </span>DropXftDraw {
+            ptr: <span class="kw-2">*mut </span>XftDraw,
+        }
+
+        <span class="kw">impl </span>Drop <span class="kw">for </span>DropXftDraw {
+            <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+                <span class="comment">// SAFETY: the pointer we have must be non-null
+                </span><span class="kw">unsafe </span>{ XftDrawDestroy(<span class="self">self</span>.ptr) };
+            }
+        }
     }
 
     <span class="doccomment">/// Determine the width and height taken up by a given string in pixels.

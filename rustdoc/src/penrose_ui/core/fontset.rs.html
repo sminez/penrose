@@ -267,6 +267,9 @@
 <a href="#265" id="265">265</a>
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{core::SCREEN, Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>fontconfig_sys::{
     constants::{FC_CHARSET, FC_SCALABLE},
@@ -385,7 +388,7 @@
         <span class="comment">// SAFETY: the Display we have a pointer to is freed by the parent draw
         </span><span class="kw">unsafe </span>{
             XftFontClose(<span class="self">self</span>.dpy, <span class="self">self</span>.primary.xfont);
-            <span class="kw">for </span>f <span class="kw">in </span><span class="self">self</span>.fallback.drain(<span class="number">0</span>..) {
+            <span class="kw">for </span>f <span class="kw">in </span><span class="self">self</span>.fallback.drain(..) {
                 XftFontClose(<span class="self">self</span>.dpy, f.xfont);
             }
         }
@@ -483,7 +486,10 @@
                 ext,
             );
 
-            <span class="prelude-val">Ok</span>(((<span class="kw-2">*</span>ext).xOff <span class="kw">as </span>u32, <span class="self">self</span>.h))
+            <span class="kw">let </span>x_off = (<span class="kw-2">*</span>ext).xOff <span class="kw">as </span>u32;
+            std::alloc::dealloc(ext <span class="kw">as </span><span class="kw-2">*mut </span>u8, layout);
+
+            <span class="prelude-val">Ok</span>((x_off, <span class="self">self</span>.h))
         }
     }
 
