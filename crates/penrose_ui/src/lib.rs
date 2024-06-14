@@ -39,6 +39,7 @@ use std::ffi::NulError;
 
 pub mod bar;
 pub mod core;
+pub mod layout_viewer;
 
 pub use crate::core::{Context, Draw, TextStyle};
 pub use bar::{Position, StatusBar};

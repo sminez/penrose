@@ -82,6 +82,15 @@ impl MainAndStack {
         Box::<Self>::default()
     }
 
+    /// Create a new rotated default [MainAndStack] [Layout] as a trait object ready to be added to
+    /// your [LayoutStack][crate::core::layout::LayoutStack].
+    pub fn boxed_default_rotated() -> Box<dyn Layout> {
+        let mut l = Self::default();
+        l.rotate();
+
+        Box::new(l)
+    }
+
     /// Create a new [MainAndStack] [Layout] with the main area on the left and remaining windows
     /// stacked to the right.
     pub fn side(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
@@ -128,6 +137,11 @@ impl MainAndStack {
             ratio_step,
             mirrored,
         }
+    }
+
+    /// Rotate the main axis of this layout
+    pub fn rotate(&mut self) {
+        self.pos = self.pos.rotate();
     }
 
     fn ratio(&self) -> f32 {
@@ -237,7 +251,7 @@ impl Layout for MainAndStack {
         } else if let Some(&Mirror) = m.downcast_ref() {
             self.mirrored = !self.mirrored;
         } else if let Some(&Rotate) = m.downcast_ref() {
-            self.pos = self.pos.rotate();
+            self.rotate();
         }
 
         None
@@ -297,6 +311,15 @@ impl CenteredMain {
         Box::<Self>::default()
     }
 
+    /// Create a new rotated default [CenteredMain] [Layout] as a trait object ready to be added to
+    /// your [LayoutStack][crate::core::layout::LayoutStack].
+    pub fn boxed_default_rotated() -> Box<dyn Layout> {
+        let mut l = Self::default();
+        l.rotate();
+
+        Box::new(l)
+    }
+
     /// Create a new [CenteredMain] [Layout] with a vertical main area and remaining windows
     /// tiled to the left and right.
     pub fn vertical(max_main: u32, ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
@@ -329,6 +352,11 @@ impl CenteredMain {
             ratio,
             ratio_step,
         }
+    }
+
+    /// Rotate the main axis of this layout
+    pub fn rotate(&mut self) {
+        self.pos = self.pos.rotate();
     }
 
     fn single_stack(&self, n: u32) -> bool {
@@ -455,7 +483,7 @@ impl Layout for CenteredMain {
                 self.max_main += n as u32;
             }
         } else if let Some(&Rotate) = m.downcast_ref() {
-            self.pos = self.pos.rotate();
+            self.rotate();
         }
 
         None

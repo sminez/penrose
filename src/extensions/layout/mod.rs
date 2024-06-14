@@ -193,6 +193,12 @@ impl Tatami {
     pub fn boxed(ratio: f32, ratio_step: f32) -> Box<dyn Layout> {
         Box::new(Tatami { ratio, ratio_step })
     }
+
+    /// Create a new default [Tatami] layout returned as a trait object ready to be added to your
+    /// layout stack.
+    pub fn boxed_default() -> Box<dyn Layout> {
+        Box::<Tatami>::default()
+    }
 }
 
 impl Default for Tatami {
