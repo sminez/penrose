@@ -116,7 +116,7 @@ impl Drop for Fontset {
         // SAFETY: the Display we have a pointer to is freed by the parent draw
         unsafe {
             XftFontClose(self.dpy, self.primary.xfont);
-            for f in self.fallback.drain(0..) {
+            for f in self.fallback.drain(..) {
                 XftFontClose(self.dpy, f.xfont);
             }
         }
@@ -214,7 +214,10 @@ impl Font {
                 ext,
             );
 
-            Ok(((*ext).xOff as u32, self.h))
+            let x_off = (*ext).xOff as u32;
+            std::alloc::dealloc(ext as *mut u8, layout);
+
+            Ok((x_off, self.h))
         }
     }
 

@@ -26,7 +26,7 @@ use std::{
 };
 use tracing::{debug, info};
 use x11::{
-    xft::{XftColor, XftColorAllocName, XftDrawCreate, XftDrawStringUtf8},
+    xft::{XftColor, XftColorAllocName, XftDraw, XftDrawCreate, XftDrawDestroy, XftDrawStringUtf8},
     xlib::{
         CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
         XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
@@ -419,6 +419,8 @@ impl<'a> Context<'a> {
     ) -> Result<(u32, u32)> {
         // SAFETY:
         //   - the pointers for self.dpy and s.drawable are known to be non-null
+        //   - we wrap the returned pointer in DropXftDraw to ensure that we correctly destroy
+        //     the XftDraw we create here (see below)
         let d = unsafe {
             XftDrawCreate(
                 self.dpy,
@@ -427,6 +429,8 @@ impl<'a> Context<'a> {
                 XDefaultColormap(self.dpy, SCREEN),
             )
         };
+
+        let _drop_draw = DropXftDraw { ptr: d };
 
         let (lpad, rpad) = (padding.0 as i32, padding.1);
         let (mut x, y) = (lpad + self.dx, self.dy);
@@ -461,7 +465,22 @@ impl<'a> Context<'a> {
             total_h = max(total_h, chunk_h);
         }
 
-        Ok((total_w + rpad, total_h))
+        return Ok((total_w + rpad, total_h));
+
+        // There are multiple error paths here where we need to make sure that we correctly destroy
+        // the XftDraw we created. Rather than complicate the error handling we use a Drop wrapper
+        // to ensure that we run XftDrawDestroy when the function returns.
+
+        struct DropXftDraw {
+            ptr: *mut XftDraw,
+        }
+
+        impl Drop for DropXftDraw {
+            fn drop(&mut self) {
+                // SAFETY: the pointer we have must be non-null
+                unsafe { XftDrawDestroy(self.ptr) };
+            }
+        }
     }
 
     /// Determine the width and height taken up by a given string in pixels.
