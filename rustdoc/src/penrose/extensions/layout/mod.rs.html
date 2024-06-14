@@ -293,6 +293,12 @@
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
 <a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Layout behaviour that is more specialised or complex than the builtin layouts.
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::{ExpandMain, ShrinkMain},
@@ -487,6 +493,12 @@
     <span class="doccomment">/// Create a new [Tatami] layout returned as a trait object ready to be added to your layout stack.
     </span><span class="kw">pub fn </span>boxed(ratio: f32, ratio_step: f32) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
         Box::new(Tatami { ratio, ratio_step })
+    }
+
+    <span class="doccomment">/// Create a new default [Tatami] layout returned as a trait object ready to be added to your
+    /// layout stack.
+    </span><span class="kw">pub fn </span>boxed_default() -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+        Box::&lt;Tatami&gt;::default()
     }
 }
 

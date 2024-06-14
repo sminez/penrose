@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["status_bar"],"mod":["bar","core"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["status_bar"],"mod":["bar","core","layout_viewer"],"type":["Result"]};
