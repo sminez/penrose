@@ -10,6 +10,41 @@ use std::fmt;
 pub trait Query<X: XConn> {
     /// Run this query for a given window ID.
     fn run(&self, id: Xid, x: &X) -> Result<bool>;
+
+    /// Combine this query with another query using a logical AND.
+    fn and<Other: Query<X>>(self, other: Other) -> AndQuery<X, Self, Other>
+    where
+        Self: Sized,
+    {
+        AndQuery {
+            first: self,
+            second: other,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Combine this query with another query using a logical OR.
+    fn or<Other: Query<X>>(self, other: Other) -> OrQuery<X, Self, Other>
+    where
+        Self: Sized,
+    {
+        OrQuery {
+            first: self,
+            second: other,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Apply a logical NOT to this query.
+    fn not(self) -> NotQuery<X, Self>
+    where
+        Self: Sized,
+    {
+        NotQuery {
+            inner: self,
+            _phantom: std::marker::PhantomData,
+        }
+    }
 }
 
 impl<X: XConn> fmt::Debug for Box<dyn Query<X>> {
@@ -101,97 +136,41 @@ where
 
 /// A meta [Query] for combining two queries with a logical AND.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct AndQuery<Q1, Q2>(pub Q1, pub Q2);
+pub struct AndQuery<X: XConn, Q1, Q2> {
+    first: Q1,
+    second: Q2,
+    _phantom: std::marker::PhantomData<X>,
+}
 
-impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for AndQuery<Q1, Q2> {
+impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for AndQuery<X, Q1, Q2> {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
-        Ok(self.0.run(id, x)? && self.1.run(id, x)?)
+        Ok(self.first.run(id, x)? && self.second.run(id, x)?)
     }
 }
 
 /// A meta [Query] for combining two queries with a logical OR.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct OrQuery<Q1, Q2>(pub Q1, pub Q2);
+pub struct OrQuery<X: XConn, Q1, Q2> {
+    first: Q1,
+    second: Q2,
+    _phantom: std::marker::PhantomData<X>,
+}
 
-impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for OrQuery<Q1, Q2> {
+impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for OrQuery<X, Q1, Q2> {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
-        Ok(self.0.run(id, x)? || self.1.run(id, x)?)
+        Ok(self.first.run(id, x)? || self.second.run(id, x)?)
     }
 }
 
 /// A meta [Query] for applying a logical NOT to a query.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct NotQuery<Q>(pub Q);
+pub struct NotQuery<X: XConn, Q> {
+    inner: Q,
+    _phantom: std::marker::PhantomData<X>,
+}
 
-impl<X: XConn, Q: Query<X>> Query<X> for NotQuery<Q> {
+impl<X: XConn, Q: Query<X>> Query<X> for NotQuery<X, Q> {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
-        Ok(!self.0.run(id, x)?)
+        Ok(!self.inner.run(id, x)?)
     }
-}
-
-/// A meta [Query] for combining multiple queries with a logical OR.
-pub struct AnyQuery<X>(pub Vec<Box<dyn Query<X>>>);
-
-impl<X: XConn> fmt::Debug for AnyQuery<X> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("AnyQuery").finish()
-    }
-}
-
-impl<X: XConn> Query<X> for AnyQuery<X> {
-    fn run(&self, id: Xid, x: &X) -> Result<bool> {
-        self.0
-            .iter()
-            .try_fold(false, |acc, query| Ok(acc || query.run(id, x)?))
-    }
-}
-
-/// A meta [Query] for combining multiple queries with a logical AND.
-pub struct AllQuery<X>(pub Vec<Box<dyn Query<X>>>);
-
-impl<X: XConn> fmt::Debug for AllQuery<X> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("AllQuery").finish()
-    }
-}
-
-impl<X: XConn> Query<X> for AllQuery<X> {
-    fn run(&self, id: Xid, x: &X) -> Result<bool> {
-        self.0
-            .iter()
-            .try_fold(true, |acc, query| Ok(acc && query.run(id, x)?))
-    }
-}
-
-trait QueryExt<X>: Query<X>
-where
-    X: XConn,
-{
-    fn and(self, other: impl Query<X>) -> AndQuery<Self, impl Query<X>>
-    where
-        Self: Sized,
-    {
-        AndQuery(self, other)
-    }
-
-    fn or(self, other: impl Query<X>) -> OrQuery<Self, impl Query<X>>
-    where
-        Self: Sized,
-    {
-        OrQuery(self, other)
-    }
-
-    fn not(self) -> NotQuery<impl Query<X>>
-    where
-        Self: Sized,
-    {
-        NotQuery(self)
-    }
-}
-
-impl<X, Q> QueryExt<X> for Q
-where
-    X: XConn,
-    Q: Query<X>,
-{
 }
