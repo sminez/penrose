@@ -270,6 +270,9 @@
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
 <a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{core::SCREEN, Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>fontconfig_sys::{
     constants::{FC_CHARSET, FC_SCALABLE},
@@ -278,7 +281,7 @@
     FcPatternDuplicate,
 };
 <span class="kw">use </span>std::{
-    alloc::{alloc, handle_alloc_error, Layout},
+    alloc::{alloc, dealloc, handle_alloc_error, Layout},
     collections::HashMap,
     ffi::CString,
 };
@@ -387,8 +390,10 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="comment">// SAFETY: the Display we have a pointer to is freed by the parent draw
         </span><span class="kw">unsafe </span>{
+            FcPatternDestroy(<span class="self">self</span>.primary.pattern <span class="kw">as _</span>);
             XftFontClose(<span class="self">self</span>.dpy, <span class="self">self</span>.primary.xfont);
             <span class="kw">for </span>f <span class="kw">in </span><span class="self">self</span>.fallback.drain(..) {
+                FcPatternDestroy(f.pattern <span class="kw">as _</span>);
                 XftFontClose(<span class="self">self</span>.dpy, f.xfont);
             }
         }
@@ -487,7 +492,7 @@
             );
 
             <span class="kw">let </span>x_off = (<span class="kw-2">*</span>ext).xOff <span class="kw">as </span>u32;
-            std::alloc::dealloc(ext <span class="kw">as </span><span class="kw-2">*mut </span>u8, layout);
+            dealloc(ext <span class="kw">as </span><span class="kw-2">*mut </span>u8, layout);
 
             <span class="prelude-val">Ok</span>((x_off, <span class="self">self</span>.h))
         }
@@ -527,15 +532,16 @@
             <span class="kw">let </span>res = ptr <span class="kw">as </span><span class="kw-2">*mut </span>FcResult;
 
             <span class="comment">// Passing the pointer from fontconfig_sys to x11 here
-            </span><span class="kw">let </span>font_match = XftFontMatch(dpy, SCREEN, pat <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, res);
+            </span><span class="kw">let </span>fc_pattern = XftFontMatch(dpy, SCREEN, pat <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, res);
 
+            dealloc(res <span class="kw">as </span><span class="kw-2">*mut </span>u8, layout);
             FcCharSetDestroy(charset);
             FcPatternDestroy(pat);
 
-            <span class="kw">if </span>font_match.is_null() {
+            <span class="kw">if </span>fc_pattern.is_null() {
                 <span class="prelude-val">Err</span>(Error::NoFallbackFontForChar(c))
             } <span class="kw">else </span>{
-                <span class="prelude-val">Ok</span>(font_match <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
+                <span class="prelude-val">Ok</span>(fc_pattern <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
             }
         }
     }

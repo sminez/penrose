@@ -560,6 +560,16 @@
 <a href="#558" id="558">558</a>
 <a href="#559" id="559">559</a>
 <a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
 //!
 //! If you are only interested in adding functionality to the penrose [StatusBar][0] then you
@@ -583,7 +593,7 @@
 <span class="kw">use </span>std::{
     alloc::{alloc, dealloc, handle_alloc_error, Layout},
     cmp::max,
-    collections::HashMap,
+    collections::{hash_map::Entry, HashMap},
     ffi::CString,
 };
 <span class="kw">use </span>tracing::{debug, info};
@@ -621,6 +631,16 @@
     drawable: Drawable,
     gc: GC,
     r: Rect,
+    id: u64,
+}
+
+<span class="kw">impl </span>Surface {
+    <span class="doccomment">/// SAFETY: dpy must be non-null
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, dpy: <span class="kw-2">*mut </span>Display) {
+        <span class="kw">let </span>Rect { w, h, .. } = <span class="self">self</span>.r;
+        XCopyArea(dpy, <span class="self">self</span>.drawable, <span class="self">self</span>.id, <span class="self">self</span>.gc, <span class="number">0</span>, <span class="number">0</span>, w, h, <span class="number">0</span>, <span class="number">0</span>);
+        XSync(dpy, False);
+    }
 }
 
 <span class="doccomment">/// A minimal back end for rendering simple text based UIs.
@@ -689,6 +709,8 @@
     colors: HashMap&lt;Color, XColor&gt;,
     active_font: String,
 }
+
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Draw {}
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Draw {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -759,7 +781,15 @@
             (drawable, gc)
         };
 
-        <span class="self">self</span>.surfaces.insert(id, Surface { r, gc, drawable });
+        <span class="self">self</span>.surfaces.insert(
+            id,
+            Surface {
+                id: <span class="kw-2">*</span>id <span class="kw">as </span>u64,
+                r,
+                gc,
+                drawable,
+            },
+        );
 
         <span class="prelude-val">Ok</span>(id)
     }
@@ -767,9 +797,9 @@
     <span class="doccomment">/// Destroy the specified window along with any surface and graphics context state held
     /// within this draw.
     </span><span class="kw">pub fn </span>destroy_window_and_surface(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.conn.destroy_window(id)<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.surfaces.remove(<span class="kw-2">&amp;</span>id) {
-            <span class="comment">// SAFETY: the pointerse being freed are known to be non-null
+            <span class="self">self</span>.conn.destroy_window(id)<span class="question-mark">?</span>;
+            <span class="comment">// SAFETY: the pointers being freed are known to be non-null
             </span><span class="kw">unsafe </span>{
                 XFreePixmap(<span class="self">self</span>.dpy, s.drawable);
                 XFreeGC(<span class="self">self</span>.dpy, s.gc);
@@ -781,8 +811,10 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font: <span class="kw-2">&amp;</span>str, point_size: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>k = font_key(font, point_size);
-        <span class="kw">let </span>fs = Fontset::try_new(<span class="self">self</span>.dpy, <span class="kw-2">&amp;</span>k)<span class="question-mark">?</span>;
-        <span class="self">self</span>.fss.insert(k, fs);
+        <span class="kw">if let </span>Entry::Vacant(e) = <span class="self">self</span>.fss.entry(k) {
+            <span class="kw">let </span>fs = Fontset::try_new(<span class="self">self</span>.dpy, e.key())<span class="question-mark">?</span>;
+            e.insert(fs);
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -790,11 +822,8 @@
     <span class="doccomment">/// Set the font being used for rendering text and clear the existing cache of fallback fonts
     /// for characters that are not supported by the primary font.
     </span><span class="kw">pub fn </span>set_font(<span class="kw-2">&amp;mut </span><span class="self">self</span>, font: <span class="kw-2">&amp;</span>str, point_size: u8) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>k = font_key(font, point_size);
-        <span class="kw">if </span>!<span class="self">self</span>.fss.contains_key(<span class="kw-2">&amp;</span>k) {
-            <span class="self">self</span>.add_font(font, point_size)<span class="question-mark">?</span>;
-        }
-        <span class="self">self</span>.active_font = k;
+        <span class="self">self</span>.add_font(font, point_size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.active_font = font_key(font, point_size);
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -810,7 +839,6 @@
             .ok_or(Error::UnintialisedSurface { id })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Context {
-            id: <span class="kw-2">*</span>id <span class="kw">as </span>u64,
             dx: <span class="number">0</span>,
             dy: <span class="number">0</span>,
             dpy: <span class="self">self</span>.dpy,
@@ -827,18 +855,11 @@
     <span class="doccomment">/// Flush any pending requests to the X server and map the specifed window to the screen.
     </span><span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.surfaces.get(<span class="kw-2">&amp;</span>id) {
-            <span class="kw">let </span>Rect { x, y, w, h } = s.r;
-            <span class="kw">let </span>(x, y) = (x <span class="kw">as </span>i32, y <span class="kw">as </span>i32);
-
-            <span class="comment">// SAFETY: the pointers for self.dpy, s.drawable, s.gc are known to be non-null
-            </span><span class="kw">unsafe </span>{
-                XCopyArea(<span class="self">self</span>.dpy, s.drawable, <span class="kw-2">*</span>id <span class="kw">as </span>u64, s.gc, x, y, w, h, x, y);
-                XSync(<span class="self">self</span>.dpy, False);
-            }
+            <span class="comment">// SAFETY: self.dpy is non-null
+            </span><span class="kw">unsafe </span>{ s.flush(<span class="self">self</span>.dpy) };
+            <span class="self">self</span>.conn.map(id)<span class="question-mark">?</span>;
+            <span class="self">self</span>.conn.flush();
         };
-
-        <span class="self">self</span>.conn.map(id)<span class="question-mark">?</span>;
-        <span class="self">self</span>.conn.flush();
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -858,7 +879,6 @@
 ///   [0]: crate::StatusBar
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Context&lt;<span class="lifetime">'a</span>&gt; {
-    id: u64,
     dx: i32,
     dy: i32,
     dpy: <span class="kw-2">*mut </span>Display,
@@ -880,10 +900,10 @@
         <span class="self">self</span>.dy += dy;
     }
 
-    <span class="doccomment">/// Set future drawing operations to apply from the origin.
-    </span><span class="kw">pub fn </span>reset_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.dx = <span class="number">0</span>;
-        <span class="self">self</span>.dy = <span class="number">0</span>;
+    <span class="doccomment">/// Set future drawing operations to apply from a specified point.
+    </span><span class="kw">pub fn </span>set_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: i32, y: i32) {
+        <span class="self">self</span>.dx = x;
+        <span class="self">self</span>.dy = y;
     }
 
     <span class="doccomment">/// Set an absolute x offset for future drawing operations.
@@ -896,12 +916,22 @@
         <span class="self">self</span>.dy = y;
     }
 
+    <span class="doccomment">/// Set future drawing operations to apply from the origin.
+    </span><span class="kw">pub fn </span>reset_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.dx = <span class="number">0</span>;
+        <span class="self">self</span>.dy = <span class="number">0</span>;
+    }
+
     <span class="kw">fn </span>get_or_try_init_xcolor(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: Color) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>XftColor&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self
-            </span>.colors
-            .entry(c)
-            .or_insert(XColor::try_new(<span class="self">self</span>.dpy, <span class="kw-2">&amp;</span>c)<span class="question-mark">?</span>)
-            .<span class="number">0</span>)
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(xc) = <span class="self">self</span>.colors.get(<span class="kw-2">&amp;</span>c) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(xc.<span class="number">0</span>);
+        }
+
+        <span class="kw">let </span>xc = XColor::try_new(<span class="self">self</span>.dpy, <span class="kw-2">&amp;</span>c)<span class="question-mark">?</span>;
+        <span class="kw">let </span>ptr = xc.<span class="number">0</span>;
+        <span class="self">self</span>.colors.insert(c, xc);
+
+        <span class="prelude-val">Ok</span>(ptr)
     }
 
     <span class="doccomment">/// Render a rectangular border using the supplied color.
@@ -1062,18 +1092,8 @@
     /// This method does not need to be called explicitly if the flush method for
     /// the parent [Draw] is being called as well.
     </span><span class="kw">pub fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let </span>Surface {
-            r: Rect { w, h, .. },
-            gc,
-            drawable,
-        } = <span class="kw-2">*</span><span class="self">self</span>.s;
-
-        <span class="comment">// SAFETY:
-        //   - the pointers for self.dpy, drawable and gc are known to be non-null
-        </span><span class="kw">unsafe </span>{
-            XCopyArea(<span class="self">self</span>.dpy, drawable, <span class="self">self</span>.id, gc, <span class="number">0</span>, <span class="number">0</span>, w, h, <span class="number">0</span>, <span class="number">0</span>);
-            XSync(<span class="self">self</span>.dpy, False);
-        }
+        <span class="comment">// SAFETY: self.dpy is non-null
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.s.flush(<span class="self">self</span>.dpy) }
     }
 }
 

@@ -101,6 +101,14 @@
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A simple UI for view the results of a given Layout implementation
 </span><span class="kw">use crate</span>::{Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
@@ -124,6 +132,7 @@
     r: Rect,
     focused: Color,
     unfocused: Color,
+    text: Color,
 }
 
 <span class="kw">impl </span>LayoutViewer {
@@ -133,6 +142,7 @@
         bg: <span class="kw">impl </span>Into&lt;Color&gt;,
         focused: <span class="kw">impl </span>Into&lt;Color&gt;,
         unfocused: <span class="kw">impl </span>Into&lt;Color&gt;,
+        text: <span class="kw">impl </span>Into&lt;Color&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>conn = RustConn::new()<span class="question-mark">?</span>;
         <span class="kw">let </span>screen_rects = conn.screen_details()<span class="question-mark">?</span>;
@@ -151,6 +161,7 @@
             r,
             focused: focused.into(),
             unfocused: unfocused.into(),
+            text: text.into(),
         })
     }
 
@@ -175,9 +186,13 @@
                 <span class="self">self</span>.unfocused
             };
             ctx.fill_rect(r_w, color)<span class="question-mark">?</span>;
+
+            ctx.set_offset((r_w.x + r_w.w / <span class="number">2</span>) <span class="kw">as </span>i32, (r_w.y + r_w.h / <span class="number">2</span>) <span class="kw">as </span>i32);
+            ctx.draw_text(<span class="kw-2">&amp;</span>id.to_string(), <span class="number">0</span>, (<span class="number">0</span>, <span class="number">0</span>), <span class="self">self</span>.text)<span class="question-mark">?</span>;
+            ctx.reset_offset();
         }
 
-        ctx.flush();
+        <span class="self">self</span>.drw.flush(<span class="self">self</span>.win)<span class="question-mark">?</span>;
         sleep(Duration::from_millis(display_ms));
 
         <span class="prelude-val">Ok</span>(())
@@ -188,11 +203,12 @@
     </span><span class="kw">pub fn </span>showcase_layouts(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         <span class="kw-2">mut </span>s: Stack&lt;Xid&gt;,
-        layouts: Vec&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;,
+        layouts: <span class="kw-2">&amp;</span>[Box&lt;<span class="kw">dyn </span>Layout&gt;],
         gap_px: u32,
         display_ms: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">for </span><span class="kw-2">mut </span>l <span class="kw">in </span>layouts.into_iter().map(|l| Gaps::wrap(l, gap_px, gap_px)) {
+        <span class="kw">for </span>l <span class="kw">in </span>layouts.iter() {
+            <span class="kw">let </span><span class="kw-2">mut </span>l = Gaps::wrap(l.boxed_clone(), gap_px, gap_px);
             <span class="kw">for _ in </span><span class="number">0</span>..s.len() {
                 <span class="self">self</span>.render_layout_with_stack(<span class="kw-2">&amp;mut </span>l, <span class="kw-2">&amp;</span>s, display_ms)<span class="question-mark">?</span>;
                 s.focus_down();

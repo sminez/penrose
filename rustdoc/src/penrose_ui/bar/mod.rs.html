@@ -402,7 +402,6 @@
 <a href="#400" id="400">400</a>
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
 </span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
@@ -492,6 +491,20 @@
                 </span>.any(|ps| ps.ws.iter().any(|w| w.require_draw())),
         }
     }
+
+    <span class="kw">fn </span>update_schedules(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Vec&lt;UpdateSchedule&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Shared(ps) =&gt; ps
+                .ws
+                .iter_mut()
+                .filter_map(|w| w.update_schedule())
+                .collect(),
+            <span class="self">Self</span>::PerScreen(pss) =&gt; pss
+                .iter_mut()
+                .flat_map(|ps| ps.ws.iter_mut().filter_map(|w| w.update_schedule()))
+                .collect(),
+        }
+    }
 }
 
 <span class="doccomment">/// A simple text based status bar that renders a user defined array of [`Widget`]s.
@@ -565,18 +578,7 @@
     <span class="kw">where
         </span>X: <span class="lifetime">'static</span>,
     {
-        <span class="kw">let </span>schedules: Vec&lt;UpdateSchedule&gt; = <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.widgets {
-            Widgets::Shared(ps) =&gt; ps
-                .ws
-                .iter_mut()
-                .filter_map(|w| w.update_schedule())
-                .collect(),
-            Widgets::PerScreen(pss) =&gt; pss
-                .iter_mut()
-                .flat_map(|ps| ps.ws.iter_mut().filter_map(|w| w.update_schedule()))
-                .collect(),
-        };
-
+        <span class="kw">let </span>schedules = <span class="self">self</span>.widgets.update_schedules();
         <span class="kw">if </span>!schedules.is_empty() {
             run_update_schedules(schedules);
         }
@@ -633,7 +635,7 @@
     <span class="doccomment">/// Re-render all widgets in this status bar for a single screen.
     /// Will panic if `i` is out of bounds
     </span><span class="kw">fn </span>redraw_screen(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>(id, w) = <span class="self">self</span>.screens[i];
+        <span class="kw">let </span>(id, w_screen) = <span class="self">self</span>.screens[i];
         <span class="kw">let </span>screen_has_focus = <span class="self">self</span>.active_screen == i;
         <span class="kw">let </span>ps = <span class="self">self</span>.widgets.for_screen_mut(i);
 
@@ -653,8 +655,8 @@
         <span class="kw">let </span>total = extents.iter().map(|(w, <span class="kw">_</span>)| w).sum::&lt;u32&gt;();
         <span class="kw">let </span>n_greedy = greedy_indices.len();
 
-        <span class="kw">if </span>total &lt; w &amp;&amp; n_greedy &gt; <span class="number">0 </span>{
-            <span class="kw">let </span>per_greedy = (w - total) / n_greedy <span class="kw">as </span>u32;
+        <span class="kw">if </span>total &lt; w_screen &amp;&amp; n_greedy &gt; <span class="number">0 </span>{
+            <span class="kw">let </span>per_greedy = (w_screen - total) / n_greedy <span class="kw">as </span>u32;
             <span class="kw">for </span>i <span class="kw">in </span>greedy_indices.iter() {
                 <span class="kw">let </span>(w, h) = extents[<span class="kw-2">*</span>i];
                 extents[<span class="kw-2">*</span>i] = (w + per_greedy, h);
@@ -665,7 +667,6 @@
         <span class="kw">for </span>(wd, (w, <span class="kw">_</span>)) <span class="kw">in </span>ps.ws.iter_mut().zip(extents) {
             wd.draw(<span class="kw-2">&amp;mut </span>ctx, <span class="self">self</span>.active_screen, screen_has_focus, w, ps.h)<span class="question-mark">?</span>;
             x += w;
-            ctx.flush();
             ctx.set_x_offset(x <span class="kw">as </span>i32);
         }
 
@@ -686,9 +687,6 @@
     <span class="kw">fn </span>redraw_if_needed(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if </span><span class="self">self</span>.widgets.require_draw(<span class="self">self</span>.screens.len()) {
             <span class="self">self</span>.redraw()<span class="question-mark">?</span>;
-            <span class="kw">for </span>(id, <span class="kw">_</span>) <span class="kw">in </span><span class="self">self</span>.screens.iter() {
-                <span class="self">self</span>.draw.flush(<span class="kw-2">*</span>id)<span class="question-mark">?</span>;
-            }
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -753,7 +751,7 @@
 
     <span class="kw">if </span><span class="macro">matches!</span>(event, RandrNotify) || <span class="macro">matches!</span>(event, ConfigureNotify(e) <span class="kw">if </span>e.is_root) {
         <span class="macro">info!</span>(<span class="string">"screens have changed: recreating status bars"</span>);
-        <span class="kw">let </span>screens: Vec&lt;<span class="kw">_</span>&gt; = bar.screens.drain(<span class="number">0</span>..).collect();
+        <span class="kw">let </span>screens: Vec&lt;<span class="kw">_</span>&gt; = bar.screens.drain(..).collect();
 
         <span class="kw">for </span>(id, <span class="kw">_</span>) <span class="kw">in </span>screens {
             <span class="macro">info!</span>(%id, <span class="string">"removing previous status bar"</span>);
