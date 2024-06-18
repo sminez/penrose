@@ -138,8 +138,6 @@ pub struct Draw {
     active_font: String,
 }
 
-unsafe impl Send for Draw {}
-
 impl Drop for Draw {
     fn drop(&mut self) {
         // SAFETY: all pointers being freed are known to be non-null
