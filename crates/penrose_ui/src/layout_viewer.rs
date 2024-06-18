@@ -21,6 +21,7 @@ pub struct LayoutViewer {
     r: Rect,
     focused: Color,
     unfocused: Color,
+    text: Color,
 }
 
 impl LayoutViewer {
@@ -30,6 +31,7 @@ impl LayoutViewer {
         bg: impl Into<Color>,
         focused: impl Into<Color>,
         unfocused: impl Into<Color>,
+        text: impl Into<Color>,
     ) -> Result<Self> {
         let conn = RustConn::new()?;
         let screen_rects = conn.screen_details()?;
@@ -48,6 +50,7 @@ impl LayoutViewer {
             r,
             focused: focused.into(),
             unfocused: unfocused.into(),
+            text: text.into(),
         })
     }
 
@@ -72,9 +75,13 @@ impl LayoutViewer {
                 self.unfocused
             };
             ctx.fill_rect(r_w, color)?;
+
+            ctx.set_offset((r_w.x + r_w.w / 2) as i32, (r_w.y + r_w.h / 2) as i32);
+            ctx.draw_text(&id.to_string(), 0, (0, 0), self.text)?;
+            ctx.reset_offset();
         }
 
-        ctx.flush();
+        self.drw.flush(self.win)?;
         sleep(Duration::from_millis(display_ms));
 
         Ok(())
@@ -85,11 +92,12 @@ impl LayoutViewer {
     pub fn showcase_layouts(
         &mut self,
         mut s: Stack<Xid>,
-        layouts: Vec<Box<dyn Layout>>,
+        layouts: &[Box<dyn Layout>],
         gap_px: u32,
         display_ms: u64,
     ) -> Result<()> {
-        for mut l in layouts.into_iter().map(|l| Gaps::wrap(l, gap_px, gap_px)) {
+        for l in layouts.iter() {
+            let mut l = Gaps::wrap(l.boxed_clone(), gap_px, gap_px);
             for _ in 0..s.len() {
                 self.render_layout_with_stack(&mut l, &s, display_ms)?;
                 s.focus_down();

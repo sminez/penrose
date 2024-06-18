@@ -6,7 +6,7 @@ use fontconfig_sys::{
     FcPatternDuplicate,
 };
 use std::{
-    alloc::{alloc, handle_alloc_error, Layout},
+    alloc::{alloc, dealloc, handle_alloc_error, Layout},
     collections::HashMap,
     ffi::CString,
 };
@@ -115,8 +115,10 @@ impl Drop for Fontset {
     fn drop(&mut self) {
         // SAFETY: the Display we have a pointer to is freed by the parent draw
         unsafe {
+            FcPatternDestroy(self.primary.pattern as _);
             XftFontClose(self.dpy, self.primary.xfont);
             for f in self.fallback.drain(..) {
+                FcPatternDestroy(f.pattern as _);
                 XftFontClose(self.dpy, f.xfont);
             }
         }
@@ -215,7 +217,7 @@ impl Font {
             );
 
             let x_off = (*ext).xOff as u32;
-            std::alloc::dealloc(ext as *mut u8, layout);
+            dealloc(ext as *mut u8, layout);
 
             Ok((x_off, self.h))
         }
@@ -255,15 +257,16 @@ impl Font {
             let res = ptr as *mut FcResult;
 
             // Passing the pointer from fontconfig_sys to x11 here
-            let font_match = XftFontMatch(dpy, SCREEN, pat as *const _, res);
+            let fc_pattern = XftFontMatch(dpy, SCREEN, pat as *const _, res);
 
+            dealloc(res as *mut u8, layout);
             FcCharSetDestroy(charset);
             FcPatternDestroy(pat);
 
-            if font_match.is_null() {
+            if fc_pattern.is_null() {
                 Err(Error::NoFallbackFontForChar(c))
             } else {
-                Ok(font_match as *mut _)
+                Ok(fc_pattern as *mut _)
             }
         }
     }

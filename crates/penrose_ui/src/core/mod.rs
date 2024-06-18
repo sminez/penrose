@@ -21,7 +21,7 @@ use penrose::{
 use std::{
     alloc::{alloc, dealloc, handle_alloc_error, Layout},
     cmp::max,
-    collections::HashMap,
+    collections::{hash_map::Entry, HashMap},
     ffi::CString,
 };
 use tracing::{debug, info};
@@ -59,6 +59,16 @@ struct Surface {
     drawable: Drawable,
     gc: GC,
     r: Rect,
+    id: u64,
+}
+
+impl Surface {
+    /// SAFETY: dpy must be non-null
+    pub(crate) unsafe fn flush(&self, dpy: *mut Display) {
+        let Rect { w, h, .. } = self.r;
+        XCopyArea(dpy, self.drawable, self.id, self.gc, 0, 0, w, h, 0, 0);
+        XSync(dpy, False);
+    }
 }
 
 /// A minimal back end for rendering simple text based UIs.
@@ -127,6 +137,8 @@ pub struct Draw {
     colors: HashMap<Color, XColor>,
     active_font: String,
 }
+
+unsafe impl Send for Draw {}
 
 impl Drop for Draw {
     fn drop(&mut self) {
@@ -197,7 +209,15 @@ impl Draw {
             (drawable, gc)
         };
 
-        self.surfaces.insert(id, Surface { r, gc, drawable });
+        self.surfaces.insert(
+            id,
+            Surface {
+                id: *id as u64,
+                r,
+                gc,
+                drawable,
+            },
+        );
 
         Ok(id)
     }
@@ -205,9 +225,9 @@ impl Draw {
     /// Destroy the specified window along with any surface and graphics context state held
     /// within this draw.
     pub fn destroy_window_and_surface(&mut self, id: Xid) -> Result<()> {
-        self.conn.destroy_window(id)?;
         if let Some(s) = self.surfaces.remove(&id) {
-            // SAFETY: the pointerse being freed are known to be non-null
+            self.conn.destroy_window(id)?;
+            // SAFETY: the pointers being freed are known to be non-null
             unsafe {
                 XFreePixmap(self.dpy, s.drawable);
                 XFreeGC(self.dpy, s.gc);
@@ -219,8 +239,10 @@ impl Draw {
 
     pub(crate) fn add_font(&mut self, font: &str, point_size: u8) -> Result<()> {
         let k = font_key(font, point_size);
-        let fs = Fontset::try_new(self.dpy, &k)?;
-        self.fss.insert(k, fs);
+        if let Entry::Vacant(e) = self.fss.entry(k) {
+            let fs = Fontset::try_new(self.dpy, e.key())?;
+            e.insert(fs);
+        }
 
         Ok(())
     }
@@ -228,11 +250,8 @@ impl Draw {
     /// Set the font being used for rendering text and clear the existing cache of fallback fonts
     /// for characters that are not supported by the primary font.
     pub fn set_font(&mut self, font: &str, point_size: u8) -> Result<()> {
-        let k = font_key(font, point_size);
-        if !self.fss.contains_key(&k) {
-            self.add_font(font, point_size)?;
-        }
-        self.active_font = k;
+        self.add_font(font, point_size)?;
+        self.active_font = font_key(font, point_size);
 
         Ok(())
     }
@@ -248,7 +267,6 @@ impl Draw {
             .ok_or(Error::UnintialisedSurface { id })?;
 
         Ok(Context {
-            id: *id as u64,
             dx: 0,
             dy: 0,
             dpy: self.dpy,
@@ -265,18 +283,11 @@ impl Draw {
     /// Flush any pending requests to the X server and map the specifed window to the screen.
     pub fn flush(&self, id: Xid) -> Result<()> {
         if let Some(s) = self.surfaces.get(&id) {
-            let Rect { x, y, w, h } = s.r;
-            let (x, y) = (x as i32, y as i32);
-
-            // SAFETY: the pointers for self.dpy, s.drawable, s.gc are known to be non-null
-            unsafe {
-                XCopyArea(self.dpy, s.drawable, *id as u64, s.gc, x, y, w, h, x, y);
-                XSync(self.dpy, False);
-            }
+            // SAFETY: self.dpy is non-null
+            unsafe { s.flush(self.dpy) };
+            self.conn.map(id)?;
+            self.conn.flush();
         };
-
-        self.conn.map(id)?;
-        self.conn.flush();
 
         Ok(())
     }
@@ -296,7 +307,6 @@ impl Draw {
 ///   [0]: crate::StatusBar
 #[derive(Debug)]
 pub struct Context<'a> {
-    id: u64,
     dx: i32,
     dy: i32,
     dpy: *mut Display,
@@ -318,10 +328,10 @@ impl<'a> Context<'a> {
         self.dy += dy;
     }
 
-    /// Set future drawing operations to apply from the origin.
-    pub fn reset_offset(&mut self) {
-        self.dx = 0;
-        self.dy = 0;
+    /// Set future drawing operations to apply from a specified point.
+    pub fn set_offset(&mut self, x: i32, y: i32) {
+        self.dx = x;
+        self.dy = y;
     }
 
     /// Set an absolute x offset for future drawing operations.
@@ -334,12 +344,22 @@ impl<'a> Context<'a> {
         self.dy = y;
     }
 
+    /// Set future drawing operations to apply from the origin.
+    pub fn reset_offset(&mut self) {
+        self.dx = 0;
+        self.dy = 0;
+    }
+
     fn get_or_try_init_xcolor(&mut self, c: Color) -> Result<*mut XftColor> {
-        Ok(self
-            .colors
-            .entry(c)
-            .or_insert(XColor::try_new(self.dpy, &c)?)
-            .0)
+        if let Some(xc) = self.colors.get(&c) {
+            return Ok(xc.0);
+        }
+
+        let xc = XColor::try_new(self.dpy, &c)?;
+        let ptr = xc.0;
+        self.colors.insert(c, xc);
+
+        Ok(ptr)
     }
 
     /// Render a rectangular border using the supplied color.
@@ -500,18 +520,8 @@ impl<'a> Context<'a> {
     /// This method does not need to be called explicitly if the flush method for
     /// the parent [Draw] is being called as well.
     pub fn flush(&self) {
-        let Surface {
-            r: Rect { w, h, .. },
-            gc,
-            drawable,
-        } = *self.s;
-
-        // SAFETY:
-        //   - the pointers for self.dpy, drawable and gc are known to be non-null
-        unsafe {
-            XCopyArea(self.dpy, drawable, self.id, gc, 0, 0, w, h, 0, 0);
-            XSync(self.dpy, False);
-        }
+        // SAFETY: self.dpy is non-null
+        unsafe { self.s.flush(self.dpy) }
     }
 }
 

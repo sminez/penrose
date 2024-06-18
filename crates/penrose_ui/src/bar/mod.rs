@@ -87,6 +87,20 @@ impl<X: XConn> Widgets<X> {
                 .any(|ps| ps.ws.iter().any(|w| w.require_draw())),
         }
     }
+
+    fn update_schedules(&mut self) -> Vec<UpdateSchedule> {
+        match self {
+            Self::Shared(ps) => ps
+                .ws
+                .iter_mut()
+                .filter_map(|w| w.update_schedule())
+                .collect(),
+            Self::PerScreen(pss) => pss
+                .iter_mut()
+                .flat_map(|ps| ps.ws.iter_mut().filter_map(|w| w.update_schedule()))
+                .collect(),
+        }
+    }
 }
 
 /// A simple text based status bar that renders a user defined array of [`Widget`]s.
@@ -160,18 +174,7 @@ impl<X: XConn> StatusBar<X> {
     where
         X: 'static,
     {
-        let schedules: Vec<UpdateSchedule> = match &mut self.widgets {
-            Widgets::Shared(ps) => ps
-                .ws
-                .iter_mut()
-                .filter_map(|w| w.update_schedule())
-                .collect(),
-            Widgets::PerScreen(pss) => pss
-                .iter_mut()
-                .flat_map(|ps| ps.ws.iter_mut().filter_map(|w| w.update_schedule()))
-                .collect(),
-        };
-
+        let schedules = self.widgets.update_schedules();
         if !schedules.is_empty() {
             run_update_schedules(schedules);
         }
@@ -228,7 +231,7 @@ impl<X: XConn> StatusBar<X> {
     /// Re-render all widgets in this status bar for a single screen.
     /// Will panic if `i` is out of bounds
     fn redraw_screen(&mut self, i: usize) -> Result<()> {
-        let (id, w) = self.screens[i];
+        let (id, w_screen) = self.screens[i];
         let screen_has_focus = self.active_screen == i;
         let ps = self.widgets.for_screen_mut(i);
 
@@ -248,8 +251,8 @@ impl<X: XConn> StatusBar<X> {
         let total = extents.iter().map(|(w, _)| w).sum::<u32>();
         let n_greedy = greedy_indices.len();
 
-        if total < w && n_greedy > 0 {
-            let per_greedy = (w - total) / n_greedy as u32;
+        if total < w_screen && n_greedy > 0 {
+            let per_greedy = (w_screen - total) / n_greedy as u32;
             for i in greedy_indices.iter() {
                 let (w, h) = extents[*i];
                 extents[*i] = (w + per_greedy, h);
@@ -260,7 +263,6 @@ impl<X: XConn> StatusBar<X> {
         for (wd, (w, _)) in ps.ws.iter_mut().zip(extents) {
             wd.draw(&mut ctx, self.active_screen, screen_has_focus, w, ps.h)?;
             x += w;
-            ctx.flush();
             ctx.set_x_offset(x as i32);
         }
 
@@ -281,9 +283,6 @@ impl<X: XConn> StatusBar<X> {
     fn redraw_if_needed(&mut self) -> Result<()> {
         if self.widgets.require_draw(self.screens.len()) {
             self.redraw()?;
-            for (id, _) in self.screens.iter() {
-                self.draw.flush(*id)?;
-            }
         }
 
         Ok(())
@@ -348,7 +347,7 @@ pub fn event_hook<X: XConn + 'static>(
 
     if matches!(event, RandrNotify) || matches!(event, ConfigureNotify(e) if e.is_root) {
         info!("screens have changed: recreating status bars");
-        let screens: Vec<_> = bar.screens.drain(0..).collect();
+        let screens: Vec<_> = bar.screens.drain(..).collect();
 
         for (id, _) in screens {
             info!(%id, "removing previous status bar");
