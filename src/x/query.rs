@@ -12,36 +12,44 @@ pub trait Query<X: XConn> {
     fn run(&self, id: Xid, x: &X) -> Result<bool>;
 
     /// Combine this query with another query using a logical AND.
-    fn and<Other: Query<X>>(self, other: Other) -> AndQuery<X, Self, Other>
+    ///
+    /// NOTE: This follows typical short-circuiting behavior, i.e. if the first query
+    /// returns false, the second query will not be run.
+    fn and<Other>(self, other: Other) -> AndQuery<X>
     where
-        Self: Sized,
+        Self: Sized + 'static,
+        Other: Query<X> + 'static,
     {
         AndQuery {
-            first: self,
-            second: other,
+            first: Box::new(self),
+            second: Box::new(other),
             _phantom: std::marker::PhantomData,
         }
     }
 
     /// Combine this query with another query using a logical OR.
-    fn or<Other: Query<X>>(self, other: Other) -> OrQuery<X, Self, Other>
+    ///
+    /// NOTE: This follows typical short-circuiting behavior, i.e. if the first query
+    /// returns true, the second query will not be run.
+    fn or<Other>(self, other: Other) -> OrQuery<X>
     where
-        Self: Sized,
+        Self: Sized + 'static,
+        Other: Query<X> + 'static,
     {
         OrQuery {
-            first: self,
-            second: other,
+            first: Box::new(self),
+            second: Box::new(other),
             _phantom: std::marker::PhantomData,
         }
     }
 
     /// Apply a logical NOT to this query.
-    fn not(self) -> NotQuery<X, Self>
+    fn not(self) -> NotQuery<X>
     where
-        Self: Sized,
+        Self: Sized + 'static,
     {
         NotQuery {
-            inner: self,
+            inner: Box::new(self),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -135,41 +143,41 @@ where
 }
 
 /// A meta [Query] for combining two queries with a logical AND.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct AndQuery<X: XConn, Q1, Q2> {
-    first: Q1,
-    second: Q2,
+#[derive(Debug)]
+pub struct AndQuery<X: XConn> {
+    first: Box<dyn Query<X>>,
+    second: Box<dyn Query<X>>,
     _phantom: std::marker::PhantomData<X>,
 }
 
-impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for AndQuery<X, Q1, Q2> {
+impl<X: XConn> Query<X> for AndQuery<X> {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
         Ok(self.first.run(id, x)? && self.second.run(id, x)?)
     }
 }
 
 /// A meta [Query] for combining two queries with a logical OR.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct OrQuery<X: XConn, Q1, Q2> {
-    first: Q1,
-    second: Q2,
+#[derive(Debug)]
+pub struct OrQuery<X: XConn> {
+    first: Box<dyn Query<X>>,
+    second: Box<dyn Query<X>>,
     _phantom: std::marker::PhantomData<X>,
 }
 
-impl<X: XConn, Q1: Query<X>, Q2: Query<X>> Query<X> for OrQuery<X, Q1, Q2> {
+impl<X: XConn> Query<X> for OrQuery<X> {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
         Ok(self.first.run(id, x)? || self.second.run(id, x)?)
     }
 }
 
 /// A meta [Query] for applying a logical NOT to a query.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct NotQuery<X: XConn, Q> {
-    inner: Q,
+#[derive(Debug)]
+pub struct NotQuery<X: XConn> {
+    inner: Box<dyn Query<X>>,
     _phantom: std::marker::PhantomData<X>,
 }
 
-impl<X: XConn, Q: Query<X>> Query<X> for NotQuery<X, Q> {
+impl<X: XConn> Query<X> for NotQuery<X> {
     fn run(&self, id: Xid, x: &X) -> Result<bool> {
         Ok(!self.inner.run(id, x)?)
     }
