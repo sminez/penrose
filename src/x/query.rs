@@ -13,7 +13,7 @@ pub trait Query<X: XConn> {
 
     /// Combine this query with another query using a logical AND.
     ///
-    /// NOTE: This follows typical short-circuiting behavior, i.e. if the first query
+    /// This follows typical short-circuiting behavior, i.e. if the first query
     /// returns false, the second query will not be run.
     fn and<Other>(self, other: Other) -> AndQuery<X>
     where
@@ -29,7 +29,7 @@ pub trait Query<X: XConn> {
 
     /// Combine this query with another query using a logical OR.
     ///
-    /// NOTE: This follows typical short-circuiting behavior, i.e. if the first query
+    /// This follows typical short-circuiting behavior, i.e. if the first query
     /// returns true, the second query will not be run.
     fn or<Other>(self, other: Other) -> OrQuery<X>
     where
@@ -44,6 +44,8 @@ pub trait Query<X: XConn> {
     }
 
     /// Apply a logical NOT to this query.
+    ///
+    /// This will invert the result of the query.
     fn not(self) -> NotQuery<X>
     where
         Self: Sized + 'static,
