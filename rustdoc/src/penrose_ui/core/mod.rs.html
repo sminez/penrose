@@ -568,8 +568,6 @@
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
 //!
 //! If you are only interested in adding functionality to the penrose [StatusBar][0] then you
@@ -709,8 +707,6 @@
     colors: HashMap&lt;Color, XColor&gt;,
     active_font: String,
 }
-
-<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Draw {}
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Draw {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
