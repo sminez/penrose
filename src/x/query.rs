@@ -10,6 +10,51 @@ use std::fmt;
 pub trait Query<X: XConn> {
     /// Run this query for a given window ID.
     fn run(&self, id: Xid, x: &X) -> Result<bool>;
+
+    /// Combine this query with another query using a logical AND.
+    ///
+    /// This follows typical short-circuiting behavior, i.e. if the first query
+    /// returns false, the second query will not be run.
+    fn and<Other>(self, other: Other) -> AndQuery<X>
+    where
+        Self: Sized + 'static,
+        Other: Query<X> + 'static,
+    {
+        AndQuery {
+            first: Box::new(self),
+            second: Box::new(other),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Combine this query with another query using a logical OR.
+    ///
+    /// This follows typical short-circuiting behavior, i.e. if the first query
+    /// returns true, the second query will not be run.
+    fn or<Other>(self, other: Other) -> OrQuery<X>
+    where
+        Self: Sized + 'static,
+        Other: Query<X> + 'static,
+    {
+        OrQuery {
+            first: Box::new(self),
+            second: Box::new(other),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Apply a logical NOT to this query.
+    ///
+    /// This will invert the result of the query.
+    fn not(self) -> NotQuery<X>
+    where
+        Self: Sized + 'static,
+    {
+        NotQuery {
+            inner: Box::new(self),
+            _phantom: std::marker::PhantomData,
+        }
+    }
 }
 
 impl<X: XConn> fmt::Debug for Box<dyn Query<X>> {
@@ -96,5 +141,46 @@ where
             Some(strs) if !strs.is_empty() => Ok(strs[0] == self.1),
             _ => Ok(false),
         }
+    }
+}
+
+/// A meta [Query] for combining two queries with a logical AND.
+#[derive(Debug)]
+pub struct AndQuery<X: XConn> {
+    first: Box<dyn Query<X>>,
+    second: Box<dyn Query<X>>,
+    _phantom: std::marker::PhantomData<X>,
+}
+
+impl<X: XConn> Query<X> for AndQuery<X> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        Ok(self.first.run(id, x)? && self.second.run(id, x)?)
+    }
+}
+
+/// A meta [Query] for combining two queries with a logical OR.
+#[derive(Debug)]
+pub struct OrQuery<X: XConn> {
+    first: Box<dyn Query<X>>,
+    second: Box<dyn Query<X>>,
+    _phantom: std::marker::PhantomData<X>,
+}
+
+impl<X: XConn> Query<X> for OrQuery<X> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        Ok(self.first.run(id, x)? || self.second.run(id, x)?)
+    }
+}
+
+/// A meta [Query] for applying a logical NOT to a query.
+#[derive(Debug)]
+pub struct NotQuery<X: XConn> {
+    inner: Box<dyn Query<X>>,
+    _phantom: std::marker::PhantomData<X>,
+}
+
+impl<X: XConn> Query<X> for NotQuery<X> {
+    fn run(&self, id: Xid, x: &X) -> Result<bool> {
+        Ok(!self.inner.run(id, x)?)
     }
 }
