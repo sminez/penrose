@@ -772,6 +772,7 @@
 <a href="#772" id="772">772</a>
 <a href="#773" id="773">773</a>
 <a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
@@ -801,7 +802,7 @@
 <span class="kw">pub mod </span>hooks;
 <span class="kw">pub mod </span>layout;
 
-<span class="kw">use </span>bindings::{KeyBindings, MouseBindings};
+<span class="kw">use </span>bindings::{KeyBindings, MouseBindings, MouseState};
 <span class="kw">use </span>hooks::{EventHook, LayoutHook, ManageHook, StateHook};
 <span class="kw">use </span>layout::{Layout, LayoutStack};
 
@@ -859,9 +860,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) current_event: <span class="prelude-ty">Option</span>&lt;XEvent&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) diff: Diff&lt;Xid&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) running: bool,
-    <span class="comment">// pub(crate) mouse_focused: bool,
-    // pub(crate) mouse_position: Option&lt;(Point, Point)&gt;,
-</span>}
+    <span class="kw">pub</span>(<span class="kw">crate</span>) held_mouse_state: <span class="prelude-ty">Option</span>&lt;MouseState&gt;,
+}
 
 <span class="kw">impl</span>&lt;X&gt; State&lt;X&gt;
 <span class="kw">where
@@ -887,6 +887,7 @@
             current_event: <span class="prelude-val">None</span>,
             diff,
             running: <span class="bool-val">false</span>,
+            held_mouse_state: <span class="prelude-val">None</span>,
         })
     }
 
@@ -1319,6 +1320,7 @@
             MappingNotify =&gt; handle::mapping_notify(key_bindings, mouse_bindings, x)<span class="question-mark">?</span>,
             MapRequest(xid) =&gt; handle::map_request(<span class="kw-2">*</span>xid, state, x)<span class="question-mark">?</span>,
             MouseEvent(e) =&gt; handle::mouse_event(e.clone(), mouse_bindings, state, x)<span class="question-mark">?</span>,
+            MotionNotify(e) =&gt; handle::motion_event(e.clone(), mouse_bindings, state, x)<span class="question-mark">?</span>,
             PropertyNotify(<span class="kw">_</span>) =&gt; (), <span class="comment">// Not currently handled
             </span>RandrNotify =&gt; handle::detect_screens(state, x)<span class="question-mark">?</span>,
             ScreenChange =&gt; handle::screen_change(state, x)<span class="question-mark">?</span>,

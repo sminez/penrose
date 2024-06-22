@@ -330,9 +330,12 @@
 <a href="#330" id="330">330</a>
 <a href="#331" id="331">331</a>
 <a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Data types for working with X events
 </span><span class="kw">use crate</span>::{
-    core::bindings::{KeyCode, MouseEvent},
+    core::bindings::{KeyCode, MotionNotifyEvent, MouseEvent},
     pure::geometry::{Point, Rect},
     x::{Atom, XConn},
     <span class="prelude-ty">Result</span>, Xid,
@@ -372,8 +375,10 @@
     </span>MappingNotify,
     <span class="doccomment">/// A client window is requesting to be positioned and rendered on the screen.
     </span>MapRequest(Xid),
-    <span class="doccomment">/// The mouse has moved or a mouse button has been pressed
+    <span class="doccomment">/// A mouse button has been pressed or released
     </span>MouseEvent(MouseEvent),
+    <span class="doccomment">/// The mouse has moved or a mouse button has been pressed
+    </span>MotionNotify(MotionNotifyEvent),
     <span class="doccomment">/// A client property has changed in some way
     </span>PropertyNotify(PropertyEvent),
     <span class="doccomment">/// A randr action has occured (new outputs, resolution change etc)
@@ -403,6 +408,7 @@
             MappingNotify =&gt; <span class="macro">write!</span>(f, <span class="string">"MappingNotify"</span>),
             MapRequest(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"MapRequest"</span>),
             MouseEvent(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"MouseEvent"</span>),
+            MotionNotify(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"MotionNotify"</span>),
             PropertyNotify(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"PropertyNotify"</span>),
             RandrNotify =&gt; <span class="macro">write!</span>(f, <span class="string">"RandrNotify"</span>),
             ResizeRequest(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(f, <span class="string">"ResizeRequest"</span>),

@@ -196,9 +196,14 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Conversions to Penrose types from X11rb types
 </span><span class="kw">use crate</span>::{
-    core::bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
+    core::bindings::{
+        KeyCode, ModifierKey, MotionNotifyEvent, MouseButton, MouseEvent, MouseEventKind,
+        MouseState,
+    },
     pure::geometry::{Point, Rect},
     x::{
         event::{
@@ -229,7 +234,7 @@
 
         Event::ButtonPress(event) =&gt; <span class="prelude-val">Ok</span>(to_mouse_state(event.detail, event.state).map(|state| {
             XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.event),
+                Xid(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -241,7 +246,7 @@
 
         Event::ButtonRelease(event) =&gt; <span class="prelude-val">Ok</span>(to_mouse_state(event.detail, event.state).map(|state| {
             XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.event),
+                Xid(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -251,16 +256,15 @@
             ))
         })),
 
-        <span class="comment">// FIXME: The 5 is due to https://github.com/sminez/penrose/issues/113
-        </span>Event::MotionNotify(event) =&gt; <span class="prelude-val">Ok</span>(to_mouse_state(<span class="number">5</span>, event.state).map(|state| {
-            XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.event),
+        <span class="comment">// NOTE: the '1' here is not actually used
+        </span>Event::MotionNotify(event) =&gt; <span class="prelude-val">Ok</span>(to_mouse_state(<span class="number">1</span>, event.state).map(|state| {
+            XEvent::MotionNotify(MotionNotifyEvent::new(
+                Xid(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
                 event.event_y,
-                state,
-                MouseEventKind::Motion,
+                state.modifiers,
             ))
         })),
 

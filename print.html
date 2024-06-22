@@ -272,11 +272,17 @@ $ wget https://raw.githubusercontent.com/sminez/penrose/develop/examples/minimal
 //! has multiple workspaces and simple client / workspace movement.
 use penrose::{
     builtin::{
-        actions::{exit, modify_with, send_layout_message, spawn},
+        actions::{
+            exit,
+            floating::{sink_clicked, MouseDragHandler, MouseResizeHandler},
+            modify_with, send_layout_message, spawn,
+        },
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        bindings::{
+            parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler, MouseState,
+        },
         Config, WindowManager,
     },
     map,
@@ -325,6 +331,21 @@ fn raw_key_bindings() -&gt; HashMap&lt;String, Box&lt;dyn KeyEventHandler&lt;Rus
     raw_bindings
 }
 
+fn mouse_bindings() -&gt; HashMap&lt;MouseState, Box&lt;dyn MouseEventHandler&lt;RustConn&gt;&gt;&gt; {
+    use penrose::core::bindings::{
+        ModifierKey::{Meta, Shift},
+        MouseButton::{Left, Middle, Right},
+    };
+
+    map! {
+        map_keys: |(button, modifiers)| MouseState { button, modifiers };
+
+        (Left, vec![Shift, Meta]) =&gt; MouseDragHandler::boxed_default(),
+        (Right, vec![Shift, Meta]) =&gt; MouseResizeHandler::boxed_default(),
+        (Middle, vec![Shift, Meta]) =&gt; sink_clicked(),
+    }
+}
+
 fn main() -&gt; Result&lt;()&gt; {
     tracing_subscriber::fmt()
         .with_env_filter("info")
@@ -333,7 +354,7 @@ fn main() -&gt; Result&lt;()&gt; {
 
     let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
-    let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
+    let wm = WindowManager::new(Config::default(), key_bindings, mouse_bindings(), conn)?;
 
     wm.run()
 }

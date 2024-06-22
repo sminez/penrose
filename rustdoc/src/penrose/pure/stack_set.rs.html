@@ -1542,6 +1542,7 @@
 <a href="#1542" id="1542">1542</a>
 <a href="#1543" id="1543">1543</a>
 <a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -2305,6 +2306,7 @@
             current_event: <span class="prelude-val">None</span>,
             diff: Default::default(),
             running: <span class="bool-val">false</span>,
+            held_mouse_state: <span class="prelude-val">None</span>,
         };
 
         s.visible_client_positions(<span class="kw-2">&amp;</span><span class="kw">crate</span>::x::StubXConn)
