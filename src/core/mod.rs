@@ -27,7 +27,7 @@ pub(crate) mod handle;
 pub mod hooks;
 pub mod layout;
 
-use bindings::{KeyBindings, MouseBindings};
+use bindings::{KeyBindings, MouseBindings, MouseState};
 use hooks::{EventHook, LayoutHook, ManageHook, StateHook};
 use layout::{Layout, LayoutStack};
 
@@ -85,8 +85,7 @@ where
     pub(crate) current_event: Option<XEvent>,
     pub(crate) diff: Diff<Xid>,
     pub(crate) running: bool,
-    // pub(crate) mouse_focused: bool,
-    // pub(crate) mouse_position: Option<(Point, Point)>,
+    pub(crate) held_mouse_state: Option<MouseState>,
 }
 
 impl<X> State<X>
@@ -113,6 +112,7 @@ where
             current_event: None,
             diff,
             running: false,
+            held_mouse_state: None,
         })
     }
 
@@ -545,6 +545,7 @@ where
             MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, x)?,
             MapRequest(xid) => handle::map_request(*xid, state, x)?,
             MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x)?,
+            MotionNotify(e) => handle::motion_event(e.clone(), mouse_bindings, state, x)?,
             PropertyNotify(_) => (), // Not currently handled
             RandrNotify => handle::detect_screens(state, x)?,
             ScreenChange => handle::screen_change(state, x)?,

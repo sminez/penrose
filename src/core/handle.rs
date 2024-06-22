@@ -1,7 +1,9 @@
 //! XEvent handlers for use in the main event loop;
 use crate::{
     core::{
-        bindings::{KeyBindings, KeyCode, MouseBindings, MouseEvent},
+        bindings::{
+            KeyBindings, KeyCode, MotionNotifyEvent, MouseBindings, MouseEvent, MouseEventKind,
+        },
         State, Xid,
     },
     pure::geometry::Point,
@@ -13,7 +15,7 @@ use crate::{
     },
     Result,
 };
-use tracing::{error, info, trace};
+use tracing::{error, info, trace, warn};
 
 // Currently no client messages are handled by default (see the ewmh extension for some examples of messages
 // that are handled when that is enabled)
@@ -31,10 +33,7 @@ pub(crate) fn mapping_notify<X: XConn>(
 ) -> Result<()> {
     trace!("grabbing key and mouse bindings");
     let key_codes: Vec<_> = key_bindings.keys().copied().collect();
-    let mouse_states: Vec<_> = mouse_bindings
-        .keys()
-        .map(|(_, state)| state.clone())
-        .collect();
+    let mouse_states: Vec<_> = mouse_bindings.keys().cloned().collect();
 
     x.grab(&key_codes, &mouse_states)
 }
@@ -62,8 +61,37 @@ pub(crate) fn mouse_event<X: XConn>(
     state: &mut State<X>,
     x: &X,
 ) -> Result<()> {
-    if let Some(action) = bindings.get_mut(&(e.kind, e.state.clone())) {
-        if let Err(error) = action.call(&e, state, x) {
+    if let Some(action) = bindings.get_mut(&e.state) {
+        if let Err(error) = action.on_mouse_event(&e, state, x) {
+            error!(%error, ?e, "error running user mouse binding");
+            return Err(error);
+        }
+
+        match e.kind {
+            MouseEventKind::Press => state.held_mouse_state = Some(e.state),
+            MouseEventKind::Release => state.held_mouse_state = None,
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) fn motion_event<X: XConn>(
+    e: MotionNotifyEvent,
+    bindings: &mut MouseBindings<X>,
+    state: &mut State<X>,
+    x: &X,
+) -> Result<()> {
+    let held_state = match state.held_mouse_state.as_ref() {
+        Some(state) => state,
+        None => {
+            warn!("got motion notify event without known held state");
+            return Ok(());
+        }
+    };
+
+    if let Some(action) = bindings.get_mut(held_state) {
+        if let Err(error) = action.on_motion(&e, state, x) {
             error!(%error, ?e, "error running user mouse binding");
             return Err(error);
         }

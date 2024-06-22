@@ -1,6 +1,6 @@
 [package]
 name = "penrose_ui"
-version = "0.3.5"
+version = "0.3.6"
 edition = "2021"
 authors = ["sminez <innes.andersonmorrison@gmail.com>"]
 license = "MIT"
@@ -12,7 +12,7 @@ description = "UI elements for the penrose window manager library"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-penrose = { version = "0.3.5", path = "../../" }
+penrose = { version = "0.3.6", path = "../../" }
 tracing = { version = "0.1", features = ["attributes"] }
 thiserror = "1.0"
 yeslogic-fontconfig-sys = "5.0"

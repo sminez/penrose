@@ -1,6 +1,10 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
-    core::{bindings::KeyEventHandler, layout::IntoMessage, ClientSet, State},
+    core::{
+        bindings::{KeyEventHandler, MouseEventHandler},
+        layout::IntoMessage,
+        ClientSet, State,
+    },
     util,
     x::{XConn, XConnExt},
     Result,
@@ -101,4 +105,28 @@ pub fn remove_and_unmap_focused_client<X: XConn>() -> Box<dyn KeyEventHandler<X>
             Ok(())
         }
     })
+}
+
+// NOTE: this is here to force the correct lifetime requirements on closures being
+//       used as handlers. The generic impl in crate::bindings for functions of the
+//       right signature isn't sufficient on its own.
+
+/// Construct a [MouseEventHandler] from a closure or free function.
+///
+/// The resulting handler will run on button press events.
+pub fn mouse_handler<F, X>(f: F) -> Box<dyn MouseEventHandler<X>>
+where
+    F: FnMut(&mut State<X>, &X) -> Result<()> + 'static,
+    X: XConn,
+{
+    Box::new(f)
+}
+
+/// Mutate the [ClientSet] and refresh the on screen state
+pub fn mouse_modify_with<F, X>(f: F) -> Box<dyn MouseEventHandler<X>>
+where
+    F: FnMut(&mut ClientSet) + Clone + 'static,
+    X: XConn,
+{
+    Box::new(move |s: &mut State<X>, x: &X| x.modify_and_refresh(s, f.clone()))
 }

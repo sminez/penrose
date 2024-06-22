@@ -116,28 +116,37 @@ pub trait MouseEventHandler<X>
 where
     X: XConn,
 {
-    /// Call this handler with the current window manager state and mouse state
-    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+    /// Called when the [MouseState] associated with this handler is seen with a button press or
+    /// release.
+    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+
+    /// Called when the [ModifierKey]s associated with this handler are seen when the mouse is
+    /// moving.
+    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<X>, x: &X) -> Result<()>;
 }
 
 impl<X: XConn> fmt::Debug for Box<dyn MouseEventHandler<X>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("KeyEventHandler").finish()
+        f.debug_struct("MouseEventHandler").finish()
     }
 }
 
 impl<F, X> MouseEventHandler<X> for F
 where
-    F: FnMut(&MouseEvent, &mut State<X>, &X) -> Result<()>,
+    F: FnMut(&mut State<X>, &X) -> Result<()>,
     X: XConn,
 {
-    fn call(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
-        (self)(evt, state, x)
+    fn on_mouse_event(&mut self, _: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        (self)(state, x)
+    }
+
+    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<X>, _: &X) -> Result<()> {
+        Ok(())
     }
 }
 
 /// User defined mouse bindings
-pub type MouseBindings<X> = HashMap<(MouseEventKind, MouseState), Box<dyn MouseEventHandler<X>>>;
+pub type MouseBindings<X> = HashMap<MouseState, Box<dyn MouseEventHandler<X>>>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -217,10 +226,11 @@ impl KeyCode {
 }
 
 /// Known mouse buttons for binding actions
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MouseButton {
     /// 1
+    #[default]
     Left,
     /// 2
     Middle,
@@ -350,23 +360,29 @@ pub enum MouseEventKind {
     Press,
     /// A button was released
     Release,
-    /// The mouse was moved while a button was held
-    Motion,
 }
 
-/// A mouse movement or button event
+/// Data from a button press or motion-notify event
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MouseEvent {
+pub struct MouseEventData {
     /// The ID of the window that was contained the click
     pub id: Xid,
     /// Absolute coordinate of the event
     pub rpt: Point,
     /// Coordinate of the event relative to top-left of the window itself
     pub wpt: Point,
+}
+
+/// A mouse movement or button event
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MouseEvent {
+    /// The details of which window the event applies to and where the event occurred
+    pub data: MouseEventData,
     /// The modifier and button code that was received
     pub state: MouseState,
-    /// Was this press, release or motion?
+    /// Was this press or release
     pub kind: MouseEventKind,
 }
 
@@ -382,11 +398,37 @@ impl MouseEvent {
         kind: MouseEventKind,
     ) -> Self {
         MouseEvent {
-            id,
-            rpt: Point::new(rx as u32, ry as u32),
-            wpt: Point::new(ex as u32, ey as u32),
+            data: MouseEventData {
+                id,
+                rpt: Point::new(rx as u32, ry as u32),
+                wpt: Point::new(ex as u32, ey as u32),
+            },
             state,
             kind,
+        }
+    }
+}
+
+/// Mouse motion with a held button and optional modifiers
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MotionNotifyEvent {
+    /// The details of which window the event applies to and where the event occurred
+    pub data: MouseEventData,
+    /// All [ModifierKey]s being held
+    pub modifiers: Vec<ModifierKey>,
+}
+
+impl MotionNotifyEvent {
+    /// Construct a new [MotionNotifyEvent] from raw data
+    pub fn new(id: Xid, rx: i16, ry: i16, ex: i16, ey: i16, modifiers: Vec<ModifierKey>) -> Self {
+        MotionNotifyEvent {
+            data: MouseEventData {
+                id,
+                rpt: Point::new(rx as u32, ry as u32),
+                wpt: Point::new(ex as u32, ey as u32),
+            },
+            modifiers,
         }
     }
 }

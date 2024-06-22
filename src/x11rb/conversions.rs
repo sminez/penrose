@@ -1,6 +1,9 @@
 //! Conversions to Penrose types from X11rb types
 use crate::{
-    core::bindings::{KeyCode, ModifierKey, MouseButton, MouseEvent, MouseEventKind, MouseState},
+    core::bindings::{
+        KeyCode, ModifierKey, MotionNotifyEvent, MouseButton, MouseEvent, MouseEventKind,
+        MouseState,
+    },
     pure::geometry::{Point, Rect},
     x::{
         event::{
@@ -31,7 +34,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
 
         Event::ButtonPress(event) => Ok(to_mouse_state(event.detail, event.state).map(|state| {
             XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.event),
+                Xid(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -43,7 +46,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
 
         Event::ButtonRelease(event) => Ok(to_mouse_state(event.detail, event.state).map(|state| {
             XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.event),
+                Xid(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -53,16 +56,15 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
             ))
         })),
 
-        // FIXME: The 5 is due to https://github.com/sminez/penrose/issues/113
-        Event::MotionNotify(event) => Ok(to_mouse_state(5, event.state).map(|state| {
-            XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.event),
+        // NOTE: the '1' here is not actually used
+        Event::MotionNotify(event) => Ok(to_mouse_state(1, event.state).map(|state| {
+            XEvent::MotionNotify(MotionNotifyEvent::new(
+                Xid(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
                 event.event_y,
-                state,
-                MouseEventKind::Motion,
+                state.modifiers,
             ))
         })),
 
