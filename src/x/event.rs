@@ -42,7 +42,7 @@ pub enum XEvent {
     MapRequest(Xid),
     /// A mouse button has been pressed or released
     MouseEvent(MouseEvent),
-    /// The mouse has moved or a mouse button has been pressed
+    /// The mouse has moved while a grabbed mouse state is held
     MotionNotify(MotionNotifyEvent),
     /// A client property has changed in some way
     PropertyNotify(PropertyEvent),
