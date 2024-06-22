@@ -4,11 +4,17 @@
 //! has multiple workspaces and simple client / workspace movement.
 use penrose::{
     builtin::{
-        actions::{exit, modify_with, send_layout_message, spawn},
+        actions::{
+            exit,
+            floating::{sink_clicked, MouseDragHandler, MouseResizeHandler},
+            modify_with, send_layout_message, spawn,
+        },
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        bindings::{
+            parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler, MouseState,
+        },
         Config, WindowManager,
     },
     map,
@@ -57,6 +63,21 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     raw_bindings
 }
 
+fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>> {
+    use penrose::core::bindings::{
+        ModifierKey::{Meta, Shift},
+        MouseButton::{Left, Middle, Right},
+    };
+
+    map! {
+        map_keys: |(button, modifiers)| MouseState { button, modifiers };
+
+        (Left, vec![Shift, Meta]) => MouseDragHandler::boxed_default(),
+        (Right, vec![Shift, Meta]) => MouseResizeHandler::boxed_default(),
+        (Middle, vec![Shift, Meta]) => sink_clicked(),
+    }
+}
+
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("info")
@@ -65,7 +86,7 @@ fn main() -> Result<()> {
 
     let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
-    let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
+    let wm = WindowManager::new(Config::default(), key_bindings, mouse_bindings(), conn)?;
 
     wm.run()
 }

@@ -761,6 +761,7 @@ impl StackSet<Xid> {
             current_event: None,
             diff: Default::default(),
             running: false,
+            held_mouse_state: None,
         };
 
         s.visible_client_positions(&crate::x::StubXConn)

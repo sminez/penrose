@@ -1,6 +1,6 @@
 //! Data types for working with X events
 use crate::{
-    core::bindings::{KeyCode, MouseEvent},
+    core::bindings::{KeyCode, MotionNotifyEvent, MouseEvent},
     pure::geometry::{Point, Rect},
     x::{Atom, XConn},
     Result, Xid,
@@ -40,8 +40,10 @@ pub enum XEvent {
     MappingNotify,
     /// A client window is requesting to be positioned and rendered on the screen.
     MapRequest(Xid),
-    /// The mouse has moved or a mouse button has been pressed
+    /// A mouse button has been pressed or released
     MouseEvent(MouseEvent),
+    /// The mouse has moved or a mouse button has been pressed
+    MotionNotify(MotionNotifyEvent),
     /// A client property has changed in some way
     PropertyNotify(PropertyEvent),
     /// A randr action has occured (new outputs, resolution change etc)
@@ -71,6 +73,7 @@ impl std::fmt::Display for XEvent {
             MappingNotify => write!(f, "MappingNotify"),
             MapRequest(_) => write!(f, "MapRequest"),
             MouseEvent(_) => write!(f, "MouseEvent"),
+            MotionNotify(_) => write!(f, "MotionNotify"),
             PropertyNotify(_) => write!(f, "PropertyNotify"),
             RandrNotify => write!(f, "RandrNotify"),
             ResizeRequest(_) => write!(f, "ResizeRequest"),
