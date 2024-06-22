@@ -99,6 +99,9 @@
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings
 </span><span class="kw">use crate</span>::{
     core::{bindings::KeyEventHandler, layout::IntoMessage, ClientSet, State},
@@ -170,9 +173,12 @@
 
 <span class="doccomment">/// Exit penrose
 ///
-/// Immediately exit the window manager with exit code 0.
+/// Signal the `WindowManager` to exit it's main event loop.
 </span><span class="kw">pub fn </span>exit&lt;X: XConn&gt;() -&gt; Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;X&gt;&gt; {
-    key_handler(|<span class="kw">_</span>, <span class="kw">_</span>| std::process::exit(<span class="number">0</span>))
+    key_handler(|s: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw">_</span>| {
+        s.running = <span class="bool-val">false</span>;
+        <span class="prelude-val">Ok</span>(())
+    })
 }
 
 <span class="doccomment">/// Info log the current window manager [State] for debugging purposes.

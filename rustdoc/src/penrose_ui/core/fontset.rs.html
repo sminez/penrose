@@ -264,13 +264,6 @@
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
 <a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{core::SCREEN, Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>fontconfig_sys::{
     constants::{FC_CHARSET, FC_SCALABLE},
@@ -521,18 +514,11 @@
             </span>FcConfigSubstitute(std::ptr::null::&lt;FcConfig&gt;() <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>, pat, FcMatchPattern);
             FcDefaultSubstitute(pat);
 
-            <span class="comment">// https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
-            </span><span class="kw">let </span>layout = Layout::new::&lt;FcResult&gt;();
-            <span class="kw">let </span>ptr = alloc(layout);
-            <span class="kw">if </span>ptr.is_null() {
-                handle_alloc_error(layout);
-            }
-            <span class="kw">let </span>res = ptr <span class="kw">as </span><span class="kw-2">*mut </span>FcResult;
+            <span class="kw">let </span><span class="kw-2">mut </span>res = FcResult::NoMatch;
 
             <span class="comment">// Passing the pointer from fontconfig_sys to x11 here
-            </span><span class="kw">let </span>fc_pattern = XftFontMatch(dpy, SCREEN, pat <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, res);
+            </span><span class="kw">let </span>fc_pattern = XftFontMatch(dpy, SCREEN, pat <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, <span class="kw-2">&amp;mut </span>res <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
 
-            dealloc(res <span class="kw">as </span><span class="kw-2">*mut </span>u8, layout);
             FcCharSetDestroy(charset);
             FcPatternDestroy(pat);
 

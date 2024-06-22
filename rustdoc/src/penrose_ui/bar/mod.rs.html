@@ -400,6 +400,7 @@
 <a href="#400" id="400">400</a>
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A lightweight and configurable status bar for penrose
 </span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>penrose::{
@@ -639,6 +640,7 @@
 
         <span class="self">self</span>.draw.set_font(<span class="kw-2">&amp;</span><span class="self">self</span>.font, ps.point_size)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>ctx = <span class="self">self</span>.draw.context_for(id)<span class="question-mark">?</span>;
+        ctx.clear()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>extents = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>greedy_indices = Vec::new();

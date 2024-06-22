@@ -1096,13 +1096,13 @@
     }
 
     <span class="kw">fn </span>map(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.conn.map_window(<span class="kw-2">*</span>client)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.map_window(<span class="kw-2">*</span>client)<span class="question-mark">?</span>.ignore_error();
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, client: Xid) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.conn.unmap_window(<span class="kw-2">*</span>client)<span class="question-mark">?</span>;
+        <span class="self">self</span>.conn.unmap_window(<span class="kw-2">*</span>client)<span class="question-mark">?</span>.ignore_error();
 
         <span class="prelude-val">Ok</span>(())
     }

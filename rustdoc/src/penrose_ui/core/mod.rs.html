@@ -566,6 +566,9 @@
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The core [`Draw`] and [`Context`] structs for rendering UI elements.
 //!
 //! If you are only interested in adding functionality to the penrose [StatusBar][0] then you
@@ -599,14 +602,16 @@
         CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
         XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
         XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap, XOpenDisplay, XPoint,
-        XSetForeground, XSetLineAttributes, XSync, GC,
+        XSetForeground, XSetGraphicsExposures, XSetLineAttributes, XSync, GC,
     },
 };
 
 <span class="kw">mod </span>fontset;
 <span class="kw">use </span>fontset::Fontset;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>SCREEN: i32 = <span class="number">0</span>;
+<span class="comment">// Xlib manual: https://www.x.org/releases/current/doc/libX11/libX11/libX11.pdf
+
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>SCREEN: i32 = <span class="number">0</span>;
 
 <span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 </span><span class="doccomment">/// A set of styling options for a text string that is to be rendered using [Draw].
@@ -771,6 +776,7 @@
             <span class="kw">let </span>drawable = XCreatePixmap(<span class="self">self</span>.dpy, root, r.w, r.h, depth);
             <span class="kw">let </span>gc = XCreateGC(<span class="self">self</span>.dpy, root, <span class="number">0</span>, std::ptr::null_mut());
             XSetLineAttributes(<span class="self">self</span>.dpy, gc, <span class="number">1</span>, LineSolid, CapButt, JoinMiter);
+            XSetGraphicsExposures(<span class="self">self</span>.dpy, gc, False);
 
             (drawable, gc)
         };
