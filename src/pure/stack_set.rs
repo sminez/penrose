@@ -760,6 +760,7 @@ impl StackSet<Xid> {
             pending_unmap: Default::default(),
             current_event: None,
             diff: Default::default(),
+            running: false,
         };
 
         s.visible_client_positions(&crate::x::StubXConn)

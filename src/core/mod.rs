@@ -84,6 +84,7 @@ where
     pub(crate) pending_unmap: HashMap<Xid, usize>,
     pub(crate) current_event: Option<XEvent>,
     pub(crate) diff: Diff<Xid>,
+    pub(crate) running: bool,
     // pub(crate) mouse_focused: bool,
     // pub(crate) mouse_position: Option<(Point, Point)>,
 }
@@ -111,6 +112,7 @@ where
             pending_unmap: HashMap::new(),
             current_event: None,
             diff,
+            running: false,
         })
     }
 
@@ -472,8 +474,9 @@ where
         }
 
         manage_existing_clients(&mut self.state, &self.x)?;
+        self.state.running = true;
 
-        loop {
+        while self.state.running {
             match self.x.next_event() {
                 Ok(event) => {
                     let span = span!(target: "penrose", Level::INFO, "XEvent", %event);
@@ -492,6 +495,8 @@ where
                 Err(e) => self.handle_error(e),
             }
         }
+
+        Ok(())
     }
 
     fn handle_xevent(&mut self, event: XEvent) -> Result<()> {

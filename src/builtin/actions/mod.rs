@@ -69,9 +69,12 @@ where
 
 /// Exit penrose
 ///
-/// Immediately exit the window manager with exit code 0.
+/// Signal the `WindowManager` to exit it's main event loop.
 pub fn exit<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|_, _| std::process::exit(0))
+    key_handler(|s: &mut State<X>, _| {
+        s.running = false;
+        Ok(())
+    })
 }
 
 /// Info log the current window manager [State] for debugging purposes.

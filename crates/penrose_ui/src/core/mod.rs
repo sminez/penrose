@@ -31,12 +31,14 @@ use x11::{
         CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
         XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
         XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap, XOpenDisplay, XPoint,
-        XSetForeground, XSetLineAttributes, XSync, GC,
+        XSetForeground, XSetGraphicsExposures, XSetLineAttributes, XSync, GC,
     },
 };
 
 mod fontset;
 use fontset::Fontset;
+
+// Xlib manual: https://www.x.org/releases/current/doc/libX11/libX11/libX11.pdf
 
 pub(crate) const SCREEN: i32 = 0;
 
@@ -203,6 +205,7 @@ impl Draw {
             let drawable = XCreatePixmap(self.dpy, root, r.w, r.h, depth);
             let gc = XCreateGC(self.dpy, root, 0, std::ptr::null_mut());
             XSetLineAttributes(self.dpy, gc, 1, LineSolid, CapButt, JoinMiter);
+            XSetGraphicsExposures(self.dpy, gc, False);
 
             (drawable, gc)
         };

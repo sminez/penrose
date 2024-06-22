@@ -385,13 +385,13 @@ where
     }
 
     fn map(&self, client: Xid) -> Result<()> {
-        self.conn.map_window(*client)?;
+        self.conn.map_window(*client)?.ignore_error();
 
         Ok(())
     }
 
     fn unmap(&self, client: Xid) -> Result<()> {
-        self.conn.unmap_window(*client)?;
+        self.conn.unmap_window(*client)?.ignore_error();
 
         Ok(())
     }

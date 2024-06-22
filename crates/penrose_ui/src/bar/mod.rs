@@ -237,6 +237,7 @@ impl<X: XConn> StatusBar<X> {
 
         self.draw.set_font(&self.font, ps.point_size)?;
         let mut ctx = self.draw.context_for(id)?;
+        ctx.clear()?;
 
         let mut extents = Vec::new();
         let mut greedy_indices = Vec::new();

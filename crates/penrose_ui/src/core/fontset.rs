@@ -248,18 +248,11 @@ impl Font {
             FcConfigSubstitute(std::ptr::null::<FcConfig>() as *mut _, pat, FcMatchPattern);
             FcDefaultSubstitute(pat);
 
-            // https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
-            let layout = Layout::new::<FcResult>();
-            let ptr = alloc(layout);
-            if ptr.is_null() {
-                handle_alloc_error(layout);
-            }
-            let res = ptr as *mut FcResult;
+            let mut res = FcResult::NoMatch;
 
             // Passing the pointer from fontconfig_sys to x11 here
-            let fc_pattern = XftFontMatch(dpy, SCREEN, pat as *const _, res);
+            let fc_pattern = XftFontMatch(dpy, SCREEN, pat as *const _, &mut res as *mut _);
 
-            dealloc(res as *mut u8, layout);
             FcCharSetDestroy(charset);
             FcPatternDestroy(pat);
 
