@@ -86,8 +86,6 @@ where
     pub(crate) diff: Diff<Xid>,
     pub(crate) running: bool,
     pub(crate) held_mouse_state: Option<MouseState>,
-    // pub(crate) mouse_focused: bool,
-    // pub(crate) mouse_position: Option<(Point, Point)>,
 }
 
 impl<X> State<X>
