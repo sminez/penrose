@@ -44,3 +44,5 @@ simple_test_case = "1"
 quickcheck = "1"
 quickcheck_macros = "1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+simple_txtar = "0.1.0"
+pretty_assertions = "1.4.0"

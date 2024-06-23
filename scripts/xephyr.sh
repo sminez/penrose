@@ -11,7 +11,7 @@
 #   EXAMPLE=with_layout_transformers APP=st make run-embeded
 #   
 CUR_DIR="$(dirname $(readlink -f $0))"
-SCREEN_SIZE=${SCREEN_SIZE:-800x600}
+SCREEN_SIZE=${SCREEN_SIZE:-1200x900}
 XDISPLAY=${XDISPLAY:-:1}
 EXAMPLE=${EXAMPLE:-minimal}
 APP=${APP:-st}
