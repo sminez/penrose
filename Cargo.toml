@@ -39,10 +39,10 @@ x11rb = { version = "0.13", features = ["randr"], optional = true }
 
 [dev-dependencies]
 penrose_ui = { path = "crates/penrose_ui" }
-serde_json = "1"
-simple_test_case = "1"
+pretty_assertions = "1.4.0"
 quickcheck = "1"
 quickcheck_macros = "1"
+serde_json = "1"
+simple_test_case = "1"
+simple_txtar = "1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-simple_txtar = "0.1.0"
-pretty_assertions = "1.4.0"

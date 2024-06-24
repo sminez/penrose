@@ -6,7 +6,7 @@ use penrose::{
     pure::{geometry::Rect, Stack},
 };
 use simple_test_case::dir_cases;
-use simple_txtar::Archive;
+use simple_txtar::{Archive, Builder};
 use std::fs;
 
 const R_SCREEN: Rect = Rect::new(0, 0, 1920, 1200);
@@ -49,14 +49,19 @@ fn stringified_positions(layout: &str, n: usize) -> String {
 #[ignore = "un-ignore to update test data"]
 fn update_snapshot_data() {
     for layout in LAYOUTS {
-        let mut archive = format!("-- layout --\n{layout}\n");
+        let mut archive = Builder::new();
+        archive.file(("layout", layout));
 
         for n in 1..=MAX_CLIENTS {
             let expected = stringified_positions(layout, n);
-            archive.push_str(&format!("-- {n} --\n{expected}"));
+            archive.file((n.to_string(), expected));
         }
 
-        fs::write(format!("tests/data/layout/snapshots/{layout}"), archive).unwrap();
+        fs::write(
+            format!("tests/data/layout/snapshots/{layout}"),
+            archive.build().to_string(),
+        )
+        .unwrap();
     }
 }
 
