@@ -15,7 +15,7 @@ use crate::{
     },
     Result,
 };
-use tracing::{error, info, trace, warn};
+use tracing::{error, info, trace};
 
 // Currently no client messages are handled by default (see the ewmh extension for some examples of messages
 // that are handled when that is enabled)
@@ -84,10 +84,7 @@ pub(crate) fn motion_event<X: XConn>(
 ) -> Result<()> {
     let held_state = match state.held_mouse_state.as_ref() {
         Some(state) => state,
-        None => {
-            warn!("got motion notify event without known held state");
-            return Ok(());
-        }
+        None => return Ok(()), // motion without us holding anything
     };
 
     if let Some(action) = bindings.get_mut(held_state) {
