@@ -214,9 +214,6 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! XEvent handlers for use in the main event loop;
 </span><span class="kw">use crate</span>::{
     core::{
@@ -234,7 +231,7 @@
     },
     <span class="prelude-ty">Result</span>,
 };
-<span class="kw">use </span>tracing::{error, info, trace, warn};
+<span class="kw">use </span>tracing::{error, info, trace};
 
 <span class="comment">// Currently no client messages are handled by default (see the ewmh extension for some examples of messages
 // that are handled when that is enabled)
@@ -303,11 +300,8 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>held_state = <span class="kw">match </span>state.held_mouse_state.as_ref() {
         <span class="prelude-val">Some</span>(state) =&gt; state,
-        <span class="prelude-val">None </span>=&gt; {
-            <span class="macro">warn!</span>(<span class="string">"got motion notify event without known held state"</span>);
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
-    };
+        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()), <span class="comment">// motion without us holding anything
+    </span>};
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(action) = bindings.get_mut(held_state) {
         <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = action.on_motion(<span class="kw-2">&amp;</span>e, state, x) {
