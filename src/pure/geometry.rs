@@ -1,7 +1,7 @@
 //! Geometry primitives
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::cmp::max;
+use std::cmp::{max, min};
 
 /// An x,y coordinate pair
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -147,6 +147,15 @@ pub struct Rect {
     pub w: u32,
     /// The height of this rect
     pub h: u32,
+}
+
+impl From<(Point, Point)> for Rect {
+    fn from((p1, p2): (Point, Point)) -> Self {
+        let (x1, x2) = (min(p1.x, p2.x), max(p1.x, p2.x));
+        let (y1, y2) = (min(p1.y, p2.y), max(p1.y, p2.y));
+
+        Rect::new(x1, y1, x2 - x1, y2 - y1)
+    }
 }
 
 impl Rect {
