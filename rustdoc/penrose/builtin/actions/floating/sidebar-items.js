@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["float_all","float_focused","reposition","resize","sink_all","sink_clicked","sink_focused"],"struct":["MouseDragHandler","MouseResizeHandler"]};
+window.SIDEBAR_ITEMS = {"fn":["float_all","float_focused","reposition","resize","sink_all","sink_focused"],"struct":["MouseDragHandler","MouseResizeHandler"]};

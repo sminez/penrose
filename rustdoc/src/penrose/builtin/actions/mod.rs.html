@@ -102,41 +102,9 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings
 </span><span class="kw">use crate</span>::{
-    core::{
-        bindings::{KeyEventHandler, MouseEventHandler},
-        layout::IntoMessage,
-        ClientSet, State,
-    },
+    core::{bindings::KeyEventHandler, layout::IntoMessage, ClientSet, State},
     util,
     x::{XConn, XConnExt},
     <span class="prelude-ty">Result</span>,
@@ -237,29 +205,5 @@
             <span class="prelude-val">Ok</span>(())
         }
     })
-}
-
-<span class="comment">// NOTE: this is here to force the correct lifetime requirements on closures being
-//       used as handlers. The generic impl in crate::bindings for functions of the
-//       right signature isn't sufficient on its own.
-
-</span><span class="doccomment">/// Construct a [MouseEventHandler] from a closure or free function.
-///
-/// The resulting handler will run on button press events.
-</span><span class="kw">pub fn </span>mouse_handler&lt;F, X&gt;(f: F) -&gt; Box&lt;<span class="kw">dyn </span>MouseEventHandler&lt;X&gt;&gt;
-<span class="kw">where
-    </span>F: FnMut(<span class="kw-2">&amp;mut </span>State&lt;X&gt;, <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; + <span class="lifetime">'static</span>,
-    X: XConn,
-{
-    Box::new(f)
-}
-
-<span class="doccomment">/// Mutate the [ClientSet] and refresh the on screen state
-</span><span class="kw">pub fn </span>mouse_modify_with&lt;F, X&gt;(f: F) -&gt; Box&lt;<span class="kw">dyn </span>MouseEventHandler&lt;X&gt;&gt;
-<span class="kw">where
-    </span>F: FnMut(<span class="kw-2">&amp;mut </span>ClientSet) + Clone + <span class="lifetime">'static</span>,
-    X: XConn,
-{
-    Box::new(<span class="kw">move </span>|s: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X| x.modify_and_refresh(s, f.clone()))
 }
 </code></pre></div></section></main></body></html>

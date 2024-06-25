@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["broadcast_layout_message","exit","key_handler","log_current_state","modify_with","mouse_handler","mouse_modify_with","remove_and_unmap_focused_client","send_layout_message","spawn"],"mod":["floating"]};
+window.SIDEBAR_ITEMS = {"fn":["broadcast_layout_message","exit","key_handler","log_current_state","modify_with","remove_and_unmap_focused_client","send_layout_message","spawn"],"mod":["floating"]};

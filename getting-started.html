@@ -253,14 +253,15 @@ use penrose::{
     builtin::{
         actions::{
             exit,
-            floating::{sink_clicked, MouseDragHandler, MouseResizeHandler},
+            floating::{sink_focused, MouseDragHandler, MouseResizeHandler},
             modify_with, send_layout_message, spawn,
         },
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
         bindings::{
-            parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler, MouseState,
+            click_handler, parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler,
+            MouseState,
         },
         Config, WindowManager,
     },
@@ -321,7 +322,7 @@ fn mouse_bindings() -&gt; HashMap&lt;MouseState, Box&lt;dyn MouseEventHandler&lt
 
         (Left, vec![Shift, Meta]) =&gt; MouseDragHandler::boxed_default(),
         (Right, vec![Shift, Meta]) =&gt; MouseResizeHandler::boxed_default(),
-        (Middle, vec![Shift, Meta]) =&gt; sink_clicked(),
+        (Middle, vec![Shift, Meta]) =&gt; click_handler(sink_focused()),
     }
 }
 
