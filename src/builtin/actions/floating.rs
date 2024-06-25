@@ -1,6 +1,6 @@
 //! Actions for manipulating floating windows.
 use crate::{
-    builtin::actions::{key_handler, modify_with, mouse_modify_with},
+    builtin::actions::{key_handler, modify_with},
     core::{
         bindings::{
             KeyEventHandler, MotionNotifyEvent, MouseEvent, MouseEventHandler, MouseEventKind,
@@ -237,16 +237,4 @@ impl<X: XConn> MouseEventHandler<X> for MouseResizeHandler {
     fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<X>, x: &X) -> Result<()> {
         ClickWrapper::on_motion(self, evt, state, x)
     }
-}
-
-/// Sink the current window back into tiling mode if it was floating
-pub fn sink_clicked<X: XConn>() -> Box<dyn MouseEventHandler<X>> {
-    mouse_modify_with(|cs| {
-        let id = match cs.current_client() {
-            Some(&id) => id,
-            None => return,
-        };
-
-        cs.sink(&id);
-    })
 }

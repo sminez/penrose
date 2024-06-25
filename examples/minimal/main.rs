@@ -6,14 +6,15 @@ use penrose::{
     builtin::{
         actions::{
             exit,
-            floating::{sink_clicked, MouseDragHandler, MouseResizeHandler},
+            floating::{sink_focused, MouseDragHandler, MouseResizeHandler},
             modify_with, send_layout_message, spawn,
         },
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
         bindings::{
-            parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler, MouseState,
+            click_handler, parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler,
+            MouseState,
         },
         Config, WindowManager,
     },
@@ -74,7 +75,7 @@ fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>>
 
         (Left, vec![Shift, Meta]) => MouseDragHandler::boxed_default(),
         (Right, vec![Shift, Meta]) => MouseResizeHandler::boxed_default(),
-        (Middle, vec![Shift, Meta]) => sink_clicked(),
+        (Middle, vec![Shift, Meta]) => click_handler(sink_focused()),
     }
 }
 

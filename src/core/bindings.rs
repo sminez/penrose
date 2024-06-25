@@ -136,8 +136,49 @@ where
     F: FnMut(&mut State<X>, &X) -> Result<()>,
     X: XConn,
 {
-    fn on_mouse_event(&mut self, _: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
-        (self)(state, x)
+    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        if evt.kind == MouseEventKind::Press {
+            (self)(state, x)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<X>, _: &X) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Convert a [KeyEventHandler] to a [MouseEventHandler] that runs on button `Press` events.
+///
+/// This allows for running pre-existing simple key handlers that do not care about press/release
+/// or motion behaviour as a simplified mouse event handler.
+///
+/// ## Example
+/// ```rust
+/// use penrose::builtin::actions::floating::sink_all;
+/// use penrose::core::bindings::{click_handler, MouseEventHandler};
+/// use penrose::x11rb::RustConn;
+///
+/// let handler: Box<dyn MouseEventHandler<RustConn>> =  click_handler(sink_all());
+/// ```
+pub fn click_handler<X: XConn + 'static>(
+    kh: Box<dyn KeyEventHandler<X>>,
+) -> Box<dyn MouseEventHandler<X>> {
+    Box::new(MouseWrapper { inner: kh })
+}
+
+struct MouseWrapper<X: XConn> {
+    inner: Box<dyn KeyEventHandler<X>>,
+}
+
+impl<X: XConn> MouseEventHandler<X> for MouseWrapper<X> {
+    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+        if evt.kind == MouseEventKind::Press {
+            self.inner.call(state, x)
+        } else {
+            Ok(())
+        }
     }
 
     fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<X>, _: &X) -> Result<()> {
