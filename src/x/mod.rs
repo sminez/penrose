@@ -493,6 +493,7 @@ pub(crate) fn manage_without_refresh<X: XConn>(
 }
 
 /// When positioning a floating client we try to position them in priority order of:
+///   - the client's requested position if it is not at the origin
 ///   - centered in their parent's screen (if transient)
 ///   - centered in the focused screen
 fn floating_client_position<X: XConn>(
@@ -503,16 +504,22 @@ fn floating_client_position<X: XConn>(
 ) -> Result<Rect> {
     let r_initial = x.client_geometry(id)?;
 
+    if (r_initial.x, r_initial.y) != (0, 0) {
+        return Ok(r_initial);
+    }
+
     let r_screen = transient_for
         .and_then(|parent| state.client_set.screen_for_client(&parent))
         .unwrap_or(&state.client_set.screens.focus)
         .r;
 
-    Ok(r_initial.centered_in(&r_screen).unwrap_or_else(|| {
+    let r_final = r_initial.centered_in(&r_screen).unwrap_or_else(|| {
         r_initial
             .centered_in(&state.client_set.screens.focus.r)
             .unwrap_or(r_initial)
-    }))
+    });
+
+    Ok(r_final)
 }
 
 fn notify_killed<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
