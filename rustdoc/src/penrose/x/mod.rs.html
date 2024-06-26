@@ -705,6 +705,13 @@
 <a href="#705" id="705">705</a>
 <a href="#706" id="706">706</a>
 <a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::Hide,
@@ -1200,6 +1207,7 @@
 }
 
 <span class="doccomment">/// When positioning a floating client we try to position them in priority order of:
+///   - the client's requested position if it is not at the origin
 ///   - centered in their parent's screen (if transient)
 ///   - centered in the focused screen
 </span><span class="kw">fn </span>floating_client_position&lt;X: XConn&gt;(
@@ -1210,16 +1218,22 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Rect&gt; {
     <span class="kw">let </span>r_initial = x.client_geometry(id)<span class="question-mark">?</span>;
 
+    <span class="kw">if </span>(r_initial.x, r_initial.y) != (<span class="number">0</span>, <span class="number">0</span>) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(r_initial);
+    }
+
     <span class="kw">let </span>r_screen = transient_for
         .and_then(|parent| state.client_set.screen_for_client(<span class="kw-2">&amp;</span>parent))
         .unwrap_or(<span class="kw-2">&amp;</span>state.client_set.screens.focus)
         .r;
 
-    <span class="prelude-val">Ok</span>(r_initial.centered_in(<span class="kw-2">&amp;</span>r_screen).unwrap_or_else(|| {
+    <span class="kw">let </span>r_final = r_initial.centered_in(<span class="kw-2">&amp;</span>r_screen).unwrap_or_else(|| {
         r_initial
             .centered_in(<span class="kw-2">&amp;</span>state.client_set.screens.focus.r)
             .unwrap_or(r_initial)
-    }))
+    });
+
+    <span class="prelude-val">Ok</span>(r_final)
 }
 
 <span class="kw">fn </span>notify_killed&lt;X: XConn&gt;(x: <span class="kw-2">&amp;</span>X, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
