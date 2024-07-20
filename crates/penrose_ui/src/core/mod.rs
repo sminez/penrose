@@ -189,6 +189,11 @@ impl Draw {
         })
     }
 
+    /// Get access to the underlying [XConn] used by this [Draw].
+    pub fn conn(&self) -> &impl XConn {
+        &self.conn
+    }
+
     /// Create a new X window with an initialised surface for drawing.
     ///
     /// Destroying this window should be carried out using the `destroy_window_and_surface` method
