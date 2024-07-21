@@ -4,3 +4,7 @@
 Cargo.lock
 node_modules/
 xephyr.log
+
+# Ignore nix user files
+**/*.nix
+**/flake.lock
