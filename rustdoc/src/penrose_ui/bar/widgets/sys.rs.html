@@ -235,14 +235,12 @@
 <a href="#235" id="235">235</a>
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! System monitor widgets and utility functions
 
 /// Helper functions for obtaining system information for use in status bar widgets
 </span><span class="kw">pub mod </span>helpers {
     <span class="kw">use </span>penrose::util::{spawn_for_output, spawn_for_output_with_args};
-    <span class="kw">use </span>std::fs;
-    <span class="kw">use </span>std::path::PathBuf;
+    <span class="kw">use </span>std::{fs, path::PathBuf};
 
     <span class="doccomment">/// This finds the first battery (BAT) file it finds; so far only
     /// confirmed working on Linux.
