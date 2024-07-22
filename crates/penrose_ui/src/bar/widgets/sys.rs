@@ -3,8 +3,7 @@
 /// Helper functions for obtaining system information for use in status bar widgets
 pub mod helpers {
     use penrose::util::{spawn_for_output, spawn_for_output_with_args};
-    use std::fs;
-    use std::path::PathBuf;
+    use std::{fs, path::PathBuf};
 
     /// This finds the first battery (BAT) file it finds; so far only
     /// confirmed working on Linux.
