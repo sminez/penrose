@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["amixer_text","battery_text","date_text","wifi_text"]};
+window.SIDEBAR_ITEMS = {"fn":["amixer_text","battery_file_search","battery_text","date_text","wifi_text"]};

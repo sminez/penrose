@@ -198,12 +198,88 @@
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
 <a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! System monitor widgets and utility functions
 
 /// Helper functions for obtaining system information for use in status bar widgets
 </span><span class="kw">pub mod </span>helpers {
     <span class="kw">use </span>penrose::util::{spawn_for_output, spawn_for_output_with_args};
     <span class="kw">use </span>std::fs;
+    <span class="kw">use </span>std::path::PathBuf;
+
+    <span class="doccomment">/// This finds the first battery (BAT) file it finds; so far only
+    /// confirmed working on Linux.
+    </span><span class="kw">pub fn </span>battery_file_search() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span>battery_paths = <span class="macro">vec!</span>[
+            <span class="comment">// Linux
+            </span><span class="string">"/sys/class/power_supply"</span>,
+            <span class="comment">// OpenBSD
+            </span><span class="string">"/var/run/apm"</span>,
+            <span class="comment">// FreeBSD and DragonFlyBSD
+            </span><span class="string">"/dev"</span>,
+            <span class="comment">// illumos
+            </span><span class="string">"/dev/battery"</span>,
+        ];
+
+        battery_paths
+            .into_iter()
+            .filter_map(|base_path| {
+                <span class="kw">let </span>base_path = PathBuf::from(base_path);
+                <span class="kw">if </span>base_path.exists() &amp;&amp; base_path.is_dir() {
+                    fs::read_dir(base_path).ok()
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
+            })
+            .flat_map(|read_dir| read_dir.filter_map(Result::ok))
+            .filter_map(|entry| {
+                <span class="kw">let </span>file_name = entry.file_name();
+                <span class="kw">let </span>file_name_str = file_name.to_str()<span class="question-mark">?</span>;
+                <span class="kw">if </span>file_name_str.starts_with(<span class="string">"BAT"</span>) &amp;&amp; file_name_str[<span class="number">3</span>..].parse::&lt;u32&gt;().is_ok() {
+                    <span class="prelude-val">Some</span>(file_name_str.to_string())
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
+            })
+            .next()
+    }
 
     <span class="doccomment">/// Fetch the requested battery's charge as a percentage of its total along with an indicator
     /// of whether it is charging or discharging.
