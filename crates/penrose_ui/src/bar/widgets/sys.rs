@@ -4,6 +4,44 @@
 pub mod helpers {
     use penrose::util::{spawn_for_output, spawn_for_output_with_args};
     use std::fs;
+    use std::path::PathBuf;
+
+    /// This finds the first battery (BAT) file it finds; so far only
+    /// confirmed working on Linux.
+    pub fn battery_file_search() -> Option<String> {
+        let battery_paths = vec![
+            // Linux
+            "/sys/class/power_supply",
+            // OpenBSD
+            "/var/run/apm",
+            // FreeBSD and DragonFlyBSD
+            "/dev",
+            // illumos
+            "/dev/battery",
+        ];
+
+        battery_paths
+            .into_iter()
+            .filter_map(|base_path| {
+                let base_path = PathBuf::from(base_path);
+                if base_path.exists() && base_path.is_dir() {
+                    fs::read_dir(base_path).ok()
+                } else {
+                    None
+                }
+            })
+            .flat_map(|read_dir| read_dir.filter_map(Result::ok))
+            .filter_map(|entry| {
+                let file_name = entry.file_name();
+                let file_name_str = file_name.to_str()?;
+                if file_name_str.starts_with("BAT") && file_name_str[3..].parse::<u32>().is_ok() {
+                    Some(file_name_str.to_string())
+                } else {
+                    None
+                }
+            })
+            .next()
+    }
 
     /// Fetch the requested battery's charge as a percentage of its total along with an indicator
     /// of whether it is charging or discharging.
