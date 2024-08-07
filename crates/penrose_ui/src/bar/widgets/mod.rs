@@ -19,7 +19,7 @@ mod simple;
 mod workspaces;
 
 pub use simple::{ActiveWindowName, CurrentLayout, RootWindowName};
-pub use workspaces::{DefaultUi, FocusState, Workspaces, WorkspacesUi, WsMeta};
+pub use workspaces::{DefaultUi, FocusState, Workspaces, WorkspacesUi, WorkspacesWidget, WsMeta};
 
 /// A status bar widget that can be rendered using a [Context]
 pub trait Widget<X>
