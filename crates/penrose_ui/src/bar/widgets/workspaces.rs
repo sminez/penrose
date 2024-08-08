@@ -172,17 +172,9 @@ fn focused_workspaces<X: XConn>(state: &State<X>) -> Vec<String> {
 pub type Workspaces = WorkspacesWidget<DefaultUi>;
 
 impl Workspaces {
-    /// Construct a new WorkspaceWidget
+    /// Construct a new [WorkspacesWidget] using the [DefaultUi].
     pub fn new(style: TextStyle, highlight: impl Into<Color>, empty_fg: impl Into<Color>) -> Self {
-        let ui = DefaultUi::new(style, highlight, empty_fg);
-
-        Self {
-            workspaces: vec![],
-            focused_ws: vec![], // set in startup hook
-            extent: None,
-            ui,
-            require_draw: true,
-        }
+        WorkspacesWidget::new_with_ui(DefaultUi::new(style, highlight, empty_fg))
     }
 }
 
@@ -203,6 +195,17 @@ impl<U> WorkspacesWidget<U>
 where
     U: WorkspacesUi,
 {
+    /// Construct a new [WorkspacesWidget] with the specified [WorkspacesUi] implementation.
+    pub fn new_with_ui(ui: U) -> Self {
+        Self {
+            workspaces: Vec::new(),
+            focused_ws: Vec::new(), // set in startup hook
+            extent: None,
+            ui,
+            require_draw: true,
+        }
+    }
+
     fn raw_tags(&self) -> Vec<&str> {
         self.workspaces.iter().map(|w| w.tag.as_ref()).collect()
     }
