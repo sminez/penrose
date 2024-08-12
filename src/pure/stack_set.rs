@@ -270,6 +270,11 @@ where
             .map(|rr| rr.applied_to(&self.screens.focus.r))
     }
 
+    /// Check whether a given client is currently floating.
+    pub fn is_floating(&mut self, client: &C) -> bool {
+        self.floating.contains_key(client)
+    }
+
     /// Check whether a given tag currently has any floating windows present.
     ///
     /// Returns false if the tag given is unknown to this StackSet.
@@ -797,6 +802,27 @@ impl StackSet<Xid> {
         self.float_unchecked(client, r);
 
         Ok(())
+    }
+
+    /// If a known client is floating, sink it.
+    /// Otherwise, record it as floating with its preferred screen position.
+    ///
+    /// # Errors
+    /// This method with return [Error::UnknownClient] if the given client is
+    /// not already managed in this stack_set.
+    ///
+    /// This method with return [Error::ClientIsNotVisible] if the given client is
+    /// not currently mapped to a screen. This is required to determine the correct
+    /// relative positioning for the floating client as is it is moved between
+    /// screens.
+    pub fn toggle_floating_state(&mut self, client: Xid, r: Rect) -> Result<Option<Rect>> {
+        Ok(if self.is_floating(&client) {
+            self.sink(&client)
+
+        } else {
+            self.float(client, r)?;
+            None
+        })
     }
 
     pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {

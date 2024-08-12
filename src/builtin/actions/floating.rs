@@ -52,7 +52,7 @@ pub fn reposition<X: XConn>(dx: i32, dy: i32) -> Box<dyn KeyEventHandler<X>> {
     })
 }
 
-/// Move the currently focused windo to the floating layer in its current on screen position
+/// Move the currently focused window to the floating layer in its current on screen position
 pub fn float_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     key_handler(|state, x: &X| {
         let id = match state.client_set.current_client() {
@@ -79,6 +79,24 @@ pub fn sink_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
         };
 
         cs.sink(&id);
+    })
+}
+
+/// Sink the current window if it was floating, float it if it was tiled.
+pub fn toggle_floating_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
+    key_handler(|state, x: &X| {
+        let id = match state.client_set.current_client() {
+            Some(&id) => id,
+            None => return Ok(()),
+        };
+
+        let mut r = x.client_geometry(id)?;
+
+        x.modify_and_refresh(state, |cs| {
+            if let Err(err) = cs.toggle_floating_state(id, r) {
+                error!(%err, %id, "unable to float requested client window");
+            }
+        })
     })
 }
 
