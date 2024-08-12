@@ -818,7 +818,6 @@ impl StackSet<Xid> {
     pub fn toggle_floating_state(&mut self, client: Xid, r: Rect) -> Result<Option<Rect>> {
         Ok(if self.is_floating(&client) {
             self.sink(&client)
-
         } else {
             self.float(client, r)?;
             None
