@@ -90,7 +90,7 @@ pub fn toggle_floating_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
             None => return Ok(()),
         };
 
-        let mut r = x.client_geometry(id)?;
+        let r = x.client_geometry(id)?;
 
         x.modify_and_refresh(state, |cs| {
             if let Err(err) = cs.toggle_floating_state(id, r) {
