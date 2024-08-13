@@ -271,7 +271,7 @@ where
     }
 
     /// Check whether a given client is currently floating.
-    pub fn is_floating(&mut self, client: &C) -> bool {
+    pub fn is_floating(&self, client: &C) -> bool {
         self.floating.contains_key(client)
     }
 
@@ -804,7 +804,7 @@ impl StackSet<Xid> {
         Ok(())
     }
 
-    /// If a known client is floating, sink it.
+    /// If a known client is floating, sink it and return its previous preferred screen position.
     /// Otherwise, record it as floating with its preferred screen position.
     ///
     /// # Errors
@@ -816,12 +816,13 @@ impl StackSet<Xid> {
     /// relative positioning for the floating client as is it is moved between
     /// screens.
     pub fn toggle_floating_state(&mut self, client: Xid, r: Rect) -> Result<Option<Rect>> {
-        Ok(if self.is_floating(&client) {
+        let rect = if self.is_floating(&client) {
             self.sink(&client)
         } else {
             self.float(client, r)?;
             None
-        })
+        };
+        Ok(rect)
     }
 
     pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
@@ -1303,6 +1304,27 @@ pub mod tests {
         s.float_unchecked(4, Rect::default());
 
         assert_eq!(s.current_client(), Some(&4));
+    }
+
+    #[test_case(&[]; "none")]
+    #[test_case(&[1]; "one")]
+    #[test_case(&[1, 2, 4]; "multiple")]
+    #[test]
+    fn floating_client_status(to_float: &[u8]) {
+        let mut s = test_stack_set(5, 3);
+        for n in 1..5 {
+            s.insert(n);
+        }
+
+        for c in to_float {
+            s.float_unchecked(*c, Rect::default());
+        }
+        for c in to_float {
+            assert!(s.is_floating(c));
+        }
+        for client in s.clients().copied() {
+            assert_eq!(to_float.contains(&client), s.is_floating(&client));
+        }
     }
 
     #[test_case(1, "1"; "current focus to current tag")]
