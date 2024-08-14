@@ -1345,22 +1345,18 @@ pub mod tests {
             assert!(res.is_ok());
         }
 
-        assert!(
-            matches!(
-                ss.toggle_floating_state(Xid(3), Rect::default()),
-                Err(Error::UnknownClient(_))
-            )
-        );
+        assert!(matches!(
+            ss.toggle_floating_state(Xid(3), Rect::default()),
+            Err(Error::UnknownClient(_))
+        ));
 
         ss.insert(Xid(3));
         ss.move_client_to_tag(&Xid(3), "3");
 
-        assert!(
-            matches!(
-                ss.toggle_floating_state(Xid(3), Rect::default()),
-                Err(Error::ClientIsNotVisible(_))
-            )
-        );
+        assert!(matches!(
+            ss.toggle_floating_state(Xid(3), Rect::default()),
+            Err(Error::ClientIsNotVisible(_))
+        ));
     }
 
     #[test_case(1, "1"; "current focus to current tag")]
