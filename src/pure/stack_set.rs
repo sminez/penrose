@@ -1327,6 +1327,42 @@ pub mod tests {
         }
     }
 
+    #[test]
+    fn toggle_floating_state() {
+        let mut ss: StackSet<Xid> = StackSet::try_new(
+            LayoutStack::default(),
+            ["1", "2", "3"],
+            vec![Rect::default(); 2],
+        )
+        .expect("enough workspaces to cover the number of initial screens");
+
+        ss.insert(Xid(0));
+        ss.insert(Xid(1));
+
+        for i in 0..10 {
+            assert_eq!(ss.is_floating(&Xid(0)), i % 2 != 0);
+            let res = ss.toggle_floating_state(Xid(0), Rect::default());
+            assert!(res.is_ok());
+        }
+
+        assert!(
+            matches!(
+                ss.toggle_floating_state(Xid(3), Rect::default()),
+                Err(Error::UnknownClient(_))
+            )
+        );
+
+        ss.insert(Xid(3));
+        ss.move_client_to_tag(&Xid(3), "3");
+
+        assert!(
+            matches!(
+                ss.toggle_floating_state(Xid(3), Rect::default()),
+                Err(Error::ClientIsNotVisible(_))
+            )
+        );
+    }
+
     #[test_case(1, "1"; "current focus to current tag")]
     #[test_case(2, "1"; "from current tag to current tag")]
     #[test_case(6, "1"; "from other tag to current tag")]
