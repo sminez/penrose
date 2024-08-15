@@ -270,6 +270,11 @@ where
             .map(|rr| rr.applied_to(&self.screens.focus.r))
     }
 
+    /// Check whether a given client is currently floating.
+    pub fn is_floating(&self, client: &C) -> bool {
+        self.floating.contains_key(client)
+    }
+
     /// Check whether a given tag currently has any floating windows present.
     ///
     /// Returns false if the tag given is unknown to this StackSet.
@@ -799,6 +804,27 @@ impl StackSet<Xid> {
         Ok(())
     }
 
+    /// If a known client is floating, sink it and return its previous preferred screen position.
+    /// Otherwise, record it as floating with its preferred screen position.
+    ///
+    /// # Errors
+    /// This method with return [Error::UnknownClient] if the given client is
+    /// not already managed in this stack_set.
+    ///
+    /// This method with return [Error::ClientIsNotVisible] if the given client is
+    /// not currently mapped to a screen. This is required to determine the correct
+    /// relative positioning for the floating client as is it is moved between
+    /// screens.
+    pub fn toggle_floating_state(&mut self, client: Xid, r: Rect) -> Result<Option<Rect>> {
+        let rect = if self.is_floating(&client) {
+            self.sink(&client)
+        } else {
+            self.float(client, r)?;
+            None
+        };
+        Ok(rect)
+    }
+
     pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
         let n_old = self.screens.len();
         let n_new = rects.len();
@@ -1278,6 +1304,59 @@ pub mod tests {
         s.float_unchecked(4, Rect::default());
 
         assert_eq!(s.current_client(), Some(&4));
+    }
+
+    #[test_case(&[]; "none")]
+    #[test_case(&[1]; "one")]
+    #[test_case(&[1, 2, 4]; "multiple")]
+    #[test]
+    fn floating_client_status(to_float: &[u8]) {
+        let mut s = test_stack_set(5, 3);
+        for n in 1..5 {
+            s.insert(n);
+        }
+
+        for c in to_float {
+            s.float_unchecked(*c, Rect::default());
+        }
+        for c in to_float {
+            assert!(s.is_floating(c));
+        }
+        for client in s.clients().copied() {
+            assert_eq!(to_float.contains(&client), s.is_floating(&client));
+        }
+    }
+
+    #[test]
+    fn toggle_floating_state() {
+        let mut ss: StackSet<Xid> = StackSet::try_new(
+            LayoutStack::default(),
+            ["1", "2", "3"],
+            vec![Rect::default(); 2],
+        )
+        .expect("enough workspaces to cover the number of initial screens");
+
+        ss.insert(Xid(0));
+        ss.insert(Xid(1));
+
+        for i in 0..10 {
+            assert_eq!(ss.is_floating(&Xid(0)), i % 2 != 0);
+            let res = ss.toggle_floating_state(Xid(0), Rect::default());
+            assert!(res.is_ok());
+        }
+
+        assert!(matches!(
+            ss.toggle_floating_state(Xid(3), Rect::default()),
+            Err(Error::UnknownClient(_))
+        ));
+
+        ss.insert(Xid(3));
+        ss.move_client_to_tag(&Xid(3), "3");
+
+        assert!(matches!(
+            ss.toggle_floating_state(Xid(3), Rect::default()),
+            Err(Error::ClientIsNotVisible(_))
+        ));
     }
 
     #[test_case(1, "1"; "current focus to current tag")]
