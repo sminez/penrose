@@ -1615,13 +1615,6 @@
 <a href="#1615" id="1615">1615</a>
 <a href="#1616" id="1616">1616</a>
 <a href="#1617" id="1617">1617</a>
-<a href="#1618" id="1618">1618</a>
-<a href="#1619" id="1619">1619</a>
-<a href="#1620" id="1620">1620</a>
-<a href="#1621" id="1621">1621</a>
-<a href="#1622" id="1622">1622</a>
-<a href="#1623" id="1623">1623</a>
-<a href="#1624" id="1624">1624</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -2441,11 +2434,16 @@
     /// screens.
     </span><span class="kw">pub fn </span>toggle_floating_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: Xid, r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Rect&gt;&gt; {
         <span class="kw">let </span>rect = <span class="kw">if </span><span class="self">self</span>.is_floating(<span class="kw-2">&amp;</span>client) {
+            <span class="kw">if </span><span class="self">self</span>.screen_for_client(<span class="kw-2">&amp;</span>client).is_none() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::ClientIsNotVisible(client));
+            }
+
             <span class="self">self</span>.sink(<span class="kw-2">&amp;</span>client)
         } <span class="kw">else </span>{
             <span class="self">self</span>.float(client, r)<span class="question-mark">?</span>;
             <span class="prelude-val">None
         </span>};
+
         <span class="prelude-val">Ok</span>(rect)
     }
 
@@ -2930,57 +2928,45 @@
         <span class="macro">assert_eq!</span>(s.current_client(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">4</span>));
     }
 
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[]</span>; <span class="string">"none"</span>)]
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="number">1</span>]</span>; <span class="string">"one"</span>)]
-    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>]</span>; <span class="string">"multiple"</span>)]
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>floating_client_status(to_float: <span class="kw-2">&amp;</span>[u8]) {
-        <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">3</span>);
-        <span class="kw">for </span>n <span class="kw">in </span><span class="number">1</span>..<span class="number">5 </span>{
-            s.insert(n);
-        }
-
-        <span class="kw">for </span>c <span class="kw">in </span>to_float {
-            s.float_unchecked(<span class="kw-2">*</span>c, Rect::default());
-        }
-        <span class="kw">for </span>c <span class="kw">in </span>to_float {
-            <span class="macro">assert!</span>(s.is_floating(c));
-        }
-        <span class="kw">for </span>client <span class="kw">in </span>s.clients().copied() {
-            <span class="macro">assert_eq!</span>(to_float.contains(<span class="kw-2">&amp;</span>client), s.is_floating(<span class="kw-2">&amp;</span>client));
-        }
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>toggle_floating_state() {
+    <span class="attr">#[test_case(<span class="string">"1"</span>, <span class="number">0</span>, <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>); <span class="string">"non floating visible"</span>)]
+    #[test_case(<span class="string">"1"</span>, <span class="number">1</span>, <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>))); <span class="string">"floating visible"</span>)]
+    #[test_case(<span class="string">"1"</span>, <span class="number">42</span>, <span class="prelude-val">Err</span>(Error::UnknownClient(Xid(<span class="number">42</span>))); <span class="string">"unknown client"</span>)]
+    #[test_case(<span class="string">"2"</span>, <span class="number">1</span>, <span class="prelude-val">Err</span>(Error::ClientIsNotVisible(Xid(<span class="number">1</span>))); <span class="string">"floating client not visible"</span>)]
+    #[test_case(<span class="string">"2"</span>, <span class="number">0</span>, <span class="prelude-val">Err</span>(Error::ClientIsNotVisible(Xid(<span class="number">0</span>))); <span class="string">"non floating client not visible"</span>)]
+    #[test]
+    </span><span class="kw">fn </span>toggle_floating_state(focused_tag: <span class="kw-2">&amp;</span>str, client: u32, expected: <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Rect&gt;&gt;) {
         <span class="kw">let </span><span class="kw-2">mut </span>ss: StackSet&lt;Xid&gt; = StackSet::try_new(
             LayoutStack::default(),
             [<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>],
-            <span class="macro">vec!</span>[Rect::default(); <span class="number">2</span>],
+            <span class="comment">// The screen size here matters as the Rect used for floating Xid(1) is converted to a
+            // RelativeRect internally and we need to ensure that it maps back correctly when it
+            // gets removed.
+            </span><span class="macro">vec!</span>[Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>)],
         )
         .expect(<span class="string">"enough workspaces to cover the number of initial screens"</span>);
 
         ss.insert(Xid(<span class="number">0</span>));
         ss.insert(Xid(<span class="number">1</span>));
+        ss.float_unchecked(Xid(<span class="number">1</span>), Rect::new(<span class="number">0</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">10</span>));
+        ss.focus_tag(focused_tag);
 
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">10 </span>{
-            <span class="macro">assert_eq!</span>(ss.is_floating(<span class="kw-2">&amp;</span>Xid(<span class="number">0</span>)), i % <span class="number">2 </span>!= <span class="number">0</span>);
-            <span class="kw">let </span>res = ss.toggle_floating_state(Xid(<span class="number">0</span>), Rect::default());
-            <span class="macro">assert!</span>(res.is_ok());
+        <span class="kw">let </span>res = ss.toggle_floating_state(Xid(client), Rect::new(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>));
+
+        <span class="kw">match </span>(expected, res) {
+            (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)) =&gt; (),
+            (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(r1)), <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(r2))) =&gt; <span class="macro">assert_eq!</span>(r1, r2),
+            (<span class="prelude-val">Err</span>(Error::UnknownClient(c1)), <span class="prelude-val">Err</span>(Error::UnknownClient(c2))) =&gt; {
+                <span class="macro">assert_eq!</span>(c1, c2, <span class="string">"unknown client"</span>)
+            }
+            (<span class="prelude-val">Err</span>(Error::ClientIsNotVisible(c1)), <span class="prelude-val">Err</span>(Error::ClientIsNotVisible(c2))) =&gt; {
+                <span class="macro">assert_eq!</span>(c1, c2, <span class="string">"client not visible"</span>)
+            }
+            (<span class="prelude-val">Err</span>(e1), <span class="prelude-val">Err</span>(e2)) =&gt; <span class="macro">panic!</span>(<span class="string">"expected {e1:?} but got {e2:?}"</span>),
+            (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(r)), <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)) =&gt; <span class="macro">panic!</span>(<span class="string">"expected floating position {r:?} but got None"</span>),
+            (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(r))) =&gt; <span class="macro">panic!</span>(<span class="string">"expected None but got floating position {r:?}"</span>),
+            (<span class="prelude-val">Err</span>(e), <span class="prelude-val">Ok</span>(r)) =&gt; <span class="macro">panic!</span>(<span class="string">"expected error {e:?} but got {r:?}"</span>),
+            (<span class="prelude-val">Ok</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(e)) =&gt; <span class="macro">panic!</span>(<span class="string">"unexpected error {e:?}"</span>),
         }
-
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ss.toggle_floating_state(Xid(<span class="number">3</span>), Rect::default()),
-            <span class="prelude-val">Err</span>(Error::UnknownClient(<span class="kw">_</span>))
-        ));
-
-        ss.insert(Xid(<span class="number">3</span>));
-        ss.move_client_to_tag(<span class="kw-2">&amp;</span>Xid(<span class="number">3</span>), <span class="string">"3"</span>);
-
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ss.toggle_floating_state(Xid(<span class="number">3</span>), Rect::default()),
-            <span class="prelude-val">Err</span>(Error::ClientIsNotVisible(<span class="kw">_</span>))
-        ));
     }
 
     <span class="attr">#[test_case(<span class="number">1</span>, <span class="string">"1"</span>; <span class="string">"current focus to current tag"</span>)]
