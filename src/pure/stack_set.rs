@@ -817,11 +817,16 @@ impl StackSet<Xid> {
     /// screens.
     pub fn toggle_floating_state(&mut self, client: Xid, r: Rect) -> Result<Option<Rect>> {
         let rect = if self.is_floating(&client) {
+            if self.screen_for_client(&client).is_none() {
+                return Err(Error::ClientIsNotVisible(client));
+            }
+
             self.sink(&client)
         } else {
             self.float(client, r)?;
             None
         };
+
         Ok(rect)
     }
 
@@ -1306,57 +1311,45 @@ pub mod tests {
         assert_eq!(s.current_client(), Some(&4));
     }
 
-    #[test_case(&[]; "none")]
-    #[test_case(&[1]; "one")]
-    #[test_case(&[1, 2, 4]; "multiple")]
+    #[test_case("1", 0, Ok(None); "non floating visible")]
+    #[test_case("1", 1, Ok(Some(Rect::new(0, 0, 10, 10))); "floating visible")]
+    #[test_case("1", 42, Err(Error::UnknownClient(Xid(42))); "unknown client")]
+    #[test_case("2", 1, Err(Error::ClientIsNotVisible(Xid(1))); "floating client not visible")]
+    #[test_case("2", 0, Err(Error::ClientIsNotVisible(Xid(0))); "non floating client not visible")]
     #[test]
-    fn floating_client_status(to_float: &[u8]) {
-        let mut s = test_stack_set(5, 3);
-        for n in 1..5 {
-            s.insert(n);
-        }
-
-        for c in to_float {
-            s.float_unchecked(*c, Rect::default());
-        }
-        for c in to_float {
-            assert!(s.is_floating(c));
-        }
-        for client in s.clients().copied() {
-            assert_eq!(to_float.contains(&client), s.is_floating(&client));
-        }
-    }
-
-    #[test]
-    fn toggle_floating_state() {
+    fn toggle_floating_state(focused_tag: &str, client: u32, expected: Result<Option<Rect>>) {
         let mut ss: StackSet<Xid> = StackSet::try_new(
             LayoutStack::default(),
             ["1", "2", "3"],
-            vec![Rect::default(); 2],
+            // The screen size here matters as the Rect used for floating Xid(1) is converted to a
+            // RelativeRect internally and we need to ensure that it maps back correctly when it
+            // gets removed.
+            vec![Rect::new(0, 0, 10, 10)],
         )
         .expect("enough workspaces to cover the number of initial screens");
 
         ss.insert(Xid(0));
         ss.insert(Xid(1));
+        ss.float_unchecked(Xid(1), Rect::new(0, 0, 10, 10));
+        ss.focus_tag(focused_tag);
 
-        for i in 0..10 {
-            assert_eq!(ss.is_floating(&Xid(0)), i % 2 != 0);
-            let res = ss.toggle_floating_state(Xid(0), Rect::default());
-            assert!(res.is_ok());
+        let res = ss.toggle_floating_state(Xid(client), Rect::new(1, 2, 3, 4));
+
+        match (expected, res) {
+            (Ok(None), Ok(None)) => (),
+            (Ok(Some(r1)), Ok(Some(r2))) => assert_eq!(r1, r2),
+            (Err(Error::UnknownClient(c1)), Err(Error::UnknownClient(c2))) => {
+                assert_eq!(c1, c2, "unknown client")
+            }
+            (Err(Error::ClientIsNotVisible(c1)), Err(Error::ClientIsNotVisible(c2))) => {
+                assert_eq!(c1, c2, "client not visible")
+            }
+            (Err(e1), Err(e2)) => panic!("expected {e1:?} but got {e2:?}"),
+            (Ok(Some(r)), Ok(None)) => panic!("expected floating position {r:?} but got None"),
+            (Ok(None), Ok(Some(r))) => panic!("expected None but got floating position {r:?}"),
+            (Err(e), Ok(r)) => panic!("expected error {e:?} but got {r:?}"),
+            (Ok(_), Err(e)) => panic!("unexpected error {e:?}"),
         }
-
-        assert!(matches!(
-            ss.toggle_floating_state(Xid(3), Rect::default()),
-            Err(Error::UnknownClient(_))
-        ));
-
-        ss.insert(Xid(3));
-        ss.move_client_to_tag(&Xid(3), "3");
-
-        assert!(matches!(
-            ss.toggle_floating_state(Xid(3), Rect::default()),
-            Err(Error::ClientIsNotVisible(_))
-        ));
     }
 
     #[test_case(1, "1"; "current focus to current tag")]
