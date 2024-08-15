@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/stack_set.rs`."><title>stack_set.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../penrose/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/pure/stack_set.rs`."><title>stack_set.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1543,6 +1543,85 @@
 <a href="#1543" id="1543">1543</a>
 <a href="#1544" id="1544">1544</a>
 <a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
+<a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
+<a href="#1608" id="1608">1608</a>
+<a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
+<a href="#1616" id="1616">1616</a>
+<a href="#1617" id="1617">1617</a>
+<a href="#1618" id="1618">1618</a>
+<a href="#1619" id="1619">1619</a>
+<a href="#1620" id="1620">1620</a>
+<a href="#1621" id="1621">1621</a>
+<a href="#1622" id="1622">1622</a>
+<a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -1813,6 +1892,11 @@
         <span class="self">self</span>.floating
             .remove(client)
             .map(|rr| rr.applied_to(<span class="kw-2">&amp;</span><span class="self">self</span>.screens.focus.r))
+    }
+
+    <span class="doccomment">/// Check whether a given client is currently floating.
+    </span><span class="kw">pub fn </span>is_floating(<span class="kw-2">&amp;</span><span class="self">self</span>, client: <span class="kw-2">&amp;</span>C) -&gt; bool {
+        <span class="self">self</span>.floating.contains_key(client)
     }
 
     <span class="doccomment">/// Check whether a given tag currently has any floating windows present.
@@ -2344,6 +2428,27 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// If a known client is floating, sink it and return its previous preferred screen position.
+    /// Otherwise, record it as floating with its preferred screen position.
+    ///
+    /// # Errors
+    /// This method with return [Error::UnknownClient] if the given client is
+    /// not already managed in this stack_set.
+    ///
+    /// This method with return [Error::ClientIsNotVisible] if the given client is
+    /// not currently mapped to a screen. This is required to determine the correct
+    /// relative positioning for the floating client as is it is moved between
+    /// screens.
+    </span><span class="kw">pub fn </span>toggle_floating_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: Xid, r: Rect) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Rect&gt;&gt; {
+        <span class="kw">let </span>rect = <span class="kw">if </span><span class="self">self</span>.is_floating(<span class="kw-2">&amp;</span>client) {
+            <span class="self">self</span>.sink(<span class="kw-2">&amp;</span>client)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.float(client, r)<span class="question-mark">?</span>;
+            <span class="prelude-val">None
+        </span>};
+        <span class="prelude-val">Ok</span>(rect)
+    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_screens(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rects: Vec&lt;Rect&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>n_old = <span class="self">self</span>.screens.len();
         <span class="kw">let </span>n_new = rects.len();
@@ -2823,6 +2928,59 @@
         s.float_unchecked(<span class="number">4</span>, Rect::default());
 
         <span class="macro">assert_eq!</span>(s.current_client(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">4</span>));
+    }
+
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[]</span>; <span class="string">"none"</span>)]
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="number">1</span>]</span>; <span class="string">"one"</span>)]
+    <span class="attr">#[test_case(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>]</span>; <span class="string">"multiple"</span>)]
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>floating_client_status(to_float: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = test_stack_set(<span class="number">5</span>, <span class="number">3</span>);
+        <span class="kw">for </span>n <span class="kw">in </span><span class="number">1</span>..<span class="number">5 </span>{
+            s.insert(n);
+        }
+
+        <span class="kw">for </span>c <span class="kw">in </span>to_float {
+            s.float_unchecked(<span class="kw-2">*</span>c, Rect::default());
+        }
+        <span class="kw">for </span>c <span class="kw">in </span>to_float {
+            <span class="macro">assert!</span>(s.is_floating(c));
+        }
+        <span class="kw">for </span>client <span class="kw">in </span>s.clients().copied() {
+            <span class="macro">assert_eq!</span>(to_float.contains(<span class="kw-2">&amp;</span>client), s.is_floating(<span class="kw-2">&amp;</span>client));
+        }
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>toggle_floating_state() {
+        <span class="kw">let </span><span class="kw-2">mut </span>ss: StackSet&lt;Xid&gt; = StackSet::try_new(
+            LayoutStack::default(),
+            [<span class="string">"1"</span>, <span class="string">"2"</span>, <span class="string">"3"</span>],
+            <span class="macro">vec!</span>[Rect::default(); <span class="number">2</span>],
+        )
+        .expect(<span class="string">"enough workspaces to cover the number of initial screens"</span>);
+
+        ss.insert(Xid(<span class="number">0</span>));
+        ss.insert(Xid(<span class="number">1</span>));
+
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">10 </span>{
+            <span class="macro">assert_eq!</span>(ss.is_floating(<span class="kw-2">&amp;</span>Xid(<span class="number">0</span>)), i % <span class="number">2 </span>!= <span class="number">0</span>);
+            <span class="kw">let </span>res = ss.toggle_floating_state(Xid(<span class="number">0</span>), Rect::default());
+            <span class="macro">assert!</span>(res.is_ok());
+        }
+
+        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+            ss.toggle_floating_state(Xid(<span class="number">3</span>), Rect::default()),
+            <span class="prelude-val">Err</span>(Error::UnknownClient(<span class="kw">_</span>))
+        ));
+
+        ss.insert(Xid(<span class="number">3</span>));
+        ss.move_client_to_tag(<span class="kw-2">&amp;</span>Xid(<span class="number">3</span>), <span class="string">"3"</span>);
+
+        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+            ss.toggle_floating_state(Xid(<span class="number">3</span>), Rect::default()),
+            <span class="prelude-val">Err</span>(Error::ClientIsNotVisible(<span class="kw">_</span>))
+        ));
     }
 
     <span class="attr">#[test_case(<span class="number">1</span>, <span class="string">"1"</span>; <span class="string">"current focus to current tag"</span>)]
