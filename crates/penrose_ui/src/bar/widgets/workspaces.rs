@@ -45,6 +45,7 @@ pub trait WorkspacesUi {
         workspace_meta: &[WsMeta],
         focused_tags: &[String],
         state: &State<X>,
+        x: &X,
     ) -> bool
     where
         X: XConn,
@@ -137,7 +138,10 @@ impl WsMeta {
         self.occupied
     }
 
-    fn from_state<X: XConn>(state: &State<X>) -> Vec<Self> {
+    fn from_state<X>(state: &State<X>) -> Vec<Self>
+    where
+        X: XConn,
+    {
         state
             .client_set
             .ordered_workspaces()
@@ -156,7 +160,10 @@ impl From<&ClientSpace> for WsMeta {
     }
 }
 
-fn focused_workspaces<X: XConn>(state: &State<X>) -> Vec<String> {
+fn focused_workspaces<X>(state: &State<X>) -> Vec<String>
+where
+    X: XConn,
+{
     let mut indexed_screens: Vec<(usize, String)> = state
         .client_set
         .screens()
@@ -210,11 +217,14 @@ where
         self.workspaces.iter().map(|w| w.tag.as_ref()).collect()
     }
 
-    fn update_from_state<X: XConn>(&mut self, state: &State<X>) {
+    fn update_from_state<X>(&mut self, state: &State<X>, x: &X)
+    where
+        X: XConn,
+    {
         let focused_ws = focused_workspaces(state);
         let wss = WsMeta::from_state(state);
 
-        let ui_updated = self.ui.update_from_state(&wss, &focused_ws, state);
+        let ui_updated = self.ui.update_from_state(&wss, &focused_ws, state, x);
         let tags_changed = self.tags_changed(&wss);
 
         if ui_updated || tags_changed {
@@ -317,14 +327,14 @@ where
         self.require_draw
     }
 
-    fn on_startup(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
-        self.update_from_state(state);
+    fn on_startup(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+        self.update_from_state(state, x);
 
         Ok(())
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
-        self.update_from_state(state);
+    fn on_refresh(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+        self.update_from_state(state, x);
 
         Ok(())
     }
