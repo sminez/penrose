@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["debug","sys"],"struct":["ActiveWindowName","CurrentLayout","IntervalText","RefreshText","RootWindowName","Text","Workspaces"],"trait":["Widget"]};
+window.SIDEBAR_ITEMS = {"enum":["FocusState"],"mod":["debug","sys"],"struct":["ActiveWindowName","CurrentLayout","DefaultUi","IntervalText","RefreshText","RootWindowName","Text","WorkspacesWidget","WsMeta"],"trait":["Widget","WorkspacesUi"],"type":["Workspaces"]};
