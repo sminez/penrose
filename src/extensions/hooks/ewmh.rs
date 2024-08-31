@@ -16,7 +16,7 @@ use crate::{
     },
     Result, Xid,
 };
-use tracing::warn;
+use tracing::{debug, warn};
 
 /// The set of Atoms this extension adds support for.
 ///
@@ -94,6 +94,8 @@ pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Resu
         XEvent::ClientMessage(m) => m,
         _ => return Ok(true),
     };
+
+    debug!(?dtype, "processing client message in ewmh hook");
 
     match dtype.as_ref() {
         // Focus the requested desktop

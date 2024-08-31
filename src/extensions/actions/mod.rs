@@ -6,7 +6,7 @@ use crate::{
     x::{atom::Atom, property::Prop, XConn, XConnExt},
     Error, Result, Xid,
 };
-use tracing::error;
+use tracing::{debug, error};
 
 mod dynamic_select;
 
@@ -42,6 +42,7 @@ pub fn set_fullscreen_state<X: XConn>(
     };
 
     let currently_fullscreen = wstate.contains(&full_screen);
+    debug!(%currently_fullscreen, ?action, %id, "setting fullscreen state");
 
     if action == Add || (action == Toggle && !currently_fullscreen) {
         let r = state
@@ -51,7 +52,7 @@ pub fn set_fullscreen_state<X: XConn>(
             .r;
         state.client_set.float(id, r)?;
         wstate.push(*full_screen);
-    } else if action == Remove || (action == Toggle && currently_fullscreen) {
+    } else if currently_fullscreen && (action == Remove || action == Toggle) {
         state.client_set.sink(&id);
         wstate.retain(|&val| val != *full_screen);
     }
@@ -86,7 +87,7 @@ pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 /// DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.
 ///
 /// > If you just want to dynamically select an existing workspace then you can use
-/// [switch_to_workspace] to select from known workspace names.
+/// > [switch_to_workspace] to select from known workspace names.
 ///
 ///   [0]: crate::pure::Workspace
 pub fn create_or_switch_to_workspace<X>(

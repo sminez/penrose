@@ -12,7 +12,7 @@ use crate::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use tracing::{error, trace};
+use tracing::{debug, error, trace};
 
 pub mod atom;
 pub mod event;
@@ -258,19 +258,20 @@ pub trait XConnExt: XConn + Sized {
         trace!(%client, "fetching WmClass prop");
         if let Some(Prop::UTF8String(strs)) = self.get_prop(client, Atom::WmClass.as_ref())? {
             if strs.iter().any(|c| floating_classes.contains(c)) {
-                trace!(%client, ?floating_classes, "window has a floating class: setting to floating state");
+                debug!(%client, ?floating_classes, "window has a floating class: setting to floating state");
                 return Ok(true);
             }
         }
 
+        trace!(%client, "fetching NetWmWindowType prop");
+        let window_types = self.get_prop(client, Atom::NetWmWindowType.as_ref())?;
+        debug!(?window_types, "client window types");
+
         let float_types: Vec<&str> = AUTO_FLOAT_WINDOW_TYPES.iter().map(|a| a.as_ref()).collect();
 
-        trace!(%client, "fetching NetWmWindowType prop");
-        let p = self.get_prop(client, Atom::NetWmWindowType.as_ref())?;
-        let should_float = if let Some(Prop::Atom(atoms)) = p {
-            atoms.iter().any(|a| float_types.contains(&a.as_ref()))
-        } else {
-            false
+        let should_float = match window_types {
+            Some(Prop::Atom(atoms)) => atoms.iter().any(|a| float_types.contains(&a.as_ref())),
+            _ => false,
         };
 
         Ok(should_float)
@@ -459,6 +460,7 @@ pub(crate) fn manage_without_refresh<X: XConn>(
                 .or(tag)
                 .map(|t| t.to_string());
 
+            debug!(%id, %parent, ?owned_tag, "client is transient");
             (owned_tag, Some(parent))
         }
 
@@ -474,6 +476,7 @@ pub(crate) fn manage_without_refresh<X: XConn>(
     }
 
     if should_float {
+        debug!(%id, "client should float");
         let r = floating_client_position(id, transient_for, state, x)?;
         if state.client_set.float(id, r).is_err() {
             error!(%id, "attempted to float client which was not in state");
@@ -489,6 +492,10 @@ pub(crate) fn manage_without_refresh<X: XConn>(
     }
     state.config.manage_hook = hook;
 
+    debug!(
+        floating=?state.client_set.floating, "floating clients"
+    );
+
     Ok(())
 }
 
@@ -502,22 +509,27 @@ fn floating_client_position<X: XConn>(
     state: &State<X>,
     x: &X,
 ) -> Result<Rect> {
+    trace!(%id, "fetching client geometry");
     let r_initial = x.client_geometry(id)?;
+    debug!(?r_initial, "initial geometry");
 
     if (r_initial.x, r_initial.y) != (0, 0) {
+        debug!(?r_initial, "accepting client's requested position");
         return Ok(r_initial);
     }
 
-    let r_screen = transient_for
+    let r_parent = transient_for
         .and_then(|parent| state.client_set.screen_for_client(&parent))
         .unwrap_or(&state.client_set.screens.focus)
         .r;
+    debug!(?r_parent, "parent geometry");
 
-    let r_final = r_initial.centered_in(&r_screen).unwrap_or_else(|| {
+    let r_final = r_initial.centered_in(&r_parent).unwrap_or_else(|| {
         r_initial
             .centered_in(&state.client_set.screens.focus.r)
             .unwrap_or(r_initial)
     });
+    debug!(?r_final, "final geometry");
 
     Ok(r_final)
 }

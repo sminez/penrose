@@ -8,7 +8,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-use tracing::{debug, trace};
+use tracing::trace;
 
 /// The minimum allowed interval for an [UpdateSchedule].
 pub const MIN_DURATION: Duration = Duration::from_secs(1);
@@ -87,7 +87,7 @@ impl UpdateSchedule {
 /// their requested intervals.
 pub(crate) fn run_update_schedules(mut schedules: Vec<UpdateSchedule>) {
     thread::spawn(move || loop {
-        debug!("running UpdateSchedule updates for all pending widgets");
+        trace!("running UpdateSchedule updates for all pending widgets");
         while schedules[0].next < Instant::now() {
             schedules[0].update_text();
             schedules.sort_by(|a, b| a.next.cmp(&b.next));
@@ -98,7 +98,7 @@ pub(crate) fn run_update_schedules(mut schedules: Vec<UpdateSchedule>) {
         let _ = spawn_with_args("xsetroot", &["-name", ""]);
 
         let interval = schedules[0].next - Instant::now();
-        debug!(?interval, "sleeping until next update point");
+        trace!(?interval, "sleeping until next update point");
         thread::sleep(interval);
     });
 }

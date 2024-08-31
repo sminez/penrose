@@ -15,6 +15,7 @@ use std::{
     hash::Hash,
     mem::{swap, take},
 };
+use tracing::debug;
 
 /// The side-effect free internal state representation of the window manager.
 #[derive(Default, Debug, Clone)]
@@ -259,6 +260,7 @@ where
     pub(crate) fn float_unchecked<R: RelativeTo>(&mut self, client: C, r: R) {
         let screen = self.screen_for_client(&client).expect("client to be known");
         let r = r.relative_to(&screen.r);
+        debug!(?r, "setting floating position");
         self.floating.insert(client, r);
     }
 
