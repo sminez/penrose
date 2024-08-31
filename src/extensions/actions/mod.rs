@@ -52,7 +52,7 @@ pub fn set_fullscreen_state<X: XConn>(
             .r;
         state.client_set.float(id, r)?;
         wstate.push(*full_screen);
-    } else if action == Remove || (action == Toggle && currently_fullscreen) {
+    } else if currently_fullscreen && (action == Remove || action == Toggle) {
         state.client_set.sink(&id);
         wstate.retain(|&val| val != *full_screen);
     }
