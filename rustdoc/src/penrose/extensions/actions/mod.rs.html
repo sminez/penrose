@@ -156,6 +156,7 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helpers and pre-defined actions for use in user defined key bindings
 </span><span class="kw">use crate</span>::{
     builtin::actions::{key_handler, modify_with},
@@ -164,7 +165,7 @@
     x::{atom::Atom, property::Prop, XConn, XConnExt},
     Error, <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="kw">use </span>tracing::error;
+<span class="kw">use </span>tracing::{debug, error};
 
 <span class="kw">mod </span>dynamic_select;
 
@@ -200,6 +201,7 @@
     };
 
     <span class="kw">let </span>currently_fullscreen = wstate.contains(<span class="kw-2">&amp;</span>full_screen);
+    <span class="macro">debug!</span>(%currently_fullscreen, <span class="question-mark">?</span>action, %id, <span class="string">"setting fullscreen state"</span>);
 
     <span class="kw">if </span>action == Add || (action == Toggle &amp;&amp; !currently_fullscreen) {
         <span class="kw">let </span>r = state
@@ -209,7 +211,7 @@
             </span>.r;
         state.client_set.float(id, r)<span class="question-mark">?</span>;
         wstate.push(<span class="kw-2">*</span>full_screen);
-    } <span class="kw">else if </span>action == Remove || (action == Toggle &amp;&amp; currently_fullscreen) {
+    } <span class="kw">else if </span>currently_fullscreen &amp;&amp; (action == Remove || action == Toggle) {
         state.client_set.sink(<span class="kw-2">&amp;</span>id);
         wstate.retain(|<span class="kw-2">&amp;</span>val| val != <span class="kw-2">*</span>full_screen);
     }
@@ -244,7 +246,7 @@
 /// DefaultWorkspace hook that allows for auto populating named Workspaces when first focusing them.
 ///
 /// &gt; If you just want to dynamically select an existing workspace then you can use
-/// [switch_to_workspace] to select from known workspace names.
+/// &gt; [switch_to_workspace] to select from known workspace names.
 ///
 ///   [0]: crate::pure::Workspace
 </span><span class="kw">pub fn </span>create_or_switch_to_workspace&lt;X&gt;(

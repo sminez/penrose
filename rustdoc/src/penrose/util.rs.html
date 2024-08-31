@@ -182,7 +182,7 @@
     io::Read,
     process::{Command, Stdio},
 };
-<span class="kw">use </span>tracing::debug;
+<span class="kw">use </span>tracing::trace;
 
 <span class="doccomment">/// Run an external command
 ///
@@ -232,7 +232,7 @@
 /// &gt; output of a process that you spawn.
 </span><span class="kw">pub fn </span>spawn_for_output&lt;S: Into&lt;String&gt;&gt;(cmd: S) -&gt; std::io::Result&lt;String&gt; {
     <span class="kw">let </span>cmd = cmd.into();
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">"spawning subprocess for output"</span>);
+    <span class="macro">trace!</span>(<span class="question-mark">?</span>cmd, <span class="string">"spawning subprocess for output"</span>);
     <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = cmd.split_whitespace().collect();
     <span class="kw">let </span>result = <span class="kw">if </span>parts.len() &gt; <span class="number">1 </span>{
         Command::new(parts[<span class="number">0</span>])
@@ -243,7 +243,7 @@
         Command::new(parts[<span class="number">0</span>]).stdout(Stdio::piped()).spawn()
     };
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="string">"reading output"</span>);
+    <span class="macro">trace!</span>(<span class="question-mark">?</span>cmd, <span class="string">"reading output"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>child = result<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>buff = String::new();
     child
@@ -265,13 +265,13 @@
 ) -&gt; std::io::Result&lt;String&gt; {
     <span class="kw">let </span>cmd = cmd.into();
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">"spawning subprocess for output"</span>);
+    <span class="macro">trace!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">"spawning subprocess for output"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>child = Command::new(<span class="kw-2">&amp;</span>cmd)
         .stdout(Stdio::piped())
         .args(args)
         .spawn()<span class="question-mark">?</span>;
 
-    <span class="macro">debug!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">"reading output"</span>);
+    <span class="macro">trace!</span>(<span class="question-mark">?</span>cmd, <span class="question-mark">?</span>args, <span class="string">"reading output"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>buff = String::new();
     child
         .stdout

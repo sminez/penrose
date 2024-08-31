@@ -269,6 +269,8 @@
 <a href="#269" id="269">269</a>
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! EWMH compliance for Penrose
 //!
 //! The primary use of this extension is to provide support for external
@@ -287,7 +289,7 @@
     },
     <span class="prelude-ty">Result</span>, Xid,
 };
-<span class="kw">use </span>tracing::warn;
+<span class="kw">use </span>tracing::{debug, warn};
 
 <span class="doccomment">/// The set of Atoms this extension adds support for.
 ///
@@ -365,6 +367,8 @@
         XEvent::ClientMessage(m) =&gt; m,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
     };
+
+    <span class="macro">debug!</span>(<span class="question-mark">?</span>dtype, <span class="string">"processing client message in ewmh hook"</span>);
 
     <span class="kw">match </span>dtype.as_ref() {
         <span class="comment">// Focus the requested desktop

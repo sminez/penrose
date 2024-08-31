@@ -1615,6 +1615,8 @@
 <a href="#1615" id="1615">1615</a>
 <a href="#1616" id="1616">1616</a>
 <a href="#1617" id="1617">1617</a>
+<a href="#1618" id="1618">1618</a>
+<a href="#1619" id="1619">1619</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
@@ -1632,6 +1634,7 @@
     hash::Hash,
     mem::{swap, take},
 };
+<span class="kw">use </span>tracing::debug;
 
 <span class="doccomment">/// The side-effect free internal state representation of the window manager.
 </span><span class="attr">#[derive(Default, Debug, Clone)]
@@ -1876,6 +1879,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>float_unchecked&lt;R: RelativeTo&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: C, r: R) {
         <span class="kw">let </span>screen = <span class="self">self</span>.screen_for_client(<span class="kw-2">&amp;</span>client).expect(<span class="string">"client to be known"</span>);
         <span class="kw">let </span>r = r.relative_to(<span class="kw-2">&amp;</span>screen.r);
+        <span class="macro">debug!</span>(<span class="question-mark">?</span>r, <span class="string">"setting floating position"</span>);
         <span class="self">self</span>.floating.insert(client, r);
     }
 

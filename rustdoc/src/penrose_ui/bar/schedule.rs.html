@@ -112,7 +112,7 @@
     thread,
     time::{Duration, Instant},
 };
-<span class="kw">use </span>tracing::{debug, trace};
+<span class="kw">use </span>tracing::trace;
 
 <span class="doccomment">/// The minimum allowed interval for an [UpdateSchedule].
 </span><span class="kw">pub const </span>MIN_DURATION: Duration = Duration::from_secs(<span class="number">1</span>);
@@ -191,7 +191,7 @@
 /// their requested intervals.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run_update_schedules(<span class="kw-2">mut </span>schedules: Vec&lt;UpdateSchedule&gt;) {
     thread::spawn(<span class="kw">move </span>|| <span class="kw">loop </span>{
-        <span class="macro">debug!</span>(<span class="string">"running UpdateSchedule updates for all pending widgets"</span>);
+        <span class="macro">trace!</span>(<span class="string">"running UpdateSchedule updates for all pending widgets"</span>);
         <span class="kw">while </span>schedules[<span class="number">0</span>].next &lt; Instant::now() {
             schedules[<span class="number">0</span>].update_text();
             schedules.sort_by(|a, b| a.next.cmp(<span class="kw-2">&amp;</span>b.next));
@@ -202,7 +202,7 @@
         </span><span class="kw">let _ </span>= spawn_with_args(<span class="string">"xsetroot"</span>, <span class="kw-2">&amp;</span>[<span class="string">"-name"</span>, <span class="string">""</span>]);
 
         <span class="kw">let </span>interval = schedules[<span class="number">0</span>].next - Instant::now();
-        <span class="macro">debug!</span>(<span class="question-mark">?</span>interval, <span class="string">"sleeping until next update point"</span>);
+        <span class="macro">trace!</span>(<span class="question-mark">?</span>interval, <span class="string">"sleeping until next update point"</span>);
         thread::sleep(interval);
     });
 }
