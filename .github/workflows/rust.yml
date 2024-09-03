@@ -25,7 +25,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: hecrj/setup-rust-action@v1
+    - uses: hecrj/setup-rust-action@v2
       with:
         rust-version: ${{ matrix.rust }}
 
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: hecrj/setup-rust-action@v1
+    - uses: hecrj/setup-rust-action@v2
       with:
         components: rustfmt
     - run: cargo fmt --all -- --check
@@ -52,7 +52,7 @@ jobs:
     #   RUSTFLAGS: -Dwarnings
     steps:
     - uses: actions/checkout@v4
-    - uses: hecrj/setup-rust-action@v1
+    - uses: hecrj/setup-rust-action@v2
       with:
         components: clippy
     - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libxft-dev --fix-missing
@@ -67,7 +67,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: hecrj/setup-rust-action@v1
+    - uses: hecrj/setup-rust-action@v2
       with:
         rust-version: nightly
     - run: sudo apt-get update && sudo apt-get install -y libxrandr-dev libx11-xcb-dev libxcb-randr0-dev libxft-dev --fix-missing
