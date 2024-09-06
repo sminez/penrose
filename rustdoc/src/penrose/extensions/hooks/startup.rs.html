@@ -31,6 +31,11 @@
 <a href="#31" id="31">31</a>
 <a href="#32" id="32">32</a>
 <a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Startup hooks for direct adding to your penrose config.
 </span><span class="kw">use crate</span>::{
     core::{hooks::StateHook, State},
@@ -47,12 +52,17 @@
 }
 
 <span class="kw">impl </span>SpawnOnStartup {
+    <span class="doccomment">/// Create a new unboxed startup hook ready for adding to your Config
+    </span><span class="kw">pub fn </span>new(prog: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ prog: prog.into() }
+    }
+
     <span class="doccomment">/// Create a new startup hook ready for adding to your Config
     </span><span class="kw">pub fn </span>boxed&lt;X&gt;(prog: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;) -&gt; Box&lt;<span class="kw">dyn </span>StateHook&lt;X&gt;&gt;
     <span class="kw">where
         </span>X: XConn,
     {
-        Box::new(<span class="self">Self </span>{ prog: prog.into() })
+        Box::new(<span class="self">Self</span>::new(prog))
     }
 }
 
