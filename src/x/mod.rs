@@ -228,7 +228,7 @@ pub trait XConnExt: XConn + Sized {
         notify_killed(self, state)?;
         set_window_props(self, state)?;
         notify_hidden_workspaces(state);
-        self.position_clients(state.config.border_width, &state.diff.after.positions)?;
+        self.position_clients(state)?;
         set_window_visibility(self, state)?;
         set_focus(self, state)?;
         handle_pointer_change(self, state)?;
@@ -323,11 +323,17 @@ pub trait XConnExt: XConn + Sized {
     /// border.
     ///
     /// See `restack` for details of stacking order is determined.
-    fn position_clients(&self, border: u32, positions: &[(Xid, Rect)]) -> Result<()> {
+    fn position_clients(&self, state: &State<Self>) -> Result<()> {
+        let border = state.config.border_width;
+        let positions = &state.diff.after.positions;
+        let screen_positions: Vec<_> = state.client_set.screens().map(|s| s.r).collect();
+
         self.restack(positions.iter().map(|(id, _)| id))?;
 
-        for &(c, r) in positions.iter() {
-            let r = r.shrink_in(border);
+        for &(c, mut r) in positions.iter() {
+            if !screen_positions.contains(&r) {
+                r = r.shrink_in(border);
+            }
             self.position_client(c, r)?;
         }
 
