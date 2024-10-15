@@ -3,7 +3,7 @@ use crate::{
     builtin::actions::{key_handler, modify_with},
     core::{bindings::KeyEventHandler, layout::LayoutStack, State},
     util::spawn,
-    x::{atom::Atom, property::Prop, XConn, XConnExt},
+    x::{atom::Atom, property::Prop, ClientConfig, XConn, XConnExt},
     Error, Result, Xid,
 };
 use tracing::{debug, error};
@@ -52,9 +52,12 @@ pub fn set_fullscreen_state<X: XConn>(
             .r;
         state.client_set.float(id, r)?;
         wstate.push(*full_screen);
+        x.set_client_config(id, &[ClientConfig::BorderPx(0)])?; // remove borders
     } else if currently_fullscreen && (action == Remove || action == Toggle) {
         state.client_set.sink(&id);
         wstate.retain(|&val| val != *full_screen);
+        // replace borders
+        x.set_client_config(id, &[ClientConfig::BorderPx(state.config.border_width)])?;
     }
 
     x.set_prop(id, net_wm_state, Prop::Cardinal(wstate))?;

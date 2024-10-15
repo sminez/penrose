@@ -10,7 +10,11 @@
 //! `penrose::extensions::hooks::ewmh`.
 use penrose::{
     builtin::{
-        actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
+        actions::{
+            exit,
+            floating::{sink_focused, MouseDragHandler, MouseResizeHandler},
+            log_current_state, modify_with, send_layout_message, spawn,
+        },
         layout::{
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReflectHorizontal, ReserveTop},
@@ -18,11 +22,17 @@ use penrose::{
         },
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        bindings::{
+            click_handler, parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler,
+            MouseState,
+        },
         layout::LayoutStack,
         Config, WindowManager,
     },
-    extensions::hooks::{add_ewmh_hooks, SpawnOnStartup},
+    extensions::{
+        actions::toggle_fullscreen,
+        hooks::{add_ewmh_hooks, SpawnOnStartup},
+    },
     map, stack,
     x11rb::RustConn,
     Result,
@@ -32,7 +42,6 @@ use tracing_subscriber::{self, prelude::*};
 
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
-        // map_keys: |k: &str| format!("C-{k}");
         map_keys: |k: &str| k.to_owned();
 
         "M-j" => modify_with(|cs| cs.focus_down()),
@@ -53,6 +62,8 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
         "M-S-s" => log_current_state(),
         "M-Return" => spawn("st"),
         "M-A-Escape" => exit(),
+
+        "M-S-f" => toggle_fullscreen(),
     };
 
     for tag in &["1", "2", "3", "4", "5", "6", "7", "8", "9"] {
@@ -69,6 +80,21 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     }
 
     raw_bindings
+}
+
+fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>> {
+    use penrose::core::bindings::{
+        ModifierKey::{Meta, Shift},
+        MouseButton::{Left, Middle, Right},
+    };
+
+    map! {
+        map_keys: |(button, modifiers)| MouseState { button, modifiers };
+
+        (Left, vec![Shift, Meta]) => MouseDragHandler::boxed_default(),
+        (Right, vec![Shift, Meta]) => MouseResizeHandler::boxed_default(),
+        (Middle, vec![Shift, Meta]) => click_handler(sink_focused()),
+    }
 }
 
 fn layouts() -> LayoutStack {
@@ -104,7 +130,7 @@ fn main() -> Result<()> {
 
     let conn = RustConn::new()?;
     let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
-    let wm = WindowManager::new(config, key_bindings, HashMap::new(), conn)?;
+    let wm = WindowManager::new(config, key_bindings, mouse_bindings(), conn)?;
 
     wm.run()
 }
