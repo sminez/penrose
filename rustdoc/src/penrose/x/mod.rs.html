@@ -724,6 +724,12 @@
 <a href="#724" id="724">724</a>
 <a href="#725" id="725">725</a>
 <a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Logic for interacting with the X server
 </span><span class="kw">use crate</span>::{
     builtin::layout::messages::Hide,
@@ -954,7 +960,7 @@
         notify_killed(<span class="self">self</span>, state)<span class="question-mark">?</span>;
         set_window_props(<span class="self">self</span>, state)<span class="question-mark">?</span>;
         notify_hidden_workspaces(state);
-        <span class="self">self</span>.position_clients(state.config.border_width, <span class="kw-2">&amp;</span>state.diff.after.positions)<span class="question-mark">?</span>;
+        <span class="self">self</span>.position_clients(state)<span class="question-mark">?</span>;
         set_window_visibility(<span class="self">self</span>, state)<span class="question-mark">?</span>;
         set_focus(<span class="self">self</span>, state)<span class="question-mark">?</span>;
         handle_pointer_change(<span class="self">self</span>, state)<span class="question-mark">?</span>;
@@ -1049,11 +1055,17 @@
     /// border.
     ///
     /// See `restack` for details of stacking order is determined.
-    </span><span class="kw">fn </span>position_clients(<span class="kw-2">&amp;</span><span class="self">self</span>, border: u32, positions: <span class="kw-2">&amp;</span>[(Xid, Rect)]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">fn </span>position_clients(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;</span>State&lt;<span class="self">Self</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>border = state.config.border_width;
+        <span class="kw">let </span>positions = <span class="kw-2">&amp;</span>state.diff.after.positions;
+        <span class="kw">let </span>screen_positions: Vec&lt;<span class="kw">_</span>&gt; = state.client_set.screens().map(|s| s.r).collect();
+
         <span class="self">self</span>.restack(positions.iter().map(|(id, <span class="kw">_</span>)| id))<span class="question-mark">?</span>;
 
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(c, r) <span class="kw">in </span>positions.iter() {
-            <span class="kw">let </span>r = r.shrink_in(border);
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(c, <span class="kw-2">mut </span>r) <span class="kw">in </span>positions.iter() {
+            <span class="kw">if </span>!screen_positions.contains(<span class="kw-2">&amp;</span>r) {
+                r = r.shrink_in(border);
+            }
             <span class="self">self</span>.position_client(c, r)<span class="question-mark">?</span>;
         }
 
