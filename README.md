@@ -15,6 +15,7 @@ customise things to your liking.
 
 ![screenshot](https://raw.githubusercontent.com/sminez/penrose/develop/screenshot.png)
 
+
 ### tl;dr - getting started
 
 The user facing docs for penrose are written using mdBook and published to GitHub Pages [here][0].
@@ -29,7 +30,16 @@ of this repo has several different starting points for you to begin with and my 
 set up can be found [here][4]. (You almost certainly _don't_ want to use my set up in
 full but it should serve as a good reference for what a real use case looks like!)
 
+#### Penrose from scratch
+
+The [penrose from scratch](https://github.com/sminez/penrose-from-scratch) repo is an example
+window manager written using `penrose` that was developed as part of a [video series](https://www.youtube.com/playlist?list=PLy2HjaQiG8lOxCKzuWKfmmXov4iEVOGOF)
+available on YouTube. Each video focuses on a different aspect of the library and guides you through
+how the APIs work, how the library is designed and how to customise the behaviour of your window
+manager.
+
 #### Discord
+
 First and foremost, you should refer to the docs (both the book and API docs) if you are looking
 to learn about Penrose and how it all works. The GitHub issue tracker is also an excellent
 resource for learning about solutions to common problems. That said, I have had repeated requests
