@@ -1037,6 +1037,35 @@
 <a href="#1037" id="1037">1037</a>
 <a href="#1038" id="1038">1038</a>
 <a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pop_where;
 <span class="kw">use </span>std::{
     collections::vec_deque::{<span class="self">self</span>, VecDeque},
@@ -1274,8 +1303,25 @@
         swap(<span class="kw-2">&amp;mut </span>head, <span class="kw-2">&amp;mut </span><span class="self">self</span>.focus);
         <span class="self">self</span>.down.push_front(head);
 
-        <span class="kw">for </span>item <span class="kw">in </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up).into_iter().rev() {
+        <span class="kw">for </span>item <span class="kw">in </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.up).into_iter() {
             <span class="self">self</span>.down.push_front(item);
+        }
+
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Move focus to the element in the head position
+    </span><span class="kw">pub fn </span>focus_tail(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>tail = <span class="kw">match </span><span class="self">self</span>.down.pop_back() {
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="self">self</span>, <span class="comment">// focus is already tail
+            </span><span class="prelude-val">Some</span>(t) =&gt; t,
+        };
+
+        swap(<span class="kw-2">&amp;mut </span>tail, <span class="kw-2">&amp;mut </span><span class="self">self</span>.focus);
+        <span class="self">self</span>.up.push_front(tail);
+
+        <span class="kw">for </span>item <span class="kw">in </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.down).into_iter() {
+            <span class="self">self</span>.up.push_front(item);
         }
 
         <span class="self">self
@@ -1736,9 +1782,9 @@
         <span class="macro">assert_eq!</span>(s, expected);
     }
 
-    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]); <span class="string">"items up and down"</span>)]
-    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]); <span class="string">"items up"</span>)]
-    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>]); <span class="string">"items down"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span>, <span class="number">4</span>, [<span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]); <span class="string">"items up and down"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span>, <span class="number">4</span>), <span class="macro">stack!</span>(<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]); <span class="string">"items up"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span>), <span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]); <span class="string">"items down"</span>)]
     <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">"focus only"</span>)]
     #[test]
     </span><span class="kw">fn </span>focus_head(<span class="kw-2">mut </span>s: Stack&lt;u8&gt;, expected: Stack&lt;u8&gt;) {
@@ -1746,6 +1792,18 @@
 
         <span class="macro">assert_eq!</span>(s, expected);
     }
+
+    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span>, <span class="number">4</span>, [<span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>], <span class="number">7</span>); <span class="string">"items up and down"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span>, <span class="number">4</span>), <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], <span class="number">4</span>); <span class="string">"items up"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span>), <span class="macro">stack!</span>([<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>], <span class="number">6</span>); <span class="string">"items down"</span>)]
+    <span class="attr">#[test_case(<span class="macro">stack!</span>(<span class="number">3</span>), <span class="macro">stack!</span>(<span class="number">3</span>); <span class="string">"focus only"</span>)]
+    #[test]
+    </span><span class="kw">fn </span>focus_tail(<span class="kw-2">mut </span>s: Stack&lt;u8&gt;, expected: Stack&lt;u8&gt;) {
+        s.focus_tail();
+
+        <span class="macro">assert_eq!</span>(s, expected);
+    }
+
 
     <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]), |<span class="kw-2">&amp;</span>e| e == <span class="number">3</span>, <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]); <span class="string">"current focus"</span>)]
     <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]), |<span class="kw-2">&amp;</span>e| e &gt; <span class="number">4</span>, <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>], <span class="number">5</span>, [<span class="number">6</span>]); <span class="string">"in tail"</span>)]
