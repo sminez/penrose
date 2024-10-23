@@ -1081,7 +1081,6 @@
 <a href="#1081" id="1081">1081</a>
 <a href="#1082" id="1082">1082</a>
 <a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pop_where;
 <span class="kw">use </span>std::{
     collections::vec_deque::{<span class="self">self</span>, VecDeque},
@@ -1819,7 +1818,6 @@
 
         <span class="macro">assert_eq!</span>(s, expected);
     }
-
 
     <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]), |<span class="kw-2">&amp;</span>e| e == <span class="number">3</span>, <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>], <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]); <span class="string">"current focus"</span>)]
     <span class="attr">#[test_case(<span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>]</span>, <span class="number">3</span>, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]), |<span class="kw-2">&amp;</span>e| e &gt; <span class="number">4</span>, <span class="macro">stack!</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>], <span class="number">5</span>, [<span class="number">6</span>]); <span class="string">"in tail"</span>)]
