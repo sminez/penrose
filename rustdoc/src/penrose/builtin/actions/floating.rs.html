@@ -256,6 +256,13 @@
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
 <a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Actions for manipulating floating windows.
 </span><span class="kw">use crate</span>::{
     builtin::actions::{key_handler, modify_with},
@@ -400,7 +407,14 @@
         (f)(<span class="kw-2">&amp;mut </span>r, dx, dy);
 
         state.client_set.float(id, r)<span class="question-mark">?</span>;
-        x.position_client(id, r)<span class="question-mark">?</span>;
+
+        <span class="comment">// When we position the window we need to shrink in so that we match
+        // the behaviour of ../../x/mod.rs:/fn\sposition_clients/
+        // -&gt; without this we end up with the window size shrinking when the
+        //    mouse button is released and the default position_clients logic
+        //    runs using the Rect that we store above.
+        </span><span class="kw">let </span>border = state.config.border_width;
+        x.position_client(id, r.shrink_in(border))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
