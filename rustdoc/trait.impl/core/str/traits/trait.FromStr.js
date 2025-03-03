@@ -1,4 +1,9 @@
-(function() {var implementors = {
-"penrose":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"enum\" href=\"penrose/x/atom/enum.Atom.html\" title=\"enum penrose::x::atom::Atom\">Atom</a>"]],
-"penrose_keysyms":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"enum\" href=\"penrose_keysyms/enum.XKeySym.html\" title=\"enum penrose_keysyms::XKeySym\">XKeySym</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {
+    var implementors = Object.fromEntries([["penrose",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.85.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"enum\" href=\"penrose/x/atom/enum.Atom.html\" title=\"enum penrose::x::atom::Atom\">Atom</a>"]]],["penrose_keysyms",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.85.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"enum\" href=\"penrose_keysyms/enum.XKeySym.html\" title=\"enum penrose_keysyms::XKeySym\">XKeySym</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[281,299]}

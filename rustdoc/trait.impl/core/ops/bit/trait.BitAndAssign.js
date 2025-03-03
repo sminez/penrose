@@ -1,3 +1,9 @@
-(function() {var implementors = {
-"penrose":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/ops/bit/trait.BitAndAssign.html\" title=\"trait core::ops::bit::BitAndAssign\">BitAndAssign</a> for <a class=\"struct\" href=\"penrose/x/property/struct.WmHintsFlags.html\" title=\"struct penrose::x::property::WmHintsFlags\">WmHintsFlags</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.81.0/core/ops/bit/trait.BitAndAssign.html\" title=\"trait core::ops::bit::BitAndAssign\">BitAndAssign</a> for <a class=\"struct\" href=\"penrose/x/property/struct.WmNormalHintsFlags.html\" title=\"struct penrose::x::property::WmNormalHintsFlags\">WmNormalHintsFlags</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {
+    var implementors = Object.fromEntries([["penrose",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.85.0/core/ops/bit/trait.BitAndAssign.html\" title=\"trait core::ops::bit::BitAndAssign\">BitAndAssign</a> for <a class=\"struct\" href=\"penrose/x/property/struct.WmHintsFlags.html\" title=\"struct penrose::x::property::WmHintsFlags\">WmHintsFlags</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.85.0/core/ops/bit/trait.BitAndAssign.html\" title=\"trait core::ops::bit::BitAndAssign\">BitAndAssign</a> for <a class=\"struct\" href=\"penrose/x/property/struct.WmNormalHintsFlags.html\" title=\"struct penrose::x::property::WmNormalHintsFlags\">WmNormalHintsFlags</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[661]}

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="ayu" dir="ltr">
+<html lang="en" class="ayu sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
@@ -30,15 +30,17 @@
 
         <!-- Custom theme stylesheets -->
 
-    </head>
-    <body class="sidebar-visible no-js">
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -60,19 +62,16 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
+            const html = document.documentElement;
             html.classList.remove('ayu')
             html.classList.add(theme);
-            var body = document.querySelector('body');
-            body.classList.remove('no-js')
-            body.classList.add('js');
+            html.classList.add("js");
         </script>
 
         <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var body = document.querySelector('body');
             var sidebar = null;
             var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
@@ -82,45 +81,25 @@
                 sidebar = 'hidden';
             }
             sidebar_toggle.checked = sidebar === 'visible';
-            body.classList.remove('sidebar-visible');
-            body.classList.add("sidebar-" + sidebar);
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="builtin/index.html"><strong aria-hidden="true">2.</strong> Built In Functionality</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="builtin/layouts.html"><strong aria-hidden="true">2.1.</strong> Layouts</a></li><li class="chapter-item expanded "><a href="builtin/actions.html"><strong aria-hidden="true">2.2.</strong> Actions</a></li><li class="chapter-item expanded "><a href="builtin/ui.html"><strong aria-hidden="true">2.3.</strong> UI</a></li></ol></li><li class="chapter-item expanded "><a href="extensions/index.html"><strong aria-hidden="true">3.</strong> Extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="extensions/hooks.html"><strong aria-hidden="true">3.1.</strong> Hooks</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="extensions/startup-hooks.html"><strong aria-hidden="true">3.1.1.</strong> Startup Hooks</a></li><li class="chapter-item expanded "><a href="extensions/event-hooks.html"><strong aria-hidden="true">3.1.2.</strong> Event Hooks</a></li><li class="chapter-item expanded "><a href="extensions/manage-hooks.html"><strong aria-hidden="true">3.1.3.</strong> Manage Hooks</a></li><li class="chapter-item expanded "><a href="extensions/refresh-hooks.html"><strong aria-hidden="true">3.1.4.</strong> Refresh Hooks</a></li></ol></li><li class="chapter-item expanded "><a href="extensions/ewmh.html"><strong aria-hidden="true">3.2.</strong> EWMH</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Reference Guide</li><li class="chapter-item expanded "><a href="overview/index.html"><strong aria-hidden="true">4.</strong> Overview of Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="overview/pure-vs-x.html"><strong aria-hidden="true">4.1.</strong> Pure Code vs X Code</a></li><li class="chapter-item expanded "><a href="overview/data-structures.html"><strong aria-hidden="true">4.2.</strong> Data Structures</a></li></ol></li><li class="chapter-item expanded "><a href="building/index.html"><strong aria-hidden="true">5.</strong> Building on top of penrose</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="building/actions.html"><strong aria-hidden="true">5.1.</strong> Actions</a></li><li class="chapter-item expanded "><a href="building/layouts.html"><strong aria-hidden="true">5.2.</strong> Layouts</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> Hooks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> State Extensions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> Example: Named Scratchpads</div></li></ol></li><li class="chapter-item expanded "><a href="faq.html" class="active">FAQs</a></li></ol>
-            </div>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <!-- Track and set sidebar scroll position -->
-        <script>
-            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
-            sidebarScrollbox.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
-                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
-                }
-            }, { passive: true });
-            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
-            sessionStorage.removeItem('sidebar-scroll');
-            if (sidebarScrollTop) {
-                // preserve sidebar scroll position when navigating via links within sidebar
-                sidebarScrollbox.scrollTop = sidebarScrollTop;
-            } else {
-                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
-                var activeSection = document.querySelector('#sidebar .active');
-                if (activeSection) {
-                    activeSection.scrollIntoView({ block: 'center' });
-                }
-            }
-        </script>
-
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
