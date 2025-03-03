@@ -48,7 +48,7 @@ pub fn set_fullscreen_state<X: XConn>(
         let r = state
             .client_set
             .screen_for_client(&id)
-            .ok_or_else(|| Error::UnknownClient(id))?
+            .ok_or(Error::UnknownClient(id))?
             .r;
         state.client_set.float(id, r)?;
         wstate.push(*full_screen);

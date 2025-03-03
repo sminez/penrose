@@ -322,7 +322,7 @@ pub struct Context<'a> {
     colors: &'a mut HashMap<Color, XColor>,
 }
 
-impl<'a> Context<'a> {
+impl Context<'_> {
     /// Clear the underlying surface, restoring it to the background color.
     pub fn clear(&mut self) -> Result<()> {
         self.fill_rect(Rect::new(0, 0, self.s.r.w, self.s.r.h), self.bg)

@@ -1440,6 +1440,7 @@ pub mod tests {
 }
 
 #[cfg(test)]
+#[allow(missing_docs)]
 mod quickcheck_tests {
     use super::{tests::test_stack_set_with_stacks, *};
     use quickcheck::{Arbitrary, Gen};
