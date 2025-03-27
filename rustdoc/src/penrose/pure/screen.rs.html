@@ -68,14 +68,13 @@
 <a href="#67" id="67">67</a>
 <a href="#68" id="68">68</a>
 <a href="#69" id="69">69</a>
-<a href="#70" id="70">70</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    pure::{
-        geometry::{Rect, RelativeRect},
-        Stack, Workspace,
-    },
-    Xid,
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pure::{
+    geometry::{Rect, RelativeRect},
+    Stack, Workspace,
 };
-<span class="kw">use </span>std::{collections::HashMap, fmt};
+<span class="kw">use </span>std::{collections::HashMap, fmt, hash::Hash};
 
 <span class="doccomment">/// A wrapper around a single [Workspace] that includes the physical screen
 /// size as a [Rect].
@@ -112,13 +111,17 @@
     }
 }
 
-<span class="kw">impl </span>Screen&lt;Xid&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>screen_clients(<span class="kw-2">&amp;</span><span class="self">self</span>, floating: <span class="kw-2">&amp;</span>HashMap&lt;Xid, RelativeRect&gt;) -&gt; ScreenClients {
+<span class="kw">impl</span>&lt;C&gt; Screen&lt;C&gt;
+<span class="kw">where
+    </span>C: Clone + Eq + Hash,
+{
+    <span class="doccomment">/// Produce a summary of the clients contained within this screen
+    </span><span class="kw">pub fn </span>screen_clients(<span class="kw-2">&amp;</span><span class="self">self</span>, floating: <span class="kw-2">&amp;</span>HashMap&lt;C, RelativeRect&gt;) -&gt; ScreenClients&lt;C&gt; {
         ScreenClients {
             floating: <span class="self">self
                 </span>.workspace
                 .clients()
-                .flat_map(|c| floating.get(c).map(|r| (<span class="kw-2">*</span>c, <span class="kw-2">*</span>r)))
+                .flat_map(|c| floating.get(c).map(|r| (c.clone(), <span class="kw-2">*</span>r)))
                 .collect(),
             tiling: <span class="self">self
                 </span>.workspace
@@ -132,10 +135,11 @@
 }
 
 <span class="doccomment">/// Used in laying out visible_client_positions
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ScreenClients {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) floating: Vec&lt;(Xid, RelativeRect)&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tiling: <span class="prelude-ty">Option</span>&lt;Stack&lt;Xid&gt;&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tag: String,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) r_s: Rect,
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ScreenClients&lt;C&gt; {
+    <span class="kw">pub </span>floating: Vec&lt;(C, RelativeRect)&gt;,
+    <span class="kw">pub </span>tiling: <span class="prelude-ty">Option</span>&lt;Stack&lt;C&gt;&gt;,
+    <span class="kw">pub </span>tag: String,
+    <span class="kw">pub </span>r_s: Rect,
 }
 </code></pre></div></section></main></body></html>

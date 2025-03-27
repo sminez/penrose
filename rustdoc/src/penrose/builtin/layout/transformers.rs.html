@@ -188,12 +188,12 @@
 </span>);
 
 <span class="kw">fn </span>reflect_horizontal(r_s: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
-    <span class="kw">let </span>offset = (r_s.x + r_s.w / <span class="number">2</span>) * <span class="number">2</span>;
+    <span class="kw">let </span>offset = (r_s.x + r_s.w <span class="kw">as </span>i32 / <span class="number">2</span>) * <span class="number">2</span>;
 
     positions
         .into_iter()
         .map(|(id, <span class="kw-2">mut </span>r)| {
-            r.x = offset.saturating_sub(r.x).saturating_sub(r.w);
+            r.x = offset.saturating_sub(r.x).saturating_sub(r.w <span class="kw">as </span>i32);
             (id, r)
         })
         .collect()
@@ -207,12 +207,12 @@
 </span>);
 
 <span class="kw">fn </span>reflect_vertical(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
-    <span class="kw">let </span>offset = (r.y + r.h / <span class="number">2</span>) * <span class="number">2</span>;
+    <span class="kw">let </span>offset = (r.y + r.h <span class="kw">as </span>i32 / <span class="number">2</span>) * <span class="number">2</span>;
 
     positions
         .into_iter()
         .map(|(id, <span class="kw-2">mut </span>r)| {
-            r.y = offset.saturating_sub(r.y).saturating_sub(r.h);
+            r.y = offset.saturating_sub(r.y).saturating_sub(r.h <span class="kw">as </span>i32);
             (id, r)
         })
         .collect()
@@ -250,8 +250,8 @@
     }
 
     Rect {
-        x: r.x + px,
-        y: r.y + px,
+        x: r.x + px <span class="kw">as </span>i32,
+        y: r.y + px <span class="kw">as </span>i32,
         w: r.w - <span class="number">2 </span>* px,
         h: r.h - <span class="number">2 </span>* px,
     }
@@ -310,7 +310,7 @@
             <span class="kw">return </span>r;
         }
 
-        r.y += <span class="self">self</span>.px;
+        r.y += <span class="self">self</span>.px <span class="kw">as </span>i32;
         r.h -= <span class="self">self</span>.px;
 
         r

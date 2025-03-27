@@ -916,8 +916,8 @@
         MouseEvent {
             data: MouseEventData {
                 id,
-                rpt: Point::new(rx <span class="kw">as </span>u32, ry <span class="kw">as </span>u32),
-                wpt: Point::new(ex <span class="kw">as </span>u32, ey <span class="kw">as </span>u32),
+                rpt: Point::new(rx <span class="kw">as </span>i32, ry <span class="kw">as </span>i32),
+                wpt: Point::new(ex <span class="kw">as </span>i32, ey <span class="kw">as </span>i32),
             },
             state,
             kind,
@@ -941,8 +941,8 @@
         MotionNotifyEvent {
             data: MouseEventData {
                 id,
-                rpt: Point::new(rx <span class="kw">as </span>u32, ry <span class="kw">as </span>u32),
-                wpt: Point::new(ex <span class="kw">as </span>u32, ey <span class="kw">as </span>u32),
+                rpt: Point::new(rx <span class="kw">as </span>i32, ry <span class="kw">as </span>i32),
+                wpt: Point::new(ex <span class="kw">as </span>i32, ey <span class="kw">as </span>i32),
             },
             modifiers,
         }

@@ -1115,8 +1115,8 @@
             <span class="kw">return </span><span class="self">self</span>.warp_pointer_to_window(<span class="kw-2">*</span>id);
         }
 
-        <span class="kw">let </span>x = (screen.r.x + screen.r.w / <span class="number">2</span>) <span class="kw">as </span>i16;
-        <span class="kw">let </span>y = (screen.r.y + screen.r.h / <span class="number">2</span>) <span class="kw">as </span>i16;
+        <span class="kw">let </span>x = (screen.r.x + screen.r.w <span class="kw">as </span>i32 / <span class="number">2</span>) <span class="kw">as </span>i16;
+        <span class="kw">let </span>y = (screen.r.y + screen.r.h <span class="kw">as </span>i32 / <span class="number">2</span>) <span class="kw">as </span>i16;
 
         <span class="self">self</span>.warp_pointer(<span class="self">self</span>.root(), x, y)
     }

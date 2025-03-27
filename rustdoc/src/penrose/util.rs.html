@@ -332,12 +332,12 @@
     <span class="kw">let </span><span class="kw-2">mut </span>screen = <span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="string">' '</span>; (screen_width + <span class="number">1</span>) <span class="kw">as </span>usize]; (screen_height + <span class="number">1</span>) <span class="kw">as </span>usize];
     <span class="kw">for </span>(<span class="kw">_</span>, Rect { x, y, w, h }) <span class="kw">in </span>positions.into_iter() {
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..=w {
-            screen[y <span class="kw">as </span>usize][(x + i) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
-            screen[(y + h) <span class="kw">as </span>usize][(x + i) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
+            screen[y <span class="kw">as </span>usize][(x <span class="kw">as </span>u32 + i) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
+            screen[(y <span class="kw">as </span>u32 + h) <span class="kw">as </span>usize][(x <span class="kw">as </span>u32 + i) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
         }
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..=h {
-            screen[(y + i) <span class="kw">as </span>usize][x <span class="kw">as </span>usize] = <span class="string">'.'</span>;
-            screen[(y + i) <span class="kw">as </span>usize][(x + w) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
+            screen[(y <span class="kw">as </span>u32 + i) <span class="kw">as </span>usize][x <span class="kw">as </span>usize] = <span class="string">'.'</span>;
+            screen[(y <span class="kw">as </span>u32 + i) <span class="kw">as </span>usize][(x <span class="kw">as </span>u32 + w) <span class="kw">as </span>usize] = <span class="string">'.'</span>;
         }
     }
 

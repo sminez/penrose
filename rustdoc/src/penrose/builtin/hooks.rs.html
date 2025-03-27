@@ -92,7 +92,7 @@
             <span class="kw">return </span>r;
         }
 
-        r.y += <span class="self">self</span>.top_px;
+        r.y += <span class="self">self</span>.top_px <span class="kw">as </span>i32;
         r.h = r.h - <span class="self">self</span>.top_px - <span class="self">self</span>.bottom_px;
 
         shrink(r, <span class="self">self</span>.outer_px)
@@ -118,8 +118,8 @@
     }
 
     Rect {
-        x: r.x + px,
-        y: r.y + px,
+        x: r.x + px <span class="kw">as </span>i32,
+        y: r.y + px <span class="kw">as </span>i32,
         w: r.w - <span class="number">2 </span>* px,
         h: r.h - <span class="number">2 </span>* px,
     }

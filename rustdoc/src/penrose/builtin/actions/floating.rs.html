@@ -401,7 +401,7 @@
         state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
         x: <span class="kw-2">&amp;</span>X,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>(dx, dy) = (rpt.x <span class="kw">as </span>i32 - <span class="self">self</span>.x_initial, rpt.y <span class="kw">as </span>i32 - <span class="self">self</span>.y_initial);
+        <span class="kw">let </span>(dx, dy) = (rpt.x - <span class="self">self</span>.x_initial, rpt.y - <span class="self">self</span>.y_initial);
 
         <span class="kw">let </span><span class="kw-2">mut </span>r = <span class="self">self</span>.r_initial;
         (f)(<span class="kw-2">&amp;mut </span>r, dx, dy);
@@ -438,8 +438,8 @@
                 <span class="kw">let </span>r_client = x.client_geometry(id)<span class="question-mark">?</span>;
                 state.client_set.float(id, r_client)<span class="question-mark">?</span>;
                 <span class="kw-2">*</span><span class="self">self</span>.data() = <span class="prelude-val">Some</span>(ClickData {
-                    x_initial: evt.data.rpt.x <span class="kw">as </span>i32,
-                    y_initial: evt.data.rpt.y <span class="kw">as </span>i32,
+                    x_initial: evt.data.rpt.x,
+                    y_initial: evt.data.rpt.y,
                     r_initial: r_client,
                 });
             }

@@ -2632,7 +2632,7 @@
     {
         <span class="kw">let </span>tags = (<span class="number">1</span>..=n_tags).map(|n| n.to_string());
         <span class="kw">let </span>screens: Vec&lt;Rect&gt; = (<span class="number">0</span>..(n_screens <span class="kw">as </span>u32))
-            .map(|k| Rect::new(k * <span class="number">1000</span>, k * <span class="number">2000</span>, <span class="number">1000</span>, <span class="number">2000</span>))
+            .map(|k| Rect::new(k <span class="kw">as </span>i32 * <span class="number">1000</span>, k <span class="kw">as </span>i32 * <span class="number">2000</span>, <span class="number">1000</span>, <span class="number">2000</span>))
             .collect();
 
         StackSet::try_new(LayoutStack::default(), tags, screens).unwrap()
@@ -2659,7 +2659,7 @@
         <span class="kw">match </span>StackSet::try_new_concrete(
             workspaces,
             (<span class="number">0</span>..(n <span class="kw">as </span>u32))
-                .map(|k| Rect::new(k * <span class="number">1000</span>, k * <span class="number">2000</span>, <span class="number">1000</span>, <span class="number">2000</span>))
+                .map(|k| Rect::new(k <span class="kw">as </span>i32 * <span class="number">1000</span>, k <span class="kw">as </span>i32 * <span class="number">2000</span>, <span class="number">1000</span>, <span class="number">2000</span>))
                 .collect(),
             HashMap::new(),
         ) {

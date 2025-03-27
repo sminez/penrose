@@ -340,7 +340,7 @@
 <span class="kw">use </span>std::{collections::HashSet, hash::Hash, iter::once, mem::swap};
 
 <span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ScreenState&lt;C&gt;
+</span><span class="kw">pub struct </span>ScreenState&lt;C&gt;
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
@@ -367,7 +367,7 @@
 ///
 ///   [0]: crate::core::State
 </span><span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Snapshot&lt;C&gt;
+</span><span class="kw">pub struct </span>Snapshot&lt;C&gt;
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
@@ -400,7 +400,7 @@
 ///
 ///   [0]: crate::core::State
 </span><span class="attr">#[derive(Debug, Default, Clone, PartialEq, Eq)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Diff&lt;C&gt;
+</span><span class="kw">pub struct </span>Diff&lt;C&gt;
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {

@@ -975,8 +975,8 @@
             .filter(|reply| reply.width &gt; <span class="number">0</span>)
             .map(|reply| {
                 Rect::new(
-                    reply.x <span class="kw">as </span>u32,
-                    reply.y <span class="kw">as </span>u32,
+                    reply.x <span class="kw">as </span>i32,
+                    reply.y <span class="kw">as </span>i32,
                     reply.width <span class="kw">as </span>u32,
                     reply.height <span class="kw">as </span>u32,
                 )
@@ -989,7 +989,7 @@
     <span class="kw">fn </span>cursor_position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Point&gt; {
         <span class="kw">let </span>reply = <span class="self">self</span>.conn.query_pointer(<span class="self">self</span>.root)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(Point::new(reply.root_x <span class="kw">as </span>u32, reply.root_y <span class="kw">as </span>u32))
+        <span class="prelude-val">Ok</span>(Point::new(reply.root_x <span class="kw">as </span>i32, reply.root_y <span class="kw">as </span>i32))
     }
 
     <span class="kw">fn </span>grab(<span class="kw-2">&amp;</span><span class="self">self</span>, key_codes: <span class="kw-2">&amp;</span>[KeyCode], mouse_states: <span class="kw-2">&amp;</span>[MouseState]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -1081,8 +1081,8 @@
         <span class="kw">let </span>res = <span class="self">self</span>.conn.get_geometry(<span class="kw-2">*</span>id)<span class="question-mark">?</span>.reply()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Rect::new(
-            res.x <span class="kw">as </span>u32,
-            res.y <span class="kw">as </span>u32,
+            res.x <span class="kw">as </span>i32,
+            res.y <span class="kw">as </span>i32,
             res.width <span class="kw">as </span>u32,
             res.height <span class="kw">as </span>u32,
         ))
@@ -1375,7 +1375,7 @@
             <span class="kw">match </span>conf {
                 ClientConfig::BorderPx(px) =&gt; aux = aux.border_width(<span class="kw-2">*</span>px),
                 ClientConfig::Position(r) =&gt; {
-                    aux = aux.x(r.x <span class="kw">as </span>i32).y(r.y <span class="kw">as </span>i32).width(r.w).height(r.h);
+                    aux = aux.x(r.x).y(r.y).width(r.w).height(r.h);
                 }
                 ClientConfig::StackBelow(s) =&gt; aux = aux.sibling(s.<span class="number">0</span>).stack_mode(StackMode::BELOW),
                 ClientConfig::StackAbove(s) =&gt; aux = aux.sibling(s.<span class="number">0</span>).stack_mode(StackMode::ABOVE),

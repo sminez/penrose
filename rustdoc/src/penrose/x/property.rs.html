@@ -599,7 +599,7 @@
             initial_state,
             icon_pixmap: raw[<span class="number">3</span>],
             icon_win: Xid(raw[<span class="number">4</span>]),
-            icon_position: Point::new(raw[<span class="number">5</span>], raw[<span class="number">6</span>]),
+            icon_position: Point::new(raw[<span class="number">5</span>] <span class="kw">as </span>i32, raw[<span class="number">6</span>] <span class="kw">as </span>i32),
             icon_mask: raw[<span class="number">7</span>],
             window_group: raw[<span class="number">8</span>],
         })
@@ -700,7 +700,7 @@
 
         <span class="comment">// These properties are marked as obsolete but some clients still set them
         // so it they are useful as fallbacks
-        </span><span class="kw">let </span>(x, y) = (raw[<span class="number">1</span>], raw[<span class="number">2</span>]);
+        </span><span class="kw">let </span>(x, y) = (raw[<span class="number">1</span>] <span class="kw">as </span>i32, raw[<span class="number">2</span>] <span class="kw">as </span>i32);
         <span class="kw">let </span>(user_w, user_h) = (raw[<span class="number">3</span>], raw[<span class="number">4</span>]);
 
         <span class="kw">let </span>(min_w, min_h) = (raw[<span class="number">5</span>], raw[<span class="number">6</span>]);

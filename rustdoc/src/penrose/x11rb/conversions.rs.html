@@ -285,15 +285,15 @@
 
         Event::EnterNotify(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(XEvent::Enter(PointerChange {
             id: Xid(event.event),
-            abs: Point::new(event.root_x <span class="kw">as </span>u32, event.root_y <span class="kw">as </span>u32),
-            relative: Point::new(event.event_x <span class="kw">as </span>u32, event.event_y <span class="kw">as </span>u32),
+            abs: Point::new(event.root_x <span class="kw">as </span>i32, event.root_y <span class="kw">as </span>i32),
+            relative: Point::new(event.event_x <span class="kw">as </span>i32, event.event_y <span class="kw">as </span>i32),
             same_screen: event.same_screen_focus == <span class="number">0</span>,
         }))),
 
         Event::LeaveNotify(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(XEvent::Leave(PointerChange {
             id: Xid(event.event),
-            abs: Point::new(event.root_x <span class="kw">as </span>u32, event.root_y <span class="kw">as </span>u32),
-            relative: Point::new(event.event_x <span class="kw">as </span>u32, event.event_y <span class="kw">as </span>u32),
+            abs: Point::new(event.root_x <span class="kw">as </span>i32, event.root_y <span class="kw">as </span>i32),
+            relative: Point::new(event.event_x <span class="kw">as </span>i32, event.event_y <span class="kw">as </span>i32),
             same_screen: event.same_screen_focus == <span class="number">0</span>,
         }))),
 
@@ -302,8 +302,8 @@
         Event::ConfigureNotify(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(XEvent::ConfigureNotify(ConfigureEvent {
             id: Xid(event.window),
             r: Rect::new(
-                event.x <span class="kw">as </span>u32,
-                event.y <span class="kw">as </span>u32,
+                event.x <span class="kw">as </span>i32,
+                event.y <span class="kw">as </span>i32,
                 event.width <span class="kw">as </span>u32,
                 event.height <span class="kw">as </span>u32,
             ),
@@ -313,8 +313,8 @@
         Event::ConfigureRequest(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(XEvent::ConfigureRequest(ConfigureEvent {
             id: Xid(event.window),
             r: Rect::new(
-                event.x <span class="kw">as </span>u32,
-                event.y <span class="kw">as </span>u32,
+                event.x <span class="kw">as </span>i32,
+                event.y <span class="kw">as </span>i32,
                 event.width <span class="kw">as </span>u32,
                 event.height <span class="kw">as </span>u32,
             ),
@@ -330,8 +330,8 @@
         Event::Expose(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(XEvent::Expose(ExposeEvent {
             id: Xid(event.window),
             r: Rect::new(
-                event.x <span class="kw">as </span>u32,
-                event.y <span class="kw">as </span>u32,
+                event.x <span class="kw">as </span>i32,
+                event.y <span class="kw">as </span>i32,
                 event.width <span class="kw">as </span>u32,
                 event.height <span class="kw">as </span>u32,
             ),

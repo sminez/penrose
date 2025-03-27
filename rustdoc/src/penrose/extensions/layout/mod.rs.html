@@ -565,10 +565,10 @@
                 <span class="kw">let </span>h = r1.h / <span class="number">4</span>;
                 <span class="kw">let </span>(<span class="kw-2">mut </span>r2, <span class="kw-2">mut </span>r4, <span class="kw-2">mut </span>r5) = (cols[<span class="number">0</span>], cols[<span class="number">1</span>], cols[<span class="number">2</span>]);
                 r2.h -= h;
-                (r4.h, r4.y) = (r4.h - <span class="number">2 </span>* h, r4.y + h);
-                (r5.h, r5.y) = (r5.h - h, r5.y + h);
-                <span class="kw">let </span>r3 = Rect::new(r2.x + r2.w, r2.y, r2.w * <span class="number">2</span>, h);
-                <span class="kw">let </span>r6 = Rect::new(r2.x, r2.y + r2.h, r2.w * <span class="number">2</span>, h);
+                (r4.h, r4.y) = (r4.h - <span class="number">2 </span>* h, r4.y + h <span class="kw">as </span>i32);
+                (r5.h, r5.y) = (r5.h - h, r5.y + h <span class="kw">as </span>i32);
+                <span class="kw">let </span>r3 = Rect::new(r2.x + r2.w <span class="kw">as </span>i32, r2.y, r2.w * <span class="number">2</span>, h);
+                <span class="kw">let </span>r6 = Rect::new(r2.x, r2.y + r2.h <span class="kw">as </span>i32, r2.w * <span class="number">2</span>, h);
 
                 apply(<span class="kw-2">&amp;</span>[r1, r2, r3, r4, r5, r6])
             }

@@ -971,7 +971,7 @@
         <span class="comment">// pop the layout hook off of `state` so that we can pass state into it
         </span><span class="kw">let </span><span class="kw-2">mut </span>hook = <span class="self">self</span>.config.layout_hook.take();
 
-        <span class="kw">let </span>scs: Vec&lt;ScreenClients&gt; = <span class="self">self
+        <span class="kw">let </span>scs: Vec&lt;ScreenClients&lt;Xid&gt;&gt; = <span class="self">self
             </span>.client_set
             .screens
             .iter()
