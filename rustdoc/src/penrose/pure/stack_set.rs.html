@@ -1618,7 +1618,8 @@
 <a href="#1617" id="1617">1617</a>
 <a href="#1618" id="1618">1618</a>
 <a href="#1619" id="1619">1619</a>
-<a href="#1620" id="1620">1620</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#1620" id="1620">1620</a>
+<a href="#1621" id="1621">1621</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     core::layout::LayoutStack,
     pop_where,
     pure::{
@@ -2544,7 +2545,8 @@
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>snapshot(<span class="kw-2">&amp;mut </span><span class="self">self</span>, positions: Vec&lt;(C, Rect)&gt;) -&gt; Snapshot&lt;C&gt; {
+    <span class="doccomment">/// Produce a [Snapshot] of the current pure state of this [StackSet].
+    </span><span class="kw">pub fn </span>snapshot(<span class="kw-2">&amp;mut </span><span class="self">self</span>, positions: Vec&lt;(C, Rect)&gt;) -&gt; Snapshot&lt;C&gt; {
         <span class="kw">let </span>visible = <span class="self">self
             </span>.screens
             .unravel()

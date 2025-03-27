@@ -70,7 +70,11 @@
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pure::{
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::pure::{
     geometry::{Rect, RelativeRect},
     Stack, Workspace,
 };
@@ -137,9 +141,13 @@
 <span class="doccomment">/// Used in laying out visible_client_positions
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>ScreenClients&lt;C&gt; {
-    <span class="kw">pub </span>floating: Vec&lt;(C, RelativeRect)&gt;,
-    <span class="kw">pub </span>tiling: <span class="prelude-ty">Option</span>&lt;Stack&lt;C&gt;&gt;,
-    <span class="kw">pub </span>tag: String,
-    <span class="kw">pub </span>r_s: Rect,
+    <span class="doccomment">/// Floating client positions on this screen
+    </span><span class="kw">pub </span>floating: Vec&lt;(C, RelativeRect)&gt;,
+    <span class="doccomment">/// Clients that need to be tiled on this screen
+    </span><span class="kw">pub </span>tiling: <span class="prelude-ty">Option</span>&lt;Stack&lt;C&gt;&gt;,
+    <span class="doccomment">/// The workspace tag currently visible on this screen
+    </span><span class="kw">pub </span>tag: String,
+    <span class="doccomment">/// The dimensions of this screen
+    </span><span class="kw">pub </span>r_s: Rect,
 }
 </code></pre></div></section></main></body></html>

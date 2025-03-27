@@ -335,7 +335,28 @@
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a></pre></div><pre class="rust"><code><span class="doccomment">//! A diff of changes to pure State
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a></pre></div><pre class="rust"><code><span class="doccomment">//! A diff of changes to pure State
 </span><span class="kw">use </span><span class="kw">crate</span>::pure::{geometry::Rect, screen::Screen};
 <span class="kw">use </span>std::{collections::HashSet, hash::Hash, iter::once, mem::swap};
 
@@ -371,12 +392,18 @@
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub </span>focused_client: <span class="prelude-ty">Option</span>&lt;C&gt;,
-    <span class="kw">pub </span>focused: ScreenState&lt;C&gt;,
-    <span class="kw">pub </span>visible: Vec&lt;ScreenState&lt;C&gt;&gt;,
-    <span class="kw">pub </span>positions: Vec&lt;(C, Rect)&gt;,
-    <span class="kw">pub </span>hidden_clients: Vec&lt;C&gt;,
-    <span class="kw">pub </span>killed_clients: Vec&lt;C&gt;,
+    <span class="doccomment">/// The focused client if there is one
+    </span><span class="kw">pub </span>focused_client: <span class="prelude-ty">Option</span>&lt;C&gt;,
+    <span class="doccomment">/// The state of the focused screen
+    </span><span class="kw">pub </span>focused: ScreenState&lt;C&gt;,
+    <span class="doccomment">/// The state of other screens
+    </span><span class="kw">pub </span>visible: Vec&lt;ScreenState&lt;C&gt;&gt;,
+    <span class="doccomment">/// The positions of all visible clients
+    </span><span class="kw">pub </span>positions: Vec&lt;(C, Rect)&gt;,
+    <span class="doccomment">/// Known clients that are currently not visable on any screen
+    </span><span class="kw">pub </span>hidden_clients: Vec&lt;C&gt;,
+    <span class="doccomment">/// Clients that have been removed from the pure state since the last snapshot
+    </span><span class="kw">pub </span>killed_clients: Vec&lt;C&gt;,
 }
 
 <span class="kw">impl</span>&lt;C&gt; Snapshot&lt;C&gt;
@@ -404,32 +431,39 @@
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub </span>before: Snapshot&lt;C&gt;,
-    <span class="kw">pub </span>after: Snapshot&lt;C&gt;,
+    <span class="doccomment">/// Previous state
+    </span><span class="kw">pub </span>before: Snapshot&lt;C&gt;,
+    <span class="doccomment">/// Current state
+    </span><span class="kw">pub </span>after: Snapshot&lt;C&gt;,
 }
 
 <span class="kw">impl</span>&lt;C&gt; Diff&lt;C&gt;
 <span class="kw">where
     </span>C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    <span class="kw">pub fn </span>new(before: Snapshot&lt;C&gt;, after: Snapshot&lt;C&gt;) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Construct a new diff from a pair of snapshots
+    </span><span class="kw">pub fn </span>new(before: Snapshot&lt;C&gt;, after: Snapshot&lt;C&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ before, after }
     }
 
-    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, after: Snapshot&lt;C&gt;) {
+    <span class="doccomment">/// Update this diff to be between the current `after` snapshot and the new one provided
+    </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, after: Snapshot&lt;C&gt;) {
         swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>.before, <span class="kw-2">&amp;mut </span><span class="self">self</span>.after);
         <span class="self">self</span>.after = after;
     }
 
-    <span class="kw">pub fn </span>focused_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;C&gt; {
+    <span class="doccomment">/// The currently focused client (if there is one)
+    </span><span class="kw">pub fn </span>focused_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;C&gt; {
         <span class="self">self</span>.after.focused_client
     }
 
-    <span class="kw">pub fn </span>focused_client_changed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="doccomment">/// Whether or not the focused client changed as part of this diff
+    </span><span class="kw">pub fn </span>focused_client_changed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.before.focused_client != <span class="self">self</span>.after.focused_client
     }
 
-    <span class="kw">pub fn </span>client_changed_position(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>C) -&gt; bool {
+    <span class="doccomment">/// Whether or not the given client changed its position as part of this diff
+    </span><span class="kw">pub fn </span>client_changed_position(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>C) -&gt; bool {
         <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.before.positions.iter();
         <span class="kw">let </span>before = it.find(|<span class="kw-2">&amp;</span>(c, <span class="kw">_</span>)| c == id).map(|(<span class="kw">_</span>, r)| <span class="kw-2">*</span>r);
         <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.after.positions.iter();
@@ -438,7 +472,8 @@
         before != after
     }
 
-    <span class="kw">pub fn </span>newly_focused_screen(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="doccomment">/// The ID of the focused screen if it changed as part of this diff
+    </span><span class="kw">pub fn </span>newly_focused_screen(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="kw">if </span><span class="self">self</span>.before.focused.screen != <span class="self">self</span>.after.focused.screen {
             <span class="prelude-val">Some</span>(<span class="self">self</span>.after.focused.screen)
         } <span class="kw">else </span>{
@@ -446,7 +481,8 @@
         </span>}
     }
 
-    <span class="kw">pub fn </span>new_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+    <span class="doccomment">/// An iterator of all clients that were added as part of this diff
+    </span><span class="kw">pub fn </span>new_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
         <span class="kw">let </span>before: HashSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.before.all_clients().collect();
 
         <span class="self">self</span>.after
@@ -454,7 +490,8 @@
             .filter(<span class="kw">move </span>|c| !before.contains(c))
     }
 
-    <span class="kw">pub fn </span>hidden_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+    <span class="doccomment">/// An iterator of all clients that were hidden as part of this diff
+    </span><span class="kw">pub fn </span>hidden_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
         <span class="kw">let </span>after: HashSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.after.visible_clients().collect();
 
         <span class="self">self</span>.before
@@ -462,11 +499,13 @@
             .filter(<span class="kw">move </span>|c| !after.contains(c))
     }
 
-    <span class="kw">pub fn </span>visible_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+    <span class="doccomment">/// An iterator of all currently visible clients
+    </span><span class="kw">pub fn </span>visible_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
         <span class="self">self</span>.after.visible_clients()
     }
 
-    <span class="kw">pub fn </span>withdrawn_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+    <span class="doccomment">/// Clients that were present in the previous snapshot but not the current one
+    </span><span class="kw">pub fn </span>withdrawn_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
         <span class="kw">let </span>after: HashSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.after.all_clients().collect();
 
         <span class="self">self</span>.before
@@ -474,17 +513,20 @@
             .filter(<span class="kw">move </span>|c| !after.contains(c))
     }
 
-    <span class="kw">pub fn </span>killed_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
+    <span class="doccomment">/// Clients that have been removed from the pure state since the last snapshot
+    </span><span class="kw">pub fn </span>killed_clients(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>C&gt; {
         <span class="self">self</span>.after.killed_clients.iter()
     }
 
-    <span class="kw">pub fn </span>previous_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
+    <span class="doccomment">/// The set of tags that were visible in the previous snapshot
+    </span><span class="kw">pub fn </span>previous_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
         once(<span class="self">self</span>.before.focused.tag.as_ref())
             .chain(<span class="self">self</span>.before.visible.iter().map(|s| s.tag.as_ref()))
             .collect()
     }
 
-    <span class="attr">#[allow(dead_code)]
+    <span class="doccomment">/// The set of tags that are visible in the current snapshot
+    </span><span class="attr">#[allow(dead_code)]
     </span><span class="kw">pub fn </span>current_visible_tags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HashSet&lt;<span class="kw-2">&amp;</span>str&gt; {
         once(<span class="self">self</span>.after.focused.tag.as_ref())
             .chain(<span class="self">self</span>.after.visible.iter().map(|s| s.tag.as_ref()))
