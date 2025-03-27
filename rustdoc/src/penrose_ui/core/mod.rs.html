@@ -947,7 +947,7 @@
     <span class="doccomment">/// Render a rectangular border using the supplied color.
     </span><span class="kw">pub fn </span>draw_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, Rect { x, y, w, h }: Rect, color: Color) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>xcol = <span class="self">self</span>.get_or_try_init_xcolor(color)<span class="question-mark">?</span>;
-        <span class="kw">let </span>(x, y) = (<span class="self">self</span>.dx + x <span class="kw">as </span>i32, <span class="self">self</span>.dy + y <span class="kw">as </span>i32);
+        <span class="kw">let </span>(x, y) = (<span class="self">self</span>.dx + x, <span class="self">self</span>.dy + y);
 
         <span class="comment">// SAFETY:
         //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null
@@ -963,7 +963,7 @@
     <span class="doccomment">/// Render a filled rectangle using the supplied color.
     </span><span class="kw">pub fn </span>fill_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, Rect { x, y, w, h }: Rect, color: Color) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>xcol = <span class="self">self</span>.get_or_try_init_xcolor(color)<span class="question-mark">?</span>;
-        <span class="kw">let </span>(x, y) = (<span class="self">self</span>.dx + x <span class="kw">as </span>i32, <span class="self">self</span>.dy + y <span class="kw">as </span>i32);
+        <span class="kw">let </span>(x, y) = (<span class="self">self</span>.dx + x, <span class="self">self</span>.dy + y);
 
         <span class="comment">// SAFETY:
         //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null

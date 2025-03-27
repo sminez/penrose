@@ -602,7 +602,7 @@
                 <span class="kw">let </span>bar_h = <span class="self">self</span>.widgets.for_screen_mut(i).h;
                 <span class="kw">let </span>y = <span class="kw">match </span><span class="self">self</span>.position {
                     Position::Top =&gt; y,
-                    Position::Bottom =&gt; h - bar_h,
+                    Position::Bottom =&gt; (h - bar_h) <span class="kw">as </span>i32,
                 };
 
                 <span class="macro">debug!</span>(<span class="string">"creating new window"</span>);

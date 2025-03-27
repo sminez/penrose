@@ -185,7 +185,7 @@
             };
             ctx.fill_rect(r_w, color)<span class="question-mark">?</span>;
 
-            ctx.set_offset((r_w.x + r_w.w / <span class="number">2</span>) <span class="kw">as </span>i32, (r_w.y + r_w.h / <span class="number">2</span>) <span class="kw">as </span>i32);
+            ctx.set_offset(r_w.x + r_w.w <span class="kw">as </span>i32 / <span class="number">2</span>, r_w.y + r_w.h <span class="kw">as </span>i32 / <span class="number">2</span>);
             ctx.draw_text(<span class="kw-2">&amp;</span>id.to_string(), <span class="number">0</span>, (<span class="number">0</span>, <span class="number">0</span>), <span class="self">self</span>.text)<span class="question-mark">?</span>;
             ctx.reset_offset();
         }
