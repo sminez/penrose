@@ -10,16 +10,15 @@ mod stack_set;
 mod workspace;
 
 #[doc(inline)]
-pub use screen::Screen;
+pub use diff::{Diff, Snapshot};
+#[doc(inline)]
+pub use screen::{Screen, ScreenClients};
 #[doc(inline)]
 pub use stack::{Position, Stack};
 #[doc(inline)]
 pub use stack_set::StackSet;
 #[doc(inline)]
 pub use workspace::Workspace;
-
-pub(crate) use diff::{Diff, Snapshot};
-pub(crate) use screen::ScreenClients;
 
 #[cfg(test)]
 pub(crate) use stack_set::tests::test_xid_stack_set;
