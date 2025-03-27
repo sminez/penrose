@@ -34,11 +34,17 @@ pub struct Snapshot<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
+    /// The focused client if there is one
     pub focused_client: Option<C>,
+    /// The state of the focused screen
     pub focused: ScreenState<C>,
+    /// The state of other screens
     pub visible: Vec<ScreenState<C>>,
+    /// The positions of all visible clients
     pub positions: Vec<(C, Rect)>,
+    /// Known clients that are currently not visable on any screen
     pub hidden_clients: Vec<C>,
+    /// Clients that have been removed from the pure state since the last snapshot
     pub killed_clients: Vec<C>,
 }
 
@@ -67,7 +73,9 @@ pub struct Diff<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
+    /// Previous state
     pub before: Snapshot<C>,
+    /// Current state
     pub after: Snapshot<C>,
 }
 
@@ -75,23 +83,28 @@ impl<C> Diff<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
+    /// Construct a new diff from a pair of snapshots
     pub fn new(before: Snapshot<C>, after: Snapshot<C>) -> Self {
         Self { before, after }
     }
 
+    /// Update this diff to be between the current `after` snapshot and the new one provided
     pub fn update(&mut self, after: Snapshot<C>) {
         swap(&mut self.before, &mut self.after);
         self.after = after;
     }
 
+    /// The currently focused client (if there is one)
     pub fn focused_client(&self) -> Option<C> {
         self.after.focused_client
     }
 
+    /// Whether or not the focused client changed as part of this diff
     pub fn focused_client_changed(&self) -> bool {
         self.before.focused_client != self.after.focused_client
     }
 
+    /// Whether or not the given client changed its position as part of this diff
     pub fn client_changed_position(&self, id: &C) -> bool {
         let mut it = self.before.positions.iter();
         let before = it.find(|&(c, _)| c == id).map(|(_, r)| *r);
@@ -101,6 +114,7 @@ where
         before != after
     }
 
+    /// The ID of the focused screen if it changed as part of this diff
     pub fn newly_focused_screen(&self) -> Option<usize> {
         if self.before.focused.screen != self.after.focused.screen {
             Some(self.after.focused.screen)
@@ -109,6 +123,7 @@ where
         }
     }
 
+    /// An iterator of all clients that were added as part of this diff
     pub fn new_clients(&self) -> impl Iterator<Item = &C> {
         let before: HashSet<_> = self.before.all_clients().collect();
 
@@ -117,6 +132,7 @@ where
             .filter(move |c| !before.contains(c))
     }
 
+    /// An iterator of all clients that were hidden as part of this diff
     pub fn hidden_clients(&self) -> impl Iterator<Item = &C> {
         let after: HashSet<_> = self.after.visible_clients().collect();
 
@@ -125,10 +141,12 @@ where
             .filter(move |c| !after.contains(c))
     }
 
+    /// An iterator of all currently visible clients
     pub fn visible_clients(&self) -> impl Iterator<Item = &C> {
         self.after.visible_clients()
     }
 
+    /// Clients that were present in the previous snapshot but not the current one
     pub fn withdrawn_clients(&self) -> impl Iterator<Item = &C> {
         let after: HashSet<_> = self.after.all_clients().collect();
 
@@ -137,16 +155,19 @@ where
             .filter(move |c| !after.contains(c))
     }
 
+    /// Clients that have been removed from the pure state since the last snapshot
     pub fn killed_clients(&self) -> impl Iterator<Item = &C> {
         self.after.killed_clients.iter()
     }
 
+    /// The set of tags that were visible in the previous snapshot
     pub fn previous_visible_tags(&self) -> HashSet<&str> {
         once(self.before.focused.tag.as_ref())
             .chain(self.before.visible.iter().map(|s| s.tag.as_ref()))
             .collect()
     }
 
+    /// The set of tags that are visible in the current snapshot
     #[allow(dead_code)]
     pub fn current_visible_tags(&self) -> HashSet<&str> {
         once(self.after.focused.tag.as_ref())

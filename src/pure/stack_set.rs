@@ -924,7 +924,8 @@ impl<C> StackSet<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    pub(crate) fn snapshot(&mut self, positions: Vec<(C, Rect)>) -> Snapshot<C> {
+    /// Produce a [Snapshot] of the current pure state of this [StackSet].
+    pub fn snapshot(&mut self, positions: Vec<(C, Rect)>) -> Snapshot<C> {
         let visible = self
             .screens
             .unravel()

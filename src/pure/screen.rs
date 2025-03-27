@@ -65,8 +65,12 @@ where
 /// Used in laying out visible_client_positions
 #[derive(Debug)]
 pub struct ScreenClients<C> {
+    /// Floating client positions on this screen
     pub floating: Vec<(C, RelativeRect)>,
+    /// Clients that need to be tiled on this screen
     pub tiling: Option<Stack<C>>,
+    /// The workspace tag currently visible on this screen
     pub tag: String,
+    /// The dimensions of this screen
     pub r_s: Rect,
 }
