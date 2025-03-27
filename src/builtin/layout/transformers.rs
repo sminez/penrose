@@ -13,12 +13,12 @@ simple_transformer!(
 );
 
 fn reflect_horizontal(r_s: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-    let offset = (r_s.x + r_s.w / 2) * 2;
+    let offset = (r_s.x + r_s.w as i32 / 2) * 2;
 
     positions
         .into_iter()
         .map(|(id, mut r)| {
-            r.x = offset.saturating_sub(r.x).saturating_sub(r.w);
+            r.x = offset.saturating_sub(r.x).saturating_sub(r.w as i32);
             (id, r)
         })
         .collect()
@@ -32,12 +32,12 @@ simple_transformer!(
 );
 
 fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
-    let offset = (r.y + r.h / 2) * 2;
+    let offset = (r.y + r.h as i32 / 2) * 2;
 
     positions
         .into_iter()
         .map(|(id, mut r)| {
-            r.y = offset.saturating_sub(r.y).saturating_sub(r.h);
+            r.y = offset.saturating_sub(r.y).saturating_sub(r.h as i32);
             (id, r)
         })
         .collect()
@@ -75,8 +75,8 @@ fn shrink(r: Rect, px: u32) -> Rect {
     }
 
     Rect {
-        x: r.x + px,
-        y: r.y + px,
+        x: r.x + px as i32,
+        y: r.y + px as i32,
         w: r.w - 2 * px,
         h: r.h - 2 * px,
     }
@@ -135,7 +135,7 @@ impl LayoutTransformer for ReserveTop {
             return r;
         }
 
-        r.y += self.px;
+        r.y += self.px as i32;
         r.h -= self.px;
 
         r

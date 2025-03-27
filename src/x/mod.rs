@@ -383,8 +383,8 @@ pub trait XConnExt: XConn + Sized {
             return self.warp_pointer_to_window(*id);
         }
 
-        let x = (screen.r.x + screen.r.w / 2) as i16;
-        let y = (screen.r.y + screen.r.h / 2) as i16;
+        let x = (screen.r.x + screen.r.w as i32 / 2) as i16;
+        let y = (screen.r.y + screen.r.h as i32 / 2) as i16;
 
         self.warp_pointer(self.root(), x, y)
     }

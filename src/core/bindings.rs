@@ -441,8 +441,8 @@ impl MouseEvent {
         MouseEvent {
             data: MouseEventData {
                 id,
-                rpt: Point::new(rx as u32, ry as u32),
-                wpt: Point::new(ex as u32, ey as u32),
+                rpt: Point::new(rx as i32, ry as i32),
+                wpt: Point::new(ex as i32, ey as i32),
             },
             state,
             kind,
@@ -466,8 +466,8 @@ impl MotionNotifyEvent {
         MotionNotifyEvent {
             data: MouseEventData {
                 id,
-                rpt: Point::new(rx as u32, ry as u32),
-                wpt: Point::new(ex as u32, ey as u32),
+                rpt: Point::new(rx as i32, ry as i32),
+                wpt: Point::new(ex as i32, ey as i32),
             },
             modifiers,
         }

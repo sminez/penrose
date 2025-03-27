@@ -264,8 +264,8 @@ where
             .filter(|reply| reply.width > 0)
             .map(|reply| {
                 Rect::new(
-                    reply.x as u32,
-                    reply.y as u32,
+                    reply.x as i32,
+                    reply.y as i32,
                     reply.width as u32,
                     reply.height as u32,
                 )
@@ -278,7 +278,7 @@ where
     fn cursor_position(&self) -> Result<Point> {
         let reply = self.conn.query_pointer(self.root)?.reply()?;
 
-        Ok(Point::new(reply.root_x as u32, reply.root_y as u32))
+        Ok(Point::new(reply.root_x as i32, reply.root_y as i32))
     }
 
     fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
@@ -370,8 +370,8 @@ where
         let res = self.conn.get_geometry(*id)?.reply()?;
 
         Ok(Rect::new(
-            res.x as u32,
-            res.y as u32,
+            res.x as i32,
+            res.y as i32,
             res.width as u32,
             res.height as u32,
         ))
@@ -664,7 +664,7 @@ where
             match conf {
                 ClientConfig::BorderPx(px) => aux = aux.border_width(*px),
                 ClientConfig::Position(r) => {
-                    aux = aux.x(r.x as i32).y(r.y as i32).width(r.w).height(r.h);
+                    aux = aux.x(r.x).y(r.y).width(r.w).height(r.h);
                 }
                 ClientConfig::StackBelow(s) => aux = aux.sibling(s.0).stack_mode(StackMode::BELOW),
                 ClientConfig::StackAbove(s) => aux = aux.sibling(s.0).stack_mode(StackMode::ABOVE),

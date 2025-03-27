@@ -266,10 +266,10 @@ impl Layout for Tatami {
                 let h = r1.h / 4;
                 let (mut r2, mut r4, mut r5) = (cols[0], cols[1], cols[2]);
                 r2.h -= h;
-                (r4.h, r4.y) = (r4.h - 2 * h, r4.y + h);
-                (r5.h, r5.y) = (r5.h - h, r5.y + h);
-                let r3 = Rect::new(r2.x + r2.w, r2.y, r2.w * 2, h);
-                let r6 = Rect::new(r2.x, r2.y + r2.h, r2.w * 2, h);
+                (r4.h, r4.y) = (r4.h - 2 * h, r4.y + h as i32);
+                (r5.h, r5.y) = (r5.h - h, r5.y + h as i32);
+                let r3 = Rect::new(r2.x + r2.w as i32, r2.y, r2.w * 2, h);
+                let r6 = Rect::new(r2.x, r2.y + r2.h as i32, r2.w * 2, h);
 
                 apply(&[r1, r2, r3, r4, r5, r6])
             }

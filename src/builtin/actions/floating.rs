@@ -136,7 +136,7 @@ impl ClickData {
         state: &mut State<X>,
         x: &X,
     ) -> Result<()> {
-        let (dx, dy) = (rpt.x as i32 - self.x_initial, rpt.y as i32 - self.y_initial);
+        let (dx, dy) = (rpt.x - self.x_initial, rpt.y - self.y_initial);
 
         let mut r = self.r_initial;
         (f)(&mut r, dx, dy);
@@ -173,8 +173,8 @@ trait ClickWrapper {
                 let r_client = x.client_geometry(id)?;
                 state.client_set.float(id, r_client)?;
                 *self.data() = Some(ClickData {
-                    x_initial: evt.data.rpt.x as i32,
-                    y_initial: evt.data.rpt.y as i32,
+                    x_initial: evt.data.rpt.x,
+                    y_initial: evt.data.rpt.y,
                     r_initial: r_client,
                 });
             }

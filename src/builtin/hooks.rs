@@ -29,7 +29,7 @@ impl<X: XConn> LayoutHook<X> for SpacingHook {
             return r;
         }
 
-        r.y += self.top_px;
+        r.y += self.top_px as i32;
         r.h = r.h - self.top_px - self.bottom_px;
 
         shrink(r, self.outer_px)
@@ -55,8 +55,8 @@ fn shrink(r: Rect, px: u32) -> Rect {
     }
 
     Rect {
-        x: r.x + px,
-        y: r.y + px,
+        x: r.x + px as i32,
+        y: r.y + px as i32,
         w: r.w - 2 * px,
         h: r.h - 2 * px,
     }

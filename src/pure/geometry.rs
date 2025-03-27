@@ -8,28 +8,28 @@ use std::cmp::{max, min};
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Point {
     /// An absolute x coordinate relative to the root window
-    pub x: u32,
+    pub x: i32,
     /// An absolute y coordinate relative to the root window
-    pub y: u32,
+    pub y: i32,
 }
 
 impl Point {
     /// Create a new Point.
-    pub fn new(x: u32, y: u32) -> Self {
+    pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
 }
 
-impl From<(u32, u32)> for Point {
-    fn from(raw: (u32, u32)) -> Self {
+impl From<(i32, i32)> for Point {
+    fn from(raw: (i32, i32)) -> Self {
         let (x, y) = raw;
 
         Self { x, y }
     }
 }
 
-impl From<(&u32, &u32)> for Point {
-    fn from(raw: (&u32, &u32)) -> Self {
+impl From<(&i32, &i32)> for Point {
+    fn from(raw: (&i32, &i32)) -> Self {
         let (&x, &y) = raw;
 
         Self { x, y }
@@ -90,8 +90,8 @@ impl RelativeRect {
     /// Apply the proportions of this RelativeRect to a given Rect.
     pub fn applied_to(&self, r: &Rect) -> Rect {
         Rect {
-            x: r.x + (r.w as f64 * self.x).floor() as u32,
-            y: r.y + (r.h as f64 * self.y).floor() as u32,
+            x: r.x + (r.w as f64 * self.x).floor() as i32,
+            y: r.y + (r.h as f64 * self.y).floor() as i32,
             w: (r.w as f64 * self.w).floor() as u32,
             h: (r.h as f64 * self.h).floor() as u32,
         }
@@ -140,9 +140,9 @@ impl RelativeTo for Rect {
 #[derive(Default, Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Rect {
     /// The x-coordinate of the top left corner of this rect
-    pub x: u32,
+    pub x: i32,
     /// The y-coordinate of the top left corner of this rect
-    pub y: u32,
+    pub y: i32,
     /// The width of this rect
     pub w: u32,
     /// The height of this rect
@@ -154,13 +154,13 @@ impl From<(Point, Point)> for Rect {
         let (x1, x2) = (min(p1.x, p2.x), max(p1.x, p2.x));
         let (y1, y2) = (min(p1.y, p2.y), max(p1.y, p2.y));
 
-        Rect::new(x1, y1, x2 - x1, y2 - y1)
+        Rect::new(x1, y1, (x2 - x1) as u32, (y2 - y1) as u32)
     }
 }
 
 impl Rect {
     /// Create a new Rect.
-    pub const fn new(x: u32, y: u32, w: u32, h: u32) -> Rect {
+    pub const fn new(x: i32, y: i32, w: u32, h: u32) -> Rect {
         Rect { x, y, w, h }
     }
 
@@ -186,9 +186,12 @@ impl Rect {
 
         (
             Point { x, y },
-            Point { x: x + w, y },
-            Point { x: x + w, y: y + h },
-            Point { x, y: y + h },
+            Point { x: x + w as i32, y },
+            Point {
+                x: x + w as i32,
+                y: y + h as i32,
+            },
+            Point { x, y: y + h as i32 },
         )
     }
 
@@ -204,8 +207,8 @@ impl Rect {
     /// ```
     pub fn midpoint(&self) -> Point {
         Point {
-            x: self.x + self.w / 2,
-            y: self.y + self.h / 2,
+            x: self.x + (self.w / 2) as i32,
+            y: self.y + (self.h / 2) as i32,
         }
     }
 
@@ -302,17 +305,17 @@ impl Rect {
     /// assert_eq!(r, Rect::new(0, 10, 100, 200));
     /// ```
     pub fn reposition(&mut self, dx: i32, dy: i32) {
-        self.x = max(0, (self.x as i32) + dx) as u32;
-        self.y = max(0, (self.y as i32) + dy) as u32;
+        self.x = max(0, self.x + dx);
+        self.y = max(0, self.y + dy);
     }
 
     /// Check whether this Rect contains `other` as a sub-Rect
     pub fn contains(&self, other: &Rect) -> bool {
         match other {
             Rect { x, .. } if *x < self.x => false,
-            Rect { x, w, .. } if (*x + *w) > (self.x + self.w) => false,
+            Rect { x, w, .. } if (*x + *w as i32) > (self.x + self.w as i32) => false,
             Rect { y, .. } if *y < self.y => false,
-            Rect { y, h, .. } if (*y + *h) > (self.y + self.h) => false,
+            Rect { y, h, .. } if (*y + *h as i32) > (self.y + self.h as i32) => false,
             _ => true,
         }
     }
@@ -330,8 +333,8 @@ impl Rect {
     {
         let p = p.into();
 
-        (self.x..(self.x + self.w + 1)).contains(&p.x)
-            && (self.y..(self.y + self.h + 1)).contains(&p.y)
+        (self.x..(self.x + self.w as i32 + 1)).contains(&p.x)
+            && (self.y..(self.y + self.h as i32 + 1)).contains(&p.y)
     }
 
     /// Center this Rect inside of `enclosing`.
@@ -343,8 +346,8 @@ impl Rect {
         }
 
         Some(Self {
-            x: enclosing.x + ((enclosing.w - self.w) / 2),
-            y: enclosing.y + ((enclosing.h - self.h) / 2),
+            x: enclosing.x + ((enclosing.w - self.w) / 2) as i32,
+            y: enclosing.y + ((enclosing.h - self.h) / 2) as i32,
             ..*self
         })
     }
@@ -356,7 +359,7 @@ impl Rect {
         }
         let h = self.h / n_rows;
         (0..n_rows)
-            .map(|n| Rect::new(self.x, self.y + n * h, self.w, h))
+            .map(|n| Rect::new(self.x, self.y + (n * h) as i32, self.w, h))
             .collect()
     }
 
@@ -367,7 +370,7 @@ impl Rect {
         }
         let w = self.w / n_columns;
         (0..n_columns)
-            .map(|n| Rect::new(self.x + n * w, self.y, w, self.h))
+            .map(|n| Rect::new(self.x + (n * w) as i32, self.y, w, self.h))
             .collect()
     }
 
@@ -384,7 +387,7 @@ impl Rect {
                     ..*self
                 },
                 Self {
-                    x: self.x + new_width,
+                    x: self.x + new_width as i32,
                     w: self.w - new_width,
                     ..*self
                 },
@@ -405,7 +408,7 @@ impl Rect {
                     ..*self
                 },
                 Self {
-                    y: self.y + new_height,
+                    y: self.y + new_height as i32,
                     h: self.h - new_height,
                     ..*self
                 },
@@ -425,7 +428,7 @@ impl Rect {
             Some((
                 Self { w, ..*self },
                 Self {
-                    x: self.x + w,
+                    x: self.x + w as i32,
                     w: self.w - w,
                     ..*self
                 },
@@ -445,7 +448,7 @@ impl Rect {
             Some((
                 Self { h, ..*self },
                 Self {
-                    y: self.y + h,
+                    y: self.y + h as i32,
                     h: self.h - h,
                     ..*self
                 },
@@ -462,7 +465,7 @@ impl Rect {
                 ..*self
             },
             Self {
-                x: self.x + new_width,
+                x: self.x + new_width as i32,
                 w: self.w - new_width,
                 ..*self
             },
@@ -478,7 +481,7 @@ impl Rect {
                 ..*self
             },
             Self {
-                y: self.y + new_height,
+                y: self.y + new_height as i32,
                 h: self.h - new_height,
                 ..*self
             },
@@ -493,7 +496,7 @@ mod tests {
 
     // Helpers to make it easier to read the cases for the tests below
 
-    fn r(x: u32, y: u32, w: u32, h: u32) -> Rect {
+    fn r(x: i32, y: i32, w: u32, h: u32) -> Rect {
         Rect::new(x, y, w, h)
     }
 
@@ -501,7 +504,7 @@ mod tests {
         RelativeRect::new(x, y, w, h)
     }
 
-    fn p(x: u32, y: u32) -> Point {
+    fn p(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 

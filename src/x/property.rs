@@ -211,7 +211,7 @@ impl WmHints {
             initial_state,
             icon_pixmap: raw[3],
             icon_win: Xid(raw[4]),
-            icon_position: Point::new(raw[5], raw[6]),
+            icon_position: Point::new(raw[5] as i32, raw[6] as i32),
             icon_mask: raw[7],
             window_group: raw[8],
         })
@@ -312,7 +312,7 @@ impl WmNormalHints {
 
         // These properties are marked as obsolete but some clients still set them
         // so it they are useful as fallbacks
-        let (x, y) = (raw[1], raw[2]);
+        let (x, y) = (raw[1] as i32, raw[2] as i32);
         let (user_w, user_h) = (raw[3], raw[4]);
 
         let (min_w, min_h) = (raw[5], raw[6]);

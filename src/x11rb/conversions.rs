@@ -85,15 +85,15 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
 
         Event::EnterNotify(event) => Ok(Some(XEvent::Enter(PointerChange {
             id: Xid(event.event),
-            abs: Point::new(event.root_x as u32, event.root_y as u32),
-            relative: Point::new(event.event_x as u32, event.event_y as u32),
+            abs: Point::new(event.root_x as i32, event.root_y as i32),
+            relative: Point::new(event.event_x as i32, event.event_y as i32),
             same_screen: event.same_screen_focus == 0,
         }))),
 
         Event::LeaveNotify(event) => Ok(Some(XEvent::Leave(PointerChange {
             id: Xid(event.event),
-            abs: Point::new(event.root_x as u32, event.root_y as u32),
-            relative: Point::new(event.event_x as u32, event.event_y as u32),
+            abs: Point::new(event.root_x as i32, event.root_y as i32),
+            relative: Point::new(event.event_x as i32, event.event_y as i32),
             same_screen: event.same_screen_focus == 0,
         }))),
 
@@ -102,8 +102,8 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         Event::ConfigureNotify(event) => Ok(Some(XEvent::ConfigureNotify(ConfigureEvent {
             id: Xid(event.window),
             r: Rect::new(
-                event.x as u32,
-                event.y as u32,
+                event.x as i32,
+                event.y as i32,
                 event.width as u32,
                 event.height as u32,
             ),
@@ -113,8 +113,8 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         Event::ConfigureRequest(event) => Ok(Some(XEvent::ConfigureRequest(ConfigureEvent {
             id: Xid(event.window),
             r: Rect::new(
-                event.x as u32,
-                event.y as u32,
+                event.x as i32,
+                event.y as i32,
                 event.width as u32,
                 event.height as u32,
             ),
@@ -130,8 +130,8 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         Event::Expose(event) => Ok(Some(XEvent::Expose(ExposeEvent {
             id: Xid(event.window),
             r: Rect::new(
-                event.x as u32,
-                event.y as u32,
+                event.x as i32,
+                event.y as i32,
                 event.width as u32,
                 event.height as u32,
             ),

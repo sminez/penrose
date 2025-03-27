@@ -158,12 +158,12 @@ pub fn print_layout_result<L: Layout>(
     let mut screen = vec![vec![' '; (screen_width + 1) as usize]; (screen_height + 1) as usize];
     for (_, Rect { x, y, w, h }) in positions.into_iter() {
         for i in 0..=w {
-            screen[y as usize][(x + i) as usize] = '.';
-            screen[(y + h) as usize][(x + i) as usize] = '.';
+            screen[y as usize][(x as u32 + i) as usize] = '.';
+            screen[(y as u32 + h) as usize][(x as u32 + i) as usize] = '.';
         }
         for i in 0..=h {
-            screen[(y + i) as usize][x as usize] = '.';
-            screen[(y + i) as usize][(x + w) as usize] = '.';
+            screen[(y as u32 + i) as usize][x as usize] = '.';
+            screen[(y as u32 + i) as usize][(x as u32 + w) as usize] = '.';
         }
     }
 
