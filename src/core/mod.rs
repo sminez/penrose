@@ -196,7 +196,7 @@ where
         // pop the layout hook off of `state` so that we can pass state into it
         let mut hook = self.config.layout_hook.take();
 
-        let scs: Vec<ScreenClients> = self
+        let scs: Vec<ScreenClients<Xid>> = self
             .client_set
             .screens
             .iter()

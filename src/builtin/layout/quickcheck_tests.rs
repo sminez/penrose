@@ -44,8 +44,8 @@ impl Arbitrary for Rect {
         // >> this is a bit of a hack but zero width/height screens aren't something layouts
         //    should have to consider as valid input
         Rect::new(
-            u8::arbitrary(g) as u32,
-            u8::arbitrary(g) as u32,
+            u8::arbitrary(g) as i32,
+            u8::arbitrary(g) as i32,
             (u8::arbitrary(g) as u32) + 100,
             (u8::arbitrary(g) as u32) + 100,
         )

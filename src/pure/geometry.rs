@@ -667,16 +667,16 @@ mod tests {
     #[test_case(0, 100, None; "at width")]
     #[test_case(0, 200, None; "out of range")]
     #[test]
-    fn split_at_width(offset: u32, p: u32, expected: Option<(u32, u32)>) {
+    fn split_at_width(offset: i32, p: u32, expected: Option<(u32, u32)>) {
         let r = Rect::new(offset, 0, 100, 100);
-        let res = r.split_at_width(p + offset);
+        let res = r.split_at_width(p + offset as u32);
 
         if let Some((w1, w2)) = expected {
             assert!(res.is_some());
 
             let (r1, r2) = res.unwrap();
             assert_eq!(r1, Rect::new(offset, 0, w1, 100));
-            assert_eq!(r2, Rect::new(offset + w1, 0, w2, 100));
+            assert_eq!(r2, Rect::new(offset + w1 as i32, 0, w2, 100));
         } else {
             assert!(res.is_none());
         }
@@ -687,16 +687,16 @@ mod tests {
     #[test_case(0, 100, None; "at height")]
     #[test_case(0, 200, None; "out of range")]
     #[test]
-    fn split_at_height(offset: u32, p: u32, expected: Option<(u32, u32)>) {
+    fn split_at_height(offset: i32, p: u32, expected: Option<(u32, u32)>) {
         let r = Rect::new(0, offset, 100, 100);
-        let res = r.split_at_height(p + offset);
+        let res = r.split_at_height(p + offset as u32);
 
         if let Some((h1, h2)) = expected {
             assert!(res.is_some());
 
             let (r1, r2) = res.unwrap();
             assert_eq!(r1, Rect::new(0, offset, 100, h1));
-            assert_eq!(r2, Rect::new(0, offset + h1, 100, h2));
+            assert_eq!(r2, Rect::new(0, offset + h1 as i32, 100, h2));
         } else {
             assert!(res.is_none());
         }

@@ -1,11 +1,8 @@
-use crate::{
-    pure::{
-        geometry::{Rect, RelativeRect},
-        Stack, Workspace,
-    },
-    Xid,
+use crate::pure::{
+    geometry::{Rect, RelativeRect},
+    Stack, Workspace,
 };
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, hash::Hash};
 
 /// A wrapper around a single [Workspace] that includes the physical screen
 /// size as a [Rect].
@@ -42,13 +39,17 @@ impl<C> Screen<C> {
     }
 }
 
-impl Screen<Xid> {
-    pub(crate) fn screen_clients(&self, floating: &HashMap<Xid, RelativeRect>) -> ScreenClients {
+impl<C> Screen<C>
+where
+    C: Clone + Eq + Hash,
+{
+    /// Produce a summary of the clients contained within this screen
+    pub fn screen_clients(&self, floating: &HashMap<C, RelativeRect>) -> ScreenClients<C> {
         ScreenClients {
             floating: self
                 .workspace
                 .clients()
-                .flat_map(|c| floating.get(c).map(|r| (*c, *r)))
+                .flat_map(|c| floating.get(c).map(|r| (c.clone(), *r)))
                 .collect(),
             tiling: self
                 .workspace
@@ -62,9 +63,10 @@ impl Screen<Xid> {
 }
 
 /// Used in laying out visible_client_positions
-pub(crate) struct ScreenClients {
-    pub(crate) floating: Vec<(Xid, RelativeRect)>,
-    pub(crate) tiling: Option<Stack<Xid>>,
-    pub(crate) tag: String,
-    pub(crate) r_s: Rect,
+#[derive(Debug)]
+pub struct ScreenClients<C> {
+    pub floating: Vec<(C, RelativeRect)>,
+    pub tiling: Option<Stack<C>>,
+    pub tag: String,
+    pub r_s: Rect,
 }

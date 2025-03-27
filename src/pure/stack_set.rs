@@ -1012,7 +1012,7 @@ pub mod tests {
     {
         let tags = (1..=n_tags).map(|n| n.to_string());
         let screens: Vec<Rect> = (0..(n_screens as u32))
-            .map(|k| Rect::new(k * 1000, k * 2000, 1000, 2000))
+            .map(|k| Rect::new(k as i32 * 1000, k as i32 * 2000, 1000, 2000))
             .collect();
 
         StackSet::try_new(LayoutStack::default(), tags, screens).unwrap()
@@ -1039,7 +1039,7 @@ pub mod tests {
         match StackSet::try_new_concrete(
             workspaces,
             (0..(n as u32))
-                .map(|k| Rect::new(k * 1000, k * 2000, 1000, 2000))
+                .map(|k| Rect::new(k as i32 * 1000, k as i32 * 2000, 1000, 2000))
                 .collect(),
             HashMap::new(),
         ) {

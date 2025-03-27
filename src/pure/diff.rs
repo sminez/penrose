@@ -3,7 +3,7 @@ use crate::pure::{geometry::Rect, screen::Screen};
 use std::{collections::HashSet, hash::Hash, iter::once, mem::swap};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub(crate) struct ScreenState<C>
+pub struct ScreenState<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
@@ -30,7 +30,7 @@ where
 ///
 ///   [0]: crate::core::State
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub(crate) struct Snapshot<C>
+pub struct Snapshot<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
@@ -63,7 +63,7 @@ where
 ///
 ///   [0]: crate::core::State
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub(crate) struct Diff<C>
+pub struct Diff<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
