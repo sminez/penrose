@@ -7,8 +7,8 @@ use penrose::{
 use penrose_ui::Draw;
 use std::{thread::sleep, time::Duration};
 
-const DX: u32 = 100;
-const DY: u32 = 100;
+const DX: i32 = 100;
+const DY: i32 = 100;
 const W: u32 = 500;
 const H: u32 = 60;
 const FONT: &str = "ProFont For Powerline";

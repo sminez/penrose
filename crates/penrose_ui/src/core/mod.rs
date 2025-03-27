@@ -371,7 +371,7 @@ impl Context<'_> {
     /// Render a rectangular border using the supplied color.
     pub fn draw_rect(&mut self, Rect { x, y, w, h }: Rect, color: Color) -> Result<()> {
         let xcol = self.get_or_try_init_xcolor(color)?;
-        let (x, y) = (self.dx + x as i32, self.dy + y as i32);
+        let (x, y) = (self.dx + x, self.dy + y);
 
         // SAFETY:
         //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null
@@ -387,7 +387,7 @@ impl Context<'_> {
     /// Render a filled rectangle using the supplied color.
     pub fn fill_rect(&mut self, Rect { x, y, w, h }: Rect, color: Color) -> Result<()> {
         let xcol = self.get_or_try_init_xcolor(color)?;
-        let (x, y) = (self.dx + x as i32, self.dy + y as i32);
+        let (x, y) = (self.dx + x, self.dy + y);
 
         // SAFETY:
         //   - the pointers for self.dpy, s.drawable, s.gc are known to be non-null

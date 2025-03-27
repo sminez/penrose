@@ -199,7 +199,7 @@ impl<X: XConn> StatusBar<X> {
                 let bar_h = self.widgets.for_screen_mut(i).h;
                 let y = match self.position {
                     Position::Top => y,
-                    Position::Bottom => h - bar_h,
+                    Position::Bottom => (h - bar_h) as i32,
                 };
 
                 debug!("creating new window");

@@ -76,7 +76,7 @@ impl LayoutViewer {
             };
             ctx.fill_rect(r_w, color)?;
 
-            ctx.set_offset((r_w.x + r_w.w / 2) as i32, (r_w.y + r_w.h / 2) as i32);
+            ctx.set_offset(r_w.x + r_w.w as i32 / 2, r_w.y + r_w.h as i32 / 2);
             ctx.draw_text(&id.to_string(), 0, (0, 0), self.text)?;
             ctx.reset_offset();
         }

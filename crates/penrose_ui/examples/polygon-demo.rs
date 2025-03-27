@@ -10,8 +10,8 @@ pub const WHITE: u32 = 0xdcd7baff; // #dcd7ba
 pub const GREY: u32 = 0x363646ff; //  #363646
 pub const BLUE: u32 = 0x658594ff; //  #658594
 
-const DX: u32 = 100;
-const DY: u32 = 100;
+const DX: i32 = 100;
+const DY: i32 = 100;
 const W: u32 = 600;
 const H: u32 = 60;
 const FONT: &str = "mono";
@@ -43,12 +43,20 @@ fn main() -> anyhow::Result<()> {
         ctx.set_x_offset(0);
         ctx.fill_rect(r, color.into())?;
         ctx.fill_polygon(
-            &[Point::new(0, 0), Point::new(H, 0), Point::new(0, H)],
+            &[
+                Point::new(0, 0),
+                Point::new(H as i32, 0),
+                Point::new(0, H as i32),
+            ],
             GREY.into(),
         )?;
         ctx.set_x_offset((W - H) as i32);
         ctx.fill_polygon(
-            &[Point::new(0, H), Point::new(H, 0), Point::new(H, H)],
+            &[
+                Point::new(0, H as i32),
+                Point::new(H as i32, 0),
+                Point::new(H as i32, H as i32),
+            ],
             GREY.into(),
         )?;
         ctx.flush();
