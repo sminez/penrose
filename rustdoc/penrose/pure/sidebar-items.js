@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Position","RelativePosition"],"mod":["geometry"],"struct":["Screen","Stack","StackSet","Workspace"]};
+window.SIDEBAR_ITEMS = {"enum":["Position","RelativePosition"],"mod":["geometry"],"struct":["Diff","Screen","ScreenClients","Snapshot","Stack","StackSet","Workspace"]};

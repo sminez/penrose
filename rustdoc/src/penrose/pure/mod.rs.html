@@ -36,8 +36,7 @@
 <a href="#35" id="35">35</a>
 <a href="#36" id="36">36</a>
 <a href="#37" id="37">37</a>
-<a href="#38" id="38">38</a>
-<a href="#39" id="39">39</a></pre></div><pre class="rust"><code><span class="doccomment">//! Side effect free management of internal window manager state
+<a href="#38" id="38">38</a></pre></div><pre class="rust"><code><span class="doccomment">//! Side effect free management of internal window manager state
 </span><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 
@@ -49,16 +48,15 @@
 <span class="kw">mod </span>workspace;
 
 <span class="attr">#[doc(inline)]
-</span><span class="kw">pub use </span>screen::Screen;
+</span><span class="kw">pub use </span>diff::{Diff, Snapshot};
+<span class="attr">#[doc(inline)]
+</span><span class="kw">pub use </span>screen::{Screen, ScreenClients};
 <span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span>stack::{Position, Stack};
 <span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span>stack_set::StackSet;
 <span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span>workspace::Workspace;
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>diff::{Diff, Snapshot};
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>screen::ScreenClients;
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>stack_set::tests::test_xid_stack_set;
