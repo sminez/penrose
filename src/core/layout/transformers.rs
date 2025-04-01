@@ -8,7 +8,7 @@ use std::mem::swap;
 
 /// A wrapper round another [Layout] that is able to intercept and modify both the positions being
 /// returned by the inner layout and messages being sent to it.
-pub trait LayoutTransformer: Clone + Sized + 'static {
+pub trait LayoutTransformer: Send + Sync + Clone + Sized + 'static {
     /// The same as [Layout::name] but for [LayoutTransformer] itself.
     fn transformed_name(&self) -> String;
 

@@ -28,7 +28,7 @@ pub use transformers::LayoutTransformer;
 /// Mutating the state of a Layout is possible by sending it a [Message] which can then either modify
 /// the existing layout (e.g. increase the number of clients positioned in a "main" area) or replace
 /// the existing Layout with a new one. There is no requirement to be able to handle all message types.
-pub trait Layout {
+pub trait Layout: Send + Sync {
     /// A short display name for this Layout, appropriate for rendering in a status bar as an indicator
     /// of which layout is currently being used.
     fn name(&self) -> String;
