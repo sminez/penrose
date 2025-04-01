@@ -183,7 +183,7 @@
 
 <span class="doccomment">/// A wrapper round another [Layout] that is able to intercept and modify both the positions being
 /// returned by the inner layout and messages being sent to it.
-</span><span class="kw">pub trait </span>LayoutTransformer: Clone + Sized + <span class="lifetime">'static </span>{
+</span><span class="kw">pub trait </span>LayoutTransformer: Send + Sync + Clone + Sized + <span class="lifetime">'static </span>{
     <span class="doccomment">/// The same as [Layout::name] but for [LayoutTransformer] itself.
     </span><span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
 
