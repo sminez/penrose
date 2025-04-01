@@ -29,7 +29,7 @@ pub mod layout;
 
 use bindings::{KeyBindings, MouseBindings, MouseState};
 use hooks::{EventHook, LayoutHook, ManageHook, StateHook};
-use layout::{Layout, LayoutStack};
+use layout::LayoutStack;
 
 /// An X11 ID for a given resource
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -221,13 +221,12 @@ where
                 Some(ref mut h) => {
                     let r_s = h.transform_initial_for_screen(i, r_s, self, x);
                     let s = self.client_set.screens.iter_mut().nth(i).unwrap();
-                    let (_, initial) = s.workspace.layouts.layout_workspace(&tag, &tiling, r_s);
+                    let initial = s.workspace.apply_layout(&tag, &tiling, r_s);
                     h.transform_positions_for_screen(i, r_s, initial, self, x)
                 }
                 None => {
                     let s = self.client_set.screens.iter_mut().nth(i).unwrap();
-                    let (_, positions) = s.workspace.layouts.layout_workspace(&tag, &tiling, r_s);
-                    positions
+                    s.workspace.apply_layout(&tag, &tiling, r_s)
                 }
             };
 

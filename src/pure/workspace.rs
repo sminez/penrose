@@ -1,7 +1,7 @@
 use crate::{
-    core::layout::{IntoMessage, LayoutStack},
-    pure::{Position, Stack},
-    stack, Error, Result,
+    core::layout::{IntoMessage, Layout, LayoutStack},
+    pure::{geometry::Rect, Position, Stack},
+    stack, Error, Result, Xid,
 };
 use std::{fmt, mem::take};
 
@@ -90,6 +90,17 @@ impl<T> Workspace<T> {
     /// An immutable reference to the focused window for this workspace if there is one
     pub fn focus(&self) -> Option<&T> {
         self.stack.as_ref().map(|s| &s.focus)
+    }
+
+    /// Apply the currently active layout to the given stack
+    pub fn apply_layout(
+        &mut self,
+        tag: &str,
+        stack: &Option<Stack<Xid>>,
+        r: Rect,
+    ) -> Vec<(Xid, Rect)> {
+        let (_, positions) = self.layouts.layout_workspace(tag, stack, r);
+        positions
     }
 
     /// An iterator over all windows in this workspace.
