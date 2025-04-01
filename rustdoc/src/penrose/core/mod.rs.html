@@ -772,8 +772,7 @@
 <a href="#771" id="771">771</a>
 <a href="#772" id="772">772</a>
 <a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a></pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
+<a href="#774" id="774">774</a></pre></div><pre class="rust"><code><span class="doccomment">//! Core data structures and user facing functionality for the window manager
 </span><span class="kw">use crate</span>::{
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
     x::{
@@ -804,7 +803,7 @@
 
 <span class="kw">use </span>bindings::{KeyBindings, MouseBindings, MouseState};
 <span class="kw">use </span>hooks::{EventHook, LayoutHook, ManageHook, StateHook};
-<span class="kw">use </span>layout::{Layout, LayoutStack};
+<span class="kw">use </span>layout::LayoutStack;
 
 <span class="doccomment">/// An X11 ID for a given resource
 </span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -996,13 +995,12 @@
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>h) =&gt; {
                     <span class="kw">let </span>r_s = h.transform_initial_for_screen(i, r_s, <span class="self">self</span>, x);
                     <span class="kw">let </span>s = <span class="self">self</span>.client_set.screens.iter_mut().nth(i).unwrap();
-                    <span class="kw">let </span>(<span class="kw">_</span>, initial) = s.workspace.layouts.layout_workspace(<span class="kw-2">&amp;</span>tag, <span class="kw-2">&amp;</span>tiling, r_s);
+                    <span class="kw">let </span>initial = s.workspace.apply_layout(<span class="kw-2">&amp;</span>tag, <span class="kw-2">&amp;</span>tiling, r_s);
                     h.transform_positions_for_screen(i, r_s, initial, <span class="self">self</span>, x)
                 }
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="kw">let </span>s = <span class="self">self</span>.client_set.screens.iter_mut().nth(i).unwrap();
-                    <span class="kw">let </span>(<span class="kw">_</span>, positions) = s.workspace.layouts.layout_workspace(<span class="kw-2">&amp;</span>tag, <span class="kw-2">&amp;</span>tiling, r_s);
-                    positions
+                    s.workspace.apply_layout(<span class="kw-2">&amp;</span>tag, <span class="kw-2">&amp;</span>tiling, r_s)
                 }
             };
 
