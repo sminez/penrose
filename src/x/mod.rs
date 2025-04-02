@@ -155,6 +155,7 @@ pub trait XConnExt: XConn + Sized {
 
         Ok(())
     }
+
     /// Establish the window manager state for the given client window and refresh the
     /// current X state.
     fn manage(&self, id: Xid, state: &mut State<Self>) -> Result<()> {
@@ -389,17 +390,6 @@ pub trait XConnExt: XConn + Sized {
         self.warp_pointer(self.root(), x, y)
     }
 
-    /// Fetch the value of all known properties for a given client window
-    fn all_props_for(&self, id: Xid) -> Result<HashMap<String, Prop>> {
-        self.list_props(id)?
-            .into_iter()
-            .map(|s| {
-                self.get_prop(id, &s)
-                    .map(|opt| (s, opt.expect("prop to be set")))
-            })
-            .collect()
-    }
-
     /// Request the title of a given client window following ICCCM/EWMH standards.
     fn window_title(&self, id: Xid) -> Result<String> {
         match query::str_prop(Atom::WmName, id, self) {
@@ -408,15 +398,6 @@ pub trait XConnExt: XConn + Sized {
                 Some(mut strs) => Ok(strs.remove(0)),
                 None => Ok("".to_owned()),
             },
-        }
-    }
-
-    /// Check to see if a given client window supports a particular protocol or not
-    fn client_supports_protocol(&self, id: Xid, proto: &str) -> Result<bool> {
-        if let Some(Prop::Atom(protocols)) = self.get_prop(id, Atom::WmProtocols.as_ref())? {
-            Ok(protocols.iter().any(|p| p == proto))
-        } else {
-            Ok(false)
         }
     }
 

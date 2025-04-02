@@ -23,6 +23,7 @@ use std::{
 use tracing::{debug, error, info, span, trace, warn, Level};
 
 pub mod bindings;
+pub mod conn;
 pub(crate) mod handle;
 pub mod hooks;
 pub mod layout;
