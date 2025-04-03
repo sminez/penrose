@@ -81,7 +81,7 @@ pub mod x;
 pub mod x11rb;
 
 #[doc(inline)]
-pub use crate::core::Xid;
+pub use crate::core::WinId;
 
 /// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
@@ -89,7 +89,7 @@ pub enum Error {
     /// An operation requiring the client to be on a screen was requested on a client window that
     /// is not currently visible
     #[error("Client {0} is not currently visible")]
-    ClientIsNotVisible(Xid),
+    ClientIsNotVisible(WinId),
 
     /// A custom error message from user code or extensions
     #[error("{0}")]
@@ -137,7 +137,7 @@ pub enum Error {
     #[error("{ty} property '{prop}' for {id} contained invalid data")]
     InvalidPropertyData {
         /// The window that was queried
-        id: Xid,
+        id: WinId,
         /// The type of property that was queried
         ty: String,
         /// The name of the property that was queried
@@ -164,8 +164,8 @@ pub enum Error {
     Randr(String),
 
     /// An operation was requested on a client window that is unknown
-    #[error("No client with id={0}")]
-    UnknownClient(Xid),
+    #[error("Client {0} is not in found")]
+    UnknownClient(WinId),
 
     /// An operation was requested on a workspace tag that is unknown
     #[error("No workspace with tag={0}")]

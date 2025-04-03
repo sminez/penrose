@@ -1,8 +1,10 @@
 use crate::{
     builtin::layout::{messages::UnwrapTransformer, Monocle},
-    core::layout::{messages::Message, Layout},
+    core::{
+        conn::WinId,
+        layout::{messages::Message, Layout},
+    },
     pure::{geometry::Rect, Stack},
-    Xid,
 };
 use std::mem::swap;
 
@@ -46,15 +48,19 @@ pub trait LayoutTransformer: Send + Sync + Clone + Sized + 'static {
     ///
     /// The default implementation of this method leaves the positions returned by the inner layout
     /// unchanged.
-    fn transform_positions(&mut self, _r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+    fn transform_positions(
+        &mut self,
+        _r: Rect,
+        positions: Vec<(WinId, Rect)>,
+    ) -> Vec<(WinId, Rect)> {
         positions
     }
 
     /// Apply the [LayoutTransformer] to its wrapped inner [Layout].
     #[allow(clippy::type_complexity)]
-    fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>)
+    fn run_transform<F>(&mut self, f: F, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>)
     where
-        F: FnOnce(Rect, &mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
+        F: FnOnce(Rect, &mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>),
     {
         let r = self.transform_initial(r);
         let (new, positions) = (f)(r, self.inner_mut());
@@ -95,17 +101,21 @@ where
     fn layout_workspace(
         &mut self,
         tag: &str,
-        stack: &Option<Stack<Xid>>,
+        stack: &Option<Stack<WinId>>,
         r: Rect,
-    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         self.run_transform(|r, inner| inner.layout_workspace(tag, stack, r), r)
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         self.run_transform(|r, inner| inner.layout(s, r), r)
     }
 
-    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         self.run_transform(|r, inner| inner.layout_empty(r), r)
     }
 
@@ -119,14 +129,14 @@ where
 }
 
 /// Quickly define a [LayoutTransformer] from a single element tuple struct and a
-/// transformation function: `fn(Rect, Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)>`.
+/// transformation function: `fn(Rect, Vec<(WinId, Rect)>) -> Vec<(WinId, Rect)>`.
 ///
 /// The struct must have a single field which is a `Box<dyn Layout>`.
 ///
 /// # Example
 /// ```no_run
-/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};
-/// fn my_transformation_function(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, WinId};
+/// fn my_transformation_function(r: Rect, positions: Vec<(WinId, Rect)>) -> Vec<(WinId, Rect)> {
 ///     // transformation implementation goes here
 ///     positions
 /// }
@@ -166,8 +176,8 @@ macro_rules! simple_transformer {
             fn transform_positions(
                 &mut self,
                 r: $crate::pure::geometry::Rect,
-                positions: Vec<($crate::core::Xid, $crate::pure::geometry::Rect)>,
-            ) -> Vec<($crate::core::Xid, $crate::pure::geometry::Rect)> {
+                positions: Vec<($crate::core::conn::WinId, $crate::pure::geometry::Rect)>,
+            ) -> Vec<($crate::core::conn::WinId, $crate::pure::geometry::Rect)> {
                 $f(r, positions)
             }
         }

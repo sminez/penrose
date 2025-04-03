@@ -1,26 +1,20 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
+    core::conn::Conn,
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
-    x::{
-        manage_without_refresh,
-        property::{MapState, WmState},
-        Atom, Prop, WindowAttributes, XConn, XConnExt, XEvent,
-    },
+    x::XEvent,
     Color, Error, Result,
 };
 use anymap::{any::Any, AnyMap};
 use nix::sys::signal::{signal, SigHandler, Signal};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::{
     any::TypeId,
     cell::RefCell,
     collections::{HashMap, HashSet},
     fmt,
-    ops::Deref,
     sync::Arc,
 };
-use tracing::{debug, error, info, span, trace, warn, Level};
+use tracing::{debug, error, info, span, trace, Level};
 
 pub mod bindings;
 pub mod conn;
@@ -32,72 +26,43 @@ use bindings::{KeyBindings, MouseBindings, MouseState};
 use hooks::{EventHook, LayoutHook, ManageHook, StateHook};
 use layout::LayoutStack;
 
-/// An X11 ID for a given resource
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
-pub struct Xid(pub(crate) u32);
-
-impl std::fmt::Display for Xid {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl Deref for Xid {
-    type Target = u32;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl From<u32> for Xid {
-    fn from(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-impl From<Xid> for u32 {
-    fn from(id: Xid) -> Self {
-        id.0
-    }
-}
+pub use conn::WinId;
 
 /// The pure client state information for the window manager
-pub type ClientSet = StackSet<Xid>;
+pub type ClientSet = StackSet<WinId>;
 
 /// The pure client state information for a single [Workspace]
-pub type ClientSpace = Workspace<Xid>;
+pub type ClientSpace = Workspace<WinId>;
 
 /// Mutable internal state for the window manager
 #[derive(Debug)]
-pub struct State<X>
+pub struct State<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// The user defined configuration options for running the main window manager logic
-    pub config: Config<X>,
+    pub config: Config<C>,
     /// The pure window manager state
-    pub client_set: ClientSet,
+    pub client_set: StackSet<WinId>,
     pub(crate) extensions: AnyMap,
-    pub(crate) root: Xid,
-    pub(crate) mapped: HashSet<Xid>,
-    pub(crate) pending_unmap: HashMap<Xid, usize>,
+    pub(crate) root: WinId,
+    pub(crate) mapped: HashSet<WinId>,
+    pub(crate) pending_unmap: HashMap<WinId, usize>,
     pub(crate) current_event: Option<XEvent>,
-    pub(crate) diff: Diff<Xid>,
+    pub(crate) diff: Diff<WinId>,
     pub(crate) running: bool,
     pub(crate) held_mouse_state: Option<MouseState>,
 }
 
-impl<X> State<X>
+impl<C> State<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    pub(crate) fn try_new(config: Config<X>, x: &X) -> Result<Self> {
+    pub(crate) fn try_new(config: Config<C>, conn: &C) -> Result<Self> {
         let mut client_set = StackSet::try_new(
             config.default_layouts.clone(),
             config.tags.iter(),
-            x.screen_details()?,
+            conn.screen_details()?,
         )?;
 
         let ss = client_set.snapshot(vec![]);
@@ -107,7 +72,7 @@ where
             config,
             client_set,
             extensions: AnyMap::new(),
-            root: x.root(),
+            root: conn.root(),
             mapped: HashSet::new(),
             pending_unmap: HashMap::new(),
             current_event: None,
@@ -117,13 +82,13 @@ where
         })
     }
 
-    /// The Xid of the root window for the running [WindowManager].
-    pub fn root(&self) -> Xid {
+    /// The WinId of the root window for the running [WindowManager].
+    pub fn root(&self) -> WinId {
         self.root
     }
 
     /// The set of all client windows currently mapped to a screen.
-    pub fn mapped_clients(&self) -> &HashSet<Xid> {
+    pub fn mapped_clients(&self) -> &HashSet<WinId> {
         &self.mapped
     }
 
@@ -182,22 +147,22 @@ where
         self.extensions.insert(Arc::new(RefCell::new(extension)));
     }
 
-    pub(crate) fn position_and_snapshot(&mut self, x: &X) -> Snapshot<Xid> {
-        let positions = self.visible_client_positions(x);
+    pub(crate) fn position_and_snapshot(&mut self, conn: &C) -> Snapshot<WinId> {
+        let positions = self.visible_client_positions(conn);
         self.client_set.snapshot(positions)
     }
 
     /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
     /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
     /// from the layout.
-    pub(crate) fn visible_client_positions(&mut self, x: &X) -> Vec<(Xid, Rect)> {
-        let mut float_positions: Vec<(Xid, Rect)> = Vec::new();
-        let mut positions: Vec<(Xid, Rect)> = Vec::new();
+    pub(crate) fn visible_client_positions(&mut self, conn: &C) -> Vec<(WinId, Rect)> {
+        let mut float_positions: Vec<(WinId, Rect)> = Vec::new();
+        let mut positions: Vec<(WinId, Rect)> = Vec::new();
 
         // pop the layout hook off of `state` so that we can pass state into it
         let mut hook = self.config.layout_hook.take();
 
-        let scs: Vec<ScreenClients<Xid>> = self
+        let scs: Vec<ScreenClients<WinId>> = self
             .client_set
             .screens
             .iter()
@@ -220,10 +185,10 @@ where
             // Next run layout functions for each workspace on a visible screen
             let stack_positions = match hook {
                 Some(ref mut h) => {
-                    let r_s = h.transform_initial_for_screen(i, r_s, self, x);
+                    let r_s = h.transform_initial_for_screen(i, r_s, self, conn);
                     let s = self.client_set.screens.iter_mut().nth(i).unwrap();
                     let initial = s.workspace.apply_layout(&tag, &tiling, r_s);
-                    h.transform_positions_for_screen(i, r_s, initial, self, x)
+                    h.transform_positions_for_screen(i, r_s, initial, self, conn)
                 }
                 None => {
                     let s = self.client_set.screens.iter_mut().nth(i).unwrap();
@@ -245,9 +210,9 @@ where
 }
 
 /// The user specified config options for how the window manager should run
-pub struct Config<X>
+pub struct Config<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// The RGBA color to use for normal (unfocused) window borders
     pub normal_border: Color,
@@ -264,20 +229,20 @@ where
     /// Window classes that should always be assigned floating positions rather than tiled
     pub floating_classes: Vec<String>,
     /// A [StateHook] to run before entering the main event loop
-    pub startup_hook: Option<Box<dyn StateHook<X>>>,
+    pub startup_hook: Option<Box<dyn StateHook<C>>>,
     /// A [StateHook] to run before processing each [XEvent]
-    pub event_hook: Option<Box<dyn EventHook<X>>>,
+    pub event_hook: Option<Box<dyn EventHook<C>>>,
     /// A [ManageHook] to run after each new window becomes managed by the window manager
-    pub manage_hook: Option<Box<dyn ManageHook<X>>>,
+    pub manage_hook: Option<Box<dyn ManageHook<C>>>,
     /// A [StateHook] to run every time the on screen X state is refreshed
-    pub refresh_hook: Option<Box<dyn StateHook<X>>>,
+    pub refresh_hook: Option<Box<dyn StateHook<C>>>,
     /// A [LayoutHook] to run when positioning clients on the screen
-    pub layout_hook: Option<Box<dyn LayoutHook<X>>>,
+    pub layout_hook: Option<Box<dyn LayoutHook<C>>>,
 }
 
-impl<X> fmt::Debug for Config<X>
+impl<C> fmt::Debug for Config<C>
 where
-    X: XConn,
+    C: Conn,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
@@ -292,9 +257,9 @@ where
     }
 }
 
-impl<X> Default for Config<X>
+impl<C> Default for Config<C>
 where
-    X: XConn,
+    C: Conn,
 {
     fn default() -> Self {
         let strings = |slice: &[&str]| slice.iter().map(|s| s.to_string()).collect();
@@ -316,17 +281,17 @@ where
     }
 }
 
-impl<X> Config<X>
+impl<C> Config<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// Set the startup_hook or compose it with what is already set.
     ///
     /// The new hook will run before what was there before.
     pub fn compose_or_set_startup_hook<H>(&mut self, hook: H)
     where
-        H: StateHook<X> + 'static,
-        X: 'static,
+        H: StateHook<C> + 'static,
+        C: 'static,
     {
         self.startup_hook = match self.startup_hook.take() {
             Some(h) => Some(hook.then_boxed(h)),
@@ -339,8 +304,8 @@ where
     /// The new hook will run before what was there before.
     pub fn compose_or_set_event_hook<H>(&mut self, hook: H)
     where
-        H: EventHook<X> + 'static,
-        X: 'static,
+        H: EventHook<C> + 'static,
+        C: 'static,
     {
         self.event_hook = match self.event_hook.take() {
             Some(h) => Some(hook.then_boxed(h)),
@@ -353,8 +318,8 @@ where
     /// The new hook will run before what was there before.
     pub fn compose_or_set_manage_hook<H>(&mut self, hook: H)
     where
-        H: ManageHook<X> + 'static,
-        X: 'static,
+        H: ManageHook<C> + 'static,
+        C: 'static,
     {
         self.manage_hook = match self.manage_hook.take() {
             Some(h) => Some(hook.then_boxed(h)),
@@ -367,8 +332,8 @@ where
     /// The new hook will run before what was there before.
     pub fn compose_or_set_refresh_hook<H>(&mut self, hook: H)
     where
-        H: StateHook<X> + 'static,
-        X: 'static,
+        H: StateHook<C> + 'static,
+        C: 'static,
     {
         self.refresh_hook = match self.refresh_hook.take() {
             Some(h) => Some(hook.then_boxed(h)),
@@ -381,8 +346,8 @@ where
     /// The new hook will run before what was there before.
     pub fn compose_or_set_layout_hook<H>(&mut self, hook: H)
     where
-        H: LayoutHook<X> + 'static,
-        X: 'static,
+        H: LayoutHook<C> + 'static,
+        C: 'static,
     {
         self.layout_hook = match self.layout_hook.take() {
             Some(h) => Some(hook.then_boxed(h)),
@@ -396,35 +361,35 @@ where
 /// This allows for final configuration to be carried out before entering the main event
 /// loop.
 #[derive(Debug)]
-pub struct WindowManager<X>
+pub struct WindowManager<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    x: X,
+    conn: C,
     /// The mutable [State] of the window manager
-    pub state: State<X>,
-    key_bindings: KeyBindings<X>,
-    mouse_bindings: MouseBindings<X>,
+    pub state: State<C>,
+    key_bindings: KeyBindings<C>,
+    mouse_bindings: MouseBindings<C>,
 }
 
-impl<X> WindowManager<X>
+impl<C> WindowManager<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// Construct a new [WindowManager] with the provided config and X connection.
     ///
     /// If you need to set [State] extensions, call [WindowManager::add_extension] after
     /// constructing your initial WindowManager.
     pub fn new(
-        config: Config<X>,
-        key_bindings: KeyBindings<X>,
-        mouse_bindings: MouseBindings<X>,
-        x: X,
+        config: Config<C>,
+        key_bindings: KeyBindings<C>,
+        mouse_bindings: MouseBindings<C>,
+        conn: C,
     ) -> Result<Self> {
-        let state = State::try_new(config, &x)?;
+        let state = State::try_new(config, &conn)?;
 
         Ok(Self {
-            x,
+            conn,
             state,
             key_bindings,
             mouse_bindings,
@@ -464,20 +429,20 @@ where
             panic!("unable to set signal handler: {}", e);
         }
 
-        handle::mapping_notify(&self.key_bindings, &self.mouse_bindings, &self.x)?;
+        handle::mapping_notify(&self.key_bindings, &self.mouse_bindings, &self.conn)?;
 
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
-            if let Err(e) = h.call(&mut self.state, &self.x) {
+            if let Err(e) = h.call(&mut self.state, &self.conn) {
                 error!(%e, "error returned from user startup hook");
             }
         }
 
-        manage_existing_clients(&mut self.state, &self.x)?;
+        self.conn.manage_existing_clients(&mut self.state)?;
         self.state.running = true;
 
         while self.state.running {
-            match self.x.next_event() {
+            match self.conn.next_event() {
                 Ok(event) => {
                     let span = span!(target: "penrose", Level::INFO, "XEvent", %event);
                     let _enter = span.enter();
@@ -487,7 +452,7 @@ where
                     if let Err(e) = self.handle_xevent(event) {
                         error!(%e, "Error handling XEvent");
                     }
-                    self.x.flush();
+                    self.conn.flush();
 
                     self.state.current_event = None;
                 }
@@ -503,7 +468,7 @@ where
         use XEvent::*;
 
         let WindowManager {
-            x,
+            conn,
             state,
             key_bindings,
             mouse_bindings,
@@ -513,7 +478,7 @@ where
         let should_run = match hook {
             Some(ref mut h) => {
                 trace!("running user event hook");
-                match h.call(&event, state, x) {
+                match h.call(&event, state, conn) {
                     Ok(should_run) => should_run,
                     Err(e) => {
                         error!(%e, "error returned from user event hook");
@@ -532,24 +497,24 @@ where
         }
 
         match &event {
-            ClientMessage(m) => handle::client_message(m.clone(), state, x)?,
-            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, x)?,
+            ClientMessage(m) => handle::client_message(m.clone(), state, conn)?,
+            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, conn)?,
             ConfigureNotify(_) => (), // Not currently handled
-            ConfigureRequest(e) => handle::configure_request(e, state, x)?,
-            Enter(p) => handle::enter(*p, state, x)?,
+            ConfigureRequest(e) => handle::configure_request(e, state, conn)?,
+            Enter(p) => handle::enter(*p, state, conn)?,
             Expose(_) => (), // Not currently handled
-            FocusIn(id) => handle::focus_in(*id, state, x)?,
-            Destroy(xid) => handle::destroy(*xid, state, x)?,
-            KeyPress(code) => handle::keypress(*code, key_bindings, state, x)?,
-            Leave(p) => handle::leave(*p, state, x)?,
-            MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, x)?,
-            MapRequest(xid) => handle::map_request(*xid, state, x)?,
-            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, x)?,
-            MotionNotify(e) => handle::motion_event(e.clone(), mouse_bindings, state, x)?,
+            FocusIn(id) => conn.handle_focus_in(*id, state)?,
+            Destroy(xid) => handle::destroy(*xid, state, conn)?,
+            KeyPress(code) => handle::keypress(*code, key_bindings, state, conn)?,
+            Leave(p) => handle::leave(*p, state, conn)?,
+            MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, conn)?,
+            MapRequest(xid) => handle::map_request(*xid, state, conn)?,
+            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, conn)?,
+            MotionNotify(e) => handle::motion_event(e.clone(), mouse_bindings, state, conn)?,
             PropertyNotify(_) => (), // Not currently handled
-            RandrNotify => handle::detect_screens(state, x)?,
-            ScreenChange => handle::screen_change(state, x)?,
-            UnmapNotify(xid) => handle::unmap_notify(*xid, state, x)?,
+            RandrNotify => handle::detect_screens(state, conn)?,
+            ScreenChange => handle::screen_change(state, conn)?,
+            UnmapNotify(id) => handle::unmap_notify(*id, state, conn)?,
 
             _ => (), // XEvent is non-exhaustive
         }
@@ -571,99 +536,6 @@ where
     }
 }
 
-// A "best effort" attempt to manage existing clients on the workspaces they were present
-// on previously. This is not guaranteed to preserve the stack order or correctly handle
-// any clients that were on invisible workspaces / workspaces that no longer exist.
-//
-// NOTE: the check for if each client is already in state is in case a startup hook has
-//       pre-managed clients for us. In that case we want to avoid stomping on
-//       anything that they have set up.
-#[tracing::instrument(level = "info", skip(state, x))]
-fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
-    info!("managing existing clients");
-
-    // We're not guaranteed that workspace indices are _always_ continuous from 0..n
-    // so we explicitly map tags to indices instead.
-    // We also exclude hidden workspaces as those can contain windows which are
-    // externally managed by a user written extension, which can lead to malformed
-    // internal state for those extensions when they restart.
-    let ws_map: HashMap<usize, String> = state
-        .client_set
-        .non_hidden_workspaces()
-        .map(|w| (w.id, w.tag.clone()))
-        .collect();
-
-    let first_tag = state.client_set.ordered_tags()[0].clone();
-
-    for id in x.existing_clients()? {
-        if !state.client_set.contains(&id) && client_should_be_managed(id, x) {
-            let workspace_id = match x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
-                Ok(Some(Prop::Cardinal(ids))) => ids[0] as usize,
-                _ => 0, // we know that we always have at least one workspace
-            };
-
-            let tag = ws_map.get(&workspace_id).unwrap_or(&first_tag);
-            let title = x.window_title(id)?;
-            info!(%id, %title, %tag, "attempting to manage existing client");
-            manage_without_refresh(id, Some(tag), state, x)?;
-        }
-    }
-
-    // If EWMH is enabled then we should have this property set to tell us what the previously
-    // active client was. If that client is not in the client set or the property is not set we
-    // default to forcing focus to the first available tag and whatever active client we have there
-    // as that is where we will have placed all existing clients.
-    match x.get_prop(state.root, Atom::NetActiveWindow.as_ref()) {
-        Ok(Some(Prop::Window(ids))) if state.client_set.contains(&ids[0]) => {
-            let id = ids[0];
-            info!(%id, "focusing _NET_ACTIVE_WINDOW client");
-            state.client_set.focus_client(&id);
-        }
-        _ => {
-            info!(%first_tag, "unable to determine an active window: focusing first tag");
-            state.client_set.focus_tag(&first_tag);
-        }
-    };
-
-    info!("triggering refresh");
-    x.refresh(state)
-}
-
-/// For a given existing client being processed on startup, determine whether we need
-/// to bring it into our internal state and manage it.
-pub(crate) fn client_should_be_managed<X: XConn>(id: Xid, x: &X) -> bool {
-    let attrs = match x.get_window_attributes(id) {
-        Ok(attrs) => attrs,
-        _ => {
-            warn!(%id, "unable to pull window attributes for client: skipping.");
-            return false;
-        }
-    };
-
-    let wm_state = match x.get_wm_state(id) {
-        Ok(state) => state,
-        _ => {
-            warn!(%id, "unable to pull wm state for client: skipping.");
-            return false;
-        }
-    };
-
-    info!(%id, ?attrs, ?wm_state, "processing client");
-
-    let WindowAttributes {
-        override_redirect,
-        map_state,
-        ..
-    } = attrs;
-
-    let viewable = map_state == MapState::Viewable;
-    let iconic = wm_state == Some(WmState::Iconic);
-
-    // This condition for determining what windows we should manage is
-    // taken from the `scan` function found in both dwm and XMonad.
-    !override_redirect && (viewable || iconic)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -679,15 +551,15 @@ mod tests {
         let mut s = test_xid_stack_set(5, 2);
 
         for n in 0..4 {
-            s.insert(Xid(n));
+            s.insert(WinId(n));
         }
 
         let r = Rect::new(50, 50, 50, 50);
-        s.float_unchecked(Xid(1), r);
+        s.float_unchecked(WinId(1), r);
 
         let positions = s.visible_client_positions();
 
-        assert!(positions.contains(&(Xid(1), r)), "{positions:?}")
+        assert!(positions.contains(&(WinId(1), r)), "{positions:?}")
     }
 
     #[test]
@@ -695,24 +567,24 @@ mod tests {
         let mut s = test_xid_stack_set(5, 2);
 
         for n in 0..4 {
-            s.insert(Xid(n));
+            s.insert(WinId(n));
         }
 
         let r = Rect::new(50, 50, 50, 50);
-        s.float_unchecked(Xid(1), r);
+        s.float_unchecked(WinId(1), r);
 
         let positions = s.visible_client_positions();
 
-        assert!(positions.contains(&(Xid(1), r)), "{positions:?}");
+        assert!(positions.contains(&(WinId(1), r)), "{positions:?}");
 
         // If we move the client to tag 2 on the second screen then it should
         // change position and be relative to that screen instead
-        s.move_client_to_tag(&Xid(1), "2");
+        s.move_client_to_tag(&WinId(1), "2");
         let positions = s.visible_client_positions();
 
-        assert!(!positions.contains(&(Xid(1), r)), "{positions:?}");
+        assert!(!positions.contains(&(WinId(1), r)), "{positions:?}");
         assert!(
-            positions.contains(&(Xid(1), Rect::new(1050, 2050, 50, 50))),
+            positions.contains(&(WinId(1), Rect::new(1050, 2050, 50, 50))),
             "{positions:?}"
         );
     }
@@ -722,11 +594,11 @@ mod tests {
         let mut s = test_xid_stack_set(5, 2);
 
         for n in 1..6 {
-            s.insert(Xid(n));
+            s.insert(WinId(n));
         }
 
-        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
-        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+        s.float_unchecked(WinId(2), Rect::new(0, 0, 42, 42));
+        s.float_unchecked(WinId(3), Rect::new(0, 0, 69, 69));
 
         assert_eq!(stack_order(&s), vec![1, 4, 5, 2, 3]);
     }
@@ -736,13 +608,13 @@ mod tests {
         let mut s = test_xid_stack_set(5, 2);
 
         for n in 1..6 {
-            s.insert(Xid(n));
+            s.insert(WinId(n));
         }
 
-        s.float_unchecked(Xid(2), Rect::new(0, 0, 42, 42));
-        s.float_unchecked(Xid(3), Rect::new(0, 0, 69, 69));
+        s.float_unchecked(WinId(2), Rect::new(0, 0, 42, 42));
+        s.float_unchecked(WinId(3), Rect::new(0, 0, 69, 69));
 
-        s.insert(Xid(6));
+        s.insert(WinId(6));
 
         assert_eq!(stack_order(&s), vec![1, 4, 5, 6, 2, 3]);
     }
@@ -751,18 +623,18 @@ mod tests {
     fn floating_clients_dont_break_insert_focus() {
         let mut s = test_xid_stack_set(1, 1);
 
-        s.insert_at(Position::Focus, Xid(0));
-        s.float_unchecked(Xid(0), Rect::new(0, 0, 42, 42));
+        s.insert_at(Position::Focus, WinId(0));
+        s.float_unchecked(WinId(0), Rect::new(0, 0, 42, 42));
 
-        assert_eq!(s.current_client(), Some(&Xid(0)));
+        assert_eq!(s.current_client(), Some(&WinId(0)));
 
         // Each time we add a client it should be the focus
         // and the floating window should be stacked above
         // all others.
         let mut expected = vec![0];
         for n in 1..=5 {
-            s.insert_at(Position::Focus, Xid(n));
-            assert_eq!(s.current_client(), Some(&Xid(n)));
+            s.insert_at(Position::Focus, WinId(n));
+            assert_eq!(s.current_client(), Some(&WinId(n)));
 
             // Tiled position ordering is reversed in visible_client_positions
             // in order to ensure that when we restack, the order returned

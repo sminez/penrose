@@ -1,10 +1,10 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
     builtin::actions::{key_handler, modify_with},
-    core::{bindings::KeyEventHandler, layout::LayoutStack, State},
+    core::{bindings::KeyEventHandler, conn::ConnExt, layout::LayoutStack, State},
     util::spawn,
-    x::{atom::Atom, property::Prop, ClientConfig, XConn, XConnExt},
-    Error, Result, Xid,
+    x::{atom::Atom, property::Prop, ClientConfig, XConn},
+    Error, Result, WinId,
 };
 use tracing::{debug, error};
 
@@ -26,7 +26,7 @@ pub enum FullScreenAction {
 
 /// Set the fullscreen state of a particular client
 pub fn set_fullscreen_state<X: XConn>(
-    id: Xid,
+    id: WinId,
     action: FullScreenAction,
     state: &mut State<X>,
     x: &X,

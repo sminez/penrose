@@ -5,9 +5,9 @@ use crate::{
     Result,
 };
 use penrose::{
-    core::State,
+    core::{conn::Conn, State},
     pure::geometry::Rect,
-    x::{event::PropertyEvent, Atom, XConn, XConnExt, XEvent},
+    x::{event::PropertyEvent, Atom, XConn, XEvent},
 };
 
 /// A text widget that is set via updating the root window name a la dwm
@@ -49,7 +49,7 @@ impl<X: XConn> Widget<X> for RootWindowName {
             XEvent::PropertyNotify(PropertyEvent {
                 id, atom, is_root, ..
             }) if *is_root && name_props.contains(&atom.as_ref()) => {
-                self.inner.set_text(x.window_title(*id)?)
+                self.inner.set_text(x.client_title(*id)?)
             }
 
             _ => (),
@@ -110,7 +110,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
 
     fn on_refresh(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
         if let Some(id) = state.client_set.current_client() {
-            self.set_text(&x.window_title(*id)?)
+            self.set_text(&x.client_title(*id)?)
         } else {
             self.set_text("")
         }
@@ -126,7 +126,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
                 XEvent::PropertyNotify(PropertyEvent { id, atom, .. })
                     if id == focused && name_props.contains(&atom.as_ref()) =>
                 {
-                    self.set_text(&x.window_title(*id)?)
+                    self.set_text(&x.client_title(*id)?)
                 }
 
                 _ => (),

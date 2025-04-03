@@ -4,7 +4,7 @@ use penrose::{
     core::{State, WindowManager},
     pure::geometry::Rect,
     x::{event::XEvent, Atom, ClientConfig, Prop, WinType, XConn},
-    Color, Xid,
+    Color, WinId,
 };
 use std::fmt;
 use tracing::{debug, error, info};
@@ -109,7 +109,7 @@ pub struct StatusBar<X: XConn> {
     draw: Draw,
     position: Position,
     widgets: Widgets<X>,
-    screens: Vec<(Xid, u32)>,
+    screens: Vec<(WinId, u32)>,
     active_screen: usize,
     font: String,
     redrawn: bool,
@@ -226,7 +226,7 @@ impl<X: XConn> StatusBar<X> {
 
                 Ok((id, w))
             })
-            .collect::<Result<Vec<(Xid, u32)>>>()?;
+            .collect::<Result<Vec<(WinId, u32)>>>()?;
 
         Ok(())
     }
@@ -393,7 +393,7 @@ pub fn event_hook<X: XConn + 'static>(
 
 /// Run any widget on_new_client actions and then redraw if needed
 pub fn manage_hook<X: XConn + 'static>(
-    id: Xid,
+    id: WinId,
     state: &mut State<X>,
     x: &X,
 ) -> penrose::Result<()> {

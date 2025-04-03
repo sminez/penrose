@@ -15,7 +15,7 @@
 //! ### Startup Hooks
 //!
 //! Startup hooks are implemented using the [`StateHook`] trait, allowing you access
-//! to the pure WindowManager internal [`State`] and the [`XConn`] in order to run
+//! to the pure WindowManager internal [`State`] and the [`Conn`] in order to run
 //! any set up code you need which requires the bindings to already have been
 //! grabbed but before any existing clients are parsed and managed by the WindowManager.
 //!
@@ -50,7 +50,7 @@
 //! things that are possible.
 //!
 //! > **NOTE**: ManageHooks should _not_ directly trigger a refresh of the X state!
-//! >           They are already called by the XConn immediately before refreshing so all
+//! >           They are already called by the Conn immediately before refreshing so all
 //! >           triggering a refresh directly will do is run the refresh twice: once with
 //! >           the initial state of the client before your hook was applied and once after.
 //!
@@ -71,7 +71,7 @@
 //! ### Refresh Hooks
 //!
 //! Refresh hooks are implemented using the same [`StateHook`] trait used for Startup hooks.
-//! In this case however, your hook will be run each time the XConn refreshes the X state in
+//! In this case however, your hook will be run each time the Conn refreshes the X state in
 //! response to changes being made to the internal state of the WindowManager.
 //! This is one of the more general purpose hooks available for you to make use of and can be
 //! used to run code any time something changes in the internal state of your window manager.
@@ -88,10 +88,14 @@
 //!   [2]: crate::core::Config
 
 use crate::{
-    core::{layout::LayoutTransformer, State},
+    core::{
+        conn::{Conn, WinId},
+        layout::LayoutTransformer,
+        State,
+    },
     pure::geometry::Rect,
-    x::{XConn, XEvent},
-    Result, Xid,
+    x::XEvent,
+    Result,
 };
 use std::fmt;
 
@@ -99,15 +103,15 @@ use std::fmt;
 ///
 /// This hook is called before incoming XEvents are processed by the default event handling
 /// logic.
-pub trait EventHook<X>
+pub trait EventHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool>;
+    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool>;
 
     /// Convert to a trait object
-    fn boxed(self) -> Box<dyn EventHook<X>>
+    fn boxed(self) -> Box<dyn EventHook<C>>
     where
         Self: Sized + 'static,
     {
@@ -116,9 +120,9 @@ where
 
     /// Compose this hook with another [EventHook]. The second hook will be skipped if this one
     /// returns `false`.
-    fn then<H>(self, next: H) -> ComposedEventHook<X>
+    fn then<H>(self, next: H) -> ComposedEventHook<C>
     where
-        H: EventHook<X> + 'static,
+        H: EventHook<C> + 'static,
         Self: Sized + 'static,
     {
         ComposedEventHook {
@@ -129,10 +133,10 @@ where
 
     /// Compose this hook with a boxed [EventHook]. The second hook will be skipped if this one
     /// returns `false`.
-    fn then_boxed(self, next: Box<dyn EventHook<X>>) -> Box<dyn EventHook<X>>
+    fn then_boxed(self, next: Box<dyn EventHook<C>>) -> Box<dyn EventHook<C>>
     where
         Self: Sized + 'static,
-        X: 'static,
+        C: 'static,
     {
         Box::new(ComposedEventHook {
             first: Box::new(self),
@@ -141,14 +145,14 @@ where
     }
 }
 
-impl<X> EventHook<X> for Vec<Box<dyn EventHook<X>>>
+impl<C> EventHook<C> for Vec<Box<dyn EventHook<C>>>
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
+    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool> {
         let mut call_next = true;
         for hook in self.iter_mut() {
-            call_next = hook.call(event, state, x)?;
+            call_next = hook.call(event, state, conn)?;
             if !call_next {
                 return Ok(false);
             }
@@ -158,7 +162,7 @@ where
     }
 }
 
-impl<X: XConn> fmt::Debug for Box<dyn EventHook<X>> {
+impl<C: Conn> fmt::Debug for Box<dyn EventHook<C>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("EventHook").finish()
     }
@@ -166,34 +170,34 @@ impl<X: XConn> fmt::Debug for Box<dyn EventHook<X>> {
 
 /// The result of composing two event hooks using `then`
 #[derive(Debug)]
-pub struct ComposedEventHook<X>
+pub struct ComposedEventHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    first: Box<dyn EventHook<X>>,
-    second: Box<dyn EventHook<X>>,
+    first: Box<dyn EventHook<C>>,
+    second: Box<dyn EventHook<C>>,
 }
 
-impl<X> EventHook<X> for ComposedEventHook<X>
+impl<C> EventHook<C> for ComposedEventHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
-        if self.first.call(event, state, x)? {
-            self.second.call(event, state, x)
+    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool> {
+        if self.first.call(event, state, conn)? {
+            self.second.call(event, state, conn)
         } else {
             Ok(false)
         }
     }
 }
 
-impl<F, X> EventHook<X> for F
+impl<F, C> EventHook<C> for F
 where
-    F: FnMut(&XEvent, &mut State<X>, &X) -> Result<bool>,
-    X: XConn,
+    F: FnMut(&XEvent, &mut State<C>, &C) -> Result<bool>,
+    C: Conn,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
-        (self)(event, state, x)
+    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool> {
+        (self)(event, state, conn)
     }
 }
 
@@ -201,15 +205,15 @@ where
 ///
 /// Manage hooks should _not_ trigger refreshes of state directly: they are called
 /// immediately before a refresh is run by main window manager logic.
-pub trait ManageHook<X>
+pub trait ManageHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()>;
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()>;
 
     /// Convert to a trait object
-    fn boxed(self) -> Box<dyn ManageHook<X>>
+    fn boxed(self) -> Box<dyn ManageHook<C>>
     where
         Self: Sized + 'static,
     {
@@ -217,9 +221,9 @@ where
     }
 
     /// Compose this hook with another [ManageHook].
-    fn then<H>(self, next: H) -> ComposedManageHook<X>
+    fn then<H>(self, next: H) -> ComposedManageHook<C>
     where
-        H: ManageHook<X> + 'static,
+        H: ManageHook<C> + 'static,
         Self: Sized + 'static,
     {
         ComposedManageHook {
@@ -229,10 +233,10 @@ where
     }
 
     /// Compose this hook with a boxed [ManageHook].
-    fn then_boxed(self, next: Box<dyn ManageHook<X>>) -> Box<dyn ManageHook<X>>
+    fn then_boxed(self, next: Box<dyn ManageHook<C>>) -> Box<dyn ManageHook<C>>
     where
         Self: Sized + 'static,
-        X: 'static,
+        C: 'static,
     {
         Box::new(ComposedManageHook {
             first: Box::new(self),
@@ -241,20 +245,20 @@ where
     }
 }
 
-impl<X> ManageHook<X> for Vec<Box<dyn ManageHook<X>>>
+impl<C> ManageHook<C> for Vec<Box<dyn ManageHook<C>>>
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
         for hook in self.iter_mut() {
-            hook.call(id, state, x)?;
+            hook.call(id, state, conn)?;
         }
 
         Ok(())
     }
 }
 
-impl<X: XConn> fmt::Debug for Box<dyn ManageHook<X>> {
+impl<C: Conn> fmt::Debug for Box<dyn ManageHook<C>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ManageHook").finish()
     }
@@ -262,46 +266,46 @@ impl<X: XConn> fmt::Debug for Box<dyn ManageHook<X>> {
 
 /// The result of composing two manage hooks using `then`
 #[derive(Debug)]
-pub struct ComposedManageHook<X>
+pub struct ComposedManageHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    first: Box<dyn ManageHook<X>>,
-    second: Box<dyn ManageHook<X>>,
+    first: Box<dyn ManageHook<C>>,
+    second: Box<dyn ManageHook<C>>,
 }
 
-impl<X> ManageHook<X> for ComposedManageHook<X>
+impl<C> ManageHook<C> for ComposedManageHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-        self.first.call(client, state, x)?;
-        self.second.call(client, state, x)
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+        self.first.call(client, state, conn)?;
+        self.second.call(client, state, conn)
     }
 }
 
-impl<F, X> ManageHook<X> for F
+impl<F, C> ManageHook<C> for F
 where
-    F: FnMut(Xid, &mut State<X>, &X) -> Result<()>,
-    X: XConn,
+    F: FnMut(WinId, &mut State<C>, &C) -> Result<()>,
+    C: Conn,
 {
-    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-        (self)(client, state, x)
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+        (self)(client, state, conn)
     }
 }
 
 /// An arbitrary action that can be run and modify [State]
-pub trait StateHook<X>
+pub trait StateHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
+    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()>;
 
     /// Compose this hook with another [StateHook].
-    fn then<H>(self, next: H) -> ComposedStateHook<X>
+    fn then<H>(self, next: H) -> ComposedStateHook<C>
     where
-        H: StateHook<X> + 'static,
+        H: StateHook<C> + 'static,
         Self: Sized + 'static,
     {
         ComposedStateHook {
@@ -311,7 +315,7 @@ where
     }
 
     /// Convert to a trait object
-    fn boxed(self) -> Box<dyn StateHook<X>>
+    fn boxed(self) -> Box<dyn StateHook<C>>
     where
         Self: Sized + 'static,
     {
@@ -319,10 +323,10 @@ where
     }
 
     /// Compose this hook with a boxed [StateHook].
-    fn then_boxed(self, next: Box<dyn StateHook<X>>) -> Box<dyn StateHook<X>>
+    fn then_boxed(self, next: Box<dyn StateHook<C>>) -> Box<dyn StateHook<C>>
     where
         Self: Sized + 'static,
-        X: 'static,
+        C: 'static,
     {
         Box::new(ComposedStateHook {
             first: Box::new(self),
@@ -331,20 +335,20 @@ where
     }
 }
 
-impl<X> StateHook<X> for Vec<Box<dyn StateHook<X>>>
+impl<C> StateHook<C> for Vec<Box<dyn StateHook<C>>>
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
         for hook in self.iter_mut() {
-            hook.call(state, x)?;
+            hook.call(state, conn)?;
         }
 
         Ok(())
     }
 }
 
-impl<X: XConn> fmt::Debug for Box<dyn StateHook<X>> {
+impl<C: Conn> fmt::Debug for Box<dyn StateHook<C>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("StateHook").finish()
     }
@@ -352,38 +356,38 @@ impl<X: XConn> fmt::Debug for Box<dyn StateHook<X>> {
 
 /// The result of composing two state hooks using `then`
 #[derive(Debug)]
-pub struct ComposedStateHook<X>
+pub struct ComposedStateHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    first: Box<dyn StateHook<X>>,
-    second: Box<dyn StateHook<X>>,
+    first: Box<dyn StateHook<C>>,
+    second: Box<dyn StateHook<C>>,
 }
 
-impl<X> StateHook<X> for ComposedStateHook<X>
+impl<C> StateHook<C> for ComposedStateHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        self.first.call(state, x)?;
-        self.second.call(state, x)
+    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+        self.first.call(state, conn)?;
+        self.second.call(state, conn)
     }
 }
 
-impl<F, X> StateHook<X> for F
+impl<F, C> StateHook<C> for F
 where
-    F: FnMut(&mut State<X>, &X) -> Result<()>,
-    X: XConn,
+    F: FnMut(&mut State<C>, &C) -> Result<()>,
+    C: Conn,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        (self)(state, x)
+    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+        (self)(state, conn)
     }
 }
 
 /// Logic to run before and after laying out clients
-pub trait LayoutHook<X>
+pub trait LayoutHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
     #[allow(unused_variables)]
     /// Optionally modify the screen dimensions being given to a
@@ -394,15 +398,15 @@ where
         &mut self,
         screen_index: usize,
         r: Rect,
-        state: &State<X>,
-        x: &X,
+        state: &State<C>,
+        conn: &C,
     ) -> Rect {
-        self.transform_initial(r, state, x)
+        self.transform_initial(r, state, conn)
     }
 
     #[allow(unused_variables)]
     /// Optionally modify the screen dimensions being given to a [Layout][crate::core::layout::Layout]
-    fn transform_initial(&mut self, r: Rect, state: &State<X>, x: &X) -> Rect {
+    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {
         r
     }
 
@@ -415,11 +419,11 @@ where
         &mut self,
         screen_index: usize,
         r: Rect,
-        positions: Vec<(Xid, Rect)>,
-        state: &State<X>,
-        x: &X,
-    ) -> Vec<(Xid, Rect)> {
-        self.transform_positions(r, positions, state, x)
+        positions: Vec<(WinId, Rect)>,
+        state: &State<C>,
+        conn: &C,
+    ) -> Vec<(WinId, Rect)> {
+        self.transform_positions(r, positions, state, conn)
     }
 
     #[allow(unused_variables)]
@@ -427,17 +431,17 @@ where
     fn transform_positions(
         &mut self,
         r: Rect,
-        positions: Vec<(Xid, Rect)>,
-        state: &State<X>,
-        x: &X,
-    ) -> Vec<(Xid, Rect)> {
+        positions: Vec<(WinId, Rect)>,
+        state: &State<C>,
+        conn: &C,
+    ) -> Vec<(WinId, Rect)> {
         positions
     }
 
     /// Compose this hook with another [LayoutHook].
-    fn then<H>(self, next: H) -> ComposedLayoutHook<X>
+    fn then<H>(self, next: H) -> ComposedLayoutHook<C>
     where
-        H: LayoutHook<X> + 'static,
+        H: LayoutHook<C> + 'static,
         Self: Sized + 'static,
     {
         ComposedLayoutHook {
@@ -447,7 +451,7 @@ where
     }
 
     /// Convert to a trait object
-    fn boxed(self) -> Box<dyn LayoutHook<X>>
+    fn boxed(self) -> Box<dyn LayoutHook<C>>
     where
         Self: Sized + 'static,
     {
@@ -455,10 +459,10 @@ where
     }
 
     /// Compose this hook with a boxed [LayoutHook].
-    fn then_boxed(self, next: Box<dyn LayoutHook<X>>) -> Box<dyn LayoutHook<X>>
+    fn then_boxed(self, next: Box<dyn LayoutHook<C>>) -> Box<dyn LayoutHook<C>>
     where
         Self: Sized + 'static,
-        X: 'static,
+        C: 'static,
     {
         Box::new(ComposedLayoutHook {
             first: Box::new(self),
@@ -467,7 +471,7 @@ where
     }
 }
 
-impl<X: XConn> fmt::Debug for Box<dyn LayoutHook<X>> {
+impl<C: Conn> fmt::Debug for Box<dyn LayoutHook<C>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LayoutHook").finish()
     }
@@ -475,110 +479,110 @@ impl<X: XConn> fmt::Debug for Box<dyn LayoutHook<X>> {
 
 /// The result of composing two state hooks using `then`
 #[derive(Debug)]
-pub struct ComposedLayoutHook<X>
+pub struct ComposedLayoutHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
-    first: Box<dyn LayoutHook<X>>,
-    second: Box<dyn LayoutHook<X>>,
+    first: Box<dyn LayoutHook<C>>,
+    second: Box<dyn LayoutHook<C>>,
 }
 
-impl<X> LayoutHook<X> for ComposedLayoutHook<X>
+impl<C> LayoutHook<C> for ComposedLayoutHook<C>
 where
-    X: XConn,
+    C: Conn,
 {
     fn transform_initial_for_screen(
         &mut self,
         screen_index: usize,
         r: Rect,
-        state: &State<X>,
-        x: &X,
+        state: &State<C>,
+        conn: &C,
     ) -> Rect {
         self.second.transform_initial_for_screen(
             screen_index,
             self.first
-                .transform_initial_for_screen(screen_index, r, state, x),
+                .transform_initial_for_screen(screen_index, r, state, conn),
             state,
-            x,
+            conn,
         )
     }
 
-    fn transform_initial(&mut self, r: Rect, state: &State<X>, x: &X) -> Rect {
+    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {
         self.second
-            .transform_initial(self.first.transform_initial(r, state, x), state, x)
+            .transform_initial(self.first.transform_initial(r, state, conn), state, conn)
     }
 
     fn transform_positions_for_screen(
         &mut self,
         screen_index: usize,
         r: Rect,
-        positions: Vec<(Xid, Rect)>,
-        state: &State<X>,
-        x: &X,
-    ) -> Vec<(Xid, Rect)> {
+        positions: Vec<(WinId, Rect)>,
+        state: &State<C>,
+        conn: &C,
+    ) -> Vec<(WinId, Rect)> {
         self.second.transform_positions_for_screen(
             screen_index,
             r,
             self.first
-                .transform_positions_for_screen(screen_index, r, positions, state, x),
+                .transform_positions_for_screen(screen_index, r, positions, state, conn),
             state,
-            x,
+            conn,
         )
     }
 
     fn transform_positions(
         &mut self,
         r: Rect,
-        positions: Vec<(Xid, Rect)>,
-        state: &State<X>,
-        x: &X,
-    ) -> Vec<(Xid, Rect)> {
+        positions: Vec<(WinId, Rect)>,
+        state: &State<C>,
+        conn: &C,
+    ) -> Vec<(WinId, Rect)> {
         self.second.transform_positions(
             r,
-            self.first.transform_positions(r, positions, state, x),
+            self.first.transform_positions(r, positions, state, conn),
             state,
-            x,
+            conn,
         )
     }
 }
 
-impl<F, G, X> LayoutHook<X> for (F, G)
+impl<F, G, C> LayoutHook<C> for (F, G)
 where
-    F: FnMut(Rect, &State<X>, &X) -> Rect,
-    G: FnMut(Rect, Vec<(Xid, Rect)>, &State<X>, &X) -> Vec<(Xid, Rect)>,
-    X: XConn,
+    F: FnMut(Rect, &State<C>, &C) -> Rect,
+    G: FnMut(Rect, Vec<(WinId, Rect)>, &State<C>, &C) -> Vec<(WinId, Rect)>,
+    C: Conn,
 {
-    fn transform_initial(&mut self, r: Rect, state: &State<X>, x: &X) -> Rect {
-        (self.0)(r, state, x)
+    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {
+        (self.0)(r, state, conn)
     }
 
     fn transform_positions(
         &mut self,
         r: Rect,
-        positions: Vec<(Xid, Rect)>,
-        state: &State<X>,
-        x: &X,
-    ) -> Vec<(Xid, Rect)> {
-        (self.1)(r, positions, state, x)
+        positions: Vec<(WinId, Rect)>,
+        state: &State<C>,
+        conn: &C,
+    ) -> Vec<(WinId, Rect)> {
+        (self.1)(r, positions, state, conn)
     }
 }
 
-impl<T, X> LayoutHook<X> for T
+impl<T, C> LayoutHook<C> for T
 where
     T: LayoutTransformer,
-    X: XConn,
+    C: Conn,
 {
-    fn transform_initial(&mut self, r: Rect, _: &State<X>, _: &X) -> Rect {
+    fn transform_initial(&mut self, r: Rect, _: &State<C>, _: &C) -> Rect {
         LayoutTransformer::transform_initial(self, r)
     }
 
     fn transform_positions(
         &mut self,
         r: Rect,
-        positions: Vec<(Xid, Rect)>,
-        _: &State<X>,
-        _: &X,
-    ) -> Vec<(Xid, Rect)> {
+        positions: Vec<(WinId, Rect)>,
+        _: &State<C>,
+        _: &C,
+    ) -> Vec<(WinId, Rect)> {
         LayoutTransformer::transform_positions(self, r, positions)
     }
 }

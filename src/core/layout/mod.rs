@@ -1,8 +1,9 @@
 //! Layouts for positioning client windows on the screen within a given workspace.
 use crate::{
     builtin::layout::MainAndStack,
+    core::conn::WinId,
     pure::{geometry::Rect, Stack},
-    stack, Xid,
+    stack,
 };
 use std::{fmt, mem::swap};
 
@@ -52,12 +53,12 @@ pub trait Layout: Send + Sync {
     /// present and [Layout::layout_empty] if not.
     ///
     /// # Positioning clients
-    /// For each client that should be shown on the screen a pair of its [Xid] and a [Rect] should be
+    /// For each client that should be shown on the screen a pair of its [WinId] and a [Rect] should be
     /// provided, indicating the screen position the client should be placed at. To hide a client that
     /// was present in the [crate::pure::Workspace] simply do not provide a position for it. (You may also provide
-    /// positions for clients that were not present in the input if you have the [Xid] available.)
+    /// positions for clients that were not present in the input if you have the [WinId] available.)
     ///
-    /// The order in which the ([Xid], [Rect]) pairs are returned determines the stacking order on the
+    /// The order in which the ([WinId], [Rect]) pairs are returned determines the stacking order on the
     /// screen. It does not have to match the stack order of the clients within the [crate::pure::Workspace].
     ///
     /// # Returning a new layout
@@ -68,9 +69,9 @@ pub trait Layout: Send + Sync {
     fn layout_workspace(
         &mut self,
         tag: &str,
-        stack: &Option<Stack<Xid>>,
+        stack: &Option<Stack<WinId>>,
         r: Rect,
-    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         match stack {
             Some(s) => self.layout(s, r),
             None => self.layout_empty(r),
@@ -81,13 +82,17 @@ pub trait Layout: Send + Sync {
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
     #[allow(clippy::type_complexity)]
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>);
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>);
 
     /// Generate screen positions for an empty [Stack].
     ///
     /// See [Layout::layout_workspace] for details of how positions should be returned.
     #[allow(clippy::type_complexity, unused_variables)]
-    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         (None, vec![])
     }
 
@@ -134,9 +139,9 @@ impl LayoutStack {
     ///
     /// If the layout being run wants to be replaced with a new layout, swap it
     /// out for the new one in its current position in the [Stack].
-    pub fn run_and_replace<F>(&mut self, f: F) -> Vec<(Xid, Rect)>
+    pub fn run_and_replace<F>(&mut self, f: F) -> Vec<(WinId, Rect)>
     where
-        F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>),
+        F: FnOnce(&mut Box<dyn Layout>) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>),
     {
         let (new_focus, rs) = (f)(&mut self.focus);
 
@@ -187,20 +192,24 @@ impl Layout for LayoutStack {
     fn layout_workspace(
         &mut self,
         tag: &str,
-        stack: &Option<Stack<Xid>>,
+        stack: &Option<Stack<WinId>>,
         r: Rect,
-    ) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         (
             None,
             self.run_and_replace(|l| l.layout_workspace(tag, stack, r)),
         )
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         (None, self.run_and_replace(|l| l.layout(s, r)))
     }
 
-    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout_empty(&mut self, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         (None, self.run_and_replace(|l| l.layout_empty(r)))
     }
 

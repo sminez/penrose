@@ -1,24 +1,28 @@
 //! Dynamic selection based actions using Dmenu.
 use crate::{
     builtin::actions::key_handler,
-    core::{bindings::KeyEventHandler, State},
+    core::{
+        bindings::KeyEventHandler,
+        conn::{Conn, ConnExt},
+        State,
+    },
     custom_error,
     extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch},
-    x::{XConn, XConnExt},
-    Xid,
+    x::XConn,
+    WinId,
 };
 use std::collections::HashMap;
 
 /// Use [DMenu] to dynamically select and focus a client window.
 pub fn dmenu_focus_client<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state: &mut State<X>, x: &X| {
-        let choices: HashMap<String, Xid> = state
+        let choices: HashMap<String, WinId> = state
             .client_set
             .workspaces()
             .filter(|w| !state.client_set.invisible_tags.iter().any(|t| t == w.tag()))
             .flat_map(|w| {
                 w.clients().map(|&id| {
-                    let title = x.window_title(id).unwrap_or_else(|_| (*id).to_string());
+                    let title = x.client_title(id).unwrap_or_else(|_| (*id).to_string());
 
                     (format!("{}: {}", w.tag(), title), id)
                 })

@@ -3,7 +3,7 @@ use crate::{
     core::bindings::{KeyCode, MotionNotifyEvent, MouseEvent},
     pure::geometry::{Point, Rect},
     x::{Atom, XConn},
-    Result, Xid,
+    Result, WinId,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,9 @@ pub enum XEvent {
     /// A part or all of a client has become visible
     Expose(ExposeEvent),
     /// A client should have focus
-    FocusIn(Xid),
+    FocusIn(WinId),
     /// A client window has been closed
-    Destroy(Xid),
+    Destroy(WinId),
     /// A grabbed key combination has been entered by the user
     KeyPress(KeyCode),
     /// The mouse pointer has left the current client window
@@ -39,7 +39,7 @@ pub enum XEvent {
     /// Keybindings have changed
     MappingNotify,
     /// A client window is requesting to be positioned and rendered on the screen.
-    MapRequest(Xid),
+    MapRequest(WinId),
     /// A mouse button has been pressed or released
     MouseEvent(MouseEvent),
     /// The mouse has moved while a grabbed mouse state is held
@@ -53,7 +53,7 @@ pub enum XEvent {
     /// Focus has moved to a different screen
     ScreenChange,
     /// A client is being unmapped
-    UnmapNotify(Xid),
+    UnmapNotify(WinId),
 }
 
 impl std::fmt::Display for XEvent {
@@ -87,21 +87,21 @@ impl std::fmt::Display for XEvent {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ClientMessageKind {
     /// Inform a client that it is being closed
-    DeleteWindow(Xid),
+    DeleteWindow(WinId),
     /// Request that a client take input focus
-    TakeFocus(Xid),
+    TakeFocus(WinId),
     /// Take ownership of the systray
     ///
     /// Args are the id of the root window and id of the window being used as a systray
-    TakeSystrayOwnership(Xid, Xid),
+    TakeSystrayOwnership(WinId, WinId),
     /// Inform an embedded window that it has gained focus
-    XEmbedFocusIn(Xid, Xid),
+    XEmbedFocusIn(WinId, WinId),
     /// Inform an embedded window that it has been blocked by a modal dialog
-    XEmbedModalityOn(Xid, Xid),
+    XEmbedModalityOn(WinId, WinId),
     /// Inform a window that it is being embedded
-    XEmbedNotify(Xid, Xid),
+    XEmbedNotify(WinId, WinId),
     /// Inform an embedded window that it is now active
-    XEmbedWindowActivate(Xid, Xid),
+    XEmbedWindowActivate(WinId, WinId),
 }
 
 impl ClientMessageKind {
@@ -114,7 +114,7 @@ impl ClientMessageKind {
     where
         X: XConn,
     {
-        let proto_msg = |id: Xid, atom: Atom| {
+        let proto_msg = |id: WinId, atom: Atom| {
             let proto = Atom::WmProtocols.as_ref();
             let data = &[*q.intern_atom(atom.as_ref())?, 0, 0, 0, 0];
             let mask = ClientEventMask::NoEventMask;
@@ -129,7 +129,7 @@ impl ClientMessageKind {
         let focus_in = 4;
         let modality_on = 10;
 
-        let xembed_msg = |id: Xid, embedder: Xid, kind: u32| {
+        let xembed_msg = |id: WinId, embedder: WinId, kind: u32| {
             let atom = Atom::XEmbed.as_ref();
             let data = &[0, kind, 0, *embedder, xembed_version];
             let mask = ClientEventMask::SubstructureNotify;
@@ -246,7 +246,7 @@ __impl_client_message_data!(u32; 5, ClientMessageData::U32, as_u32);
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ClientMessage {
     /// The ID of the window that sent the message
-    pub id: Xid,
+    pub id: WinId,
     /// The mask to use when sending the event
     pub mask: ClientEventMask,
     /// The data type being set
@@ -258,7 +258,7 @@ pub struct ClientMessage {
 impl ClientMessage {
     /// Try to build a new ClientMessage. Fails if the data is invalid
     pub fn new(
-        id: Xid,
+        id: WinId,
         mask: ClientEventMask,
         dtype: impl Into<String>,
         data: ClientMessageData,
@@ -277,7 +277,7 @@ impl ClientMessage {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ConfigureEvent {
     /// The ID of the window that had a property changed
-    pub id: Xid,
+    pub id: WinId,
     /// The new window size
     pub r: Rect,
     /// Is this window the root window?
@@ -289,7 +289,7 @@ pub struct ConfigureEvent {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExposeEvent {
     /// The ID of the window that has become exposed
-    pub id: Xid,
+    pub id: WinId,
     /// The current size and position of the window
     pub r: Rect,
     /// How many following expose events are pending
@@ -301,7 +301,7 @@ pub struct ExposeEvent {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PointerChange {
     /// The ID of the window that was entered
-    pub id: Xid,
+    pub id: WinId,
     /// Absolute coordinate of the event
     pub abs: Point,
     /// Coordinate of the event relative to top-left of the window itself
@@ -315,7 +315,7 @@ pub struct PointerChange {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PropertyEvent {
     /// The ID of the window that had a property changed
-    pub id: Xid,
+    pub id: WinId,
     /// The property that changed
     pub atom: String,
     /// Is this window the root window?
@@ -327,7 +327,7 @@ pub struct PropertyEvent {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResizeRequestEvent {
     /// The ID of the window that is being resized
-    pub id: Xid,
+    pub id: WinId,
     /// The new width
     pub width: u32,
     /// The new height

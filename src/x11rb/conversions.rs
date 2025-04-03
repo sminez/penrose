@@ -13,7 +13,7 @@ use crate::{
         XConn, XEvent,
     },
     x11rb::Conn,
-    Error, Result, Xid,
+    Error, Result, WinId,
 };
 use strum::IntoEnumIterator;
 use tracing::warn;
@@ -34,7 +34,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
 
         Event::ButtonPress(event) => Ok(to_mouse_state(event.detail, event.state).map(|state| {
             XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.child),
+                WinId(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -46,7 +46,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
 
         Event::ButtonRelease(event) => Ok(to_mouse_state(event.detail, event.state).map(|state| {
             XEvent::MouseEvent(MouseEvent::new(
-                Xid(event.child),
+                WinId(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -59,7 +59,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         // NOTE: the '1' here is not actually used
         Event::MotionNotify(event) => Ok(to_mouse_state(1, event.state).map(|state| {
             XEvent::MotionNotify(MotionNotifyEvent::new(
-                Xid(event.child),
+                WinId(event.child),
                 event.root_x,
                 event.root_y,
                 event.event_x,
@@ -79,28 +79,28 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
             )))
         }
 
-        Event::MapRequest(event) => Ok(Some(XEvent::MapRequest(Xid(event.window)))),
+        Event::MapRequest(event) => Ok(Some(XEvent::MapRequest(WinId(event.window)))),
 
-        Event::UnmapNotify(event) => Ok(Some(XEvent::UnmapNotify(Xid(event.window)))),
+        Event::UnmapNotify(event) => Ok(Some(XEvent::UnmapNotify(WinId(event.window)))),
 
         Event::EnterNotify(event) => Ok(Some(XEvent::Enter(PointerChange {
-            id: Xid(event.event),
+            id: WinId(event.event),
             abs: Point::new(event.root_x as i32, event.root_y as i32),
             relative: Point::new(event.event_x as i32, event.event_y as i32),
             same_screen: event.same_screen_focus == 0,
         }))),
 
         Event::LeaveNotify(event) => Ok(Some(XEvent::Leave(PointerChange {
-            id: Xid(event.event),
+            id: WinId(event.event),
             abs: Point::new(event.root_x as i32, event.root_y as i32),
             relative: Point::new(event.event_x as i32, event.event_y as i32),
             same_screen: event.same_screen_focus == 0,
         }))),
 
-        Event::DestroyNotify(event) => Ok(Some(XEvent::Destroy(Xid(event.window)))),
+        Event::DestroyNotify(event) => Ok(Some(XEvent::Destroy(WinId(event.window)))),
 
         Event::ConfigureNotify(event) => Ok(Some(XEvent::ConfigureNotify(ConfigureEvent {
-            id: Xid(event.window),
+            id: WinId(event.window),
             r: Rect::new(
                 event.x as i32,
                 event.y as i32,
@@ -111,7 +111,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         }))),
 
         Event::ConfigureRequest(event) => Ok(Some(XEvent::ConfigureRequest(ConfigureEvent {
-            id: Xid(event.window),
+            id: WinId(event.window),
             r: Rect::new(
                 event.x as i32,
                 event.y as i32,
@@ -122,13 +122,13 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         }))),
 
         Event::ResizeRequest(event) => Ok(Some(XEvent::ResizeRequest(ResizeRequestEvent {
-            id: Xid(event.window),
+            id: WinId(event.window),
             width: event.width as u32,
             height: event.height as u32,
         }))),
 
         Event::Expose(event) => Ok(Some(XEvent::Expose(ExposeEvent {
-            id: Xid(event.window),
+            id: WinId(event.window),
             r: Rect::new(
                 event.x as i32,
                 event.y as i32,
@@ -141,8 +141,8 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
         Event::ClientMessage(event) => Ok(Some(to_client_message(conn, event)?)),
 
         Event::PropertyNotify(event) => Ok(Some(XEvent::PropertyNotify(PropertyEvent {
-            id: Xid(event.window),
-            atom: conn.atom_name(Xid(event.atom))?,
+            id: WinId(event.window),
+            atom: conn.atom_name(WinId(event.atom))?,
             is_root: event.window == *conn.root(),
         }))),
 
@@ -152,7 +152,7 @@ pub(crate) fn convert_event<C: Connection>(conn: &Conn<C>, event: Event) -> Resu
             error_code: 3,
             bad_value,
             ..
-        }) => Err(Error::UnknownClient(Xid(bad_value))),
+        }) => Err(Error::UnknownClient(WinId(bad_value))),
 
         // Other errors are returned directly
         Event::Error(e) => Err(Error::X11rbX11Error(e)),
@@ -183,7 +183,7 @@ fn to_mouse_state(detail: u8, state: KeyButMask) -> Option<MouseState> {
 }
 
 fn to_client_message<C: Connection>(conn: &Conn<C>, event: ClientMessageEvent) -> Result<XEvent> {
-    let name = conn.atom_name(Xid(event.type_))?;
+    let name = conn.atom_name(WinId(event.type_))?;
     let data = match event.format {
         8 => ClientMessageData::from(event.data.as_data8()),
         16 => ClientMessageData::from(event.data.as_data16()),
@@ -192,7 +192,7 @@ fn to_client_message<C: Connection>(conn: &Conn<C>, event: ClientMessageEvent) -
     };
 
     Ok(XEvent::ClientMessage(ClientMessage::new(
-        Xid(event.window),
+        WinId(event.window),
         ClientEventMask::NoEventMask,
         name,
         data,

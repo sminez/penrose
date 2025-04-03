@@ -2,7 +2,7 @@
 use crate::{
     core::layout::Layout,
     pure::{geometry::Rect, Stack},
-    Result, Xid,
+    Result, WinId,
 };
 use std::{
     io::Read,
@@ -152,7 +152,7 @@ pub fn print_layout_result<L: Layout>(
     screen_width: u32,
     screen_height: u32,
 ) {
-    let s: Stack<Xid> = Stack::try_from_iter((0..n_clients).map(Into::into)).expect("non-empty");
+    let s: Stack<WinId> = Stack::try_from_iter((0..n_clients).map(Into::into)).expect("non-empty");
     let (_, positions) = l.layout(&s, Rect::new(0, 0, screen_width, screen_height));
 
     let mut screen = vec![vec![' '; (screen_width + 1) as usize]; (screen_height + 1) as usize];

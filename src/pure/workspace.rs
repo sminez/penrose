@@ -1,7 +1,7 @@
 use crate::{
     core::layout::{IntoMessage, Layout, LayoutStack},
     pure::{geometry::Rect, Position, Stack},
-    stack, Error, Result, Xid,
+    stack, Error, Result, WinId,
 };
 use std::{fmt, mem::take};
 
@@ -96,9 +96,9 @@ impl<T> Workspace<T> {
     pub fn apply_layout(
         &mut self,
         tag: &str,
-        stack: &Option<Stack<Xid>>,
+        stack: &Option<Stack<WinId>>,
         r: Rect,
-    ) -> Vec<(Xid, Rect)> {
+    ) -> Vec<(WinId, Rect)> {
         let (_, positions) = self.layouts.layout_workspace(tag, stack, r);
         positions
     }

@@ -6,7 +6,7 @@ use penrose::{
     pure::{geometry::Rect, Stack},
     x::{Atom, WinType, XConn},
     x11rb::RustConn,
-    Color, Xid,
+    Color, WinId,
 };
 use std::{thread::sleep, time::Duration};
 
@@ -17,7 +17,7 @@ const FONT: &str = "mono";
 #[derive(Debug)]
 pub struct LayoutViewer {
     drw: Draw,
-    win: Xid,
+    win: WinId,
     r: Rect,
     focused: Color,
     unfocused: Color,
@@ -59,7 +59,7 @@ impl LayoutViewer {
     pub fn render_layout_with_stack(
         &mut self,
         layout: &mut Box<dyn Layout>,
-        stack: &Stack<Xid>,
+        stack: &Stack<WinId>,
         display_ms: u64,
     ) -> Result<()> {
         let focus = *stack.focused();
@@ -91,7 +91,7 @@ impl LayoutViewer {
     /// between the clients.
     pub fn showcase_layouts(
         &mut self,
-        mut s: Stack<Xid>,
+        mut s: Stack<WinId>,
         layouts: &[Box<dyn Layout>],
         gap_px: u32,
         display_ms: u64,

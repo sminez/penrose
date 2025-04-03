@@ -4,7 +4,7 @@ use penrose::{
     core::State,
     pure::geometry::Rect,
     x::{XConn, XEvent},
-    Color, Xid,
+    Color, WinId,
 };
 use std::{
     fmt,
@@ -73,7 +73,7 @@ where
 
     #[allow(unused_variables)]
     /// A manage hook to be run in order to update this Widget
-    fn on_new_client(&mut self, id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_new_client(&mut self, id: WinId, state: &mut State<X>, x: &X) -> Result<()> {
         Ok(())
     }
 }

@@ -1,9 +1,13 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
-    core::{bindings::KeyEventHandler, layout::IntoMessage, ClientSet, State},
-    util,
-    x::{XConn, XConnExt},
-    Result,
+    core::{
+        bindings::KeyEventHandler,
+        conn::{Conn, ConnExt},
+        layout::IntoMessage,
+        State,
+    },
+    pure::StackSet,
+    util, Result, WinId,
 };
 use tracing::info;
 
@@ -14,55 +18,55 @@ pub mod floating;
 //       right signature isn't sufficient on its own.
 
 /// Construct a [KeyEventHandler] from a closure or free function
-pub fn key_handler<F, X>(f: F) -> Box<dyn KeyEventHandler<X>>
+pub fn key_handler<F, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: FnMut(&mut State<X>, &X) -> Result<()> + 'static,
-    X: XConn,
+    F: FnMut(&mut State<C>, &C) -> Result<()> + 'static,
+    C: Conn,
 {
     Box::new(f)
 }
 
-/// Mutate the [ClientSet] and refresh the on screen state
-pub fn modify_with<F, X>(f: F) -> Box<dyn KeyEventHandler<X>>
+/// Mutate the [StackSet<WinId>] and refresh the on screen state
+pub fn modify_with<F, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: FnMut(&mut ClientSet) + Clone + 'static,
-    X: XConn,
+    F: FnMut(&mut StackSet<WinId>) + Clone + 'static,
+    C: Conn,
 {
-    Box::new(move |s: &mut State<X>, x: &X| x.modify_and_refresh(s, f.clone()))
+    Box::new(move |s: &mut State<C>, conn: &C| conn.modify_and_refresh(s, f.clone()))
 }
 
 /// Send a message to the currently active layout
-pub fn send_layout_message<F, M, X>(f: F) -> Box<dyn KeyEventHandler<X>>
+pub fn send_layout_message<F, M, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
     F: Fn() -> M + 'static,
     M: IntoMessage,
-    X: XConn,
+    C: Conn,
 {
-    key_handler(move |s: &mut State<X>, x: &X| {
-        x.modify_and_refresh(s, |cs| {
+    key_handler(move |s: &mut State<C>, conn: &C| {
+        conn.modify_and_refresh(s, |cs| {
             cs.current_workspace_mut().handle_message(f());
         })
     })
 }
 
 /// Send a message to all layouts available to the current workspace
-pub fn broadcast_layout_message<F, M, X>(f: F) -> Box<dyn KeyEventHandler<X>>
+pub fn broadcast_layout_message<F, M, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
     F: Fn() -> M + 'static,
     M: IntoMessage,
-    X: XConn,
+    C: Conn,
 {
-    key_handler(move |s: &mut State<X>, x: &X| {
-        x.modify_and_refresh(s, |cs| {
+    key_handler(move |s: &mut State<C>, conn: &C| {
+        conn.modify_and_refresh(s, |cs| {
             cs.current_workspace_mut().broadcast_message(f());
         })
     })
 }
 
 /// Spawn an external program as part of a key binding
-pub fn spawn<X>(program: &'static str) -> Box<dyn KeyEventHandler<X>>
+pub fn spawn<C>(program: &'static str) -> Box<dyn KeyEventHandler<C>>
 where
-    X: XConn,
+    C: Conn,
 {
     key_handler(move |_, _| util::spawn(program))
 }
@@ -70,16 +74,16 @@ where
 /// Exit penrose
 ///
 /// Signal the `WindowManager` to exit it's main event loop.
-pub fn exit<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|s: &mut State<X>, _| {
+pub fn exit<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
+    key_handler(|s: &mut State<C>, _| {
         s.running = false;
         Ok(())
     })
 }
 
 /// Info log the current window manager [State] for debugging purposes.
-pub fn log_current_state<X: XConn + std::fmt::Debug>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|s: &mut State<X>, _| {
+pub fn log_current_state<C: Conn + std::fmt::Debug>() -> Box<dyn KeyEventHandler<C>> {
+    key_handler(|s: &mut State<C>, _| {
         info!("Current Window Manager State: {s:#?}");
         Ok(())
     })
@@ -89,14 +93,14 @@ pub fn log_current_state<X: XConn + std::fmt::Debug>() -> Box<dyn KeyEventHandle
 /// closing the client program.
 /// This is provided for removing clients that have been accidentally tiled when
 /// they should have been ignored.
-pub fn remove_and_unmap_focused_client<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|s: &mut State<X>, x: &X| {
+pub fn remove_and_unmap_focused_client<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
+    key_handler(|s: &mut State<C>, conn: &C| {
         if let Some(client) = s.client_set.remove_focused() {
             info!(
                 ?client,
                 "Unmapping previously focused client following removal from state"
             );
-            x.unmap(client)
+            conn.hide_client(client)
         } else {
             Ok(())
         }

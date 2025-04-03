@@ -34,7 +34,7 @@
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
 )]
 
-use penrose::{x::XConn, Color, Xid};
+use penrose::{x::XConn, Color, WinId};
 use std::ffi::NulError;
 
 pub mod bar;
@@ -93,7 +93,7 @@ pub enum Error {
     #[error("no surface for {id}")]
     UnintialisedSurface {
         /// The window id requested
-        id: Xid,
+        id: WinId,
     },
 }
 

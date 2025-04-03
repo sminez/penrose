@@ -175,6 +175,7 @@ where
             .collect()
     }
 
+    /// Check whether this diff is a no-op
     #[cfg(test)]
     /// Is this diff empty
     pub fn is_empty(&self) -> bool {
@@ -193,7 +194,7 @@ mod tests {
     use super::*;
     use crate::{
         pure::stack_set::tests::{test_stack_set, test_stack_set_with_stacks},
-        stack, Xid,
+        stack, WinId,
     };
     use simple_test_case::test_case;
 
@@ -226,8 +227,8 @@ mod tests {
     fn drag_workspace_generates_correct_diff() {
         let mut s = test_stack_set_with_stacks(
             vec![
-                Some(stack!([Xid(1), Xid(2)], Xid(3), [Xid(4), Xid(5)])),
-                Some(stack!(Xid(6), [Xid(7), Xid(8)])),
+                Some(stack!([WinId(1), WinId(2)], WinId(3), [WinId(4), WinId(5)])),
+                Some(stack!(WinId(6), [WinId(7), WinId(8)])),
                 None,
             ],
             2,
@@ -240,18 +241,18 @@ mod tests {
         let diff = Diff::new(before, after);
 
         assert_eq!(diff.newly_focused_screen(), Some(1));
-        assert_eq!(diff.focused_client(), Some(Xid(3)));
+        assert_eq!(diff.focused_client(), Some(WinId(3)));
     }
 }
 
 #[cfg(test)]
 mod quickcheck_tests {
     use super::*;
-    use crate::{pure::StackSet, Xid};
+    use crate::{pure::StackSet, WinId};
     use quickcheck_macros::quickcheck;
 
     #[quickcheck]
-    fn diff_of_unchanged_stackset_is_empty(mut s: StackSet<Xid>) -> bool {
+    fn diff_of_unchanged_stackset_is_empty(mut s: StackSet<WinId>) -> bool {
         let ss = s.position_and_snapshot();
         let diff = Diff::new(ss.clone(), ss);
 
@@ -259,7 +260,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn adding_a_client_is_new_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn adding_a_client_is_new_in_diff(mut s: StackSet<WinId>) -> bool {
         let ss = s.position_and_snapshot();
         let new = s.minimal_unknown_client();
 
@@ -275,13 +276,13 @@ mod quickcheck_tests {
     // the positions returned by the Layout. In these tests, those are being specified manually
     // so there is nothing to test.
     #[quickcheck]
-    fn focusing_new_workspace_hides_old_clients_and_tag_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn focusing_new_workspace_hides_old_clients_and_tag_in_diff(mut s: StackSet<WinId>) -> bool {
         let tag = match s.first_hidden_tag() {
             Some(t) => t,
             None => return true,
         };
         let prev_tag = s.current_tag().to_string();
-        let clients_on_active: Vec<Xid> = match s.current_stack() {
+        let clients_on_active: Vec<WinId> = match s.current_stack() {
             Some(stack) => stack.iter().cloned().collect(),
             None => vec![],
         };
@@ -300,7 +301,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn removing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn removing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<WinId>) -> bool {
         let focus = match s.current_client() {
             Some(&c) => c,
             None => return true, // nothing to remove
@@ -318,7 +319,7 @@ mod quickcheck_tests {
 
     #[quickcheck]
     fn killing_focused_client_sets_killed_withdrawn_and_hidden_in_diff(
-        mut s: StackSet<Xid>,
+        mut s: StackSet<WinId>,
     ) -> bool {
         let focus = match s.current_client() {
             Some(&c) => c,
@@ -337,7 +338,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn moving_client_to_hidden_workspace_sets_hidden_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn moving_client_to_hidden_workspace_sets_hidden_in_diff(mut s: StackSet<WinId>) -> bool {
         let tag = s.first_hidden_tag();
         let client = s.current_client().cloned();
 

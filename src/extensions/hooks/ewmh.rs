@@ -6,15 +6,16 @@
 //! See details of the spec here:
 //!   <https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html>
 use crate::{
-    core::{ClientSet, Config, State},
+    core::{conn::ConnExt, Config, State},
     extensions::actions::{set_fullscreen_state, FullScreenAction},
+    pure::StackSet,
     x::{
         atom::Atom,
         event::{ClientMessage, ClientMessageData},
         property::Prop,
-        XConn, XConnExt, XEvent,
+        XConn, XEvent,
     },
-    Result, Xid,
+    Result, WinId,
 };
 use tracing::{debug, warn};
 
@@ -139,7 +140,7 @@ pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Resu
 }
 
 fn handle_fullscreen_message<X: XConn>(
-    id: Xid,
+    id: WinId,
     data: &ClientMessageData,
     state: &mut State<X>,
     x: &X,
@@ -184,7 +185,7 @@ pub fn refresh_hook<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
     Ok(())
 }
 
-fn set_known_desktops<X>(cs: &ClientSet, x: &X) -> Result<()>
+fn set_known_desktops<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
 where
     X: XConn,
 {
@@ -203,12 +204,12 @@ where
     )
 }
 
-fn set_known_clients<X>(cs: &ClientSet, x: &X) -> Result<()>
+fn set_known_clients<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
 where
     X: XConn,
 {
     // FIXME: this currently isn't in stacking order
-    let ordered_clients: Vec<Xid> = cs.clients().copied().collect();
+    let ordered_clients: Vec<WinId> = cs.clients().copied().collect();
 
     x.set_prop(
         x.root(),
@@ -223,7 +224,7 @@ where
     )
 }
 
-fn set_current_desktop<X>(cs: &ClientSet, x: &X) -> Result<()>
+fn set_current_desktop<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
 where
     X: XConn,
 {
@@ -236,7 +237,7 @@ where
     )
 }
 
-fn set_client_desktops<X>(cs: &ClientSet, x: &X) -> Result<()>
+fn set_client_desktops<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
 where
     X: XConn,
 {
@@ -257,7 +258,7 @@ where
     Ok(())
 }
 
-fn set_active_client<X>(cs: &ClientSet, x: &X) -> Result<()>
+fn set_active_client<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
 where
     X: XConn,
 {

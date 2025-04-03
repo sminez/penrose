@@ -7,7 +7,7 @@ use crate::{
         workspace::check_workspace_invariants,
         Position, Screen, Stack, Workspace,
     },
-    stack, Error, Result, Xid,
+    stack, Error, Result, WinId,
 };
 use std::{
     cmp::Ordering,
@@ -28,7 +28,7 @@ where
     pub(crate) floating: HashMap<C, RelativeRect>, // Floating windows
     pub(crate) previous_tag: String,      // The last tag to be focused before the current one
     pub(crate) invisible_tags: Vec<String>, // Tags that should never be focused
-    pub(crate) killed_clients: Vec<C>, // clients that have been removed and need processing on the X side
+    pub(crate) killed_clients: Vec<C>, // clients that have been removed and need processing on the Conn side
 }
 
 impl<C> StackSet<C>
@@ -826,15 +826,15 @@ where
 }
 
 #[cfg(test)]
-impl StackSet<Xid> {
+impl StackSet<WinId> {
     /// This is a test implementation that runs the `State::visible_client_positions`
     /// logic using a stub XConn and no layout hook.
-    pub(crate) fn visible_client_positions(&self) -> Vec<(Xid, Rect)> {
+    pub(crate) fn visible_client_positions(&self) -> Vec<(WinId, Rect)> {
         let mut s = crate::core::State {
             client_set: self.clone(),
             config: Default::default(),
             extensions: anymap::AnyMap::new(),
-            root: Xid(0),
+            root: WinId(0),
             mapped: Default::default(),
             pending_unmap: Default::default(),
             current_event: None,
@@ -848,13 +848,13 @@ impl StackSet<Xid> {
 
     /// This is a test implementation that runs the `State::position_and_snapshot`
     /// logic using a stub XConn and no layout hook.
-    pub(crate) fn position_and_snapshot(&mut self) -> Snapshot<Xid> {
+    pub(crate) fn position_and_snapshot(&mut self) -> Snapshot<WinId> {
         let positions = self.visible_client_positions();
         self.snapshot(positions)
     }
 }
 
-impl StackSet<Xid> {
+impl StackSet<WinId> {
     /// Record a known client as floating, giving its preferred screen position.
     ///
     /// # Errors
@@ -865,7 +865,7 @@ impl StackSet<Xid> {
     /// not currently mapped to a screen. This is required to determine the correct
     /// relative positioning for the floating client as is it is moved between
     /// screens.
-    pub fn float(&mut self, client: Xid, r: Rect) -> Result<()> {
+    pub fn float(&mut self, client: WinId, r: Rect) -> Result<()> {
         if !self.contains(&client) {
             return Err(Error::UnknownClient(client));
         }
@@ -889,7 +889,7 @@ impl StackSet<Xid> {
     /// not currently mapped to a screen. This is required to determine the correct
     /// relative positioning for the floating client as is it is moved between
     /// screens.
-    pub fn toggle_floating_state(&mut self, client: Xid, r: Rect) -> Result<Option<Rect>> {
+    pub fn toggle_floating_state(&mut self, client: WinId, r: Rect) -> Result<Option<Rect>> {
         let rect = if self.is_floating(&client) {
             if self.screen_for_client(&client).is_none() {
                 return Err(Error::ClientIsNotVisible(client));
@@ -956,7 +956,7 @@ impl StackSet<Xid> {
     // with ones we generate with default values. In doing this we need to make sure
     // that any _invisible_ workspaces are kept to one side so that they do not end
     // up focused on a screen by mistake.
-    fn take_from_hidden(&mut self, n: usize) -> Vec<Workspace<Xid>> {
+    fn take_from_hidden(&mut self, n: usize) -> Vec<Workspace<WinId>> {
         let next_id = self.workspaces().map(|w| w.id).max().unwrap_or(0) + 1;
         let mut tmp = Vec::with_capacity(self.hidden.len());
         let mut hidden = VecDeque::new();
@@ -1095,7 +1095,7 @@ pub mod tests {
         _test_stack_set(n_tags, n_screens)
     }
 
-    pub fn test_xid_stack_set(n_tags: usize, n_screens: usize) -> StackSet<Xid> {
+    pub fn test_xid_stack_set(n_tags: usize, n_screens: usize) -> StackSet<WinId> {
         _test_stack_set(n_tags, n_screens)
     }
 
@@ -1484,27 +1484,27 @@ pub mod tests {
 
     #[test_case("1", 0, Ok(None); "non floating visible")]
     #[test_case("1", 1, Ok(Some(Rect::new(0, 0, 10, 10))); "floating visible")]
-    #[test_case("1", 42, Err(Error::UnknownClient(Xid(42))); "unknown client")]
-    #[test_case("2", 1, Err(Error::ClientIsNotVisible(Xid(1))); "floating client not visible")]
-    #[test_case("2", 0, Err(Error::ClientIsNotVisible(Xid(0))); "non floating client not visible")]
+    #[test_case("1", 42, Err(Error::UnknownClient(WinId(42))); "unknown client")]
+    #[test_case("2", 1, Err(Error::ClientIsNotVisible(WinId(1))); "floating client not visible")]
+    #[test_case("2", 0, Err(Error::ClientIsNotVisible(WinId(0))); "non floating client not visible")]
     #[test]
     fn toggle_floating_state(focused_tag: &str, client: u32, expected: Result<Option<Rect>>) {
-        let mut ss: StackSet<Xid> = StackSet::try_new(
+        let mut ss: StackSet<WinId> = StackSet::try_new(
             LayoutStack::default(),
             ["1", "2", "3"],
-            // The screen size here matters as the Rect used for floating Xid(1) is converted to a
+            // The screen size here matters as the Rect used for floating WinId(1) is converted to a
             // RelativeRect internally and we need to ensure that it maps back correctly when it
             // gets removed.
             vec![Rect::new(0, 0, 10, 10)],
         )
         .expect("enough workspaces to cover the number of initial screens");
 
-        ss.insert(Xid(0));
-        ss.insert(Xid(1));
-        ss.float_unchecked(Xid(1), Rect::new(0, 0, 10, 10));
+        ss.insert(WinId(0));
+        ss.insert(WinId(1));
+        ss.float_unchecked(WinId(1), Rect::new(0, 0, 10, 10));
         ss.focus_tag(focused_tag);
 
-        let res = ss.toggle_floating_state(Xid(client), Rect::new(1, 2, 3, 4));
+        let res = ss.toggle_floating_state(WinId(client), Rect::new(1, 2, 3, 4));
 
         match (expected, res) {
             (Ok(None), Ok(None)) => (),
@@ -1547,7 +1547,7 @@ pub mod tests {
         assert_eq!(s.workspace(tag).unwrap().focus(), Some(&client));
     }
 
-    fn focused_tags(ss: &StackSet<Xid>) -> Vec<&String> {
+    fn focused_tags(ss: &StackSet<WinId>) -> Vec<&String> {
         ss.screens.iter().map(|s| &s.workspace.tag).collect()
     }
 
@@ -1565,7 +1565,7 @@ pub mod tests {
         tags_before: Vec<&str>,
         tags_after: Vec<&str>,
     ) {
-        let mut ss: StackSet<Xid> = StackSet::try_new(
+        let mut ss: StackSet<WinId> = StackSet::try_new(
             LayoutStack::default(),
             ["1", "2"],
             vec![Rect::default(); n_before],
@@ -1598,7 +1598,7 @@ pub mod tests {
 
     #[test]
     fn update_screens_with_empty_vec_is_an_error() {
-        let mut ss: StackSet<Xid> =
+        let mut ss: StackSet<WinId> =
             StackSet::try_new(LayoutStack::default(), ["1", "2"], vec![Rect::default(); 2])
                 .expect("enough workspaces to cover the number of screens");
 
@@ -1634,15 +1634,15 @@ mod quickcheck_tests {
         }
     }
 
-    impl StackSet<Xid> {
-        pub fn minimal_unknown_client(&self) -> Xid {
+    impl StackSet<WinId> {
+        pub fn minimal_unknown_client(&self) -> WinId {
             let mut c = 0;
 
-            while self.contains(&Xid(c)) {
+            while self.contains(&WinId(c)) {
                 c += 1;
             }
 
-            Xid(c)
+            WinId(c)
         }
 
         pub fn first_hidden_tag(&self) -> Option<String> {
@@ -1657,7 +1657,7 @@ mod quickcheck_tests {
                 .clone()
         }
 
-        pub fn last_visible_client(&self) -> Option<&Xid> {
+        pub fn last_visible_client(&self) -> Option<&WinId> {
             self.screens
                 .down
                 .back()
@@ -1670,20 +1670,20 @@ mod quickcheck_tests {
         }
     }
 
-    impl Arbitrary for Xid {
+    impl Arbitrary for WinId {
         fn arbitrary(g: &mut Gen) -> Self {
-            Xid(u32::arbitrary(g))
+            WinId(u32::arbitrary(g))
         }
     }
 
     // For the tests below we only care about the stack structure not the elements themselves, so
     // we use `u8` as an easily defaultable focus if `Vec::arbitrary` gives us an empty vec.
-    impl Arbitrary for StackSet<Xid> {
+    impl Arbitrary for StackSet<WinId> {
         fn arbitrary(g: &mut Gen) -> Self {
             let n_stacks = usize::arbitrary(g) % 10;
             let mut stacks = Vec::with_capacity(n_stacks);
 
-            let mut clients: Vec<Xid> = HashSet::<Xid>::arbitrary(g).into_iter().collect();
+            let mut clients: Vec<WinId> = HashSet::<WinId>::arbitrary(g).into_iter().collect();
 
             for _ in 0..n_stacks {
                 if clients.is_empty() {
@@ -1709,7 +1709,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn insert_pushes_to_current_stack(mut s: StackSet<Xid>) -> bool {
+    fn insert_pushes_to_current_stack(mut s: StackSet<WinId>) -> bool {
         let new_focus = s.minimal_unknown_client();
         s.insert(new_focus);
 
@@ -1717,7 +1717,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<Xid>) -> bool {
+    fn focus_client_focused_the_enclosing_workspace(mut s: StackSet<WinId>) -> bool {
         let target = match s.clients().max() {
             Some(target) => *target,
             None => return true, // nothing to focus
@@ -1734,7 +1734,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_focused_to_tag(mut s: StackSet<Xid>) -> bool {
+    fn move_focused_to_tag(mut s: StackSet<WinId>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.current_client() {
@@ -1749,7 +1749,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn move_client_to_tag(mut s: StackSet<Xid>) -> bool {
+    fn move_client_to_tag(mut s: StackSet<WinId>) -> bool {
         let tag = s.last_tag();
 
         let c = match s.last_visible_client() {
@@ -1764,7 +1764,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn focus_next_workspace_always_changes_workspace(mut s: StackSet<Xid>) -> bool {
+    fn focus_next_workspace_always_changes_workspace(mut s: StackSet<WinId>) -> bool {
         if s.ordered_tags().len() == 1 {
             return true; // need at least two tags to cycle
         };
@@ -1776,7 +1776,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn focus_previous_workspace_always_changes_workspace(mut s: StackSet<Xid>) -> bool {
+    fn focus_previous_workspace_always_changes_workspace(mut s: StackSet<WinId>) -> bool {
         if s.ordered_tags().len() == 1 {
             return true; // need at least two tags to cycle
         };

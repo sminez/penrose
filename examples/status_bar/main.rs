@@ -7,6 +7,7 @@
 //!
 //! For more customisation options, see the `bar` module of the `penrose_ui` crate in
 //! the `/crates` directory.
+
 use penrose::{
     builtin::{
         actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
