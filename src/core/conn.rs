@@ -2,19 +2,18 @@
 use crate::{
     builtin::layout::messages::Hide,
     core::{
-        bindings::{KeyCode, MouseState},
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
         Config, State,
     },
     pure::{
         geometry::{Point, Rect},
         StackSet,
     },
-    x::XEvent,
     Color, Result,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{fmt, ops::Deref};
+use std::{fmt, hash::Hash, ops::Deref};
 use tracing::{debug, error, trace};
 
 /// An ID for a given window
@@ -22,7 +21,7 @@ use tracing::{debug, error, trace};
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct WinId(pub u32);
 
-impl std::fmt::Display for WinId {
+impl fmt::Display for WinId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -48,29 +47,45 @@ impl From<WinId> for u32 {
     }
 }
 
+/// An event type associated with a [Conn]
+pub trait ConnEvent: fmt::Debug + fmt::Display + Clone + PartialEq + Eq + Hash {
+    /// Whether or not this event should trigger pointer warping as part of a refresh
+    fn requires_pointer_warp(&self) -> bool;
+}
+
 /// A platform agnostic backing connection
 pub trait Conn: Sized {
+    /// The event type used by this connection
+    type Event: ConnEvent;
+
     /// The ID of the window manager root window.
     fn root(&self) -> WinId;
     /// Block and wait for the next event so it can be processed.
-    fn next_event(&self) -> Result<XEvent>;
+    fn next_event(&self) -> Result<Self::Event>;
+    /// Process the an event
+    fn handle_event(
+        &self,
+        evt: Self::Event,
+        key_bindings: &mut KeyBindings<Self>,
+        mouse_bindings: &mut MouseBindings<Self>,
+        state: &mut State<Self>,
+    ) -> Result<()>;
     /// Flush any pending events to the underlying back end.
     fn flush(&self);
+
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
     fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
-
+    /// Ask the X server for the IDs of all currently known client windows
+    fn existing_clients(&self) -> Result<Vec<WinId>>;
+    /// Request a client windows's current workspace
+    fn manage_existing_clients(&self, state: &mut State<Self>) -> Result<()>;
     /// The dimensions of each currently available screen.
     fn screen_details(&self) -> Result<Vec<Rect>>;
     /// The current (x, y) coordinate of the mouse cursor.
     fn cursor_position(&self) -> Result<Point>;
     /// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.
     fn warp_pointer(&self, id: WinId, x: i16, y: i16) -> Result<()>;
-
-    // TODO: do the other warp pointer methods need to be here so they can be overwritten?
-
-    /// Ask the X server for the IDs of all currently known client windows
-    fn existing_clients(&self) -> Result<Vec<WinId>>;
 
     /// Update the geometry of a given client based on the given [Rect].
     fn position_client(&self, id: WinId, r: Rect) -> Result<()>;
@@ -113,10 +128,6 @@ pub trait Conn: Sized {
     where
         WinId: 'a,
         I: Iterator<Item = &'a WinId>;
-    /// Handle external requests to focus the specified client
-    fn handle_focus_in(&self, id: WinId, state: &mut State<Self>) -> Result<()>;
-    /// Request a client windows's current workspace
-    fn manage_existing_clients(&self, state: &mut State<Self>) -> Result<()>;
 }
 
 /// Extended functionality for [Conn] impls in order to run the window manager.
@@ -486,7 +497,7 @@ fn handle_pointer_change<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> 
     }
 
     trace!("checking if focus should change");
-    if !matches!(state.current_event, Some(XEvent::Enter(_))) {
+    if state.current_event().map(|e| e.requires_pointer_warp()) != Some(true) {
         if let Some(id) = state.diff.focused_client() {
             trace!("focused client changed");
             // NOTE: Some of the behaviour here is based on looking at whether or

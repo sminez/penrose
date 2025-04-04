@@ -2,7 +2,6 @@
 use crate::{
     core::conn::Conn,
     pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
-    x::XEvent,
     Color, Error, Result,
 };
 use anymap::{any::Any, AnyMap};
@@ -48,7 +47,7 @@ where
     pub(crate) root: WinId,
     pub(crate) mapped: HashSet<WinId>,
     pub(crate) pending_unmap: HashMap<WinId, usize>,
-    pub(crate) current_event: Option<XEvent>,
+    pub(crate) current_event: Option<C::Event>,
     pub(crate) diff: Diff<WinId>,
     pub(crate) running: bool,
     pub(crate) held_mouse_state: Option<MouseState>,
@@ -93,7 +92,7 @@ where
     }
 
     /// The event currently being processed.
-    pub fn current_event(&self) -> Option<&XEvent> {
+    pub fn current_event(&self) -> Option<&C::Event> {
         self.current_event.as_ref()
     }
 
@@ -429,7 +428,9 @@ where
             panic!("unable to set signal handler: {}", e);
         }
 
-        handle::mapping_notify(&self.key_bindings, &self.mouse_bindings, &self.conn)?;
+        let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
+        let mouse_states: Vec<_> = self.mouse_bindings.keys().cloned().collect();
+        self.conn.grab(&key_codes, &mouse_states)?;
 
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
@@ -449,7 +450,7 @@ where
                     trace!(details = ?event, "event details");
                     self.state.current_event = Some(event.clone());
 
-                    if let Err(e) = self.handle_xevent(event) {
+                    if let Err(e) = self.handle_event(event) {
                         error!(%e, "Error handling XEvent");
                     }
                     self.conn.flush();
@@ -464,9 +465,7 @@ where
         Ok(())
     }
 
-    fn handle_xevent(&mut self, event: XEvent) -> Result<()> {
-        use XEvent::*;
-
+    fn handle_event(&mut self, event: C::Event) -> Result<()> {
         let WindowManager {
             conn,
             state,
@@ -496,30 +495,7 @@ where
             return Ok(());
         }
 
-        match &event {
-            ClientMessage(m) => handle::client_message(m.clone(), state, conn)?,
-            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, conn)?,
-            ConfigureNotify(_) => (), // Not currently handled
-            ConfigureRequest(e) => handle::configure_request(e, state, conn)?,
-            Enter(p) => handle::enter(*p, state, conn)?,
-            Expose(_) => (), // Not currently handled
-            FocusIn(id) => conn.handle_focus_in(*id, state)?,
-            Destroy(xid) => handle::destroy(*xid, state, conn)?,
-            KeyPress(code) => handle::keypress(*code, key_bindings, state, conn)?,
-            Leave(p) => handle::leave(*p, state, conn)?,
-            MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, conn)?,
-            MapRequest(xid) => handle::map_request(*xid, state, conn)?,
-            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, conn)?,
-            MotionNotify(e) => handle::motion_event(e.clone(), mouse_bindings, state, conn)?,
-            PropertyNotify(_) => (), // Not currently handled
-            RandrNotify => handle::detect_screens(state, conn)?,
-            ScreenChange => handle::screen_change(state, conn)?,
-            UnmapNotify(id) => handle::unmap_notify(*id, state, conn)?,
-
-            _ => (), // XEvent is non-exhaustive
-        }
-
-        Ok(())
+        conn.handle_event(event, key_bindings, mouse_bindings, state)
     }
 
     fn handle_error(&mut self, e: Error) {

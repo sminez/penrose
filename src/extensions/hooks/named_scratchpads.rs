@@ -8,7 +8,6 @@ use crate::{
         State, WindowManager,
     },
     util::spawn,
-    x::XEvent,
     Result, WinId,
 };
 use std::{borrow::Cow, collections::HashMap, fmt};
@@ -100,7 +99,7 @@ where
         .add_invisible_workspace(NSP_TAG)
         .expect("named scratchpad tag to be unique");
     wm.state.config.compose_or_set_manage_hook(manage_hook);
-    wm.state.config.compose_or_set_event_hook(event_hook);
+    wm.state.config.compose_or_set_refresh_hook(refresh_hook);
 
     wm
 }
@@ -121,23 +120,20 @@ pub fn manage_hook<C: Conn + 'static>(id: WinId, state: &mut State<C>, conn: &C)
 }
 
 /// Remove destroyed clients from internal scratchpad state
-pub fn event_hook<C: Conn + 'static>(event: &XEvent, state: &mut State<C>, _: &C) -> Result<bool> {
-    let destroyed = match event {
-        XEvent::Destroy(id) => id,
-        _ => return Ok(true),
-    };
-
+pub fn refresh_hook<C: Conn + 'static>(state: &mut State<C>, _: &C) -> Result<()> {
     let s = state.extension::<NamedScratchPadState<C>>()?;
-
     for sp in s.borrow_mut().0.values_mut() {
-        if sp.client == Some(*destroyed) {
-            debug!(%sp.name, %destroyed, "scratchpad client destroyed");
-            sp.client = None;
-            break;
+        match sp.client {
+            Some(id) if !state.client_set.contains(&id) => {
+                debug!(%sp.name, %id, "scratchpad client destroyed");
+                sp.client = None;
+                break;
+            }
+            _ => (),
         }
     }
 
-    Ok(true)
+    Ok(())
 }
 
 /// Toggle the visibility of a NamedScratchPad.

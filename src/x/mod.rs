@@ -1,15 +1,15 @@
 //! Logic for interacting with the X server
 use crate::{
     core::{
-        bindings::{KeyCode, MouseState},
-        conn::{manage_without_refresh, Conn, ConnExt},
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
+        conn::{manage_without_refresh, Conn, ConnEvent, ConnExt},
         Config, State,
     },
     pure::geometry::{Point, Rect},
     x::{
         atom::AUTO_FLOAT_WINDOW_TYPES,
-        event::{ClientMessage, ClientMessageKind},
-        property::{MapState, WmHints, WmState},
+        event::ClientMessage,
+        property::{MapState, WmState},
         query::str_prop,
     },
     Color, Result, WinId,
@@ -149,10 +149,18 @@ pub trait XConn {
     fn warp_pointer(&self, id: WinId, x: i16, y: i16) -> Result<()>;
 }
 
+impl ConnEvent for XEvent {
+    fn requires_pointer_warp(&self) -> bool {
+        !matches!(self, &XEvent::Enter(_))
+    }
+}
+
 impl<X> Conn for X
 where
     X: XConn,
 {
+    type Event = XEvent;
+
     #[inline]
     fn root(&self) -> WinId {
         self.root()
@@ -161,6 +169,42 @@ where
     #[inline]
     fn next_event(&self) -> Result<XEvent> {
         self.next_event()
+    }
+
+    fn handle_event(
+        &self,
+        evt: Self::Event,
+        key_bindings: &mut KeyBindings<Self>,
+        mouse_bindings: &mut MouseBindings<Self>,
+        state: &mut State<Self>,
+    ) -> Result<()> {
+        use crate::core::handle;
+        use XEvent::*;
+
+        match evt {
+            ClientMessage(m) => handle::client_message(m.clone(), state, self)?,
+            ConfigureNotify(e) if e.is_root => handle::detect_screens(state, self)?,
+            ConfigureNotify(_) => (), // Not currently handled
+            ConfigureRequest(e) => handle::configure_request(&e, state, self)?,
+            Enter(p) => handle::enter(p, state, self)?,
+            Expose(_) => (), // Not currently handled
+            FocusIn(id) => handle::focus_in(id, state, self)?,
+            Destroy(id) => handle::destroy(id, state, self)?,
+            KeyPress(code) => handle::keypress(code, key_bindings, state, self)?,
+            Leave(p) => handle::leave(p, state, self)?,
+            MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, self)?,
+            MapRequest(xid) => handle::map_request(xid, state, self)?,
+            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, self)?,
+            MotionNotify(e) => handle::motion_event(e.clone(), mouse_bindings, state, self)?,
+            PropertyNotify(_) => (), // Not currently handled
+            RandrNotify => handle::detect_screens(state, self)?,
+            ScreenChange => handle::screen_change(state, self)?,
+            UnmapNotify(id) => handle::unmap_notify(id, state, self)?,
+
+            _ => (), // XEvent is non-exhaustive
+        }
+
+        Ok(())
     }
 
     #[inline]
@@ -378,28 +422,6 @@ where
         for &id in ids {
             self.set_client_config(id, &[ClientConfig::StackAbove(previous)])?;
             previous = id;
-        }
-
-        Ok(())
-    }
-
-    fn handle_focus_in(&self, id: WinId, state: &mut State<Self>) -> Result<()> {
-        let accepts_focus = match self.get_prop(id, Atom::WmHints.as_ref()) {
-            Ok(Some(Prop::WmHints(WmHints { accepts_input, .. }))) => accepts_input,
-            _ => true,
-        };
-
-        if accepts_focus {
-            self.focus(id)?;
-            self.set_prop(
-                self.root(),
-                Atom::NetActiveWindow.as_ref(),
-                Prop::Window(vec![id]),
-            )?;
-            self.set_active_client(id, state)?;
-        } else {
-            let msg = ClientMessageKind::TakeFocus(id).as_message(self)?;
-            self.send_client_message(msg)?;
         }
 
         Ok(())

@@ -4,45 +4,49 @@ use crate::{
         bindings::{
             KeyBindings, KeyCode, MotionNotifyEvent, MouseBindings, MouseEvent, MouseEventKind,
         },
-        conn::{Conn, ConnExt, WinId},
+        conn::{Conn, ConnExt},
         State,
     },
     pure::geometry::Point,
-    x::event::{ClientMessage, ConfigureEvent, PointerChange},
-    Result,
+    x::{
+        event::{ClientMessage, ClientMessageKind, ConfigureEvent, PointerChange},
+        property::WmHints,
+        Atom, Prop, XConn,
+    },
+    Result, WinId,
 };
 use tracing::{error, info, trace};
 
 // Currently no client messages are handled by default (see the ewmh extension for some examples of messages
 // that are handled when that is enabled)
-pub(crate) fn client_message<C: Conn>(msg: ClientMessage, _: &mut State<C>, _: &C) -> Result<()> {
+pub(crate) fn client_message<X: XConn>(msg: ClientMessage, _: &mut State<X>, _: &X) -> Result<()> {
     let data = &msg.data;
     trace!(id = msg.id.0, dtype = ?msg.dtype, ?data, "got client message");
 
     Ok(())
 }
 
-pub(crate) fn mapping_notify<C: Conn>(
-    key_bindings: &KeyBindings<C>,
-    mouse_bindings: &MouseBindings<C>,
-    conn: &C,
+pub(crate) fn mapping_notify<X: XConn>(
+    key_bindings: &KeyBindings<X>,
+    mouse_bindings: &MouseBindings<X>,
+    x: &X,
 ) -> Result<()> {
     trace!("grabbing key and mouse bindings");
     let key_codes: Vec<_> = key_bindings.keys().copied().collect();
     let mouse_states: Vec<_> = mouse_bindings.keys().cloned().collect();
 
-    conn.grab(&key_codes, &mouse_states)
+    x.grab(&key_codes, &mouse_states)
 }
 
-pub(crate) fn keypress<C: Conn>(
+pub(crate) fn keypress<X: XConn>(
     key: KeyCode,
-    bindings: &mut KeyBindings<C>,
-    state: &mut State<C>,
-    conn: &C,
+    bindings: &mut KeyBindings<X>,
+    state: &mut State<X>,
+    x: &X,
 ) -> Result<()> {
     if let Some(action) = bindings.get_mut(&key) {
         trace!(?key, "running user keybinding");
-        if let Err(error) = action.call(state, conn) {
+        if let Err(error) = action.call(state, x) {
             error!(%error, ?key, "error running user keybinding");
             return Err(error);
         }
@@ -51,14 +55,14 @@ pub(crate) fn keypress<C: Conn>(
     Ok(())
 }
 
-pub(crate) fn mouse_event<C: Conn>(
+pub(crate) fn mouse_event<X: XConn>(
     e: MouseEvent,
-    bindings: &mut MouseBindings<C>,
-    state: &mut State<C>,
-    conn: &C,
+    bindings: &mut MouseBindings<X>,
+    state: &mut State<X>,
+    x: &X,
 ) -> Result<()> {
     if let Some(action) = bindings.get_mut(&e.state) {
-        if let Err(error) = action.on_mouse_event(&e, state, conn) {
+        if let Err(error) = action.on_mouse_event(&e, state, x) {
             error!(%error, ?e, "error running user mouse binding");
             return Err(error);
         }
@@ -72,11 +76,11 @@ pub(crate) fn mouse_event<C: Conn>(
     Ok(())
 }
 
-pub(crate) fn motion_event<C: Conn>(
+pub(crate) fn motion_event<X: XConn>(
     e: MotionNotifyEvent,
-    bindings: &mut MouseBindings<C>,
-    state: &mut State<C>,
-    conn: &C,
+    bindings: &mut MouseBindings<X>,
+    state: &mut State<X>,
+    x: &X,
 ) -> Result<()> {
     let held_state = match state.held_mouse_state.as_ref() {
         Some(state) => state,
@@ -84,7 +88,7 @@ pub(crate) fn motion_event<C: Conn>(
     };
 
     if let Some(action) = bindings.get_mut(held_state) {
-        if let Err(error) = action.on_motion(&e, state, conn) {
+        if let Err(error) = action.on_motion(&e, state, x) {
             error!(%error, ?e, "error running user mouse binding");
             return Err(error);
         }
@@ -93,32 +97,54 @@ pub(crate) fn motion_event<C: Conn>(
     Ok(())
 }
 
-pub(crate) fn configure_request<C: Conn>(
+pub(crate) fn configure_request<X: XConn>(
     ConfigureEvent { id, r, .. }: &ConfigureEvent,
-    state: &mut State<C>,
-    conn: &C,
+    state: &mut State<X>,
+    x: &X,
 ) -> Result<()> {
     if state.client_set.contains(id) && !state.client_set.floating.contains_key(id) {
         return Ok(()); // Managed tiled clients aren't allowed to configure themselves
     }
 
-    conn.position_client(*id, *r)
+    x.position_client(*id, *r)
 }
 
-pub(crate) fn map_request<C: Conn>(id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn map_request<X: XConn>(id: WinId, state: &mut State<X>, x: &X) -> Result<()> {
     trace!(?id, "handling new map request");
 
-    if !state.client_set.contains(&id) && conn.client_should_be_managed(id) {
+    if !state.client_set.contains(&id) && x.client_should_be_managed(id) {
         trace!(?id, "managing client");
-        conn.manage(id, state)?;
+        x.manage(id, state)?;
     }
 
     Ok(())
 }
 
-pub(crate) fn destroy<C: Conn>(id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn focus_in<X: XConn>(id: WinId, state: &mut State<X>, x: &X) -> Result<()> {
+    let accepts_focus = match x.get_prop(id, Atom::WmHints.as_ref()) {
+        Ok(Some(Prop::WmHints(WmHints { accepts_input, .. }))) => accepts_input,
+        _ => true,
+    };
+
+    if accepts_focus {
+        x.focus(id)?;
+        x.set_prop(
+            x.root(),
+            Atom::NetActiveWindow.as_ref(),
+            Prop::Window(vec![id]),
+        )?;
+        x.set_active_client(id, state)?;
+    } else {
+        let msg = ClientMessageKind::TakeFocus(id).as_message(x)?;
+        x.send_client_message(msg)?;
+    }
+
+    Ok(())
+}
+
+pub(crate) fn destroy<X: XConn>(id: WinId, state: &mut State<X>, x: &X) -> Result<()> {
     trace!(?id, "destroying client");
-    conn.unmanage(id, state)?;
+    x.unmanage(id, state)?;
     state.mapped.remove(&id);
     state.pending_unmap.remove(&id);
 
@@ -126,11 +152,11 @@ pub(crate) fn destroy<C: Conn>(id: WinId, state: &mut State<C>, conn: &C) -> Res
 }
 
 // Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
-pub(crate) fn unmap_notify<C: Conn>(id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn unmap_notify<X: XConn>(id: WinId, state: &mut State<X>, x: &X) -> Result<()> {
     let expected = *state.pending_unmap.get(&id).unwrap_or(&0);
 
     if expected == 0 {
-        conn.unmanage(id, state)?;
+        x.unmanage(id, state)?;
     } else if expected == 1 {
         state.pending_unmap.remove(&id);
     } else {
@@ -143,9 +169,9 @@ pub(crate) fn unmap_notify<C: Conn>(id: WinId, state: &mut State<C>, conn: &C) -
     Ok(())
 }
 
-pub(crate) fn enter<C: Conn>(p: PointerChange, state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn enter<X: XConn>(p: PointerChange, state: &mut State<X>, x: &X) -> Result<()> {
     if state.config.focus_follow_mouse {
-        conn.modify_and_refresh(state, |cs| {
+        x.modify_and_refresh(state, |cs| {
             cs.focus_client(&p.id);
         })
     } else {
@@ -153,30 +179,30 @@ pub(crate) fn enter<C: Conn>(p: PointerChange, state: &mut State<C>, conn: &C) -
     }
 }
 
-pub(crate) fn leave<C: Conn>(p: PointerChange, state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn leave<X: XConn>(p: PointerChange, state: &mut State<X>, x: &X) -> Result<()> {
     if p.id == state.root() && !p.same_screen {
-        conn.focus_client(p.id)?;
-        set_screen_from_point(p.abs, state, conn)?;
+        x.focus_client(p.id)?;
+        set_screen_from_point(p.abs, state, x)?;
     }
 
     Ok(())
 }
 
-pub(crate) fn detect_screens<C: Conn>(state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn detect_screens<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
     info!("re-detecting screens");
-    let rects = conn.screen_details()?;
+    let rects = x.screen_details()?;
     info!(?rects, "found screens");
 
     state.client_set.update_screens(rects)
 }
 
-pub(crate) fn screen_change<C: Conn>(state: &mut State<C>, conn: &C) -> Result<()> {
+pub(crate) fn screen_change<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
     trace!("screen changed");
-    set_screen_from_point(conn.cursor_position()?, state, conn)
+    set_screen_from_point(x.cursor_position()?, state, x)
 }
 
-fn set_screen_from_point<C: Conn>(p: Point, state: &mut State<C>, conn: &C) -> Result<()> {
-    conn.modify_and_refresh(state, |cs| {
+fn set_screen_from_point<X: XConn>(p: Point, state: &mut State<X>, x: &X) -> Result<()> {
+    x.modify_and_refresh(state, |cs| {
         let index = cs
             .screens()
             .find(|s| s.r.contains_point(p))

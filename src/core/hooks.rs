@@ -94,7 +94,6 @@ use crate::{
         State,
     },
     pure::geometry::Rect,
-    x::XEvent,
     Result,
 };
 use std::fmt;
@@ -108,7 +107,7 @@ where
     C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool>;
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool>;
 
     /// Convert to a trait object
     fn boxed(self) -> Box<dyn EventHook<C>>
@@ -149,7 +148,7 @@ impl<C> EventHook<C> for Vec<Box<dyn EventHook<C>>>
 where
     C: Conn,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool> {
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
         let mut call_next = true;
         for hook in self.iter_mut() {
             call_next = hook.call(event, state, conn)?;
@@ -182,7 +181,7 @@ impl<C> EventHook<C> for ComposedEventHook<C>
 where
     C: Conn,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool> {
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
         if self.first.call(event, state, conn)? {
             self.second.call(event, state, conn)
         } else {
@@ -193,10 +192,10 @@ where
 
 impl<F, C> EventHook<C> for F
 where
-    F: FnMut(&XEvent, &mut State<C>, &C) -> Result<bool>,
+    F: FnMut(&C::Event, &mut State<C>, &C) -> Result<bool>,
     C: Conn,
 {
-    fn call(&mut self, event: &XEvent, state: &mut State<C>, conn: &C) -> Result<bool> {
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
         (self)(event, state, conn)
     }
 }
