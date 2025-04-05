@@ -19,7 +19,7 @@ use crate::{
 /// Any implementation of `MockXConn` will automatically implement `XConn` by forwarding on
 /// calls to `$method` to `mock_$method`.
 #[allow(unused_variables, missing_docs)]
-pub trait MockXConn {
+pub trait MockXConn: Send {
     fn mock_root(&self) -> WinId {
         WinId(0)
     }
