@@ -128,7 +128,7 @@ impl Conn<XCBConnection> {
 
 impl<C> Conn<C>
 where
-    C: Connection,
+    C: Connection + Send,
 {
     fn new_for_connection(conn: C) -> Result<Self> {
         let root = conn.setup().roots[0].root;
@@ -238,7 +238,7 @@ where
 
 impl<C> XConn for Conn<C>
 where
-    C: Connection,
+    C: Connection + Send,
 {
     fn root(&self) -> WinId {
         self.root.into()

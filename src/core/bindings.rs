@@ -87,7 +87,7 @@ where
 }
 
 /// Some action to be run by a user key binding
-pub trait KeyEventHandler<C>
+pub trait KeyEventHandler<C>: Send
 where
     C: Conn,
 {
@@ -103,7 +103,7 @@ impl<C: Conn> fmt::Debug for Box<dyn KeyEventHandler<C>> {
 
 impl<F, C> KeyEventHandler<C> for F
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()>,
+    F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
     C: Conn,
 {
     fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
@@ -115,7 +115,7 @@ where
 pub type KeyBindings<C> = HashMap<KeyCode, Box<dyn KeyEventHandler<C>>>;
 
 /// An action to be run in response to a mouse event
-pub trait MouseEventHandler<C>
+pub trait MouseEventHandler<C>: Send
 where
     C: Conn,
 {
@@ -136,7 +136,7 @@ impl<C: Conn> fmt::Debug for Box<dyn MouseEventHandler<C>> {
 
 impl<F, C> MouseEventHandler<C> for F
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()>,
+    F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
     C: Conn,
 {
     fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, conn: &C) -> Result<()> {

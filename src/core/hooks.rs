@@ -102,7 +102,7 @@ use std::fmt;
 ///
 /// This hook is called before incoming XEvents are processed by the default event handling
 /// logic.
-pub trait EventHook<C>
+pub trait EventHook<C>: Send
 where
     C: Conn,
 {
@@ -192,7 +192,7 @@ where
 
 impl<F, C> EventHook<C> for F
 where
-    F: FnMut(&C::Event, &mut State<C>, &C) -> Result<bool>,
+    F: FnMut(&C::Event, &mut State<C>, &C) -> Result<bool> + Send,
     C: Conn,
 {
     fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
@@ -204,7 +204,7 @@ where
 ///
 /// Manage hooks should _not_ trigger refreshes of state directly: they are called
 /// immediately before a refresh is run by main window manager logic.
-pub trait ManageHook<C>
+pub trait ManageHook<C>: Send
 where
     C: Conn,
 {
@@ -285,7 +285,7 @@ where
 
 impl<F, C> ManageHook<C> for F
 where
-    F: FnMut(WinId, &mut State<C>, &C) -> Result<()>,
+    F: FnMut(WinId, &mut State<C>, &C) -> Result<()> + Send,
     C: Conn,
 {
     fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
@@ -294,7 +294,7 @@ where
 }
 
 /// An arbitrary action that can be run and modify [State]
-pub trait StateHook<C>
+pub trait StateHook<C>: Send
 where
     C: Conn,
 {
@@ -375,7 +375,7 @@ where
 
 impl<F, C> StateHook<C> for F
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()>,
+    F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
     C: Conn,
 {
     fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
@@ -384,7 +384,7 @@ where
 }
 
 /// Logic to run before and after laying out clients
-pub trait LayoutHook<C>
+pub trait LayoutHook<C>: Send
 where
     C: Conn,
 {
@@ -547,8 +547,8 @@ where
 
 impl<F, G, C> LayoutHook<C> for (F, G)
 where
-    F: FnMut(Rect, &State<C>, &C) -> Rect,
-    G: FnMut(Rect, Vec<(WinId, Rect)>, &State<C>, &C) -> Vec<(WinId, Rect)>,
+    F: FnMut(Rect, &State<C>, &C) -> Rect + Send,
+    G: FnMut(Rect, Vec<(WinId, Rect)>, &State<C>, &C) -> Vec<(WinId, Rect)> + Send,
     C: Conn,
 {
     fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {

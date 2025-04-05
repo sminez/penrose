@@ -86,7 +86,7 @@ pub enum ClientAttr {
 /// should be possible to write an implementation that allows penrose to run on systems not using X
 /// as the windowing system but X idioms and high level event types / client interations are
 /// assumed.
-pub trait XConn {
+pub trait XConn: Send {
     /// The ID of the window manager root window.
     fn root(&self) -> WinId;
     /// Ask the X server for the dimensions of each currently available screen.

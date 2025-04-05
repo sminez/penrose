@@ -20,7 +20,7 @@ pub mod floating;
 /// Construct a [KeyEventHandler] from a closure or free function
 pub fn key_handler<F, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()> + 'static,
+    F: FnMut(&mut State<C>, &C) -> Result<()> + Send + 'static,
     C: Conn,
 {
     Box::new(f)
@@ -29,7 +29,7 @@ where
 /// Mutate the [StackSet<WinId>] and refresh the on screen state
 pub fn modify_with<F, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: FnMut(&mut StackSet<WinId>) + Clone + 'static,
+    F: FnMut(&mut StackSet<WinId>) + Clone + Send + 'static,
     C: Conn,
 {
     Box::new(move |s: &mut State<C>, conn: &C| conn.modify_and_refresh(s, f.clone()))
@@ -38,7 +38,7 @@ where
 /// Send a message to the currently active layout
 pub fn send_layout_message<F, M, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: Fn() -> M + 'static,
+    F: Fn() -> M + Send + 'static,
     M: IntoMessage,
     C: Conn,
 {
@@ -52,7 +52,7 @@ where
 /// Send a message to all layouts available to the current workspace
 pub fn broadcast_layout_message<F, M, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: Fn() -> M + 'static,
+    F: Fn() -> M + Send + 'static,
     M: IntoMessage,
     C: Conn,
 {

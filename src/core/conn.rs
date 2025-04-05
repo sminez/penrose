@@ -54,7 +54,7 @@ pub trait ConnEvent: fmt::Debug + fmt::Display + Clone + PartialEq + Eq + Hash {
 }
 
 /// A platform agnostic backing connection
-pub trait Conn: Sized {
+pub trait Conn: Send + Sized {
     /// The event type used by this connection
     type Event: ConnEvent;
 
@@ -273,7 +273,7 @@ impl<T> ConnExt for T where T: Conn {}
 
 /// A query to be run against client windows for identifying specific windows
 /// or programs.
-pub trait Query<C: Conn> {
+pub trait Query<C: Conn>: Send {
     /// Run this query for a given window ID.
     fn run(&self, id: WinId, conn: &C) -> Result<bool>;
 
