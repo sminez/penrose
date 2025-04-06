@@ -370,11 +370,11 @@ impl<C: Conn> Query<C> for NotQuery<C> {
     }
 }
 
-// The main logic for inserting a new client into the StackSet without any refresh
-// of the X state. In normal window manager operation, the `manage` method on XConnExt
-// is always used: this is provided independently to support managing existing clients
-// on startup.
-pub(crate) fn manage_without_refresh<C: Conn>(
+/// The main logic for inserting a new client into the StackSet without any refresh
+/// of the X state. In normal window manager operation, the `manage` method on XConnExt
+/// is always used: this is provided independently to support managing existing clients
+/// on startup.
+pub fn manage_without_refresh<C: Conn>(
     id: WinId,
     tag: Option<&str>,
     state: &mut State<C>,
@@ -382,15 +382,15 @@ pub(crate) fn manage_without_refresh<C: Conn>(
 ) -> Result<()> {
     trace!(%id, "checking if client is transient");
     let transient_for = conn.client_transient_parent(id);
+    trace!(%id, "checking if client should float");
     let should_float = conn.client_should_float(id, &state.config.floating_classes);
-    let owned_tag = transient_for.and_then(|parent| {
-        state
-            .client_set
-            .tag_for_client(&parent)
-            .or(tag)
-            .map(|t| t.to_string())
-    });
+    trace!(%id, "checking for owned tag");
+    let owned_tag = transient_for
+        .and_then(|parent| state.client_set.tag_for_client(&parent))
+        .or(tag)
+        .map(|t| t.to_string());
 
+    trace!(%id, "inserting client");
     match owned_tag {
         Some(tag) => state.client_set.insert_as_focus_for(tag.as_ref(), id),
         None => state.client_set.insert(id),
@@ -496,8 +496,9 @@ fn handle_pointer_change<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> 
         return Ok(());
     }
 
-    trace!("checking if focus should change");
-    if state.current_event().map(|e| e.requires_pointer_warp()) != Some(true) {
+    let require_pointer_warp = state.current_event().map(|e| e.requires_pointer_warp());
+    trace!(?require_pointer_warp, "checking if focus should change");
+    if require_pointer_warp == Some(true) {
         if let Some(id) = state.diff.focused_client() {
             trace!("focused client changed");
             // NOTE: Some of the behaviour here is based on looking at whether or

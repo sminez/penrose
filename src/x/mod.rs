@@ -436,8 +436,6 @@ where
     //       anything that they have set up.
     #[tracing::instrument(level = "info", skip(state, self))]
     fn manage_existing_clients(&self, state: &mut State<Self>) -> Result<()> {
-        info!("managing existing clients");
-
         // We're not guaranteed that workspace indices are _always_ continuous from 0..n
         // so we explicitly map tags to indices instead.
         // We also exclude hidden workspaces as those can contain windows which are

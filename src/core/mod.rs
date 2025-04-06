@@ -439,22 +439,23 @@ where
             }
         }
 
+        info!("managing existing clients");
         self.conn.manage_existing_clients(&mut self.state)?;
         self.state.running = true;
 
+        debug!("entering main run loop");
         while self.state.running {
             match self.conn.next_event() {
                 Ok(event) => {
-                    let span = span!(target: "penrose", Level::INFO, "XEvent", %event);
+                    let span = span!(target: "penrose", Level::INFO, "Event", %event);
                     let _enter = span.enter();
                     trace!(details = ?event, "event details");
                     self.state.current_event = Some(event.clone());
 
                     if let Err(e) = self.handle_event(event) {
-                        error!(%e, "Error handling XEvent");
+                        error!(%e, "Error handling Event");
                     }
                     self.conn.flush();
-
                     self.state.current_event = None;
                 }
 
@@ -503,11 +504,11 @@ where
             // If we get an error from the XConn telling us that a client ID is unknown then
             // we need to make sure that we remove any reference to it from our internal state
             Error::UnknownClient(id) => {
-                debug!(%id, "XConn encountered an error due to an unknown client ID: removing client");
+                debug!(%id, "Conn encountered an error due to an unknown client ID: removing client");
                 self.state.client_set.remove_client(&id);
             }
 
-            _ => error!(%e, "Unhandled error pulling next x event"),
+            _ => error!(%e, "Unhandled error pulling next event"),
         }
     }
 }
