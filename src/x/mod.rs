@@ -386,11 +386,6 @@ where
         self.set_client_attributes(id, &[ClientAttr::BorderColor(color.argb_u32())])
     }
 
-    fn set_client_border_width(&self, id: WinId, w: u32) -> Result<()> {
-        let conf = &[ClientConfig::BorderPx(w)];
-        self.set_client_config(id, conf)
-    }
-
     fn set_initial_properties(&self, id: WinId, config: &Config<Self>) -> Result<()> {
         let Config {
             normal_border,

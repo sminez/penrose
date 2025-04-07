@@ -118,8 +118,6 @@ pub trait Conn: Send + Sized {
 
     /// Update the border color of the given client window.
     fn set_client_border_color(&self, id: WinId, color: impl Into<Color>) -> Result<()>;
-    /// Update the border width of the given client window.
-    fn set_client_border_width(&self, id: WinId, w: u32) -> Result<()>;
     /// Set the initial window properties for a newly managed window.
     fn set_initial_properties(&self, id: WinId, config: &Config<Self>) -> Result<()>;
 
