@@ -20,7 +20,7 @@ where
     Q: Query<C>,
     H: ManageHook<C>,
 {
-    fn call(&mut self, id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, id: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         if self.0.run(id, conn)? {
             self.1.call(id, state, conn)?;
         }
@@ -29,7 +29,7 @@ where
     }
 }
 
-fn float<C: Conn>(client: WinId, r: Rect, state: &mut State<C>, _: &C) -> Result<()> {
+fn float<C: Conn>(client: WinId, r: Rect, state: &mut State<C>, _: &mut C) -> Result<()> {
     state.client_set.float(client, r)
 }
 
@@ -37,7 +37,7 @@ fn float<C: Conn>(client: WinId, r: Rect, state: &mut State<C>, _: &C) -> Result
 #[derive(Debug)]
 pub struct DefaultTiled;
 impl<C: Conn> ManageHook<C> for DefaultTiled {
-    fn call(&mut self, _client: WinId, _state: &mut State<C>, _: &C) -> Result<()> {
+    fn call(&mut self, _client: WinId, _state: &mut State<C>, _: &mut C) -> Result<()> {
         Ok(())
     }
 }
@@ -46,7 +46,7 @@ impl<C: Conn> ManageHook<C> for DefaultTiled {
 #[derive(Debug)]
 pub struct FloatingFixed(pub Rect);
 impl<C: Conn> ManageHook<C> for FloatingFixed {
-    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         float(client, self.0, state, conn)
     }
 }
@@ -73,7 +73,7 @@ impl FloatingCentered {
 }
 
 impl<C: Conn> ManageHook<C> for FloatingCentered {
-    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         let r_screen = &state.client_set.screens.focus.r;
         let r = r_screen
             .scale_h(self.h)
@@ -96,7 +96,7 @@ impl FloatingRelative {
 }
 
 impl<C: Conn> ManageHook<C> for FloatingRelative {
-    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         let r_screen = &state.client_set.screens.focus.r;
         let r = self.0.applied_to(r_screen);
 
@@ -108,7 +108,7 @@ impl<C: Conn> ManageHook<C> for FloatingRelative {
 #[derive(Debug)]
 pub struct SetWorkspace(pub &'static str);
 impl<C: Conn> ManageHook<C> for SetWorkspace {
-    fn call(&mut self, client: WinId, state: &mut State<C>, _: &C) -> Result<()> {
+    fn call(&mut self, client: WinId, state: &mut State<C>, _: &mut C) -> Result<()> {
         state.client_set.move_client_to_tag(&client, self.0);
         Ok(())
     }

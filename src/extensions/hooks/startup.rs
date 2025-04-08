@@ -1,8 +1,7 @@
 //! Startup hooks for direct adding to your penrose config.
 use crate::{
-    core::{self, hooks::StateHook, State},
+    core::{conn::Conn, hooks::StateHook, State},
     util::spawn,
-    x::{Atom, Prop, XConn},
     Result,
 };
 use std::borrow::Cow;
@@ -20,19 +19,19 @@ impl SpawnOnStartup {
     }
 
     /// Create a new startup hook ready for adding to your Config
-    pub fn boxed<X>(prog: impl Into<Cow<'static, str>>) -> Box<dyn StateHook<X>>
+    pub fn boxed<C>(prog: impl Into<Cow<'static, str>>) -> Box<dyn StateHook<C>>
     where
-        X: XConn,
+        C: Conn,
     {
         Box::new(Self::new(prog))
     }
 }
 
-impl<X> StateHook<X> for SpawnOnStartup
+impl<C> StateHook<C> for SpawnOnStartup
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, _state: &mut State<X>, _x: &X) -> Result<()> {
+    fn call(&mut self, _state: &mut State<C>, _: &mut C) -> Result<()> {
         spawn(self.prog.as_ref())
     }
 }

@@ -43,7 +43,7 @@ impl WindowSwallowingState {
         &mut self,
         child: WinId,
         state: &mut State<X>,
-        x: &X,
+        x: &mut X,
     ) -> Result<bool> {
         warn!(%child, ?self, "checking if we need to restore");
         let parent = match self.swallowed.get(&child) {
@@ -104,7 +104,7 @@ impl<X: XConn> WindowSwallowing<X> {
         })
     }
 
-    fn queries_hold(&self, id: WinId, parent: WinId, x: &X) -> bool {
+    fn queries_hold(&self, id: WinId, parent: WinId, x: &mut X) -> bool {
         let parent_matches = x.query_or(false, &*self.parent, parent);
         let child_matches = match &self.child {
             Some(q) => x.query_or(false, &**q, id),
@@ -119,7 +119,7 @@ impl<X: XConn> WindowSwallowing<X> {
         child: WinId,
         wss: &mut WindowSwallowingState,
         state: &mut State<X>,
-        x: &X,
+        x: &mut X,
     ) -> Result<bool> {
         let parent = match state.client_set.current_client() {
             Some(&parent) => parent,
@@ -147,7 +147,7 @@ impl<X: XConn> WindowSwallowing<X> {
 }
 
 impl<X: XConn> EventHook<X> for WindowSwallowing<X> {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &mut X) -> Result<bool> {
         let _wss = state.extension_or_default::<WindowSwallowingState>();
         let mut wss = _wss.borrow_mut();
 
@@ -180,7 +180,7 @@ fn transfer_floating_state(from: WinId, to: WinId, floating: &mut HashMap<WinId,
     }
 }
 
-fn is_child_of<X: XConn>(id: WinId, parent: WinId, x: &X) -> bool {
+fn is_child_of<X: XConn>(id: WinId, parent: WinId, x: &mut X) -> bool {
     match (x.client_pid(parent), x.client_pid(id)) {
         (Some(p_pid), Some(c_pid)) => parent_pid_chain(c_pid).contains(&p_pid),
         _ => false,

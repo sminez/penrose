@@ -59,7 +59,7 @@ where
 }
 
 /// Advertise EWMH support to the X server
-pub fn startup_hook<X: XConn>(_state: &mut State<X>, x: &X) -> Result<()> {
+pub fn startup_hook<X: XConn>(_state: &mut State<X>, x: &mut X) -> Result<()> {
     let root = x.root();
 
     x.set_prop(
@@ -88,7 +88,7 @@ pub fn startup_hook<X: XConn>(_state: &mut State<X>, x: &X) -> Result<()> {
 ///   - _NET_ACTIVE_WINDOW   :: focus a new client and handle workspace switching
 ///   - _NET_CLOSE_WINDOW    :: closing a client window
 ///   - _NET_WM_STATE        :: support for fullscreen windows
-pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
+pub fn event_hook<X: XConn>(event: &XEvent, state: &mut State<X>, x: &mut X) -> Result<bool> {
     let ClientMessage {
         id, dtype, data, ..
     } = match event {
@@ -143,7 +143,7 @@ fn handle_fullscreen_message<X: XConn>(
     id: WinId,
     data: &ClientMessageData,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> Result<()> {
     let mut data32 = data.as_u32();
     if data32.is_empty() {
@@ -173,7 +173,7 @@ fn handle_fullscreen_message<X: XConn>(
 }
 
 /// Notify external clients of the current status of workspaces and clients
-pub fn refresh_hook<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
+pub fn refresh_hook<X: XConn>(state: &mut State<X>, x: &mut X) -> Result<()> {
     set_known_desktops(&state.client_set, x)?;
     set_known_clients(&state.client_set, x)?;
     set_current_desktop(&state.client_set, x)?;
@@ -185,59 +185,62 @@ pub fn refresh_hook<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> {
     Ok(())
 }
 
-fn set_known_desktops<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
+fn set_known_desktops<X>(cs: &StackSet<WinId>, x: &mut X) -> Result<()>
 where
     X: XConn,
 {
     let workspaces_names = cs.ordered_tags();
+    let root = x.root();
 
     x.set_prop(
-        x.root(),
+        root,
         Atom::NetNumberOfDesktops.as_ref(),
         Prop::Cardinal(vec![workspaces_names.len() as u32]),
     )?;
 
     x.set_prop(
-        x.root(),
+        root,
         Atom::NetDesktopNames.as_ref(),
         Prop::UTF8String(workspaces_names),
     )
 }
 
-fn set_known_clients<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
+fn set_known_clients<X>(cs: &StackSet<WinId>, x: &mut X) -> Result<()>
 where
     X: XConn,
 {
     // FIXME: this currently isn't in stacking order
     let ordered_clients: Vec<WinId> = cs.clients().copied().collect();
+    let root = x.root();
 
     x.set_prop(
-        x.root(),
+        root,
         Atom::NetClientList.as_ref(),
         Prop::Window(ordered_clients.clone()),
     )?;
 
     x.set_prop(
-        x.root(),
+        root,
         Atom::NetClientListStacking.as_ref(),
         Prop::Window(ordered_clients),
     )
 }
 
-fn set_current_desktop<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
+fn set_current_desktop<X>(cs: &StackSet<WinId>, x: &mut X) -> Result<()>
 where
     X: XConn,
 {
     let current_desktop = cs.current_workspace().id as u32;
+    let root = x.root();
 
     x.set_prop(
-        x.root(),
+        root,
         Atom::NetCurrentDesktop.as_ref(),
         Prop::Cardinal(vec![current_desktop]),
     )
 }
 
-fn set_client_desktops<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
+fn set_client_desktops<X>(cs: &StackSet<WinId>, x: &mut X) -> Result<()>
 where
     X: XConn,
 {
@@ -258,16 +261,13 @@ where
     Ok(())
 }
 
-fn set_active_client<X>(cs: &StackSet<WinId>, x: &X) -> Result<()>
+fn set_active_client<X>(cs: &StackSet<WinId>, x: &mut X) -> Result<()>
 where
     X: XConn,
 {
     if let Some(&id) = cs.current_client() {
-        x.set_prop(
-            x.root(),
-            Atom::NetActiveWindow.as_ref(),
-            Prop::Window(vec![id]),
-        )?;
+        let root = x.root();
+        x.set_prop(root, Atom::NetActiveWindow.as_ref(), Prop::Window(vec![id]))?;
     }
 
     Ok(())

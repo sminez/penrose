@@ -843,7 +843,7 @@ impl StackSet<WinId> {
             held_mouse_state: None,
         };
 
-        s.visible_client_positions(&crate::x::StubXConn)
+        s.visible_client_positions(&mut crate::x::StubXConn)
     }
 
     /// This is a test implementation that runs the `State::position_and_snapshot`

@@ -55,25 +55,25 @@ where
 
     #[allow(unused_variables)]
     /// A startup hook to be run in order to initialise this Widget
-    fn on_startup(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_startup(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         Ok(())
     }
 
     #[allow(unused_variables)]
     /// An event hook to be run in order to update this Widget
-    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &mut X) -> Result<()> {
         Ok(())
     }
 
     #[allow(unused_variables)]
     /// A refresh hook to be run in order to update this Widget
-    fn on_refresh(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         Ok(())
     }
 
     #[allow(unused_variables)]
     /// A manage hook to be run in order to update this Widget
-    fn on_new_client(&mut self, id: WinId, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_new_client(&mut self, id: WinId, state: &mut State<X>, x: &mut X) -> Result<()> {
         Ok(())
     }
 }
@@ -264,7 +264,7 @@ impl<X: XConn> Widget<X> for RefreshText {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, _: &mut State<X>, _: &X) -> Result<()> {
+    fn on_refresh(&mut self, _: &mut State<X>, _: &mut X) -> Result<()> {
         let txt = (self.get_text)();
 
         self.inner.set_text(txt);

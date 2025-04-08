@@ -22,7 +22,7 @@ pub struct SpacingHook {
 }
 
 impl<C: Conn> LayoutHook<C> for SpacingHook {
-    fn transform_initial(&mut self, mut r: Rect, _: &State<C>, _: &C) -> Rect {
+    fn transform_initial(&mut self, mut r: Rect, _: &State<C>, _: &mut C) -> Rect {
         if r.w == 0 || r.h == 0 {
             return r;
         }
@@ -38,7 +38,7 @@ impl<C: Conn> LayoutHook<C> for SpacingHook {
         _: Rect,
         positions: Vec<(WinId, Rect)>,
         _: &State<C>,
-        _: &C,
+        _: &mut C,
     ) -> Vec<(WinId, Rect)> {
         positions
             .into_iter()

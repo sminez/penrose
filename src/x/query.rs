@@ -5,7 +5,11 @@ use crate::{
     Result, WinId,
 };
 
-pub(crate) fn str_prop<X>(prop: impl AsRef<str>, id: WinId, x: &X) -> Result<Option<Vec<String>>>
+pub(crate) fn str_prop<X>(
+    prop: impl AsRef<str>,
+    id: WinId,
+    x: &mut X,
+) -> Result<Option<Vec<String>>>
 where
     X: XConn,
 {
@@ -23,7 +27,7 @@ impl<X> Query<X> for Title
 where
     X: XConn,
 {
-    fn run(&self, id: WinId, x: &X) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut X) -> Result<bool> {
         let strs = str_prop(Atom::WmName, id, x)
             .ok()
             .or_else(|| str_prop(Atom::NetWmName, id, x).ok())
@@ -45,7 +49,7 @@ impl<X> Query<X> for AppName
 where
     X: XConn,
 {
-    fn run(&self, id: WinId, x: &X) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut X) -> Result<bool> {
         match str_prop(Atom::WmClass, id, x)? {
             Some(strs) if !strs.is_empty() => Ok(strs[0] == self.0),
             _ => Ok(false),
@@ -62,7 +66,7 @@ impl<X> Query<X> for ClassName
 where
     X: XConn,
 {
-    fn run(&self, id: WinId, x: &X) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut X) -> Result<bool> {
         match str_prop(Atom::WmClass, id, x)? {
             Some(strs) if strs.len() > 1 => Ok(strs[1] == self.0),
             _ => Ok(false),
@@ -78,7 +82,7 @@ impl<X> Query<X> for StringProperty
 where
     X: XConn,
 {
-    fn run(&self, id: WinId, x: &X) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut X) -> Result<bool> {
         match str_prop(self.0, id, x)? {
             Some(strs) if !strs.is_empty() => Ok(strs[0] == self.1),
             _ => Ok(false),

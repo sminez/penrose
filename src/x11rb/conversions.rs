@@ -27,7 +27,7 @@ use x11rb::{
 };
 
 pub(crate) fn convert_event<C: Connection + Send>(
-    conn: &Conn<C>,
+    conn: &mut Conn<C>,
     event: Event,
 ) -> Result<Option<XEvent>> {
     match event {
@@ -186,7 +186,7 @@ fn to_mouse_state(detail: u8, state: KeyButMask) -> Option<MouseState> {
 }
 
 fn to_client_message<C: Connection + Send>(
-    conn: &Conn<C>,
+    conn: &mut Conn<C>,
     event: ClientMessageEvent,
 ) -> Result<XEvent> {
     let name = conn.atom_name(WinId(event.type_))?;

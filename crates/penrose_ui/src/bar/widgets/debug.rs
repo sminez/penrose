@@ -38,7 +38,7 @@ impl<X: XConn> Widget<X> for ActiveWindowId {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
         if let Some(id) = state.client_set.current_client() {
             self.inner.set_text(format!("FOCUS={}", *id))
         } else {
@@ -88,7 +88,7 @@ impl<X: XConn> Widget<X> for StateSummary {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
         self.inner.set_text(summarise_state(state, &self.cfg));
 
         Ok(())

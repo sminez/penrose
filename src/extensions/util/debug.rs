@@ -12,7 +12,7 @@ use crate::{
 pub struct NotfyState(pub CurrentStateConfig);
 
 impl<X: XConn> StateHook<X> for NotfyState {
-    fn call(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
         let msg = summarise_state(state, &self.0);
 
         notify_send("Current State", msg)

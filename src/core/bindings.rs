@@ -92,7 +92,7 @@ where
     C: Conn,
 {
     /// Call this handler with the current window manager state
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()>;
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()>;
 }
 
 impl<C: Conn> fmt::Debug for Box<dyn KeyEventHandler<C>> {
@@ -103,10 +103,10 @@ impl<C: Conn> fmt::Debug for Box<dyn KeyEventHandler<C>> {
 
 impl<F, C> KeyEventHandler<C> for F
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
+    F: FnMut(&mut State<C>, &mut C) -> Result<()> + Send,
     C: Conn,
 {
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
         (self)(state, conn)
     }
 }
@@ -121,11 +121,16 @@ where
 {
     /// Called when the [MouseState] associated with this handler is seen with a button press or
     /// release.
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, x: &C) -> Result<()>;
+    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, x: &mut C) -> Result<()>;
 
     /// Called when the [ModifierKey]s associated with this handler are seen when the mouse is
     /// moving.
-    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<C>, conn: &C) -> Result<()>;
+    fn on_motion(
+        &mut self,
+        evt: &MotionNotifyEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()>;
 }
 
 impl<C: Conn> fmt::Debug for Box<dyn MouseEventHandler<C>> {
@@ -139,7 +144,12 @@ where
     F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
     C: Conn,
 {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         if evt.kind == MouseEventKind::Press {
             (self)(state, conn)
         } else {
@@ -147,7 +157,7 @@ where
         }
     }
 
-    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<C>, _: &C) -> Result<()> {
+    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<C>, _: &mut C) -> Result<()> {
         Ok(())
     }
 }
@@ -176,7 +186,12 @@ struct MouseWrapper<C: Conn> {
 }
 
 impl<C: Conn> MouseEventHandler<C> for MouseWrapper<C> {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         if evt.kind == MouseEventKind::Press {
             self.inner.call(state, conn)
         } else {
@@ -184,7 +199,7 @@ impl<C: Conn> MouseEventHandler<C> for MouseWrapper<C> {
         }
     }
 
-    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<C>, _: &C) -> Result<()> {
+    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<C>, _: &mut C) -> Result<()> {
         Ok(())
     }
 }

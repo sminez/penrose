@@ -154,7 +154,7 @@ where
         let mask = NotifyMask::OUTPUT_CHANGE | NotifyMask::CRTC_CHANGE | NotifyMask::SCREEN_CHANGE;
         conn.randr_select_input(root, mask)?;
 
-        let xconn = Self { conn, root, atoms };
+        let mut xconn = Self { conn, root, atoms };
 
         xconn.set_client_attributes(WinId(root), &[ClientAttr::RootEventMask])?;
 
@@ -167,7 +167,7 @@ where
     }
 
     /// Create and map a new window to the screen with the specified [WinType].
-    pub fn create_window(&self, ty: WinType, r: Rect, managed: bool) -> Result<WinId> {
+    pub fn create_window(&mut self, ty: WinType, r: Rect, managed: bool) -> Result<WinId> {
         let (ty, mut win_aux, class) = match ty {
             WinType::CheckWin => (None, CreateWindowAux::new(), WindowClass::INPUT_OUTPUT),
 
@@ -240,11 +240,11 @@ impl<C> XConn for Conn<C>
 where
     C: Connection + Send,
 {
-    fn root(&self) -> WinId {
+    fn root(&mut self) -> WinId {
         self.root.into()
     }
 
-    fn screen_details(&self) -> Result<Vec<Rect>> {
+    fn screen_details(&mut self) -> Result<Vec<Rect>> {
         let resources = self.conn.randr_get_screen_resources(self.root)?.reply()?;
 
         // Send queries for all CRTCs
@@ -275,13 +275,13 @@ where
         Ok(rects)
     }
 
-    fn cursor_position(&self) -> Result<Point> {
+    fn cursor_position(&mut self) -> Result<Point> {
         let reply = self.conn.query_pointer(self.root)?.reply()?;
 
         Ok(Point::new(reply.root_x as i32, reply.root_y as i32))
     }
 
-    fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
         // Release any grabbed keys that we currently have before attempting to grab
         // the requested key codes.
         // NOTE: The '0' here is XCB_GRAB_ANY
@@ -331,7 +331,7 @@ where
         Ok(())
     }
 
-    fn next_event(&self) -> Result<XEvent> {
+    fn next_event(&mut self) -> Result<XEvent> {
         loop {
             let event = self.conn.wait_for_event()?;
             if let Some(event) = convert_event(self, event)? {
@@ -340,11 +340,11 @@ where
         }
     }
 
-    fn flush(&self) {
+    fn flush(&mut self) {
         self.conn.flush().unwrap_or(());
     }
 
-    fn intern_atom(&self, atom: &str) -> Result<WinId> {
+    fn intern_atom(&mut self, atom: &str) -> Result<WinId> {
         let id = match Atom::from_str(atom) {
             Ok(known) => self.atoms.known_atom(known),
             Err(_) => self.conn.intern_atom(false, atom.as_bytes())?.reply()?.atom,
@@ -353,7 +353,7 @@ where
         Ok(WinId(id))
     }
 
-    fn atom_name(&self, xid: WinId) -> Result<String> {
+    fn atom_name(&mut self, xid: WinId) -> Result<String> {
         // Is the atom already known?
         if let Some(atom) = self.atoms.atom_name(*xid) {
             return Ok(atom.as_ref().to_string());
@@ -366,7 +366,7 @@ where
         Ok(name)
     }
 
-    fn client_geometry(&self, id: WinId) -> Result<Rect> {
+    fn client_geometry(&mut self, id: WinId) -> Result<Rect> {
         let res = self.conn.get_geometry(*id)?.reply()?;
 
         Ok(Rect::new(
@@ -377,26 +377,26 @@ where
         ))
     }
 
-    fn existing_clients(&self) -> Result<Vec<WinId>> {
+    fn existing_clients(&mut self) -> Result<Vec<WinId>> {
         let raw_ids = self.conn.query_tree(self.root)?.reply()?.children;
         let ids = raw_ids.into_iter().map(WinId).collect();
 
         Ok(ids)
     }
 
-    fn map(&self, client: WinId) -> Result<()> {
+    fn map(&mut self, client: WinId) -> Result<()> {
         self.conn.map_window(*client)?.ignore_error();
 
         Ok(())
     }
 
-    fn unmap(&self, client: WinId) -> Result<()> {
+    fn unmap(&mut self, client: WinId) -> Result<()> {
         self.conn.unmap_window(*client)?.ignore_error();
 
         Ok(())
     }
 
-    fn kill(&self, client: WinId) -> Result<()> {
+    fn kill(&mut self, client: WinId) -> Result<()> {
         let supports_delete = {
             let props = self.get_prop(client, Atom::WmProtocols.as_ref());
             if let Ok(Some(Prop::Atom(protocols))) = props {
@@ -417,14 +417,14 @@ where
         Ok(())
     }
 
-    fn focus(&self, id: WinId) -> Result<()> {
+    fn focus(&mut self, id: WinId) -> Result<()> {
         self.conn
             .set_input_focus(InputFocus::PARENT, *id, CURRENT_TIME)?;
 
         Ok(())
     }
 
-    fn get_prop(&self, id: WinId, prop_name: &str) -> Result<Option<Prop>> {
+    fn get_prop(&mut self, id: WinId, prop_name: &str) -> Result<Option<Prop>> {
         let atom = *self.intern_atom(prop_name)?;
         let r = self
             .conn
@@ -527,24 +527,22 @@ where
         Ok(Some(p))
     }
 
-    fn list_props(&self, id: WinId) -> Result<Vec<String>> {
-        self.conn
-            .list_properties(*id)?
-            .reply()?
-            .atoms
+    fn list_props(&mut self, id: WinId) -> Result<Vec<String>> {
+        let atoms = self.conn.list_properties(*id)?.reply()?.atoms;
+        atoms
             .into_iter()
             .map(|a| self.atom_name(WinId(a)))
             .collect()
     }
 
-    fn delete_prop(&self, id: WinId, prop_name: &str) -> Result<()> {
+    fn delete_prop(&mut self, id: WinId, prop_name: &str) -> Result<()> {
         let prop_id = *self.intern_atom(prop_name)?;
         self.conn.delete_property(*id, prop_id)?;
 
         Ok(())
     }
 
-    fn get_window_attributes(&self, id: WinId) -> Result<WindowAttributes> {
+    fn get_window_attributes(&mut self, id: WinId) -> Result<WindowAttributes> {
         let win_attrs = self.conn.get_window_attributes(*id)?.reply()?;
 
         let map_state = match win_attrs.map_state {
@@ -568,7 +566,7 @@ where
         ))
     }
 
-    fn get_wm_state(&self, client: WinId) -> Result<Option<WmState>> {
+    fn get_wm_state(&mut self, client: WinId) -> Result<Option<WmState>> {
         match self.get_prop(client, Atom::WmState.as_ref())? {
             Some(Prop::Bytes(data)) => match data[0] {
                 0 => Ok(Some(WmState::Withdrawn)),
@@ -581,7 +579,7 @@ where
         }
     }
 
-    fn set_wm_state(&self, id: WinId, wm_state: WmState) -> Result<()> {
+    fn set_wm_state(&mut self, id: WinId, wm_state: WmState) -> Result<()> {
         let mode = PropMode::REPLACE;
         let a = *self.intern_atom(Atom::WmState.as_ref())?;
         let state = match wm_state {
@@ -595,7 +593,7 @@ where
         Ok(())
     }
 
-    fn set_prop(&self, id: WinId, name: &str, val: Prop) -> Result<()> {
+    fn set_prop(&mut self, id: WinId, name: &str, val: Prop) -> Result<()> {
         let a = *self.intern_atom(name)?;
 
         let (ty, data) = match val {
@@ -635,7 +633,7 @@ where
         Ok(())
     }
 
-    fn set_client_attributes(&self, id: WinId, attrs: &[ClientAttr]) -> Result<()> {
+    fn set_client_attributes(&mut self, id: WinId, attrs: &[ClientAttr]) -> Result<()> {
         let client_event_mask = EventMask::ENTER_WINDOW
             | EventMask::LEAVE_WINDOW
             | EventMask::PROPERTY_CHANGE
@@ -663,7 +661,7 @@ where
         Ok(())
     }
 
-    fn set_client_config(&self, id: WinId, data: &[ClientConfig]) -> Result<()> {
+    fn set_client_config(&mut self, id: WinId, data: &[ClientConfig]) -> Result<()> {
         let mut aux = ConfigureWindowAux::new();
         for conf in data.iter() {
             match conf {
@@ -682,7 +680,7 @@ where
         Ok(())
     }
 
-    fn send_client_message(&self, msg: ClientMessage) -> Result<()> {
+    fn send_client_message(&mut self, msg: ClientMessage) -> Result<()> {
         let type_ = *self.intern_atom(&msg.dtype)?;
         let data = match msg.data {
             x::event::ClientMessageData::U8(u8s) => ClientMessageData::from(u8s),
@@ -708,7 +706,7 @@ where
         Ok(())
     }
 
-    fn warp_pointer(&self, id: WinId, x: i16, y: i16) -> Result<()> {
+    fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()> {
         self.conn.warp_pointer(x11rb::NONE, *id, 0, 0, 0, 0, x, y)?;
 
         Ok(())

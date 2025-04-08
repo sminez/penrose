@@ -287,7 +287,7 @@ impl Draw {
     }
 
     /// Flush any pending requests to the X server and map the specifed window to the screen.
-    pub fn flush(&self, id: WinId) -> Result<()> {
+    pub fn flush(&mut self, id: WinId) -> Result<()> {
         if let Some(s) = self.surfaces.get(&id) {
             // SAFETY: self.dpy is non-null
             unsafe { s.flush(self.dpy) };

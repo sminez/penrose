@@ -295,7 +295,7 @@ impl<X: XConn> StatusBar<X> {
 }
 
 /// Run any widget startup actions and then redraw
-pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose::Result<()> {
+pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &mut X) -> penrose::Result<()> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
@@ -320,7 +320,7 @@ pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
 }
 
 /// Run any widget refresh actions and then redraw if needed
-pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose::Result<()> {
+pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &mut X) -> penrose::Result<()> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
@@ -351,7 +351,7 @@ pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
 pub fn event_hook<X: XConn + 'static>(
     event: &XEvent,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> penrose::Result<bool> {
     use XEvent::{ConfigureNotify, RandrNotify};
 
@@ -395,7 +395,7 @@ pub fn event_hook<X: XConn + 'static>(
 pub fn manage_hook<X: XConn + 'static>(
     id: WinId,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> penrose::Result<()> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();

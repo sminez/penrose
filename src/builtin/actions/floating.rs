@@ -54,7 +54,7 @@ pub fn reposition<C: Conn>(dx: i32, dy: i32) -> Box<dyn KeyEventHandler<C>> {
 
 /// Move the currently focused window to the floating layer in its current on screen position
 pub fn float_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
-    key_handler(|state, conn: &C| {
+    key_handler(|state, conn: &mut C| {
         let id = match state.client_set.current_client() {
             Some(&id) => id,
             None => return Ok(()),
@@ -84,7 +84,7 @@ pub fn sink_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
 
 /// Sink the current window if it was floating, float it if it was tiled.
 pub fn toggle_floating_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
-    key_handler(|state, conn: &C| {
+    key_handler(|state, conn: &mut C| {
         let id = match state.client_set.current_client() {
             Some(&id) => id,
             None => return Ok(()),
@@ -102,7 +102,7 @@ pub fn toggle_floating_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
 
 /// Float all windows in their current tiled position
 pub fn float_all<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
-    key_handler(|state, conn: &C| {
+    key_handler(|state, conn: &mut C| {
         let positions = state.visible_client_positions(conn);
 
         conn.modify_and_refresh(state, |cs| {
@@ -134,7 +134,7 @@ impl ClickData {
         id: WinId,
         rpt: Point,
         state: &mut State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Result<()> {
         let (dx, dy) = (rpt.x - self.x_initial, rpt.y - self.y_initial);
 
@@ -164,7 +164,7 @@ trait ClickWrapper {
         &mut self,
         evt: &MouseEvent,
         state: &mut State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Result<()> {
         let id = evt.data.id;
 
@@ -189,7 +189,7 @@ trait ClickWrapper {
         &mut self,
         evt: &MotionNotifyEvent,
         state: &mut State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Result<()> {
         match *self.data() {
             Some(data) => data.on_motion(self.motion_fn(), evt.data.id, evt.data.rpt, state, conn),
@@ -222,11 +222,21 @@ impl ClickWrapper for MouseDragHandler {
 }
 
 impl<C: Conn> MouseEventHandler<C> for MouseDragHandler {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         ClickWrapper::on_mouse_event(self, evt, state, conn)
     }
 
-    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn on_motion(
+        &mut self,
+        evt: &MotionNotifyEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         ClickWrapper::on_motion(self, evt, state, conn)
     }
 }
@@ -255,11 +265,21 @@ impl ClickWrapper for MouseResizeHandler {
 }
 
 impl<C: Conn> MouseEventHandler<C> for MouseResizeHandler {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         ClickWrapper::on_mouse_event(self, evt, state, conn)
     }
 
-    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn on_motion(
+        &mut self,
+        evt: &MotionNotifyEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         ClickWrapper::on_motion(self, evt, state, conn)
     }
 }

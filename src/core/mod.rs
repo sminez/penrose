@@ -57,7 +57,7 @@ impl<C> State<C>
 where
     C: Conn,
 {
-    pub(crate) fn try_new(config: Config<C>, conn: &C) -> Result<Self> {
+    pub(crate) fn try_new(config: Config<C>, conn: &mut C) -> Result<Self> {
         let mut client_set = StackSet::try_new(
             config.default_layouts.clone(),
             config.tags.iter(),
@@ -146,7 +146,7 @@ where
         self.extensions.insert(Arc::new(RefCell::new(extension)));
     }
 
-    pub(crate) fn position_and_snapshot(&mut self, conn: &C) -> Snapshot<WinId> {
+    pub(crate) fn position_and_snapshot(&mut self, conn: &mut C) -> Snapshot<WinId> {
         let positions = self.visible_client_positions(conn);
         self.client_set.snapshot(positions)
     }
@@ -154,7 +154,7 @@ where
     /// Run the per-workspace layouts to get a screen position for each visible client. Floating clients
     /// are placed above stacked clients, clients per workspace are stacked in the order they are returned
     /// from the layout.
-    pub(crate) fn visible_client_positions(&mut self, conn: &C) -> Vec<(WinId, Rect)> {
+    pub(crate) fn visible_client_positions(&mut self, conn: &mut C) -> Vec<(WinId, Rect)> {
         let mut float_positions: Vec<(WinId, Rect)> = Vec::new();
         let mut positions: Vec<(WinId, Rect)> = Vec::new();
 
@@ -383,9 +383,9 @@ where
         config: Config<C>,
         key_bindings: KeyBindings<C>,
         mouse_bindings: MouseBindings<C>,
-        conn: C,
+        mut conn: C,
     ) -> Result<Self> {
-        let state = State::try_new(config, &conn)?;
+        let state = State::try_new(config, &mut conn)?;
 
         Ok(Self {
             conn,
@@ -434,7 +434,7 @@ where
 
         if let Some(mut h) = self.state.config.startup_hook.take() {
             trace!("running user startup hook");
-            if let Err(e) = h.call(&mut self.state, &self.conn) {
+            if let Err(e) = h.call(&mut self.state, &mut self.conn) {
                 error!(%e, "error returned from user startup hook");
             }
         }

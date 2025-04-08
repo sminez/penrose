@@ -20,7 +20,7 @@ pub mod floating;
 /// Construct a [KeyEventHandler] from a closure or free function
 pub fn key_handler<F, C>(f: F) -> Box<dyn KeyEventHandler<C>>
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()> + Send + 'static,
+    F: FnMut(&mut State<C>, &mut C) -> Result<()> + Send + 'static,
     C: Conn,
 {
     Box::new(f)
@@ -32,7 +32,7 @@ where
     F: FnMut(&mut StackSet<WinId>) + Clone + Send + 'static,
     C: Conn,
 {
-    Box::new(move |s: &mut State<C>, conn: &C| conn.modify_and_refresh(s, f.clone()))
+    Box::new(move |s: &mut State<C>, conn: &mut C| conn.modify_and_refresh(s, f.clone()))
 }
 
 /// Send a message to the currently active layout
@@ -42,7 +42,7 @@ where
     M: IntoMessage,
     C: Conn,
 {
-    key_handler(move |s: &mut State<C>, conn: &C| {
+    key_handler(move |s: &mut State<C>, conn: &mut C| {
         conn.modify_and_refresh(s, |cs| {
             cs.current_workspace_mut().handle_message(f());
         })
@@ -56,7 +56,7 @@ where
     M: IntoMessage,
     C: Conn,
 {
-    key_handler(move |s: &mut State<C>, conn: &C| {
+    key_handler(move |s: &mut State<C>, conn: &mut C| {
         conn.modify_and_refresh(s, |cs| {
             cs.current_workspace_mut().broadcast_message(f());
         })
@@ -94,7 +94,7 @@ pub fn log_current_state<C: Conn + std::fmt::Debug>() -> Box<dyn KeyEventHandler
 /// This is provided for removing clients that have been accidentally tiled when
 /// they should have been ignored.
 pub fn remove_and_unmap_focused_client<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
-    key_handler(|s: &mut State<C>, conn: &C| {
+    key_handler(|s: &mut State<C>, conn: &mut C| {
         if let Some(client) = s.client_set.remove_focused() {
             info!(
                 ?client,

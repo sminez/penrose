@@ -107,7 +107,7 @@ where
     C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool>;
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &mut C) -> Result<bool>;
 
     /// Convert to a trait object
     fn boxed(self) -> Box<dyn EventHook<C>>
@@ -148,7 +148,7 @@ impl<C> EventHook<C> for Vec<Box<dyn EventHook<C>>>
 where
     C: Conn,
 {
-    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &mut C) -> Result<bool> {
         let mut call_next = true;
         for hook in self.iter_mut() {
             call_next = hook.call(event, state, conn)?;
@@ -181,7 +181,7 @@ impl<C> EventHook<C> for ComposedEventHook<C>
 where
     C: Conn,
 {
-    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &mut C) -> Result<bool> {
         if self.first.call(event, state, conn)? {
             self.second.call(event, state, conn)
         } else {
@@ -192,10 +192,10 @@ where
 
 impl<F, C> EventHook<C> for F
 where
-    F: FnMut(&C::Event, &mut State<C>, &C) -> Result<bool> + Send,
+    F: FnMut(&C::Event, &mut State<C>, &mut C) -> Result<bool> + Send,
     C: Conn,
 {
-    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &C) -> Result<bool> {
+    fn call(&mut self, event: &C::Event, state: &mut State<C>, conn: &mut C) -> Result<bool> {
         (self)(event, state, conn)
     }
 }
@@ -209,7 +209,7 @@ where
     C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()>;
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()>;
 
     /// Convert to a trait object
     fn boxed(self) -> Box<dyn ManageHook<C>>
@@ -248,7 +248,7 @@ impl<C> ManageHook<C> for Vec<Box<dyn ManageHook<C>>>
 where
     C: Conn,
 {
-    fn call(&mut self, id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, id: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         for hook in self.iter_mut() {
             hook.call(id, state, conn)?;
         }
@@ -277,7 +277,7 @@ impl<C> ManageHook<C> for ComposedManageHook<C>
 where
     C: Conn,
 {
-    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         self.first.call(client, state, conn)?;
         self.second.call(client, state, conn)
     }
@@ -285,10 +285,10 @@ where
 
 impl<F, C> ManageHook<C> for F
 where
-    F: FnMut(WinId, &mut State<C>, &C) -> Result<()> + Send,
+    F: FnMut(WinId, &mut State<C>, &mut C) -> Result<()> + Send,
     C: Conn,
 {
-    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         (self)(client, state, conn)
     }
 }
@@ -299,7 +299,7 @@ where
     C: Conn,
 {
     /// Run this hook
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()>;
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()>;
 
     /// Compose this hook with another [StateHook].
     fn then<H>(self, next: H) -> ComposedStateHook<C>
@@ -338,7 +338,7 @@ impl<C> StateHook<C> for Vec<Box<dyn StateHook<C>>>
 where
     C: Conn,
 {
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
         for hook in self.iter_mut() {
             hook.call(state, conn)?;
         }
@@ -367,7 +367,7 @@ impl<C> StateHook<C> for ComposedStateHook<C>
 where
     C: Conn,
 {
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
         self.first.call(state, conn)?;
         self.second.call(state, conn)
     }
@@ -375,10 +375,10 @@ where
 
 impl<F, C> StateHook<C> for F
 where
-    F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
+    F: FnMut(&mut State<C>, &mut C) -> Result<()> + Send,
     C: Conn,
 {
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
         (self)(state, conn)
     }
 }
@@ -398,14 +398,14 @@ where
         screen_index: usize,
         r: Rect,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Rect {
         self.transform_initial(r, state, conn)
     }
 
     #[allow(unused_variables)]
     /// Optionally modify the screen dimensions being given to a [Layout][crate::core::layout::Layout]
-    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {
+    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &mut C) -> Rect {
         r
     }
 
@@ -420,7 +420,7 @@ where
         r: Rect,
         positions: Vec<(WinId, Rect)>,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Vec<(WinId, Rect)> {
         self.transform_positions(r, positions, state, conn)
     }
@@ -432,7 +432,7 @@ where
         r: Rect,
         positions: Vec<(WinId, Rect)>,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Vec<(WinId, Rect)> {
         positions
     }
@@ -495,7 +495,7 @@ where
         screen_index: usize,
         r: Rect,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Rect {
         self.second.transform_initial_for_screen(
             screen_index,
@@ -506,7 +506,7 @@ where
         )
     }
 
-    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {
+    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &mut C) -> Rect {
         self.second
             .transform_initial(self.first.transform_initial(r, state, conn), state, conn)
     }
@@ -517,7 +517,7 @@ where
         r: Rect,
         positions: Vec<(WinId, Rect)>,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Vec<(WinId, Rect)> {
         self.second.transform_positions_for_screen(
             screen_index,
@@ -534,7 +534,7 @@ where
         r: Rect,
         positions: Vec<(WinId, Rect)>,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Vec<(WinId, Rect)> {
         self.second.transform_positions(
             r,
@@ -547,11 +547,11 @@ where
 
 impl<F, G, C> LayoutHook<C> for (F, G)
 where
-    F: FnMut(Rect, &State<C>, &C) -> Rect + Send,
-    G: FnMut(Rect, Vec<(WinId, Rect)>, &State<C>, &C) -> Vec<(WinId, Rect)> + Send,
+    F: FnMut(Rect, &State<C>, &mut C) -> Rect + Send,
+    G: FnMut(Rect, Vec<(WinId, Rect)>, &State<C>, &mut C) -> Vec<(WinId, Rect)> + Send,
     C: Conn,
 {
-    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &C) -> Rect {
+    fn transform_initial(&mut self, r: Rect, state: &State<C>, conn: &mut C) -> Rect {
         (self.0)(r, state, conn)
     }
 
@@ -560,7 +560,7 @@ where
         r: Rect,
         positions: Vec<(WinId, Rect)>,
         state: &State<C>,
-        conn: &C,
+        conn: &mut C,
     ) -> Vec<(WinId, Rect)> {
         (self.1)(r, positions, state, conn)
     }
@@ -571,7 +571,7 @@ where
     T: LayoutTransformer,
     C: Conn,
 {
-    fn transform_initial(&mut self, r: Rect, _: &State<C>, _: &C) -> Rect {
+    fn transform_initial(&mut self, r: Rect, _: &State<C>, _: &mut C) -> Rect {
         LayoutTransformer::transform_initial(self, r)
     }
 
@@ -580,7 +580,7 @@ where
         r: Rect,
         positions: Vec<(WinId, Rect)>,
         _: &State<C>,
-        _: &C,
+        _: &mut C,
     ) -> Vec<(WinId, Rect)> {
         LayoutTransformer::transform_positions(self, r, positions)
     }

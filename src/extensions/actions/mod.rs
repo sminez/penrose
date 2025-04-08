@@ -29,7 +29,7 @@ pub fn set_fullscreen_state<X: XConn>(
     id: WinId,
     action: FullScreenAction,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> Result<()> {
     use FullScreenAction::*;
 
@@ -75,7 +75,7 @@ pub fn set_fullscreen_state<X: XConn>(
 ///   [0]: crate::extensions::hooks::add_ewmh_hooks
 ///   [1]: crate::extensions::hooks::startup::ClearFsPropOnStartup
 pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|state, x: &X| {
+    key_handler(|state, x: &mut X| {
         let id = match state.client_set.current_client() {
             Some(&id) => id,
             None => return Ok(()),
@@ -143,7 +143,7 @@ pub fn focus_or_spawn<X>(class: &'static str, command: &'static str) -> Box<dyn 
 where
     X: XConn,
 {
-    key_handler(move |s: &mut State<X>, x: &X| {
+    key_handler(move |s: &mut State<X>, x: &mut X| {
         let mut client = None;
 
         for &id in s.client_set.clients() {

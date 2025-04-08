@@ -42,7 +42,7 @@ impl<X: XConn> Widget<X> for RootWindowName {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_event(&mut self, event: &XEvent, _: &mut State<X>, x: &X) -> Result<()> {
+    fn on_event(&mut self, event: &XEvent, _: &mut State<X>, x: &mut X) -> Result<()> {
         let name_props = [Atom::NetWmName.as_ref(), Atom::WmName.as_ref()];
 
         match event {
@@ -108,7 +108,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         if let Some(id) = state.client_set.current_client() {
             self.set_text(&x.client_title(*id)?)
         } else {
@@ -118,7 +118,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
         Ok(())
     }
 
-    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &mut X) -> Result<()> {
         let name_props = [Atom::NetWmName.as_ref(), Atom::WmName.as_ref()];
 
         if let Some(focused) = state.client_set.current_client() {
@@ -169,7 +169,7 @@ impl<X: XConn> Widget<X> for CurrentLayout {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
         let layout_name = state.client_set.current_workspace().layout_name();
         self.inner.set_text(format!("[{layout_name}]"));
 

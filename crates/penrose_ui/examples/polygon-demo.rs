@@ -17,7 +17,7 @@ const H: u32 = 60;
 const FONT: &str = "mono";
 
 fn main() -> anyhow::Result<()> {
-    let conn = RustConn::new()?;
+    let mut conn = RustConn::new()?;
     let screen_rects = conn.screen_details()?;
     let Rect { x, y, .. } = screen_rects.last().unwrap();
 

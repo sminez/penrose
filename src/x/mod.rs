@@ -88,65 +88,65 @@ pub enum ClientAttr {
 /// assumed.
 pub trait XConn: Send {
     /// The ID of the window manager root window.
-    fn root(&self) -> WinId;
+    fn root(&mut self) -> WinId;
     /// Ask the X server for the dimensions of each currently available screen.
-    fn screen_details(&self) -> Result<Vec<Rect>>;
+    fn screen_details(&mut self) -> Result<Vec<Rect>>;
     /// Ask the X server for the current (x, y) coordinate of the mouse cursor.
-    fn cursor_position(&self) -> Result<Point>;
+    fn cursor_position(&mut self) -> Result<Point>;
 
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
-    fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
     /// Block and wait for the next event from the X server so it can be processed.
-    fn next_event(&self) -> Result<XEvent>;
+    fn next_event(&mut self) -> Result<XEvent>;
     /// Flush any pending events to the X server.
-    fn flush(&self);
+    fn flush(&mut self);
 
     /// Look up the [WinId] of a given [Atom] name. If it is not currently interned, intern it.
-    fn intern_atom(&self, atom: &str) -> Result<WinId>;
+    fn intern_atom(&mut self, atom: &str) -> Result<WinId>;
     /// Look up the string name of a given [Atom] by its [WinId].
-    fn atom_name(&self, xid: WinId) -> Result<String>;
+    fn atom_name(&mut self, xid: WinId) -> Result<String>;
 
     /// Look up the current dimensions and position of a given client window.
-    fn client_geometry(&self, client: WinId) -> Result<Rect>;
+    fn client_geometry(&mut self, client: WinId) -> Result<Rect>;
     /// Ask the X server for the IDs of all currently known client windows
-    fn existing_clients(&self) -> Result<Vec<WinId>>;
+    fn existing_clients(&mut self) -> Result<Vec<WinId>>;
 
     /// Map the given client window to the screen with its current geometry, making it visible.
-    fn map(&self, client: WinId) -> Result<()>;
+    fn map(&mut self, client: WinId) -> Result<()>;
     /// Unmap the given client window from the screen, hiding it.
-    fn unmap(&self, client: WinId) -> Result<()>;
+    fn unmap(&mut self, client: WinId) -> Result<()>;
     /// Kill the given client window, closing it.
-    fn kill(&self, client: WinId) -> Result<()>;
+    fn kill(&mut self, client: WinId) -> Result<()>;
     /// Set X input focus to be held by the given client window.
-    fn focus(&self, client: WinId) -> Result<()>;
+    fn focus(&mut self, client: WinId) -> Result<()>;
 
     /// Look up a specific property on a given client window.
-    fn get_prop(&self, client: WinId, prop_name: &str) -> Result<Option<Prop>>;
+    fn get_prop(&mut self, client: WinId, prop_name: &str) -> Result<Option<Prop>>;
     /// List the known property names set for a given client.
-    fn list_props(&self, client: WinId) -> Result<Vec<String>>;
+    fn list_props(&mut self, client: WinId) -> Result<Vec<String>>;
     /// Get the current [WmState] for a given client window.
-    fn get_wm_state(&self, client: WinId) -> Result<Option<WmState>>;
+    fn get_wm_state(&mut self, client: WinId) -> Result<Option<WmState>>;
     /// Request the [WindowAttributes] for a given client window from the X server.
-    fn get_window_attributes(&self, client: WinId) -> Result<WindowAttributes>;
+    fn get_window_attributes(&mut self, client: WinId) -> Result<WindowAttributes>;
 
     /// Set the current [WmState] for a given client window.
-    fn set_wm_state(&self, client: WinId, wm_state: WmState) -> Result<()>;
+    fn set_wm_state(&mut self, client: WinId, wm_state: WmState) -> Result<()>;
     /// Set a specific property on a given client window.
-    fn set_prop(&self, client: WinId, name: &str, val: Prop) -> Result<()>;
+    fn set_prop(&mut self, client: WinId, name: &str, val: Prop) -> Result<()>;
     /// Delete a property for a given client window.
-    fn delete_prop(&self, client: WinId, prop_name: &str) -> Result<()>;
+    fn delete_prop(&mut self, client: WinId, prop_name: &str) -> Result<()>;
     /// Set one or more [ClientAttr] for a given client window.
-    fn set_client_attributes(&self, client: WinId, attrs: &[ClientAttr]) -> Result<()>;
+    fn set_client_attributes(&mut self, client: WinId, attrs: &[ClientAttr]) -> Result<()>;
     /// Set the [ClientConfig] for a given client window.
-    fn set_client_config(&self, client: WinId, data: &[ClientConfig]) -> Result<()>;
+    fn set_client_config(&mut self, client: WinId, data: &[ClientConfig]) -> Result<()>;
     /// Send a [ClientMessage] to a given client.
-    fn send_client_message(&self, msg: ClientMessage) -> Result<()>;
+    fn send_client_message(&mut self, msg: ClientMessage) -> Result<()>;
 
     /// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.
     /// This method should not be called directly: use `warp_pointer_to_window` or `warp_pointer_to_screen`
     /// instead.
-    fn warp_pointer(&self, id: WinId, x: i16, y: i16) -> Result<()>;
+    fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()>;
 }
 
 impl ConnEvent for XEvent {
@@ -162,17 +162,17 @@ where
     type Event = XEvent;
 
     #[inline]
-    fn root(&self) -> WinId {
+    fn root(&mut self) -> WinId {
         self.root()
     }
 
     #[inline]
-    fn next_event(&self) -> Result<XEvent> {
+    fn next_event(&mut self) -> Result<XEvent> {
         self.next_event()
     }
 
     fn handle_event(
-        &self,
+        &mut self,
         evt: Self::Event,
         key_bindings: &mut KeyBindings<Self>,
         mouse_bindings: &mut MouseBindings<Self>,
@@ -208,36 +208,36 @@ where
     }
 
     #[inline]
-    fn flush(&self) {
+    fn flush(&mut self) {
         self.flush();
     }
 
     #[inline]
-    fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
         self.grab(key_codes, mouse_states)
     }
 
     #[inline]
-    fn screen_details(&self) -> Result<Vec<Rect>> {
+    fn screen_details(&mut self) -> Result<Vec<Rect>> {
         self.screen_details()
     }
 
     #[inline]
-    fn cursor_position(&self) -> Result<Point> {
+    fn cursor_position(&mut self) -> Result<Point> {
         self.cursor_position()
     }
 
     #[inline]
-    fn warp_pointer(&self, id: WinId, x: i16, y: i16) -> Result<()> {
+    fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()> {
         self.warp_pointer(id, x, y)
     }
 
     #[inline]
-    fn existing_clients(&self) -> Result<Vec<WinId>> {
+    fn existing_clients(&mut self) -> Result<Vec<WinId>> {
         self.existing_clients()
     }
 
-    fn position_client(&self, id: WinId, mut r: Rect) -> Result<()> {
+    fn position_client(&mut self, id: WinId, mut r: Rect) -> Result<()> {
         let p = Atom::WmNormalHints.as_ref();
         if let Ok(Some(Prop::WmNormalHints(hints))) = self.get_prop(id, p) {
             trace!(%id, ?hints, "client has WmNormalHints: applying size hints");
@@ -248,12 +248,12 @@ where
         self.set_client_config(id, &[ClientConfig::Position(r)])
     }
 
-    fn show_client(&self, id: WinId) -> Result<()> {
+    fn show_client(&mut self, id: WinId) -> Result<()> {
         self.set_wm_state(id, WmState::Normal)?;
         self.map(id)
     }
 
-    fn hide_client(&self, id: WinId) -> Result<()> {
+    fn hide_client(&mut self, id: WinId) -> Result<()> {
         self.set_client_attributes(id, &[ClientAttr::ClientUnmapMask])?;
         self.unmap(id)?;
         self.set_client_attributes(id, &[ClientAttr::ClientEventMask])?;
@@ -263,26 +263,26 @@ where
     }
 
     #[inline]
-    fn withdraw_client(&self, id: WinId) -> Result<()> {
+    fn withdraw_client(&mut self, id: WinId) -> Result<()> {
         self.set_wm_state(id, WmState::Withdrawn)
     }
 
     #[inline]
-    fn kill_client(&self, id: WinId) -> Result<()> {
+    fn kill_client(&mut self, id: WinId) -> Result<()> {
         self.kill(id)
     }
 
     #[inline]
-    fn focus_client(&self, id: WinId) -> Result<()> {
+    fn focus_client(&mut self, id: WinId) -> Result<()> {
         self.focus(id)
     }
 
     #[inline]
-    fn client_geometry(&self, id: WinId) -> Result<Rect> {
+    fn client_geometry(&mut self, id: WinId) -> Result<Rect> {
         self.client_geometry(id)
     }
 
-    fn client_title(&self, id: WinId) -> Result<String> {
+    fn client_title(&mut self, id: WinId) -> Result<String> {
         match str_prop(Atom::WmName, id, self) {
             Ok(Some(mut strs)) => Ok(strs.remove(0)),
             _ => match str_prop(Atom::NetWmName, id, self)? {
@@ -292,7 +292,7 @@ where
         }
     }
 
-    fn client_pid(&self, id: WinId) -> Option<u32> {
+    fn client_pid(&mut self, id: WinId) -> Option<u32> {
         if let Ok(Some(Prop::Cardinal(vals))) = self.get_prop(id, "_NET_WM_PID") {
             Some(vals[0])
         } else {
@@ -300,7 +300,7 @@ where
         }
     }
 
-    fn client_should_float(&self, id: WinId, floating_classes: &[String]) -> bool {
+    fn client_should_float(&mut self, id: WinId, floating_classes: &[String]) -> bool {
         trace!(%id, "fetching WmClass prop");
         if let Ok(Some(Prop::UTF8String(strs))) = self.get_prop(id, Atom::WmClass.as_ref()) {
             if strs.iter().any(|c| floating_classes.contains(c)) {
@@ -326,7 +326,7 @@ where
         should_float
     }
 
-    fn client_should_be_managed(&self, id: WinId) -> bool {
+    fn client_should_be_managed(&mut self, id: WinId) -> bool {
         let attrs = match self.get_window_attributes(id) {
             Ok(attrs) => attrs,
             _ => {
@@ -359,7 +359,7 @@ where
         !override_redirect && (viewable || iconic)
     }
 
-    fn client_is_fullscreen(&self, id: WinId) -> bool {
+    fn client_is_fullscreen(&mut self, id: WinId) -> bool {
         let net_wm_state = Atom::NetWmState.as_ref();
         let full_screen = match self.intern_atom(Atom::NetWmStateFullscreen.as_ref()) {
             Ok(atom) => atom,
@@ -374,19 +374,19 @@ where
         wstate.contains(&full_screen)
     }
 
-    fn client_transient_parent(&self, id: WinId) -> Option<WinId> {
+    fn client_transient_parent(&mut self, id: WinId) -> Option<WinId> {
         match self.get_prop(id, Atom::WmTransientFor.as_ref()).ok()?? {
             Prop::Window(ids) => Some(ids[0]),
             _ => None,
         }
     }
 
-    fn set_client_border_color(&self, id: WinId, color: impl Into<Color>) -> Result<()> {
+    fn set_client_border_color(&mut self, id: WinId, color: impl Into<Color>) -> Result<()> {
         let color = color.into();
         self.set_client_attributes(id, &[ClientAttr::BorderColor(color.argb_u32())])
     }
 
-    fn set_initial_properties(&self, id: WinId, config: &Config<Self>) -> Result<()> {
+    fn set_initial_properties(&mut self, id: WinId, config: &Config<Self>) -> Result<()> {
         let Config {
             normal_border,
             border_width,
@@ -404,7 +404,7 @@ where
         self.set_client_config(id, conf)
     }
 
-    fn restack<'a, I>(&self, mut ids: I) -> Result<()>
+    fn restack<'a, I>(&mut self, mut ids: I) -> Result<()>
     where
         WinId: 'a,
         I: Iterator<Item = &'a WinId>,
@@ -430,7 +430,7 @@ where
     //       pre-managed clients for us. In that case we want to avoid stomping on
     //       anything that they have set up.
     #[tracing::instrument(level = "info", skip(state, self))]
-    fn manage_existing_clients(&self, state: &mut State<Self>) -> Result<()> {
+    fn manage_existing_clients(&mut self, state: &mut State<Self>) -> Result<()> {
         // We're not guaranteed that workspace indices are _always_ continuous from 0..n
         // so we explicitly map tags to indices instead.
         // We also exclude hidden workspaces as those can contain windows which are

@@ -59,70 +59,70 @@ pub trait Conn: Send + Sized {
     type Event: ConnEvent;
 
     /// The ID of the window manager root window.
-    fn root(&self) -> WinId;
+    fn root(&mut self) -> WinId;
     /// Block and wait for the next event so it can be processed.
-    fn next_event(&self) -> Result<Self::Event>;
+    fn next_event(&mut self) -> Result<Self::Event>;
     /// Process the an event
     fn handle_event(
-        &self,
+        &mut self,
         evt: Self::Event,
         key_bindings: &mut KeyBindings<Self>,
         mouse_bindings: &mut MouseBindings<Self>,
         state: &mut State<Self>,
     ) -> Result<()>;
     /// Flush any pending events to the underlying back end.
-    fn flush(&self);
+    fn flush(&mut self);
 
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
-    fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
     /// Ask the X server for the IDs of all currently known client windows
-    fn existing_clients(&self) -> Result<Vec<WinId>>;
+    fn existing_clients(&mut self) -> Result<Vec<WinId>>;
     /// Request a client windows's current workspace
-    fn manage_existing_clients(&self, state: &mut State<Self>) -> Result<()>;
+    fn manage_existing_clients(&mut self, state: &mut State<Self>) -> Result<()>;
     /// The dimensions of each currently available screen.
-    fn screen_details(&self) -> Result<Vec<Rect>>;
+    fn screen_details(&mut self) -> Result<Vec<Rect>>;
     /// The current (x, y) coordinate of the mouse cursor.
-    fn cursor_position(&self) -> Result<Point>;
+    fn cursor_position(&mut self) -> Result<Point>;
     /// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.
-    fn warp_pointer(&self, id: WinId, x: i16, y: i16) -> Result<()>;
+    fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()>;
 
     /// Update the geometry of a given client based on the given [Rect].
-    fn position_client(&self, id: WinId, r: Rect) -> Result<()>;
+    fn position_client(&mut self, id: WinId, r: Rect) -> Result<()>;
     /// Display a client on the screen at its current position.
-    fn show_client(&self, id: WinId) -> Result<()>;
+    fn show_client(&mut self, id: WinId) -> Result<()>;
     /// Hide a client
-    fn hide_client(&self, id: WinId) -> Result<()>;
+    fn hide_client(&mut self, id: WinId) -> Result<()>;
     /// Withdraw a client
-    fn withdraw_client(&self, id: WinId) -> Result<()>;
+    fn withdraw_client(&mut self, id: WinId) -> Result<()>;
     /// Kill the given client window, closing it.
-    fn kill_client(&self, id: WinId) -> Result<()>;
+    fn kill_client(&mut self, id: WinId) -> Result<()>;
     /// Set input focus to be held by the given client window.
-    fn focus_client(&self, id: WinId) -> Result<()>;
+    fn focus_client(&mut self, id: WinId) -> Result<()>;
 
     /// Look up the current dimensions and position of a given client window.
-    fn client_geometry(&self, id: WinId) -> Result<Rect>;
+    fn client_geometry(&mut self, id: WinId) -> Result<Rect>;
     /// Request the title of a given client window.
-    fn client_title(&self, id: WinId) -> Result<String>;
+    fn client_title(&mut self, id: WinId) -> Result<String>;
     /// Request a window's PID.
-    fn client_pid(&self, id: WinId) -> Option<u32>;
+    fn client_pid(&mut self, id: WinId) -> Option<u32>;
     /// Check whether or not the given client should be assigned floating status or not.
-    fn client_should_float(&self, id: WinId, floating_classes: &[String]) -> bool;
+    fn client_should_float(&mut self, id: WinId, floating_classes: &[String]) -> bool;
     /// For a given existing client being processed on startup, determine whether we need
     /// to bring it into our internal state and manage it.
-    fn client_should_be_managed(&self, id: WinId) -> bool;
+    fn client_should_be_managed(&mut self, id: WinId) -> bool;
     /// Check whether this client is currently fullscreen or not
-    fn client_is_fullscreen(&self, id: WinId) -> bool;
+    fn client_is_fullscreen(&mut self, id: WinId) -> bool;
     /// The id of the parent for this client if it is transient
-    fn client_transient_parent(&self, id: WinId) -> Option<WinId>;
+    fn client_transient_parent(&mut self, id: WinId) -> Option<WinId>;
 
     /// Update the border color of the given client window.
-    fn set_client_border_color(&self, id: WinId, color: impl Into<Color>) -> Result<()>;
+    fn set_client_border_color(&mut self, id: WinId, color: impl Into<Color>) -> Result<()>;
     /// Set the initial window properties for a newly managed window.
-    fn set_initial_properties(&self, id: WinId, config: &Config<Self>) -> Result<()>;
+    fn set_initial_properties(&mut self, id: WinId, config: &Config<Self>) -> Result<()>;
 
     /// Restack the given windows, each one above the last.
-    fn restack<'a, I>(&self, ids: I) -> Result<()>
+    fn restack<'a, I>(&mut self, ids: I) -> Result<()>
     where
         WinId: 'a,
         I: Iterator<Item = &'a WinId>;
@@ -131,7 +131,7 @@ pub trait Conn: Send + Sized {
 /// Extended functionality for [Conn] impls in order to run the window manager.
 pub trait ConnExt: Conn + Sized {
     /// Kill the focused client if there is one
-    fn kill_focused(&self, state: &mut State<Self>) -> Result<()> {
+    fn kill_focused(&mut self, state: &mut State<Self>) -> Result<()> {
         if let Some(&id) = state.client_set.current_client() {
             self.kill_client(id)?;
         }
@@ -141,7 +141,7 @@ pub trait ConnExt: Conn + Sized {
 
     /// Establish the window manager state for the given client window and refresh the
     /// current X state.
-    fn manage(&self, id: WinId, state: &mut State<Self>) -> Result<()> {
+    fn manage(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
         trace!(%id, "managing new client");
         manage_without_refresh(id, None, state, self)?;
         self.refresh(state)
@@ -149,7 +149,7 @@ pub trait ConnExt: Conn + Sized {
 
     /// Remove the window manager state for the given client window and refresh the
     /// current X state.
-    fn unmanage(&self, id: WinId, state: &mut State<Self>) -> Result<()> {
+    fn unmanage(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
         trace!(?id, "removing client");
         self.modify_and_refresh(state, |cs| {
             cs.remove_client(&id);
@@ -163,7 +163,7 @@ pub trait ConnExt: Conn + Sized {
     /// of window placement, focus and borders. Everything is driven from a diff of the
     /// pure ClientSet state before and after some mutating operation that was carried out
     /// by `f`.
-    fn modify_and_refresh<F>(&self, state: &mut State<Self>, mut f: F) -> Result<()>
+    fn modify_and_refresh<F>(&mut self, state: &mut State<Self>, mut f: F) -> Result<()>
     where
         F: FnMut(&mut StackSet<WinId>),
     {
@@ -196,7 +196,7 @@ pub trait ConnExt: Conn + Sized {
 
     /// Refresh the current X server state based on a diff of the current state against the state
     /// when we last refreshed.
-    fn refresh(&self, state: &mut State<Self>) -> Result<()> {
+    fn refresh(&mut self, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |_| ())
     }
 
@@ -206,7 +206,7 @@ pub trait ConnExt: Conn + Sized {
     /// border.
     ///
     /// See `restack` for details of stacking order is determined.
-    fn position_clients(&self, state: &State<Self>) -> Result<()> {
+    fn position_clients(&mut self, state: &State<Self>) -> Result<()> {
         let border = state.config.border_width;
         let positions = &state.diff.after.positions;
         let screen_positions: Vec<_> = state.client_set.screens().map(|s| s.r).collect();
@@ -224,19 +224,23 @@ pub trait ConnExt: Conn + Sized {
     }
 
     /// Update the currently focused client and refresh the X state.
-    fn set_active_client(&self, id: WinId, state: &mut State<Self>) -> Result<()> {
+    fn set_active_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |cs| cs.focus_client(&id))
     }
 
     /// Warp the mouse cursor to the center of the given client window.
-    fn warp_pointer_to_window(&self, id: WinId) -> Result<()> {
+    fn warp_pointer_to_window(&mut self, id: WinId) -> Result<()> {
         let r = self.client_geometry(id)?;
 
         self.warp_pointer(id, r.w as i16 / 2, r.h as i16 / 2)
     }
 
     /// Warp the mouse cursor to the center of the given screen.
-    fn warp_pointer_to_screen(&self, state: &mut State<Self>, screen_index: usize) -> Result<()> {
+    fn warp_pointer_to_screen(
+        &mut self,
+        state: &mut State<Self>,
+        screen_index: usize,
+    ) -> Result<()> {
         let maybe_screen = state.client_set.screens().find(|s| s.index == screen_index);
 
         let screen = match maybe_screen {
@@ -250,18 +254,19 @@ pub trait ConnExt: Conn + Sized {
 
         let x = (screen.r.x + screen.r.w as i32 / 2) as i16;
         let y = (screen.r.y + screen.r.h as i32 / 2) as i16;
+        let root = self.root();
 
-        self.warp_pointer(self.root(), x, y)
+        self.warp_pointer(root, x, y)
     }
 
     /// Run the provided [Query], returning the result.
-    fn query(&self, query: &dyn Query<Self>, id: WinId) -> Result<bool> {
+    fn query(&mut self, query: &dyn Query<Self>, id: WinId) -> Result<bool> {
         query.run(id, self)
     }
 
     /// Run the provided [Query], returning the result or a default value if there
     /// were any errors encountered when communicating with the X server.
-    fn query_or(&self, default: bool, query: &dyn Query<Self>, id: WinId) -> bool {
+    fn query_or(&mut self, default: bool, query: &dyn Query<Self>, id: WinId) -> bool {
         query.run(id, self).unwrap_or(default)
     }
 }
@@ -273,7 +278,7 @@ impl<T> ConnExt for T where T: Conn {}
 /// or programs.
 pub trait Query<C: Conn>: Send {
     /// Run this query for a given window ID.
-    fn run(&self, id: WinId, conn: &C) -> Result<bool>;
+    fn run(&self, id: WinId, conn: &mut C) -> Result<bool>;
 
     /// Combine this query with another query using a logical AND.
     ///
@@ -336,7 +341,7 @@ pub struct AndQuery<C: Conn> {
 }
 
 impl<C: Conn> Query<C> for AndQuery<C> {
-    fn run(&self, id: WinId, x: &C) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut C) -> Result<bool> {
         Ok(self.first.run(id, x)? && self.second.run(id, x)?)
     }
 }
@@ -350,7 +355,7 @@ pub struct OrQuery<C: Conn> {
 }
 
 impl<C: Conn> Query<C> for OrQuery<C> {
-    fn run(&self, id: WinId, x: &C) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut C) -> Result<bool> {
         Ok(self.first.run(id, x)? || self.second.run(id, x)?)
     }
 }
@@ -363,7 +368,7 @@ pub struct NotQuery<C: Conn> {
 }
 
 impl<C: Conn> Query<C> for NotQuery<C> {
-    fn run(&self, id: WinId, x: &C) -> Result<bool> {
+    fn run(&self, id: WinId, x: &mut C) -> Result<bool> {
         Ok(!self.inner.run(id, x)?)
     }
 }
@@ -376,7 +381,7 @@ pub fn manage_without_refresh<C: Conn>(
     id: WinId,
     tag: Option<&str>,
     state: &mut State<C>,
-    conn: &C,
+    conn: &mut C,
 ) -> Result<()> {
     trace!(%id, "checking if client is transient");
     let transient_for = conn.client_transient_parent(id);
@@ -426,7 +431,7 @@ fn floating_client_position<C: Conn>(
     id: WinId,
     transient_for: Option<WinId>,
     state: &State<C>,
-    conn: &C,
+    conn: &mut C,
 ) -> Result<Rect> {
     trace!(%id, "fetching client geometry");
     let r_initial = conn.client_geometry(id)?;
@@ -453,7 +458,7 @@ fn floating_client_position<C: Conn>(
     Ok(r_final)
 }
 
-fn notify_killed<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> {
+fn notify_killed<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
     for &c in state.diff.killed_clients() {
         conn.kill_client(c)?;
     }
@@ -461,7 +466,7 @@ fn notify_killed<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> {
     Ok(())
 }
 
-fn set_window_props<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> {
+fn set_window_props<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
     for &c in state.diff.new_clients() {
         conn.set_initial_properties(c, &state.config)?;
     }
@@ -489,7 +494,7 @@ fn notify_hidden_workspaces<C: Conn>(state: &mut State<C>) {
 }
 
 // Warp the cursor if this diff resulted in a focus change
-fn handle_pointer_change<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> {
+fn handle_pointer_change<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
     if !state.config.focus_follow_mouse {
         return Ok(());
     }
@@ -523,7 +528,7 @@ fn handle_pointer_change<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> 
     Ok(())
 }
 
-fn set_window_visibility<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> {
+fn set_window_visibility<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
     for &c in state.diff.visible_clients() {
         trace!(?c, "revealing client");
         conn.show_client(c)?;
@@ -542,7 +547,7 @@ fn set_window_visibility<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> 
     Ok(())
 }
 
-fn set_focus<C: Conn>(conn: &C, state: &mut State<C>) -> Result<()> {
+fn set_focus<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
     if let Some(&id) = state.client_set.current_client() {
         conn.focus_client(id)
     } else {
@@ -571,11 +576,11 @@ mod tests {
     const TEST_SCREEN_2: Rect = Rect::new(1024, 0, 4096, 2160);
 
     impl MockXConn for TransientXConn {
-        fn mock_screen_details(&self) -> Result<Vec<Rect>> {
+        fn mock_screen_details(&mut self) -> Result<Vec<Rect>> {
             Ok(vec![TEST_SCREEN, TEST_SCREEN_2])
         }
 
-        fn mock_get_prop(&self, client: WinId, prop_name: &str) -> Result<Option<Prop>> {
+        fn mock_get_prop(&mut self, client: WinId, prop_name: &str) -> Result<Option<Prop>> {
             let maybe_prop = if prop_name == Atom::WmTransientFor.as_ref() {
                 self.transient_ids
                     .get(&client)
@@ -587,7 +592,7 @@ mod tests {
             Ok(maybe_prop)
         }
 
-        fn mock_client_geometry(&self, client: WinId) -> Result<Rect> {
+        fn mock_client_geometry(&mut self, client: WinId) -> Result<Rect> {
             self.geometry
                 .get(&client)
                 .copied()
@@ -618,7 +623,7 @@ mod tests {
     )]
     #[test]
     fn manage_without_refresh_transient(parent: Rect, child: Rect, screen: usize, expected: Rect) {
-        let conn = TransientXConn {
+        let mut conn = TransientXConn {
             transient_ids: map! {
                 WinId(1) => WinId(2),
             },
@@ -627,12 +632,12 @@ mod tests {
                 WinId(2) => parent,
             },
         };
-        let mut state = State::try_new(Default::default(), &conn).expect("test state");
+        let mut state = State::try_new(Default::default(), &mut conn).expect("test state");
         state.client_set.focus_screen(screen);
         state.client_set.insert(WinId(2));
         state.client_set.focus_screen(0);
 
-        manage_without_refresh(WinId(1), None, &mut state, &conn).expect("refresh");
+        manage_without_refresh(WinId(1), None, &mut state, &mut conn).expect("refresh");
 
         assert!(
             state.client_set.contains(&WinId(1)),

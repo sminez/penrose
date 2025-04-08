@@ -40,7 +40,7 @@ impl<X> StateHook<X> for DefaultWorkspace
 where
     X: XConn,
 {
-    fn call(&mut self, state: &mut State<X>, _x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, _x: &mut X) -> Result<()> {
         let on_screen_and_empty = matches!(state.diff.after.visible.iter().find(|s| s.tag == self.tag), Some(s) if s.clients.is_empty());
 
         if on_screen_and_empty

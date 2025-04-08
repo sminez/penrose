@@ -105,7 +105,7 @@ where
 }
 
 /// Store clients matching NamedScratchPad queries and run the associated [ManageHook].
-pub fn manage_hook<C: Conn + 'static>(id: WinId, state: &mut State<C>, conn: &C) -> Result<()> {
+pub fn manage_hook<C: Conn + 'static>(id: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
     let s = state.extension::<NamedScratchPadState<C>>()?;
 
     for sp in s.borrow_mut().0.values_mut() {
@@ -120,7 +120,7 @@ pub fn manage_hook<C: Conn + 'static>(id: WinId, state: &mut State<C>, conn: &C)
 }
 
 /// Remove destroyed clients from internal scratchpad state
-pub fn refresh_hook<C: Conn + 'static>(state: &mut State<C>, _: &C) -> Result<()> {
+pub fn refresh_hook<C: Conn + 'static>(state: &mut State<C>, _: &mut C) -> Result<()> {
     let s = state.extension::<NamedScratchPadState<C>>()?;
     for sp in s.borrow_mut().0.values_mut() {
         match sp.client {
@@ -149,7 +149,7 @@ pub struct ToggleNamedScratchPad {
 
 impl<C: Conn + 'static> KeyEventHandler<C> for ToggleNamedScratchPad {
     #[tracing::instrument(level = "debug", skip(state, conn))]
-    fn call(&mut self, state: &mut State<C>, conn: &C) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
         let _s = state.extension::<NamedScratchPadState<C>>()?;
         let mut s = _s.borrow_mut();
         let name = self.name.as_ref();

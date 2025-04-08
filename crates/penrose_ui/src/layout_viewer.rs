@@ -33,7 +33,7 @@ impl LayoutViewer {
         unfocused: impl Into<Color>,
         text: impl Into<Color>,
     ) -> Result<Self> {
-        let conn = RustConn::new()?;
+        let mut conn = RustConn::new()?;
         let screen_rects = conn.screen_details()?;
         let r_screen = screen_rects.last().unwrap();
 
