@@ -312,6 +312,7 @@ impl<X: XConn> Widget<X> for RefreshText {
 ///     style,
 ///     my_get_text,
 ///     Duration::from_secs(60 * 5),
+///     Duration::from_secs(60 * 5),
 ///     true,
 ///     true
 /// );
