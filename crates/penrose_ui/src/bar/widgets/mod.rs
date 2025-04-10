@@ -333,11 +333,17 @@ impl IntervalText {
     /// Construct a new [`IntervalText`] using the specified styling and a function for
     /// generating the widget contents. The function for updating the widget contents
     /// will be run in its own thread on the interval provided.
-    pub fn new<F>(style: TextStyle, get_text: F, interval: Duration) -> Self
+    pub fn new<F>(
+        style: TextStyle,
+        get_text: F,
+        interval: Duration,
+        is_greedy: bool,
+        right_justified: bool,
+    ) -> Self
     where
         F: Fn() -> Option<String> + Send + 'static,
     {
-        let inner = Arc::new(Mutex::new(Text::new("", style, false, false)));
+        let inner = Arc::new(Mutex::new(Text::new("", style, is_greedy, right_justified)));
 
         Self {
             inner,
