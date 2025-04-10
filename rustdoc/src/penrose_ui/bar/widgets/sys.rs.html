@@ -235,7 +235,19 @@
 <a href="#234" id="234">234</a>
 <a href="#235" id="235">235</a>
 <a href="#236" id="236">236</a>
-<a href="#237" id="237">237</a></pre></div><pre class="rust"><code><span class="doccomment">//! System monitor widgets and utility functions
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a></pre></div><pre class="rust"><code><span class="doccomment">//! System monitor widgets and utility functions
 
 /// Helper functions for obtaining system information for use in status bar widgets
 </span><span class="kw">pub mod </span>helpers {
@@ -447,20 +459,26 @@
         style: TextStyle,
         interval: Duration,
     ) -&gt; IntervalText {
-        IntervalText::new(style, <span class="kw">move </span>|| helpers::battery_text(bat), interval)
+        IntervalText::new(
+            style,
+            <span class="kw">move </span>|| helpers::battery_text(bat),
+            interval,
+            <span class="bool-val">true</span>,
+            <span class="bool-val">true</span>,
+        )
     }
 
     <span class="doccomment">/// Display the current date and time in YYYY-MM-DD HH:MM format
     ///
     /// This widget shells out to the `date` tool to generate its output
     </span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle, interval: Duration) -&gt; IntervalText {
-        IntervalText::new(style, helpers::date_text, interval)
+        IntervalText::new(style, helpers::date_text, interval, <span class="bool-val">true</span>, <span class="bool-val">true</span>)
     }
 
     <span class="doccomment">/// Display the ESSID currently connected to and the signal quality as
     /// a percentage.
     </span><span class="kw">pub fn </span>wifi_network(style: TextStyle, interval: Duration) -&gt; IntervalText {
-        IntervalText::new(style, helpers::wifi_text, interval)
+        IntervalText::new(style, helpers::wifi_text, interval, <span class="bool-val">true</span>, <span class="bool-val">true</span>)
     }
 
     <span class="doccomment">/// Display the current volume level as reported by `amixer`
@@ -469,7 +487,13 @@
         style: TextStyle,
         interval: Duration,
     ) -&gt; IntervalText {
-        IntervalText::new(style, <span class="kw">move </span>|| helpers::amixer_text(channel), interval)
+        IntervalText::new(
+            style,
+            <span class="kw">move </span>|| helpers::amixer_text(channel),
+            interval,
+            <span class="bool-val">true</span>,
+            <span class="bool-val">true</span>,
+        )
     }
 }
 </code></pre></div></section></main></body></html>

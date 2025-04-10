@@ -379,7 +379,15 @@
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a></pre></div><pre class="rust"><code><span class="doccomment">//! Self rendering building blocks for text based UI elements
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a></pre></div><pre class="rust"><code><span class="doccomment">//! Self rendering building blocks for text based UI elements
 </span><span class="kw">use crate</span>::{bar::schedule::UpdateSchedule, Context, <span class="prelude-ty">Result</span>, TextStyle};
 <span class="kw">use </span>penrose::{
     core::State,
@@ -692,7 +700,9 @@
 /// let my_widget = IntervalText::new(
 ///     style,
 ///     my_get_text,
-///     Duration::from_secs(60 * 5)
+///     Duration::from_secs(60 * 5),
+///     true,
+///     true
 /// );
 /// ```
 </span><span class="kw">pub struct </span>IntervalText {
@@ -714,11 +724,17 @@
     <span class="doccomment">/// Construct a new [`IntervalText`] using the specified styling and a function for
     /// generating the widget contents. The function for updating the widget contents
     /// will be run in its own thread on the interval provided.
-    </span><span class="kw">pub fn </span>new&lt;F&gt;(style: TextStyle, get_text: F, interval: Duration) -&gt; <span class="self">Self
+    </span><span class="kw">pub fn </span>new&lt;F&gt;(
+        style: TextStyle,
+        get_text: F,
+        interval: Duration,
+        is_greedy: bool,
+        right_justified: bool,
+    ) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: Fn() -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; + Send + <span class="lifetime">'static</span>,
     {
-        <span class="kw">let </span>inner = Arc::new(Mutex::new(Text::new(<span class="string">""</span>, style, <span class="bool-val">false</span>, <span class="bool-val">false</span>)));
+        <span class="kw">let </span>inner = Arc::new(Mutex::new(Text::new(<span class="string">""</span>, style, is_greedy, right_justified)));
 
         <span class="self">Self </span>{
             inner,
