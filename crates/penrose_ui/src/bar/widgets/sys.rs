@@ -210,20 +210,26 @@ pub mod interval {
         style: TextStyle,
         interval: Duration,
     ) -> IntervalText {
-        IntervalText::new(style, move || helpers::battery_text(bat), interval)
+        IntervalText::new(
+            style,
+            move || helpers::battery_text(bat),
+            interval,
+            true,
+            true,
+        )
     }
 
     /// Display the current date and time in YYYY-MM-DD HH:MM format
     ///
     /// This widget shells out to the `date` tool to generate its output
     pub fn current_date_and_time(style: TextStyle, interval: Duration) -> IntervalText {
-        IntervalText::new(style, helpers::date_text, interval)
+        IntervalText::new(style, helpers::date_text, interval, true, true)
     }
 
     /// Display the ESSID currently connected to and the signal quality as
     /// a percentage.
     pub fn wifi_network(style: TextStyle, interval: Duration) -> IntervalText {
-        IntervalText::new(style, helpers::wifi_text, interval)
+        IntervalText::new(style, helpers::wifi_text, interval, true, true)
     }
 
     /// Display the current volume level as reported by `amixer`
@@ -232,6 +238,12 @@ pub mod interval {
         style: TextStyle,
         interval: Duration,
     ) -> IntervalText {
-        IntervalText::new(style, move || helpers::amixer_text(channel), interval)
+        IntervalText::new(
+            style,
+            move || helpers::amixer_text(channel),
+            interval,
+            true,
+            true,
+        )
     }
 }
