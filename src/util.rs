@@ -77,7 +77,7 @@ pub fn spawn_for_output<S: Into<String>>(cmd: S) -> std::io::Result<String> {
         .take()
         .expect("to have output")
         .read_to_string(&mut buff)
-        .map(|_| buff)
+        .map(|_| buff.trim().to_string())
 }
 
 /// Run an external command with arguments and return its output.
