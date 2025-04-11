@@ -104,7 +104,7 @@ pub fn spawn_for_output_with_args<S: Into<String>>(
         .take()
         .unwrap()
         .read_to_string(&mut buff)
-        .map(|_| buff)
+        .map(|_| buff.trim().to_string())
 }
 
 /// Use `notify-send` to display a message to the user
