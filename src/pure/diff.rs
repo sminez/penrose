@@ -176,6 +176,7 @@ where
     }
 
     #[cfg(test)]
+    /// Is this diff empty
     pub fn is_empty(&self) -> bool {
         !(self.focused_client_changed()
             || self.newly_focused_screen().is_some()
