@@ -1,351 +1,175 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/layout/transformers.rs`."><title>transformers.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">penrose/core/layout/</div>transformers.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
-<a href="#1" id="1">1</a>
-<a href="#2" id="2">2</a>
-<a href="#3" id="3">3</a>
-<a href="#4" id="4">4</a>
-<a href="#5" id="5">5</a>
-<a href="#6" id="6">6</a>
-<a href="#7" id="7">7</a>
-<a href="#8" id="8">8</a>
-<a href="#9" id="9">9</a>
-<a href="#10" id="10">10</a>
-<a href="#11" id="11">11</a>
-<a href="#12" id="12">12</a>
-<a href="#13" id="13">13</a>
-<a href="#14" id="14">14</a>
-<a href="#15" id="15">15</a>
-<a href="#16" id="16">16</a>
-<a href="#17" id="17">17</a>
-<a href="#18" id="18">18</a>
-<a href="#19" id="19">19</a>
-<a href="#20" id="20">20</a>
-<a href="#21" id="21">21</a>
-<a href="#22" id="22">22</a>
-<a href="#23" id="23">23</a>
-<a href="#24" id="24">24</a>
-<a href="#25" id="25">25</a>
-<a href="#26" id="26">26</a>
-<a href="#27" id="27">27</a>
-<a href="#28" id="28">28</a>
-<a href="#29" id="29">29</a>
-<a href="#30" id="30">30</a>
-<a href="#31" id="31">31</a>
-<a href="#32" id="32">32</a>
-<a href="#33" id="33">33</a>
-<a href="#34" id="34">34</a>
-<a href="#35" id="35">35</a>
-<a href="#36" id="36">36</a>
-<a href="#37" id="37">37</a>
-<a href="#38" id="38">38</a>
-<a href="#39" id="39">39</a>
-<a href="#40" id="40">40</a>
-<a href="#41" id="41">41</a>
-<a href="#42" id="42">42</a>
-<a href="#43" id="43">43</a>
-<a href="#44" id="44">44</a>
-<a href="#45" id="45">45</a>
-<a href="#46" id="46">46</a>
-<a href="#47" id="47">47</a>
-<a href="#48" id="48">48</a>
-<a href="#49" id="49">49</a>
-<a href="#50" id="50">50</a>
-<a href="#51" id="51">51</a>
-<a href="#52" id="52">52</a>
-<a href="#53" id="53">53</a>
-<a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a>
-<a href="#56" id="56">56</a>
-<a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a>
-<a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
-<a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
-<a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
-<a href="#68" id="68">68</a>
-<a href="#69" id="69">69</a>
-<a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    builtin::layout::{messages::UnwrapTransformer, Monocle},
-    core::layout::{messages::Message, Layout},
-    pure::{geometry::Rect, Stack},
-    Xid,
-};
-<span class="kw">use </span>std::mem::swap;
-
-<span class="doccomment">/// A wrapper round another [Layout] that is able to intercept and modify both the positions being
-/// returned by the inner layout and messages being sent to it.
-</span><span class="kw">pub trait </span>LayoutTransformer: Send + Sync + Clone + Sized + <span class="lifetime">'static </span>{
-    <span class="doccomment">/// The same as [Layout::name] but for [LayoutTransformer] itself.
-    </span><span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
-
-    <span class="doccomment">/// Provide a mutable reference to the [Layout] wrapped by this transformer.
-    </span><span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;;
-
-    <span class="doccomment">/// Replace the currently wrapped [Layout] with a new one.
-    </span><span class="kw">fn </span>swap_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>new: Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
-        swap(<span class="self">self</span>.inner_mut(), <span class="kw-2">&amp;mut </span>new);
-
-        new
-    }
-
-    <span class="doccomment">/// Remove the inner [Layout] from this [LayoutTransformer].
-    ///
-    /// The default implementation of this method simply swaps the built-in [Monocle]
-    /// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better
-    /// implementation is possible then it should be implemented but this default will
-    /// give the correct behaviour when [LayoutTransformer::passthrough_message] receives
-    /// an [UnwrapTransformer] message.
-    </span><span class="kw">fn </span>unwrap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
-        <span class="self">self</span>.swap_inner(Box::new(Monocle))
-    }
-
-    <span class="doccomment">/// Modify the initial [Rect] that will be passed to the inner [Layout].
-    ///
-    /// The default implementation of this method leaves the initial Rect unchanged.
-    </span><span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;</span><span class="self">self</span>, r: Rect) -&gt; Rect {
-        r
-    }
-
-    <span class="doccomment">/// Optionally modify any of the positions returned by the inner [Layout] before they are
-    /// applied by the window manager. The dimensions of the screen being layed out are avaiable
-    /// as `r`.
-    ///
-    /// The default implementation of this method leaves the positions returned by the inner layout
-    /// unchanged.
-    </span><span class="kw">fn </span>transform_positions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
-        positions
-    }
-
-    <span class="doccomment">/// Apply the [LayoutTransformer] to its wrapped inner [Layout].
-    </span><span class="attr">#[allow(clippy::type_complexity)]
-    </span><span class="kw">fn </span>run_transform&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;)
-    <span class="kw">where
-        </span>F: FnOnce(Rect, <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;),
-    {
-        <span class="kw">let </span>r = <span class="self">self</span>.transform_initial(r);
-        <span class="kw">let </span>(new, positions) = (f)(r, <span class="self">self</span>.inner_mut());
-        <span class="kw">let </span>transformed = <span class="self">self</span>.transform_positions(r, positions);
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(l) = new {
-            <span class="self">self</span>.swap_inner(l);
-        }
-
-        (<span class="prelude-val">None</span>, transformed)
-    }
-
-    <span class="doccomment">/// Pass a message on to the wrapped inner [Layout].
-    ///
-    /// The default implementation of this method will return `Some(inner_layout)` if it
-    /// receives an [UnwrapTransformer] [Message] using the `unwrap` method of this trait.
-    </span><span class="kw">fn </span>passthrough_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(new) = <span class="self">self</span>.inner_mut().handle_message(m) {
-            <span class="self">self</span>.swap_inner(new);
-        }
-
-        <span class="prelude-val">None
-    </span>}
-}
-
-<span class="kw">impl</span>&lt;LT&gt; Layout <span class="kw">for </span>LT
-<span class="kw">where
-    </span>LT: LayoutTransformer,
-{
-    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="self">self</span>.transformed_name()
-    }
-
-    <span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
-        Box::new(<span class="self">self</span>.clone())
-    }
-
-    <span class="kw">fn </span>layout_workspace(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        tag: <span class="kw-2">&amp;</span>str,
-        stack: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Stack&lt;Xid&gt;&gt;,
-        r: Rect,
-    ) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
-        <span class="self">self</span>.run_transform(|r, inner| inner.layout_workspace(tag, stack, r), r)
-    }
-
-    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
-        <span class="self">self</span>.run_transform(|r, inner| inner.layout(s, r), r)
-    }
-
-    <span class="kw">fn </span>layout_empty(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
-        <span class="self">self</span>.run_transform(|r, inner| inner.layout_empty(r), r)
-    }
-
-    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>UnwrapTransformer) = m.downcast_ref() {
-            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="self">self</span>.unwrap());
-        }
-
-        <span class="self">self</span>.passthrough_message(m)
-    }
-}
-
-<span class="doccomment">/// Quickly define a [LayoutTransformer] from a single element tuple struct and a
-/// transformation function: `fn(Rect, Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt;`.
-///
-/// The struct must have a single field which is a `Box&lt;dyn Layout&gt;`.
-///
-/// # Example
-/// ```no_run
-/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};
-/// fn my_transformation_function(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
-///     // transformation implementation goes here
-///     positions
-/// }
-///
-/// simple_transformer!(MyTransformer, my_transformation_function, "MyTransform");
-/// ```
-</span><span class="attr">#[macro_export]
-</span><span class="macro">macro_rules!</span> simple_transformer {
-    (
-        $(<span class="attr">#[<span class="macro-nonterminal">$struct_docs</span>:meta]</span>)*
-        <span class="macro-nonterminal">$t</span>:ident,
-        <span class="macro-nonterminal">$f</span>:ident,
-        <span class="macro-nonterminal">$prefix</span>:expr
-    ) =&gt; {
-        $(<span class="attr">#[<span class="macro-nonterminal">$struct_docs</span>]</span>)*
-        <span class="attr">#[derive(Debug, Clone)]
-        </span><span class="kw">pub struct </span><span class="macro-nonterminal">$t</span>(Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt;);
-
-        <span class="kw">impl </span><span class="macro-nonterminal">$t </span>{
-            <span class="doccomment">/// Wrap an existing layout with this transformer
-            </span><span class="kw">pub fn </span>wrap(
-                layout: Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt;,
-            ) -&gt; Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt; {
-                Box::new(<span class="self">Self</span>(layout))
-            }
-        }
-
-        <span class="kw">impl </span><span class="macro-nonterminal">$crate::core::layout::LayoutTransformer </span><span class="kw">for </span><span class="macro-nonterminal">$t </span>{
-            <span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-                <span class="macro">format!</span>(<span class="string">"{}&lt;{}&gt;"</span>, <span class="macro-nonterminal">$prefix</span>, <span class="self">self</span>.<span class="number">0</span>.name())
-            }
-
-            <span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt; {
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
-            </span>}
-
-            <span class="kw">fn </span>transform_positions(
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-                r: <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>,
-                positions: Vec&lt;(<span class="macro-nonterminal">$crate::core::Xid</span>, <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>)&gt;,
-            ) -&gt; Vec&lt;(<span class="macro-nonterminal">$crate::core::Xid</span>, <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>)&gt; {
-                <span class="macro-nonterminal">$f</span>(r, positions)
-            }
-        }
-    };
-}
-</code></pre></div></section></main></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/layout/transformers.rs`."><title>transformers.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-6c3ea77c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0 (05f9846f8 2025-03-31)" data-channel="1.86.0" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../../static.files/src-script-b8d3f215.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">penrose/core/layout/</div>transformers.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use crate</span>::{
+<a href=#2 id=2 data-nosnippet>2</a>    builtin::layout::{messages::UnwrapTransformer, Monocle},
+<a href=#3 id=3 data-nosnippet>3</a>    core::layout::{messages::Message, Layout},
+<a href=#4 id=4 data-nosnippet>4</a>    pure::{geometry::Rect, Stack},
+<a href=#5 id=5 data-nosnippet>5</a>    Xid,
+<a href=#6 id=6 data-nosnippet>6</a>};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>std::mem::swap;
+<a href=#8 id=8 data-nosnippet>8</a>
+<a href=#9 id=9 data-nosnippet>9</a><span class="doccomment">/// A wrapper round another [Layout] that is able to intercept and modify both the positions being
+<a href=#10 id=10 data-nosnippet>10</a>/// returned by the inner layout and messages being sent to it.
+<a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">pub trait </span>LayoutTransformer: Send + Sync + Clone + Sized + <span class="lifetime">'static </span>{
+<a href=#12 id=12 data-nosnippet>12</a>    <span class="doccomment">/// The same as [Layout::name] but for [LayoutTransformer] itself.
+<a href=#13 id=13 data-nosnippet>13</a>    </span><span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
+<a href=#14 id=14 data-nosnippet>14</a>
+<a href=#15 id=15 data-nosnippet>15</a>    <span class="doccomment">/// Provide a mutable reference to the [Layout] wrapped by this transformer.
+<a href=#16 id=16 data-nosnippet>16</a>    </span><span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;;
+<a href=#17 id=17 data-nosnippet>17</a>
+<a href=#18 id=18 data-nosnippet>18</a>    <span class="doccomment">/// Replace the currently wrapped [Layout] with a new one.
+<a href=#19 id=19 data-nosnippet>19</a>    </span><span class="kw">fn </span>swap_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>new: Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+<a href=#20 id=20 data-nosnippet>20</a>        swap(<span class="self">self</span>.inner_mut(), <span class="kw-2">&amp;mut </span>new);
+<a href=#21 id=21 data-nosnippet>21</a>
+<a href=#22 id=22 data-nosnippet>22</a>        new
+<a href=#23 id=23 data-nosnippet>23</a>    }
+<a href=#24 id=24 data-nosnippet>24</a>
+<a href=#25 id=25 data-nosnippet>25</a>    <span class="doccomment">/// Remove the inner [Layout] from this [LayoutTransformer].
+<a href=#26 id=26 data-nosnippet>26</a>    ///
+<a href=#27 id=27 data-nosnippet>27</a>    /// The default implementation of this method simply swaps the built-in [Monocle]
+<a href=#28 id=28 data-nosnippet>28</a>    /// layout for the inner layout using [LayoutTransformer::swap_inner]. If a better
+<a href=#29 id=29 data-nosnippet>29</a>    /// implementation is possible then it should be implemented but this default will
+<a href=#30 id=30 data-nosnippet>30</a>    /// give the correct behaviour when [LayoutTransformer::passthrough_message] receives
+<a href=#31 id=31 data-nosnippet>31</a>    /// an [UnwrapTransformer] message.
+<a href=#32 id=32 data-nosnippet>32</a>    </span><span class="kw">fn </span>unwrap(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+<a href=#33 id=33 data-nosnippet>33</a>        <span class="self">self</span>.swap_inner(Box::new(Monocle))
+<a href=#34 id=34 data-nosnippet>34</a>    }
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a>    <span class="doccomment">/// Modify the initial [Rect] that will be passed to the inner [Layout].
+<a href=#37 id=37 data-nosnippet>37</a>    ///
+<a href=#38 id=38 data-nosnippet>38</a>    /// The default implementation of this method leaves the initial Rect unchanged.
+<a href=#39 id=39 data-nosnippet>39</a>    </span><span class="kw">fn </span>transform_initial(<span class="kw-2">&amp;</span><span class="self">self</span>, r: Rect) -&gt; Rect {
+<a href=#40 id=40 data-nosnippet>40</a>        r
+<a href=#41 id=41 data-nosnippet>41</a>    }
+<a href=#42 id=42 data-nosnippet>42</a>
+<a href=#43 id=43 data-nosnippet>43</a>    <span class="doccomment">/// Optionally modify any of the positions returned by the inner [Layout] before they are
+<a href=#44 id=44 data-nosnippet>44</a>    /// applied by the window manager. The dimensions of the screen being layed out are avaiable
+<a href=#45 id=45 data-nosnippet>45</a>    /// as `r`.
+<a href=#46 id=46 data-nosnippet>46</a>    ///
+<a href=#47 id=47 data-nosnippet>47</a>    /// The default implementation of this method leaves the positions returned by the inner layout
+<a href=#48 id=48 data-nosnippet>48</a>    /// unchanged.
+<a href=#49 id=49 data-nosnippet>49</a>    </span><span class="kw">fn </span>transform_positions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+<a href=#50 id=50 data-nosnippet>50</a>        positions
+<a href=#51 id=51 data-nosnippet>51</a>    }
+<a href=#52 id=52 data-nosnippet>52</a>
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="doccomment">/// Apply the [LayoutTransformer] to its wrapped inner [Layout].
+<a href=#54 id=54 data-nosnippet>54</a>    </span><span class="attr">#[allow(clippy::type_complexity)]
+<a href=#55 id=55 data-nosnippet>55</a>    </span><span class="kw">fn </span>run_transform&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;)
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">where
+<a href=#57 id=57 data-nosnippet>57</a>        </span>F: FnOnce(Rect, <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span>Layout&gt;) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;),
+<a href=#58 id=58 data-nosnippet>58</a>    {
+<a href=#59 id=59 data-nosnippet>59</a>        <span class="kw">let </span>r = <span class="self">self</span>.transform_initial(r);
+<a href=#60 id=60 data-nosnippet>60</a>        <span class="kw">let </span>(new, positions) = (f)(r, <span class="self">self</span>.inner_mut());
+<a href=#61 id=61 data-nosnippet>61</a>        <span class="kw">let </span>transformed = <span class="self">self</span>.transform_positions(r, positions);
+<a href=#62 id=62 data-nosnippet>62</a>
+<a href=#63 id=63 data-nosnippet>63</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(l) = new {
+<a href=#64 id=64 data-nosnippet>64</a>            <span class="self">self</span>.swap_inner(l);
+<a href=#65 id=65 data-nosnippet>65</a>        }
+<a href=#66 id=66 data-nosnippet>66</a>
+<a href=#67 id=67 data-nosnippet>67</a>        (<span class="prelude-val">None</span>, transformed)
+<a href=#68 id=68 data-nosnippet>68</a>    }
+<a href=#69 id=69 data-nosnippet>69</a>
+<a href=#70 id=70 data-nosnippet>70</a>    <span class="doccomment">/// Pass a message on to the wrapped inner [Layout].
+<a href=#71 id=71 data-nosnippet>71</a>    ///
+<a href=#72 id=72 data-nosnippet>72</a>    /// The default implementation of this method will return `Some(inner_layout)` if it
+<a href=#73 id=73 data-nosnippet>73</a>    /// receives an [UnwrapTransformer] [Message] using the `unwrap` method of this trait.
+<a href=#74 id=74 data-nosnippet>74</a>    </span><span class="kw">fn </span>passthrough_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(new) = <span class="self">self</span>.inner_mut().handle_message(m) {
+<a href=#76 id=76 data-nosnippet>76</a>            <span class="self">self</span>.swap_inner(new);
+<a href=#77 id=77 data-nosnippet>77</a>        }
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a>        <span class="prelude-val">None
+<a href=#80 id=80 data-nosnippet>80</a>    </span>}
+<a href=#81 id=81 data-nosnippet>81</a>}
+<a href=#82 id=82 data-nosnippet>82</a>
+<a href=#83 id=83 data-nosnippet>83</a><span class="kw">impl</span>&lt;LT&gt; Layout <span class="kw">for </span>LT
+<a href=#84 id=84 data-nosnippet>84</a><span class="kw">where
+<a href=#85 id=85 data-nosnippet>85</a>    </span>LT: LayoutTransformer,
+<a href=#86 id=86 data-nosnippet>86</a>{
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+<a href=#88 id=88 data-nosnippet>88</a>        <span class="self">self</span>.transformed_name()
+<a href=#89 id=89 data-nosnippet>89</a>    }
+<a href=#90 id=90 data-nosnippet>90</a>
+<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">fn </span>boxed_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Layout&gt; {
+<a href=#92 id=92 data-nosnippet>92</a>        Box::new(<span class="self">self</span>.clone())
+<a href=#93 id=93 data-nosnippet>93</a>    }
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a>    <span class="kw">fn </span>layout_workspace(
+<a href=#96 id=96 data-nosnippet>96</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#97 id=97 data-nosnippet>97</a>        tag: <span class="kw-2">&amp;</span>str,
+<a href=#98 id=98 data-nosnippet>98</a>        stack: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Stack&lt;Xid&gt;&gt;,
+<a href=#99 id=99 data-nosnippet>99</a>        r: Rect,
+<a href=#100 id=100 data-nosnippet>100</a>    ) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+<a href=#101 id=101 data-nosnippet>101</a>        <span class="self">self</span>.run_transform(|r, inner| inner.layout_workspace(tag, stack, r), r)
+<a href=#102 id=102 data-nosnippet>102</a>    }
+<a href=#103 id=103 data-nosnippet>103</a>
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">fn </span>layout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>Stack&lt;Xid&gt;, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="self">self</span>.run_transform(|r, inner| inner.layout(s, r), r)
+<a href=#106 id=106 data-nosnippet>106</a>    }
+<a href=#107 id=107 data-nosnippet>107</a>
+<a href=#108 id=108 data-nosnippet>108</a>    <span class="kw">fn </span>layout_empty(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: Rect) -&gt; (<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt;, Vec&lt;(Xid, Rect)&gt;) {
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="self">self</span>.run_transform(|r, inner| inner.layout_empty(r), r)
+<a href=#110 id=110 data-nosnippet>110</a>    }
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a>    <span class="kw">fn </span>handle_message(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>Layout&gt;&gt; {
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>UnwrapTransformer) = m.downcast_ref() {
+<a href=#114 id=114 data-nosnippet>114</a>            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="self">self</span>.unwrap());
+<a href=#115 id=115 data-nosnippet>115</a>        }
+<a href=#116 id=116 data-nosnippet>116</a>
+<a href=#117 id=117 data-nosnippet>117</a>        <span class="self">self</span>.passthrough_message(m)
+<a href=#118 id=118 data-nosnippet>118</a>    }
+<a href=#119 id=119 data-nosnippet>119</a>}
+<a href=#120 id=120 data-nosnippet>120</a>
+<a href=#121 id=121 data-nosnippet>121</a><span class="doccomment">/// Quickly define a [LayoutTransformer] from a single element tuple struct and a
+<a href=#122 id=122 data-nosnippet>122</a>/// transformation function: `fn(Rect, Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt;`.
+<a href=#123 id=123 data-nosnippet>123</a>///
+<a href=#124 id=124 data-nosnippet>124</a>/// The struct must have a single field which is a `Box&lt;dyn Layout&gt;`.
+<a href=#125 id=125 data-nosnippet>125</a>///
+<a href=#126 id=126 data-nosnippet>126</a>/// # Example
+<a href=#127 id=127 data-nosnippet>127</a>/// ```no_run
+<a href=#128 id=128 data-nosnippet>128</a>/// # use penrose::{core::layout::Layout, pure::geometry::Rect, simple_transformer, Xid};
+<a href=#129 id=129 data-nosnippet>129</a>/// fn my_transformation_function(r: Rect, positions: Vec&lt;(Xid, Rect)&gt;) -&gt; Vec&lt;(Xid, Rect)&gt; {
+<a href=#130 id=130 data-nosnippet>130</a>///     // transformation implementation goes here
+<a href=#131 id=131 data-nosnippet>131</a>///     positions
+<a href=#132 id=132 data-nosnippet>132</a>/// }
+<a href=#133 id=133 data-nosnippet>133</a>///
+<a href=#134 id=134 data-nosnippet>134</a>/// simple_transformer!(MyTransformer, my_transformation_function, "MyTransform");
+<a href=#135 id=135 data-nosnippet>135</a>/// ```
+<a href=#136 id=136 data-nosnippet>136</a></span><span class="attr">#[macro_export]
+<a href=#137 id=137 data-nosnippet>137</a></span><span class="macro">macro_rules!</span> simple_transformer {
+<a href=#138 id=138 data-nosnippet>138</a>    (
+<a href=#139 id=139 data-nosnippet>139</a>        $(<span class="attr">#[<span class="macro-nonterminal">$struct_docs</span>:meta]</span>)*
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="macro-nonterminal">$t</span>:ident,
+<a href=#141 id=141 data-nosnippet>141</a>        <span class="macro-nonterminal">$f</span>:ident,
+<a href=#142 id=142 data-nosnippet>142</a>        <span class="macro-nonterminal">$prefix</span>:expr
+<a href=#143 id=143 data-nosnippet>143</a>    ) =&gt; {
+<a href=#144 id=144 data-nosnippet>144</a>        $(<span class="attr">#[<span class="macro-nonterminal">$struct_docs</span>]</span>)*
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="attr">#[derive(Debug, Clone)]
+<a href=#146 id=146 data-nosnippet>146</a>        </span><span class="kw">pub struct </span><span class="macro-nonterminal">$t</span>(Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt;);
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a>        <span class="kw">impl </span><span class="macro-nonterminal">$t </span>{
+<a href=#149 id=149 data-nosnippet>149</a>            <span class="doccomment">/// Wrap an existing layout with this transformer
+<a href=#150 id=150 data-nosnippet>150</a>            </span><span class="kw">pub fn </span>wrap(
+<a href=#151 id=151 data-nosnippet>151</a>                layout: Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt;,
+<a href=#152 id=152 data-nosnippet>152</a>            ) -&gt; Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt; {
+<a href=#153 id=153 data-nosnippet>153</a>                Box::new(<span class="self">Self</span>(layout))
+<a href=#154 id=154 data-nosnippet>154</a>            }
+<a href=#155 id=155 data-nosnippet>155</a>        }
+<a href=#156 id=156 data-nosnippet>156</a>
+<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">impl </span><span class="macro-nonterminal">$crate::core::layout::LayoutTransformer </span><span class="kw">for </span><span class="macro-nonterminal">$t </span>{
+<a href=#158 id=158 data-nosnippet>158</a>            <span class="kw">fn </span>transformed_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+<a href=#159 id=159 data-nosnippet>159</a>                <span class="macro">format!</span>(<span class="string">"{}&lt;{}&gt;"</span>, <span class="macro-nonterminal">$prefix</span>, <span class="self">self</span>.<span class="number">0</span>.name())
+<a href=#160 id=160 data-nosnippet>160</a>            }
+<a href=#161 id=161 data-nosnippet>161</a>
+<a href=#162 id=162 data-nosnippet>162</a>            <span class="kw">fn </span>inner_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$crate::core::layout::Layout</span>&gt; {
+<a href=#163 id=163 data-nosnippet>163</a>                <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
+<a href=#164 id=164 data-nosnippet>164</a>            </span>}
+<a href=#165 id=165 data-nosnippet>165</a>
+<a href=#166 id=166 data-nosnippet>166</a>            <span class="kw">fn </span>transform_positions(
+<a href=#167 id=167 data-nosnippet>167</a>                <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#168 id=168 data-nosnippet>168</a>                r: <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>,
+<a href=#169 id=169 data-nosnippet>169</a>                positions: Vec&lt;(<span class="macro-nonterminal">$crate::core::Xid</span>, <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>)&gt;,
+<a href=#170 id=170 data-nosnippet>170</a>            ) -&gt; Vec&lt;(<span class="macro-nonterminal">$crate::core::Xid</span>, <span class="macro-nonterminal">$crate::pure::geometry::Rect</span>)&gt; {
+<a href=#171 id=171 data-nosnippet>171</a>                <span class="macro-nonterminal">$f</span>(r, positions)
+<a href=#172 id=172 data-nosnippet>172</a>            }
+<a href=#173 id=173 data-nosnippet>173</a>        }
+<a href=#174 id=174 data-nosnippet>174</a>    };
+<a href=#175 id=175 data-nosnippet>175</a>}</code></pre></div></section></main></body></html>
