@@ -10,10 +10,6 @@ use crate::{
 use std::collections::HashMap;
 
 /// Use [DMenu] to dynamically select and focus a client window.
-///
-/// # Arguments
-/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
-///    obey colorscheme, postion, custom font, custom prompt etc...
 pub fn dmenu_focus_client<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state: &mut State<X>, x: &X| {
         let choices: HashMap<String, Xid> = state
@@ -48,10 +44,6 @@ pub fn dmenu_focus_client<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEvent
 }
 
 /// Use [DMenu] to dynamically select and focus a client window.
-///
-/// # Arguments
-/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
-///    obey colorscheme, postion, custom font, custom prompt etc...
 pub fn dmenu_focus_tag<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state: &mut State<X>, x: &X| {
         let choices = state.client_set.ordered_tags();
@@ -72,10 +64,6 @@ pub fn dmenu_focus_tag<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHan
 }
 
 /// Launch [DMenu] for its most basic purposes, launching other programs.
-///
-/// # Arguments
-/// * `config` users custom DMenuConfig, the dmenu instance that is launched will
-///    obey colorscheme, postion, custom font, custom prompt etc...
 pub fn launch_dmenu<X: XConn>(mut config: DMenuConfig) -> Box<dyn KeyEventHandler<X>> {
     key_handler(move |state, _| {
         let screen = state.client_set.current_screen().index();

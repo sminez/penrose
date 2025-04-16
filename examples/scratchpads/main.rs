@@ -119,7 +119,22 @@ mod tests {
 
     #[test]
     fn bindings_parse_correctly_with_xmodmap() {
-        let res = parse_keybindings_with_xmodmap(raw_key_bindings());
+        let (nsp_1, toggle_1) = NamedScratchPad::new(
+            "terminal",
+            "st -c StScratchpad",
+            ClassName("StScratchpad"),
+            FloatingCentered::new(0.8, 0.8),
+            true,
+        );
+        let (nsp_2, toggle_2) = NamedScratchPad::new(
+            "qt-console",
+            "jupyter-qtconsole",
+            ClassName("jupyter-qtconsole"),
+            FloatingCentered::new(0.8, 0.8),
+            true,
+        );
+
+        let res = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_1, toggle_2));
 
         if let Err(e) = res {
             panic!("{e}");
