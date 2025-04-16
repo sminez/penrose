@@ -227,11 +227,17 @@ where
         }
 
         let tag = match self.tag_for_client(client) {
-            Some(tag) => tag.to_string(),
+            Some(tag) if self.invisible_tags.iter().any(|t| t == tag) => return,
             None => return, // unknown client
+            Some(tag) => tag.to_string(),
         };
 
         self.focus_tag(&tag);
+        debug_assert_eq!(
+            self.current_tag(),
+            tag,
+            "attempt to focus unknown or invisible tag for client"
+        );
 
         while self.current_client() != Some(client) {
             self.focus_up()
@@ -1080,6 +1086,28 @@ pub mod tests {
         let visible_tags: Vec<&str> = s.screens().map(|s| s.workspace.tag.as_ref()).collect();
         assert_eq!(s.screens.focus.workspace.tag, "1");
         assert_eq!(visible_tags, &["1", "2"]);
+    }
+
+    #[test]
+    fn clients_on_invisible_workspaces_cant_be_focused() {
+        let mut s = test_stack_set_with_stacks(
+            vec![
+                Some(stack!([1, 2], 3, [4, 5])),
+                Some(stack!(6, [7, 8])),
+                Some(stack!([9], 10)),
+            ],
+            1,
+        );
+        s.add_invisible_workspace("invisible").unwrap();
+
+        assert_eq!(s.current_client(), Some(&3)); // focus of the stack on screen 0
+
+        s.focus_client(&7);
+        assert_eq!(s.current_client(), Some(&7));
+
+        s.move_client_to_tag(&1, "invisible");
+        s.focus_client(&1);
+        assert_eq!(s.current_client(), Some(&7));
     }
 
     #[test_case(0, Some("1"), Some("3"); "initial focus")]
