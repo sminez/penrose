@@ -562,6 +562,41 @@ where
         Ok(())
     }
 
+    /// Attempt to remove a [Workspace] from this [StackSet] by tag.
+    ///
+    /// Removing a workspace in this way will close all clients present on the workspace.
+    ///
+    /// If the workspace tag is unknown or if removal would result in insufficient workspaces
+    /// for the current number of screens then this method will return None, otherwise it will
+    /// return the Workspace that was removed.
+    pub fn remove_workspace(&mut self, tag: impl AsRef<str>) -> Option<Workspace<C>> {
+        let tag = tag.as_ref();
+
+        for s in self.screens.iter_mut() {
+            if s.workspace.tag != tag {
+                continue;
+            }
+
+            // If we don't have a replacement in hidden we cant remove
+            let mut ws = self.hidden.pop_front()?;
+            swap(&mut ws, &mut s.workspace);
+
+            if self.previous_tag == tag {
+                self.previous_tag = s.workspace.tag.clone();
+            }
+
+            return Some(ws);
+        }
+
+        let opt = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag);
+
+        if self.previous_tag == tag {
+            self.previous_tag = self.screens.focus.workspace.tag.clone();
+        }
+
+        opt
+    }
+
     /// Add a new invisible [Workspace] to this [StackSet].
     ///
     /// It will not be possible to focus this workspace on a screen but its
@@ -1086,6 +1121,27 @@ pub mod tests {
         let visible_tags: Vec<&str> = s.screens().map(|s| s.workspace.tag.as_ref()).collect();
         assert_eq!(s.screens.focus.workspace.tag, "1");
         assert_eq!(visible_tags, &["1", "2"]);
+    }
+
+    #[test_case("1", "2", "2", Some("1"); "focused")]
+    #[test_case("2", "1", "1", Some("2"); "ws on other screen")]
+    #[test_case("3", "1", "1", Some("3"); "hidden")]
+    #[test_case("1", "1", "3", Some("1"); "focused when that is previous tag")]
+    #[test_case("3", "3", "1", Some("3"); "hidden when that is previous tag")]
+    #[test_case("?", "7", "7", None; "unknown tag")]
+    #[test]
+    fn remove_workspace_works(
+        tag: &str,
+        prev_tag: &str,
+        new_prev_tag: &str,
+        expected: Option<&str>,
+    ) {
+        let mut s = test_stack_set(5, 2);
+        s.previous_tag = prev_tag.to_string();
+        let maybe_ws = s.remove_workspace(tag);
+
+        assert_eq!(maybe_ws.map(|w| w.tag).as_deref(), expected);
+        assert_eq!(s.previous_tag, new_prev_tag);
     }
 
     #[test]
