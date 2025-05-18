@@ -535,6 +535,35 @@ where
         &self.screens.focus.workspace.tag
     }
 
+    /// Attempt to set a new tag for an existing [Workspace].
+    ///
+    /// This will error if the new tag collides with an existing one or if the
+    /// old tag is unknown.
+    pub fn try_rename_workspace(
+        &mut self,
+        old_tag: impl AsRef<str>,
+        new_tag: impl Into<String>,
+    ) -> Result<()> {
+        let new_tag = new_tag.into();
+        if old_tag.as_ref() == new_tag {
+            return Ok(());
+        }
+
+        if self.contains_tag(&new_tag) {
+            return Err(Error::NonUniqueTags {
+                tags: vec![new_tag],
+            });
+        }
+
+        match self.workspace_mut(old_tag.as_ref()) {
+            Some(ws) => {
+                ws.tag = new_tag;
+                Ok(())
+            }
+            None => Err(Error::UnknownWorkspace(old_tag.as_ref().to_string())),
+        }
+    }
+
     /// Add a new [Workspace] to this [StackSet].
     ///
     /// The id assigned to this workspace will be max(workspace ids) + 1.
@@ -1142,6 +1171,43 @@ pub mod tests {
 
         assert_eq!(maybe_ws.map(|w| w.tag).as_deref(), expected);
         assert_eq!(s.previous_tag, new_prev_tag);
+    }
+
+    #[derive(Debug, PartialEq)]
+    enum RmWs {
+        Valid,
+        Unknown,
+        Conflict,
+    }
+
+    #[test_case("1", "foo", RmWs::Valid; "known to new")]
+    #[test_case("1", "1", RmWs::Valid; "known to itself")]
+    #[test_case("?", "foo", RmWs::Unknown; "unknown")]
+    #[test_case("1", "2", RmWs::Conflict; "conflicting")]
+    #[test_case("?", "1", RmWs::Conflict; "unknown to conflicting")]
+    #[test_case("invisible", "foo", RmWs::Valid; "invisible to new")]
+    #[test_case("invisible", "1", RmWs::Conflict; "invisible to conflicting")]
+    #[test]
+    fn try_rename_workspace_works(old_tag: &str, new_tag: &str, expected: RmWs) {
+        let mut s = test_stack_set(5, 2);
+        s.add_invisible_workspace("invisible").unwrap();
+
+        let res = s.try_rename_workspace(old_tag, new_tag);
+
+        match res {
+            Ok(_) => {
+                assert_eq!(expected, RmWs::Valid);
+                assert!(s.contains_tag(new_tag), "should contain the new tag");
+                if old_tag != new_tag {
+                    assert!(!s.contains_tag(old_tag), "should not contain the old tag");
+                }
+            }
+
+            Err(Error::UnknownWorkspace(_)) => assert_eq!(expected, RmWs::Unknown),
+            Err(Error::NonUniqueTags { .. }) => assert_eq!(expected, RmWs::Conflict),
+
+            _ => panic!("unexpected error returned: {res:?}"),
+        }
     }
 
     #[test]
