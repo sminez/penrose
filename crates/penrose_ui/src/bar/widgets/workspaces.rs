@@ -227,21 +227,22 @@ where
         let ui_updated = self.ui.update_from_state(&wss, &focused_ws, state, x);
         let tags_changed = self.tags_changed(&wss);
 
-        if ui_updated || tags_changed {
+        if ui_updated
+            || tags_changed
+            || self.focused_ws != focused_ws
+            || self.occupied_changed(&wss)
+        {
+            self.focused_ws = focused_ws;
+            self.workspaces = wss;
             self.require_draw = true;
             self.extent = None;
-        } else if self.focused_ws != focused_ws || self.occupied_changed(&wss) {
-            self.require_draw = true;
         }
-
-        self.focused_ws = focused_ws;
-        self.workspaces = wss;
     }
 
     fn tags_changed(&self, workspaces: &[WsMeta]) -> bool {
         let new_tags: Vec<&str> = workspaces.iter().map(|w| w.tag.as_ref()).collect();
 
-        self.raw_tags() == new_tags
+        self.raw_tags() != new_tags
     }
 
     // Called after tags_changed above so we assume that tags are matching

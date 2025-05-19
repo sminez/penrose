@@ -535,6 +535,35 @@ where
         &self.screens.focus.workspace.tag
     }
 
+    /// Attempt to set a new tag for an existing [Workspace].
+    ///
+    /// This will error if the new tag collides with an existing one or if the
+    /// old tag is unknown.
+    pub fn try_rename_workspace(
+        &mut self,
+        old_tag: impl AsRef<str>,
+        new_tag: impl Into<String>,
+    ) -> Result<()> {
+        let new_tag = new_tag.into();
+        if old_tag.as_ref() == new_tag {
+            return Ok(());
+        }
+
+        if self.contains_tag(&new_tag) {
+            return Err(Error::NonUniqueTags {
+                tags: vec![new_tag],
+            });
+        }
+
+        match self.workspace_mut(old_tag.as_ref()) {
+            Some(ws) => {
+                ws.tag = new_tag;
+                Ok(())
+            }
+            None => Err(Error::UnknownWorkspace(old_tag.as_ref().to_string())),
+        }
+    }
+
     /// Add a new [Workspace] to this [StackSet].
     ///
     /// The id assigned to this workspace will be max(workspace ids) + 1.
@@ -560,6 +589,41 @@ where
         self.hidden.push_front(ws);
 
         Ok(())
+    }
+
+    /// Attempt to remove a [Workspace] from this [StackSet] by tag.
+    ///
+    /// Removing a workspace in this way will close all clients present on the workspace.
+    ///
+    /// If the workspace tag is unknown or if removal would result in insufficient workspaces
+    /// for the current number of screens then this method will return None, otherwise it will
+    /// return the Workspace that was removed.
+    pub fn remove_workspace(&mut self, tag: impl AsRef<str>) -> Option<Workspace<C>> {
+        let tag = tag.as_ref();
+
+        for s in self.screens.iter_mut() {
+            if s.workspace.tag != tag {
+                continue;
+            }
+
+            // If we don't have a replacement in hidden we cant remove
+            let mut ws = self.hidden.pop_front()?;
+            swap(&mut ws, &mut s.workspace);
+
+            if self.previous_tag == tag {
+                self.previous_tag = s.workspace.tag.clone();
+            }
+
+            return Some(ws);
+        }
+
+        let opt = pop_where!(self, hidden, |w: &Workspace<C>| w.tag == tag);
+
+        if self.previous_tag == tag {
+            self.previous_tag = self.screens.focus.workspace.tag.clone();
+        }
+
+        opt
     }
 
     /// Add a new invisible [Workspace] to this [StackSet].
@@ -1086,6 +1150,64 @@ pub mod tests {
         let visible_tags: Vec<&str> = s.screens().map(|s| s.workspace.tag.as_ref()).collect();
         assert_eq!(s.screens.focus.workspace.tag, "1");
         assert_eq!(visible_tags, &["1", "2"]);
+    }
+
+    #[test_case("1", "2", "2", Some("1"); "focused")]
+    #[test_case("2", "1", "1", Some("2"); "ws on other screen")]
+    #[test_case("3", "1", "1", Some("3"); "hidden")]
+    #[test_case("1", "1", "3", Some("1"); "focused when that is previous tag")]
+    #[test_case("3", "3", "1", Some("3"); "hidden when that is previous tag")]
+    #[test_case("?", "7", "7", None; "unknown tag")]
+    #[test]
+    fn remove_workspace_works(
+        tag: &str,
+        prev_tag: &str,
+        new_prev_tag: &str,
+        expected: Option<&str>,
+    ) {
+        let mut s = test_stack_set(5, 2);
+        s.previous_tag = prev_tag.to_string();
+        let maybe_ws = s.remove_workspace(tag);
+
+        assert_eq!(maybe_ws.map(|w| w.tag).as_deref(), expected);
+        assert_eq!(s.previous_tag, new_prev_tag);
+    }
+
+    #[derive(Debug, PartialEq)]
+    enum RmWs {
+        Valid,
+        Unknown,
+        Conflict,
+    }
+
+    #[test_case("1", "foo", RmWs::Valid; "known to new")]
+    #[test_case("1", "1", RmWs::Valid; "known to itself")]
+    #[test_case("?", "foo", RmWs::Unknown; "unknown")]
+    #[test_case("1", "2", RmWs::Conflict; "conflicting")]
+    #[test_case("?", "1", RmWs::Conflict; "unknown to conflicting")]
+    #[test_case("invisible", "foo", RmWs::Valid; "invisible to new")]
+    #[test_case("invisible", "1", RmWs::Conflict; "invisible to conflicting")]
+    #[test]
+    fn try_rename_workspace_works(old_tag: &str, new_tag: &str, expected: RmWs) {
+        let mut s = test_stack_set(5, 2);
+        s.add_invisible_workspace("invisible").unwrap();
+
+        let res = s.try_rename_workspace(old_tag, new_tag);
+
+        match res {
+            Ok(_) => {
+                assert_eq!(expected, RmWs::Valid);
+                assert!(s.contains_tag(new_tag), "should contain the new tag");
+                if old_tag != new_tag {
+                    assert!(!s.contains_tag(old_tag), "should not contain the old tag");
+                }
+            }
+
+            Err(Error::UnknownWorkspace(_)) => assert_eq!(expected, RmWs::Unknown),
+            Err(Error::NonUniqueTags { .. }) => assert_eq!(expected, RmWs::Conflict),
+
+            _ => panic!("unexpected error returned: {res:?}"),
+        }
     }
 
     #[test]

@@ -214,7 +214,7 @@ pub mod interval {
             style,
             move || helpers::battery_text(bat),
             interval,
-            true,
+            false,
             true,
         )
     }
@@ -223,13 +223,13 @@ pub mod interval {
     ///
     /// This widget shells out to the `date` tool to generate its output
     pub fn current_date_and_time(style: TextStyle, interval: Duration) -> IntervalText {
-        IntervalText::new(style, helpers::date_text, interval, true, true)
+        IntervalText::new(style, helpers::date_text, interval, false, true)
     }
 
     /// Display the ESSID currently connected to and the signal quality as
     /// a percentage.
     pub fn wifi_network(style: TextStyle, interval: Duration) -> IntervalText {
-        IntervalText::new(style, helpers::wifi_text, interval, true, true)
+        IntervalText::new(style, helpers::wifi_text, interval, false, true)
     }
 
     /// Display the current volume level as reported by `amixer`
@@ -242,7 +242,7 @@ pub mod interval {
             style,
             move || helpers::amixer_text(channel),
             interval,
-            true,
+            false,
             true,
         )
     }
