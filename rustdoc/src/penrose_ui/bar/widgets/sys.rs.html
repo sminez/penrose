@@ -214,7 +214,7 @@
 <a href=#214 id=214 data-nosnippet>214</a>            style,
 <a href=#215 id=215 data-nosnippet>215</a>            <span class="kw">move </span>|| helpers::battery_text(bat),
 <a href=#216 id=216 data-nosnippet>216</a>            interval,
-<a href=#217 id=217 data-nosnippet>217</a>            <span class="bool-val">true</span>,
+<a href=#217 id=217 data-nosnippet>217</a>            <span class="bool-val">false</span>,
 <a href=#218 id=218 data-nosnippet>218</a>            <span class="bool-val">true</span>,
 <a href=#219 id=219 data-nosnippet>219</a>        )
 <a href=#220 id=220 data-nosnippet>220</a>    }
@@ -223,13 +223,13 @@
 <a href=#223 id=223 data-nosnippet>223</a>    ///
 <a href=#224 id=224 data-nosnippet>224</a>    /// This widget shells out to the `date` tool to generate its output
 <a href=#225 id=225 data-nosnippet>225</a>    </span><span class="kw">pub fn </span>current_date_and_time(style: TextStyle, interval: Duration) -&gt; IntervalText {
-<a href=#226 id=226 data-nosnippet>226</a>        IntervalText::new(style, helpers::date_text, interval, <span class="bool-val">true</span>, <span class="bool-val">true</span>)
+<a href=#226 id=226 data-nosnippet>226</a>        IntervalText::new(style, helpers::date_text, interval, <span class="bool-val">false</span>, <span class="bool-val">true</span>)
 <a href=#227 id=227 data-nosnippet>227</a>    }
 <a href=#228 id=228 data-nosnippet>228</a>
 <a href=#229 id=229 data-nosnippet>229</a>    <span class="doccomment">/// Display the ESSID currently connected to and the signal quality as
 <a href=#230 id=230 data-nosnippet>230</a>    /// a percentage.
 <a href=#231 id=231 data-nosnippet>231</a>    </span><span class="kw">pub fn </span>wifi_network(style: TextStyle, interval: Duration) -&gt; IntervalText {
-<a href=#232 id=232 data-nosnippet>232</a>        IntervalText::new(style, helpers::wifi_text, interval, <span class="bool-val">true</span>, <span class="bool-val">true</span>)
+<a href=#232 id=232 data-nosnippet>232</a>        IntervalText::new(style, helpers::wifi_text, interval, <span class="bool-val">false</span>, <span class="bool-val">true</span>)
 <a href=#233 id=233 data-nosnippet>233</a>    }
 <a href=#234 id=234 data-nosnippet>234</a>
 <a href=#235 id=235 data-nosnippet>235</a>    <span class="doccomment">/// Display the current volume level as reported by `amixer`
@@ -242,7 +242,7 @@
 <a href=#242 id=242 data-nosnippet>242</a>            style,
 <a href=#243 id=243 data-nosnippet>243</a>            <span class="kw">move </span>|| helpers::amixer_text(channel),
 <a href=#244 id=244 data-nosnippet>244</a>            interval,
-<a href=#245 id=245 data-nosnippet>245</a>            <span class="bool-val">true</span>,
+<a href=#245 id=245 data-nosnippet>245</a>            <span class="bool-val">false</span>,
 <a href=#246 id=246 data-nosnippet>246</a>            <span class="bool-val">true</span>,
 <a href=#247 id=247 data-nosnippet>247</a>        )
 <a href=#248 id=248 data-nosnippet>248</a>    }
