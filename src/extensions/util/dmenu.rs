@@ -79,18 +79,12 @@ pub struct DMenuConfig {
     pub ignore_case: bool,
 
     /// Background color for the rendered window
-    ///
-    /// Default: #282828
     pub bg_color: Option<Color>,
 
     /// Foreground color for text
-    ///
-    /// Default: #ebdbb2
     pub fg_color: Option<Color>,
 
     /// Selected line background color
-    ///
-    /// Default: #458588
     pub selected_color: Option<Color>,
 
     /// Number of lines to display at a time.
@@ -442,6 +436,7 @@ mod tests {
         }
     }
 
+    /// Color flags should not be set when no colors are set in DMenuConfig
     #[test]
     fn dmenu_rs_config_no_colors_test() {
         let dc = DMenuConfig {
