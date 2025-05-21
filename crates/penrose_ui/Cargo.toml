@@ -14,8 +14,8 @@ description = "UI elements for the penrose window manager library"
 [dependencies]
 penrose = { version = "0.4.0", path = "../../" }
 tracing = { version = "0.1", features = ["attributes"] }
-thiserror = "1.0"
-yeslogic-fontconfig-sys = "5.0"
+thiserror = "2.0"
+yeslogic-fontconfig-sys = "6.0"
 x11 = { version = "2.21", features = ["xft", "xlib"] }
 
 [dev-dependencies]
