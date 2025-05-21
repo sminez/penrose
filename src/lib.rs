@@ -164,8 +164,12 @@ pub enum Error {
     Randr(String),
 
     /// An operation was requested on a client window that is unknown
-    #[error("Client {0} is not in found")]
+    #[error("No client with id={0}")]
     UnknownClient(Xid),
+
+    /// An operation was requested on a workspace tag that is unknown
+    #[error("No workspace with tag={0}")]
+    UnknownWorkspace(String),
 
     /// A keybinding has been specified for an unknown key name for this machine.
     #[error("'{name}' is not a known key name")]

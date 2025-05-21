@@ -112,6 +112,7 @@ pub struct StatusBar<X: XConn> {
     screens: Vec<(Xid, u32)>,
     active_screen: usize,
     font: String,
+    redrawn: bool,
 }
 
 impl<X: XConn> StatusBar<X> {
@@ -135,6 +136,7 @@ impl<X: XConn> StatusBar<X> {
             screens: vec![],
             active_screen: 0,
             font: font.to_string(),
+            redrawn: false,
         })
     }
 
@@ -162,6 +164,7 @@ impl<X: XConn> StatusBar<X> {
             screens: vec![],
             active_screen: 0,
             font: font.to_string(),
+            redrawn: false,
         })
     }
 
@@ -277,6 +280,7 @@ impl<X: XConn> StatusBar<X> {
         for i in 0..self.screens.len() {
             self.redraw_screen(i)?;
         }
+        self.redrawn = true;
 
         Ok(())
     }
@@ -328,7 +332,15 @@ pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
         }
     });
 
-    if let Err(e) = bar.redraw_if_needed() {
+    // the redrawn flag is set to false at the start of our event hook. If neither of the other
+    // hooks trigger a redraw then we force one now on refresh to ensure that we're up to date.
+    let res = if !bar.redrawn {
+        bar.redraw()
+    } else {
+        bar.redraw_if_needed()
+    };
+
+    if let Err(e) = res {
         error!(%e, "error redrawing status bar");
     }
 
@@ -345,6 +357,7 @@ pub fn event_hook<X: XConn + 'static>(
 
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
+    bar.redrawn = false;
 
     if matches!(event, RandrNotify) || matches!(event, ConfigureNotify(e) if e.is_root) {
         info!("screens have changed: recreating status bars");

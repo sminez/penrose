@@ -28,18 +28,18 @@ x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 
 [dependencies]
 anymap = "0.12"
-bitflags = { version = "2.5", features = ["serde"] }
-nix = { version = "0.29", default-features = false, features = ["signal"] }
+bitflags = { version = "2.9", features = ["serde"] }
+nix = { version = "0.30", default-features = false, features = ["signal"] }
 penrose_keysyms = { version = "0.3.6", path = "crates/penrose_keysyms", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
-strum = { version = "0.26", features = ["derive"] }
-thiserror = "1.0"
+strum = { version = "0.27", features = ["derive"] }
+thiserror = "2.0"
 tracing = { version = "0.1", features = ["attributes"] }
 x11rb = { version = "0.13", features = ["randr"], optional = true }
 
 [dev-dependencies]
 penrose_ui = { path = "crates/penrose_ui" }
-pretty_assertions = "1.4.0"
+pretty_assertions = "1.4.1"
 quickcheck = "1"
 quickcheck_macros = "1"
 serde_json = "1"
