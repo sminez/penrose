@@ -81,17 +81,17 @@ pub struct DMenuConfig {
     /// Background color for the rendered window
     ///
     /// Default: #282828
-    pub bg_color: Color,
+    pub bg_color: Option<Color>,
 
     /// Foreground color for text
     ///
     /// Default: #ebdbb2
-    pub fg_color: Color,
+    pub fg_color: Option<Color>,
 
     /// Selected line background color
     ///
     /// Default: #458588
-    pub selected_color: Color,
+    pub selected_color: Option<Color>,
 
     /// Number of lines to display at a time.
     ///
@@ -124,9 +124,9 @@ impl Default for DMenuConfig {
             show_on_bottom: false,
             password_input: false,
             ignore_case: false,
-            bg_color: 0x282828ff.into(),
-            fg_color: 0xebdbb2ff.into(),
-            selected_color: 0x458588ff.into(),
+            bg_color: None,
+            fg_color: None,
+            selected_color: None,
             n_lines: 10,
             custom_font: None,
             kind: DMenuKind::Suckless,
@@ -168,14 +168,20 @@ impl DMenuConfig {
 
         let mut flags = vec!["-m".to_owned(), screen_index.to_string()];
 
-        flags.push(format!("{prefix}nb"));
-        flags.push(bg_color.as_rgb_hex_string());
+        if let Some(bg_color) = bg_color {
+            flags.push(format!("{prefix}nb"));
+            flags.push(bg_color.as_rgb_hex_string());
+        }
 
-        flags.push(format!("{prefix}nf"));
-        flags.push(fg_color.as_rgb_hex_string());
+        if let Some(fg_color) = fg_color {
+            flags.push(format!("{prefix}nf"));
+            flags.push(fg_color.as_rgb_hex_string());
+        }
 
-        flags.push(format!("{prefix}sb"));
-        flags.push(selected_color.as_rgb_hex_string());
+        if let Some(selected_color) = selected_color {
+            flags.push(format!("{prefix}sb"));
+            flags.push(selected_color.as_rgb_hex_string());
+        }
 
         if *n_lines > 0 {
             flags.push("-l".to_owned());
@@ -352,9 +358,12 @@ mod tests {
     /// is changed in the flags function, these tests will fail. There is a better way, but
     /// this works for now.
     #[test]
-    fn dmenu_suckless_config_test() {
+    fn dmenu_suckless_config_colors_test() {
         let dc = DMenuConfig {
             custom_font: Some("mono".to_owned()),
+            bg_color: Some(0x123456FF.into()),
+            fg_color: Some(0x123456FF.into()),
+            selected_color: Some(0x123456FF.into()),
             ..DMenuConfig::default()
         };
 
@@ -378,6 +387,25 @@ mod tests {
         }
     }
 
+    /// Color flags should not be set when no colors are set in DMenuConfig
+    #[test]
+    fn dmenu_suckless_config_no_colors_test() {
+        let dc = DMenuConfig {
+            custom_font: Some("mono".to_owned()),
+            ..DMenuConfig::default()
+        };
+
+        // Should default to suckless c-style dmenu
+        assert_eq!(dc.kind, DMenuKind::Suckless);
+        let flags = dc.flags(0);
+
+        for (i, flag) in flags.into_iter().enumerate() {
+            if i == 6 {
+                assert_eq!(flag, "-fn".to_owned());
+            }
+        }
+    }
+
     /// Flags [ nb, nf, sb, and nf] need to be modified for the different
     /// versions of dmenu. Classic Suckless dmenu uses a single dash "-", dmenu-rs
     /// uses the more modern cli style of double dashes "--".
@@ -385,9 +413,12 @@ mod tests {
     /// is changed in the flags function, these tests will fail. There is a better way, but
     /// this works for now.
     #[test]
-    fn dmenu_rs_config_test() {
+    fn dmenu_rs_config_color_test() {
         let dc = DMenuConfig {
             custom_font: Some("mono".to_owned()),
+            bg_color: Some(0x123456FF.into()),
+            fg_color: Some(0x123456FF.into()),
+            selected_color: Some(0x123456FF.into()),
             kind: DMenuKind::Rust,
             ..DMenuConfig::default()
         };
@@ -406,6 +437,24 @@ mod tests {
                 assert_eq!(flag, "--sb".to_owned());
             }
             if i == 10 {
+                assert_eq!(flag, "--fn".to_owned());
+            }
+        }
+    }
+
+    #[test]
+    fn dmenu_rs_config_no_colors_test() {
+        let dc = DMenuConfig {
+            custom_font: Some("mono".to_owned()),
+            kind: DMenuKind::Rust,
+            ..DMenuConfig::default()
+        };
+
+        assert_eq!(dc.kind, DMenuKind::Rust);
+        let flags = dc.flags(0);
+
+        for (i, flag) in flags.into_iter().enumerate() {
+            if i == 6 {
                 assert_eq!(flag, "--fn".to_owned());
             }
         }
