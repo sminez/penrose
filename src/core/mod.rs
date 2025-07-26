@@ -595,7 +595,7 @@ fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> 
     let first_tag = state.client_set.ordered_tags()[0].clone();
 
     for id in x.existing_clients()? {
-        if !state.client_set.contains(&id) && client_should_be_manged(id, x) {
+        if !state.client_set.contains(&id) && client_should_be_managed(id, x) {
             let workspace_id = match x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
                 Ok(Some(Prop::Cardinal(ids))) => ids[0] as usize,
                 _ => 0, // we know that we always have at least one workspace
@@ -630,7 +630,7 @@ fn manage_existing_clients<X: XConn>(state: &mut State<X>, x: &X) -> Result<()> 
 
 /// For a given existing client being processed on startup, determine whether we need
 /// to bring it into our internal state and manage it.
-fn client_should_be_manged<X: XConn>(id: Xid, x: &X) -> bool {
+pub(crate) fn client_should_be_managed<X: XConn>(id: Xid, x: &X) -> bool {
     let attrs = match x.get_window_attributes(id) {
         Ok(attrs) => attrs,
         _ => {
