@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SpawnOnStartup"]};
+window.SIDEBAR_ITEMS = {"struct":["ClearFsPropOnStartup","SpawnOnStartup"]};

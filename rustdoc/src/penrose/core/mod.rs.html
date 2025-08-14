@@ -595,7 +595,7 @@
 <a href=#595 id=595 data-nosnippet>595</a>    <span class="kw">let </span>first_tag = state.client_set.ordered_tags()[<span class="number">0</span>].clone();
 <a href=#596 id=596 data-nosnippet>596</a>
 <a href=#597 id=597 data-nosnippet>597</a>    <span class="kw">for </span>id <span class="kw">in </span>x.existing_clients()<span class="question-mark">? </span>{
-<a href=#598 id=598 data-nosnippet>598</a>        <span class="kw">if </span>!state.client_set.contains(<span class="kw-2">&amp;</span>id) &amp;&amp; client_should_be_manged(id, x) {
+<a href=#598 id=598 data-nosnippet>598</a>        <span class="kw">if </span>!state.client_set.contains(<span class="kw-2">&amp;</span>id) &amp;&amp; client_should_be_managed(id, x) {
 <a href=#599 id=599 data-nosnippet>599</a>            <span class="kw">let </span>workspace_id = <span class="kw">match </span>x.get_prop(id, Atom::NetWmDesktop.as_ref()) {
 <a href=#600 id=600 data-nosnippet>600</a>                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Prop::Cardinal(ids))) =&gt; ids[<span class="number">0</span>] <span class="kw">as </span>usize,
 <a href=#601 id=601 data-nosnippet>601</a>                <span class="kw">_ </span>=&gt; <span class="number">0</span>, <span class="comment">// we know that we always have at least one workspace
@@ -630,7 +630,7 @@
 <a href=#630 id=630 data-nosnippet>630</a>
 <a href=#631 id=631 data-nosnippet>631</a><span class="doccomment">/// For a given existing client being processed on startup, determine whether we need
 <a href=#632 id=632 data-nosnippet>632</a>/// to bring it into our internal state and manage it.
-<a href=#633 id=633 data-nosnippet>633</a></span><span class="kw">fn </span>client_should_be_manged&lt;X: XConn&gt;(id: Xid, x: <span class="kw-2">&amp;</span>X) -&gt; bool {
+<a href=#633 id=633 data-nosnippet>633</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>client_should_be_managed&lt;X: XConn&gt;(id: Xid, x: <span class="kw-2">&amp;</span>X) -&gt; bool {
 <a href=#634 id=634 data-nosnippet>634</a>    <span class="kw">let </span>attrs = <span class="kw">match </span>x.get_window_attributes(id) {
 <a href=#635 id=635 data-nosnippet>635</a>        <span class="prelude-val">Ok</span>(attrs) =&gt; attrs,
 <a href=#636 id=636 data-nosnippet>636</a>        <span class="kw">_ </span>=&gt; {
