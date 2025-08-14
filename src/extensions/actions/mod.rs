@@ -68,8 +68,12 @@ pub fn set_fullscreen_state<X: XConn>(
 ///
 /// **NOTE**: You will need to make use of [add_ewmh_hooks][0] for this action to
 ///           work correctly.
+///           Additionally you can use the [ClearFsPropOnStartup][1] hook to prevent
+///           existing clients from having an inconsistent fullscreen state after
+///           restarting penrose while they are fullscreen.
 ///
 ///   [0]: crate::extensions::hooks::add_ewmh_hooks
+///   [1]: crate::extensions::hooks::startup::ClearFsPropOnStartup
 pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     key_handler(|state, x: &X| {
         let id = match state.client_set.current_client() {
