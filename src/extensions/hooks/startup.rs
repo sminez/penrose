@@ -2,6 +2,7 @@
 use crate::{
     core::{conn::Conn, hooks::StateHook, State},
     util::spawn,
+    x::{Atom, Prop, XConn},
     Result,
 };
 use std::borrow::Cow;
@@ -57,9 +58,9 @@ impl<X> StateHook<X> for ClearFsPropOnStartup
 where
     X: XConn,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         for id in x.existing_clients()? {
-            if !state.client_set.contains(&id) && core::client_should_be_managed(id, x) {
+            if !state.client_set.contains(&id) && x.client_should_be_managed(id) {
                 let net_wm_state = Atom::NetWmState.as_ref();
                 let full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())?;
                 let mut wstate = match x.get_prop(id, net_wm_state) {
