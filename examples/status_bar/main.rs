@@ -8,6 +8,8 @@
 //! For more customisation options, see the `bar` module of the `penrose_ui` crate in
 //! the `/crates` directory.
 
+#[cfg(not(target_os = "macos"))]
+use penrose::x11rb::RustConn;
 use penrose::{
     builtin::{
         actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
@@ -23,10 +25,9 @@ use penrose::{
         Config, WindowManager,
     },
     extensions::hooks::add_ewmh_hooks,
-    map, stack,
-    x11rb::RustConn,
-    Result,
+    map, stack, Result,
 };
+#[cfg(not(target_os = "macos"))]
 use penrose_ui::{bar::Position, core::TextStyle, status_bar};
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
@@ -44,6 +45,7 @@ const OUTER_PX: u32 = 5;
 const INNER_PX: u32 = 5;
 const BAR_HEIGHT_PX: u32 = 18;
 
+#[cfg(not(target_os = "macos"))]
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_owned();
@@ -84,6 +86,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     raw_bindings
 }
 
+#[cfg(not(target_os = "macos"))]
 fn layouts() -> LayoutStack {
     stack!(
         MainAndStack::side(MAX_MAIN, RATIO, RATIO_STEP),
@@ -94,6 +97,7 @@ fn layouts() -> LayoutStack {
     .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, OUTER_PX, INNER_PX), BAR_HEIGHT_PX))
 }
 
+#[cfg(not(target_os = "macos"))]
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("debug")
@@ -123,4 +127,9 @@ fn main() -> Result<()> {
     )?);
 
     wm.run()
+}
+
+#[cfg(target_os = "macos")]
+fn main() -> Result<()> {
+    panic!("not supported on OSX");
 }

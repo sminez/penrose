@@ -1,6 +1,8 @@
 //! penrose :: adding named scratchpads to your config
 //!
 //! This file adds named scratchpad support to the `minimal` example.
+#[cfg(not(target_os = "macos"))]
+use penrose::x11rb::RustConn;
 use penrose::{
     builtin::{
         actions::{exit, modify_with, send_layout_message, spawn},
@@ -15,12 +17,12 @@ use penrose::{
     },
     map,
     x::query::ClassName,
-    x11rb::RustConn,
     Result,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
+#[cfg(not(target_os = "macos"))]
 fn raw_key_bindings(
     toggle_1: ToggleNamedScratchPad,
     toggle_2: ToggleNamedScratchPad,
@@ -68,6 +70,7 @@ fn raw_key_bindings(
     raw_bindings
 }
 
+#[cfg(not(target_os = "macos"))]
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("info")
@@ -113,6 +116,12 @@ fn main() -> Result<()> {
     wm.run()
 }
 
+#[cfg(target_os = "macos")]
+fn main() -> Result<()> {
+    panic!("not supported on OSX");
+}
+
+#[cfg(not(target_os = "macos"))]
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -2,6 +2,8 @@
 //!
 //! This file will give you a functional if incredibly minimal window manager that
 //! has multiple workspaces and simple client / workspace movement.
+#[cfg(not(target_os = "macos"))]
+use penrose::x11rb::RustConn;
 use penrose::{
     builtin::{
         actions::{
@@ -18,13 +20,13 @@ use penrose::{
         },
         Config, WindowManager,
     },
-    map,
-    x11rb::RustConn,
-    Result,
+    map, Result,
 };
+
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
+#[cfg(not(target_os = "macos"))]
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_string();
@@ -64,6 +66,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     raw_bindings
 }
 
+#[cfg(not(target_os = "macos"))]
 fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>> {
     use penrose::core::bindings::{
         ModifierKey::{Meta, Shift},
@@ -79,6 +82,7 @@ fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>>
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("info")
@@ -92,6 +96,12 @@ fn main() -> Result<()> {
     wm.run()
 }
 
+#[cfg(target_os = "macos")]
+fn main() -> Result<()> {
+    panic!("not supported on OSX");
+}
+
+#[cfg(not(target_os = "macos"))]
 #[cfg(test)]
 mod tests {
     use super::*;
