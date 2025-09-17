@@ -77,7 +77,7 @@ pub fn summarise_state<X: XConn>(state: &State<X>, cfg: &CurrentStateConfig) -> 
     }
 
     if cfg.n_mapped_clients {
-        fields.push(format!("n_mapped={}", state.mapped.len()));
+        fields.push(format!("n_mapped={}", state.mapped_clients().len()));
     }
 
     if cfg.line_per_stat {

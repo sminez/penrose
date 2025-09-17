@@ -835,8 +835,6 @@ impl StackSet<WinId> {
             config: Default::default(),
             extensions: anymap::AnyMap::new(),
             root: WinId(0),
-            mapped: Default::default(),
-            pending_unmap: Default::default(),
             current_event: None,
             diff: Default::default(),
             running: false,

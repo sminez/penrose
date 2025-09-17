@@ -6,13 +6,7 @@ use crate::{
 };
 use anymap::{any::Any, AnyMap};
 use nix::sys::signal::{signal, SigHandler, Signal};
-use std::{
-    any::TypeId,
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    fmt,
-    sync::Arc,
-};
+use std::{any::TypeId, cell::RefCell, collections::HashSet, fmt, sync::Arc};
 use tracing::{debug, error, info, span, trace, Level};
 
 pub mod bindings;
@@ -45,8 +39,6 @@ where
     pub client_set: StackSet<WinId>,
     pub(crate) extensions: AnyMap,
     pub(crate) root: WinId,
-    pub(crate) mapped: HashSet<WinId>,
-    pub(crate) pending_unmap: HashMap<WinId, usize>,
     pub(crate) current_event: Option<C::Event>,
     pub(crate) diff: Diff<WinId>,
     pub(crate) running: bool,
@@ -72,8 +64,6 @@ where
             client_set,
             extensions: AnyMap::new(),
             root: conn.root(),
-            mapped: HashSet::new(),
-            pending_unmap: HashMap::new(),
             current_event: None,
             diff,
             running: false,
@@ -87,8 +77,8 @@ where
     }
 
     /// The set of all client windows currently mapped to a screen.
-    pub fn mapped_clients(&self) -> &HashSet<WinId> {
-        &self.mapped
+    pub fn mapped_clients(&self) -> HashSet<WinId> {
+        self.client_set.clients().cloned().collect()
     }
 
     /// The event currently being processed.

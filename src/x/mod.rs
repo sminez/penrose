@@ -16,7 +16,7 @@ use crate::{
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tracing::{debug, info, trace, warn};
 
 pub mod atom;
@@ -155,11 +155,58 @@ impl ConnEvent for XEvent {
     }
 }
 
+/// The check for whether or not we manage an _existing_ client is a little different from
+/// whether or not we manage a _new_ client.
+fn existing_client_should_be_managed<X: XConn>(x: &mut X, id: WinId) -> bool {
+    let attrs = match x.get_window_attributes(id) {
+        Ok(attrs) => attrs,
+        _ => {
+            warn!(%id, "unable to pull window attributes for client: skipping.");
+            return false;
+        }
+    };
+
+    let wm_state = match x.get_wm_state(id) {
+        Ok(state) => state,
+        _ => {
+            warn!(%id, "unable to pull wm state for client: skipping.");
+            return false;
+        }
+    };
+
+    info!(%id, ?attrs, ?wm_state, "processing client");
+
+    let WindowAttributes {
+        override_redirect,
+        map_state,
+        ..
+    } = attrs;
+
+    let viewable = map_state == MapState::Viewable;
+    let iconic = wm_state == Some(WmState::Iconic);
+
+    // This condition for determining what windows we should manage is
+    // taken from the `scan` function found in both dwm and XMonad.
+    !override_redirect && (viewable || iconic)
+}
+
+/// Transient state needed for all XConn impls in order to track expected map/unmap events coming
+/// from the Xserver.
+#[derive(Debug, Default)]
+pub(super) struct XConnState {
+    pub(super) mapped: HashSet<WinId>,
+    pub(super) pending_unmap: HashMap<WinId, usize>,
+}
+
 impl<X> Conn for X
 where
     X: XConn,
 {
     type Event = XEvent;
+
+    fn initialize_state(&mut self, state: &mut State<Self>) {
+        state.add_extension(XConnState::default());
+    }
 
     #[inline]
     fn root(&mut self) -> WinId {
@@ -248,16 +295,41 @@ where
         self.set_client_config(id, &[ClientConfig::Position(r)])
     }
 
-    fn show_client(&mut self, id: WinId) -> Result<()> {
+    fn show_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
         self.set_wm_state(id, WmState::Normal)?;
-        self.map(id)
+        self.map(id)?;
+
+        if state.client_set.contains(&id) {
+            state
+                .extension_or_default::<XConnState>()
+                .borrow_mut()
+                .mapped
+                .insert(id);
+        }
+
+        Ok(())
     }
 
-    fn hide_client(&mut self, id: WinId) -> Result<()> {
+    fn hide_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
+        let _xstate = state.extension_or_default::<XConnState>();
+        if !_xstate.borrow().mapped.contains(&id) {
+            return Ok(());
+        }
+
         self.set_client_attributes(id, &[ClientAttr::ClientUnmapMask])?;
         self.unmap(id)?;
         self.set_client_attributes(id, &[ClientAttr::ClientEventMask])?;
         self.set_wm_state(id, WmState::Iconic)?;
+
+        let _xstate = state.extension_or_default::<XConnState>();
+        let mut xstate = _xstate.borrow_mut();
+
+        xstate.mapped.remove(&id);
+        xstate
+            .pending_unmap
+            .entry(id)
+            .and_modify(|count| *count += 1)
+            .or_insert(1);
 
         Ok(())
     }
@@ -327,36 +399,13 @@ where
     }
 
     fn client_should_be_managed(&mut self, id: WinId) -> bool {
-        let attrs = match self.get_window_attributes(id) {
-            Ok(attrs) => attrs,
+        match self.get_window_attributes(id) {
+            Ok(attrs) => !attrs.override_redirect,
             _ => {
                 warn!(%id, "unable to pull window attributes for client: skipping.");
-                return false;
+                false
             }
-        };
-
-        let wm_state = match self.get_wm_state(id) {
-            Ok(state) => state,
-            _ => {
-                warn!(%id, "unable to pull wm state for client: skipping.");
-                return false;
-            }
-        };
-
-        info!(%id, ?attrs, ?wm_state, "processing client");
-
-        let WindowAttributes {
-            override_redirect,
-            map_state,
-            ..
-        } = attrs;
-
-        let viewable = map_state == MapState::Viewable;
-        let iconic = wm_state == Some(WmState::Iconic);
-
-        // This condition for determining what windows we should manage is
-        // taken from the `scan` function found in both dwm and XMonad.
-        !override_redirect && (viewable || iconic)
+        }
     }
 
     fn client_is_fullscreen(&mut self, id: WinId) -> bool {
@@ -445,7 +494,7 @@ where
         let first_tag = state.client_set.ordered_tags()[0].clone();
 
         for id in self.existing_clients()? {
-            if !state.client_set.contains(&id) && self.client_should_be_managed(id) {
+            if !state.client_set.contains(&id) && existing_client_should_be_managed(self, id) {
                 let workspace_id = match self.get_prop(id, Atom::NetWmDesktop.as_ref()) {
                     Ok(Some(Prop::Cardinal(ids))) => ids[0] as usize,
                     _ => 0, // we know that we always have at least one workspace

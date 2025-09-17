@@ -100,7 +100,7 @@ pub fn remove_and_unmap_focused_client<C: Conn>() -> Box<dyn KeyEventHandler<C>>
                 ?client,
                 "Unmapping previously focused client following removal from state"
             );
-            conn.hide_client(client)
+            conn.hide_client(client, s)
         } else {
             Ok(())
         }

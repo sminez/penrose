@@ -52,16 +52,18 @@ impl<C> Snapshot<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    pub(crate) fn visible_clients(&self) -> impl Iterator<Item = &C> {
-        self.positions.iter().map(|(c, _)| c)
+    pub(crate) fn visible_clients(&self) -> Vec<C> {
+        self.positions.iter().map(|(c, _)| *c).collect()
     }
 
-    pub(crate) fn all_clients(&self) -> impl Iterator<Item = &C> {
+    pub(crate) fn all_clients(&self) -> Vec<C> {
         self.focused
             .clients
             .iter()
-            .chain(self.visible.iter().flat_map(|s| s.clients.iter()))
-            .chain(self.hidden_clients.iter())
+            .cloned()
+            .chain(self.visible.iter().flat_map(|s| s.clients.iter().cloned()))
+            .chain(self.hidden_clients.iter().cloned())
+            .collect()
     }
 }
 
@@ -124,40 +126,40 @@ where
     }
 
     /// An iterator of all clients that were added as part of this diff
-    pub fn new_clients(&self) -> impl Iterator<Item = &C> {
-        let before: HashSet<_> = self.before.all_clients().collect();
+    pub fn new_clients(&self) -> Vec<C> {
+        let before: HashSet<_> = self.before.all_clients().into_iter().collect();
+        let mut after = self.after.all_clients();
+        after.retain(|c| !before.contains(c));
 
-        self.after
-            .all_clients()
-            .filter(move |c| !before.contains(c))
+        after
     }
 
     /// An iterator of all clients that were hidden as part of this diff
-    pub fn hidden_clients(&self) -> impl Iterator<Item = &C> {
-        let after: HashSet<_> = self.after.visible_clients().collect();
+    pub fn hidden_clients(&self) -> Vec<C> {
+        let after: HashSet<_> = self.after.visible_clients().into_iter().collect();
+        let mut before = self.before.all_clients();
+        before.retain(|c| !after.contains(c));
 
-        self.before
-            .visible_clients()
-            .filter(move |c| !after.contains(c))
+        before
     }
 
     /// An iterator of all currently visible clients
-    pub fn visible_clients(&self) -> impl Iterator<Item = &C> {
+    pub fn visible_clients(&self) -> Vec<C> {
         self.after.visible_clients()
     }
 
     /// Clients that were present in the previous snapshot but not the current one
-    pub fn withdrawn_clients(&self) -> impl Iterator<Item = &C> {
-        let after: HashSet<_> = self.after.all_clients().collect();
+    pub fn withdrawn_clients(&self) -> Vec<C> {
+        let after: HashSet<_> = self.after.all_clients().into_iter().collect();
+        let mut before = self.before.all_clients();
+        before.retain(|c| !after.contains(c));
 
-        self.before
-            .all_clients()
-            .filter(move |c| !after.contains(c))
+        before
     }
 
     /// Clients that have been removed from the pure state since the last snapshot
-    pub fn killed_clients(&self) -> impl Iterator<Item = &C> {
-        self.after.killed_clients.iter()
+    pub fn killed_clients(&self) -> Vec<C> {
+        self.after.killed_clients.clone()
     }
 
     /// The set of tags that were visible in the previous snapshot
@@ -181,8 +183,8 @@ where
     pub fn is_empty(&self) -> bool {
         !(self.focused_client_changed()
             || self.newly_focused_screen().is_some()
-            || self.new_clients().count() > 0
-            || self.withdrawn_clients().count() > 0
+            || self.new_clients().len() > 0
+            || self.withdrawn_clients().len() > 0
             || self.previous_visible_tags() != self.current_visible_tags()
             || self.before.positions != self.after.positions
             || self.after.killed_clients.len() > 0)
@@ -267,9 +269,8 @@ mod quickcheck_tests {
         s.insert(new);
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let res = diff.new_clients().any(|&c| c == new);
 
-        res
+        diff.new_clients().contains(&new)
     }
 
     // Not checking that clients on the new workspace are visible as this is driven entirely by
@@ -292,7 +293,7 @@ mod quickcheck_tests {
         s.focus_tag(&tag);
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let hidden: HashSet<_> = diff.hidden_clients().collect();
+        let hidden: HashSet<_> = diff.hidden_clients().into_iter().collect();
 
         let focused_clients_now_hidden = clients_on_active.iter().all(|c| hidden.contains(c));
         let tag_now_hidden = diff.previous_visible_tags().contains(&prev_tag.as_ref());
@@ -311,10 +312,8 @@ mod quickcheck_tests {
         s.remove_focused();
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let res = diff.withdrawn_clients().any(|&c| c == focus)
-            && diff.hidden_clients().any(|&c| c == focus);
 
-        res
+        diff.withdrawn_clients().contains(&focus) && diff.hidden_clients().contains(&focus)
     }
 
     #[quickcheck]
@@ -330,11 +329,10 @@ mod quickcheck_tests {
         s.kill_focused();
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let res = diff.withdrawn_clients().any(|&c| c == focus)
-            && diff.hidden_clients().any(|&c| c == focus)
-            && diff.killed_clients().any(|&c| c == focus);
 
-        res
+        diff.withdrawn_clients().contains(&focus)
+            && diff.hidden_clients().contains(&focus)
+            && diff.killed_clients().contains(&focus)
     }
 
     #[quickcheck]
@@ -349,9 +347,8 @@ mod quickcheck_tests {
                 s.move_client_to_tag(&client, &tag);
 
                 let diff = Diff::new(ss, s.position_and_snapshot());
-                let res = diff.hidden_clients().any(|&c| c == client);
 
-                res
+                diff.hidden_clients().contains(&client)
             }
 
             _ => true, // No hidden tags or no clients

@@ -58,6 +58,10 @@ pub trait Conn: Send + Sized {
     /// The event type used by this connection
     type Event: ConnEvent;
 
+    /// Called once when the window manager state is first created.
+    #[allow(unused_variables)]
+    fn initialize_state(&mut self, state: &mut State<Self>) {}
+
     /// The ID of the window manager root window.
     fn root(&mut self) -> WinId;
     /// Block and wait for the next event so it can be processed.
@@ -90,9 +94,9 @@ pub trait Conn: Send + Sized {
     /// Update the geometry of a given client based on the given [Rect].
     fn position_client(&mut self, id: WinId, r: Rect) -> Result<()>;
     /// Display a client on the screen at its current position.
-    fn show_client(&mut self, id: WinId) -> Result<()>;
+    fn show_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()>;
     /// Hide a client
-    fn hide_client(&mut self, id: WinId) -> Result<()>;
+    fn hide_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()>;
     /// Withdraw a client
     fn withdraw_client(&mut self, id: WinId) -> Result<()>;
     /// Kill the given client window, closing it.
@@ -459,7 +463,7 @@ fn floating_client_position<C: Conn>(
 }
 
 fn notify_killed<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
-    for &c in state.diff.killed_clients() {
+    for c in state.diff.killed_clients() {
         conn.kill_client(c)?;
     }
 
@@ -467,7 +471,7 @@ fn notify_killed<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
 }
 
 fn set_window_props<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
-    for &c in state.diff.new_clients() {
+    for c in state.diff.new_clients() {
         conn.set_initial_properties(c, &state.config)?;
     }
 
@@ -529,17 +533,17 @@ fn handle_pointer_change<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<
 }
 
 fn set_window_visibility<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
-    for &c in state.diff.visible_clients() {
+    for c in state.diff.visible_clients() {
         trace!(?c, "revealing client");
-        conn.show_client(c)?;
+        conn.show_client(c, state)?;
     }
 
-    for &c in state.diff.hidden_clients() {
+    for c in state.diff.hidden_clients() {
         trace!(?c, "hiding client");
-        conn.hide_client(c)?;
+        conn.hide_client(c, state)?;
     }
 
-    for &c in state.diff.withdrawn_clients() {
+    for c in state.diff.withdrawn_clients() {
         trace!(?c, "setting withdrawn state for client");
         conn.withdraw_client(c)?;
     }
