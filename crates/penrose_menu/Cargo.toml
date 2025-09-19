@@ -2,7 +2,7 @@
 name = "penrose_menu"
 version = "0.1.1"
 authors = ["IDAM <innes.andersonmorrison@gmail.com>"]
-edition = "2018"
+edition = "2024"
 
 [dependencies]
 fuzzy-matcher = "0.3.7"

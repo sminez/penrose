@@ -1,7 +1,7 @@
 //! Data types for working with X window properties
 use crate::{
-    pure::geometry::{Point, Rect},
     Error, Result, WinId,
+    pure::geometry::{Point, Rect},
 };
 use bitflags::bitflags;
 #[cfg(feature = "serde")]
@@ -201,7 +201,7 @@ impl WmHints {
             _ => {
                 return Err(Error::InvalidHints {
                     reason: format!("initial state flag should be 0, 1, 2: got {}", raw[2]),
-                })
+                });
             }
         };
 
@@ -260,18 +260,18 @@ impl WmNormalHints {
     ///
     /// > Currently only the max size is respected
     pub fn apply_to(&self, mut r: Rect) -> Rect {
-        if let Some(max) = self.max {
-            if r.is_larger_than(&max) {
-                r.w = max.w;
-                r.h = max.h
-            }
+        if let Some(max) = self.max
+            && r.is_larger_than(&max)
+        {
+            r.w = max.w;
+            r.h = max.h
         }
 
-        if let Some(min) = self.min {
-            if min.is_larger_than(&r) {
-                r.w = min.w;
-                r.h = min.h;
-            }
+        if let Some(min) = self.min
+            && min.is_larger_than(&r)
+        {
+            r.w = min.w;
+            r.h = min.h;
         }
 
         r

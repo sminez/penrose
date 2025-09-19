@@ -1,14 +1,14 @@
 //! Support for managing multiple floating scratchpad programs that can be
 //! toggled on or off on the active workspace.
 use crate::{
+    Result, WinId,
     core::{
+        State, WindowManager,
         bindings::KeyEventHandler,
         conn::{Conn, ConnExt, Query},
         hooks::ManageHook,
-        State, WindowManager,
     },
     util::spawn,
-    Result, WinId,
 };
 use std::{borrow::Cow, collections::HashMap, fmt};
 use tracing::{debug, error, warn};
@@ -196,10 +196,10 @@ impl<C: Conn + 'static> KeyEventHandler<C> for ToggleNamedScratchPad {
             debug!(%id, "current workspace does not contain target client: moving to tag");
             state.client_set.move_client_to_current_tag(&id);
 
-            if self.run_hook_on_toggle {
-                if let Err(e) = hook.call(id, state, conn) {
-                    error!(%e, %name, %id, "unable to run NSP manage hook during toggle");
-                }
+            if self.run_hook_on_toggle
+                && let Err(e) = hook.call(id, state, conn)
+            {
+                error!(%e, %name, %id, "unable to run NSP manage hook during toggle");
             }
         }
 

@@ -1,19 +1,19 @@
 //! XEvent handlers for use in the main event loop;
 use crate::{
+    Result, WinId,
     core::{
+        State,
         bindings::{
             KeyBindings, KeyCode, MotionNotifyEvent, MouseBindings, MouseEvent, MouseEventKind,
         },
         conn::{Conn, ConnExt},
-        State,
     },
     pure::geometry::Point,
     x::{
+        Atom, Prop, XConn,
         event::{ClientMessage, ClientMessageKind, ConfigureEvent, PointerChange},
         property::WmHints,
-        Atom, Prop, XConn,
     },
-    Result, WinId,
 };
 use tracing::{error, info, trace};
 
@@ -91,11 +91,11 @@ pub(crate) fn motion_event<X: XConn>(
         None => return Ok(()), // motion without us holding anything
     };
 
-    if let Some(action) = bindings.get_mut(held_state) {
-        if let Err(error) = action.on_motion(&e, state, x) {
-            error!(%error, ?e, "error running user mouse binding");
-            return Err(error);
-        }
+    if let Some(action) = bindings.get_mut(held_state)
+        && let Err(error) = action.on_motion(&e, state, x)
+    {
+        error!(%error, ?e, "error running user mouse binding");
+        return Err(error);
     }
 
     Ok(())

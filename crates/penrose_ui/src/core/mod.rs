@@ -13,25 +13,25 @@
 //!   [1]: crate::bar::widgets::Widget
 use crate::{Error, Result};
 use penrose::{
+    Color, WinId,
     pure::geometry::{Point, Rect},
     x::{WinType, XConn},
     x11rb::RustConn,
-    Color, WinId,
 };
 use std::{
-    alloc::{alloc, dealloc, handle_alloc_error, Layout},
+    alloc::{Layout, alloc, dealloc, handle_alloc_error},
     cmp::max,
-    collections::{hash_map::Entry, HashMap},
+    collections::{HashMap, hash_map::Entry},
     ffi::CString,
 };
 use tracing::{debug, info};
 use x11::{
     xft::{XftColor, XftColorAllocName, XftDraw, XftDrawCreate, XftDrawDestroy, XftDrawStringUtf8},
     xlib::{
-        CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
-        XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
-        XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap, XOpenDisplay, XPoint,
-        XSetForeground, XSetGraphicsExposures, XSetLineAttributes, XSync, GC,
+        CapButt, Complex, CoordModeOrigin, Display, Drawable, False, GC, JoinMiter, LineSolid,
+        Window, XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth,
+        XDefaultVisual, XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap,
+        XOpenDisplay, XPoint, XSetForeground, XSetGraphicsExposures, XSetLineAttributes, XSync,
     },
 };
 
@@ -68,8 +68,11 @@ impl Surface {
     /// SAFETY: dpy must be non-null
     pub(crate) unsafe fn flush(&self, dpy: *mut Display) {
         let Rect { w, h, .. } = self.r;
-        XCopyArea(dpy, self.drawable, self.id, self.gc, 0, 0, w, h, 0, 0);
-        XSync(dpy, False);
+        // SAFETY: dpy must be non-null
+        unsafe {
+            XCopyArea(dpy, self.drawable, self.id, self.gc, 0, 0, w, h, 0, 0);
+            XSync(dpy, False);
+        }
     }
 }
 
@@ -554,19 +557,23 @@ impl XColor {
 unsafe fn try_xftcolor_from_name(dpy: *mut Display, color: &str) -> Result<*mut XftColor> {
     // https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
     let layout = Layout::new::<XftColor>();
-    let ptr = alloc(layout);
+    // SAFETY: layout size is non-zero
+    let ptr = unsafe { alloc(layout) };
     if ptr.is_null() {
         handle_alloc_error(layout);
     }
 
     let c_name = CString::new(color)?;
-    let res = XftColorAllocName(
-        dpy,
-        XDefaultVisual(dpy, SCREEN),
-        XDefaultColormap(dpy, SCREEN),
-        c_name.as_ptr(),
-        ptr as *mut XftColor,
-    );
+    // SAFETY: pointers are non-null
+    let res = unsafe {
+        XftColorAllocName(
+            dpy,
+            XDefaultVisual(dpy, SCREEN),
+            XDefaultColormap(dpy, SCREEN),
+            c_name.as_ptr(),
+            ptr as *mut XftColor,
+        )
+    };
 
     if res == 0 {
         Err(Error::UnableToAllocateColor)

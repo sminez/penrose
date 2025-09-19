@@ -1,9 +1,10 @@
 //! Logic for interacting with the X server
 use crate::{
+    Color, Result, WinId,
     core::{
-        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
-        conn::{manage_without_refresh, Conn, ConnEvent, ConnExt},
         Config, State,
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
+        conn::{Conn, ConnEvent, ConnExt, manage_without_refresh},
     },
     pure::geometry::{Point, Rect},
     x::{
@@ -12,7 +13,6 @@ use crate::{
         property::{MapState, WmState},
         query::str_prop,
     },
-    Color, Result, WinId,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -372,11 +372,11 @@ where
 
     fn client_should_float(&mut self, id: WinId, floating_classes: &[String]) -> bool {
         trace!(%id, "fetching WmClass prop");
-        if let Ok(Some(Prop::UTF8String(strs))) = self.get_prop(id, Atom::WmClass.as_ref()) {
-            if strs.iter().any(|c| floating_classes.contains(c)) {
-                debug!(%id, ?floating_classes, "window has a floating class: setting to floating state");
-                return true;
-            }
+        if let Ok(Some(Prop::UTF8String(strs))) = self.get_prop(id, Atom::WmClass.as_ref())
+            && strs.iter().any(|c| floating_classes.contains(c))
+        {
+            debug!(%id, ?floating_classes, "window has a floating class: setting to floating state");
+            return true;
         }
 
         trace!(%id, "fetching NetWmWindowType prop");
@@ -388,12 +388,10 @@ where
 
         let float_types: Vec<&str> = AUTO_FLOAT_WINDOW_TYPES.iter().map(|a| a.as_ref()).collect();
 
-        let should_float = match window_types {
+        match window_types {
             Some(Prop::Atom(atoms)) => atoms.iter().any(|a| float_types.contains(&a.as_ref())),
             _ => false,
-        };
-
-        should_float
+        }
     }
 
     fn client_should_be_managed(&mut self, id: WinId) -> bool {

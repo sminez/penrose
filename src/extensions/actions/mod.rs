@@ -1,10 +1,10 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
-    builtin::actions::{key_handler, modify_with},
-    core::{bindings::KeyEventHandler, conn::ConnExt, layout::LayoutStack, State},
-    util::spawn,
-    x::{atom::Atom, property::Prop, ClientConfig, XConn},
     Error, Result, WinId,
+    builtin::actions::{key_handler, modify_with},
+    core::{State, bindings::KeyEventHandler, conn::ConnExt, layout::LayoutStack},
+    util::spawn,
+    x::{ClientConfig, XConn, atom::Atom, property::Prop},
 };
 use tracing::{debug, error};
 
@@ -147,11 +147,11 @@ where
         let mut client = None;
 
         for &id in s.client_set.clients() {
-            if let Some(Prop::UTF8String(classes)) = x.get_prop(id, Atom::WmClass.as_ref())? {
-                if classes.iter().any(|s| s == class) {
-                    client = Some(id);
-                    break;
-                }
+            if let Some(Prop::UTF8String(classes)) = x.get_prop(id, Atom::WmClass.as_ref())?
+                && classes.iter().any(|s| s == class)
+            {
+                client = Some(id);
+                break;
             }
         }
 
