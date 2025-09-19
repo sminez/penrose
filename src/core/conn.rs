@@ -48,7 +48,9 @@ impl From<WinId> for u32 {
 }
 
 /// An event type associated with a [Conn]
-pub trait ConnEvent: fmt::Debug + fmt::Display + Clone + PartialEq + Eq + Hash {
+pub trait ConnEvent:
+    fmt::Debug + fmt::Display + Clone + PartialEq + Eq + Hash + Send + Sized
+{
     /// Whether or not this event should trigger pointer warping as part of a refresh
     fn requires_pointer_warp(&self) -> bool;
 }
@@ -58,9 +60,14 @@ pub trait Conn: Send + Sized {
     /// The event type used by this connection
     type Event: ConnEvent;
 
+    /// Additional data that will be kept separately within the main [State].
+    ///
+    /// This is typically used to be able to support having generic shared state when writing
+    /// families of Conn implementations such as `XConn`.
+    type State: fmt::Debug + Send + Sized;
+
     /// Called once when the window manager state is first created.
-    #[allow(unused_variables)]
-    fn initialize_state(&mut self, state: &mut State<Self>) {}
+    fn initial_state(&mut self) -> Self::State;
 
     /// The ID of the window manager root window.
     fn root(&mut self) -> WinId;

@@ -833,6 +833,7 @@ impl StackSet<WinId> {
         let mut s = crate::core::State {
             client_set: self.clone(),
             config: Default::default(),
+            conn_state: crate::x::XConnState::default(),
             extensions: anymap::AnyMap::new(),
             root: WinId(0),
             current_event: None,

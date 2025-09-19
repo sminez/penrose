@@ -193,7 +193,7 @@ fn existing_client_should_be_managed<X: XConn>(x: &mut X, id: WinId) -> bool {
 /// Transient state needed for all XConn impls in order to track expected map/unmap events coming
 /// from the Xserver.
 #[derive(Debug, Default)]
-pub(super) struct XConnState {
+pub struct XConnState {
     pub(super) mapped: HashSet<WinId>,
     pub(super) pending_unmap: HashMap<WinId, usize>,
 }
@@ -203,9 +203,10 @@ where
     X: XConn,
 {
     type Event = XEvent;
+    type State = XConnState;
 
-    fn initialize_state(&mut self, state: &mut State<Self>) {
-        state.add_extension(XConnState::default());
+    fn initial_state(&mut self) -> Self::State {
+        XConnState::default()
     }
 
     #[inline]
@@ -311,8 +312,7 @@ where
     }
 
     fn hide_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
-        let _xstate = state.extension_or_default::<XConnState>();
-        if !_xstate.borrow().mapped.contains(&id) {
+        if state.conn_state.mapped.contains(&id) {
             return Ok(());
         }
 
@@ -321,11 +321,9 @@ where
         self.set_client_attributes(id, &[ClientAttr::ClientEventMask])?;
         self.set_wm_state(id, WmState::Iconic)?;
 
-        let _xstate = state.extension_or_default::<XConnState>();
-        let mut xstate = _xstate.borrow_mut();
-
-        xstate.mapped.remove(&id);
-        xstate
+        state.conn_state.mapped.remove(&id);
+        state
+            .conn_state
             .pending_unmap
             .entry(id)
             .and_modify(|count| *count += 1)

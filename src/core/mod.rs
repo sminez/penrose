@@ -37,6 +37,8 @@ where
     pub config: Config<C>,
     /// The pure window manager state
     pub client_set: StackSet<WinId>,
+    /// Additional state for the [Conn]
+    pub conn_state: C::State,
     pub(crate) extensions: AnyMap,
     pub(crate) root: WinId,
     pub(crate) current_event: Option<C::Event>,
@@ -58,10 +60,12 @@ where
 
         let ss = client_set.snapshot(vec![]);
         let diff = Diff::new(ss.clone(), ss);
+        let conn_state = conn.initial_state();
 
         Ok(Self {
             config,
             client_set,
+            conn_state,
             extensions: AnyMap::new(),
             root: conn.root(),
             current_event: None,

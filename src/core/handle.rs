@@ -11,7 +11,7 @@ use crate::{
     x::{
         event::{ClientMessage, ClientMessageKind, ConfigureEvent, PointerChange},
         property::WmHints,
-        Atom, Prop, XConn, XConnState,
+        Atom, Prop, XConn,
     },
     Result, WinId,
 };
@@ -146,10 +146,8 @@ pub(crate) fn focus_in<X: XConn>(id: WinId, state: &mut State<X>, x: &mut X) -> 
 pub(crate) fn destroy<X: XConn>(id: WinId, state: &mut State<X>, x: &mut X) -> Result<()> {
     trace!(?id, "destroying client");
     x.unmanage(id, state)?;
-    let _xstate = state.extension_or_default::<XConnState>();
-    let mut xstate = _xstate.borrow_mut();
-    xstate.mapped.remove(&id);
-    xstate.pending_unmap.remove(&id);
+    state.conn_state.mapped.remove(&id);
+    state.conn_state.pending_unmap.remove(&id);
 
     Ok(())
 }
@@ -157,24 +155,17 @@ pub(crate) fn destroy<X: XConn>(id: WinId, state: &mut State<X>, x: &mut X) -> R
 // Expected unmap events are tracked in pending_unmap. We ignore expected unmaps.
 pub(crate) fn unmap_notify<X: XConn>(id: WinId, state: &mut State<X>, x: &mut X) -> Result<()> {
     // Need to make sure we drop the Ref from borrow() before calling unmanage
-    let expected = *state
-        .extension_or_default::<XConnState>()
-        .borrow()
-        .pending_unmap
-        .get(&id)
-        .unwrap_or(&0);
+    let expected = *state.conn_state.pending_unmap.get(&id).unwrap_or(&0);
 
     if expected == 0 {
         return x.unmanage(id, state);
     }
 
-    let _xstate = state.extension_or_default::<XConnState>();
-    let mut xstate = _xstate.borrow_mut();
-
     if expected == 1 {
-        xstate.pending_unmap.remove(&id);
+        state.conn_state.pending_unmap.remove(&id);
     } else {
-        xstate
+        state
+            .conn_state
             .pending_unmap
             .entry(id)
             .and_modify(|count| *count -= 1);
