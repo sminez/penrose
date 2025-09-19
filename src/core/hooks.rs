@@ -88,13 +88,13 @@
 //!   [2]: crate::core::Config
 
 use crate::{
+    Result,
     core::{
+        State,
         conn::{Conn, WinId},
         layout::LayoutTransformer,
-        State,
     },
     pure::geometry::Rect,
-    Result,
 };
 use std::fmt;
 

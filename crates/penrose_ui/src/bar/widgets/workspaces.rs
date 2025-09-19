@@ -1,14 +1,14 @@
 //! Widgets for the penrose status bar
 use crate::{
+    Result,
     bar::widgets::Widget,
     core::{Context, TextStyle},
-    Result,
 };
 use penrose::{
+    Color,
     core::{ClientSpace, State},
     pure::geometry::Rect,
     x::XConn,
-    Color,
 };
 
 const PADDING: u32 = 3;

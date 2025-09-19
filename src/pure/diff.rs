@@ -195,8 +195,9 @@ where
 mod tests {
     use super::*;
     use crate::{
+        WinId,
         pure::stack_set::tests::{test_stack_set, test_stack_set_with_stacks},
-        stack, WinId,
+        stack,
     };
     use simple_test_case::test_case;
 
@@ -250,7 +251,7 @@ mod tests {
 #[cfg(test)]
 mod quickcheck_tests {
     use super::*;
-    use crate::{pure::StackSet, WinId};
+    use crate::{WinId, pure::StackSet};
     use quickcheck_macros::quickcheck;
 
     #[quickcheck]

@@ -1,8 +1,8 @@
 //! Queries against client windows
 use crate::{
-    core::conn::Query,
-    x::{atom::Atom, property::Prop, XConn},
     Result, WinId,
+    core::conn::Query,
+    x::{XConn, atom::Atom, property::Prop},
 };
 
 pub(crate) fn str_prop<X>(

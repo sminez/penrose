@@ -2,7 +2,7 @@
 use crate::{
     builtin::layout::MainAndStack,
     core::conn::WinId,
-    pure::{geometry::Rect, Stack},
+    pure::{Stack, geometry::Rect},
     stack,
 };
 use std::{fmt, mem::swap};

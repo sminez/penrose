@@ -86,19 +86,21 @@ impl UpdateSchedule {
 /// Run the polling thread for a set of [UpdateSchedule]s and update their contents on
 /// their requested intervals.
 pub(crate) fn run_update_schedules(mut schedules: Vec<UpdateSchedule>) {
-    thread::spawn(move || loop {
-        trace!("running UpdateSchedule updates for all pending widgets");
-        while schedules[0].next < Instant::now() {
-            schedules[0].update_text();
-            schedules.sort_by(|a, b| a.next.cmp(&b.next));
+    thread::spawn(move || {
+        loop {
+            trace!("running UpdateSchedule updates for all pending widgets");
+            while schedules[0].next < Instant::now() {
+                schedules[0].update_text();
+                schedules.sort_by(|a, b| a.next.cmp(&b.next));
+            }
+
+            // FIXME: this is a hack at the moment to ensure that an event drops into the main
+            // window manager event loop and triggers the `on_event` hook of the status bar.
+            let _ = spawn_with_args("xsetroot", &["-name", ""]);
+
+            let interval = schedules[0].next - Instant::now();
+            trace!(?interval, "sleeping until next update point");
+            thread::sleep(interval);
         }
-
-        // FIXME: this is a hack at the moment to ensure that an event drops into the main
-        // window manager event loop and triggers the `on_event` hook of the status bar.
-        let _ = spawn_with_args("xsetroot", &["-name", ""]);
-
-        let interval = schedules[0].next - Instant::now();
-        trace!(?interval, "sleeping until next update point");
-        thread::sleep(interval);
     });
 }

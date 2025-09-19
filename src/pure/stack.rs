@@ -2,7 +2,7 @@ use crate::pop_where;
 use std::{
     collections::vec_deque::{self, VecDeque},
     fmt,
-    iter::{once, IntoIterator},
+    iter::{IntoIterator, once},
     mem::{swap, take},
 };
 

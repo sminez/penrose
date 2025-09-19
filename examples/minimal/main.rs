@@ -5,22 +5,23 @@
 #[cfg(not(target_os = "macos"))]
 use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{
             exit,
-            floating::{sink_focused, MouseDragHandler, MouseResizeHandler},
+            floating::{MouseDragHandler, MouseResizeHandler, sink_focused},
             modify_with, send_layout_message, spawn,
         },
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
-        bindings::{
-            click_handler, parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler,
-            MouseState,
-        },
         Config, WindowManager,
+        bindings::{
+            KeyEventHandler, MouseEventHandler, MouseState, click_handler,
+            parse_keybindings_with_xmodmap,
+        },
     },
-    map, Result,
+    map,
 };
 
 use std::collections::HashMap;

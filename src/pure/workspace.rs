@@ -1,7 +1,8 @@
 use crate::{
+    Error, Result, WinId,
     core::layout::{IntoMessage, Layout, LayoutStack},
-    pure::{geometry::Rect, Position, Stack},
-    stack, Error, Result, WinId,
+    pure::{Position, Stack, geometry::Rect},
+    stack,
 };
 use std::{fmt, mem::take};
 

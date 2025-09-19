@@ -1,13 +1,14 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
+    Result, WinId,
     core::{
+        State,
         bindings::KeyEventHandler,
         conn::{Conn, ConnExt},
         layout::IntoMessage,
-        State,
     },
     pure::StackSet,
-    util, Result, WinId,
+    util,
 };
 use tracing::info;
 

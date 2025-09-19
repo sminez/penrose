@@ -1,9 +1,9 @@
 //! Configure workspaces to auto-spawn a set of windows if they are empty when they gain focus
 use crate::{
-    core::{hooks::StateHook, State},
+    Result,
+    core::{State, hooks::StateHook},
     util::spawn,
     x::XConn,
-    Result,
 };
 
 /// Specify a workspace by `tag` and use a named layout to spawn a set of default programs

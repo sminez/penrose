@@ -7,10 +7,10 @@
 //! NOTE: See penrose::builtin::layout::quickcheck_tests for the Arbitrary impls for
 //!       Stack<WinId> and Rect.
 use crate::{
+    WinId,
     core::layout::Layout,
     extensions::layout::{Fibonacci, Tatami},
-    pure::{geometry::Rect, Stack},
-    WinId,
+    pure::{Stack, geometry::Rect},
 };
 use quickcheck_macros::quickcheck;
 

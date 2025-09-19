@@ -1,15 +1,15 @@
 //! A platform agnostic backing connection
 use crate::{
+    Color, Result,
     builtin::layout::messages::Hide,
     core::{
-        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
         Config, State,
+        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
     },
     pure::{
-        geometry::{Point, Rect},
         StackSet,
+        geometry::{Point, Rect},
     },
-    Color, Result,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -525,8 +525,7 @@ fn handle_pointer_change<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<
             if focus_changed || focused_client_moved {
                 trace!(
                     focus_changed,
-                    focused_client_moved,
-                    "warping to focused client"
+                    focused_client_moved, "warping to focused client"
                 );
                 conn.warp_pointer_to_window(id)?;
             }
@@ -570,9 +569,8 @@ fn set_focus<C: Conn>(conn: &mut C, state: &mut State<C>) -> Result<()> {
 mod tests {
     use super::*;
     use crate::{
-        map,
+        Error, Result, map,
         x::{Atom, MockXConn, Prop},
-        Error, Result,
     };
     use simple_test_case::test_case;
     use std::collections::HashMap;

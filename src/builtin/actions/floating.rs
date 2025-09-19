@@ -1,16 +1,16 @@
 //! Actions for manipulating floating windows.
 use crate::{
+    Result,
     builtin::actions::{key_handler, modify_with},
     core::{
+        State, WinId,
         bindings::{
             KeyEventHandler, MotionNotifyEvent, MouseEvent, MouseEventHandler, MouseEventKind,
         },
         conn::{Conn, ConnExt},
-        State, WinId,
     },
     custom_error,
     pure::geometry::{Point, Rect},
-    Result,
 };
 use tracing::error;
 

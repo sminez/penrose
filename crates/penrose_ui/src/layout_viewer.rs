@@ -1,12 +1,12 @@
 //! A simple UI for view the results of a given Layout implementation
 use crate::{Draw, Result};
 use penrose::{
+    Color, WinId,
     builtin::layout::transformers::Gaps,
     core::layout::Layout,
-    pure::{geometry::Rect, Stack},
+    pure::{Stack, geometry::Rect},
     x::{Atom, WinType, XConn},
     x11rb::RustConn,
-    Color, WinId,
 };
 use std::{thread::sleep, time::Duration};
 

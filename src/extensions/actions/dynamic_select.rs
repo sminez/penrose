@@ -1,15 +1,15 @@
 //! Dynamic selection based actions using Dmenu.
 use crate::{
+    WinId,
     builtin::actions::key_handler,
     core::{
+        State,
         bindings::KeyEventHandler,
         conn::{Conn, ConnExt},
-        State,
     },
     custom_error,
     extensions::util::dmenu::{DMenu, DMenuConfig, MenuMatch},
     x::XConn,
-    WinId,
 };
 use std::collections::HashMap;
 

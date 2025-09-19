@@ -17,34 +17,33 @@
 //! [1]: https://www.x.org/releases/X11R7.6/doc/xproto/x11protocol.html
 //! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt
 use crate::{
+    Error, Result, WinId,
     core::bindings::{KeyCode, MouseState},
     pure::geometry::{Point, Rect},
     x::{
-        self,
+        self, ClientAttr, ClientConfig, WinType, XConn, XEvent,
         atom::Atom,
         event::{ClientEventMask, ClientMessage, ClientMessageKind},
         property::{Prop, WindowAttributes, WmHints, WmNormalHints, WmState},
-        ClientAttr, ClientConfig, WinType, XConn, XEvent,
     },
-    Error, Result, WinId,
 };
 use std::{collections::HashMap, str::FromStr};
 use strum::IntoEnumIterator;
 use tracing::error;
 use x11rb::{
+    CURRENT_TIME,
     connection::Connection,
     protocol::{
         randr::{self, ConnectionExt as _, NotifyMask},
         xproto::{
-            AtomEnum, ChangeWindowAttributesAux, ClientMessageData, ClientMessageEvent,
-            ColormapAlloc, ConfigureWindowAux, ConnectionExt as _, CreateWindowAux, EventMask,
-            GrabMode, InputFocus, MapState, ModMask, PropMode, StackMode, WindowClass,
-            CLIENT_MESSAGE_EVENT,
+            AtomEnum, CLIENT_MESSAGE_EVENT, ChangeWindowAttributesAux, ClientMessageData,
+            ClientMessageEvent, ColormapAlloc, ConfigureWindowAux, ConnectionExt as _,
+            CreateWindowAux, EventMask, GrabMode, InputFocus, MapState, ModMask, PropMode,
+            StackMode, WindowClass,
         },
     },
     rust_connection::RustConnection,
     wrapper::ConnectionExt as _,
-    CURRENT_TIME,
 };
 
 #[cfg(feature = "x11rb-xcb")]

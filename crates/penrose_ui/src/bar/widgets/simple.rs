@@ -1,13 +1,13 @@
 //! Simple text based widgets built on top of Text
 use crate::{
+    Result,
     bar::widgets::{Text, TextStyle, Widget},
     core::Context,
-    Result,
 };
 use penrose::{
-    core::{conn::Conn, State},
+    core::{State, conn::Conn},
     pure::geometry::Rect,
-    x::{event::PropertyEvent, Atom, XConn, XEvent},
+    x::{Atom, XConn, XEvent, event::PropertyEvent},
 };
 
 /// A text widget that is set via updating the root window name a la dwm

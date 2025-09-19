@@ -3,13 +3,13 @@
 //! Manage hooks should _not_ trigger a refresh directly: that is handled by penrose
 //! itself when the manage hook is called.
 use crate::{
+    Result, WinId,
     core::{
+        State,
         conn::{Conn, Query},
         hooks::ManageHook,
-        State,
     },
     pure::geometry::{Rect, RelativeRect},
-    Result, WinId,
 };
 
 // A tuple of (query, manage hook) runs conditionally if the query holds

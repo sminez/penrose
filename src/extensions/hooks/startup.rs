@@ -1,9 +1,9 @@
 //! Startup hooks for direct adding to your penrose config.
 use crate::{
-    core::{conn::Conn, hooks::StateHook, State},
+    Result,
+    core::{State, conn::Conn, hooks::StateHook},
     util::spawn,
     x::{Atom, Prop, XConn},
-    Result,
 };
 use std::borrow::Cow;
 

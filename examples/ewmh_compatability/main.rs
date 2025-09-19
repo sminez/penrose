@@ -11,31 +11,32 @@
 #[cfg(not(target_os = "macos"))]
 use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{
             exit,
-            floating::{sink_focused, MouseDragHandler, MouseResizeHandler},
+            floating::{MouseDragHandler, MouseResizeHandler, sink_focused},
             log_current_state, modify_with, send_layout_message, spawn,
         },
         layout::{
+            MainAndStack,
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReflectHorizontal, ReserveTop},
-            MainAndStack,
         },
     },
     core::{
+        Config, WindowManager,
         bindings::{
-            click_handler, parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler,
-            MouseState,
+            KeyEventHandler, MouseEventHandler, MouseState, click_handler,
+            parse_keybindings_with_xmodmap,
         },
         layout::LayoutStack,
-        Config, WindowManager,
     },
     extensions::{
         actions::toggle_fullscreen,
-        hooks::{add_ewmh_hooks, SpawnOnStartup},
+        hooks::{SpawnOnStartup, add_ewmh_hooks},
     },
-    map, stack, Result,
+    map, stack,
 };
 
 use std::collections::HashMap;

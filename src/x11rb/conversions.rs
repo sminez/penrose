@@ -1,27 +1,27 @@
 //! Conversions to Penrose types from X11rb types
 use crate::{
+    Error, Result, WinId,
     core::bindings::{
         KeyCode, ModifierKey, MotionNotifyEvent, MouseButton, MouseEvent, MouseEventKind,
         MouseState,
     },
     pure::geometry::{Point, Rect},
     x::{
+        XConn, XEvent,
         event::{
             ClientEventMask, ClientMessage, ClientMessageData, ConfigureEvent, ExposeEvent,
             PointerChange, PropertyEvent, ResizeRequestEvent,
         },
-        XConn, XEvent,
     },
     x11rb::Conn,
-    Error, Result, WinId,
 };
 use strum::IntoEnumIterator;
 use tracing::warn;
 use x11rb::{
     connection::Connection,
     protocol::{
-        xproto::{ClientMessageEvent, KeyButMask, ModMask},
         ErrorKind, Event,
+        xproto::{ClientMessageEvent, KeyButMask, ModMask},
     },
     x11_utils::X11Error,
 };

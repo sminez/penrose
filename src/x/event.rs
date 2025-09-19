@@ -1,9 +1,9 @@
 //! Data types for working with X events
 use crate::{
+    Result, WinId,
     core::bindings::{KeyCode, MotionNotifyEvent, MouseEvent},
     pure::geometry::{Point, Rect},
     x::{Atom, XConn},
-    Result, WinId,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

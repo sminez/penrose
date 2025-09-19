@@ -1,13 +1,14 @@
 use crate::{
+    Error, Result, WinId,
     core::layout::LayoutStack,
     pop_where,
     pure::{
+        Position, Screen, Stack, Workspace,
         diff::{ScreenState, Snapshot},
         geometry::{Rect, RelativeRect, RelativeTo},
         workspace::check_workspace_invariants,
-        Position, Screen, Stack, Workspace,
     },
-    stack, Error, Result, WinId,
+    stack,
 };
 use std::{
     cmp::Ordering,
@@ -67,7 +68,7 @@ where
         match (workspaces.len(), screen_details.len()) {
             (_, 0) => return Err(Error::NoScreens),
             (n_ws, n_screens) if n_ws < n_screens => {
-                return Err(Error::InsufficientWorkspaces { n_ws, n_screens })
+                return Err(Error::InsufficientWorkspaces { n_ws, n_screens });
             }
             _ => (),
         }

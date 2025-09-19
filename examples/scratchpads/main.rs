@@ -4,20 +4,20 @@
 #[cfg(not(target_os = "macos"))]
 use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{exit, modify_with, send_layout_message, spawn},
         layout::messages::{ExpandMain, IncMain, ShrinkMain},
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
         Config, WindowManager,
+        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
     },
     extensions::hooks::{
-        add_named_scratchpads, manage::FloatingCentered, NamedScratchPad, ToggleNamedScratchPad,
+        NamedScratchPad, ToggleNamedScratchPad, add_named_scratchpads, manage::FloatingCentered,
     },
     map,
     x::query::ClassName,
-    Result,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};

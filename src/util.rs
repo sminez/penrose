@@ -1,8 +1,8 @@
 //! Utility functions for use in other parts of penrose
 use crate::{
-    core::layout::Layout,
-    pure::{geometry::Rect, Stack},
     Result, WinId,
+    core::layout::Layout,
+    pure::{Stack, geometry::Rect},
 };
 use std::{
     io::Read,

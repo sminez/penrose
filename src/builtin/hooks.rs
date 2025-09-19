@@ -1,6 +1,6 @@
 //! Built-in hooks
 use crate::{
-    core::{conn::Conn, hooks::LayoutHook, State, WinId},
+    core::{State, WinId, conn::Conn, hooks::LayoutHook},
     pure::geometry::Rect,
 };
 

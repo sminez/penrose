@@ -1,8 +1,9 @@
 //! Built-in layout transformers.
 use crate::{
+    WinId,
     core::layout::{Layout, LayoutTransformer},
     pure::geometry::Rect,
-    simple_transformer, WinId,
+    simple_transformer,
 };
 
 simple_transformer!(

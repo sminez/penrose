@@ -1,12 +1,12 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
+    Error, Result,
     core::{
-        conn::{Conn, WinId},
         State,
+        conn::{Conn, WinId},
     },
     pure::geometry::Point,
     x::XConn,
-    Error, Result,
 };
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;

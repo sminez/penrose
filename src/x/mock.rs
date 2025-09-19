@@ -2,14 +2,14 @@
 //! use in tests.
 //! This module and its contents are only available when testing.
 use crate::{
+    Result, WinId,
     core::bindings::{KeyCode, MouseState},
     pure::geometry::{Point, Rect},
     x::{
+        ClientAttr, ClientConfig, XConn,
         event::{ClientMessage, XEvent},
         property::{Prop, WindowAttributes, WmState},
-        ClientAttr, ClientConfig, XConn,
     },
-    Result, WinId,
 };
 
 /// All methods on this trait that return a Result unimplemented by

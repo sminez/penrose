@@ -4,20 +4,21 @@
 #[cfg(not(target_os = "macos"))]
 use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
         layout::{
+            MainAndStack,
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReflectHorizontal},
-            MainAndStack,
         },
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-        layout::LayoutStack,
         Config, WindowManager,
+        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
+        layout::LayoutStack,
     },
-    map, stack, Result,
+    map, stack,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};

@@ -6,16 +6,16 @@
 //! See details of the spec here:
 //!   <https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html>
 use crate::{
-    core::{conn::ConnExt, Config, State},
-    extensions::actions::{set_fullscreen_state, FullScreenAction},
+    Result, WinId,
+    core::{Config, State, conn::ConnExt},
+    extensions::actions::{FullScreenAction, set_fullscreen_state},
     pure::StackSet,
     x::{
+        XConn, XEvent,
         atom::Atom,
         event::{ClientMessage, ClientMessageData},
         property::Prop,
-        XConn, XEvent,
     },
-    Result, WinId,
 };
 use tracing::{debug, warn};
 

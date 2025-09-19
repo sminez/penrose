@@ -4,13 +4,14 @@
 //! layouts, only that they do not panic and crash the window manager when asked to
 //! layout unexpected inputs.
 use crate::{
+    WinId,
     builtin::layout::{
-        transformers::{ReflectHorizontal, ReflectVertical},
         CenteredMain, Grid, MainAndStack, Monocle,
+        transformers::{ReflectHorizontal, ReflectVertical},
     },
     core::layout::Layout,
-    pure::{geometry::Rect, Stack},
-    stack, WinId,
+    pure::{Stack, geometry::Rect},
+    stack,
 };
 use quickcheck::{Arbitrary, Gen};
 use quickcheck_macros::quickcheck;

@@ -11,21 +11,22 @@
 #[cfg(not(target_os = "macos"))]
 use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
         layout::{
+            MainAndStack, Monocle,
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReserveTop},
-            MainAndStack, Monocle,
         },
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-        layout::LayoutStack,
         Config, WindowManager,
+        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
+        layout::LayoutStack,
     },
     extensions::hooks::add_ewmh_hooks,
-    map, stack, Result,
+    map, stack,
 };
 #[cfg(not(target_os = "macos"))]
 use penrose_ui::{bar::Position, core::TextStyle, status_bar};

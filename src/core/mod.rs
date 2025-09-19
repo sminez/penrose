@@ -1,13 +1,13 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
-    core::conn::Conn,
-    pure::{geometry::Rect, Diff, ScreenClients, Snapshot, StackSet, Workspace},
     Color, Error, Result,
+    core::conn::Conn,
+    pure::{Diff, ScreenClients, Snapshot, StackSet, Workspace, geometry::Rect},
 };
-use anymap::{any::Any, AnyMap};
-use nix::sys::signal::{signal, SigHandler, Signal};
+use anymap::{AnyMap, any::Any};
+use nix::sys::signal::{SigHandler, Signal, signal};
 use std::{any::TypeId, cell::RefCell, collections::HashSet, fmt, sync::Arc};
-use tracing::{debug, error, info, span, trace, Level};
+use tracing::{Level, debug, error, info, span, trace};
 
 pub mod bindings;
 pub mod conn;
@@ -510,7 +510,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pure::{test_xid_stack_set, Position};
+    use crate::pure::{Position, test_xid_stack_set};
 
     fn stack_order(cs: &ClientSet) -> Vec<u32> {
         let positions = cs.visible_client_positions();

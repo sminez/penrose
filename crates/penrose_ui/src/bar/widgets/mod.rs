@@ -1,10 +1,10 @@
 //! Self rendering building blocks for text based UI elements
-use crate::{bar::schedule::UpdateSchedule, Context, Result, TextStyle};
+use crate::{Context, Result, TextStyle, bar::schedule::UpdateSchedule};
 use penrose::{
+    Color, WinId,
     core::State,
     pure::geometry::Rect,
     x::{XConn, XEvent},
-    Color, WinId,
 };
 use std::{
     fmt,

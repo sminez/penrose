@@ -4,15 +4,15 @@
 //! over the parent window's position in the Stack. When the child window closes, the
 //! parent is restored in its place.
 use crate::{
+    Result, WinId,
     core::{
+        State,
         conn::Query,
         conn::{Conn, ConnExt},
         hooks::EventHook,
-        State,
     },
-    pure::{geometry::RelativeRect, Stack},
+    pure::{Stack, geometry::RelativeRect},
     x::{XConn, XEvent},
-    Result, WinId,
 };
 use std::collections::HashMap;
 use tracing::{info, warn};

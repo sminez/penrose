@@ -1,8 +1,8 @@
 //! Higher order combinators for Layouts that allow for composing their behaviour
 use crate::{
-    core::layout::{Layout, Message},
-    pure::{geometry::Rect, Stack},
     WinId,
+    core::layout::{Layout, Message},
+    pure::{Stack, geometry::Rect},
 };
 use std::fmt;
 

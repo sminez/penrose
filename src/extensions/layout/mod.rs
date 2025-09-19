@@ -1,9 +1,9 @@
 //! Layout behaviour that is more specialised or complex than the builtin layouts.
 use crate::{
+    WinId,
     builtin::layout::messages::{ExpandMain, ShrinkMain},
     core::layout::{Layout, Message},
-    pure::{geometry::Rect, Stack},
-    WinId,
+    pure::{Stack, geometry::Rect},
 };
 
 mod combinators;

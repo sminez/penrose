@@ -1,12 +1,12 @@
-use crate::{core::SCREEN, Error, Result};
+use crate::{Error, Result, core::SCREEN};
 use fontconfig_sys::{
-    constants::{FC_CHARSET, FC_SCALABLE},
     FcCharSetAddChar, FcCharSetCreate, FcCharSetDestroy, FcConfig, FcConfigSubstitute,
     FcDefaultSubstitute, FcMatchPattern, FcPatternAddBool, FcPatternAddCharSet, FcPatternDestroy,
     FcPatternDuplicate,
+    constants::{FC_CHARSET, FC_SCALABLE},
 };
 use std::{
-    alloc::{alloc, dealloc, handle_alloc_error, Layout},
+    alloc::{Layout, alloc, dealloc, handle_alloc_error},
     collections::HashMap,
     ffi::CString,
 };

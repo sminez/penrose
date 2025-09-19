@@ -2,7 +2,7 @@
 use crate::bar::widgets::{Context, Result, Text, TextStyle, Widget};
 use penrose::{
     core::State,
-    extensions::util::debug::{summarise_state, CurrentStateConfig},
+    extensions::util::debug::{CurrentStateConfig, summarise_state},
     x::XConn,
 };
 

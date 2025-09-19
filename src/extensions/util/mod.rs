@@ -1,8 +1,8 @@
 //! Utility extensions for use in the penrose window manager
 use crate::{
+    Error, Result,
     pure::RelativePosition,
     util::{spawn, spawn_for_output, spawn_with_args},
-    Error, Result,
 };
 
 pub mod debug;

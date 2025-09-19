@@ -2,10 +2,10 @@
 use crate::{
     builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
     core::{
-        layout::{Layout, Message},
         WinId,
+        layout::{Layout, Message},
     },
-    pure::{geometry::Rect, Stack},
+    pure::{Stack, geometry::Rect},
 };
 
 pub mod messages;

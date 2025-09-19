@@ -1,10 +1,10 @@
 //! A lightweight and configurable status bar for penrose
-use crate::{core::Draw, Result};
+use crate::{Result, core::Draw};
 use penrose::{
+    Color, WinId,
     core::{State, WindowManager},
     pure::geometry::Rect,
-    x::{event::XEvent, Atom, ClientConfig, Prop, WinType, XConn},
-    Color, WinId,
+    x::{Atom, ClientConfig, Prop, WinType, XConn, event::XEvent},
 };
 use std::fmt;
 use tracing::{debug, error, info};
@@ -12,7 +12,7 @@ use tracing::{debug, error, info};
 pub mod schedule;
 pub mod widgets;
 
-use schedule::{run_update_schedules, UpdateSchedule};
+use schedule::{UpdateSchedule, run_update_schedules};
 use widgets::Widget;
 
 /// The position of a status bar

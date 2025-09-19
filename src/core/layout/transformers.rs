@@ -1,10 +1,10 @@
 use crate::{
-    builtin::layout::{messages::UnwrapTransformer, Monocle},
+    builtin::layout::{Monocle, messages::UnwrapTransformer},
     core::{
         conn::WinId,
-        layout::{messages::Message, Layout},
+        layout::{Layout, messages::Message},
     },
-    pure::{geometry::Rect, Stack},
+    pure::{Stack, geometry::Rect},
 };
 use std::mem::swap;
 

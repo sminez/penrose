@@ -1,9 +1,9 @@
 //! Debugging utilities for diagnosing issues with penrose.
 use crate::{
-    core::{hooks::StateHook, State},
+    Result,
+    core::{State, hooks::StateHook},
     extensions::util::notify_send,
     x::XConn,
-    Result,
 };
 
 /// Use `notify-send` to display details about the current Window Manager each
