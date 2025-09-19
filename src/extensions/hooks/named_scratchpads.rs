@@ -203,6 +203,8 @@ impl<C: Conn + 'static> KeyEventHandler<C> for ToggleNamedScratchPad {
             }
         }
 
+        drop(s);
+
         debug!(%id, %name, "running refresh following NamedScratchPad toggle");
         conn.refresh(state)
     }
