@@ -6,7 +6,11 @@ use crate::{
         ClientSet, Config, State,
     },
     pure::geometry::{Point, Rect},
-    x::{atom::AUTO_FLOAT_WINDOW_TYPES, event::ClientMessage, property::WmState},
+    x::{
+        atom::AUTO_FLOAT_WINDOW_TYPES,
+        event::{ClientMessage, ClientMessageKind},
+        property::{WmHints, WmState},
+    },
     Color, Result, Xid,
 };
 #[cfg(feature = "serde")]
@@ -644,8 +648,24 @@ fn set_window_visibility<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
 
 fn set_focus<X: XConn>(x: &X, state: &mut State<X>) -> Result<()> {
     if let Some(&id) = state.client_set.current_client() {
-        x.focus(id)
+        trace!(?id, "setting X11 focus to client");
+
+        // Use the same ICCCM focus protocol as focus_in handler
+        let accepts_input = match x.get_prop(id, Atom::WmHints.as_ref()) {
+            Ok(Some(Prop::WmHints(WmHints { accepts_input, .. }))) => accepts_input,
+            _ => true,
+        };
+
+        if accepts_input {
+            trace!(?id, accepts_input, "using direct focus (XSetInputFocus)");
+            x.focus(id)
+        } else {
+            trace!(?id, accepts_input, "using WM_TAKE_FOCUS protocol");
+            let msg = ClientMessageKind::TakeFocus(id).as_message(x)?;
+            x.send_client_message(msg)
+        }
     } else {
+        trace!("setting X11 focus to root window");
         x.focus(state.root)
     }
 }
