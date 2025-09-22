@@ -166,7 +166,21 @@ pub trait XConnExt: XConn + Sized {
     /// Remove the window manager state for the given client window and refresh the
     /// current X state.
     fn unmanage(&self, client: Xid, state: &mut State<Self>) -> Result<()> {
-        trace!(?client, "removing client");
+        let current_focus = state.client_set.current_client();
+        let contains_client = state.client_set.contains(&client);
+
+        if !contains_client {
+            trace!(client = ?client, "client not in managed set, skipping unmanage");
+            return Ok(());
+        }
+
+        trace!(
+            client = %client,
+            current_focus = ?current_focus,
+            contains_client,
+            "unmanaging client"
+        );
+
         self.modify_and_refresh(state, |cs| {
             cs.remove_client(&client);
         })
