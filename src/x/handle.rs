@@ -131,7 +131,7 @@ pub(crate) fn focus_in<X: XConn>(id: WinId, state: &mut State<X>, x: &mut X) -> 
     };
 
     if accepts_focus {
-        x.focus(id)?;
+        x.focus_client(id)?;
         let root = x.root();
         x.set_prop(root, Atom::NetActiveWindow.as_ref(), Prop::Window(vec![id]))?;
         x.set_active_client(id, state)?;

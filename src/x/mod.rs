@@ -301,18 +301,14 @@ where
         self.map(id)?;
 
         if state.client_set.contains(&id) {
-            state
-                .extension_or_default::<XConnState>()
-                .borrow_mut()
-                .mapped
-                .insert(id);
+            state.conn_state.mapped.insert(id);
         }
 
         Ok(())
     }
 
     fn hide_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()> {
-        if state.conn_state.mapped.contains(&id) {
+        if !state.conn_state.mapped.contains(&id) {
             return Ok(());
         }
 
