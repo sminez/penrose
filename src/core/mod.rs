@@ -11,7 +11,6 @@ use tracing::{Level, debug, error, info, span, trace};
 
 pub mod bindings;
 pub mod conn;
-pub(crate) mod handle;
 pub mod hooks;
 pub mod layout;
 

@@ -21,6 +21,7 @@ use tracing::{debug, info, trace, warn};
 
 pub mod atom;
 pub mod event;
+mod handle;
 pub mod property;
 pub mod query;
 
@@ -226,7 +227,6 @@ where
         mouse_bindings: &mut MouseBindings<Self>,
         state: &mut State<Self>,
     ) -> Result<()> {
-        use crate::core::handle;
         use XEvent::*;
 
         match evt {
