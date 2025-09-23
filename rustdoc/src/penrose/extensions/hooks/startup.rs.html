@@ -1,9 +1,9 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/hooks/startup.rs`."><title>startup.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../../static.files/storage-4e99c027.js"></script><script defer src="../../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">penrose/extensions/hooks/</div>startup.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Startup hooks for direct adding to your penrose config.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/extensions/hooks/startup.rs`."><title>startup.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-84e720fa.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="penrose" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0 (29483883e 2025-08-04)" data-channel="1.89.0" data-search-js="search-92309212.js" data-settings-js="settings-5514c975.js" ><script src="../../../../static.files/storage-4e99c027.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-fd3af306.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">penrose/extensions/hooks/</div>startup.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Startup hooks for direct adding to your penrose config.
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">use crate</span>::{
-<a href=#3 id=3 data-nosnippet>3</a>    core::{<span class="self">self</span>, hooks::StateHook, State},
-<a href=#4 id=4 data-nosnippet>4</a>    util::spawn,
-<a href=#5 id=5 data-nosnippet>5</a>    x::{Atom, Prop, XConn},
-<a href=#6 id=6 data-nosnippet>6</a>    <span class="prelude-ty">Result</span>,
+<a href=#3 id=3 data-nosnippet>3</a>    <span class="prelude-ty">Result</span>,
+<a href=#4 id=4 data-nosnippet>4</a>    core::{State, conn::Conn, hooks::StateHook},
+<a href=#5 id=5 data-nosnippet>5</a>    util::spawn,
+<a href=#6 id=6 data-nosnippet>6</a>    x::{Atom, Prop, XConn},
 <a href=#7 id=7 data-nosnippet>7</a>};
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>std::borrow::Cow;
 <a href=#9 id=9 data-nosnippet>9</a>
@@ -20,19 +20,19 @@
 <a href=#20 id=20 data-nosnippet>20</a>    }
 <a href=#21 id=21 data-nosnippet>21</a>
 <a href=#22 id=22 data-nosnippet>22</a>    <span class="doccomment">/// Create a new startup hook ready for adding to your Config
-<a href=#23 id=23 data-nosnippet>23</a>    </span><span class="kw">pub fn </span>boxed&lt;X&gt;(prog: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;) -&gt; Box&lt;<span class="kw">dyn </span>StateHook&lt;X&gt;&gt;
+<a href=#23 id=23 data-nosnippet>23</a>    </span><span class="kw">pub fn </span>boxed&lt;C&gt;(prog: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;) -&gt; Box&lt;<span class="kw">dyn </span>StateHook&lt;C&gt;&gt;
 <a href=#24 id=24 data-nosnippet>24</a>    <span class="kw">where
-<a href=#25 id=25 data-nosnippet>25</a>        </span>X: XConn,
+<a href=#25 id=25 data-nosnippet>25</a>        </span>C: Conn,
 <a href=#26 id=26 data-nosnippet>26</a>    {
 <a href=#27 id=27 data-nosnippet>27</a>        Box::new(<span class="self">Self</span>::new(prog))
 <a href=#28 id=28 data-nosnippet>28</a>    }
 <a href=#29 id=29 data-nosnippet>29</a>}
 <a href=#30 id=30 data-nosnippet>30</a>
-<a href=#31 id=31 data-nosnippet>31</a><span class="kw">impl</span>&lt;X&gt; StateHook&lt;X&gt; <span class="kw">for </span>SpawnOnStartup
+<a href=#31 id=31 data-nosnippet>31</a><span class="kw">impl</span>&lt;C&gt; StateHook&lt;C&gt; <span class="kw">for </span>SpawnOnStartup
 <a href=#32 id=32 data-nosnippet>32</a><span class="kw">where
-<a href=#33 id=33 data-nosnippet>33</a>    </span>X: XConn,
+<a href=#33 id=33 data-nosnippet>33</a>    </span>C: Conn,
 <a href=#34 id=34 data-nosnippet>34</a>{
-<a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, _x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>State&lt;C&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>C) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
 <a href=#36 id=36 data-nosnippet>36</a>        spawn(<span class="self">self</span>.prog.as_ref())
 <a href=#37 id=37 data-nosnippet>37</a>    }
 <a href=#38 id=38 data-nosnippet>38</a>}
@@ -58,9 +58,9 @@
 <a href=#58 id=58 data-nosnippet>58</a><span class="kw">where
 <a href=#59 id=59 data-nosnippet>59</a>    </span>X: XConn,
 <a href=#60 id=60 data-nosnippet>60</a>{
-<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">fn </span>call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;mut </span>X) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
 <a href=#62 id=62 data-nosnippet>62</a>        <span class="kw">for </span>id <span class="kw">in </span>x.existing_clients()<span class="question-mark">? </span>{
-<a href=#63 id=63 data-nosnippet>63</a>            <span class="kw">if </span>!state.client_set.contains(<span class="kw-2">&amp;</span>id) &amp;&amp; core::client_should_be_managed(id, x) {
+<a href=#63 id=63 data-nosnippet>63</a>            <span class="kw">if </span>!state.client_set.contains(<span class="kw-2">&amp;</span>id) &amp;&amp; x.client_should_be_managed(id) {
 <a href=#64 id=64 data-nosnippet>64</a>                <span class="kw">let </span>net_wm_state = Atom::NetWmState.as_ref();
 <a href=#65 id=65 data-nosnippet>65</a>                <span class="kw">let </span>full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())<span class="question-mark">?</span>;
 <a href=#66 id=66 data-nosnippet>66</a>                <span class="kw">let </span><span class="kw-2">mut </span>wstate = <span class="kw">match </span>x.get_prop(id, net_wm_state) {

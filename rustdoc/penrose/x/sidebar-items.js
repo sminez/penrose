@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ClientAttr","ClientConfig","WinType"],"mod":["atom","event","property","query"],"trait":["XConn","XConnExt"]};
+window.SIDEBAR_ITEMS = {"enum":["ClientAttr","ClientConfig","WinType"],"mod":["atom","event","property","query"],"struct":["XConnState"],"trait":["XConn"]};

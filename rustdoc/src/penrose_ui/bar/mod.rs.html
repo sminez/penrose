@@ -1,10 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/bar/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">penrose_ui/bar/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! A lightweight and configurable status bar for penrose
-<a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">use crate</span>::{core::Draw, <span class="prelude-ty">Result</span>};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/penrose_ui/src/bar/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-84e720fa.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="penrose_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0 (29483883e 2025-08-04)" data-channel="1.89.0" data-search-js="search-92309212.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-fd3af306.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">penrose_ui/bar/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! A lightweight and configurable status bar for penrose
+<a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">use crate</span>::{<span class="prelude-ty">Result</span>, core::Draw};
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>penrose::{
-<a href=#4 id=4 data-nosnippet>4</a>    core::{State, WindowManager},
-<a href=#5 id=5 data-nosnippet>5</a>    pure::geometry::Rect,
-<a href=#6 id=6 data-nosnippet>6</a>    x::{event::XEvent, Atom, ClientConfig, Prop, WinType, XConn},
-<a href=#7 id=7 data-nosnippet>7</a>    Color, Xid,
+<a href=#4 id=4 data-nosnippet>4</a>    Color, WinId,
+<a href=#5 id=5 data-nosnippet>5</a>    core::{State, WindowManager},
+<a href=#6 id=6 data-nosnippet>6</a>    pure::geometry::Rect,
+<a href=#7 id=7 data-nosnippet>7</a>    x::{Atom, ClientConfig, Prop, WinType, XConn, event::XEvent},
 <a href=#8 id=8 data-nosnippet>8</a>};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>std::fmt;
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>tracing::{debug, error, info};
@@ -12,7 +12,7 @@
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">pub mod </span>schedule;
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">pub mod </span>widgets;
 <a href=#14 id=14 data-nosnippet>14</a>
-<a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span>schedule::{run_update_schedules, UpdateSchedule};
+<a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span>schedule::{UpdateSchedule, run_update_schedules};
 <a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>widgets::Widget;
 <a href=#17 id=17 data-nosnippet>17</a>
 <a href=#18 id=18 data-nosnippet>18</a><span class="doccomment">/// The position of a status bar
@@ -109,7 +109,7 @@
 <a href=#109 id=109 data-nosnippet>109</a>    draw: Draw,
 <a href=#110 id=110 data-nosnippet>110</a>    position: Position,
 <a href=#111 id=111 data-nosnippet>111</a>    widgets: Widgets&lt;X&gt;,
-<a href=#112 id=112 data-nosnippet>112</a>    screens: Vec&lt;(Xid, u32)&gt;,
+<a href=#112 id=112 data-nosnippet>112</a>    screens: Vec&lt;(WinId, u32)&gt;,
 <a href=#113 id=113 data-nosnippet>113</a>    active_screen: usize,
 <a href=#114 id=114 data-nosnippet>114</a>    font: String,
 <a href=#115 id=115 data-nosnippet>115</a>    redrawn: bool,
@@ -226,7 +226,7 @@
 <a href=#226 id=226 data-nosnippet>226</a>
 <a href=#227 id=227 data-nosnippet>227</a>                <span class="prelude-val">Ok</span>((id, w))
 <a href=#228 id=228 data-nosnippet>228</a>            })
-<a href=#229 id=229 data-nosnippet>229</a>            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;(Xid, u32)&gt;&gt;&gt;()<span class="question-mark">?</span>;
+<a href=#229 id=229 data-nosnippet>229</a>            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;(WinId, u32)&gt;&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#230 id=230 data-nosnippet>230</a>
 <a href=#231 id=231 data-nosnippet>231</a>        <span class="prelude-val">Ok</span>(())
 <a href=#232 id=232 data-nosnippet>232</a>    }
@@ -295,7 +295,7 @@
 <a href=#295 id=295 data-nosnippet>295</a>}
 <a href=#296 id=296 data-nosnippet>296</a>
 <a href=#297 id=297 data-nosnippet>297</a><span class="doccomment">/// Run any widget startup actions and then redraw
-<a href=#298 id=298 data-nosnippet>298</a></span><span class="kw">pub fn </span>startup_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; penrose::Result&lt;()&gt; {
+<a href=#298 id=298 data-nosnippet>298</a></span><span class="kw">pub fn </span>startup_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;mut </span>X) -&gt; penrose::Result&lt;()&gt; {
 <a href=#299 id=299 data-nosnippet>299</a>    <span class="kw">let </span>s = state.extension::&lt;StatusBar&lt;X&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#300 id=300 data-nosnippet>300</a>    <span class="kw">let </span><span class="kw-2">mut </span>bar = s.borrow_mut();
 <a href=#301 id=301 data-nosnippet>301</a>
@@ -320,7 +320,7 @@
 <a href=#320 id=320 data-nosnippet>320</a>}
 <a href=#321 id=321 data-nosnippet>321</a>
 <a href=#322 id=322 data-nosnippet>322</a><span class="doccomment">/// Run any widget refresh actions and then redraw if needed
-<a href=#323 id=323 data-nosnippet>323</a></span><span class="kw">pub fn </span>refresh_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;</span>X) -&gt; penrose::Result&lt;()&gt; {
+<a href=#323 id=323 data-nosnippet>323</a></span><span class="kw">pub fn </span>refresh_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;, x: <span class="kw-2">&amp;mut </span>X) -&gt; penrose::Result&lt;()&gt; {
 <a href=#324 id=324 data-nosnippet>324</a>    <span class="kw">let </span>s = state.extension::&lt;StatusBar&lt;X&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#325 id=325 data-nosnippet>325</a>    <span class="kw">let </span><span class="kw-2">mut </span>bar = s.borrow_mut();
 <a href=#326 id=326 data-nosnippet>326</a>
@@ -351,7 +351,7 @@
 <a href=#351 id=351 data-nosnippet>351</a></span><span class="kw">pub fn </span>event_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(
 <a href=#352 id=352 data-nosnippet>352</a>    event: <span class="kw-2">&amp;</span>XEvent,
 <a href=#353 id=353 data-nosnippet>353</a>    state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
-<a href=#354 id=354 data-nosnippet>354</a>    x: <span class="kw-2">&amp;</span>X,
+<a href=#354 id=354 data-nosnippet>354</a>    x: <span class="kw-2">&amp;mut </span>X,
 <a href=#355 id=355 data-nosnippet>355</a>) -&gt; penrose::Result&lt;bool&gt; {
 <a href=#356 id=356 data-nosnippet>356</a>    <span class="kw">use </span>XEvent::{ConfigureNotify, RandrNotify};
 <a href=#357 id=357 data-nosnippet>357</a>
@@ -393,9 +393,9 @@
 <a href=#393 id=393 data-nosnippet>393</a>
 <a href=#394 id=394 data-nosnippet>394</a><span class="doccomment">/// Run any widget on_new_client actions and then redraw if needed
 <a href=#395 id=395 data-nosnippet>395</a></span><span class="kw">pub fn </span>manage_hook&lt;X: XConn + <span class="lifetime">'static</span>&gt;(
-<a href=#396 id=396 data-nosnippet>396</a>    id: Xid,
+<a href=#396 id=396 data-nosnippet>396</a>    id: WinId,
 <a href=#397 id=397 data-nosnippet>397</a>    state: <span class="kw-2">&amp;mut </span>State&lt;X&gt;,
-<a href=#398 id=398 data-nosnippet>398</a>    x: <span class="kw-2">&amp;</span>X,
+<a href=#398 id=398 data-nosnippet>398</a>    x: <span class="kw-2">&amp;mut </span>X,
 <a href=#399 id=399 data-nosnippet>399</a>) -&gt; penrose::Result&lt;()&gt; {
 <a href=#400 id=400 data-nosnippet>400</a>    <span class="kw">let </span>s = state.extension::&lt;StatusBar&lt;X&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#401 id=401 data-nosnippet>401</a>    <span class="kw">let </span><span class="kw-2">mut </span>bar = s.borrow_mut();

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["bindings","hooks","layout"],"struct":["Config","State","WindowManager","Xid"],"type":["ClientSet","ClientSpace"]};
+window.SIDEBAR_ITEMS = {"mod":["bindings","conn","hooks","layout"],"struct":["Config","State","WindowManager"],"type":["ClientSet","ClientSpace"]};

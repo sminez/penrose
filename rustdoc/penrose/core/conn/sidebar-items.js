@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["manage_without_refresh"],"struct":["AndQuery","NotQuery","OrQuery","WinId"],"trait":["Conn","ConnEvent","ConnExt","Query"]};
