@@ -1,9 +1,9 @@
 //! Configure workspaces to auto-spawn a set of windows if they are empty when they gain focus
 use crate::{
-    core::{hooks::StateHook, State},
+    Result,
+    core::{State, hooks::StateHook},
     util::spawn,
     x::XConn,
-    Result,
 };
 
 /// Specify a workspace by `tag` and use a named layout to spawn a set of default programs
@@ -40,7 +40,7 @@ impl<X> StateHook<X> for DefaultWorkspace
 where
     X: XConn,
 {
-    fn call(&mut self, state: &mut State<X>, _x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, _x: &mut X) -> Result<()> {
         let on_screen_and_empty = matches!(state.diff.after.visible.iter().find(|s| s.tag == self.tag), Some(s) if s.clients.is_empty());
 
         if on_screen_and_empty

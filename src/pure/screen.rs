@@ -1,6 +1,6 @@
 use crate::pure::{
-    geometry::{Rect, RelativeRect},
     Stack, Workspace,
+    geometry::{Rect, RelativeRect},
 };
 use std::{collections::HashMap, fmt, hash::Hash};
 

@@ -61,14 +61,24 @@
     issue_tracker_base_url = "https://github.com/sminez/penrose/issues/"
 )]
 
-#[cfg(feature = "x11rb")]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+use std::any::TypeId;
+
+#[cfg(all(
+    feature = "x11rb",
+    any(
+        target_os = "linux",
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd"
+    )
+))]
 use ::x11rb::{
     errors::{ConnectError, ConnectionError, ReplyError, ReplyOrIdError},
     x11_utils::X11Error,
 };
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-use std::any::TypeId;
 
 pub mod builtin;
 pub mod core;
@@ -77,11 +87,21 @@ mod macros;
 pub mod pure;
 pub mod util;
 pub mod x;
-#[cfg(feature = "x11rb")]
+
+#[cfg(all(
+    feature = "x11rb",
+    any(
+        target_os = "linux",
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd"
+    )
+))]
 pub mod x11rb;
 
 #[doc(inline)]
-pub use crate::core::Xid;
+pub use crate::core::WinId;
 
 /// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
@@ -89,7 +109,7 @@ pub enum Error {
     /// An operation requiring the client to be on a screen was requested on a client window that
     /// is not currently visible
     #[error("Client {0} is not currently visible")]
-    ClientIsNotVisible(Xid),
+    ClientIsNotVisible(WinId),
 
     /// A custom error message from user code or extensions
     #[error("{0}")]
@@ -137,7 +157,7 @@ pub enum Error {
     #[error("{ty} property '{prop}' for {id} contained invalid data")]
     InvalidPropertyData {
         /// The window that was queried
-        id: Xid,
+        id: WinId,
         /// The type of property that was queried
         ty: String,
         /// The name of the property that was queried
@@ -164,8 +184,8 @@ pub enum Error {
     Randr(String),
 
     /// An operation was requested on a client window that is unknown
-    #[error("No client with id={0}")]
-    UnknownClient(Xid),
+    #[error("Client {0} is not in found")]
+    UnknownClient(WinId),
 
     /// An operation was requested on a workspace tag that is unknown
     #[error("No workspace with tag={0}")]
@@ -203,27 +223,72 @@ pub enum Error {
     //       set of common error variants that they can be mapped to without
     //       needing to extend the enum conditionally when flags are enabled
     /// An error that occurred while connecting to an X11 server
-    #[cfg(feature = "x11rb")]
+    #[cfg(all(
+        feature = "x11rb",
+        any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "netbsd"
+        )
+    ))]
     #[error(transparent)]
     X11rbConnect(#[from] ConnectError),
 
     /// An error that occurred on an already established X11 connection
-    #[cfg(feature = "x11rb")]
+    #[cfg(all(
+        feature = "x11rb",
+        any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "netbsd"
+        )
+    ))]
     #[error(transparent)]
     X11rbConnection(#[from] ConnectionError),
 
     /// An error that occurred with some request.
-    #[cfg(feature = "x11rb")]
+    #[cfg(all(
+        feature = "x11rb",
+        any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "netbsd"
+        )
+    ))]
     #[error(transparent)]
     X11rbReplyError(#[from] ReplyError),
 
     /// An error caused by some request or by the exhaustion of IDs.
-    #[cfg(feature = "x11rb")]
+    #[cfg(all(
+        feature = "x11rb",
+        any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "netbsd"
+        )
+    ))]
     #[error(transparent)]
     X11rbReplyOrIdError(#[from] ReplyOrIdError),
 
     /// Representation of an X11 error packet that was sent by the server.
-    #[cfg(feature = "x11rb")]
+    #[cfg(all(
+        feature = "x11rb",
+        any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "netbsd"
+        )
+    ))]
     #[error("X11 error: {0:?}")]
     X11rbX11Error(X11Error),
 }

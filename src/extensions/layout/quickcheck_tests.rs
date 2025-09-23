@@ -5,17 +5,17 @@
 //! layout unexpected inputs.
 //!
 //! NOTE: See penrose::builtin::layout::quickcheck_tests for the Arbitrary impls for
-//!       Stack<Xid> and Rect.
+//!       Stack<WinId> and Rect.
 use crate::{
+    WinId,
     core::layout::Layout,
     extensions::layout::{Fibonacci, Tatami},
-    pure::{geometry::Rect, Stack},
-    Xid,
+    pure::{Stack, geometry::Rect},
 };
 use quickcheck_macros::quickcheck;
 
 #[quickcheck]
-fn fibonacci_doesnt_panic(r: Rect, stack: Stack<Xid>, ratio: u8) -> bool {
+fn fibonacci_doesnt_panic(r: Rect, stack: Stack<WinId>, ratio: u8) -> bool {
     let ratio = ((ratio % 10) as f32) / 10.0;
     let (_, positions) = Fibonacci::new(40, ratio, 0.1).layout(&stack, r);
 
@@ -23,7 +23,7 @@ fn fibonacci_doesnt_panic(r: Rect, stack: Stack<Xid>, ratio: u8) -> bool {
 }
 
 #[quickcheck]
-fn tatami_doesnt_panic(r: Rect, stack: Stack<Xid>, ratio: u8) -> bool {
+fn tatami_doesnt_panic(r: Rect, stack: Stack<WinId>, ratio: u8) -> bool {
     let ratio = ((ratio % 10) as f32) / 10.0;
     let (_, positions) = Tatami::new(ratio, 0.1).layout(&stack, r);
 

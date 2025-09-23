@@ -1,9 +1,7 @@
 //! Built-in hooks
 use crate::{
-    core::{hooks::LayoutHook, State},
+    core::{State, WinId, conn::Conn, hooks::LayoutHook},
     pure::geometry::Rect,
-    x::XConn,
-    Xid,
 };
 
 /// Simple gaps around the window placement of the enclosed [Layout][crate::core::layout::Layout].
@@ -23,8 +21,8 @@ pub struct SpacingHook {
     pub bottom_px: u32,
 }
 
-impl<X: XConn> LayoutHook<X> for SpacingHook {
-    fn transform_initial(&mut self, mut r: Rect, _: &State<X>, _: &X) -> Rect {
+impl<C: Conn> LayoutHook<C> for SpacingHook {
+    fn transform_initial(&mut self, mut r: Rect, _: &State<C>, _: &mut C) -> Rect {
         if r.w == 0 || r.h == 0 {
             return r;
         }
@@ -38,10 +36,10 @@ impl<X: XConn> LayoutHook<X> for SpacingHook {
     fn transform_positions(
         &mut self,
         _: Rect,
-        positions: Vec<(Xid, Rect)>,
-        _: &State<X>,
-        _: &X,
-    ) -> Vec<(Xid, Rect)> {
+        positions: Vec<(WinId, Rect)>,
+        _: &State<C>,
+        _: &mut C,
+    ) -> Vec<(WinId, Rect)> {
         positions
             .into_iter()
             .map(|(id, r)| (id, shrink(r, self.inner_px)))

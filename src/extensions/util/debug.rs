@@ -1,9 +1,9 @@
 //! Debugging utilities for diagnosing issues with penrose.
 use crate::{
-    core::{hooks::StateHook, State},
+    Result,
+    core::{State, hooks::StateHook},
     extensions::util::notify_send,
     x::XConn,
-    Result,
 };
 
 /// Use `notify-send` to display details about the current Window Manager each
@@ -12,7 +12,7 @@ use crate::{
 pub struct NotfyState(pub CurrentStateConfig);
 
 impl<X: XConn> StateHook<X> for NotfyState {
-    fn call(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
         let msg = summarise_state(state, &self.0);
 
         notify_send("Current State", msg)
@@ -77,7 +77,7 @@ pub fn summarise_state<X: XConn>(state: &State<X>, cfg: &CurrentStateConfig) -> 
     }
 
     if cfg.n_mapped_clients {
-        fields.push(format!("n_mapped={}", state.mapped.len()));
+        fields.push(format!("n_mapped={}", state.mapped_clients().len()));
     }
 
     if cfg.line_per_stat {

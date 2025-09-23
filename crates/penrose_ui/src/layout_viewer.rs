@@ -1,12 +1,12 @@
 //! A simple UI for view the results of a given Layout implementation
 use crate::{Draw, Result};
 use penrose::{
+    Color, WinId,
     builtin::layout::transformers::Gaps,
     core::layout::Layout,
-    pure::{geometry::Rect, Stack},
+    pure::{Stack, geometry::Rect},
     x::{Atom, WinType, XConn},
     x11rb::RustConn,
-    Color, Xid,
 };
 use std::{thread::sleep, time::Duration};
 
@@ -17,7 +17,7 @@ const FONT: &str = "mono";
 #[derive(Debug)]
 pub struct LayoutViewer {
     drw: Draw,
-    win: Xid,
+    win: WinId,
     r: Rect,
     focused: Color,
     unfocused: Color,
@@ -33,7 +33,7 @@ impl LayoutViewer {
         unfocused: impl Into<Color>,
         text: impl Into<Color>,
     ) -> Result<Self> {
-        let conn = RustConn::new()?;
+        let mut conn = RustConn::new()?;
         let screen_rects = conn.screen_details()?;
         let r_screen = screen_rects.last().unwrap();
 
@@ -59,7 +59,7 @@ impl LayoutViewer {
     pub fn render_layout_with_stack(
         &mut self,
         layout: &mut Box<dyn Layout>,
-        stack: &Stack<Xid>,
+        stack: &Stack<WinId>,
         display_ms: u64,
     ) -> Result<()> {
         let focus = *stack.focused();
@@ -91,7 +91,7 @@ impl LayoutViewer {
     /// between the clients.
     pub fn showcase_layouts(
         &mut self,
-        mut s: Stack<Xid>,
+        mut s: Stack<WinId>,
         layouts: &[Box<dyn Layout>],
         gap_px: u32,
         display_ms: u64,

@@ -3,7 +3,7 @@ use penrose::{
     builtin::layout::{CenteredMain, Grid, MainAndStack, Monocle},
     core::layout::Layout,
     extensions::layout::{Fibonacci, Tatami},
-    pure::{geometry::Rect, Stack},
+    pure::{Stack, geometry::Rect},
 };
 use simple_test_case::dir_cases;
 use simple_txtar::{Archive, Builder};

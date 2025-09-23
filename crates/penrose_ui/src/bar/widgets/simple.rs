@@ -1,13 +1,13 @@
 //! Simple text based widgets built on top of Text
 use crate::{
+    Result,
     bar::widgets::{Text, TextStyle, Widget},
     core::Context,
-    Result,
 };
 use penrose::{
-    core::State,
+    core::{State, conn::Conn},
     pure::geometry::Rect,
-    x::{event::PropertyEvent, Atom, XConn, XConnExt, XEvent},
+    x::{Atom, XConn, XEvent, event::PropertyEvent},
 };
 
 /// A text widget that is set via updating the root window name a la dwm
@@ -42,14 +42,14 @@ impl<X: XConn> Widget<X> for RootWindowName {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_event(&mut self, event: &XEvent, _: &mut State<X>, x: &X) -> Result<()> {
+    fn on_event(&mut self, event: &XEvent, _: &mut State<X>, x: &mut X) -> Result<()> {
         let name_props = [Atom::NetWmName.as_ref(), Atom::WmName.as_ref()];
 
         match event {
             XEvent::PropertyNotify(PropertyEvent {
                 id, atom, is_root, ..
             }) if *is_root && name_props.contains(&atom.as_ref()) => {
-                self.inner.set_text(x.window_title(*id)?)
+                self.inner.set_text(x.client_title(*id)?)
             }
 
             _ => (),
@@ -108,9 +108,9 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         if let Some(id) = state.client_set.current_client() {
-            self.set_text(&x.window_title(*id)?)
+            self.set_text(&x.client_title(*id)?)
         } else {
             self.set_text("")
         }
@@ -118,7 +118,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
         Ok(())
     }
 
-    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_event(&mut self, event: &XEvent, state: &mut State<X>, x: &mut X) -> Result<()> {
         let name_props = [Atom::NetWmName.as_ref(), Atom::WmName.as_ref()];
 
         if let Some(focused) = state.client_set.current_client() {
@@ -126,7 +126,7 @@ impl<X: XConn> Widget<X> for ActiveWindowName {
                 XEvent::PropertyNotify(PropertyEvent { id, atom, .. })
                     if id == focused && name_props.contains(&atom.as_ref()) =>
                 {
-                    self.set_text(&x.window_title(*id)?)
+                    self.set_text(&x.client_title(*id)?)
                 }
 
                 _ => (),
@@ -169,7 +169,7 @@ impl<X: XConn> Widget<X> for CurrentLayout {
         Widget::<X>::require_draw(&self.inner)
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, _: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
         let layout_name = state.client_set.current_workspace().layout_name();
         self.inner.set_text(format!("[{layout_name}]"));
 

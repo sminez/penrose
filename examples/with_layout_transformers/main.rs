@@ -1,27 +1,29 @@
 //! penrose :: layout transformers
 //!
 //! Layouts can be wrapped with transformers that modify their behaviour.
+#[cfg(not(target_os = "macos"))]
+use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
         layout::{
+            MainAndStack,
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReflectHorizontal},
-            MainAndStack,
         },
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-        layout::LayoutStack,
         Config, WindowManager,
+        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
+        layout::LayoutStack,
     },
     map, stack,
-    x11rb::RustConn,
-    Result,
 };
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
+#[cfg(not(target_os = "macos"))]
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| format!("C-{k}");
@@ -62,6 +64,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     raw_bindings
 }
 
+#[cfg(not(target_os = "macos"))]
 fn layouts() -> LayoutStack {
     let max_main = 1;
     let ratio = 0.6;
@@ -77,6 +80,7 @@ fn layouts() -> LayoutStack {
     .map(|layout| Gaps::wrap(layout, outer_px, inner_px))
 }
 
+#[cfg(not(target_os = "macos"))]
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("trace")
@@ -93,4 +97,9 @@ fn main() -> Result<()> {
     let wm = WindowManager::new(config, key_bindings, HashMap::new(), conn)?;
 
     wm.run()
+}
+
+#[cfg(target_os = "macos")]
+fn main() -> Result<()> {
+    panic!("not supported on OSX");
 }

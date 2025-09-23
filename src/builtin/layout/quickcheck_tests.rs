@@ -4,28 +4,29 @@
 //! layouts, only that they do not panic and crash the window manager when asked to
 //! layout unexpected inputs.
 use crate::{
+    WinId,
     builtin::layout::{
-        transformers::{ReflectHorizontal, ReflectVertical},
         CenteredMain, Grid, MainAndStack, Monocle,
+        transformers::{ReflectHorizontal, ReflectVertical},
     },
     core::layout::Layout,
-    pure::{geometry::Rect, Stack},
-    stack, Xid,
+    pure::{Stack, geometry::Rect},
+    stack,
 };
 use quickcheck::{Arbitrary, Gen};
 use quickcheck_macros::quickcheck;
 use std::collections::HashSet;
 
 // Focus is always `42` and elements are unique.
-impl Arbitrary for Stack<Xid> {
+impl Arbitrary for Stack<WinId> {
     fn arbitrary(g: &mut Gen) -> Self {
-        let mut up: Vec<Xid> = HashSet::<u32>::arbitrary(g)
+        let mut up: Vec<WinId> = HashSet::<u32>::arbitrary(g)
             .into_iter()
             .filter(|&n| n != 42)
             .map(Into::into)
             .collect();
 
-        let focus = Xid(42);
+        let focus = WinId(42);
         if up.is_empty() {
             return stack!(focus); // return a minimal stack as we don't allow empty
         }
@@ -53,14 +54,14 @@ impl Arbitrary for Rect {
 }
 
 #[quickcheck]
-fn monocle_doesnt_panic(r: Rect, stack: Stack<Xid>) -> bool {
+fn monocle_doesnt_panic(r: Rect, stack: Stack<WinId>) -> bool {
     let (_, positions) = Monocle.layout(&stack, r);
 
     !positions.is_empty()
 }
 
 #[quickcheck]
-fn grid_doesnt_panic(r: Rect, stack: Stack<Xid>) -> bool {
+fn grid_doesnt_panic(r: Rect, stack: Stack<WinId>) -> bool {
     let (_, positions) = Grid.layout(&stack, r);
 
     !positions.is_empty()
@@ -70,7 +71,7 @@ mod main_and_stack {
     use super::*;
 
     #[quickcheck]
-    fn side_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn side_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = MainAndStack::side_unboxed(n, ratio, 0.1, false).layout(&stack, r);
 
@@ -78,7 +79,7 @@ mod main_and_stack {
     }
 
     #[quickcheck]
-    fn side_mirrored_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn side_mirrored_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = MainAndStack::side_unboxed(n, ratio, 0.1, true).layout(&stack, r);
 
@@ -86,7 +87,7 @@ mod main_and_stack {
     }
 
     #[quickcheck]
-    fn bottom_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn bottom_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = MainAndStack::bottom_unboxed(n, ratio, 0.1, false).layout(&stack, r);
 
@@ -94,7 +95,7 @@ mod main_and_stack {
     }
 
     #[quickcheck]
-    fn bottom_mirrored_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn bottom_mirrored_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = MainAndStack::bottom_unboxed(n, ratio, 0.1, true).layout(&stack, r);
 
@@ -106,7 +107,7 @@ mod centered_main {
     use super::*;
 
     #[quickcheck]
-    fn vertical_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn vertical_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = CenteredMain::vertical_unboxed(n, ratio, 0.1).layout(&stack, r);
 
@@ -114,7 +115,7 @@ mod centered_main {
     }
 
     #[quickcheck]
-    fn horizontal_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn horizontal_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) = CenteredMain::horizontal_unboxed(n, ratio, 0.1).layout(&stack, r);
 
@@ -126,7 +127,7 @@ mod transformers {
     use super::*;
 
     #[quickcheck]
-    fn reflect_h_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn reflect_h_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) =
             ReflectHorizontal::wrap(MainAndStack::side(n, ratio, 0.1)).layout(&stack, r);
@@ -135,7 +136,7 @@ mod transformers {
     }
 
     #[quickcheck]
-    fn reflect_v_doesnt_panic(r: Rect, stack: Stack<Xid>, n: u32, ratio: u8) -> bool {
+    fn reflect_v_doesnt_panic(r: Rect, stack: Stack<WinId>, n: u32, ratio: u8) -> bool {
         let ratio = ((ratio % 10) as f32) / 10.0;
         let (_, positions) =
             ReflectVertical::wrap(MainAndStack::side(n, ratio, 0.1)).layout(&stack, r);

@@ -1,9 +1,12 @@
 //! Setting up and responding to user defined key/mouse bindings
 use crate::{
-    core::{State, Xid},
+    Error, Result,
+    core::{
+        State,
+        conn::{Conn, WinId},
+    },
     pure::geometry::Point,
     x::XConn,
-    Error, Result,
 };
 #[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
@@ -84,67 +87,77 @@ where
 }
 
 /// Some action to be run by a user key binding
-pub trait KeyEventHandler<X>
+pub trait KeyEventHandler<C>: Send
 where
-    X: XConn,
+    C: Conn,
 {
     /// Call this handler with the current window manager state
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()>;
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()>;
 }
 
-impl<X: XConn> fmt::Debug for Box<dyn KeyEventHandler<X>> {
+impl<C: Conn> fmt::Debug for Box<dyn KeyEventHandler<C>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("KeyEventHandler").finish()
     }
 }
 
-impl<F, X> KeyEventHandler<X> for F
+impl<F, C> KeyEventHandler<C> for F
 where
-    F: FnMut(&mut State<X>, &X) -> Result<()>,
-    X: XConn,
+    F: FnMut(&mut State<C>, &mut C) -> Result<()> + Send,
+    C: Conn,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        (self)(state, x)
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
+        (self)(state, conn)
     }
 }
 
 /// User defined key bindings
-pub type KeyBindings<X> = HashMap<KeyCode, Box<dyn KeyEventHandler<X>>>;
+pub type KeyBindings<C> = HashMap<KeyCode, Box<dyn KeyEventHandler<C>>>;
 
 /// An action to be run in response to a mouse event
-pub trait MouseEventHandler<X>
+pub trait MouseEventHandler<C>: Send
 where
-    X: XConn,
+    C: Conn,
 {
     /// Called when the [MouseState] associated with this handler is seen with a button press or
     /// release.
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()>;
+    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<C>, x: &mut C) -> Result<()>;
 
     /// Called when the [ModifierKey]s associated with this handler are seen when the mouse is
     /// moving.
-    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<X>, x: &X) -> Result<()>;
+    fn on_motion(
+        &mut self,
+        evt: &MotionNotifyEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()>;
 }
 
-impl<X: XConn> fmt::Debug for Box<dyn MouseEventHandler<X>> {
+impl<C: Conn> fmt::Debug for Box<dyn MouseEventHandler<C>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MouseEventHandler").finish()
     }
 }
 
-impl<F, X> MouseEventHandler<X> for F
+impl<F, C> MouseEventHandler<C> for F
 where
-    F: FnMut(&mut State<X>, &X) -> Result<()>,
-    X: XConn,
+    F: FnMut(&mut State<C>, &C) -> Result<()> + Send,
+    C: Conn,
 {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         if evt.kind == MouseEventKind::Press {
-            (self)(state, x)
+            (self)(state, conn)
         } else {
             Ok(())
         }
     }
 
-    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<X>, _: &X) -> Result<()> {
+    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<C>, _: &mut C) -> Result<()> {
         Ok(())
     }
 }
@@ -162,32 +175,37 @@ where
 ///
 /// let handler: Box<dyn MouseEventHandler<RustConn>> =  click_handler(sink_all());
 /// ```
-pub fn click_handler<X: XConn + 'static>(
-    kh: Box<dyn KeyEventHandler<X>>,
-) -> Box<dyn MouseEventHandler<X>> {
+pub fn click_handler<C: Conn + 'static>(
+    kh: Box<dyn KeyEventHandler<C>>,
+) -> Box<dyn MouseEventHandler<C>> {
     Box::new(MouseWrapper { inner: kh })
 }
 
-struct MouseWrapper<X: XConn> {
-    inner: Box<dyn KeyEventHandler<X>>,
+struct MouseWrapper<C: Conn> {
+    inner: Box<dyn KeyEventHandler<C>>,
 }
 
-impl<X: XConn> MouseEventHandler<X> for MouseWrapper<X> {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
+impl<C: Conn> MouseEventHandler<C> for MouseWrapper<C> {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
         if evt.kind == MouseEventKind::Press {
-            self.inner.call(state, x)
+            self.inner.call(state, conn)
         } else {
             Ok(())
         }
     }
 
-    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<X>, _: &X) -> Result<()> {
+    fn on_motion(&mut self, _: &MotionNotifyEvent, _: &mut State<C>, _: &mut C) -> Result<()> {
         Ok(())
     }
 }
 
 /// User defined mouse bindings
-pub type MouseBindings<X> = HashMap<MouseState, Box<dyn MouseEventHandler<X>>>;
+pub type MouseBindings<C> = HashMap<MouseState, Box<dyn MouseEventHandler<C>>>;
 
 /// Abstraction layer for working with key presses
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -408,7 +426,7 @@ pub enum MouseEventKind {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MouseEventData {
     /// The ID of the window that was contained the click
-    pub id: Xid,
+    pub id: WinId,
     /// Absolute coordinate of the event
     pub rpt: Point,
     /// Coordinate of the event relative to top-left of the window itself
@@ -430,7 +448,7 @@ pub struct MouseEvent {
 impl MouseEvent {
     /// Construct a new [MouseEvent] from raw data
     pub fn new(
-        id: Xid,
+        id: WinId,
         rx: i16,
         ry: i16,
         ex: i16,
@@ -462,7 +480,7 @@ pub struct MotionNotifyEvent {
 
 impl MotionNotifyEvent {
     /// Construct a new [MotionNotifyEvent] from raw data
-    pub fn new(id: Xid, rx: i16, ry: i16, ex: i16, ey: i16, modifiers: Vec<ModifierKey>) -> Self {
+    pub fn new(id: WinId, rx: i16, ry: i16, ex: i16, ey: i16, modifiers: Vec<ModifierKey>) -> Self {
         MotionNotifyEvent {
             data: MouseEventData {
                 id,

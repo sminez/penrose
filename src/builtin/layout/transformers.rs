@@ -1,8 +1,9 @@
 //! Built-in layout transformers.
 use crate::{
+    WinId,
     core::layout::{Layout, LayoutTransformer},
     pure::geometry::Rect,
-    simple_transformer, Xid,
+    simple_transformer,
 };
 
 simple_transformer!(
@@ -12,7 +13,7 @@ simple_transformer!(
     "Reflected"
 );
 
-fn reflect_horizontal(r_s: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+fn reflect_horizontal(r_s: Rect, positions: Vec<(WinId, Rect)>) -> Vec<(WinId, Rect)> {
     let offset = (r_s.x + r_s.w as i32 / 2) * 2;
 
     positions
@@ -31,7 +32,7 @@ simple_transformer!(
     "Flipped"
 );
 
-fn reflect_vertical(r: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+fn reflect_vertical(r: Rect, positions: Vec<(WinId, Rect)>) -> Vec<(WinId, Rect)> {
     let offset = (r.y + r.h as i32 / 2) * 2;
 
     positions
@@ -95,7 +96,11 @@ impl LayoutTransformer for Gaps {
         shrink(r, self.outer_px)
     }
 
-    fn transform_positions(&mut self, _: Rect, positions: Vec<(Xid, Rect)>) -> Vec<(Xid, Rect)> {
+    fn transform_positions(
+        &mut self,
+        _: Rect,
+        positions: Vec<(WinId, Rect)>,
+    ) -> Vec<(WinId, Rect)> {
         positions
             .into_iter()
             .map(|(id, r)| (id, shrink(r, self.inner_px)))
@@ -155,9 +160,9 @@ mod tests {
     #[test]
     fn reflect_horizontal(original: Rect, expected: Rect) {
         let r = Rect::new(0, 0, 100, 200);
-        let transformed = reflect_horizontal(r, vec![(Xid(1), original)]);
+        let transformed = reflect_horizontal(r, vec![(WinId(1), original)]);
 
-        assert_eq!(transformed, vec![(Xid(1), expected)]);
+        assert_eq!(transformed, vec![(WinId(1), expected)]);
     }
 
     #[test_case(Rect::new(0, 0, 100, 200), Rect::new(0, 0, 100, 200); "fullscreen is idempotent")]
@@ -168,8 +173,8 @@ mod tests {
     #[test]
     fn reflect_vertical(original: Rect, expected: Rect) {
         let r = Rect::new(0, 0, 100, 200);
-        let transformed = reflect_vertical(r, vec![(Xid(1), original)]);
+        let transformed = reflect_vertical(r, vec![(WinId(1), original)]);
 
-        assert_eq!(transformed, vec![(Xid(1), expected)]);
+        assert_eq!(transformed, vec![(WinId(1), expected)]);
     }
 }

@@ -1,10 +1,10 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
+    Error, Result, WinId,
     builtin::actions::{key_handler, modify_with},
-    core::{bindings::KeyEventHandler, layout::LayoutStack, State},
+    core::{State, bindings::KeyEventHandler, conn::ConnExt, layout::LayoutStack},
     util::spawn,
-    x::{atom::Atom, property::Prop, ClientConfig, XConn, XConnExt},
-    Error, Result, Xid,
+    x::{ClientConfig, XConn, atom::Atom, property::Prop},
 };
 use tracing::{debug, error};
 
@@ -26,10 +26,10 @@ pub enum FullScreenAction {
 
 /// Set the fullscreen state of a particular client
 pub fn set_fullscreen_state<X: XConn>(
-    id: Xid,
+    id: WinId,
     action: FullScreenAction,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> Result<()> {
     use FullScreenAction::*;
 
@@ -75,7 +75,7 @@ pub fn set_fullscreen_state<X: XConn>(
 ///   [0]: crate::extensions::hooks::add_ewmh_hooks
 ///   [1]: crate::extensions::hooks::startup::ClearFsPropOnStartup
 pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|state, x: &X| {
+    key_handler(|state, x: &mut X| {
         let id = match state.client_set.current_client() {
             Some(&id) => id,
             None => return Ok(()),
@@ -143,15 +143,15 @@ pub fn focus_or_spawn<X>(class: &'static str, command: &'static str) -> Box<dyn 
 where
     X: XConn,
 {
-    key_handler(move |s: &mut State<X>, x: &X| {
+    key_handler(move |s: &mut State<X>, x: &mut X| {
         let mut client = None;
 
         for &id in s.client_set.clients() {
-            if let Some(Prop::UTF8String(classes)) = x.get_prop(id, Atom::WmClass.as_ref())? {
-                if classes.iter().any(|s| s == class) {
-                    client = Some(id);
-                    break;
-                }
+            if let Some(Prop::UTF8String(classes)) = x.get_prop(id, Atom::WmClass.as_ref())?
+                && classes.iter().any(|s| s == class)
+            {
+                client = Some(id);
+                break;
             }
         }
 

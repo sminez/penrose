@@ -3,38 +3,41 @@
 //! Manage hooks should _not_ trigger a refresh directly: that is handled by penrose
 //! itself when the manage hook is called.
 use crate::{
-    core::{hooks::ManageHook, State},
+    Result, WinId,
+    core::{
+        State,
+        conn::{Conn, Query},
+        hooks::ManageHook,
+    },
     pure::geometry::{Rect, RelativeRect},
-    x::{Query, XConn},
-    Result, Xid,
 };
 
 // A tuple of (query, manage hook) runs conditionally if the query holds
 // for the window being managed.
-impl<X, Q, H> ManageHook<X> for (Q, H)
+impl<C, Q, H> ManageHook<C> for (Q, H)
 where
-    X: XConn,
-    Q: Query<X>,
-    H: ManageHook<X>,
+    C: Conn,
+    Q: Query<C>,
+    H: ManageHook<C>,
 {
-    fn call(&mut self, id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-        if self.0.run(id, x)? {
-            self.1.call(id, state, x)?;
+    fn call(&mut self, id: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
+        if self.0.run(id, conn)? {
+            self.1.call(id, state, conn)?;
         }
 
         Ok(())
     }
 }
 
-fn float<X: XConn>(client: Xid, r: Rect, state: &mut State<X>, _: &X) -> Result<()> {
+fn float<C: Conn>(client: WinId, r: Rect, state: &mut State<C>, _: &mut C) -> Result<()> {
     state.client_set.float(client, r)
 }
 
 /// Perform no additional actions when managing a new client.
 #[derive(Debug)]
 pub struct DefaultTiled;
-impl<X: XConn> ManageHook<X> for DefaultTiled {
-    fn call(&mut self, _client: Xid, _state: &mut State<X>, _x: &X) -> Result<()> {
+impl<C: Conn> ManageHook<C> for DefaultTiled {
+    fn call(&mut self, _client: WinId, _state: &mut State<C>, _: &mut C) -> Result<()> {
         Ok(())
     }
 }
@@ -42,9 +45,9 @@ impl<X: XConn> ManageHook<X> for DefaultTiled {
 /// Float clients at a fixed position on the screen.
 #[derive(Debug)]
 pub struct FloatingFixed(pub Rect);
-impl<X: XConn> ManageHook<X> for FloatingFixed {
-    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-        float(client, self.0, state, x)
+impl<C: Conn> ManageHook<C> for FloatingFixed {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
+        float(client, self.0, state, conn)
     }
 }
 
@@ -69,8 +72,8 @@ impl FloatingCentered {
     }
 }
 
-impl<X: XConn> ManageHook<X> for FloatingCentered {
-    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+impl<C: Conn> ManageHook<C> for FloatingCentered {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         let r_screen = &state.client_set.screens.focus.r;
         let r = r_screen
             .scale_h(self.h)
@@ -78,7 +81,7 @@ impl<X: XConn> ManageHook<X> for FloatingCentered {
             .centered_in(r_screen)
             .expect("bounds checks in FloatingCentered::new to be upheld");
 
-        float(client, r, state, x)
+        float(client, r, state, conn)
     }
 }
 
@@ -92,20 +95,20 @@ impl FloatingRelative {
     }
 }
 
-impl<X: XConn> ManageHook<X> for FloatingRelative {
-    fn call(&mut self, client: Xid, state: &mut State<X>, x: &X) -> Result<()> {
+impl<C: Conn> ManageHook<C> for FloatingRelative {
+    fn call(&mut self, client: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
         let r_screen = &state.client_set.screens.focus.r;
         let r = self.0.applied_to(r_screen);
 
-        float(client, r, state, x)
+        float(client, r, state, conn)
     }
 }
 
 /// Move the specified client to the named workspace.
 #[derive(Debug)]
 pub struct SetWorkspace(pub &'static str);
-impl<X: XConn> ManageHook<X> for SetWorkspace {
-    fn call(&mut self, client: Xid, state: &mut State<X>, _: &X) -> Result<()> {
+impl<C: Conn> ManageHook<C> for SetWorkspace {
+    fn call(&mut self, client: WinId, state: &mut State<C>, _: &mut C) -> Result<()> {
         state.client_set.move_client_to_tag(&client, self.0);
         Ok(())
     }

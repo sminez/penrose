@@ -15,7 +15,7 @@ env:
 
 jobs:
   test:
-    name: Test Rust ${{ matrix.rust }}
+    name: Test Rust ${{ matrix.rust }} (features=${{ matrix.features }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

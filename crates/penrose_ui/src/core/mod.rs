@@ -13,25 +13,25 @@
 //!   [1]: crate::bar::widgets::Widget
 use crate::{Error, Result};
 use penrose::{
+    Color, WinId,
     pure::geometry::{Point, Rect},
     x::{WinType, XConn},
     x11rb::RustConn,
-    Color, Xid,
 };
 use std::{
-    alloc::{alloc, dealloc, handle_alloc_error, Layout},
+    alloc::{Layout, alloc, dealloc, handle_alloc_error},
     cmp::max,
-    collections::{hash_map::Entry, HashMap},
+    collections::{HashMap, hash_map::Entry},
     ffi::CString,
 };
 use tracing::{debug, info};
 use x11::{
     xft::{XftColor, XftColorAllocName, XftDraw, XftDrawCreate, XftDrawDestroy, XftDrawStringUtf8},
     xlib::{
-        CapButt, Complex, CoordModeOrigin, Display, Drawable, False, JoinMiter, LineSolid, Window,
-        XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth, XDefaultVisual,
-        XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap, XOpenDisplay, XPoint,
-        XSetForeground, XSetGraphicsExposures, XSetLineAttributes, XSync, GC,
+        CapButt, Complex, CoordModeOrigin, Display, Drawable, False, GC, JoinMiter, LineSolid,
+        Window, XCopyArea, XCreateGC, XCreatePixmap, XDefaultColormap, XDefaultDepth,
+        XDefaultVisual, XDrawRectangle, XFillPolygon, XFillRectangle, XFreeGC, XFreePixmap,
+        XOpenDisplay, XPoint, XSetForeground, XSetGraphicsExposures, XSetLineAttributes, XSync,
     },
 };
 
@@ -68,8 +68,11 @@ impl Surface {
     /// SAFETY: dpy must be non-null
     pub(crate) unsafe fn flush(&self, dpy: *mut Display) {
         let Rect { w, h, .. } = self.r;
-        XCopyArea(dpy, self.drawable, self.id, self.gc, 0, 0, w, h, 0, 0);
-        XSync(dpy, False);
+        // SAFETY: dpy must be non-null
+        unsafe {
+            XCopyArea(dpy, self.drawable, self.id, self.gc, 0, 0, w, h, 0, 0);
+            XSync(dpy, False);
+        }
     }
 }
 
@@ -135,7 +138,7 @@ pub struct Draw {
     dpy: *mut Display,
     fss: HashMap<String, Fontset>,
     bg: Color,
-    surfaces: HashMap<Xid, Surface>,
+    surfaces: HashMap<WinId, Surface>,
     colors: HashMap<Color, XColor>,
     active_font: String,
 }
@@ -198,7 +201,7 @@ impl Draw {
     ///
     /// Destroying this window should be carried out using the `destroy_window_and_surface` method
     /// so that the associated graphics state is also cleaned up correctly.
-    pub fn new_window(&mut self, ty: WinType, r: Rect, managed: bool) -> Result<Xid> {
+    pub fn new_window(&mut self, ty: WinType, r: Rect, managed: bool) -> Result<WinId> {
         info!(?ty, ?r, %managed, "creating new window");
         let id = self.conn.create_window(ty, r, managed)?;
 
@@ -230,7 +233,7 @@ impl Draw {
 
     /// Destroy the specified window along with any surface and graphics context state held
     /// within this draw.
-    pub fn destroy_window_and_surface(&mut self, id: Xid) -> Result<()> {
+    pub fn destroy_window_and_surface(&mut self, id: WinId) -> Result<()> {
         if let Some(s) = self.surfaces.remove(&id) {
             self.conn.destroy_window(id)?;
             // SAFETY: the pointers being freed are known to be non-null
@@ -262,11 +265,11 @@ impl Draw {
         Ok(())
     }
 
-    /// Retrieve the drawing [Context] for the given window `Xid`.
+    /// Retrieve the drawing [Context] for the given window `WinId`.
     ///
     /// This method will error if the requested id does not already have an initialised surface.
     /// See the `new_window` method for details.
-    pub fn context_for(&mut self, id: Xid) -> Result<Context<'_>> {
+    pub fn context_for(&mut self, id: WinId) -> Result<Context<'_>> {
         let s = self
             .surfaces
             .get(&id)
@@ -287,7 +290,7 @@ impl Draw {
     }
 
     /// Flush any pending requests to the X server and map the specifed window to the screen.
-    pub fn flush(&self, id: Xid) -> Result<()> {
+    pub fn flush(&mut self, id: WinId) -> Result<()> {
         if let Some(s) = self.surfaces.get(&id) {
             // SAFETY: self.dpy is non-null
             unsafe { s.flush(self.dpy) };
@@ -554,19 +557,23 @@ impl XColor {
 unsafe fn try_xftcolor_from_name(dpy: *mut Display, color: &str) -> Result<*mut XftColor> {
     // https://doc.rust-lang.org/std/alloc/trait.GlobalAlloc.html#tymethod.alloc
     let layout = Layout::new::<XftColor>();
-    let ptr = alloc(layout);
+    // SAFETY: layout size is non-zero
+    let ptr = unsafe { alloc(layout) };
     if ptr.is_null() {
         handle_alloc_error(layout);
     }
 
     let c_name = CString::new(color)?;
-    let res = XftColorAllocName(
-        dpy,
-        XDefaultVisual(dpy, SCREEN),
-        XDefaultColormap(dpy, SCREEN),
-        c_name.as_ptr(),
-        ptr as *mut XftColor,
-    );
+    // SAFETY: pointers are non-null
+    let res = unsafe {
+        XftColorAllocName(
+            dpy,
+            XDefaultVisual(dpy, SCREEN),
+            XDefaultColormap(dpy, SCREEN),
+            c_name.as_ptr(),
+            ptr as *mut XftColor,
+        )
+    };
 
     if res == 0 {
         Err(Error::UnableToAllocateColor)

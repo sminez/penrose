@@ -1,10 +1,14 @@
 //! Support for managing multiple floating scratchpad programs that can be
 //! toggled on or off on the active workspace.
 use crate::{
-    core::{bindings::KeyEventHandler, hooks::ManageHook, State, WindowManager},
+    Result, WinId,
+    core::{
+        State, WindowManager,
+        bindings::KeyEventHandler,
+        conn::{Conn, ConnExt, Query},
+        hooks::ManageHook,
+    },
     util::spawn,
-    x::{Query, XConn, XConnExt, XEvent},
-    Result, Xid,
 };
 use std::{borrow::Cow, collections::HashMap, fmt};
 use tracing::{debug, error, warn};
@@ -14,18 +18,18 @@ use tracing::{debug, error, warn};
 pub const NSP_TAG: &str = "NSP";
 
 /// A toggle-able client program that can be shown and hidden via a keybinding.
-pub struct NamedScratchPad<X>
+pub struct NamedScratchPad<C>
 where
-    X: XConn,
+    C: Conn,
 {
     name: Cow<'static, str>,
     prog: Cow<'static, str>,
-    client: Option<Xid>,
-    query: Box<dyn Query<X>>,
-    hook: Box<dyn ManageHook<X>>,
+    client: Option<WinId>,
+    query: Box<dyn Query<C>>,
+    hook: Box<dyn ManageHook<C>>,
 }
 
-impl<X: XConn> fmt::Debug for NamedScratchPad<X> {
+impl<C: Conn> fmt::Debug for NamedScratchPad<C> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NamedScratchpad")
             .field("name", &self.name)
@@ -35,9 +39,9 @@ impl<X: XConn> fmt::Debug for NamedScratchPad<X> {
     }
 }
 
-impl<X> NamedScratchPad<X>
+impl<C> NamedScratchPad<C>
 where
-    X: XConn,
+    C: Conn,
 {
     /// Create a new named scratchpad.
     pub fn new<Q, H>(
@@ -48,8 +52,8 @@ where
         run_hook_on_toggle: bool,
     ) -> (Self, ToggleNamedScratchPad)
     where
-        Q: Query<X> + 'static,
-        H: ManageHook<X> + 'static,
+        Q: Query<C> + 'static,
+        H: ManageHook<C> + 'static,
     {
         let name = name.into();
         let nsp = Self {
@@ -71,18 +75,18 @@ where
 }
 
 // Private wrapper type to ensure that only this module can access this state extension
-struct NamedScratchPadState<X: XConn>(HashMap<Cow<'static, str>, NamedScratchPad<X>>);
+struct NamedScratchPadState<C: Conn>(HashMap<Cow<'static, str>, NamedScratchPad<C>>);
 
 /// Add the required hooks to manage EWMH compliance to an existing [crate::core::Config].
 ///
 /// See the module level docs for details of what functionality is provided by
 /// this extension.
-pub fn add_named_scratchpads<X>(
-    mut wm: WindowManager<X>,
-    scratchpads: Vec<NamedScratchPad<X>>,
-) -> WindowManager<X>
+pub fn add_named_scratchpads<C>(
+    mut wm: WindowManager<C>,
+    scratchpads: Vec<NamedScratchPad<C>>,
+) -> WindowManager<C>
 where
-    X: XConn + 'static,
+    C: Conn + 'static,
 {
     let state: HashMap<_, _> = scratchpads
         .into_iter()
@@ -95,20 +99,20 @@ where
         .add_invisible_workspace(NSP_TAG)
         .expect("named scratchpad tag to be unique");
     wm.state.config.compose_or_set_manage_hook(manage_hook);
-    wm.state.config.compose_or_set_event_hook(event_hook);
+    wm.state.config.compose_or_set_refresh_hook(refresh_hook);
 
     wm
 }
 
 /// Store clients matching NamedScratchPad queries and run the associated [ManageHook].
-pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> Result<()> {
-    let s = state.extension::<NamedScratchPadState<X>>()?;
+pub fn manage_hook<C: Conn + 'static>(id: WinId, state: &mut State<C>, conn: &mut C) -> Result<()> {
+    let s = state.extension::<NamedScratchPadState<C>>()?;
 
     for sp in s.borrow_mut().0.values_mut() {
-        if sp.client.is_none() && sp.query.run(id, x)? {
+        if sp.client.is_none() && sp.query.run(id, conn)? {
             debug!(scratchpad=sp.name.as_ref(), %id, "matched query for named scratchpad");
             sp.client = Some(id);
-            return sp.hook.call(id, state, x);
+            return sp.hook.call(id, state, conn);
         }
     }
 
@@ -116,23 +120,20 @@ pub fn manage_hook<X: XConn + 'static>(id: Xid, state: &mut State<X>, x: &X) -> 
 }
 
 /// Remove destroyed clients from internal scratchpad state
-pub fn event_hook<X: XConn + 'static>(event: &XEvent, state: &mut State<X>, _: &X) -> Result<bool> {
-    let destroyed = match event {
-        XEvent::Destroy(id) => id,
-        _ => return Ok(true),
-    };
-
-    let s = state.extension::<NamedScratchPadState<X>>()?;
-
+pub fn refresh_hook<C: Conn + 'static>(state: &mut State<C>, _: &mut C) -> Result<()> {
+    let s = state.extension::<NamedScratchPadState<C>>()?;
     for sp in s.borrow_mut().0.values_mut() {
-        if sp.client == Some(*destroyed) {
-            debug!(%sp.name, %destroyed, "scratchpad client destroyed");
-            sp.client = None;
-            break;
+        match sp.client {
+            Some(id) if !state.client_set.contains(&id) => {
+                debug!(%sp.name, %id, "scratchpad client destroyed");
+                sp.client = None;
+                break;
+            }
+            _ => (),
         }
     }
 
-    Ok(true)
+    Ok(())
 }
 
 /// Toggle the visibility of a NamedScratchPad.
@@ -146,10 +147,10 @@ pub struct ToggleNamedScratchPad {
     run_hook_on_toggle: bool,
 }
 
-impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
-    #[tracing::instrument(level = "debug", skip(state, x))]
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
-        let _s = state.extension::<NamedScratchPadState<X>>()?;
+impl<C: Conn + 'static> KeyEventHandler<C> for ToggleNamedScratchPad {
+    #[tracing::instrument(level = "debug", skip(state, conn))]
+    fn call(&mut self, state: &mut State<C>, conn: &mut C) -> Result<()> {
+        let _s = state.extension::<NamedScratchPadState<C>>()?;
         let mut s = _s.borrow_mut();
         let name = self.name.as_ref();
 
@@ -195,14 +196,16 @@ impl<X: XConn + 'static> KeyEventHandler<X> for ToggleNamedScratchPad {
             debug!(%id, "current workspace does not contain target client: moving to tag");
             state.client_set.move_client_to_current_tag(&id);
 
-            if self.run_hook_on_toggle {
-                if let Err(e) = hook.call(id, state, x) {
-                    error!(%e, %name, %id, "unable to run NSP manage hook during toggle");
-                }
+            if self.run_hook_on_toggle
+                && let Err(e) = hook.call(id, state, conn)
+            {
+                error!(%e, %name, %id, "unable to run NSP manage hook during toggle");
             }
         }
 
+        drop(s);
+
         debug!(%id, %name, "running refresh following NamedScratchPad toggle");
-        x.refresh(state)
+        conn.refresh(state)
     }
 }

@@ -1,23 +1,23 @@
 //! Actions for manipulating floating windows.
 use crate::{
+    Result,
     builtin::actions::{key_handler, modify_with},
     core::{
+        State, WinId,
         bindings::{
             KeyEventHandler, MotionNotifyEvent, MouseEvent, MouseEventHandler, MouseEventKind,
         },
-        State,
+        conn::{Conn, ConnExt},
     },
     custom_error,
     pure::geometry::{Point, Rect},
-    x::{XConn, XConnExt},
-    Result, Xid,
 };
 use tracing::error;
 
 /// Resize a currently floating window by a given (width, height) delta
 ///
 /// Screen coordinates are 0-indexed from the top left corner of the sceen.
-pub fn resize<X: XConn>(dw: i32, dh: i32) -> Box<dyn KeyEventHandler<X>> {
+pub fn resize<C: Conn>(dw: i32, dh: i32) -> Box<dyn KeyEventHandler<C>> {
     modify_with(move |cs| {
         let id = match cs.current_client() {
             Some(&id) => id,
@@ -36,7 +36,7 @@ pub fn resize<X: XConn>(dw: i32, dh: i32) -> Box<dyn KeyEventHandler<X>> {
 /// Move a currently floating window by a given (x, y) delta
 ///
 /// Screen coordinates are 0-indexed from the top left corner of the sceen.
-pub fn reposition<X: XConn>(dx: i32, dy: i32) -> Box<dyn KeyEventHandler<X>> {
+pub fn reposition<C: Conn>(dx: i32, dy: i32) -> Box<dyn KeyEventHandler<C>> {
     modify_with(move |cs| {
         let id = match cs.current_client() {
             Some(&id) => id,
@@ -53,16 +53,16 @@ pub fn reposition<X: XConn>(dx: i32, dy: i32) -> Box<dyn KeyEventHandler<X>> {
 }
 
 /// Move the currently focused window to the floating layer in its current on screen position
-pub fn float_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|state, x: &X| {
+pub fn float_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
+    key_handler(|state, conn: &mut C| {
         let id = match state.client_set.current_client() {
             Some(&id) => id,
             None => return Ok(()),
         };
 
-        let r = x.client_geometry(id)?;
+        let r = conn.client_geometry(id)?;
 
-        x.modify_and_refresh(state, |cs| {
+        conn.modify_and_refresh(state, |cs| {
             if let Err(err) = cs.float(id, r) {
                 error!(%err, %id, "unable to float requested client window");
             }
@@ -71,7 +71,7 @@ pub fn float_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 }
 
 /// Sink the current window back into tiling mode if it was floating
-pub fn sink_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
+pub fn sink_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
     modify_with(|cs| {
         let id = match cs.current_client() {
             Some(&id) => id,
@@ -83,16 +83,16 @@ pub fn sink_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 }
 
 /// Sink the current window if it was floating, float it if it was tiled.
-pub fn toggle_floating_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|state, x: &X| {
+pub fn toggle_floating_focused<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
+    key_handler(|state, conn: &mut C| {
         let id = match state.client_set.current_client() {
             Some(&id) => id,
             None => return Ok(()),
         };
 
-        let r = x.client_geometry(id)?;
+        let r = conn.client_geometry(id)?;
 
-        x.modify_and_refresh(state, |cs| {
+        conn.modify_and_refresh(state, |cs| {
             if let Err(err) = cs.toggle_floating_state(id, r) {
                 error!(%err, %id, "unable to float requested client window");
             }
@@ -101,11 +101,11 @@ pub fn toggle_floating_focused<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 }
 
 /// Float all windows in their current tiled position
-pub fn float_all<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
-    key_handler(|state, x: &X| {
-        let positions = state.visible_client_positions(x);
+pub fn float_all<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
+    key_handler(|state, conn: &mut C| {
+        let positions = state.visible_client_positions(conn);
 
-        x.modify_and_refresh(state, |cs| {
+        conn.modify_and_refresh(state, |cs| {
             for &(id, r) in positions.iter() {
                 if let Err(err) = cs.float(id, r) {
                     error!(%err, %id, "unable to float requested client window");
@@ -116,7 +116,7 @@ pub fn float_all<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 }
 
 /// Sink all floating windows back into their tiled positions
-pub fn sink_all<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
+pub fn sink_all<C: Conn>() -> Box<dyn KeyEventHandler<C>> {
     modify_with(|cs| cs.floating.clear())
 }
 
@@ -128,13 +128,13 @@ struct ClickData {
 }
 
 impl ClickData {
-    fn on_motion<X: XConn>(
+    fn on_motion<C: Conn>(
         &self,
         f: impl Fn(&mut Rect, i32, i32),
-        id: Xid,
+        id: WinId,
         rpt: Point,
-        state: &mut State<X>,
-        x: &X,
+        state: &mut State<C>,
+        conn: &mut C,
     ) -> Result<()> {
         let (dx, dy) = (rpt.x - self.x_initial, rpt.y - self.y_initial);
 
@@ -149,7 +149,7 @@ impl ClickData {
         //    mouse button is released and the default position_clients logic
         //    runs using the Rect that we store above.
         let border = state.config.border_width;
-        x.position_client(id, r.shrink_in(border))?;
+        conn.position_client(id, r.shrink_in(border))?;
 
         Ok(())
     }
@@ -160,17 +160,17 @@ trait ClickWrapper {
 
     fn motion_fn(&self) -> impl Fn(&mut Rect, i32, i32);
 
-    fn on_mouse_event<X: XConn>(
+    fn on_mouse_event<C: Conn>(
         &mut self,
         evt: &MouseEvent,
-        state: &mut State<X>,
-        x: &X,
+        state: &mut State<C>,
+        conn: &mut C,
     ) -> Result<()> {
         let id = evt.data.id;
 
         match evt.kind {
             MouseEventKind::Press => {
-                let r_client = x.client_geometry(id)?;
+                let r_client = conn.client_geometry(id)?;
                 state.client_set.float(id, r_client)?;
                 *self.data() = Some(ClickData {
                     x_initial: evt.data.rpt.x,
@@ -185,14 +185,14 @@ trait ClickWrapper {
         Ok(())
     }
 
-    fn on_motion<X: XConn>(
+    fn on_motion<C: Conn>(
         &mut self,
         evt: &MotionNotifyEvent,
-        state: &mut State<X>,
-        x: &X,
+        state: &mut State<C>,
+        conn: &mut C,
     ) -> Result<()> {
         match *self.data() {
-            Some(data) => data.on_motion(self.motion_fn(), evt.data.id, evt.data.rpt, state, x),
+            Some(data) => data.on_motion(self.motion_fn(), evt.data.id, evt.data.rpt, state, conn),
             None => Err(custom_error!("mouse motion without held state")),
         }
     }
@@ -206,7 +206,7 @@ pub struct MouseDragHandler {
 
 impl MouseDragHandler {
     /// Construct a boxed [MouseEventHandler] trait object ready to be added to your bindings
-    pub fn boxed_default<X: XConn>() -> Box<dyn MouseEventHandler<X>> {
+    pub fn boxed_default<C: Conn>() -> Box<dyn MouseEventHandler<C>> {
         Box::<MouseDragHandler>::default()
     }
 }
@@ -221,13 +221,23 @@ impl ClickWrapper for MouseDragHandler {
     }
 }
 
-impl<X: XConn> MouseEventHandler<X> for MouseDragHandler {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
-        ClickWrapper::on_mouse_event(self, evt, state, x)
+impl<C: Conn> MouseEventHandler<C> for MouseDragHandler {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
+        ClickWrapper::on_mouse_event(self, evt, state, conn)
     }
 
-    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<X>, x: &X) -> Result<()> {
-        ClickWrapper::on_motion(self, evt, state, x)
+    fn on_motion(
+        &mut self,
+        evt: &MotionNotifyEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
+        ClickWrapper::on_motion(self, evt, state, conn)
     }
 }
 
@@ -239,7 +249,7 @@ pub struct MouseResizeHandler {
 
 impl MouseResizeHandler {
     /// Construct a boxed [MouseEventHandler] trait object ready to be added to your bindings
-    pub fn boxed_default<X: XConn>() -> Box<dyn MouseEventHandler<X>> {
+    pub fn boxed_default<C: Conn>() -> Box<dyn MouseEventHandler<C>> {
         Box::<MouseResizeHandler>::default()
     }
 }
@@ -254,12 +264,22 @@ impl ClickWrapper for MouseResizeHandler {
     }
 }
 
-impl<X: XConn> MouseEventHandler<X> for MouseResizeHandler {
-    fn on_mouse_event(&mut self, evt: &MouseEvent, state: &mut State<X>, x: &X) -> Result<()> {
-        ClickWrapper::on_mouse_event(self, evt, state, x)
+impl<C: Conn> MouseEventHandler<C> for MouseResizeHandler {
+    fn on_mouse_event(
+        &mut self,
+        evt: &MouseEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
+        ClickWrapper::on_mouse_event(self, evt, state, conn)
     }
 
-    fn on_motion(&mut self, evt: &MotionNotifyEvent, state: &mut State<X>, x: &X) -> Result<()> {
-        ClickWrapper::on_motion(self, evt, state, x)
+    fn on_motion(
+        &mut self,
+        evt: &MotionNotifyEvent,
+        state: &mut State<C>,
+        conn: &mut C,
+    ) -> Result<()> {
+        ClickWrapper::on_motion(self, evt, state, conn)
     }
 }

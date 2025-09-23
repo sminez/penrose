@@ -8,38 +8,41 @@
 //! hooks into your existing Config before starting the window manager. If you want
 //! to modify the support, each of the individual hooks can be found in
 //! `penrose::extensions::hooks::ewmh`.
+#[cfg(not(target_os = "macos"))]
+use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{
             exit,
-            floating::{sink_focused, MouseDragHandler, MouseResizeHandler},
+            floating::{MouseDragHandler, MouseResizeHandler, sink_focused},
             log_current_state, modify_with, send_layout_message, spawn,
         },
         layout::{
+            MainAndStack,
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReflectHorizontal, ReserveTop},
-            MainAndStack,
         },
     },
     core::{
+        Config, WindowManager,
         bindings::{
-            click_handler, parse_keybindings_with_xmodmap, KeyEventHandler, MouseEventHandler,
-            MouseState,
+            KeyEventHandler, MouseEventHandler, MouseState, click_handler,
+            parse_keybindings_with_xmodmap,
         },
         layout::LayoutStack,
-        Config, WindowManager,
     },
     extensions::{
         actions::toggle_fullscreen,
-        hooks::{add_ewmh_hooks, SpawnOnStartup},
+        hooks::{SpawnOnStartup, add_ewmh_hooks},
     },
     map, stack,
-    x11rb::RustConn,
-    Result,
 };
+
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
 
+#[cfg(not(target_os = "macos"))]
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_owned();
@@ -82,6 +85,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     raw_bindings
 }
 
+#[cfg(not(target_os = "macos"))]
 fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>> {
     use penrose::core::bindings::{
         ModifierKey::{Meta, Shift},
@@ -97,7 +101,7 @@ fn mouse_bindings() -> HashMap<MouseState, Box<dyn MouseEventHandler<RustConn>>>
     }
 }
 
-fn layouts() -> LayoutStack {
+pub fn layouts() -> LayoutStack {
     let max_main = 1;
     let ratio = 0.6;
     let ratio_step = 0.1;
@@ -113,6 +117,7 @@ fn layouts() -> LayoutStack {
     .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, outer_px, inner_px), top_px))
 }
 
+#[cfg(not(target_os = "macos"))]
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("trace")
@@ -133,4 +138,9 @@ fn main() -> Result<()> {
     let wm = WindowManager::new(config, key_bindings, mouse_bindings(), conn)?;
 
     wm.run()
+}
+
+#[cfg(target_os = "macos")]
+fn main() -> Result<()> {
+    panic!("not supported on OSX");
 }

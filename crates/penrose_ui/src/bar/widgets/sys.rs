@@ -160,7 +160,7 @@ pub mod helpers {
 /// These will update themselves every time that the window manager refreshes its internal state.
 /// To update on a specified interval instead, see the [interval] module instead.
 pub mod refresh {
-    use crate::bar::widgets::{sys::helpers, RefreshText, TextStyle};
+    use crate::bar::widgets::{RefreshText, TextStyle, sys::helpers};
 
     /// Display the current charge level and status of a named battery.
     ///
@@ -198,7 +198,7 @@ pub mod refresh {
 /// These will update themselves based on the interval provided. To update when the window manager
 /// refreshes its internal state, see the [refresh] module instead.
 pub mod interval {
-    use crate::bar::widgets::{sys::helpers, IntervalText, TextStyle};
+    use crate::bar::widgets::{IntervalText, TextStyle, sys::helpers};
     use std::time::Duration;
 
     /// Display the current charge level and status of a named battery.

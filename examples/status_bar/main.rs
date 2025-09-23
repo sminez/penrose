@@ -7,25 +7,28 @@
 //!
 //! For more customisation options, see the `bar` module of the `penrose_ui` crate in
 //! the `/crates` directory.
+
+#[cfg(not(target_os = "macos"))]
+use penrose::x11rb::RustConn;
 use penrose::{
+    Result,
     builtin::{
         actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
         layout::{
+            MainAndStack, Monocle,
             messages::{ExpandMain, IncMain, ShrinkMain},
             transformers::{Gaps, ReserveTop},
-            MainAndStack, Monocle,
         },
     },
     core::{
-        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
-        layout::LayoutStack,
         Config, WindowManager,
+        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
+        layout::LayoutStack,
     },
     extensions::hooks::add_ewmh_hooks,
     map, stack,
-    x11rb::RustConn,
-    Result,
 };
+#[cfg(not(target_os = "macos"))]
 use penrose_ui::{bar::Position, core::TextStyle, status_bar};
 use std::collections::HashMap;
 use tracing_subscriber::{self, prelude::*};
@@ -43,6 +46,7 @@ const OUTER_PX: u32 = 5;
 const INNER_PX: u32 = 5;
 const BAR_HEIGHT_PX: u32 = 18;
 
+#[cfg(not(target_os = "macos"))]
 fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     let mut raw_bindings = map! {
         map_keys: |k: &str| k.to_owned();
@@ -83,6 +87,7 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
     raw_bindings
 }
 
+#[cfg(not(target_os = "macos"))]
 fn layouts() -> LayoutStack {
     stack!(
         MainAndStack::side(MAX_MAIN, RATIO, RATIO_STEP),
@@ -93,6 +98,7 @@ fn layouts() -> LayoutStack {
     .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, OUTER_PX, INNER_PX), BAR_HEIGHT_PX))
 }
 
+#[cfg(not(target_os = "macos"))]
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("debug")
@@ -122,4 +128,9 @@ fn main() -> Result<()> {
     )?);
 
     wm.run()
+}
+
+#[cfg(target_os = "macos")]
+fn main() -> Result<()> {
+    panic!("not supported on OSX");
 }

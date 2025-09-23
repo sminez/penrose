@@ -1,10 +1,10 @@
 //! A lightweight and configurable status bar for penrose
-use crate::{core::Draw, Result};
+use crate::{Result, core::Draw};
 use penrose::{
+    Color, WinId,
     core::{State, WindowManager},
     pure::geometry::Rect,
-    x::{event::XEvent, Atom, ClientConfig, Prop, WinType, XConn},
-    Color, Xid,
+    x::{Atom, ClientConfig, Prop, WinType, XConn, event::XEvent},
 };
 use std::fmt;
 use tracing::{debug, error, info};
@@ -12,7 +12,7 @@ use tracing::{debug, error, info};
 pub mod schedule;
 pub mod widgets;
 
-use schedule::{run_update_schedules, UpdateSchedule};
+use schedule::{UpdateSchedule, run_update_schedules};
 use widgets::Widget;
 
 /// The position of a status bar
@@ -109,7 +109,7 @@ pub struct StatusBar<X: XConn> {
     draw: Draw,
     position: Position,
     widgets: Widgets<X>,
-    screens: Vec<(Xid, u32)>,
+    screens: Vec<(WinId, u32)>,
     active_screen: usize,
     font: String,
     redrawn: bool,
@@ -226,7 +226,7 @@ impl<X: XConn> StatusBar<X> {
 
                 Ok((id, w))
             })
-            .collect::<Result<Vec<(Xid, u32)>>>()?;
+            .collect::<Result<Vec<(WinId, u32)>>>()?;
 
         Ok(())
     }
@@ -295,7 +295,7 @@ impl<X: XConn> StatusBar<X> {
 }
 
 /// Run any widget startup actions and then redraw
-pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose::Result<()> {
+pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &mut X) -> penrose::Result<()> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
@@ -320,7 +320,7 @@ pub fn startup_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
 }
 
 /// Run any widget refresh actions and then redraw if needed
-pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose::Result<()> {
+pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &mut X) -> penrose::Result<()> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();
 
@@ -351,7 +351,7 @@ pub fn refresh_hook<X: XConn + 'static>(state: &mut State<X>, x: &X) -> penrose:
 pub fn event_hook<X: XConn + 'static>(
     event: &XEvent,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> penrose::Result<bool> {
     use XEvent::{ConfigureNotify, RandrNotify};
 
@@ -393,9 +393,9 @@ pub fn event_hook<X: XConn + 'static>(
 
 /// Run any widget on_new_client actions and then redraw if needed
 pub fn manage_hook<X: XConn + 'static>(
-    id: Xid,
+    id: WinId,
     state: &mut State<X>,
-    x: &X,
+    x: &mut X,
 ) -> penrose::Result<()> {
     let s = state.extension::<StatusBar<X>>()?;
     let mut bar = s.borrow_mut();

@@ -1,9 +1,11 @@
 //! Built-in layouts.
 use crate::{
     builtin::layout::messages::{ExpandMain, IncMain, Mirror, Rotate, ShrinkMain},
-    core::layout::{Layout, Message},
-    pure::{geometry::Rect, Stack},
-    Xid,
+    core::{
+        WinId,
+        layout::{Layout, Message},
+    },
+    pure::{Stack, geometry::Rect},
 };
 
 pub mod messages;
@@ -158,7 +160,7 @@ impl MainAndStack {
         n <= self.max_main || self.max_main == 0 || self.ratio == 1.0 || self.ratio == 0.0
     }
 
-    fn layout_side(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
+    fn layout_side(&self, s: &Stack<WinId>, r: Rect) -> Vec<(WinId, Rect)> {
         let n = s.len() as u32;
 
         if self.all_windows_in_single_stack(n) {
@@ -181,7 +183,7 @@ impl MainAndStack {
         }
     }
 
-    fn layout_bottom(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
+    fn layout_bottom(&self, s: &Stack<WinId>, r: Rect) -> Vec<(WinId, Rect)> {
         let n = s.len() as u32;
 
         if self.all_windows_in_single_stack(n) {
@@ -222,7 +224,11 @@ impl Layout for MainAndStack {
         Box::new(*self)
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         let positions = match self.pos {
             StackPosition::Side => self.layout_side(s, r),
             StackPosition::Bottom => self.layout_bottom(s, r),
@@ -365,7 +371,7 @@ impl CenteredMain {
 
     // NOTE: There are subtle differences between this method and layout_horizontal
     // >> Be careful when refactoring!
-    fn layout_vertical(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
+    fn layout_vertical(&self, s: &Stack<WinId>, r: Rect) -> Vec<(WinId, Rect)> {
         let n = s.len() as u32;
 
         if self.single_stack(n) {
@@ -403,7 +409,7 @@ impl CenteredMain {
 
     // NOTE: There are subtle differences between this method and layout_vertical
     // >> Be careful when refactoring!
-    fn layout_horizontal(&self, s: &Stack<Xid>, r: Rect) -> Vec<(Xid, Rect)> {
+    fn layout_horizontal(&self, s: &Stack<WinId>, r: Rect) -> Vec<(WinId, Rect)> {
         let n = s.len() as u32;
 
         if self.single_stack(n) {
@@ -456,7 +462,11 @@ impl Layout for CenteredMain {
         Box::new(*self)
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         let positions = match self.pos {
             StackPosition::Side => self.layout_vertical(s, r),
             StackPosition::Bottom => self.layout_horizontal(s, r),
@@ -527,7 +537,11 @@ impl Layout for Monocle {
         Self::boxed()
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         (None, vec![(s.focus, r)])
     }
 
@@ -592,7 +606,11 @@ impl Layout for Grid {
         Self::boxed()
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         let n = s.len();
         let n_cols = (1..).find(|&i| (i * i) >= n).unwrap_or(1);
         let n_rows = if n_cols * (n_cols - 1) >= n {

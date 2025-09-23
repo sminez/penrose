@@ -2,14 +2,14 @@
 //! use in tests.
 //! This module and its contents are only available when testing.
 use crate::{
+    Result, WinId,
     core::bindings::{KeyCode, MouseState},
     pure::geometry::{Point, Rect},
     x::{
+        ClientAttr, ClientConfig, XConn,
         event::{ClientMessage, XEvent},
         property::{Prop, WindowAttributes, WmState},
-        ClientAttr, ClientConfig, XConn,
     },
-    Result, Xid,
 };
 
 /// All methods on this trait that return a Result unimplemented by
@@ -19,102 +19,102 @@ use crate::{
 /// Any implementation of `MockXConn` will automatically implement `XConn` by forwarding on
 /// calls to `$method` to `mock_$method`.
 #[allow(unused_variables, missing_docs)]
-pub trait MockXConn {
-    fn mock_root(&self) -> Xid {
-        Xid(0)
+pub trait MockXConn: Send {
+    fn mock_root(&mut self) -> WinId {
+        WinId(0)
     }
 
-    fn mock_screen_details(&self) -> Result<Vec<Rect>> {
+    fn mock_screen_details(&mut self) -> Result<Vec<Rect>> {
         unimplemented!("mock_screen_details")
     }
 
-    fn mock_cursor_position(&self) -> Result<Point> {
+    fn mock_cursor_position(&mut self) -> Result<Point> {
         unimplemented!("mock_cursor_position")
     }
 
-    fn mock_grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+    fn mock_grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
         unimplemented!("mock_grab")
     }
 
-    fn mock_next_event(&self) -> Result<XEvent> {
+    fn mock_next_event(&mut self) -> Result<XEvent> {
         unimplemented!("mock_next_event")
     }
 
-    fn mock_flush(&self) {}
+    fn mock_flush(&mut self) {}
 
-    fn mock_intern_atom(&self, atom: &str) -> Result<Xid> {
+    fn mock_intern_atom(&mut self, atom: &str) -> Result<WinId> {
         unimplemented!("mock_intern_atom")
     }
 
-    fn mock_atom_name(&self, xid: Xid) -> Result<String> {
+    fn mock_atom_name(&mut self, xid: WinId) -> Result<String> {
         unimplemented!("mock_atom_name")
     }
 
-    fn mock_client_geometry(&self, client: Xid) -> Result<Rect> {
+    fn mock_client_geometry(&mut self, client: WinId) -> Result<Rect> {
         unimplemented!("mock_client_geometry")
     }
 
-    fn mock_existing_clients(&self) -> Result<Vec<Xid>> {
+    fn mock_existing_clients(&mut self) -> Result<Vec<WinId>> {
         unimplemented!("mock_existing_clients")
     }
 
-    fn mock_map(&self, client: Xid) -> Result<()> {
+    fn mock_map(&mut self, client: WinId) -> Result<()> {
         unimplemented!("mock_map")
     }
 
-    fn mock_unmap(&self, client: Xid) -> Result<()> {
+    fn mock_unmap(&mut self, client: WinId) -> Result<()> {
         unimplemented!("mock_unmap")
     }
 
-    fn mock_kill(&self, client: Xid) -> Result<()> {
+    fn mock_kill(&mut self, client: WinId) -> Result<()> {
         unimplemented!("mock_kill")
     }
 
-    fn mock_focus(&self, client: Xid) -> Result<()> {
+    fn mock_focus(&mut self, client: WinId) -> Result<()> {
         unimplemented!("mock_focus")
     }
 
-    fn mock_get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>> {
+    fn mock_get_prop(&mut self, client: WinId, prop_name: &str) -> Result<Option<Prop>> {
         unimplemented!("mock_get_prop")
     }
 
-    fn mock_list_props(&self, client: Xid) -> Result<Vec<String>> {
+    fn mock_list_props(&mut self, client: WinId) -> Result<Vec<String>> {
         unimplemented!("mock_list_props")
     }
 
-    fn mock_get_wm_state(&self, client: Xid) -> Result<Option<WmState>> {
+    fn mock_get_wm_state(&mut self, client: WinId) -> Result<Option<WmState>> {
         unimplemented!("mock_get_wm_state")
     }
 
-    fn mock_get_window_attributes(&self, client: Xid) -> Result<WindowAttributes> {
+    fn mock_get_window_attributes(&mut self, client: WinId) -> Result<WindowAttributes> {
         unimplemented!("mock_get_window_attributes")
     }
 
-    fn mock_set_wm_state(&self, client: Xid, wm_state: WmState) -> Result<()> {
+    fn mock_set_wm_state(&mut self, client: WinId, wm_state: WmState) -> Result<()> {
         unimplemented!("mock_set_wm_state")
     }
 
-    fn mock_set_prop(&self, client: Xid, name: &str, val: Prop) -> Result<()> {
+    fn mock_set_prop(&mut self, client: WinId, name: &str, val: Prop) -> Result<()> {
         unimplemented!("mock_set_prop")
     }
 
-    fn mock_delete_prop(&self, client: Xid, prop_name: &str) -> Result<()> {
+    fn mock_delete_prop(&mut self, client: WinId, prop_name: &str) -> Result<()> {
         unimplemented!("mock_delete_prop")
     }
 
-    fn mock_set_client_attributes(&self, client: Xid, attrs: &[ClientAttr]) -> Result<()> {
+    fn mock_set_client_attributes(&mut self, client: WinId, attrs: &[ClientAttr]) -> Result<()> {
         unimplemented!("mock_set_client_attributes")
     }
 
-    fn mock_set_client_config(&self, client: Xid, data: &[ClientConfig]) -> Result<()> {
+    fn mock_set_client_config(&mut self, client: WinId, data: &[ClientConfig]) -> Result<()> {
         unimplemented!("mock_set_client_config")
     }
 
-    fn mock_send_client_message(&self, msg: ClientMessage) -> Result<()> {
+    fn mock_send_client_message(&mut self, msg: ClientMessage) -> Result<()> {
         unimplemented!("mock_send_client_message")
     }
 
-    fn mock_warp_pointer(&self, id: Xid, x: i16, y: i16) -> Result<()> {
+    fn mock_warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()> {
         unimplemented!("mock_warp_pointer")
     }
 }
@@ -123,103 +123,103 @@ impl<T> XConn for T
 where
     T: MockXConn,
 {
-    fn root(&self) -> Xid {
+    fn root(&mut self) -> WinId {
         self.mock_root()
     }
 
-    fn screen_details(&self) -> Result<Vec<Rect>> {
+    fn screen_details(&mut self) -> Result<Vec<Rect>> {
         self.mock_screen_details()
     }
 
-    fn cursor_position(&self) -> Result<Point> {
+    fn cursor_position(&mut self) -> Result<Point> {
         self.mock_cursor_position()
     }
 
-    fn grab(&self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
         self.mock_grab(key_codes, mouse_states)
     }
 
-    fn next_event(&self) -> Result<XEvent> {
+    fn next_event(&mut self) -> Result<XEvent> {
         self.mock_next_event()
     }
 
-    fn flush(&self) {
+    fn flush(&mut self) {
         self.mock_flush()
     }
 
-    fn intern_atom(&self, atom: &str) -> Result<Xid> {
+    fn intern_atom(&mut self, atom: &str) -> Result<WinId> {
         self.mock_intern_atom(atom)
     }
 
-    fn atom_name(&self, xid: Xid) -> Result<String> {
+    fn atom_name(&mut self, xid: WinId) -> Result<String> {
         self.mock_atom_name(xid)
     }
 
-    fn client_geometry(&self, client: Xid) -> Result<Rect> {
+    fn client_geometry(&mut self, client: WinId) -> Result<Rect> {
         self.mock_client_geometry(client)
     }
 
-    fn existing_clients(&self) -> Result<Vec<Xid>> {
+    fn existing_clients(&mut self) -> Result<Vec<WinId>> {
         self.mock_existing_clients()
     }
 
-    fn map(&self, client: Xid) -> Result<()> {
+    fn map(&mut self, client: WinId) -> Result<()> {
         self.mock_map(client)
     }
 
-    fn unmap(&self, client: Xid) -> Result<()> {
+    fn unmap(&mut self, client: WinId) -> Result<()> {
         self.mock_unmap(client)
     }
 
-    fn kill(&self, client: Xid) -> Result<()> {
+    fn kill(&mut self, client: WinId) -> Result<()> {
         self.mock_kill(client)
     }
 
-    fn focus(&self, client: Xid) -> Result<()> {
+    fn focus(&mut self, client: WinId) -> Result<()> {
         self.mock_focus(client)
     }
 
-    fn get_prop(&self, client: Xid, prop_name: &str) -> Result<Option<Prop>> {
+    fn get_prop(&mut self, client: WinId, prop_name: &str) -> Result<Option<Prop>> {
         self.mock_get_prop(client, prop_name)
     }
 
-    fn list_props(&self, client: Xid) -> Result<Vec<String>> {
+    fn list_props(&mut self, client: WinId) -> Result<Vec<String>> {
         self.mock_list_props(client)
     }
 
-    fn get_wm_state(&self, client: Xid) -> Result<Option<WmState>> {
+    fn get_wm_state(&mut self, client: WinId) -> Result<Option<WmState>> {
         self.mock_get_wm_state(client)
     }
 
-    fn get_window_attributes(&self, client: Xid) -> Result<WindowAttributes> {
+    fn get_window_attributes(&mut self, client: WinId) -> Result<WindowAttributes> {
         self.mock_get_window_attributes(client)
     }
 
-    fn set_wm_state(&self, client: Xid, wm_state: WmState) -> Result<()> {
+    fn set_wm_state(&mut self, client: WinId, wm_state: WmState) -> Result<()> {
         self.mock_set_wm_state(client, wm_state)
     }
 
-    fn set_prop(&self, client: Xid, name: &str, val: Prop) -> Result<()> {
+    fn set_prop(&mut self, client: WinId, name: &str, val: Prop) -> Result<()> {
         self.mock_set_prop(client, name, val)
     }
 
-    fn delete_prop(&self, client: Xid, prop_name: &str) -> Result<()> {
+    fn delete_prop(&mut self, client: WinId, prop_name: &str) -> Result<()> {
         self.mock_delete_prop(client, prop_name)
     }
 
-    fn set_client_attributes(&self, client: Xid, attrs: &[ClientAttr]) -> Result<()> {
+    fn set_client_attributes(&mut self, client: WinId, attrs: &[ClientAttr]) -> Result<()> {
         self.mock_set_client_attributes(client, attrs)
     }
 
-    fn set_client_config(&self, client: Xid, data: &[ClientConfig]) -> Result<()> {
+    fn set_client_config(&mut self, client: WinId, data: &[ClientConfig]) -> Result<()> {
         self.mock_set_client_config(client, data)
     }
 
-    fn send_client_message(&self, msg: ClientMessage) -> Result<()> {
+    fn send_client_message(&mut self, msg: ClientMessage) -> Result<()> {
         self.mock_send_client_message(msg)
     }
 
-    fn warp_pointer(&self, id: Xid, x: i16, y: i16) -> Result<()> {
+    fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()> {
         self.mock_warp_pointer(id, x, y)
     }
 }

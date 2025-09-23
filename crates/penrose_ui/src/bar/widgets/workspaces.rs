@@ -1,14 +1,14 @@
 //! Widgets for the penrose status bar
 use crate::{
+    Result,
     bar::widgets::Widget,
     core::{Context, TextStyle},
-    Result,
 };
 use penrose::{
+    Color,
     core::{ClientSpace, State},
     pure::geometry::Rect,
     x::XConn,
-    Color,
 };
 
 const PADDING: u32 = 3;
@@ -328,13 +328,13 @@ where
         self.require_draw
     }
 
-    fn on_startup(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_startup(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         self.update_from_state(state, x);
 
         Ok(())
     }
 
-    fn on_refresh(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn on_refresh(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         self.update_from_state(state, x);
 
         Ok(())

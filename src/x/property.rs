@@ -1,7 +1,7 @@
 //! Data types for working with X window properties
 use crate::{
+    Error, Result, WinId,
     pure::geometry::{Point, Rect},
-    Error, Result, Xid,
 };
 use bitflags::bitflags;
 #[cfg(feature = "serde")]
@@ -21,7 +21,7 @@ pub enum Prop {
     /// UTF-8 encoded string data
     UTF8String(Vec<String>),
     /// An X window IDs
-    Window(Vec<Xid>),
+    Window(Vec<WinId>),
     /// The WmHints properties for this window
     WmHints(WmHints),
     /// The WmNormalHints properties for this window
@@ -133,7 +133,7 @@ pub struct WmHints {
     pub(crate) accepts_input: bool,
     pub(crate) initial_state: WmState,
     pub(crate) icon_pixmap: u32,
-    pub(crate) icon_win: Xid,
+    pub(crate) icon_win: WinId,
     pub(crate) icon_position: Point,
     pub(crate) icon_mask: u32,
     pub(crate) window_group: u32,
@@ -147,7 +147,7 @@ impl WmHints {
         accepts_input: bool,
         initial_state: WmState,
         icon_pixmap: u32,
-        icon_win: Xid,
+        icon_win: WinId,
         icon_position: Point,
         icon_mask: u32,
         window_group: u32,
@@ -201,7 +201,7 @@ impl WmHints {
             _ => {
                 return Err(Error::InvalidHints {
                     reason: format!("initial state flag should be 0, 1, 2: got {}", raw[2]),
-                })
+                });
             }
         };
 
@@ -210,7 +210,7 @@ impl WmHints {
             accepts_input,
             initial_state,
             icon_pixmap: raw[3],
-            icon_win: Xid(raw[4]),
+            icon_win: WinId(raw[4]),
             icon_position: Point::new(raw[5] as i32, raw[6] as i32),
             icon_mask: raw[7],
             window_group: raw[8],
@@ -260,18 +260,18 @@ impl WmNormalHints {
     ///
     /// > Currently only the max size is respected
     pub fn apply_to(&self, mut r: Rect) -> Rect {
-        if let Some(max) = self.max {
-            if r.is_larger_than(&max) {
-                r.w = max.w;
-                r.h = max.h
-            }
+        if let Some(max) = self.max
+            && r.is_larger_than(&max)
+        {
+            r.w = max.w;
+            r.h = max.h
         }
 
-        if let Some(min) = self.min {
-            if min.is_larger_than(&r) {
-                r.w = min.w;
-                r.h = min.h;
-            }
+        if let Some(min) = self.min
+            && min.is_larger_than(&r)
+        {
+            r.w = min.w;
+            r.h = min.h;
         }
 
         r

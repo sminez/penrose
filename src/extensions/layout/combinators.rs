@@ -1,8 +1,8 @@
 //! Higher order combinators for Layouts that allow for composing their behaviour
 use crate::{
+    WinId,
     core::layout::{Layout, Message},
-    pure::{geometry::Rect, Stack},
-    Xid,
+    pure::{Stack, geometry::Rect},
 };
 use std::fmt;
 
@@ -18,7 +18,7 @@ pub struct Conditional {
     name: String,
     left: Box<dyn Layout>,
     right: Box<dyn Layout>,
-    should_use_left: fn(&Stack<Xid>, Rect) -> bool,
+    should_use_left: fn(&Stack<WinId>, Rect) -> bool,
     left_is_active: bool,
 }
 
@@ -40,7 +40,7 @@ impl Conditional {
         name: impl Into<String>,
         left: L,
         right: R,
-        should_use_left: fn(&Stack<Xid>, Rect) -> bool,
+        should_use_left: fn(&Stack<WinId>, Rect) -> bool,
     ) -> Self {
         Self {
             name: name.into(),
@@ -57,7 +57,7 @@ impl Conditional {
         name: impl Into<String>,
         left: L,
         right: R,
-        should_use_left: fn(&Stack<Xid>, Rect) -> bool,
+        should_use_left: fn(&Stack<WinId>, Rect) -> bool,
     ) -> Box<dyn Layout> {
         Box::new(Self::new(name, left, right, should_use_left))
     }
@@ -78,7 +78,11 @@ impl Layout for Conditional {
         })
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         self.left_is_active = (self.should_use_left)(s, r);
         if self.left_is_active {
             self.left.layout(s, r)

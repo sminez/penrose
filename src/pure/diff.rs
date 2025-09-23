@@ -52,16 +52,18 @@ impl<C> Snapshot<C>
 where
     C: Copy + Clone + PartialEq + Eq + Hash,
 {
-    pub(crate) fn visible_clients(&self) -> impl Iterator<Item = &C> {
-        self.positions.iter().map(|(c, _)| c)
+    pub(crate) fn visible_clients(&self) -> Vec<C> {
+        self.positions.iter().map(|(c, _)| *c).collect()
     }
 
-    pub(crate) fn all_clients(&self) -> impl Iterator<Item = &C> {
+    pub(crate) fn all_clients(&self) -> Vec<C> {
         self.focused
             .clients
             .iter()
-            .chain(self.visible.iter().flat_map(|s| s.clients.iter()))
-            .chain(self.hidden_clients.iter())
+            .cloned()
+            .chain(self.visible.iter().flat_map(|s| s.clients.iter().cloned()))
+            .chain(self.hidden_clients.iter().cloned())
+            .collect()
     }
 }
 
@@ -124,40 +126,40 @@ where
     }
 
     /// An iterator of all clients that were added as part of this diff
-    pub fn new_clients(&self) -> impl Iterator<Item = &C> {
-        let before: HashSet<_> = self.before.all_clients().collect();
+    pub fn new_clients(&self) -> Vec<C> {
+        let before: HashSet<_> = self.before.all_clients().into_iter().collect();
+        let mut after = self.after.all_clients();
+        after.retain(|c| !before.contains(c));
 
-        self.after
-            .all_clients()
-            .filter(move |c| !before.contains(c))
+        after
     }
 
     /// An iterator of all clients that were hidden as part of this diff
-    pub fn hidden_clients(&self) -> impl Iterator<Item = &C> {
-        let after: HashSet<_> = self.after.visible_clients().collect();
+    pub fn hidden_clients(&self) -> Vec<C> {
+        let after: HashSet<_> = self.after.visible_clients().into_iter().collect();
+        let mut before = self.before.all_clients();
+        before.retain(|c| !after.contains(c));
 
-        self.before
-            .visible_clients()
-            .filter(move |c| !after.contains(c))
+        before
     }
 
     /// An iterator of all currently visible clients
-    pub fn visible_clients(&self) -> impl Iterator<Item = &C> {
+    pub fn visible_clients(&self) -> Vec<C> {
         self.after.visible_clients()
     }
 
     /// Clients that were present in the previous snapshot but not the current one
-    pub fn withdrawn_clients(&self) -> impl Iterator<Item = &C> {
-        let after: HashSet<_> = self.after.all_clients().collect();
+    pub fn withdrawn_clients(&self) -> Vec<C> {
+        let after: HashSet<_> = self.after.all_clients().into_iter().collect();
+        let mut before = self.before.all_clients();
+        before.retain(|c| !after.contains(c));
 
-        self.before
-            .all_clients()
-            .filter(move |c| !after.contains(c))
+        before
     }
 
     /// Clients that have been removed from the pure state since the last snapshot
-    pub fn killed_clients(&self) -> impl Iterator<Item = &C> {
-        self.after.killed_clients.iter()
+    pub fn killed_clients(&self) -> Vec<C> {
+        self.after.killed_clients.clone()
     }
 
     /// The set of tags that were visible in the previous snapshot
@@ -175,13 +177,14 @@ where
             .collect()
     }
 
+    /// Check whether this diff is a no-op
     #[cfg(test)]
     /// Is this diff empty
     pub fn is_empty(&self) -> bool {
         !(self.focused_client_changed()
             || self.newly_focused_screen().is_some()
-            || self.new_clients().count() > 0
-            || self.withdrawn_clients().count() > 0
+            || self.new_clients().len() > 0
+            || self.withdrawn_clients().len() > 0
             || self.previous_visible_tags() != self.current_visible_tags()
             || self.before.positions != self.after.positions
             || self.after.killed_clients.len() > 0)
@@ -192,8 +195,9 @@ where
 mod tests {
     use super::*;
     use crate::{
+        WinId,
         pure::stack_set::tests::{test_stack_set, test_stack_set_with_stacks},
-        stack, Xid,
+        stack,
     };
     use simple_test_case::test_case;
 
@@ -226,8 +230,8 @@ mod tests {
     fn drag_workspace_generates_correct_diff() {
         let mut s = test_stack_set_with_stacks(
             vec![
-                Some(stack!([Xid(1), Xid(2)], Xid(3), [Xid(4), Xid(5)])),
-                Some(stack!(Xid(6), [Xid(7), Xid(8)])),
+                Some(stack!([WinId(1), WinId(2)], WinId(3), [WinId(4), WinId(5)])),
+                Some(stack!(WinId(6), [WinId(7), WinId(8)])),
                 None,
             ],
             2,
@@ -240,18 +244,18 @@ mod tests {
         let diff = Diff::new(before, after);
 
         assert_eq!(diff.newly_focused_screen(), Some(1));
-        assert_eq!(diff.focused_client(), Some(Xid(3)));
+        assert_eq!(diff.focused_client(), Some(WinId(3)));
     }
 }
 
 #[cfg(test)]
 mod quickcheck_tests {
     use super::*;
-    use crate::{pure::StackSet, Xid};
+    use crate::{WinId, pure::StackSet};
     use quickcheck_macros::quickcheck;
 
     #[quickcheck]
-    fn diff_of_unchanged_stackset_is_empty(mut s: StackSet<Xid>) -> bool {
+    fn diff_of_unchanged_stackset_is_empty(mut s: StackSet<WinId>) -> bool {
         let ss = s.position_and_snapshot();
         let diff = Diff::new(ss.clone(), ss);
 
@@ -259,29 +263,28 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn adding_a_client_is_new_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn adding_a_client_is_new_in_diff(mut s: StackSet<WinId>) -> bool {
         let ss = s.position_and_snapshot();
         let new = s.minimal_unknown_client();
 
         s.insert(new);
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let res = diff.new_clients().any(|&c| c == new);
 
-        res
+        diff.new_clients().contains(&new)
     }
 
     // Not checking that clients on the new workspace are visible as this is driven entirely by
     // the positions returned by the Layout. In these tests, those are being specified manually
     // so there is nothing to test.
     #[quickcheck]
-    fn focusing_new_workspace_hides_old_clients_and_tag_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn focusing_new_workspace_hides_old_clients_and_tag_in_diff(mut s: StackSet<WinId>) -> bool {
         let tag = match s.first_hidden_tag() {
             Some(t) => t,
             None => return true,
         };
         let prev_tag = s.current_tag().to_string();
-        let clients_on_active: Vec<Xid> = match s.current_stack() {
+        let clients_on_active: Vec<WinId> = match s.current_stack() {
             Some(stack) => stack.iter().cloned().collect(),
             None => vec![],
         };
@@ -291,7 +294,7 @@ mod quickcheck_tests {
         s.focus_tag(&tag);
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let hidden: HashSet<_> = diff.hidden_clients().collect();
+        let hidden: HashSet<_> = diff.hidden_clients().into_iter().collect();
 
         let focused_clients_now_hidden = clients_on_active.iter().all(|c| hidden.contains(c));
         let tag_now_hidden = diff.previous_visible_tags().contains(&prev_tag.as_ref());
@@ -300,7 +303,7 @@ mod quickcheck_tests {
     }
 
     #[quickcheck]
-    fn removing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn removing_focused_client_sets_withdrawn_and_hidden_in_diff(mut s: StackSet<WinId>) -> bool {
         let focus = match s.current_client() {
             Some(&c) => c,
             None => return true, // nothing to remove
@@ -310,15 +313,13 @@ mod quickcheck_tests {
         s.remove_focused();
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let res = diff.withdrawn_clients().any(|&c| c == focus)
-            && diff.hidden_clients().any(|&c| c == focus);
 
-        res
+        diff.withdrawn_clients().contains(&focus) && diff.hidden_clients().contains(&focus)
     }
 
     #[quickcheck]
     fn killing_focused_client_sets_killed_withdrawn_and_hidden_in_diff(
-        mut s: StackSet<Xid>,
+        mut s: StackSet<WinId>,
     ) -> bool {
         let focus = match s.current_client() {
             Some(&c) => c,
@@ -329,15 +330,14 @@ mod quickcheck_tests {
         s.kill_focused();
 
         let diff = Diff::new(ss, s.position_and_snapshot());
-        let res = diff.withdrawn_clients().any(|&c| c == focus)
-            && diff.hidden_clients().any(|&c| c == focus)
-            && diff.killed_clients().any(|&c| c == focus);
 
-        res
+        diff.withdrawn_clients().contains(&focus)
+            && diff.hidden_clients().contains(&focus)
+            && diff.killed_clients().contains(&focus)
     }
 
     #[quickcheck]
-    fn moving_client_to_hidden_workspace_sets_hidden_in_diff(mut s: StackSet<Xid>) -> bool {
+    fn moving_client_to_hidden_workspace_sets_hidden_in_diff(mut s: StackSet<WinId>) -> bool {
         let tag = s.first_hidden_tag();
         let client = s.current_client().cloned();
 
@@ -348,9 +348,8 @@ mod quickcheck_tests {
                 s.move_client_to_tag(&client, &tag);
 
                 let diff = Diff::new(ss, s.position_and_snapshot());
-                let res = diff.hidden_clients().any(|&c| c == client);
 
-                res
+                diff.hidden_clients().contains(&client)
             }
 
             _ => true, // No hidden tags or no clients

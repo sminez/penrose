@@ -4,10 +4,15 @@
 //! over the parent window's position in the Stack. When the child window closes, the
 //! parent is restored in its place.
 use crate::{
-    core::{hooks::EventHook, State},
-    pure::{geometry::RelativeRect, Stack},
-    x::{Query, XConn, XConnExt, XEvent},
-    Result, Xid,
+    Result, WinId,
+    core::{
+        State,
+        conn::Query,
+        conn::{Conn, ConnExt},
+        hooks::EventHook,
+    },
+    pure::{Stack, geometry::RelativeRect},
+    x::{XConn, XEvent},
 };
 use std::collections::HashMap;
 use tracing::{info, warn};
@@ -15,9 +20,9 @@ use tracing::{info, warn};
 // Private internal state for managing swallowed windows
 #[derive(Default, Debug)]
 struct WindowSwallowingState {
-    swallowed: HashMap<Xid, Xid>, // map of child windows to their swallowed parent
-    stack_before_close: Option<Stack<Xid>>,
-    floating_before_close: HashMap<Xid, RelativeRect>,
+    swallowed: HashMap<WinId, WinId>, // map of child windows to their swallowed parent
+    stack_before_close: Option<Stack<WinId>>,
+    floating_before_close: HashMap<WinId, RelativeRect>,
 }
 
 impl WindowSwallowingState {
@@ -29,16 +34,16 @@ impl WindowSwallowingState {
         Ok(true)
     }
 
-    fn clear_state_for(&mut self, id: Xid) {
+    fn clear_state_for(&mut self, id: WinId) {
         self.swallowed.remove(&id);
         self.stack_before_close = None;
     }
 
     fn try_restore_parent<X: XConn>(
         &mut self,
-        child: Xid,
+        child: WinId,
         state: &mut State<X>,
-        x: &X,
+        x: &mut X,
     ) -> Result<bool> {
         warn!(%child, ?self, "checking if we need to restore");
         let parent = match self.swallowed.get(&child) {
@@ -99,7 +104,7 @@ impl<X: XConn> WindowSwallowing<X> {
         })
     }
 
-    fn queries_hold(&self, id: Xid, parent: Xid, x: &X) -> bool {
+    fn queries_hold(&self, id: WinId, parent: WinId, x: &mut X) -> bool {
         let parent_matches = x.query_or(false, &*self.parent, parent);
         let child_matches = match &self.child {
             Some(q) => x.query_or(false, &**q, id),
@@ -111,10 +116,10 @@ impl<X: XConn> WindowSwallowing<X> {
 
     fn handle_map_request(
         &mut self,
-        child: Xid,
+        child: WinId,
         wss: &mut WindowSwallowingState,
         state: &mut State<X>,
-        x: &X,
+        x: &mut X,
     ) -> Result<bool> {
         let parent = match state.client_set.current_client() {
             Some(&parent) => parent,
@@ -142,7 +147,7 @@ impl<X: XConn> WindowSwallowing<X> {
 }
 
 impl<X: XConn> EventHook<X> for WindowSwallowing<X> {
-    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &X) -> Result<bool> {
+    fn call(&mut self, event: &XEvent, state: &mut State<X>, x: &mut X) -> Result<bool> {
         let _wss = state.extension_or_default::<WindowSwallowingState>();
         let mut wss = _wss.borrow_mut();
 
@@ -169,14 +174,14 @@ impl<X: XConn> EventHook<X> for WindowSwallowing<X> {
     }
 }
 
-fn transfer_floating_state(from: Xid, to: Xid, floating: &mut HashMap<Xid, RelativeRect>) {
+fn transfer_floating_state(from: WinId, to: WinId, floating: &mut HashMap<WinId, RelativeRect>) {
     if let Some(r) = floating.remove(&from) {
         floating.insert(to, r);
     }
 }
 
-fn is_child_of<X: XConn>(id: Xid, parent: Xid, x: &X) -> bool {
-    match (x.window_pid(parent), x.window_pid(id)) {
+fn is_child_of<X: XConn>(id: WinId, parent: WinId, x: &mut X) -> bool {
+    match (x.client_pid(parent), x.client_pid(id)) {
         (Some(p_pid), Some(c_pid)) => parent_pid_chain(c_pid).contains(&p_pid),
         _ => false,
     }

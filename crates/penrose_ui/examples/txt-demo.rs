@@ -1,8 +1,8 @@
 //! Demo of the text rendering API
 use penrose::{
+    Color,
     pure::geometry::Rect,
     x::{Atom, WinType},
-    Color,
 };
 use penrose_ui::Draw;
 use std::{thread::sleep, time::Duration};

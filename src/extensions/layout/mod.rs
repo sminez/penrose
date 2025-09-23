@@ -1,9 +1,9 @@
 //! Layout behaviour that is more specialised or complex than the builtin layouts.
 use crate::{
+    WinId,
     builtin::layout::messages::{ExpandMain, ShrinkMain},
     core::layout::{Layout, Message},
-    pure::{geometry::Rect, Stack},
-    Xid,
+    pure::{Stack, geometry::Rect},
 };
 
 mod combinators;
@@ -86,7 +86,11 @@ impl Layout for Fibonacci {
         Box::new(*self)
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         let n = s.len();
         let mut positions = Vec::with_capacity(n);
         let (mut r1, mut r2) = r
@@ -219,7 +223,11 @@ impl Layout for Tatami {
         Box::new(*self)
     }
 
-    fn layout(&mut self, s: &Stack<Xid>, r: Rect) -> (Option<Box<dyn Layout>>, Vec<(Xid, Rect)>) {
+    fn layout(
+        &mut self,
+        s: &Stack<WinId>,
+        r: Rect,
+    ) -> (Option<Box<dyn Layout>>, Vec<(WinId, Rect)>) {
         let apply = |rs: &[Rect]| s.iter().zip(rs).map(|(&id, &r)| (id, r)).collect();
         let split_main = || {
             r.split_at_width((r.w as f32 * self.ratio) as u32)

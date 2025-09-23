@@ -1,9 +1,9 @@
 //! Startup hooks for direct adding to your penrose config.
 use crate::{
-    core::{self, hooks::StateHook, State},
+    Result,
+    core::{State, conn::Conn, hooks::StateHook},
     util::spawn,
     x::{Atom, Prop, XConn},
-    Result,
 };
 use std::borrow::Cow;
 
@@ -20,19 +20,19 @@ impl SpawnOnStartup {
     }
 
     /// Create a new startup hook ready for adding to your Config
-    pub fn boxed<X>(prog: impl Into<Cow<'static, str>>) -> Box<dyn StateHook<X>>
+    pub fn boxed<C>(prog: impl Into<Cow<'static, str>>) -> Box<dyn StateHook<C>>
     where
-        X: XConn,
+        C: Conn,
     {
         Box::new(Self::new(prog))
     }
 }
 
-impl<X> StateHook<X> for SpawnOnStartup
+impl<C> StateHook<C> for SpawnOnStartup
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, _state: &mut State<X>, _x: &X) -> Result<()> {
+    fn call(&mut self, _state: &mut State<C>, _: &mut C) -> Result<()> {
         spawn(self.prog.as_ref())
     }
 }
@@ -58,9 +58,9 @@ impl<X> StateHook<X> for ClearFsPropOnStartup
 where
     X: XConn,
 {
-    fn call(&mut self, state: &mut State<X>, x: &X) -> Result<()> {
+    fn call(&mut self, state: &mut State<X>, x: &mut X) -> Result<()> {
         for id in x.existing_clients()? {
-            if !state.client_set.contains(&id) && core::client_should_be_managed(id, x) {
+            if !state.client_set.contains(&id) && x.client_should_be_managed(id) {
                 let net_wm_state = Atom::NetWmState.as_ref();
                 let full_screen = x.intern_atom(Atom::NetWmStateFullscreen.as_ref())?;
                 let mut wstate = match x.get_prop(id, net_wm_state) {
