@@ -112,7 +112,7 @@
 <a href=#112 id=112 data-nosnippet>112</a>}
 <a href=#113 id=113 data-nosnippet>113</a>
 <a href=#114 id=114 data-nosnippet>114</a><span class="doccomment">/// User defined key bindings
-<a href=#115 id=115 data-nosnippet>115</a></span><span class="kw">pub type </span>KeyBindings&lt;C&gt; = HashMap&lt;KeyCode, Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;C&gt;&gt;&gt;;
+<a href=#115 id=115 data-nosnippet>115</a></span><span class="kw">pub type </span>KeyBindings&lt;C&gt; = HashMap&lt;&lt;C <span class="kw">as </span>Conn&gt;::KeyBindingKey, Box&lt;<span class="kw">dyn </span>KeyEventHandler&lt;C&gt;&gt;&gt;;
 <a href=#116 id=116 data-nosnippet>116</a>
 <a href=#117 id=117 data-nosnippet>117</a><span class="doccomment">/// An action to be run in response to a mouse event
 <a href=#118 id=118 data-nosnippet>118</a></span><span class="kw">pub trait </span>MouseEventHandler&lt;C&gt;: Send
