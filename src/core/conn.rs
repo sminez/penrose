@@ -4,7 +4,7 @@ use crate::{
     builtin::layout::messages::Hide,
     core::{
         Config, State,
-        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
+        bindings::{KeyBindings, MouseBindings, MouseState},
     },
     pure::{
         StackSet,
@@ -66,6 +66,9 @@ pub trait Conn: Send + Sized {
     /// families of Conn implementations such as `XConn`.
     type State: fmt::Debug + Send + Sized;
 
+    /// The type that is used as the key for a [KeyBindings] map using this Conn.
+    type KeyBindingKey: fmt::Debug + Copy + Clone + PartialEq + Eq + Hash + Send + Sized;
+
     /// Called once when the window manager state is first created.
     fn initial_state(&mut self) -> Self::State;
 
@@ -86,7 +89,11 @@ pub trait Conn: Send + Sized {
 
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
-    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    fn grab(
+        &mut self,
+        key_codes: &[Self::KeyBindingKey],
+        mouse_states: &[MouseState],
+    ) -> Result<()>;
     /// Ask the X server for the IDs of all currently known client windows
     fn existing_clients(&mut self) -> Result<Vec<WinId>>;
     /// Request a client windows's current workspace

@@ -112,7 +112,7 @@ where
 }
 
 /// User defined key bindings
-pub type KeyBindings<C> = HashMap<KeyCode, Box<dyn KeyEventHandler<C>>>;
+pub type KeyBindings<C> = HashMap<<C as Conn>::KeyBindingKey, Box<dyn KeyEventHandler<C>>>;
 
 /// An action to be run in response to a mouse event
 pub trait MouseEventHandler<C>: Send

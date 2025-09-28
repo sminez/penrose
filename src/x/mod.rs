@@ -205,6 +205,7 @@ where
 {
     type Event = XEvent;
     type State = XConnState;
+    type KeyBindingKey = KeyCode;
 
     fn initial_state(&mut self) -> Self::State {
         XConnState::default()
