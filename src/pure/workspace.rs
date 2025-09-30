@@ -4,7 +4,10 @@ use crate::{
     pure::{Position, Stack, geometry::Rect},
     stack,
 };
-use std::{fmt, mem::take};
+use std::{
+    fmt,
+    mem::{swap, take},
+};
 
 /// A wrapper around a [Stack] of windows belonging to a single "workspace" or virtual
 /// desktop. When this workspace is active on a given screen, the windows contained in
@@ -109,7 +112,8 @@ impl<T> Workspace<T> {
         self.stack.iter().flat_map(|s| s.iter())
     }
 
-    pub(crate) fn remove_focused(&mut self) -> Option<T> {
+    /// Remove the focused client from this workspace if there is one.
+    pub fn remove_focused(&mut self) -> Option<T> {
         let current = self.stack.take();
         let (focus, new_stack) = current?.remove_focused();
         self.stack = new_stack;
@@ -117,7 +121,8 @@ impl<T> Workspace<T> {
         Some(focus)
     }
 
-    pub(crate) fn insert_as_focus(&mut self, c: T) {
+    /// Insert the given client as the focused element of the workspace's [Stack].
+    pub fn insert_as_focus(&mut self, c: T) {
         self.stack = Some(match take(&mut self.stack) {
             None => stack!(c),
             Some(mut s) => {
@@ -125,6 +130,31 @@ impl<T> Workspace<T> {
                 s
             }
         });
+    }
+
+    /// Insert the given client at the requested position of the workspace's [Stack].
+    pub fn insert_at(&mut self, pos: Position, c: T) {
+        self.stack = Some(match take(&mut self.stack) {
+            None => stack!(c),
+            Some(mut s) => {
+                s.insert_at(pos, c);
+                s
+            }
+        });
+    }
+
+    /// Obtain a reference to this workspace's current [Stack].
+    ///
+    /// Returns [None] if there a currently no clients in the workspace.
+    pub fn stack(&self) -> Option<&Stack<T>> {
+        self.stack.as_ref()
+    }
+
+    /// Obtain a mutable reference to this workspace's current [Stack].
+    ///
+    /// Returns [None] if there a currently no clients in the workspace.
+    pub fn stack_mut(&mut self) -> Option<&mut Stack<T>> {
+        self.stack.as_mut()
     }
 
     /// Pass the given message on to the currently focused layout.
@@ -153,10 +183,20 @@ impl<T> Workspace<T> {
         self.layouts.focus_up();
     }
 
+    /// Obtain a reference to the layouts currently in use by this workspace.
+    pub fn layouts(&self) -> &LayoutStack {
+        &self.layouts
+    }
+
+    /// Obtain a mutable reference to the layouts currently in use by this workspace.
+    pub fn layouts_mut(&mut self) -> &mut LayoutStack {
+        &mut self.layouts
+    }
+
     /// Replace the current [LayoutStack] with a new one, returning the layouts that
     /// were previously active.
     pub fn set_available_layouts(&mut self, mut layouts: LayoutStack) -> LayoutStack {
-        std::mem::swap(&mut self.layouts, &mut layouts);
+        swap(&mut self.layouts, &mut layouts);
 
         layouts
     }
