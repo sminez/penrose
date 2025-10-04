@@ -904,7 +904,8 @@ impl StackSet<WinId> {
         Ok(rect)
     }
 
-    pub(crate) fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
+    /// Update internal state to reflect changes to the available physical screens.
+    pub fn update_screens(&mut self, rects: Vec<Rect>) -> Result<()> {
         let n_old = self.screens.len();
         let n_new = rects.len();
 
