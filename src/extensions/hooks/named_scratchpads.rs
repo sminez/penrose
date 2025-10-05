@@ -81,10 +81,7 @@ struct NamedScratchPadState<C: Conn>(HashMap<Cow<'static, str>, NamedScratchPad<
 ///
 /// See the module level docs for details of what functionality is provided by
 /// this extension.
-pub fn add_named_scratchpads<C>(
-    mut wm: WindowManager<C>,
-    scratchpads: Vec<NamedScratchPad<C>>,
-) -> WindowManager<C>
+pub fn add_named_scratchpads<C>(wm: &mut WindowManager<C>, scratchpads: Vec<NamedScratchPad<C>>)
 where
     C: Conn + 'static,
 {
@@ -100,8 +97,6 @@ where
         .expect("named scratchpad tag to be unique");
     wm.state.config.compose_or_set_manage_hook(manage_hook);
     wm.state.config.compose_or_set_refresh_hook(refresh_hook);
-
-    wm
 }
 
 /// Store clients matching NamedScratchPad queries and run the associated [ManageHook].

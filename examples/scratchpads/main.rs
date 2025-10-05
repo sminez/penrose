@@ -108,10 +108,8 @@ fn main() -> Result<()> {
     // The order in which the NamedScratchPads are specified in the Vec passed here determines the
     // order in which each scratchpad's `Query` will be run to determine owndership of newly
     // spawned client windows.
-    let wm = add_named_scratchpads(
-        WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?,
-        vec![nsp_1, nsp_2],
-    );
+    let mut wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
+    add_named_scratchpads(&mut wm, vec![nsp_1, nsp_2]);
 
     wm.run()
 }
