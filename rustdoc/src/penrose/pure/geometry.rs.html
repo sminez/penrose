@@ -342,7 +342,7 @@
 <a href=#342 id=342 data-nosnippet>342</a>    /// assert_eq!(r.scale_w(1.5), Rect::new(0, 0, 45, 40));
 <a href=#343 id=343 data-nosnippet>343</a>    /// assert_eq!(r.scale_w(0.5), Rect::new(0, 0, 15, 40));
 <a href=#344 id=344 data-nosnippet>344</a>    /// ```
-<a href=#345 id=345 data-nosnippet>345</a>    </span><span class="kw">pub const fn </span>scale_w(<span class="kw-2">&amp;</span><span class="self">self</span>, factor: f64) -&gt; <span class="self">Self </span>{
+<a href=#345 id=345 data-nosnippet>345</a>    </span><span class="kw">pub fn </span>scale_w(<span class="kw-2">&amp;</span><span class="self">self</span>, factor: f64) -&gt; <span class="self">Self </span>{
 <a href=#346 id=346 data-nosnippet>346</a>        <span class="self">Self </span>{
 <a href=#347 id=347 data-nosnippet>347</a>            w: (<span class="self">self</span>.w <span class="kw">as </span>f64 * factor).floor() <span class="kw">as </span>u32,
 <a href=#348 id=348 data-nosnippet>348</a>            ..<span class="kw-2">*</span><span class="self">self
@@ -357,7 +357,7 @@
 <a href=#357 id=357 data-nosnippet>357</a>    /// assert_eq!(r.scale_h(1.5), Rect::new(0, 0, 30, 60));
 <a href=#358 id=358 data-nosnippet>358</a>    /// assert_eq!(r.scale_h(0.5), Rect::new(0, 0, 30, 20));
 <a href=#359 id=359 data-nosnippet>359</a>    /// ```
-<a href=#360 id=360 data-nosnippet>360</a>    </span><span class="kw">pub const fn </span>scale_h(<span class="kw-2">&amp;</span><span class="self">self</span>, factor: f64) -&gt; <span class="self">Self </span>{
+<a href=#360 id=360 data-nosnippet>360</a>    </span><span class="kw">pub fn </span>scale_h(<span class="kw-2">&amp;</span><span class="self">self</span>, factor: f64) -&gt; <span class="self">Self </span>{
 <a href=#361 id=361 data-nosnippet>361</a>        <span class="self">Self </span>{
 <a href=#362 id=362 data-nosnippet>362</a>            h: (<span class="self">self</span>.h <span class="kw">as </span>f64 * factor).floor() <span class="kw">as </span>u32,
 <a href=#363 id=363 data-nosnippet>363</a>            ..<span class="kw-2">*</span><span class="self">self
