@@ -1,7 +1,10 @@
 //! Geometry primitives
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::cmp::{max, min};
+use std::{
+    cmp::{max, min},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 /// An x,y coordinate pair
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -14,8 +17,11 @@ pub struct Point {
 }
 
 impl Point {
+    /// The origin (0, 0)
+    pub const ORIGIN: Self = Self::new(0, 0);
+
     /// Create a new Point.
-    pub fn new(x: i32, y: i32) -> Self {
+    pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
 }
@@ -50,6 +56,82 @@ impl From<&Rect> for Point {
         let &Rect { x, y, .. } = r;
 
         Self { x, y }
+    }
+}
+
+impl Neg for Point {
+    type Output = Point;
+
+    fn neg(self) -> Self::Output {
+        Self::new(-self.x, self.y)
+    }
+}
+
+impl Add<Point> for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Point) -> Self::Output {
+        Self::new(self.x + rhs.x, self.y + rhs.y)
+    }
+}
+
+impl AddAssign<Point> for Point {
+    fn add_assign(&mut self, rhs: Point) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
+}
+
+impl Sub<Point> for Point {
+    type Output = Point;
+
+    fn sub(self, rhs: Point) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
+impl SubAssign<Point> for Point {
+    fn sub_assign(&mut self, rhs: Point) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
+}
+
+impl Mul<i32> for Point {
+    type Output = Point;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        Self::new(self.x * rhs, self.y * rhs)
+    }
+}
+
+impl MulAssign<i32> for Point {
+    fn mul_assign(&mut self, rhs: i32) {
+        self.x *= rhs;
+        self.y *= rhs;
+    }
+}
+
+impl Mul<Point> for i32 {
+    type Output = Point;
+
+    fn mul(self, rhs: Point) -> Self::Output {
+        Point::new(rhs.x * self, rhs.y * self)
+    }
+}
+
+impl Div<i32> for Point {
+    type Output = Point;
+
+    fn div(self, rhs: i32) -> Self::Output {
+        Self::new(self.x / rhs, self.y / rhs)
+    }
+}
+
+impl DivAssign<i32> for Point {
+    fn div_assign(&mut self, rhs: i32) {
+        self.x /= rhs;
+        self.y /= rhs;
     }
 }
 
@@ -164,6 +246,21 @@ impl Rect {
         Rect { x, y, w, h }
     }
 
+    /// Set the position of this [Rect] by specifying the new location of the top left corner as a
+    /// [Point].
+    ///
+    /// ```
+    /// # use penrose::pure::geometry::{Rect, Point};
+    /// let mut r = Rect::new(0, 0, 100, 200);
+    /// r.set_position(Point::new(20, -10));
+    ///
+    /// assert_eq!(r, Rect::new(20, -10, 100, 200));
+    /// ```
+    pub const fn set_position(&mut self, Point { x, y }: Point) {
+        self.x = x;
+        self.y = y;
+    }
+
     /// The four corners of this [Rect] in [Point] form returned in clockwise
     /// order from the top left corner.
     /// ```
@@ -181,7 +278,7 @@ impl Rect {
     ///     )
     /// );
     /// ```
-    pub fn corners(&self) -> (Point, Point, Point, Point) {
+    pub const fn corners(&self) -> (Point, Point, Point, Point) {
         let &Rect { x, y, w, h } = self;
 
         (
@@ -205,7 +302,7 @@ impl Rect {
     ///
     /// assert_eq!(r.midpoint(), Point { x: 50, y: 100 });
     /// ```
-    pub fn midpoint(&self) -> Point {
+    pub const fn midpoint(&self) -> Point {
         Point {
             x: self.x + (self.w / 2) as i32,
             y: self.y + (self.h / 2) as i32,
@@ -222,7 +319,7 @@ impl Rect {
     /// assert_eq!(r.shrink_in(50), Rect::new(0, 0, 1, 100));
     /// assert_eq!(r.shrink_in(100), Rect::new(0, 0, 1, 1));
     /// ```
-    pub fn shrink_in(&self, border: u32) -> Self {
+    pub const fn shrink_in(&self, border: u32) -> Self {
         let w = if self.w <= 2 * border {
             1
         } else {
@@ -290,8 +387,6 @@ impl Rect {
 
     /// Update the position of this [Rect] by specified deltas.
     ///
-    /// Minimum (x, y) coordinates are clamped at (0, 0)
-    ///
     /// # Panics
     /// This function will panic if one of the supplied deltas overflows `i32::MAX`.
     /// ```
@@ -302,15 +397,15 @@ impl Rect {
     /// assert_eq!(r, Rect::new(20, 30, 100, 200));
     ///
     /// r.reposition(-40, -20);
-    /// assert_eq!(r, Rect::new(0, 10, 100, 200));
+    /// assert_eq!(r, Rect::new(-20, 10, 100, 200));
     /// ```
-    pub fn reposition(&mut self, dx: i32, dy: i32) {
-        self.x = max(0, self.x + dx);
-        self.y = max(0, self.y + dy);
+    pub const fn reposition(&mut self, dx: i32, dy: i32) {
+        self.x += dx;
+        self.y += dy;
     }
 
     /// Check whether this Rect contains `other` as a sub-Rect
-    pub fn contains(&self, other: &Rect) -> bool {
+    pub const fn contains(&self, other: &Rect) -> bool {
         match other {
             Rect { x, .. } if *x < self.x => false,
             Rect { x, w, .. } if (*x + *w as i32) > (self.x + self.w as i32) => false,
@@ -322,7 +417,7 @@ impl Rect {
 
     /// Check whether this Rect is physically larger than `other` regardless
     /// of position.
-    pub fn is_larger_than(&self, other: &Rect) -> bool {
+    pub const fn is_larger_than(&self, other: &Rect) -> bool {
         self.w > other.w && self.h > other.h
     }
 
@@ -340,7 +435,7 @@ impl Rect {
     /// Center this Rect inside of `enclosing`.
     ///
     /// Returns `None` if this Rect can not fit inside enclosing
-    pub fn centered_in(&self, enclosing: &Rect) -> Option<Self> {
+    pub const fn centered_in(&self, enclosing: &Rect) -> Option<Self> {
         if self.w > enclosing.w || self.h > enclosing.h {
             return None;
         }
@@ -377,7 +472,7 @@ impl Rect {
     /// Divides this rect into two columns where the first has the given width.
     ///
     /// Returns `None` if new_width is out of bounds
-    pub fn split_at_width(&self, new_width: u32) -> Option<(Self, Self)> {
+    pub const fn split_at_width(&self, new_width: u32) -> Option<(Self, Self)> {
         if new_width >= self.w {
             None
         } else {
@@ -398,7 +493,7 @@ impl Rect {
     /// Divides this rect into two rows where the first has the given height.
     ///
     /// Returns `None` if new_height is out of bounds
-    pub fn split_at_height(&self, new_height: u32) -> Option<(Self, Self)> {
+    pub const fn split_at_height(&self, new_height: u32) -> Option<(Self, Self)> {
         if new_height >= self.h {
             None
         } else {
@@ -457,7 +552,7 @@ impl Rect {
     }
 
     /// Divides this rect into two columns along its midpoint.
-    pub fn split_at_mid_width(&self) -> (Self, Self) {
+    pub const fn split_at_mid_width(&self) -> (Self, Self) {
         let new_width = self.w / 2;
         (
             Self {
@@ -473,7 +568,7 @@ impl Rect {
     }
 
     /// Divides this rect into two rows along its midpoint.
-    pub fn split_at_mid_height(&self) -> (Self, Self) {
+    pub const fn split_at_mid_height(&self) -> (Self, Self) {
         let new_height = self.h / 2;
         (
             Self {
@@ -486,6 +581,35 @@ impl Rect {
                 ..*self
             },
         )
+    }
+}
+
+impl Add<Rect> for Point {
+    type Output = Rect;
+
+    fn add(self, mut rhs: Rect) -> Self::Output {
+        rhs.x += self.x;
+        rhs.y += self.y;
+
+        rhs
+    }
+}
+
+impl Add<Point> for Rect {
+    type Output = Rect;
+
+    fn add(mut self, rhs: Point) -> Self::Output {
+        self.x += rhs.x;
+        self.y += rhs.y;
+
+        self
+    }
+}
+
+impl AddAssign<Point> for Rect {
+    fn add_assign(&mut self, rhs: Point) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 
@@ -587,8 +711,8 @@ mod tests {
     // no case for increase by i32::MAX as this overflows (documented).
     #[test_case(1, 2, r(11, 22, 10, 20); "increase")]
     #[test_case(-1, -2, r(9, 18, 10, 20); "decrease")]
-    #[test_case(-100, -100, r(0, 0, 10, 20); "clamp at 0x0")]
-    #[test_case(-i32::MAX, -i32::MAX, r(0, 0, 10, 20); "decrease by max")]
+    #[test_case(-100, -100, r(-90, -80, 10, 20); "clamp at 0x0")]
+    #[test_case(-i32::MAX, -i32::MAX, r(10-i32::MAX, 20-i32::MAX, 10, 20); "decrease by max")]
     #[test]
     fn reposition_works(dw: i32, dh: i32, expected: Rect) {
         let mut r = Rect::new(10, 20, 10, 20);
