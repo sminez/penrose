@@ -221,7 +221,7 @@ where
     /// Focus the given client and set its [Workspace] as current (see
     /// focus_tag).
     ///
-    /// If the client is unknown or on an invisible tag then then this is a no-op.
+    /// If the client is unknown or on an invisible tag then this is a no-op.
     pub fn focus_client(&mut self, client: &C) {
         if self.current_client() == Some(client) {
             return; // already focused

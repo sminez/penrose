@@ -7,17 +7,17 @@
 //! patch directly (such as `dwm`). Penrose strives to be as simple as possible in its
 //! implementation in order to make the guts of the window manager easier to understand. Given the
 //! nature of what this involves, this is not always possible but effort has been made to keep the
-//! source readable and with relatively free of magic.
+//! source readable and relatively free of magic.
 //!
 //!
 //! ## Using Penrose
 //!
 //! Penrose itself is not a binary application that you can build, install and run. You need to
-//! write your own **main.rs** as a rust binary crate that uses Penrose as a dependency to set up,
+//! write your own **main.rs** as a Rust binary crate that uses Penrose as a dependency to set up,
 //! configure and run your very own window manager exactly how you want it. In short, you *will*
 //! need to write some code and you *will* need to know Rust to some degree.
 //!
-//! For learning rust itself, there are some fantastic official [guides][4] available on
+//! For learning Rust itself, there are some fantastic official [guides][4] available on
 //! rust-lang.org and if you are sticking to using the out of the box functionality provided
 //! by the penrose crate, working through [The Rust Book][5] before diving into penrose should be more
 //! than enough to get you started.
@@ -36,7 +36,7 @@
 //! in to the [core] module which contains the majority of the functionality you are likely to
 //! want to work with. If you are interested in the lower level X11 interactions (or need to make
 //! requests to the X server directly) you should check out the [x] module and its associated
-//! traits. To add functionality and flexability to your window manager, there are the [builtin]
+//! traits. To add functionality and flexibility to your window manager, there are the [builtin]
 //! and [extensions] modules which offer capabilities built on top of the rest of penrose.
 //!
 //! [1]: https://dwm.suckless.org/
