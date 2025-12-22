@@ -6,3 +6,4 @@ title = "The Penrose Book"
 
 [output.html]
 default-theme = "ayu"
+edit-url-template = "https://github.com/sminez/penrose/edit/develop/docs/{path}"
