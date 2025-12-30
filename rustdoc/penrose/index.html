@@ -6,13 +6,13 @@ level details taken care of for you) rather than a minimal window manager that y
 patch directly (such as <code>dwm</code>). Penrose strives to be as simple as possible in its
 implementation in order to make the guts of the window manager easier to understand. Given the
 nature of what this involves, this is not always possible but effort has been made to keep the
-source readable and with relatively free of magic.</p>
+source readable and relatively free of magic.</p>
 <h3 id="using-penrose"><a class="doc-anchor" href="#using-penrose">§</a>Using Penrose</h3>
 <p>Penrose itself is not a binary application that you can build, install and run. You need to
-write your own <strong>main.rs</strong> as a rust binary crate that uses Penrose as a dependency to set up,
+write your own <strong>main.rs</strong> as a Rust binary crate that uses Penrose as a dependency to set up,
 configure and run your very own window manager exactly how you want it. In short, you <em>will</em>
 need to write some code and you <em>will</em> need to know Rust to some degree.</p>
-<p>For learning rust itself, there are some fantastic official <a href="https://www.rust-lang.org/learn">guides</a> available on
+<p>For learning Rust itself, there are some fantastic official <a href="https://www.rust-lang.org/learn">guides</a> available on
 rust-lang.org and if you are sticking to using the out of the box functionality provided
 by the penrose crate, working through <a href="https://doc.rust-lang.org/book/">The Rust Book</a> before diving into penrose should be more
 than enough to get you started.</p>
@@ -28,7 +28,7 @@ libraries that are dependencies (namely xcb, Cairo and Pango).</p>
 in to the <a href="core/index.html" title="mod penrose::core">core</a> module which contains the majority of the functionality you are likely to
 want to work with. If you are interested in the lower level X11 interactions (or need to make
 requests to the X server directly) you should check out the <a href="x/index.html" title="mod penrose::x">x</a> module and its associated
-traits. To add functionality and flexability to your window manager, there are the <a href="builtin/index.html" title="mod penrose::builtin">builtin</a>
+traits. To add functionality and flexibility to your window manager, there are the <a href="builtin/index.html" title="mod penrose::builtin">builtin</a>
 and <a href="extensions/index.html" title="mod penrose::extensions">extensions</a> modules which offer capabilities built on top of the rest of penrose.</p>
 </div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="builtin/index.html" title="mod penrose::builtin">builtin</a></dt><dd>Built-in functionality for penrose.</dd><dt><a class="mod" href="core/index.html" title="mod penrose::core">core</a></dt><dd>Core data structures and user facing functionality for the window manager</dd><dt><a class="mod" href="extensions/index.html" title="mod penrose::extensions">extensions</a></dt><dd>Extensions to the base behaviour of Penrose</dd><dt><a class="mod" href="pure/index.html" title="mod penrose::pure">pure</a></dt><dd>Side effect free management of internal window manager state</dd><dt><a class="mod" href="util/index.html" title="mod penrose::util">util</a></dt><dd>Utility functions for use in other parts of penrose</dd><dt><a class="mod" href="x/index.html" title="mod penrose::x">x</a></dt><dd>Logic for interacting with the X server</dd><dt><a class="mod" href="x11rb/index.html" title="mod penrose::x11rb">x11rb</a></dt><dd>Helpers and utilities for using x11rb as a back end for penrose</dd></dl><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><dl class="item-table"><dt><a class="macro" href="macro.custom_error.html" title="macro penrose::custom_error">custom_<wbr>error</a></dt><dd>Quickly create a <a href="enum.Error.html#variant.Custom" title="variant penrose::Error::Custom">crate::Error::Custom</a></dd><dt><a class="macro" href="macro.impl_message.html" title="macro penrose::impl_message">impl_<wbr>message</a></dt><dd>Mark a type as being usable as a <a href="core/layout/struct.Message.html" title="struct penrose::core::layout::Message">Message</a> for sending to a <a href="core/layout/trait.Layout.html" title="trait penrose::core::layout::Layout">Layout</a></dd><dt><a class="macro" href="macro.manage_hooks.html" title="macro penrose::manage_hooks">manage_<wbr>hooks</a></dt><dd>Compose together a set of ManageHook query/hook rules into a single ManageHook
 that can be added to your Config.</dd><dt><a class="macro" href="macro.map.html" title="macro penrose::map">map</a></dt><dd>Make creating a pre-defined HashMap a little less verbose</dd><dt><a class="macro" href="macro.simple_transformer.html" title="macro penrose::simple_transformer">simple_<wbr>transformer</a></dt><dd>Quickly define a <a href="core/layout/trait.LayoutTransformer.html" title="trait penrose::core::layout::LayoutTransformer">LayoutTransformer</a> from a single element tuple struct and a

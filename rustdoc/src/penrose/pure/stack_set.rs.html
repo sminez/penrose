@@ -221,7 +221,7 @@
 <a href=#221 id=221 data-nosnippet>221</a>    <span class="doccomment">/// Focus the given client and set its [Workspace] as current (see
 <a href=#222 id=222 data-nosnippet>222</a>    /// focus_tag).
 <a href=#223 id=223 data-nosnippet>223</a>    ///
-<a href=#224 id=224 data-nosnippet>224</a>    /// If the client is unknown or on an invisible tag then then this is a no-op.
+<a href=#224 id=224 data-nosnippet>224</a>    /// If the client is unknown or on an invisible tag then this is a no-op.
 <a href=#225 id=225 data-nosnippet>225</a>    </span><span class="kw">pub fn </span>focus_client(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: <span class="kw-2">&amp;</span>C) {
 <a href=#226 id=226 data-nosnippet>226</a>        <span class="kw">if </span><span class="self">self</span>.current_client() == <span class="prelude-val">Some</span>(client) {
 <a href=#227 id=227 data-nosnippet>227</a>            <span class="kw">return</span>; <span class="comment">// already focused
