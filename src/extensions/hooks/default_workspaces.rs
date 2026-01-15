@@ -41,7 +41,11 @@ where
     X: XConn,
 {
     fn call(&mut self, state: &mut State<X>, _x: &mut X) -> Result<()> {
-        let on_screen_and_empty = matches!(state.diff.after.visible.iter().find(|s| s.tag == self.tag), Some(s) if s.clients.is_empty());
+        let on_screen_and_empty = std::iter::once(&state.diff.after.focused)
+            .chain(state.diff.after.visible.iter())
+            .find(|s| s.tag == self.tag)
+            .map(|s| s.clients.is_empty())
+            .unwrap_or(false);
 
         if on_screen_and_empty
             && !state
