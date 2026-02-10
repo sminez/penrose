@@ -227,12 +227,11 @@ pub trait ConnExt: Conn + Sized {
     fn position_clients(&mut self, state: &State<Self>) -> Result<()> {
         let border = state.config.border_width;
         let positions = &state.diff.after.positions;
-        let screen_positions: Vec<_> = state.client_set.screens().map(|s| s.r).collect();
 
         self.restack(positions.iter().map(|(id, _)| id))?;
 
         for &(c, mut r) in positions.iter() {
-            if !screen_positions.contains(&r) {
+            if !self.client_is_fullscreen(c) {
                 r = r.shrink_in(border);
             }
             self.position_client(c, r)?;
