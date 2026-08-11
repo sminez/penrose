@@ -87,10 +87,12 @@ impl fmt::Display for KeyBindingError {
     }
 }
 
-/// The keybindings that parsed, along with any errors that occurred.
+/// The keybindings that parsed, along with any errors.
 #[derive(Debug)]
 pub struct ParsedKeyBindings<C: Conn> {
+    /// The bindings.
     pub bindings: KeyBindings<C>,
+    /// Errors that occurred while parsing the bindings.
     pub errors: Vec<KeyBindingError>,
 }
 
@@ -116,95 +118,9 @@ impl<C: Conn> ParsedKeyBindings<C> {
     }
 }
 
-/// Parse string format key bindings using the given parse function, collecting any failures.
-///
-/// A key string containing whitespace is a *sequence*: `"M-m M-l"` fires when `M-l` is pressed
-/// after `M-m`, and neither key does anything on its own. Sequences may be any length. Binding
-/// both a chord and something shorter that it starts with is ambiguous, so the longer binding
-/// is dropped and reported, as is any sequence described more than once.
-pub fn parse_keybindings<S, C, F>(
-    str_bindings: HashMap<S, Box<dyn KeyEventHandler<C>>>,
-    mut parse: F,
-) -> ParsedKeyBindings<C>
-where
-    S: AsRef<str>,
-    C: Conn,
-    F: FnMut(&str) -> Result<C::KeyBindingKey>,
-{
-    let mut errors = Vec::new();
-    let mut parsed = Vec::new();
-
-    for (s, handler) in str_bindings {
-        let binding = s.as_ref().to_owned();
-        let keys: Result<Vec<C::KeyBindingKey>> =
-            s.as_ref().split_whitespace().map(&mut parse).collect();
-
-        match keys {
-            Err(error) => errors.push(KeyBindingError { binding, error }),
-            Ok(keys) if keys.is_empty() => errors.push(KeyBindingError {
-                error: Error::Custom("no keys in binding".to_owned()),
-                binding,
-            }),
-            Ok(keys) => parsed.push((binding, keys, handler)),
-        }
-    }
-
-    // Shortest first, so which spelling of a duplicated sequence survives is the tidiest one
-    // rather than whatever the map happened to iterate first.
-    parsed.sort_by(|(a, ..), (b, ..)| (a.len(), a).cmp(&(b.len(), b)));
-
-    let mut named = Claimed::<C>::new();
-
-    for (binding, keys, handler) in parsed {
-        match named.get(&keys) {
-            Some((owner, _)) => errors.push(KeyBindingError {
-                error: Error::Custom(format!("duplicate of '{owner}'")),
-                binding,
-            }),
-            None => {
-                named.insert(keys, (binding, handler));
-            }
-        }
-    }
-
-    // Pressing the shorter binding fires it rather than waiting to see whether a longer one
-    // was meant, so the longer ones could never be reached.
-    let shadowed: Vec<_> = named
-        .keys()
-        .filter_map(|keys| {
-            let (by, _) = (1..keys.len()).find_map(|n| named.get(&keys[..n]))?;
-            Some((keys.clone(), by.clone()))
-        })
-        .collect();
-
-    for (keys, by) in shadowed {
-        if let Some((binding, _)) = named.remove(&keys) {
-            errors.push(KeyBindingError {
-                error: Error::Custom(format!("shadowed by '{by}'")),
-                binding,
-            });
-        }
-    }
-
-    errors.sort_by(|a, b| a.binding.cmp(&b.binding));
-
-    ParsedKeyBindings {
-        bindings: KeyBindings::new(named.into_iter().map(|(k, (_, h))| (k, h)).collect()),
-        errors,
-    }
-}
-
-/// Each parsed key sequence, the binding which claimed it, and what it runs.
-type Claimed<C> = HashMap<Vec<<C as Conn>::KeyBindingKey>, (String, Box<dyn KeyEventHandler<C>>)>;
-
-/// Run the binding a key press completes, waiting for more keys if it begins a longer one.
-///
-/// [Conn] implementations should call this for every key press they receive rather than
-/// looking bindings up themselves, so that chorded bindings work on every backend.
-///
-/// A key press which continues no binding abandons the sequence in progress rather than
-/// leaving the window manager in a state where the user's bindings have silently stopped
-/// working.
+/// Dispatches a key press. If it matches a binding, the action is run. If it matches a key
+/// sequence, waits for more keys to complete. [Conn] implementations should call this for every key
+/// press they receive rather than looking bindings up themselves.
 pub fn dispatch_key<C: Conn>(
     key: C::KeyBindingKey,
     bindings: &mut KeyBindings<C>,
@@ -239,50 +155,35 @@ pub fn dispatch_key<C: Conn>(
     Ok(())
 }
 
-/// Parse string format key bindings into [KeyCode] based [KeyBindings] using
-/// the command line `xmodmap` utility.
+/// Parse string format key bindings into [KeyCode] based [KeyBindings] using the command line
+/// `xmodmap` utility, keeping the bindings that parsed alongside the errors for those that did not.
 ///
-/// Every binding must be usable: if any are not, this returns an error naming all of them
-/// rather than only the first. See [parse_keybindings_with_xmodmap_or_log] to keep the
-/// bindings that did parse instead.
+/// A binding pattern containing whitespace is a *sequence*: `"M-m M-l"` runs when `M-l` is pressed
+/// after `M-m`, and neither key does anything on its own. Sequences may be any length, and a
+/// sequence bound alongside a shorter binding it starts with is ambiguous, so both are dropped and
+/// reported.
 ///
 /// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
-pub fn parse_keybindings_with_xmodmap<S, X>(
-    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X>>>,
-) -> Result<KeyBindings<X>>
-where
-    S: AsRef<str>,
-    X: XConn,
-{
-    xmodmap_bindings(str_bindings)?.into_result()
-}
-
-/// Parse string format key bindings as [parse_keybindings_with_xmodmap] does, but keep going
-/// when one of them cannot be used.
-///
-/// Bindings which fail are logged at error level and dropped; everything else still works.
-/// This only fails if `xmodmap` itself could not be run, in which case there is nothing to
-/// parse against and no partial result to keep.
-pub fn parse_keybindings_with_xmodmap_or_log<S, X>(
-    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X>>>,
-) -> Result<KeyBindings<X>>
-where
-    S: AsRef<str>,
-    X: XConn,
-{
-    Ok(xmodmap_bindings(str_bindings)?.log_errors())
-}
-
-fn xmodmap_bindings<S, X>(
-    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X>>>,
+pub fn parse_keybindings<X>(
+    str_bindings: HashMap<String, Box<dyn KeyEventHandler<X>>>,
 ) -> Result<ParsedKeyBindings<X>>
 where
-    S: AsRef<str>,
     X: XConn,
 {
     let m = keycodes_from_xmodmap()?;
+    Ok(KeyBindings::parse(str_bindings, |k| parse_binding(k, &m)))
+}
 
-    Ok(parse_keybindings(str_bindings, |k| parse_binding(k, &m)))
+/// Parse string format key bindings into [KeyCode] based [KeyBindings] using the command line
+/// `xmodmap` utility. Returns an [Error] if any fail to parse. See [parse_keybindings] for more
+/// details.
+pub fn parse_keybindings_with_xmodmap<X>(
+    str_bindings: HashMap<String, Box<dyn KeyEventHandler<X>>>,
+) -> Result<KeyBindings<X>>
+where
+    X: XConn,
+{
+    parse_keybindings(str_bindings)?.into_result()
 }
 
 /// Some action to be run by a user key binding
@@ -310,10 +211,7 @@ where
     }
 }
 
-/// User defined key bindings, keyed by the sequence of key presses which run them.
-///
-/// Built by [parse_keybindings], which is where a sequence bound twice, or shadowed by a
-/// shorter one it starts with, is reported and dropped.
+/// User defined key bindings, keyed by keypress sequence.
 pub struct KeyBindings<C: Conn> {
     bindings: HashMap<Vec<C::KeyBindingKey>, Box<dyn KeyEventHandler<C>>>,
     /// Every sequence which begins a binding without being one itself.
@@ -324,26 +222,92 @@ impl<C: Conn> fmt::Debug for KeyBindings<C> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("KeyBindings")
             .field("bindings", &self.bindings)
+            .field("prefixes", &self.prefixes)
             .finish()
     }
 }
 
 impl<C: Conn> KeyBindings<C> {
-    /// Index a map of key sequences for dispatch.
+    /// Parse string format key bindings using the given parse function, collecting any failures.
+    /// Bindings which overlap are all dropped and reported as errors.
     ///
-    /// Private so that [parse_keybindings] is the only way to obtain a `KeyBindings`, which
-    /// is what makes "no sequence bound twice, none shadowed by a shorter one" a property of
-    /// the type rather than of remembering to check. A sequence which is both a binding and
-    /// the start of a longer one can only ever run as the shorter of the two, so it is not
-    /// treated as a prefix and the longer one is unreachable.
-    fn new(bindings: HashMap<Vec<C::KeyBindingKey>, Box<dyn KeyEventHandler<C>>>) -> Self {
+    /// A binding pattern containing whitespace is a *sequence*: `"M-m M-l"` matches when `M-l` is
+    /// pressed after `M-m`, and neither key does anything on its own.
+    pub fn parse<F>(
+        input_bindings: HashMap<String, Box<dyn KeyEventHandler<C>>>,
+        mut parse_key: F,
+    ) -> ParsedKeyBindings<C>
+    where
+        F: FnMut(&str) -> Result<C::KeyBindingKey>,
+    {
+        type BindingsWithString<C> =
+            HashMap<Vec<<C as Conn>::KeyBindingKey>, (String, Box<dyn KeyEventHandler<C>>)>;
+
+        let mut errors = Vec::new();
+        let mut bindings = BindingsWithString::<C>::new();
+        let mut duplicates: HashSet<Vec<C::KeyBindingKey>> = HashSet::new();
+
+        for (binding, handler) in input_bindings {
+            let keys: Result<Vec<C::KeyBindingKey>> =
+                binding.split_whitespace().map(&mut parse_key).collect();
+
+            match keys {
+                Err(error) => errors.push(KeyBindingError { binding, error }),
+                Ok(keys) if keys.is_empty() => errors.push(KeyBindingError {
+                    error: Error::EmptyKeyBinding,
+                    binding,
+                }),
+                Ok(keys) => {
+                    if duplicates.contains(&keys) {
+                        errors.push(KeyBindingError {
+                            error: Error::DuplicateKeyBinding,
+                            binding,
+                        });
+                    } else if let Some((previous, _)) = bindings.remove(&keys) {
+                        errors.push(KeyBindingError {
+                            error: Error::DuplicateKeyBinding,
+                            binding,
+                        });
+                        errors.push(KeyBindingError {
+                            error: Error::DuplicateKeyBinding,
+                            binding: previous,
+                        });
+                        duplicates.insert(keys);
+                    } else {
+                        bindings.insert(keys, (binding, handler));
+                    }
+                }
+            }
+        }
+
+        let overlapped_prefixes: Vec<Vec<C::KeyBindingKey>> = bindings
+            .keys()
+            .flat_map(|keys| (1..keys.len()).map(|n| keys[..n].to_vec()))
+            .filter(|prefix| bindings.contains_key(prefix))
+            .collect();
+
+        for prefix in overlapped_prefixes {
+            for (_, (binding, _)) in bindings.extract_if(|keys, _| keys.starts_with(&prefix)) {
+                errors.push(KeyBindingError {
+                    error: Error::KeyBindingPrefixOverlap,
+                    binding,
+                });
+            }
+        }
+
         let prefixes = bindings
             .keys()
             .flat_map(|keys| (1..keys.len()).map(|n| keys[..n].to_vec()))
-            .filter(|prefix| !bindings.contains_key(prefix))
             .collect();
 
-        Self { bindings, prefixes }
+        let bindings = bindings.into_iter().map(|(k, (_, h))| (k, h)).collect();
+
+        errors.sort_by(|a, b| a.binding.cmp(&b.binding));
+
+        ParsedKeyBindings {
+            bindings: KeyBindings { bindings, prefixes },
+            errors,
+        }
     }
 
     /// The number of bindings.
@@ -351,13 +315,14 @@ impl<C: Conn> KeyBindings<C> {
         self.bindings.len()
     }
 
-    /// Whether there are no bindings at all.
+    /// Whether there are no bindings.
     pub fn is_empty(&self) -> bool {
         self.bindings.is_empty()
     }
 
     /// The key sequence which runs each binding.
-    pub fn sequences(&self) -> impl Iterator<Item = &[C::KeyBindingKey]> {
+    #[cfg(test)]
+    pub(crate) fn sequences(&self) -> impl Iterator<Item = &[C::KeyBindingKey]> {
         self.bindings.keys().map(Vec::as_slice)
     }
 
@@ -374,7 +339,7 @@ impl<C: Conn> KeyBindings<C> {
 
     /// Whether more keys are needed before this sequence can run anything.
     fn is_prefix(&self, keys: &[C::KeyBindingKey]) -> bool {
-        // Checked first so that a config with no chords in it does no work at all here.
+        // Checked first so that a config with no sequences in it does no work at all here.
         !self.prefixes.is_empty() && self.prefixes.contains(keys)
     }
 
@@ -767,7 +732,7 @@ mod tests {
     use crate::{pure::geometry::Rect, x::mock::MockXConn};
     use std::sync::mpsc::{Receiver, Sender, channel};
 
-    #[derive(Default)]
+    #[derive(Debug, Default)]
     struct TestConn {
         captures: Vec<&'static str>,
     }
@@ -804,7 +769,7 @@ mod tests {
         KeyCode { mask: 0, code }
     }
 
-    /// Each key description is a single letter, mapping to its position in the alphabet.
+    /// Each key name is a single letter, mapping to its position in the alphabet.
     /// Anything else fails to parse.
     fn parse(k: &str) -> Result<KeyCode> {
         match k.as_bytes() {
@@ -819,7 +784,7 @@ mod tests {
             .map(|p| ((*p).to_string(), record(log, p)))
             .collect();
 
-        parse_keybindings(raw, parse)
+        KeyBindings::parse(raw, parse)
     }
 
     fn test_state(conn: &mut TestConn) -> State<TestConn> {
@@ -836,62 +801,23 @@ mod tests {
     // --- accumulating parse failures ---
 
     #[test]
-    fn every_failure_is_reported_not_just_the_first() {
+    fn every_failure_is_reported_and_the_rest_are_kept() {
         let (log, _rx) = channel();
+        let parsed = parsed(&["a", "nope", "b", "also-nope"], &log);
 
-        assert_eq!(
-            dropped(&parsed(&["a", "nope", "b", "also-nope"], &log)),
-            vec!["also-nope", "nope"]
-        );
-    }
+        // Reporting every failure and keeping everything else are the same point: one typo
+        // should cost the user that binding and nothing more.
+        assert_eq!(dropped(&parsed), vec!["also-nope", "nope"]);
 
-    #[test]
-    fn bindings_that_parse_are_kept() {
-        let (log, _rx) = channel();
-        let parsed = parsed(&["a", "nope", "b"], &log);
-
-        // Dropping only what could not be used is the point: one typo should not cost the
-        // user every other binding they wrote.
         let mut kept: Vec<u8> = parsed.bindings.sequences().map(|k| k[0].code).collect();
         kept.sort_unstable();
         assert_eq!(kept, vec![1, 2]);
     }
 
-    #[test]
-    fn all_or_error_names_every_failure() {
-        let (log, _rx) = channel();
-        let err = parsed(&["a", "nope", "also-nope"], &log)
-            .into_result()
-            .expect_err("failures to be reported");
-
-        let msg = err.to_string();
-        assert!(msg.contains("nope"), "{msg}");
-        assert!(msg.contains("also-nope"), "{msg}");
-        // The underlying error is worth having, not just the name of the binding.
-        assert!(msg.contains("is not a known key name"), "{msg}");
-    }
+    // --- grouping sequences ---
 
     #[test]
-    fn all_or_error_yields_the_bindings_when_everything_parses() {
-        let (log, _rx) = channel();
-        let bindings = parsed(&["a", "b"], &log)
-            .into_result()
-            .expect("no failures");
-
-        assert_eq!(bindings.len(), 2);
-    }
-
-    #[test]
-    fn log_errors_keeps_what_parsed() {
-        let (log, _rx) = channel();
-
-        assert_eq!(parsed(&["a", "nope"], &log).log_errors().len(), 1);
-    }
-
-    // --- grouping chords ---
-
-    #[test]
-    fn only_the_leading_key_of_a_chord_is_grabbed() {
+    fn only_the_leading_key_of_a_sequence_is_grabbed() {
         let (log, _rx) = channel();
         let parsed = parsed(&["a b", "a c", "z"], &log);
 
@@ -910,102 +836,56 @@ mod tests {
     }
 
     #[test]
-    fn a_chord_shadowed_by_a_shorter_binding_is_dropped() {
+    fn a_sequence_and_the_shorter_binding_it_starts_with_are_both_dropped() {
         let (log, _rx) = channel();
-        let parsed = parsed(&["a", "a b"], &log);
+        let parsed = parsed(&["a", "a b", "z"], &log);
 
-        // Pressing "a" fires it immediately, so "a b" could never be reached.
-        assert_eq!(dropped(&parsed), vec!["a b"]);
+        // Pressing "a" would fire it rather than waiting for "b", so "a b" could never be
+        // reached. There is no telling which was meant, so neither is kept.
+        assert_eq!(dropped(&parsed), vec!["a", "a b"]);
         assert_eq!(parsed.bindings.len(), 1);
     }
 
     #[test]
-    fn a_chord_shadowed_partway_through_is_dropped() {
+    fn an_overlap_drops_both_bindings_and_leaves_no_prefix_behind() {
         let (log, _rx) = channel();
+        let parsed = parsed(&["a b", "a b c"], &log);
 
-        assert_eq!(dropped(&parsed(&["a b", "a b c"], &log)), vec!["a b c"]);
+        assert_eq!(dropped(&parsed), vec!["a b", "a b c"]);
+        assert!(parsed.bindings.is_empty());
+        // "a" would otherwise stay a prefix with nothing behind it, so pressing it would grab
+        // the keyboard and swallow the next key press before giving up.
+        assert!(parsed.bindings.prefixes.is_empty());
     }
 
     #[test]
-    fn chords_can_be_any_length() {
-        let (log, _rx) = channel();
-        let parsed = parsed(&["a b c", "a b d"], &log);
-
-        // Nothing has to be declared for depth: a sequence is just a longer map key.
-        assert_eq!(parsed.bindings.len(), 2);
-        assert_eq!(parsed.bindings.leading_keys().len(), 1);
-        assert!(parsed.errors.is_empty(), "{:?}", parsed.errors);
-    }
-
-    #[test]
-    fn two_descriptions_of_one_key_sequence_keep_the_first_by_name() {
-        let (log, _rx) = channel();
-
-        // Whitespace makes these distinct keys in the map the user wrote, but the same key
-        // sequence once parsed. Modifier order does the same thing: "M-S-j" and "S-M-j".
-        let parsed = parsed(&["a", " a "], &log);
-
-        assert_eq!(dropped(&parsed), vec![" a "]);
-        assert_eq!(parsed.bindings.len(), 1);
-    }
-
-    #[test]
-    fn which_duplicate_is_dropped_does_not_depend_on_map_ordering() {
-        // The bindings arrive in a HashMap, so the only thing keeping this stable across runs
-        // is sorting them: without it either description could win.
+    fn every_pattern_for_a_duplicated_sequence_is_dropped() {
+        // The bindings arrive in a HashMap, so what is reported has to be stable across runs
+        // by construction rather than by luck.
         for _ in 0..20 {
             let (log, _rx) = channel();
-            let parsed = parsed(&["a", " a ", "a  "], &log);
 
-            assert_eq!(dropped(&parsed), vec![" a ", "a  "]);
+            // Whitespace makes these distinct keys in the map the user wrote, but the same
+            // key sequence once parsed. Modifier order does the same: "M-S-j" and "S-M-j".
+            let parsed = parsed(&["a", " a ", "a  "], &log);
+            assert!(parsed.bindings.is_empty());
+
+            let err = parsed.into_result().expect_err("duplicates to be reported");
+            let Error::InvalidKeyBindings { errors } = err else {
+                panic!("expected InvalidKeyBindings, got {err:?}");
+            };
+
+            assert_eq!(
+                errors
+                    .iter()
+                    .map(|e| e.binding.as_str())
+                    .collect::<Vec<_>>(),
+                vec![" a ", "a", "a  "]
+            );
         }
     }
 
-    #[test]
-    fn a_duplicate_names_the_binding_that_won() {
-        let (log, _rx) = channel();
-        let err = parsed(&["a", " a "], &log)
-            .into_result()
-            .expect_err("duplicate to be reported");
-
-        // Quoted, because otherwise a duplicate caused by stray whitespace is invisible.
-        assert!(err.to_string().contains("' a ': duplicate of 'a'"), "{err}");
-    }
-
-    #[test]
-    fn duplicated_chords_are_reported_too() {
-        let (log, _rx) = channel();
-
-        assert_eq!(dropped(&parsed(&["a b", "a  b"], &log)), vec!["a  b"]);
-    }
-
-    #[test]
-    fn a_config_without_chords_has_no_prefixes() {
-        let (log, _rx) = channel();
-
-        // What makes the prefix check free for the configs that never use a chord.
-        assert!(parsed(&["a", "b"], &log).bindings.prefixes.is_empty());
-    }
-
-    #[test]
-    fn a_hand_built_map_resolves_shadowing_rather_than_hanging() {
-        let (log, rx) = channel();
-        let mut map = HashMap::new();
-        map.insert(vec![key(1)], record(&log, "a"));
-        map.insert(vec![key(1), key(2)], record(&log, "a b"));
-
-        // Parsing rejects this pair, but nothing stops it being built by hand. Treating "a"
-        // as a prefix would leave it waiting for a key that can never make it run.
-        let mut bindings = KeyBindings::new(map);
-        let mut conn = TestConn::default();
-        let mut state = test_state(&mut conn);
-
-        dispatch_key(key(1), &mut bindings, &mut state, &mut conn).expect("dispatch");
-        assert_eq!(rx.try_iter().collect::<Vec<_>>(), vec!["a"]);
-        assert!(conn.captures.is_empty());
-    }
-
-    // --- dispatching chords ---
+    // --- dispatching sequences ---
 
     /// The state of a running window manager holding the given bindings.
     struct Running {
@@ -1049,7 +929,7 @@ mod tests {
     }
 
     #[test]
-    fn a_chord_runs_its_binding_once_completed() {
+    fn a_sequence_runs_its_binding_once_completed() {
         let mut wm = Running::new(&["a b", "a c"]);
 
         wm.press(1);
@@ -1065,14 +945,14 @@ mod tests {
     }
 
     #[test]
-    fn a_key_that_continues_no_chord_abandons_it() {
+    fn a_key_that_continues_no_sequence_abandons_it() {
         let mut wm = Running::new(&["a b", "z"]);
 
         wm.press(1);
         wm.press(26);
 
-        // "z" is consumed cancelling the chord rather than running its own binding, which is
-        // what stops a mistyped chord from doing something unexpected.
+        // "z" is consumed cancelling the sequence rather than running its own binding, which
+        // is what stops a mistyped sequence from doing something unexpected.
         assert!(wm.ran().is_empty());
         assert_eq!(wm.conn.captures, vec!["capture", "cancel"]);
 
@@ -1082,7 +962,7 @@ mod tests {
     }
 
     #[test]
-    fn a_chord_only_claims_one_key_press() {
+    fn a_sequence_only_claims_one_key_press() {
         let mut wm = Running::new(&["a b", "b"]);
 
         wm.press(1);
@@ -1094,7 +974,7 @@ mod tests {
     }
 
     #[test]
-    fn nested_chords_dispatch_a_level_at_a_time() {
+    fn longer_sequences_dispatch_a_key_at_a_time() {
         let mut wm = Running::new(&["a b c", "a b d"]);
 
         wm.press(1);

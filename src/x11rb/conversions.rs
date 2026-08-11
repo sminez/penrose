@@ -72,15 +72,12 @@ pub(crate) fn convert_event<C: Connection + Send>(
         })),
 
         Event::KeyPress(event) => {
-            // Capturing grabs the whole keyboard, so bare modifier presses arrive too and
-            // would look like "a key that is not bound", ending the capture mid chord. Gated
-            // on it, because a deliberately bound modifier must still be reported.
-            if conn.capturing {
+            if conn.capturing_next_key {
+                // whole keyboard is captured, so modifier keys also arrive.
                 if conn.modifier_keycodes.contains(&event.detail) {
                     return Ok(None);
                 }
-
-                // The capture covers a single key press: this one.
+                // ungrab the keyboard since a key press has arrived.
                 conn.end_capture()?;
             }
 

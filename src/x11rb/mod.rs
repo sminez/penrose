@@ -102,7 +102,7 @@ pub struct Conn<C: Connection> {
     /// whenever bindings are grabbed, which covers `MappingNotify`.
     modifier_keycodes: HashSet<u8>,
     /// Whether the keyboard is currently grabbed for `capture_next_key`.
-    capturing: bool,
+    capturing_next_key: bool,
 }
 
 /// A pure rust based connection to the X server using a [RustConnection].
@@ -166,7 +166,7 @@ where
             root,
             atoms,
             modifier_keycodes: HashSet::new(),
-            capturing: false,
+            capturing_next_key: false,
         };
 
         xconn.refresh_modifier_keycodes()?;
@@ -177,14 +177,14 @@ where
 
     /// End an in-progress key capture, releasing the keyboard.
     ///
-    /// Called as soon as a key press has been converted for the window manager, which is what
-    /// makes the capture one-shot even if the caller never cancels it.
+    /// Called as soon as a key press has been converted for the window manager, which is what makes
+    /// the capture one-shot even if the caller never cancels it.
     fn end_capture(&mut self) -> Result<()> {
-        if !self.capturing {
+        if !self.capturing_next_key {
             return Ok(());
         }
 
-        self.capturing = false;
+        self.capturing_next_key = false;
         self.conn.ungrab_keyboard(CURRENT_TIME)?;
         self.conn.flush()?;
 
@@ -196,7 +196,6 @@ where
         let reply = self.conn.get_modifier_mapping()?.reply()?;
         // A keycode of 0 means "unused slot" rather than a real key.
         self.modifier_keycodes = reply.keycodes.into_iter().filter(|&k| k != 0).collect();
-
         Ok(())
     }
 
@@ -325,6 +324,10 @@ where
     }
 
     fn capture_next_key(&mut self) -> Result<()> {
+        if self.capturing_next_key {
+            return Ok(());
+        }
+
         let reply = self
             .conn
             .grab_keyboard(
@@ -345,7 +348,7 @@ where
             )));
         }
 
-        self.capturing = true;
+        self.capturing_next_key = true;
         self.conn.flush()?;
 
         Ok(())
