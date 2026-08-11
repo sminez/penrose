@@ -22,15 +22,17 @@ members = [
 ]
 
 [features]
-default = ["x11rb", "keysyms"]
-keysyms = ["penrose_keysyms"]
+default = ["x11rb"]
+# Kept so that configs enabling it still build: penrose_keysyms is now required, as
+# binding names are resolved to keysyms rather than to keycodes via xmodmap.
+keysyms = []
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 
 [dependencies]
 anymap = "0.12"
 bitflags = { version = "2.9", features = ["serde"] }
 nix = { version = "0.30", default-features = false, features = ["signal"] }
-penrose_keysyms = { version = "0.3.6", path = "crates/penrose_keysyms", optional = true }
+penrose_keysyms = { version = "0.3.6", path = "crates/penrose_keysyms" }
 serde = { version = "1.0", features = ["derive"], optional = true }
 strum = { version = "0.27", features = ["derive"] }
 thiserror = "2.0"

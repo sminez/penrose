@@ -8,7 +8,6 @@ use crate::{
     pure::geometry::Point,
     x::XConn,
 };
-#[cfg(feature = "keysyms")]
 use penrose_keysyms::XKeySym;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -17,6 +16,7 @@ use std::{
     convert::TryFrom,
     fmt, mem,
     process::Command,
+    str::FromStr,
 };
 use strum::{EnumIter, IntoEnumIterator};
 use tracing::{debug, error, trace};
@@ -470,7 +470,6 @@ pub enum KeyPress {
     Right,
 }
 
-#[cfg(feature = "keysyms")]
 impl TryFrom<XKeySym> for KeyPress {
     type Error = std::string::FromUtf8Error;
 
@@ -515,6 +514,60 @@ impl KeyCode {
             mask: self.mask & !mask,
             code: self.code,
         }
+    }
+}
+
+/// A keysym and the modifiers held with it: what a key binding is keyed on.
+///
+/// A keysym identifies what a key *means* rather than where it sits on the keyboard, so
+/// unlike a [KeyCode] this is the same value on every machine regardless of layout. Which
+/// physical keys can produce it is a question for the backend, answered when grabbing.
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct KeySym {
+    /// The held modifier mask
+    pub mask: KeyCodeMask,
+    /// The X11 keysym value
+    pub keysym: u32,
+}
+
+impl KeySym {
+    /// Parse a binding pattern such as `"M-S-semicolon"`.
+    ///
+    /// Modifiers are `M` (meta / super), `A` (alt), `C` (control) and `S` (shift), joined to
+    /// the key name with `-`. The key name is a keysym name with the `XK_` / `XF86XK_`
+    /// prefix stripped, which is how `xmodmap -pke` prints them: `a`, `semicolon`,
+    /// `Return`, `XF86AudioMute`.
+    ///
+    /// Naming a key that this keyboard cannot produce is not an error here - whether a
+    /// key exists is a property of the keymap rather than of the binding - so that is
+    /// reported when the binding is grabbed.
+    ///
+    /// ```rust
+    /// # use penrose::core::bindings::KeySym;
+    /// let k = KeySym::parse("M-S-semicolon").unwrap();
+    /// assert_eq!(k.keysym, 0x3b);
+    ///
+    /// assert!(KeySym::parse("M-not-a-key").is_err());
+    /// ```
+    pub fn parse(pattern: &str) -> Result<Self> {
+        let mut parts: Vec<&str> = pattern.split('-').collect();
+        let name = parts.remove(parts.len() - 1);
+
+        let keysym = XKeySym::from_str(name)
+            .map_err(|_| Error::UnknownKeyName {
+                name: name.to_owned(),
+            })?
+            .keysym();
+
+        let mask = parts
+            .iter()
+            .map(|&s| ModifierKey::try_from(s))
+            .try_fold(0, |acc, v| v.map(|inner| acc | u16::from(inner)))?;
+
+        trace!(?pattern, mask, keysym, "parsed keybinding");
+
+        Ok(KeySym { mask, keysym })
     }
 }
 
@@ -984,5 +1037,59 @@ mod tests {
 
         wm.press(4);
         assert_eq!(wm.ran(), vec!["a b d"]);
+    }
+
+    // --- parsing key names ---
+
+    #[test]
+    fn modifiers_and_key_name_parse() {
+        let k = KeySym::parse("M-S-semicolon").expect("valid binding");
+
+        assert_eq!(k.mask, u16::from(ModifierKey::Meta) | u16::from(ModifierKey::Shift));
+        assert_eq!(k.keysym, 0x3b);
+    }
+
+    #[test]
+    fn each_modifier_has_its_own_bit() {
+        for (pattern, modifier) in [
+            ("C-a", ModifierKey::Ctrl),
+            ("A-a", ModifierKey::Alt),
+            ("S-a", ModifierKey::Shift),
+            ("M-a", ModifierKey::Meta),
+        ] {
+            let k = KeySym::parse(pattern).expect(pattern);
+            assert_eq!(k.mask, u16::from(modifier), "{pattern}");
+        }
+    }
+
+    #[test]
+    fn a_key_named_for_the_separator_still_parses() {
+        // The pattern is split on '-', so the key that is itself a '-' is the awkward case.
+        let k = KeySym::parse("M-minus").expect("valid binding");
+
+        assert_eq!(k.mask, u16::from(ModifierKey::Meta));
+        assert_eq!(k.keysym, XKeySym::XK_minus.keysym());
+    }
+
+    #[test]
+    fn media_keys_parse_by_name() {
+        let k = KeySym::parse("XF86AudioMute").expect("valid binding");
+
+        assert_eq!(k.mask, 0);
+        assert_eq!(k.keysym, 0x1008ff12);
+    }
+
+    #[test]
+    fn unknown_names_are_reported() {
+        // A key name we do not know and a modifier we do not know are both errors, and each
+        // names the part that was not understood.
+        assert!(matches!(
+            KeySym::parse("M-nope"),
+            Err(Error::UnknownKeyName { name }) if name == "nope"
+        ));
+        assert!(matches!(
+            KeySym::parse("X-a"),
+            Err(Error::UnknownModifier { name }) if name == "X"
+        ));
     }
 }
