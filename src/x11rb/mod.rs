@@ -288,10 +288,8 @@ where
             error!(%e, "unable to ungrab keys");
         };
 
-        // We need to explicitly grab NumLock as an additional modifier and then drop it later on
-        // when we are passing events through to the WindowManager as NumLock alters the modifier
-        // mask when it is active.
-        let modifiers = &[0, u16::from(ModMask::M2)];
+        // Keys also need to be grabbed with all combinations of ignored lock modifiers.
+        let modifiers = &lock_combinations();
         let mode = GrabMode::ASYNC;
         let mask = EventMask::BUTTON_PRESS | EventMask::BUTTON_RELEASE | EventMask::BUTTON_MOTION;
 
@@ -710,4 +708,20 @@ where
 
         Ok(())
     }
+}
+
+/// Modifier mask of both caps lock and num lock. These are ignored for key dispatch since they are
+/// toggled rather than held. The same physical key combination should be recognized regardless of
+/// lock state.
+pub(crate) fn lock_modifiers() -> u16 {
+    let caps = u16::from(ModMask::LOCK);
+    let num = u16::from(ModMask::M2);
+    caps | num
+}
+
+/// Every combination of the lock modifiers, for key press grabbing.
+pub(crate) fn lock_combinations() -> [u16; 4] {
+    let caps = u16::from(ModMask::LOCK);
+    let num = u16::from(ModMask::M2);
+    [0, caps, num, caps | num]
 }
