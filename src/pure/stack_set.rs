@@ -841,6 +841,7 @@ impl StackSet<WinId> {
             diff: Default::default(),
             running: false,
             held_mouse_state: None,
+            pending_keys: Vec::new(),
         };
 
         s.visible_client_positions(&mut crate::x::StubXConn)

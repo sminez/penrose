@@ -87,8 +87,21 @@ pub trait Conn: Send + Sized {
     /// Flush any pending events to the underlying back end.
     fn flush(&mut self);
 
+    /// Capture the next non-modifier key press, bound or not, delivering it to the window
+    /// manager rather than to the focused client.
+    ///
+    /// Ends capture as soon as a key press is received, so that a caller that never calls
+    /// `cancel_capture_next_key` does not hold the keyboard indefinitely.
+    fn capture_next_key(&mut self) -> Result<()>;
+
+    /// End a capture started by `capture_next_key`, without waiting for the key press.
+    fn cancel_capture_next_key(&mut self) -> Result<()>;
+
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
+    ///
+    /// This *replaces* the currently grabbed set: anything previously grabbed and not named
+    /// here is released.
     fn grab(
         &mut self,
         key_codes: &[Self::KeyBindingKey],

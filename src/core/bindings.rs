@@ -12,9 +12,14 @@ use crate::{
 use penrose_keysyms::XKeySym;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, convert::TryFrom, fmt, process::Command};
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryFrom,
+    fmt, mem,
+    process::Command,
+};
 use strum::{EnumIter, IntoEnumIterator};
-use tracing::trace;
+use tracing::{debug, error, trace};
 
 /// Run the xmodmap command to dump the system keymap table.
 ///
@@ -67,23 +72,118 @@ fn parse_binding(pattern: &str, known_codes: &HashMap<String, u8>) -> Result<Key
     }
 }
 
-/// Parse string format key bindings into [KeyCode] based [KeyBindings] using
-/// the command line `xmodmap` utility.
+/// Why a key binding could not be used.
+#[derive(Debug)]
+pub struct KeyBindingError {
+    /// The binding as it was written, e.g. `"M-S-Retrun"`.
+    pub binding: String,
+    /// Why it could not be used.
+    pub error: Error,
+}
+
+impl fmt::Display for KeyBindingError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "'{}': {}", self.binding, self.error)
+    }
+}
+
+/// The keybindings that parsed, along with any errors.
+#[derive(Debug)]
+pub struct ParsedKeyBindings<C: Conn> {
+    /// The bindings.
+    pub bindings: KeyBindings<C>,
+    /// Errors that occurred while parsing the bindings.
+    pub errors: Vec<KeyBindingError>,
+}
+
+impl<C: Conn> ParsedKeyBindings<C> {
+    /// Returns the bindings or an error naming every binding that was dropped.
+    pub fn into_result(self) -> Result<KeyBindings<C>> {
+        if self.errors.is_empty() {
+            return Ok(self.bindings);
+        }
+
+        Err(Error::InvalidKeyBindings {
+            errors: self.errors,
+        })
+    }
+
+    /// Returns the bindings, and logs all dropped bindings.
+    pub fn log_err(self) -> KeyBindings<C> {
+        for e in self.errors.iter() {
+            error!(binding = %e.binding, error = %e.error, "key binding error");
+        }
+
+        self.bindings
+    }
+}
+
+/// Dispatches a key press. If it matches a binding, the action is run. If it matches a key
+/// sequence, waits for more keys to complete. [Conn] implementations should call this for every key
+/// press they receive rather than looking bindings up themselves.
+pub fn dispatch_key<C: Conn>(
+    key: C::KeyBindingKey,
+    bindings: &mut KeyBindings<C>,
+    state: &mut State<C>,
+    conn: &mut C,
+) -> Result<()> {
+    state.pending_keys.push(key);
+
+    if bindings.is_prefix(&state.pending_keys) {
+        trace!(pending = ?state.pending_keys, "waiting for the rest of a key sequence");
+        return conn.capture_next_key();
+    }
+
+    let keys = mem::take(&mut state.pending_keys);
+    if keys.len() > 1 {
+        conn.cancel_capture_next_key()?;
+    }
+
+    match bindings.get_mut(&keys) {
+        Some(handler) => {
+            trace!(?keys, "running user keybinding");
+            if let Err(error) = handler.call(state, conn) {
+                error!(%error, ?keys, "error running user keybinding");
+                return Err(error);
+            }
+        }
+
+        None if keys.len() > 1 => debug!(?keys, "no binding for this key sequence"),
+        None => (),
+    }
+
+    Ok(())
+}
+
+/// Parse string format key bindings into [KeyCode] based [KeyBindings] using the command line
+/// `xmodmap` utility, keeping the bindings that parsed alongside the errors for those that did not.
+///
+/// A binding pattern containing whitespace is a *sequence*: `"M-m M-l"` runs when `M-l` is pressed
+/// after `M-m`, and neither key does anything on its own. Sequences may be any length, and a
+/// sequence bound alongside a shorter binding it starts with is ambiguous, so both are dropped and
+/// reported.
 ///
 /// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
-pub fn parse_keybindings_with_xmodmap<S, X>(
-    str_bindings: HashMap<S, Box<dyn KeyEventHandler<X>>>,
-) -> Result<KeyBindings<X>>
+pub fn parse_keybindings<X>(
+    str_bindings: HashMap<String, Box<dyn KeyEventHandler<X>>>,
+) -> Result<ParsedKeyBindings<X>>
 where
-    S: AsRef<str>,
     X: XConn,
 {
     let m = keycodes_from_xmodmap()?;
+    Ok(KeyBindings::parse(str_bindings, |k| parse_binding(k, &m)))
+}
 
-    str_bindings
-        .into_iter()
-        .map(|(s, v)| parse_binding(s.as_ref(), &m).map(|k| (k, v)))
-        .collect()
+/// Parse string format key bindings into [KeyCode] based [KeyBindings] using the command line
+/// `xmodmap` utility. Returns an [Error] if any fail to parse. See [parse_keybindings] for more
+/// details.
+pub fn parse_keybindings_with_xmodmap<X>(
+    str_bindings: HashMap<String, Box<dyn KeyEventHandler<X>>>,
+) -> Result<KeyBindings<X>>
+where
+    X: XConn,
+{
+    parse_keybindings(str_bindings)?.into_result()
 }
 
 /// Some action to be run by a user key binding
@@ -111,8 +211,142 @@ where
     }
 }
 
-/// User defined key bindings
-pub type KeyBindings<C> = HashMap<<C as Conn>::KeyBindingKey, Box<dyn KeyEventHandler<C>>>;
+/// User defined key bindings, keyed by keypress sequence.
+pub struct KeyBindings<C: Conn> {
+    bindings: HashMap<Vec<C::KeyBindingKey>, Box<dyn KeyEventHandler<C>>>,
+    /// Every sequence which begins a binding without being one itself.
+    prefixes: HashSet<Vec<C::KeyBindingKey>>,
+}
+
+impl<C: Conn> fmt::Debug for KeyBindings<C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("KeyBindings")
+            .field("bindings", &self.bindings)
+            .field("prefixes", &self.prefixes)
+            .finish()
+    }
+}
+
+impl<C: Conn> KeyBindings<C> {
+    /// Parse string format key bindings using the given parse function, collecting any failures.
+    /// Bindings which overlap are all dropped and reported as errors.
+    ///
+    /// A binding pattern containing whitespace is a *sequence*: `"M-m M-l"` matches when `M-l` is
+    /// pressed after `M-m`, and neither key does anything on its own.
+    pub fn parse<F>(
+        input_bindings: HashMap<String, Box<dyn KeyEventHandler<C>>>,
+        mut parse_key: F,
+    ) -> ParsedKeyBindings<C>
+    where
+        F: FnMut(&str) -> Result<C::KeyBindingKey>,
+    {
+        type BindingsWithString<C> =
+            HashMap<Vec<<C as Conn>::KeyBindingKey>, (String, Box<dyn KeyEventHandler<C>>)>;
+
+        let mut errors = Vec::new();
+        let mut bindings = BindingsWithString::<C>::new();
+        let mut duplicates: HashSet<Vec<C::KeyBindingKey>> = HashSet::new();
+
+        for (binding, handler) in input_bindings {
+            let keys: Result<Vec<C::KeyBindingKey>> =
+                binding.split_whitespace().map(&mut parse_key).collect();
+
+            match keys {
+                Err(error) => errors.push(KeyBindingError { binding, error }),
+                Ok(keys) if keys.is_empty() => errors.push(KeyBindingError {
+                    error: Error::EmptyKeyBinding,
+                    binding,
+                }),
+                Ok(keys) => {
+                    if duplicates.contains(&keys) {
+                        errors.push(KeyBindingError {
+                            error: Error::DuplicateKeyBinding,
+                            binding,
+                        });
+                    } else if let Some((previous, _)) = bindings.remove(&keys) {
+                        errors.push(KeyBindingError {
+                            error: Error::DuplicateKeyBinding,
+                            binding,
+                        });
+                        errors.push(KeyBindingError {
+                            error: Error::DuplicateKeyBinding,
+                            binding: previous,
+                        });
+                        duplicates.insert(keys);
+                    } else {
+                        bindings.insert(keys, (binding, handler));
+                    }
+                }
+            }
+        }
+
+        let overlapped_prefixes: Vec<Vec<C::KeyBindingKey>> = bindings
+            .keys()
+            .flat_map(|keys| (1..keys.len()).map(|n| keys[..n].to_vec()))
+            .filter(|prefix| bindings.contains_key(prefix))
+            .collect();
+
+        for prefix in overlapped_prefixes {
+            for (_, (binding, _)) in bindings.extract_if(|keys, _| keys.starts_with(&prefix)) {
+                errors.push(KeyBindingError {
+                    error: Error::KeyBindingPrefixOverlap,
+                    binding,
+                });
+            }
+        }
+
+        let prefixes = bindings
+            .keys()
+            .flat_map(|keys| (1..keys.len()).map(|n| keys[..n].to_vec()))
+            .collect();
+
+        let bindings = bindings.into_iter().map(|(k, (_, h))| (k, h)).collect();
+
+        errors.sort_by(|a, b| a.binding.cmp(&b.binding));
+
+        ParsedKeyBindings {
+            bindings: KeyBindings { bindings, prefixes },
+            errors,
+        }
+    }
+
+    /// The number of bindings.
+    pub fn len(&self) -> usize {
+        self.bindings.len()
+    }
+
+    /// Whether there are no bindings.
+    pub fn is_empty(&self) -> bool {
+        self.bindings.is_empty()
+    }
+
+    /// The key sequence which runs each binding.
+    #[cfg(test)]
+    pub(crate) fn sequences(&self) -> impl Iterator<Item = &[C::KeyBindingKey]> {
+        self.bindings.keys().map(Vec::as_slice)
+    }
+
+    /// The keys which can begin a binding, and so are the ones that need grabbing. The rest
+    /// of a sequence arrives through [Conn::capture_next_key] rather than through a grab.
+    pub fn leading_keys(&self) -> Vec<C::KeyBindingKey> {
+        self.bindings
+            .keys()
+            .filter_map(|keys| keys.first().copied())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect()
+    }
+
+    /// Whether more keys are needed before this sequence can run anything.
+    fn is_prefix(&self, keys: &[C::KeyBindingKey]) -> bool {
+        // Checked first so that a config with no sequences in it does no work at all here.
+        !self.prefixes.is_empty() && self.prefixes.contains(keys)
+    }
+
+    fn get_mut(&mut self, keys: &[C::KeyBindingKey]) -> Option<&mut Box<dyn KeyEventHandler<C>>> {
+        self.bindings.get_mut(keys)
+    }
+}
 
 /// An action to be run in response to a mouse event
 pub trait MouseEventHandler<C>: Send
@@ -489,5 +723,266 @@ impl MotionNotifyEvent {
             },
             modifiers,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{pure::geometry::Rect, x::mock::MockXConn};
+    use std::sync::mpsc::{Receiver, Sender, channel};
+
+    #[derive(Debug, Default)]
+    struct TestConn {
+        captures: Vec<&'static str>,
+    }
+
+    impl MockXConn for TestConn {
+        fn mock_screen_details(&mut self) -> Result<Vec<Rect>> {
+            Ok(vec![Rect::new(0, 0, 1000, 800)])
+        }
+
+        fn mock_capture_next_key(&mut self) -> Result<()> {
+            self.captures.push("capture");
+            Ok(())
+        }
+
+        fn mock_cancel_capture_next_key(&mut self) -> Result<()> {
+            self.captures.push("cancel");
+            Ok(())
+        }
+    }
+
+    type Log = Sender<&'static str>;
+
+    /// A binding which records that it ran rather than doing anything.
+    fn record(log: &Log, tag: &'static str) -> Box<dyn KeyEventHandler<TestConn>> {
+        let log = log.clone();
+
+        Box::new(move |_: &mut State<TestConn>, _: &mut TestConn| {
+            log.send(tag).expect("log to be open");
+            Ok(())
+        })
+    }
+
+    fn key(code: u8) -> KeyCode {
+        KeyCode { mask: 0, code }
+    }
+
+    /// Each key name is a single letter, mapping to its position in the alphabet.
+    /// Anything else fails to parse.
+    fn parse(k: &str) -> Result<KeyCode> {
+        match k.as_bytes() {
+            [c @ b'a'..=b'z'] => Ok(key(c - b'a' + 1)),
+            _ => Err(Error::UnknownKeyName { name: k.to_owned() }),
+        }
+    }
+
+    fn parsed(patterns: &[&'static str], log: &Log) -> ParsedKeyBindings<TestConn> {
+        let raw = patterns
+            .iter()
+            .map(|p| ((*p).to_string(), record(log, p)))
+            .collect();
+
+        KeyBindings::parse(raw, parse)
+    }
+
+    fn test_state(conn: &mut TestConn) -> State<TestConn> {
+        State::try_new(Default::default(), conn).expect("test state")
+    }
+
+    fn dropped(parsed: &ParsedKeyBindings<TestConn>) -> Vec<&str> {
+        let mut names: Vec<&str> = parsed.errors.iter().map(|e| e.binding.as_str()).collect();
+        names.sort_unstable();
+
+        names
+    }
+
+    // --- accumulating parse failures ---
+
+    #[test]
+    fn every_failure_is_reported_and_the_rest_are_kept() {
+        let (log, _rx) = channel();
+        let parsed = parsed(&["a", "nope", "b", "also-nope"], &log);
+
+        // Reporting every failure and keeping everything else are the same point: one typo
+        // should cost the user that binding and nothing more.
+        assert_eq!(dropped(&parsed), vec!["also-nope", "nope"]);
+
+        let mut kept: Vec<u8> = parsed.bindings.sequences().map(|k| k[0].code).collect();
+        kept.sort_unstable();
+        assert_eq!(kept, vec![1, 2]);
+    }
+
+    // --- grouping sequences ---
+
+    #[test]
+    fn only_the_leading_key_of_a_sequence_is_grabbed() {
+        let (log, _rx) = channel();
+        let parsed = parsed(&["a b", "a c", "z"], &log);
+
+        // The rest of a sequence arrives through the capture rather than through a grab, so
+        // only the first key of each binding needs grabbing.
+        let mut grabbed: Vec<u8> = parsed
+            .bindings
+            .leading_keys()
+            .iter()
+            .map(|k| k.code)
+            .collect();
+        grabbed.sort_unstable();
+
+        assert_eq!(grabbed, vec![1, 26]);
+        assert!(parsed.errors.is_empty(), "{:?}", parsed.errors);
+    }
+
+    #[test]
+    fn a_sequence_and_the_shorter_binding_it_starts_with_are_both_dropped() {
+        let (log, _rx) = channel();
+        let parsed = parsed(&["a", "a b", "z"], &log);
+
+        // Pressing "a" would fire it rather than waiting for "b", so "a b" could never be
+        // reached. There is no telling which was meant, so neither is kept.
+        assert_eq!(dropped(&parsed), vec!["a", "a b"]);
+        assert_eq!(parsed.bindings.len(), 1);
+    }
+
+    #[test]
+    fn an_overlap_drops_both_bindings_and_leaves_no_prefix_behind() {
+        let (log, _rx) = channel();
+        let parsed = parsed(&["a b", "a b c"], &log);
+
+        assert_eq!(dropped(&parsed), vec!["a b", "a b c"]);
+        assert!(parsed.bindings.is_empty());
+        // "a" would otherwise stay a prefix with nothing behind it, so pressing it would grab
+        // the keyboard and swallow the next key press before giving up.
+        assert!(parsed.bindings.prefixes.is_empty());
+    }
+
+    #[test]
+    fn every_pattern_for_a_duplicated_sequence_is_dropped() {
+        // The bindings arrive in a HashMap, so what is reported has to be stable across runs
+        // by construction rather than by luck.
+        for _ in 0..20 {
+            let (log, _rx) = channel();
+
+            // Whitespace makes these distinct keys in the map the user wrote, but the same
+            // key sequence once parsed. Modifier order does the same: "M-S-j" and "S-M-j".
+            let parsed = parsed(&["a", " a ", "a  "], &log);
+            assert!(parsed.bindings.is_empty());
+
+            let err = parsed.into_result().expect_err("duplicates to be reported");
+            let Error::InvalidKeyBindings { errors } = err else {
+                panic!("expected InvalidKeyBindings, got {err:?}");
+            };
+
+            assert_eq!(
+                errors
+                    .iter()
+                    .map(|e| e.binding.as_str())
+                    .collect::<Vec<_>>(),
+                vec![" a ", "a", "a  "]
+            );
+        }
+    }
+
+    // --- dispatching sequences ---
+
+    /// The state of a running window manager holding the given bindings.
+    struct Running {
+        bindings: KeyBindings<TestConn>,
+        state: State<TestConn>,
+        conn: TestConn,
+        ran: Receiver<&'static str>,
+    }
+
+    impl Running {
+        fn new(patterns: &[&'static str]) -> Self {
+            let (log, ran) = channel();
+            let bindings = parsed(patterns, &log)
+                .into_result()
+                .expect("test bindings to parse");
+            let mut conn = TestConn::default();
+            let state = test_state(&mut conn);
+
+            Self {
+                bindings,
+                state,
+                conn,
+                ran,
+            }
+        }
+
+        /// Feed a key press through the same path the backend uses.
+        fn press(&mut self, code: u8) {
+            dispatch_key(
+                key(code),
+                &mut self.bindings,
+                &mut self.state,
+                &mut self.conn,
+            )
+            .expect("dispatch");
+        }
+
+        fn ran(&self) -> Vec<&'static str> {
+            self.ran.try_iter().collect()
+        }
+    }
+
+    #[test]
+    fn a_sequence_runs_its_binding_once_completed() {
+        let mut wm = Running::new(&["a b", "a c"]);
+
+        wm.press(1);
+        assert!(
+            wm.ran().is_empty(),
+            "the leading key runs nothing on its own"
+        );
+
+        wm.press(3);
+        assert_eq!(wm.ran(), vec!["a c"]);
+        // Captured for the second key press, then released once it arrived.
+        assert_eq!(wm.conn.captures, vec!["capture", "cancel"]);
+    }
+
+    #[test]
+    fn a_key_that_continues_no_sequence_abandons_it() {
+        let mut wm = Running::new(&["a b", "z"]);
+
+        wm.press(1);
+        wm.press(26);
+
+        // "z" is consumed cancelling the sequence rather than running its own binding, which
+        // is what stops a mistyped sequence from doing something unexpected.
+        assert!(wm.ran().is_empty());
+        assert_eq!(wm.conn.captures, vec!["capture", "cancel"]);
+
+        // ... and the next press behaves normally again.
+        wm.press(26);
+        assert_eq!(wm.ran(), vec!["z"]);
+    }
+
+    #[test]
+    fn a_sequence_only_claims_one_key_press() {
+        let mut wm = Running::new(&["a b", "b"]);
+
+        wm.press(1);
+        wm.press(2);
+        assert_eq!(wm.ran(), vec!["a b"]);
+
+        wm.press(2);
+        assert_eq!(wm.ran(), vec!["b"]);
+    }
+
+    #[test]
+    fn longer_sequences_dispatch_a_key_at_a_time() {
+        let mut wm = Running::new(&["a b c", "a b d"]);
+
+        wm.press(1);
+        wm.press(2);
+        assert!(wm.ran().is_empty());
+        assert_eq!(wm.conn.captures, vec!["capture", "capture"]);
+
+        wm.press(4);
+        assert_eq!(wm.ran(), vec!["a b d"]);
     }
 }

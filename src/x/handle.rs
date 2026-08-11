@@ -3,9 +3,7 @@ use crate::{
     Result, WinId,
     core::{
         State,
-        bindings::{
-            KeyBindings, KeyCode, MotionNotifyEvent, MouseBindings, MouseEvent, MouseEventKind,
-        },
+        bindings::{KeyBindings, MotionNotifyEvent, MouseBindings, MouseEvent, MouseEventKind},
         conn::{Conn, ConnExt},
     },
     pure::geometry::Point,
@@ -36,27 +34,10 @@ pub(crate) fn mapping_notify<X: XConn>(
     x: &mut X,
 ) -> Result<()> {
     trace!("grabbing key and mouse bindings");
-    let key_codes: Vec<_> = key_bindings.keys().copied().collect();
+    let key_codes = key_bindings.leading_keys();
     let mouse_states: Vec<_> = mouse_bindings.keys().cloned().collect();
 
     x.grab(&key_codes, &mouse_states)
-}
-
-pub(crate) fn keypress<X: XConn>(
-    key: KeyCode,
-    bindings: &mut KeyBindings<X>,
-    state: &mut State<X>,
-    x: &mut X,
-) -> Result<()> {
-    if let Some(action) = bindings.get_mut(&key) {
-        trace!(?key, "running user keybinding");
-        if let Err(error) = action.call(state, x) {
-            error!(%error, ?key, "error running user keybinding");
-            return Err(error);
-        }
-    }
-
-    Ok(())
 }
 
 pub(crate) fn mouse_event<X: XConn>(

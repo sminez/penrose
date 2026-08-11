@@ -72,6 +72,15 @@ pub(crate) fn convert_event<C: Connection + Send>(
         })),
 
         Event::KeyPress(event) => {
+            if conn.capturing_next_key {
+                // whole keyboard is captured, so modifier keys also arrive.
+                if conn.modifier_keycodes.contains(&event.detail) {
+                    return Ok(None);
+                }
+                // ungrab the keyboard since a key press has arrived.
+                conn.end_capture()?;
+            }
+
             let code = KeyCode {
                 mask: event.state.into(),
                 code: event.detail,

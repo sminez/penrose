@@ -105,6 +105,7 @@ pub use crate::core::WinId;
 
 /// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum Error {
     /// An operation requiring the client to be on a screen was requested on a client window that
     /// is not currently visible
@@ -196,6 +197,25 @@ pub enum Error {
     UnknownKeyName {
         /// The name of the unknown key
         name: String,
+    },
+
+    /// A keybinding was specified without any keys in it.
+    #[error("no keys in binding")]
+    EmptyKeyBinding,
+
+    /// A keybinding has been specified multiple times.
+    #[error("duplicate key binding")]
+    DuplicateKeyBinding,
+
+    /// A keybinding shares a prefix with another binding.
+    #[error("prefix of binding is matched by another binding")]
+    KeyBindingPrefixOverlap,
+
+    /// One or more key bindings could not be used.
+    #[error("unable to use {} key binding(s):\n{}", .errors.len(), fmt_binding_errors(.errors))]
+    InvalidKeyBindings {
+        /// Each binding which could not be used, and why
+        errors: Vec<core::bindings::KeyBindingError>,
     },
 
     /// An unknown character has been used to specify a modifier key
@@ -295,6 +315,14 @@ pub enum Error {
 
 /// A Result where the error type is a penrose [Error]
 pub type Result<T> = std::result::Result<T, Error>;
+
+fn fmt_binding_errors(errors: &[core::bindings::KeyBindingError]) -> String {
+    errors
+        .iter()
+        .map(|e| format!("  {e}"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
