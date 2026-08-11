@@ -44,6 +44,7 @@ where
     pub(crate) diff: Diff<WinId>,
     pub(crate) running: bool,
     pub(crate) held_mouse_state: Option<MouseState>,
+    pub(crate) pending_keys: Vec<<C as Conn>::KeyBindingKey>,
 }
 
 impl<C> State<C>
@@ -71,6 +72,7 @@ where
             diff,
             running: false,
             held_mouse_state: None,
+            pending_keys: Vec::new(),
         })
     }
 
@@ -421,7 +423,7 @@ where
             panic!("unable to set signal handler: {}", e);
         }
 
-        let key_codes: Vec<_> = self.key_bindings.keys().copied().collect();
+        let key_codes = self.key_bindings.leading_keys();
         let mouse_states: Vec<_> = self.mouse_bindings.keys().cloned().collect();
         self.conn.grab(&key_codes, &mouse_states)?;
 

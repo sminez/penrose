@@ -36,6 +36,14 @@ pub trait MockXConn: Send {
         unimplemented!("mock_grab")
     }
 
+    fn mock_capture_next_key(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn mock_cancel_capture_next_key(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     fn mock_next_event(&mut self) -> Result<XEvent> {
         unimplemented!("mock_next_event")
     }
@@ -137,6 +145,14 @@ where
 
     fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
         self.mock_grab(key_codes, mouse_states)
+    }
+
+    fn capture_next_key(&mut self) -> Result<()> {
+        self.mock_capture_next_key()
+    }
+
+    fn cancel_capture_next_key(&mut self) -> Result<()> {
+        self.mock_cancel_capture_next_key()
     }
 
     fn next_event(&mut self) -> Result<XEvent> {

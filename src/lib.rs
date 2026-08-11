@@ -103,6 +103,14 @@ pub mod x11rb;
 #[doc(inline)]
 pub use crate::core::WinId;
 
+fn fmt_binding_errors(errors: &[core::bindings::KeyBindingError]) -> String {
+    errors
+        .iter()
+        .map(|e| format!("  {e}"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// Error variants from the core penrose library.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -196,6 +204,13 @@ pub enum Error {
     UnknownKeyName {
         /// The name of the unknown key
         name: String,
+    },
+
+    /// One or more key bindings could not be used.
+    #[error("unable to use {} key binding(s):\n{}", .errors.len(), fmt_binding_errors(.errors))]
+    InvalidKeyBindings {
+        /// Each binding which could not be used, and why
+        errors: Vec<core::bindings::KeyBindingError>,
     },
 
     /// An unknown character has been used to specify a modifier key

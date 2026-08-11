@@ -3,7 +3,7 @@ use crate::{
     Color, Result, WinId,
     core::{
         Config, State,
-        bindings::{KeyBindings, KeyCode, MouseBindings, MouseState},
+        bindings::{self, KeyBindings, KeyCode, MouseBindings, MouseState},
         conn::{Conn, ConnEvent, ConnExt, manage_without_refresh},
     },
     pure::geometry::{Point, Rect},
@@ -98,6 +98,15 @@ pub trait XConn: Send {
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
     fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    /// Grab the keyboard as a whole, so that key presses which match no grabbed binding are
+    /// still delivered to the window manager.
+    ///
+    /// See [Conn::capture_next_key], which this backs.
+    fn capture_next_key(&mut self) -> Result<()>;
+    /// Release a keyboard grab taken by [XConn::capture_next_key].
+    ///
+    /// See [Conn::cancel_capture_next_key], which this backs.
+    fn cancel_capture_next_key(&mut self) -> Result<()>;
     /// Block and wait for the next event from the X server so it can be processed.
     fn next_event(&mut self) -> Result<XEvent>;
     /// Flush any pending events to the X server.
@@ -239,7 +248,7 @@ where
             Expose(_) => (), // Not currently handled
             FocusIn(id) => handle::focus_in(id, state, self)?,
             Destroy(id) => handle::destroy(id, state, self)?,
-            KeyPress(code) => handle::keypress(code, key_bindings, state, self)?,
+            KeyPress(code) => bindings::dispatch_key(code, key_bindings, state, self)?,
             Leave(p) => handle::leave(p, state, self)?,
             MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, self)?,
             MapRequest(xid) => handle::map_request(xid, state, self)?,
@@ -264,6 +273,16 @@ where
     #[inline]
     fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
         self.grab(key_codes, mouse_states)
+    }
+
+    #[inline]
+    fn capture_next_key(&mut self) -> Result<()> {
+        self.capture_next_key()
+    }
+
+    #[inline]
+    fn cancel_capture_next_key(&mut self) -> Result<()> {
+        self.cancel_capture_next_key()
     }
 
     #[inline]

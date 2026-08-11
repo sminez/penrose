@@ -87,8 +87,30 @@ pub trait Conn: Send + Sized {
     /// Flush any pending events to the underlying back end.
     fn flush(&mut self);
 
+    /// Capture the next non-modifier key press, bound or not, delivering it to the window
+    /// manager rather than to the focused client. This is how a chorded binding knows to
+    /// abort rather than wait indefinitely.
+    ///
+    /// One-shot: implementations must end the capture as soon as a key press is delivered, so
+    /// that a caller which never cancels cannot hold the keyboard. Backends which do nothing
+    /// here leave chords waiting rather than aborting.
+    fn capture_next_key(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// End a capture without waiting for the key press that would have ended it.
+    ///
+    /// A no-op when nothing is in flight, which is the usual case: a delivered key press ends
+    /// its own capture. This is for abandoning one that nothing is going to satisfy.
+    fn cancel_capture_next_key(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
+    ///
+    /// This *replaces* the currently grabbed set: anything previously grabbed and not named
+    /// here is released.
     fn grab(
         &mut self,
         key_codes: &[Self::KeyBindingKey],

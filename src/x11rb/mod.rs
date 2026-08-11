@@ -27,7 +27,10 @@ use crate::{
         property::{Prop, WindowAttributes, WmHints, WmNormalHints, WmState},
     },
 };
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 use strum::IntoEnumIterator;
 use tracing::error;
 use x11rb::{
@@ -38,8 +41,8 @@ use x11rb::{
         xproto::{
             AtomEnum, CLIENT_MESSAGE_EVENT, ChangeWindowAttributesAux, ClientMessageData,
             ClientMessageEvent, ColormapAlloc, ConfigureWindowAux, ConnectionExt as _,
-            CreateWindowAux, EventMask, GrabMode, InputFocus, MapState, ModMask, PropMode,
-            StackMode, WindowClass,
+            CreateWindowAux, EventMask, GrabMode, GrabStatus, InputFocus, MapState, ModMask,
+            PropMode, StackMode, WindowClass,
         },
     },
     rust_connection::RustConnection,
@@ -95,6 +98,11 @@ pub struct Conn<C: Connection> {
     conn: C,
     root: u32,
     atoms: Atoms,
+    /// Keycodes which are modifiers, so that they can be ignored while capturing. Refreshed
+    /// whenever bindings are grabbed, which covers `MappingNotify`.
+    modifier_keycodes: HashSet<u8>,
+    /// Whether the keyboard is currently grabbed for `capture_next_key`.
+    capturing: bool,
 }
 
 /// A pure rust based connection to the X server using a [RustConnection].
@@ -153,11 +161,43 @@ where
         let mask = NotifyMask::OUTPUT_CHANGE | NotifyMask::CRTC_CHANGE | NotifyMask::SCREEN_CHANGE;
         conn.randr_select_input(root, mask)?;
 
-        let mut xconn = Self { conn, root, atoms };
+        let mut xconn = Self {
+            conn,
+            root,
+            atoms,
+            modifier_keycodes: HashSet::new(),
+            capturing: false,
+        };
 
+        xconn.refresh_modifier_keycodes()?;
         xconn.set_client_attributes(WinId(root), &[ClientAttr::RootEventMask])?;
 
         Ok(xconn)
+    }
+
+    /// End an in-progress key capture, releasing the keyboard.
+    ///
+    /// Called as soon as a key press has been converted for the window manager, which is what
+    /// makes the capture one-shot even if the caller never cancels it.
+    fn end_capture(&mut self) -> Result<()> {
+        if !self.capturing {
+            return Ok(());
+        }
+
+        self.capturing = false;
+        self.conn.ungrab_keyboard(CURRENT_TIME)?;
+        self.conn.flush()?;
+
+        Ok(())
+    }
+
+    /// Pull the current keycode -> modifier mapping from the X server.
+    fn refresh_modifier_keycodes(&mut self) -> Result<()> {
+        let reply = self.conn.get_modifier_mapping()?.reply()?;
+        // A keycode of 0 means "unused slot" rather than a real key.
+        self.modifier_keycodes = reply.keycodes.into_iter().filter(|&k| k != 0).collect();
+
+        Ok(())
     }
 
     /// Get a handle to the underlying connection.
@@ -280,7 +320,42 @@ where
         Ok(Point::new(reply.root_x as i32, reply.root_y as i32))
     }
 
+    fn cancel_capture_next_key(&mut self) -> Result<()> {
+        self.end_capture()
+    }
+
+    fn capture_next_key(&mut self) -> Result<()> {
+        let reply = self
+            .conn
+            .grab_keyboard(
+                false, // don't pass grabbed events through to the client
+                self.root,
+                CURRENT_TIME,
+                GrabMode::ASYNC,
+                GrabMode::ASYNC,
+            )?
+            .reply()?;
+
+        // Reporting a refused grab lets the caller decline to enter a state which depends on
+        // a capture it did not get.
+        if reply.status != GrabStatus::SUCCESS {
+            return Err(Error::Custom(format!(
+                "unable to grab the keyboard: {:?}",
+                reply.status
+            )));
+        }
+
+        self.capturing = true;
+        self.conn.flush()?;
+
+        Ok(())
+    }
+
     fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+        // The set of keycodes that are modifiers can change at runtime (this method is
+        // re-run on MappingNotify) and capture_next_key needs it to be current.
+        self.refresh_modifier_keycodes()?;
+
         // Release any grabbed keys that we currently have before attempting to grab
         // the requested key codes.
         // NOTE: The '0' here is XCB_GRAB_ANY
