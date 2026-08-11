@@ -14,6 +14,7 @@ use crate::{
     },
     x11rb::Conn,
 };
+use std::mem;
 use strum::IntoEnumIterator;
 use tracing::warn;
 use x11rb::{
@@ -71,25 +72,34 @@ pub(crate) fn convert_event<C: Connection + Send>(
         })),
 
         Event::KeyPress(event) => {
-            if conn.capturing_next_key {
+            // The key that was pressed can be named by any of its levels, so the level a
+            // binding names has to be looked up rather than assumed. Mid sequence the
+            // candidates are the keys which would continue it, since the rest of a sequence
+            // is captured rather than grabbed.
+            let candidates = if conn.capturing_next_key {
                 // whole keyboard is captured, so modifier keys also arrive.
                 if conn.modifier_keycodes.contains(&event.detail) {
                     return Ok(None);
                 }
-                // ungrab the keyboard since a key press has arrived.
+                // ungrab the keyboard since a key press has arrived. This drops the
+                // continuations, so take them first.
+                let continuations = mem::take(&mut conn.capture_continuations);
                 conn.end_capture()?;
-            }
+
+                continuations
+            } else {
+                conn.bound_keys.clone()
+            };
 
             // NumLock alters the modifier mask while it is active and is not something a
             // binding names, so it is dropped before the binding is looked up.
             let mask = u16::from(event.state) & !u16::from(ModMask::M2);
 
-            // The key that was pressed can be named by any of its levels, so ask which of
-            // them is bound rather than assuming. A press with no binding at all still has
-            // to be delivered: that is how a mistyped key sequence is abandoned.
+            // A press matching nothing still has to be delivered: that is how a mistyped key
+            // sequence is abandoned.
             let key = conn
                 .keymap
-                .bound_sym(event.detail, mask, &conn.bound_keys)
+                .bound_sym(event.detail, mask, &candidates)
                 .or_else(|| conn.keymap.unmodified_sym(event.detail, mask));
 
             match key {

@@ -90,9 +90,20 @@ pub trait Conn: Send + Sized {
     /// Capture the next non-modifier key press, bound or not, delivering it to the window
     /// manager rather than to the focused client.
     ///
+    /// `continuations` are the keys which would extend the sequence in progress into a
+    /// binding; anything else ends it. It is never empty, since there would be nothing to
+    /// wait for. A backend needs this to know which keys to listen for: on a compositor
+    /// which binds keys on the window manager's behalf, a key with no binding registered
+    /// produces no event to deliver.
+    ///
     /// Ends capture as soon as a key press is received, so that a caller that never calls
     /// `cancel_capture_next_key` does not hold the keyboard indefinitely.
-    fn capture_next_key(&mut self) -> Result<()>;
+    ///
+    /// Calling this again before that press arrives *replaces* `continuations` rather than
+    /// adding to them, and does not extend the capture: one press is captured either way,
+    /// and it is resolved against the most recent set. A backend which registers the keys
+    /// somewhere must therefore drop the previous set, or a stale continuation stays live.
+    fn capture_next_key(&mut self, continuations: &[Self::KeyBindingKey]) -> Result<()>;
 
     /// End a capture started by `capture_next_key`, without waiting for the key press.
     fn cancel_capture_next_key(&mut self) -> Result<()>;

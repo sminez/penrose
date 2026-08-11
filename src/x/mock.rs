@@ -36,7 +36,7 @@ pub trait MockXConn: Send {
         unimplemented!("mock_grab")
     }
 
-    fn mock_capture_next_key(&mut self) -> Result<()> {
+    fn mock_capture_next_key(&mut self, _continuations: &[KeySym]) -> Result<()> {
         Ok(())
     }
 
@@ -147,8 +147,8 @@ where
         self.mock_grab(keys, mouse_states)
     }
 
-    fn capture_next_key(&mut self) -> Result<()> {
-        self.mock_capture_next_key()
+    fn capture_next_key(&mut self, continuations: &[KeySym]) -> Result<()> {
+        self.mock_capture_next_key(continuations)
     }
 
     fn cancel_capture_next_key(&mut self) -> Result<()> {

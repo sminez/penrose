@@ -77,8 +77,9 @@ pub fn dispatch_key<C: Conn>(
     state.pending_keys.push(key);
 
     if bindings.is_prefix(&state.pending_keys) {
-        trace!(pending = ?state.pending_keys, "waiting for the rest of a key sequence");
-        return conn.capture_next_key();
+        let continuations = bindings.continuations(&state.pending_keys);
+        trace!(pending = ?state.pending_keys, ?continuations, "waiting for the rest of a key sequence");
+        return conn.capture_next_key(&continuations);
     }
 
     let keys = mem::take(&mut state.pending_keys);
@@ -283,6 +284,20 @@ impl<C: Conn> KeyBindings<C> {
         self.bindings
             .keys()
             .filter_map(|keys| keys.first().copied())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect()
+    }
+
+    /// The keys which would extend `prefix` into a binding.
+    ///
+    /// This is what a backend needs in order to listen for the rest of a sequence, so it is
+    /// only ever asked for a prefix of some binding, and so is never empty.
+    fn continuations(&self, prefix: &[C::KeyBindingKey]) -> Vec<C::KeyBindingKey> {
+        self.bindings
+            .keys()
+            .filter(|keys| keys.len() > prefix.len() && keys.starts_with(prefix))
+            .map(|keys| keys[prefix.len()])
             .collect::<HashSet<_>>()
             .into_iter()
             .collect()
@@ -739,6 +754,8 @@ mod tests {
     #[derive(Debug, Default)]
     struct TestConn {
         captures: Vec<&'static str>,
+        /// The keys each capture was told to expect, as the letters they parsed from.
+        continuations: Vec<Vec<u32>>,
     }
 
     impl MockXConn for TestConn {
@@ -746,8 +763,13 @@ mod tests {
             Ok(vec![Rect::new(0, 0, 1000, 800)])
         }
 
-        fn mock_capture_next_key(&mut self) -> Result<()> {
+        fn mock_capture_next_key(&mut self, continuations: &[KeySym]) -> Result<()> {
             self.captures.push("capture");
+
+            let mut keysyms: Vec<u32> = continuations.iter().map(|k| k.keysym).collect();
+            keysyms.sort_unstable();
+            self.continuations.push(keysyms);
+
             Ok(())
         }
 
@@ -975,6 +997,28 @@ mod tests {
 
         wm.press(2);
         assert_eq!(wm.ran(), vec!["b"]);
+    }
+
+    #[test]
+    fn a_capture_is_told_which_keys_would_continue_the_sequence() {
+        let mut wm = Running::new(&["a b", "a c", "z"]);
+
+        // The backend needs these to know what to listen for: a compositor which binds keys
+        // on our behalf hears nothing at all from a key it has no binding for.
+        wm.press(1);
+        assert_eq!(wm.conn.continuations, vec![vec![2, 3]]);
+    }
+
+    #[test]
+    fn each_step_of_a_sequence_narrows_the_continuations() {
+        let mut wm = Running::new(&["a b c", "a b d", "a e"]);
+
+        wm.press(1);
+        wm.press(2);
+
+        // Only the keys still reachable are expected, so a backend never leaves a key
+        // registered for a branch the user has already stepped past.
+        assert_eq!(wm.conn.continuations, vec![vec![2, 5], vec![3, 4]]);
     }
 
     #[test]

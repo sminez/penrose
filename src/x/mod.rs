@@ -105,7 +105,7 @@ pub trait XConn: Send {
     /// still delivered to the window manager.
     ///
     /// See [Conn::capture_next_key], which this backs.
-    fn capture_next_key(&mut self) -> Result<()>;
+    fn capture_next_key(&mut self, continuations: &[KeySym]) -> Result<()>;
     /// Release a keyboard grab taken by [XConn::capture_next_key].
     ///
     /// See [Conn::cancel_capture_next_key], which this backs.
@@ -279,8 +279,8 @@ where
     }
 
     #[inline]
-    fn capture_next_key(&mut self) -> Result<()> {
-        self.capture_next_key()
+    fn capture_next_key(&mut self, continuations: &[KeySym]) -> Result<()> {
+        self.capture_next_key(continuations)
     }
 
     #[inline]

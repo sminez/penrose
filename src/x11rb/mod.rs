@@ -111,6 +111,10 @@ pub struct Conn<C: Connection> {
     bound_keys: Vec<KeySym>,
     /// Whether the keyboard is currently grabbed for `capture_next_key`.
     capturing_next_key: bool,
+    /// The keys which would continue the sequence in progress, for the duration of a
+    /// capture. A press is resolved against these rather than against `bound_keys`, since
+    /// the rest of a sequence is not grabbed.
+    capture_continuations: Vec<KeySym>,
 }
 
 /// A pure rust based connection to the X server using a [RustConnection].
@@ -177,6 +181,7 @@ where
             keymap: Keymap::default(),
             bound_keys: Vec::new(),
             capturing_next_key: false,
+            capture_continuations: Vec::new(),
         };
 
         xconn.refresh_modifier_keycodes()?;
@@ -195,6 +200,7 @@ where
         }
 
         self.capturing_next_key = false;
+        self.capture_continuations.clear();
         self.conn.ungrab_keyboard(CURRENT_TIME)?;
         self.conn.flush()?;
 
@@ -361,7 +367,11 @@ where
         self.end_capture()
     }
 
-    fn capture_next_key(&mut self) -> Result<()> {
+    fn capture_next_key(&mut self, continuations: &[KeySym]) -> Result<()> {
+        // Grabbing the keyboard delivers every key, so these are only needed to resolve the
+        // press to the level the binding names: see Keymap::bound_sym.
+        self.capture_continuations = continuations.to_vec();
+
         if self.capturing_next_key {
             return Ok(());
         }
