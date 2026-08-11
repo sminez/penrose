@@ -1,7 +1,7 @@
 //! Data types for working with X events
 use crate::{
     Result, WinId,
-    core::bindings::{KeyCode, MotionNotifyEvent, MouseEvent},
+    core::bindings::{KeySym, MotionNotifyEvent, MouseEvent},
     pure::geometry::{Point, Rect},
     x::{Atom, XConn},
 };
@@ -33,7 +33,7 @@ pub enum XEvent {
     /// A client window has been closed
     Destroy(WinId),
     /// A grabbed key combination has been entered by the user
-    KeyPress(KeyCode),
+    KeyPress(KeySym),
     /// The mouse pointer has left the current client window
     Leave(PointerChange),
     /// Keybindings have changed

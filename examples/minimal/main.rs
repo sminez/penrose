@@ -17,8 +17,7 @@ use penrose::{
     core::{
         Config, WindowManager,
         bindings::{
-            KeyEventHandler, MouseEventHandler, MouseState, click_handler,
-            parse_keybindings_with_xmodmap,
+            KeyEventHandler, MouseEventHandler, MouseState, click_handler, parse_keybindings,
         },
     },
     map,
@@ -91,7 +90,7 @@ fn main() -> Result<()> {
         .init();
 
     let conn = RustConn::new()?;
-    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
+    let key_bindings = parse_keybindings(raw_key_bindings()).into_result()?;
     let wm = WindowManager::new(Config::default(), key_bindings, mouse_bindings(), conn)?;
 
     wm.run()
@@ -108,8 +107,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bindings_parse_correctly_with_xmodmap() {
-        let res = parse_keybindings_with_xmodmap(raw_key_bindings());
+    fn bindings_parse_correctly() {
+        let res = parse_keybindings(raw_key_bindings()).into_result();
 
         if let Err(e) = res {
             panic!("{e}");

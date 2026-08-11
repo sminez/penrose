@@ -11,7 +11,7 @@ use penrose::{
     },
     core::{
         Config, WindowManager,
-        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
+        bindings::{KeyEventHandler, parse_keybindings},
     },
     extensions::hooks::{
         NamedScratchPad, ToggleNamedScratchPad, add_named_scratchpads, manage::FloatingCentered,
@@ -100,7 +100,7 @@ fn main() -> Result<()> {
     );
 
     let conn = RustConn::new()?;
-    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_1, toggle_2))?;
+    let key_bindings = parse_keybindings(raw_key_bindings(toggle_1, toggle_2)).into_result()?;
 
     // `add_named_scratchpads` is used to store the required state extensions in your WindowManager
     // so that the toggle hooks bound to keys above are able to track and manage your scratchpad
@@ -125,7 +125,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn bindings_parse_correctly_with_xmodmap() {
+    fn bindings_parse_correctly() {
         let (nsp_1, toggle_1) = NamedScratchPad::new(
             "terminal",
             "st -c StScratchpad",
@@ -141,7 +141,7 @@ mod tests {
             true,
         );
 
-        let res = parse_keybindings_with_xmodmap(raw_key_bindings(toggle_1, toggle_2));
+        let res = parse_keybindings(raw_key_bindings(toggle_1, toggle_2)).into_result();
 
         if let Err(e) = res {
             panic!("{e}");

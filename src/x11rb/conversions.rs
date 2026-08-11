@@ -2,8 +2,7 @@
 use crate::{
     Error, Result, WinId,
     core::bindings::{
-        KeyCode, ModifierKey, MotionNotifyEvent, MouseButton, MouseEvent, MouseEventKind,
-        MouseState,
+        ModifierKey, MotionNotifyEvent, MouseButton, MouseEvent, MouseEventKind, MouseState,
     },
     pure::geometry::{Point, Rect},
     x::{
@@ -81,14 +80,28 @@ pub(crate) fn convert_event<C: Connection + Send>(
                 conn.end_capture()?;
             }
 
-            let code = KeyCode {
-                mask: event.state.into(),
-                code: event.detail,
-            };
-            let numlock = ModMask::M2;
-            Ok(Some(XEvent::KeyPress(
-                code.ignoring_modifier(numlock.into()),
-            )))
+            // NumLock alters the modifier mask while it is active and is not something a
+            // binding names, so it is dropped before the binding is looked up.
+            let mask = u16::from(event.state) & !u16::from(ModMask::M2);
+
+            // The key that was pressed can be named by any of its levels, so ask which of
+            // them is bound rather than assuming. A press with no binding at all still has
+            // to be delivered: that is how a mistyped key sequence is abandoned.
+            let key = conn
+                .keymap
+                .bound_sym(event.detail, mask, &conn.bound_keys)
+                .or_else(|| conn.keymap.unmodified_sym(event.detail, mask));
+
+            match key {
+                Some(key) => Ok(Some(XEvent::KeyPress(key))),
+                None => {
+                    warn!(
+                        keycode = event.detail,
+                        "dropping key press for a keycode that is not in the keymap"
+                    );
+                    Ok(None)
+                }
+            }
         }
 
         Event::MapRequest(event) => Ok(Some(XEvent::MapRequest(WinId(event.window)))),

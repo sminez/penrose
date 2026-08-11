@@ -18,7 +18,7 @@
 //! [2]: https://gitlab.freedesktop.org/xorg/proto/randrproto/-/blob/master/randrproto.txt
 use crate::{
     Error, Result, WinId,
-    core::bindings::{KeyCode, MouseState},
+    core::bindings::{KeySym, MouseState},
     pure::geometry::{Point, Rect},
     x::{
         self, ClientAttr, ClientConfig, WinType, XConn, XEvent,
@@ -32,7 +32,7 @@ use std::{
     str::FromStr,
 };
 use strum::IntoEnumIterator;
-use tracing::error;
+use tracing::{error, warn};
 use x11rb::{
     CURRENT_TIME,
     connection::Connection,
@@ -53,8 +53,10 @@ use x11rb::{
 use x11rb::xcb_ffi::XCBConnection;
 
 pub mod conversions;
+pub(crate) mod keymap;
 
 use conversions::convert_event;
+use keymap::Keymap;
 
 const RANDR_VER: (u32, u32) = (1, 2);
 
@@ -101,6 +103,12 @@ pub struct Conn<C: Connection> {
     /// Keycodes which are modifiers, so that they can be ignored while capturing. Refreshed
     /// whenever bindings are grabbed, which covers `MappingNotify`.
     modifier_keycodes: HashSet<u8>,
+    /// The server's keycode -> keysym table, for resolving bindings in both directions.
+    /// Refreshed alongside `modifier_keycodes`.
+    keymap: Keymap,
+    /// The keys currently grabbed, so that a press can be resolved back to the binding it
+    /// belongs to rather than to an arbitrary level of the key that was pressed.
+    bound_keys: Vec<KeySym>,
     /// Whether the keyboard is currently grabbed for `capture_next_key`.
     capturing_next_key: bool,
 }
@@ -166,6 +174,8 @@ where
             root,
             atoms,
             modifier_keycodes: HashSet::new(),
+            keymap: Keymap::default(),
+            bound_keys: Vec::new(),
             capturing_next_key: false,
         };
 
@@ -189,6 +199,34 @@ where
         self.conn.flush()?;
 
         Ok(())
+    }
+
+    /// Warn about bindings which name different levels of the same key with the same
+    /// modifiers, e.g. `S-semicolon` and `S-colon`.
+    ///
+    /// Both are the same physical gesture, so only the one whose level comes first can ever
+    /// run. Under keycode based bindings these parsed to the same key and were reported as
+    /// a duplicate, which is not something the parser can see now that the level is only
+    /// known to the server.
+    fn warn_on_shadowed_bindings(&self, keys: &[KeySym]) {
+        for (i, k) in keys.iter().enumerate() {
+            for other in keys[i + 1..].iter().filter(|o| o.mask == k.mask) {
+                let shared = self
+                    .keymap
+                    .keycodes_for(k.keysym)
+                    .into_iter()
+                    .find(|&code| self.keymap.syms_for(code).contains(&other.keysym));
+
+                if let Some(code) = shared {
+                    warn!(
+                        keycode = code,
+                        first = k.keysym,
+                        second = other.keysym,
+                        "two bindings name the same key with the same modifiers: only one can run"
+                    );
+                }
+            }
+        }
     }
 
     /// Pull the current keycode -> modifier mapping from the X server.
@@ -354,9 +392,11 @@ where
         Ok(())
     }
 
-    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
-        // The set of keycodes that are modifiers can change at runtime (this method is
-        // re-run on MappingNotify) and capture_next_key needs it to be current.
+    fn grab(&mut self, keys: &[KeySym], mouse_states: &[MouseState]) -> Result<()> {
+        // The keymap and the set of keycodes that are modifiers can both change at runtime
+        // (this method is re-run on MappingNotify): the first is how a binding's keysym is
+        // resolved to keys to grab, and capture_next_key needs the second to be current.
+        self.keymap = Keymap::fetch(&self.conn)?;
         self.refresh_modifier_keycodes()?;
 
         // Release any grabbed keys that we currently have before attempting to grab
@@ -373,18 +413,39 @@ where
         let mode = GrabMode::ASYNC;
         let mask = EventMask::BUTTON_PRESS | EventMask::BUTTON_RELEASE | EventMask::BUTTON_MOTION;
 
+        // A press is resolved back to a binding against this set, so it has to be what was
+        // grabbed rather than what was asked for.
+        self.bound_keys = keys.to_vec();
+
         for m in modifiers.iter() {
-            for k in key_codes.iter() {
-                self.conn.grab_key(
-                    false,               // don't pass grabbed events through to the client
-                    self.root,           // the window to grab: in this case the root window
-                    (k.mask | m).into(), // modifiers to grab
-                    k.code,              // keycode to grab
-                    mode,                // don't lock pointer input while grabbing
-                    mode,                // don't lock keyboard input while grabbing
-                )?;
+            for k in keys.iter() {
+                let codes = self.keymap.keycodes_for(k.keysym);
+
+                // The keysym is a real key, it is just not one this keyboard can produce:
+                // a media key on a keyboard without one, or a layout that has been changed
+                // since the config was written.
+                if codes.is_empty() {
+                    warn!(
+                        keysym = k.keysym,
+                        "no key on the current keymap produces this keysym: binding is inactive"
+                    );
+                    continue;
+                }
+
+                for code in codes {
+                    self.conn.grab_key(
+                        false,               // don't pass grabbed events through to the client
+                        self.root,           // the window to grab: in this case the root window
+                        (k.mask | m).into(), // modifiers to grab
+                        code,                // keycode to grab
+                        mode,                // don't lock pointer input while grabbing
+                        mode,                // don't lock keyboard input while grabbing
+                    )?;
+                }
             }
         }
+
+        self.warn_on_shadowed_bindings(keys);
 
         for m in modifiers.iter() {
             for state in mouse_states.iter() {

@@ -3,7 +3,7 @@
 //! This module and its contents are only available when testing.
 use crate::{
     Result, WinId,
-    core::bindings::{KeyCode, MouseState},
+    core::bindings::{KeySym, MouseState},
     pure::geometry::{Point, Rect},
     x::{
         ClientAttr, ClientConfig, XConn,
@@ -32,7 +32,7 @@ pub trait MockXConn: Send {
         unimplemented!("mock_cursor_position")
     }
 
-    fn mock_grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
+    fn mock_grab(&mut self, keys: &[KeySym], mouse_states: &[MouseState]) -> Result<()> {
         unimplemented!("mock_grab")
     }
 
@@ -143,8 +143,8 @@ where
         self.mock_cursor_position()
     }
 
-    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
-        self.mock_grab(key_codes, mouse_states)
+    fn grab(&mut self, keys: &[KeySym], mouse_states: &[MouseState]) -> Result<()> {
+        self.mock_grab(keys, mouse_states)
     }
 
     fn capture_next_key(&mut self) -> Result<()> {

@@ -3,7 +3,7 @@ use crate::{
     Color, Result, WinId,
     core::{
         Config, State,
-        bindings::{self, KeyBindings, KeyCode, MouseBindings, MouseState},
+        bindings::{self, KeyBindings, KeySym, MouseBindings, MouseState},
         conn::{Conn, ConnEvent, ConnExt, manage_without_refresh},
     },
     pure::geometry::{Point, Rect},
@@ -97,7 +97,10 @@ pub trait XConn: Send {
 
     /// Grab the specified key and mouse states, intercepting them for processing within
     /// the window manager itself.
-    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()>;
+    ///
+    /// Each [KeySym] is resolved against the server's current keymap, so a binding is
+    /// grabbed on every key which can produce its keysym.
+    fn grab(&mut self, keys: &[KeySym], mouse_states: &[MouseState]) -> Result<()>;
     /// Grab the keyboard as a whole, so that key presses which match no grabbed binding are
     /// still delivered to the window manager.
     ///
@@ -214,7 +217,7 @@ where
 {
     type Event = XEvent;
     type State = XConnState;
-    type KeyBindingKey = KeyCode;
+    type KeyBindingKey = KeySym;
 
     fn initial_state(&mut self) -> Self::State {
         XConnState::default()
@@ -248,7 +251,7 @@ where
             Expose(_) => (), // Not currently handled
             FocusIn(id) => handle::focus_in(id, state, self)?,
             Destroy(id) => handle::destroy(id, state, self)?,
-            KeyPress(code) => bindings::dispatch_key(code, key_bindings, state, self)?,
+            KeyPress(key) => bindings::dispatch_key(key, key_bindings, state, self)?,
             Leave(p) => handle::leave(p, state, self)?,
             MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, self)?,
             MapRequest(xid) => handle::map_request(xid, state, self)?,
@@ -271,8 +274,8 @@ where
     }
 
     #[inline]
-    fn grab(&mut self, key_codes: &[KeyCode], mouse_states: &[MouseState]) -> Result<()> {
-        self.grab(key_codes, mouse_states)
+    fn grab(&mut self, keys: &[KeySym], mouse_states: &[MouseState]) -> Result<()> {
+        self.grab(keys, mouse_states)
     }
 
     #[inline]

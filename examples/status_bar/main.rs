@@ -22,7 +22,7 @@ use penrose::{
     },
     core::{
         Config, WindowManager,
-        bindings::{KeyEventHandler, parse_keybindings_with_xmodmap},
+        bindings::{KeyEventHandler, parse_keybindings},
         layout::LayoutStack,
     },
     extensions::hooks::add_ewmh_hooks,
@@ -111,7 +111,7 @@ fn main() -> Result<()> {
     });
 
     let conn = RustConn::new()?;
-    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
+    let key_bindings = parse_keybindings(raw_key_bindings()).into_result()?;
     let style = TextStyle {
         fg: WHITE.into(),
         bg: Some(BLACK.into()),

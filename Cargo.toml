@@ -23,9 +23,6 @@ members = [
 
 [features]
 default = ["x11rb"]
-# Kept so that configs enabling it still build: penrose_keysyms is now required, as
-# binding names are resolved to keysyms rather than to keycodes via xmodmap.
-keysyms = []
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
 
 [dependencies]

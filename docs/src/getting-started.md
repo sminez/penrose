@@ -116,11 +116,6 @@ Penrose itself has a pretty comprehensive test suite of the main logic and provi
 of ways for you to check and confirm that things are behaving in the way that you expect.
 To run our test (and any others that you have added yourself) we simply need to run `cargo test`:
 
-> **NOTE**: This test (and the example itself) require you to have the [xmodmap][4] utility
-> installed on your system in order to parse our keybindings.
->
-> Make sure you have it installed before going further!
-
 
 ```bash
 $ cargo test
@@ -128,7 +123,7 @@ $ cargo test
      Running unittests src/main.rs (target/debug/deps/example-1562870d47d380ed)
 
 running 1 test
-test tests::bindings_parse_correctly_with_xmodmap ... ok
+test tests::bindings_parse_correctly ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 ```
@@ -203,7 +198,6 @@ Happy window managing!
   [1]: https://www.rust-lang.org/
   [2]: https://crates.io/crates/tracing-subscriber
   [3]: https://github.com/sminez/penrose/blob/develop/examples/minimal/main.rs
-  [4]: https://wiki.archlinux.org/title/Xmodmap
   [5]: https://wiki.archlinux.org/title/Display_manager
   [6]: https://wiki.archlinux.org/title/Display_manager#Run_~/.xinitrc_as_a_session
   [7]: https://wiki.archlinux.org/title/Display_manager#Session_configuration

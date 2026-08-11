@@ -6,7 +6,6 @@ use crate::{
         conn::{Conn, WinId},
     },
     pure::geometry::Point,
-    x::XConn,
 };
 use penrose_keysyms::XKeySym;
 #[cfg(feature = "serde")]
@@ -15,62 +14,10 @@ use std::{
     collections::{HashMap, HashSet},
     convert::TryFrom,
     fmt, mem,
-    process::Command,
     str::FromStr,
 };
 use strum::{EnumIter, IntoEnumIterator};
 use tracing::{debug, error, trace};
-
-/// Run the xmodmap command to dump the system keymap table.
-///
-/// This is done in a form that we can load in and convert back to key
-/// codes. This lets the user define key bindings in the way that they
-/// would expect while also ensuring that it is easy to debug any odd
-/// issues with bindings by referring the user to the xmodmap output.
-///
-/// # Panics
-/// This function will panic if it is unable to fetch keycodes using the xmodmap
-/// binary on your system or if the output of `xmodmap -pke` is not valid
-pub fn keycodes_from_xmodmap() -> Result<HashMap<String, u8>> {
-    let output = Command::new("xmodmap").arg("-pke").output()?;
-    let m = String::from_utf8(output.stdout)?
-        .lines()
-        .flat_map(|l| {
-            let mut words = l.split_whitespace(); // keycode <code> = <names ...>
-            let key_code: u8 = match words.nth(1) {
-                Some(word) => match word.parse() {
-                    Ok(val) => val,
-                    Err(e) => panic!("{}", e),
-                },
-                None => panic!("unexpected output format from xmodmap -pke"),
-            };
-            words.skip(1).map(move |name| (name.into(), key_code))
-        })
-        .collect();
-
-    Ok(m)
-}
-
-fn parse_binding(pattern: &str, known_codes: &HashMap<String, u8>) -> Result<KeyCode> {
-    let mut parts: Vec<&str> = pattern.split('-').collect();
-    let name = parts.remove(parts.len() - 1);
-
-    match known_codes.get(name) {
-        Some(code) => {
-            let mask = parts
-                .iter()
-                .map(|&s| ModifierKey::try_from(s))
-                .try_fold(0, |acc, v| v.map(|inner| acc | u16::from(inner)))?;
-
-            trace!(?pattern, mask, code, "parsed keybinding");
-            Ok(KeyCode { mask, code: *code })
-        }
-
-        None => Err(Error::UnknownKeyName {
-            name: name.to_owned(),
-        }),
-    }
-}
 
 /// Why a key binding could not be used.
 #[derive(Debug)]
@@ -155,35 +102,39 @@ pub fn dispatch_key<C: Conn>(
     Ok(())
 }
 
-/// Parse string format key bindings into [KeyCode] based [KeyBindings] using the command line
-/// `xmodmap` utility, keeping the bindings that parsed alongside the errors for those that did not.
+/// Parse string format key bindings into [KeySym] based [KeyBindings], keeping the bindings that
+/// parsed alongside the errors for those that did not.
 ///
-/// A binding pattern containing whitespace is a *sequence*: `"M-m M-l"` runs when `M-l` is pressed
-/// after `M-m`, and neither key does anything on its own. Sequences may be any length, and a
-/// sequence bound alongside a shorter binding it starts with is ambiguous, so both are dropped and
-/// reported.
+/// A binding pattern is modifiers and a key name joined with `-`, e.g. `"M-S-semicolon"`; see
+/// [KeySym::parse] for the details of one pattern. A pattern containing whitespace is a *sequence*:
+/// `"M-m M-l"` runs when `M-l` is pressed after `M-m`, and neither key does anything on its own.
+/// Sequences may be any length, and a sequence bound alongside a shorter binding it starts with is
+/// ambiguous, so both are dropped and reported.
 ///
-/// See [keycodes_from_xmodmap] for details of how `xmodmap` is used.
-pub fn parse_keybindings<X>(
-    str_bindings: HashMap<String, Box<dyn KeyEventHandler<X>>>,
-) -> Result<ParsedKeyBindings<X>>
+/// Parsing does not need the keymap, so this works without a running window manager or a display:
+/// use it in a test to check that a config's bindings are all spelled correctly.
+pub fn parse_keybindings<C>(
+    str_bindings: HashMap<String, Box<dyn KeyEventHandler<C>>>,
+) -> ParsedKeyBindings<C>
 where
-    X: XConn,
+    C: Conn<KeyBindingKey = KeySym>,
 {
-    let m = keycodes_from_xmodmap()?;
-    Ok(KeyBindings::parse(str_bindings, |k| parse_binding(k, &m)))
+    KeyBindings::parse(str_bindings, KeySym::parse)
 }
 
-/// Parse string format key bindings into [KeyCode] based [KeyBindings] using the command line
-/// `xmodmap` utility. Returns an [Error] if any fail to parse. See [parse_keybindings] for more
-/// details.
-pub fn parse_keybindings_with_xmodmap<X>(
-    str_bindings: HashMap<String, Box<dyn KeyEventHandler<X>>>,
-) -> Result<KeyBindings<X>>
+/// Parse string format key bindings into [KeySym] based [KeyBindings]. Returns an [Error] if any
+/// fail to parse. See [parse_keybindings] for more details.
+#[deprecated(
+    since = "0.4.1",
+    note = "bindings are parsed to keysyms without running xmodmap: use parse_keybindings"
+)]
+pub fn parse_keybindings_with_xmodmap<C>(
+    str_bindings: HashMap<String, Box<dyn KeyEventHandler<C>>>,
+) -> Result<KeyBindings<C>>
 where
-    X: XConn,
+    C: Conn<KeyBindingKey = KeySym>,
 {
-    parse_keybindings(str_bindings)?.into_result()
+    parse_keybindings(str_bindings).into_result()
 }
 
 /// Some action to be run by a user key binding
@@ -818,15 +769,15 @@ mod tests {
         })
     }
 
-    fn key(code: u8) -> KeyCode {
-        KeyCode { mask: 0, code }
+    fn key(keysym: u32) -> KeySym {
+        KeySym { mask: 0, keysym }
     }
 
     /// Each key name is a single letter, mapping to its position in the alphabet.
     /// Anything else fails to parse.
-    fn parse(k: &str) -> Result<KeyCode> {
+    fn parse(k: &str) -> Result<KeySym> {
         match k.as_bytes() {
-            [c @ b'a'..=b'z'] => Ok(key(c - b'a' + 1)),
+            [c @ b'a'..=b'z'] => Ok(key((c - b'a' + 1) as u32)),
             _ => Err(Error::UnknownKeyName { name: k.to_owned() }),
         }
     }
@@ -862,7 +813,7 @@ mod tests {
         // should cost the user that binding and nothing more.
         assert_eq!(dropped(&parsed), vec!["also-nope", "nope"]);
 
-        let mut kept: Vec<u8> = parsed.bindings.sequences().map(|k| k[0].code).collect();
+        let mut kept: Vec<u32> = parsed.bindings.sequences().map(|k| k[0].keysym).collect();
         kept.sort_unstable();
         assert_eq!(kept, vec![1, 2]);
     }
@@ -876,11 +827,11 @@ mod tests {
 
         // The rest of a sequence arrives through the capture rather than through a grab, so
         // only the first key of each binding needs grabbing.
-        let mut grabbed: Vec<u8> = parsed
+        let mut grabbed: Vec<u32> = parsed
             .bindings
             .leading_keys()
             .iter()
-            .map(|k| k.code)
+            .map(|k| k.keysym)
             .collect();
         grabbed.sort_unstable();
 
@@ -966,9 +917,9 @@ mod tests {
         }
 
         /// Feed a key press through the same path the backend uses.
-        fn press(&mut self, code: u8) {
+        fn press(&mut self, keysym: u32) {
             dispatch_key(
-                key(code),
+                key(keysym),
                 &mut self.bindings,
                 &mut self.state,
                 &mut self.conn,
@@ -1045,7 +996,10 @@ mod tests {
     fn modifiers_and_key_name_parse() {
         let k = KeySym::parse("M-S-semicolon").expect("valid binding");
 
-        assert_eq!(k.mask, u16::from(ModifierKey::Meta) | u16::from(ModifierKey::Shift));
+        assert_eq!(
+            k.mask,
+            u16::from(ModifierKey::Meta) | u16::from(ModifierKey::Shift)
+        );
         assert_eq!(k.keysym, 0x3b);
     }
 
