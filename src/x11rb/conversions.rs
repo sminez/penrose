@@ -13,7 +13,7 @@ use crate::{
             PointerChange, PropertyEvent, ResizeRequestEvent,
         },
     },
-    x11rb::Conn,
+    x11rb::{Conn, lock_modifiers},
 };
 use strum::IntoEnumIterator;
 use tracing::warn;
@@ -21,7 +21,7 @@ use x11rb::{
     connection::Connection,
     protocol::{
         ErrorKind, Event,
-        xproto::{ClientMessageEvent, KeyButMask, ModMask},
+        xproto::{ClientMessageEvent, KeyButMask},
     },
     x11_utils::X11Error,
 };
@@ -76,9 +76,8 @@ pub(crate) fn convert_event<C: Connection + Send>(
                 mask: event.state.into(),
                 code: event.detail,
             };
-            let numlock = ModMask::M2;
             Ok(Some(XEvent::KeyPress(
-                code.ignoring_modifier(numlock.into()),
+                code.ignoring_modifier(lock_modifiers()),
             )))
         }
 
