@@ -1,18 +1,17 @@
 //! Debugging utilities for diagnosing issues with penrose.
 use crate::{
     Result,
-    core::{State, hooks::StateHook},
+    core::{State, conn::Conn, hooks::StateHook},
     extensions::util::notify_send,
-    x::XConn,
 };
 
 /// Use `notify-send` to display details about the current Window Manager each
 /// time there is a refresh
 #[derive(Default, Debug, Clone, Copy)]
-pub struct NotfyState(pub CurrentStateConfig);
+pub struct NotifyState(pub CurrentStateConfig);
 
-impl<X: XConn> StateHook<X> for NotfyState {
-    fn call(&mut self, state: &mut State<X>, _: &mut X) -> Result<()> {
+impl<C: Conn> StateHook<C> for NotifyState {
+    fn call(&mut self, state: &mut State<C>, _: &mut C) -> Result<()> {
         let msg = summarise_state(state, &self.0);
 
         notify_send("Current State", msg)
@@ -52,7 +51,7 @@ impl Default for CurrentStateConfig {
 }
 
 /// Summarise the current state of the window manager as simple key value pairs.
-pub fn summarise_state<X: XConn>(state: &State<X>, cfg: &CurrentStateConfig) -> String {
+pub fn summarise_state<C: Conn>(state: &State<C>, cfg: &CurrentStateConfig) -> String {
     let mut fields = Vec::new();
 
     if cfg.focused_screen {
