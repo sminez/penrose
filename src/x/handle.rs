@@ -3,7 +3,7 @@ use crate::{
     Result, WinId,
     core::{
         State,
-        bindings::{KeyBindings, MotionNotifyEvent, MouseBindings, MouseEvent, MouseEventKind},
+        bindings::{KeyBindings, MouseBindings},
         conn::{Conn, ConnExt},
     },
     pure::geometry::Point,
@@ -13,7 +13,7 @@ use crate::{
         property::WmHints,
     },
 };
-use tracing::{error, info, trace};
+use tracing::{info, trace};
 
 // Currently no client messages are handled by default (see the ewmh extension for some examples of messages
 // that are handled when that is enabled)
@@ -38,48 +38,6 @@ pub(crate) fn mapping_notify<X: XConn>(
     let mouse_states: Vec<_> = mouse_bindings.keys().cloned().collect();
 
     x.grab(&key_codes, &mouse_states)
-}
-
-pub(crate) fn mouse_event<X: XConn>(
-    e: MouseEvent,
-    bindings: &mut MouseBindings<X>,
-    state: &mut State<X>,
-    x: &mut X,
-) -> Result<()> {
-    if let Some(action) = bindings.get_mut(&e.state) {
-        if let Err(error) = action.on_mouse_event(&e, state, x) {
-            error!(%error, ?e, "error running user mouse binding");
-            return Err(error);
-        }
-
-        match e.kind {
-            MouseEventKind::Press => state.held_mouse_state = Some(e.state),
-            MouseEventKind::Release => state.held_mouse_state = None,
-        }
-    }
-
-    Ok(())
-}
-
-pub(crate) fn motion_event<X: XConn>(
-    e: MotionNotifyEvent,
-    bindings: &mut MouseBindings<X>,
-    state: &mut State<X>,
-    x: &mut X,
-) -> Result<()> {
-    let held_state = match state.held_mouse_state.as_ref() {
-        Some(state) => state,
-        None => return Ok(()), // motion without us holding anything
-    };
-
-    if let Some(action) = bindings.get_mut(held_state)
-        && let Err(error) = action.on_motion(&e, state, x)
-    {
-        error!(%error, ?e, "error running user mouse binding");
-        return Err(error);
-    }
-
-    Ok(())
 }
 
 pub(crate) fn configure_request<X: XConn>(

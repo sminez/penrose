@@ -255,8 +255,8 @@ where
             Leave(p) => handle::leave(p, state, self)?,
             MappingNotify => handle::mapping_notify(key_bindings, mouse_bindings, self)?,
             MapRequest(xid) => handle::map_request(xid, state, self)?,
-            MouseEvent(e) => handle::mouse_event(e.clone(), mouse_bindings, state, self)?,
-            MotionNotify(e) => handle::motion_event(e.clone(), mouse_bindings, state, self)?,
+            MouseEvent(e) => bindings::dispatch_mouse(e.clone(), mouse_bindings, state, self)?,
+            MotionNotify(e) => bindings::dispatch_motion(e.clone(), mouse_bindings, state, self)?,
             PropertyNotify(_) => (), // Not currently handled
             RandrNotify => handle::detect_screens(state, self)?,
             ScreenChange => handle::screen_change(state, self)?,

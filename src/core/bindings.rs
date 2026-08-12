@@ -103,6 +103,53 @@ pub fn dispatch_key<C: Conn>(
     Ok(())
 }
 
+/// Dispatches a mouse button press or release, running the matching binding if there is one.
+///
+/// A press is remembered so that the motion events which follow it reach the same binding: see
+/// [dispatch_motion].
+pub fn dispatch_mouse<C: Conn>(
+    e: MouseEvent,
+    bindings: &mut MouseBindings<C>,
+    state: &mut State<C>,
+    conn: &mut C,
+) -> Result<()> {
+    if let Some(action) = bindings.get_mut(&e.state) {
+        if let Err(error) = action.on_mouse_event(&e, state, conn) {
+            error!(%error, ?e, "error running user mouse binding");
+            return Err(error);
+        }
+
+        match e.kind {
+            MouseEventKind::Press => state.held_mouse_state = Some(e.state),
+            MouseEventKind::Release => state.held_mouse_state = None,
+        }
+    }
+
+    Ok(())
+}
+
+/// Dispatches pointer motion to the binding whose button is currently held, if any.
+pub fn dispatch_motion<C: Conn>(
+    e: MotionNotifyEvent,
+    bindings: &mut MouseBindings<C>,
+    state: &mut State<C>,
+    conn: &mut C,
+) -> Result<()> {
+    let held_state = match state.held_mouse_state.as_ref() {
+        Some(state) => state,
+        None => return Ok(()), // motion without us holding anything
+    };
+
+    if let Some(action) = bindings.get_mut(held_state)
+        && let Err(error) = action.on_motion(&e, state, conn)
+    {
+        error!(%error, ?e, "error running user mouse binding");
+        return Err(error);
+    }
+
+    Ok(())
+}
+
 /// Parse string format key bindings into [KeySym] based [KeyBindings], keeping the bindings that
 /// parsed alongside the errors for those that did not.
 ///
