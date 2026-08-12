@@ -142,6 +142,11 @@ pub(super) struct SeatEntry {
     pub(super) key_bindings: HashMap<KeySym, RiverXkbBindingV1>,
     pub(super) mouse_bindings: HashMap<MouseState, RiverPointerBindingV1>,
     pub(super) pointer: Point,
+    /// The window river says the pointer is over, until the sequence it arrived in is answered.
+    pending_enter: Option<WinId>,
+    /// Where the pointer was when the last enter arrived, which is what says whether the next one
+    /// is the pointer moving or the windows moving. `None` until the first.
+    pointer_at_enter: Option<Point>,
     pub(super) removed: bool,
 }
 
@@ -432,6 +437,52 @@ impl Loop {
 
             self.send(RiverEvent::WindowOpened(id));
         }
+
+        self.announce_pointer_focus();
+    }
+
+    /// Follow the pointer only when the pointer is what moved.
+    ///
+    /// River recomputes which window is hovered after every change to the scene, not just after
+    /// motion, and reports the result the same way either way. So a window put under a stationary
+    /// pointer -- by a fullscreen toggle, a workspace switch, a window closing, a layout change --
+    /// arrives as an enter that is indistinguishable from the user moving onto it, and following
+    /// it takes focus off whatever was just acted on. Toggling fullscreen twice would land on a
+    /// different window than it started on.
+    ///
+    /// The pointer's own position tells them apart. River sends `pointer_position` whenever it
+    /// changes and before the sequence is answered, so by the time a batch is complete the
+    /// position is up to date with the enter in it, whichever order the two arrived in.
+    ///
+    /// A click is not filtered this way: `window_interaction` says the user did something to that
+    /// window deliberately, so it focuses whether the pointer moved or not.
+    fn announce_pointer_focus(&mut self) {
+        let mut entered = Vec::new();
+
+        for seat in self.seats.iter_mut() {
+            let Some(id) = seat.pending_enter.take() else {
+                continue;
+            };
+
+            let moved = match seat.pointer_at_enter {
+                Some(at) => at != seat.pointer,
+                // The first enter of the session is river saying where the pointer already is,
+                // which is not the user putting it there. It matters at a restart, where every
+                // window is briefly on screen at once and the pointer is over whichever of them
+                // is on top.
+                None => false,
+            };
+
+            seat.pointer_at_enter = Some(seat.pointer);
+
+            if moved {
+                entered.push(id);
+            }
+        }
+
+        for id in entered {
+            self.send(RiverEvent::PointerFocus(id));
+        }
     }
 
     /// Record that river has started a sequence for us to answer.
@@ -633,6 +684,8 @@ impl wayland_client::Dispatch<RiverWindowManagerV1, ()> for Loop {
                     key_bindings: HashMap::new(),
                     mouse_bindings: HashMap::new(),
                     pointer: Point { x: 0, y: 0 },
+                    pending_enter: None,
+                    pointer_at_enter: None,
                     removed: false,
                 });
                 l.rebind_seats();
@@ -820,9 +873,15 @@ impl wayland_client::Dispatch<RiverSeatV1, ()> for Loop {
                 }
             }
 
+            // Held until the sequence is answered rather than sent now: whether this is the
+            // pointer arriving somewhere or a window arriving under the pointer is a question
+            // about where the pointer is, and river sends that afterwards. See
+            // `announce_pointer_focus`.
             Event::PointerEnter { window } => {
-                if let Some(id) = l.win_id(&window) {
-                    l.send(RiverEvent::PointerFocus(id));
+                let id = l.win_id(&window);
+
+                if let Some(seat) = l.seats.iter_mut().find(|s| s.obj.id() == obj.id()) {
+                    seat.pending_enter = id;
                 }
             }
 
@@ -847,10 +906,18 @@ impl wayland_client::Dispatch<RiverSeatV1, ()> for Loop {
                 }
             }
 
+            // The pointer left the window it was over without arriving anywhere we manage -- a
+            // layer surface, or off the output. Whatever enter is waiting to be answered is about
+            // a window the pointer is no longer on.
+            Event::PointerLeave => {
+                if let Some(seat) = l.seats.iter_mut().find(|s| s.obj.id() == obj.id()) {
+                    seat.pending_enter = None;
+                }
+            }
+
             // Interactive move and resize are river's own operation rather than something driven
             // from motion events, so nothing here maps onto penrose's floating layer yet.
             Event::WlSeat { .. }
-            | Event::PointerLeave
             | Event::ShellSurfaceInteraction { .. }
             | Event::OpDelta { .. }
             | Event::OpRelease => (),
