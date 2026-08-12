@@ -68,6 +68,20 @@ const LAYER_SHELL_VERSIONS: std::ops::RangeInclusive<u32> = 1..=1;
 /// than a slow window manager.
 const SLOW_HANDLER: Duration = Duration::from_millis(50);
 
+/// The order screen indices are assigned in.
+///
+/// Penrose indexes screens in whatever order `screen_details` returns them, and river makes no
+/// promise about the order it announces outputs in, so the conn sorts them by position. Which end
+/// to start from is a preference: `xmonad-contrib`'s `PhysicalScreens` counts right to left.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum ScreenOrder {
+    /// Screen 0 is the leftmost, then top to bottom.
+    #[default]
+    LeftToRight,
+    /// Screen 0 is the rightmost, then bottom to top.
+    RightToLeft,
+}
+
 /// A [Conn] implementation backed by the river Wayland compositor.
 ///
 /// Everything that mutates state is buffered into a plan rather than sent, because river only
@@ -204,6 +218,13 @@ struct Inner {
     /// Set when river tells us it is done with us, either a hot swap or a compositor shutdown.
     finished: bool,
     finished_delivered: bool,
+
+    screen_order: ScreenOrder,
+    /// Which tag to put an existing window back on, keyed by river's window identifier.
+    ///
+    /// River has no property store, so unlike X11 there is nowhere on a window to record which
+    /// workspace it was on. This is how a restart puts them back: see [RiverConn::restore_tags].
+    restore_tags: HashMap<String, String>,
 }
 
 impl RiverConn {
@@ -260,6 +281,8 @@ impl RiverConn {
             delivered: None,
             finished: false,
             finished_delivered: false,
+            screen_order: ScreenOrder::default(),
+            restore_tags: HashMap::new(),
         };
 
         // River sends a window event for every existing window, and an output and seat event for
@@ -286,6 +309,42 @@ impl RiverConn {
         );
 
         Ok(Self { conn, queue, inner })
+    }
+
+    /// Index screens from the right rather than from the left.
+    pub fn with_screen_order(mut self, order: ScreenOrder) -> Self {
+        self.inner.screen_order = order;
+        self
+    }
+
+    /// Put existing windows back on the workspaces they were on before a restart.
+    ///
+    /// The map is from river's window identifier to a workspace tag, and is consulted by
+    /// `manage_existing_clients`, so it has to be set before `run`. Identifiers are stable across
+    /// a window manager restart and are never reused, which is what makes them the key: they
+    /// belong to the window rather than to our connection.
+    ///
+    /// Producing the map is the caller's job, because where it is kept is: see
+    /// [RiverConn::window_identifier] and [RiverConn::stop].
+    pub fn restore_tags(mut self, tags: HashMap<String, String>) -> Self {
+        self.inner.restore_tags = tags;
+        self
+    }
+
+    /// Ask river to hand window management to somebody else.
+    ///
+    /// This is how a restart works: river keeps every client alive across the swap, so the
+    /// window manager can exit and be replaced without the session noticing. River answers with
+    /// `finished`, which arrives as [RiverEvent::Finished] and stops the run loop; `run` then
+    /// returns and the caller can exec its new binary.
+    ///
+    /// Exiting any other way -- a crash, a protocol error -- is not this: it is an unclean
+    /// disconnect, and while river should leave the windows alone, only the orderly path is
+    /// specified.
+    pub fn stop(&mut self) {
+        info!("asking river to stop sending us events");
+        self.inner.wm.stop();
+        self.flush();
     }
 
     /// Make a window fullscreen, or take it out of fullscreen.
@@ -615,15 +674,28 @@ impl Conn for RiverConn {
         Ok(ids)
     }
 
-    /// River has no property store, so unlike X11 there is nothing to read back: existing clients
-    /// are managed onto the current workspace. Tags and focus survive a restart through the state
-    /// file written for river's hot swap instead.
+    /// River has no property store, so unlike X11 there is nothing to read back off a window:
+    /// where each one belongs comes from [RiverConn::restore_tags], which a restart fills in from
+    /// a state file it wrote before asking river to swap us out.
     fn manage_existing_clients(&mut self, state: &mut State<Self>) -> Result<()> {
+        let known: Vec<String> = state.client_set.ordered_tags();
+
         for id in self.existing_clients()? {
             if !state.client_set.contains(&id) && self.client_should_be_managed(id) {
                 let title = self.client_title(id)?;
-                info!(%id, %title, "managing existing client");
-                manage_without_refresh(id, None, state, self)?;
+                // A tag that no longer exists in the config would be a workspace nothing can
+                // reach, so an unknown one falls back to the current workspace.
+                let tag = self
+                    .inner
+                    .windows
+                    .get(&id)
+                    .and_then(|w| w.identifier.as_ref())
+                    .and_then(|i| self.inner.restore_tags.get(i))
+                    .filter(|t| known.contains(t))
+                    .cloned();
+
+                info!(%id, %title, ?tag, "managing existing client");
+                manage_without_refresh(id, tag.as_deref(), state, self)?;
             }
         }
 
@@ -643,8 +715,11 @@ impl Conn for RiverConn {
         }
 
         // River makes no promise about the order it announces outputs in, so they are sorted by
-        // position: left to right, then top to bottom.
+        // position.
         rects.sort_by_key(|r| (r.x, r.y));
+        if self.inner.screen_order == ScreenOrder::RightToLeft {
+            rects.reverse();
+        }
 
         Ok(rects)
     }

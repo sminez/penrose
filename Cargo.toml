@@ -69,3 +69,8 @@ required-features = ["river"]
 name = "river_bindings"
 path = "examples/river_bindings/main.rs"
 required-features = ["river"]
+
+[[example]]
+name = "river_restart"
+path = "examples/river_restart/main.rs"
+required-features = ["river"]

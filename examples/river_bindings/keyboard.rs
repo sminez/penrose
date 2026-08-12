@@ -116,6 +116,9 @@ impl VirtualKeyboard {
     /// would be worse than useless.
     fn settle(&mut self) {
         let _ = self.roundtrip();
+        // On a thread of our own rather than in a handler: the window manager is the other half
+        // of this process and is not waiting on us.
+        #[allow(clippy::disallowed_methods)]
         thread::sleep(Duration::from_millis(400));
     }
 }

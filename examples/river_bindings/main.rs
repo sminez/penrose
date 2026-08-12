@@ -68,6 +68,8 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RiverConn>>> {
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        // Plain text: these logs are read back by the scripts in tests/.
+        .with_ansi(false)
         .finish()
         .init();
 
@@ -106,6 +108,8 @@ fn drive(keymap: &str) -> std::result::Result<(), String> {
     // Long enough for the window manager to have finished its first manage sequence, which is
     // when the bindings are enabled. Nothing observable says when that has happened, so this is
     // a sleep; the assertions fail loudly rather than silently if it is too short.
+    // On a thread of our own rather than in a handler.
+    #[allow(clippy::disallowed_methods)]
     thread::sleep(Duration::from_secs(4));
 
     let mut kb = keyboard::VirtualKeyboard::new()?;
@@ -126,6 +130,7 @@ fn drive(keymap: &str) -> std::result::Result<(), String> {
     kb.chord(MOD4, KEY_B);
 
     kb.roundtrip()?;
+    #[allow(clippy::disallowed_methods)]
     thread::sleep(Duration::from_secs(2));
 
     Ok(())

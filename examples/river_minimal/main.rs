@@ -73,6 +73,8 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RiverConn>>> {
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        // Plain text: these logs are read back by the scripts in tests/.
+        .with_ansi(false)
         .finish()
         .init();
 
