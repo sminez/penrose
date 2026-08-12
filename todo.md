@@ -58,3 +58,34 @@
   against a hand written keymap only. Xephyr should confirm a plain binding
   fires, `S-semicolon` and `S-colon` both fire, a sequence completes and a wrong
   key aborts it, and the media keys work.
+
+- Upstream: river un-hides every window when the window manager disconnects,
+  which is worth fixing in river rather than only working around here.
+
+  `Window.zig`'s `handleDestroy` (river `67379a2`) resets `rendering_requested`
+  with `hidden = false`, and `WindowManager.handleDestroy` calls it for every
+  window. So between the outgoing window manager exiting and the replacement's
+  first render plan, the entire session is on screen at once, stacked at
+  whatever positions it last had. A hot swap is meant to be the invisible way to
+  replace a window manager, and this is the one part of it that is not.
+
+  It is not only cosmetic. `Cursor.updateHovered` runs off the scene, from
+  `updateState` after every change, so the seat's hovered window is recomputed
+  against that pile; `Seat.manageStart` then sends it to the replacement as
+  `pointer_enter` in its initial state. The new window manager is told the
+  pointer is over a window that is only under it because everything was
+  un-hidden -- which, with focus-follows-mouse, moved this config to the
+  workspace of whatever was on top at every `M-q`. Worked around in
+  `src/river/mod.rs` by ignoring an enter for a window that is not on a visible
+  tag, but the compositor should not be reporting it.
+
+  The fix is presumably to keep the last rendering state until a replacement's
+  first `render_finish` rather than reverting it on disconnect. The wrinkle is
+  the case with no replacement coming: keeping windows hidden then leaves a
+  session with nothing on screen and no way to get anything back, which is
+  probably why it reverts. A grace period, or reverting only once the window
+  manager global has gone unbound for some time, would keep both.
+
+  Worth asking on the river issue tracker before writing it: the maintainer may
+  want the initial `pointer_enter` deferred until the first render instead,
+  which fixes the focus half without touching visibility.
