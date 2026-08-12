@@ -57,8 +57,10 @@ pub(super) struct RenderPlan {
     pub(super) order: Vec<WinId>,
     /// Window content positions, from the `xy` half of `position_client`.
     pub(super) positions: HashMap<WinId, Point>,
-    /// Border colours. The width is the same for every window and lives on the loop.
+    /// Border colours, and widths: the width is per window rather than global, because penrose
+    /// asks for no border on a window filling its screen.
     pub(super) borders: HashMap<WinId, Color>,
+    pub(super) border_widths: HashMap<WinId, u32>,
     /// Windows which are on a visible workspace.
     pub(super) visible: HashSet<WinId>,
 }
@@ -80,9 +82,6 @@ pub(super) enum Op {
     Capture(Vec<KeySym>),
     /// Undo a capture which has not yet eaten anything.
     CancelCapture,
-    /// The border width, which reaches the conn with a window's initial properties rather than on
-    /// its own.
-    BorderWidth(u32),
 }
 
 impl Loop {
@@ -171,9 +170,11 @@ impl Loop {
             }
         }
 
-        let width = self.border_width as i32;
         for (&id, &color) in self.render.borders.iter() {
             if let Some(win) = self.live_window(id) {
+                // A width of zero disables the border, which is what penrose asks for when a
+                // window fills its screen.
+                let width = self.render.border_widths.get(&id).copied().unwrap_or(0) as i32;
                 let (r, g, b, a) = scale_color(color);
                 win.set_borders(Edges::all(), width, r, g, b, a);
             }
@@ -222,7 +223,6 @@ impl Loop {
             Op::Grab { keys, mouse } => self.grab(keys, mouse),
             Op::Capture(continuations) => self.capture(continuations),
             Op::CancelCapture => self.cancel_capture(),
-            Op::BorderWidth(width) => self.border_width = width,
         }
     }
 }

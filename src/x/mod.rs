@@ -308,7 +308,11 @@ where
         self.existing_clients()
     }
 
-    fn position_client(&mut self, id: WinId, mut r: Rect) -> Result<()> {
+    fn position_client(&mut self, id: WinId, r: Rect, border: u32) -> Result<()> {
+        // An X11 border is drawn outside the window's origin, so the window has to be shrunk by
+        // twice its width for the two together to fill what the layout allocated.
+        let mut r = r.shrink_in(border);
+
         let p = Atom::WmNormalHints.as_ref();
         if let Ok(Some(Prop::WmNormalHints(hints))) = self.get_prop(id, p) {
             trace!(%id, ?hints, "client has WmNormalHints: applying size hints");

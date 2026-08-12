@@ -129,12 +129,18 @@ pub trait Conn: Send + Sized {
     /// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.
     fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()>;
 
-    /// Update the geometry of a given client based on the given [Rect].
+    /// Place a client in the space the layout allocated to it, leaving room for a border of the
+    /// given width.
     ///
-    /// The rect is the client's own geometry, with [Conn::border_inset] already taken out of the
-    /// space the layout allocated: whether that inset is zero is what decides whether a border is
-    /// drawn around the client or over it.
-    fn position_client(&mut self, id: WinId, r: Rect) -> Result<()>;
+    /// The rect is the allocation itself, not the client's geometry: how a border fits inside it
+    /// is the backend's business, because backends disagree. An X11 border is drawn *outside* the
+    /// window's origin, so x11rb shrinks the client by twice the width and the two together fill
+    /// the allocation. A compositor which draws borders over the client's own edges shrinks
+    /// nothing, and would leave a gap on two sides if it did.
+    ///
+    /// A width of 0 means this client should have no border: penrose asks for that when a client
+    /// fills its whole screen, where there is nothing for a border to separate it from.
+    fn position_client(&mut self, id: WinId, r: Rect, border: u32) -> Result<()>;
     /// Display a client on the screen at its current position.
     fn show_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()>;
     /// Hide a client
@@ -172,20 +178,6 @@ pub trait Conn: Send + Sized {
     where
         WinId: 'a,
         I: Iterator<Item = &'a WinId>;
-
-    /// How far a client's geometry has to be inset to leave room for the border this backend
-    /// draws around it.
-    ///
-    /// The default is the configured border width, which is X11's answer: a border there is
-    /// drawn *outside* the window's origin, so shrinking the client by twice the width is what
-    /// makes the client and its border together fill the space the layout allocated.
-    ///
-    /// A backend which draws borders over the client's own edges rather than around them should
-    /// return 0. Shrinking in that case leaves the client short of its allocation on two sides
-    /// and offset on the other two, which is visible at any non-zero border width.
-    fn border_inset(&self, border_width: u32) -> u32 {
-        border_width
-    }
 }
 
 /// Extended functionality for [Conn] impls in order to run the window manager.
@@ -260,24 +252,30 @@ pub trait ConnExt: Conn + Sized {
         self.modify_and_refresh(state, |_| ())
     }
 
-    /// Restack and set the geometry for an ordered list of client windows and their
-    /// associated positions. The provided positions are shrunk by the current border
-    /// size in order to position the windows correctly within the frame given by the
-    /// border.
+    /// Restack and place an ordered list of client windows in the space the layout allocated to
+    /// each of them.
     ///
-    /// See `restack` for details of stacking order is determined.
+    /// Making room for the border is the backend's job, not this one's: see
+    /// [Conn::position_client]. What is decided here is which clients have a border at all.
+    ///
+    /// See `restack` for details of how stacking order is determined.
     fn position_clients(&mut self, state: &State<Self>) -> Result<()> {
-        let border = self.border_inset(state.config.border_width);
+        let border_width = state.config.border_width;
         let positions = &state.diff.after.positions;
         let screen_positions: Vec<_> = state.client_set.screens().map(|s| s.r).collect();
 
         self.restack(positions.iter().map(|(id, _)| id))?;
 
-        for &(c, mut r) in positions.iter() {
-            if !screen_positions.contains(&r) {
-                r = r.shrink_in(border);
-            }
-            self.position_client(c, r)?;
+        for &(c, r) in positions.iter() {
+            // A client filling its whole screen shows no border: there is nothing on the other
+            // side of it for the border to separate it from.
+            let border = if screen_positions.contains(&r) {
+                0
+            } else {
+                border_width
+            };
+
+            self.position_client(c, r, border)?;
         }
 
         Ok(())

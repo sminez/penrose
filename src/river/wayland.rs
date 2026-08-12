@@ -164,7 +164,6 @@ pub(super) struct Loop {
     /// The last plan the worker published, re-affirmed as often as river asks for it.
     pub(super) manage: ManagePlan,
     pub(super) render: RenderPlan,
-    pub(super) border_width: u32,
 
     /// Input routing is loop state, not the worker's: which bindings are live has to be coherent
     /// with the key press that river matched against them, and `ate_unbound_key` arrives here.
@@ -219,7 +218,6 @@ impl Loop {
             seats: Vec::new(),
             manage: ManagePlan::default(),
             render: RenderPlan::default(),
-            border_width: 0,
             grabbed_keys: Vec::new(),
             grabbed_mouse: Vec::new(),
             capture_continuations: Vec::new(),

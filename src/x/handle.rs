@@ -49,7 +49,9 @@ pub(crate) fn configure_request<X: XConn>(
         return Ok(()); // Managed tiled clients aren't allowed to configure themselves
     }
 
-    x.position_client(*id, *r)
+    // The client asked for this geometry itself, so it is already what it wants: no border is
+    // fitted into it.
+    x.position_client(*id, *r, 0)
 }
 
 pub(crate) fn map_request<X: XConn>(id: WinId, state: &mut State<X>, x: &mut X) -> Result<()> {

@@ -533,14 +533,16 @@ impl Conn for RiverConn {
     /// A window's size is manage state and its position is render state, so this one call feeds
     /// both halves of the plan and lands on screen over two sequences.
     ///
-    /// The rect fills the space the layout allocated, because river's borders take nothing out of
-    /// it: see [RiverConn::border_inset].
-    fn position_client(&mut self, id: WinId, r: Rect) -> Result<()> {
+    /// The client fills its whole allocation: river draws borders over the client's own edges
+    /// rather than around them, so there is no room to make. Neighbouring windows then touch and
+    /// the line between two of them is one border from each, which is the X11 picture.
+    fn position_client(&mut self, id: WinId, r: Rect, border: u32) -> Result<()> {
         let dimensions = (r.w, r.h);
         let position = Point { x: r.x, y: r.y };
 
         if self.manage.dimensions.insert(id, dimensions) != Some(dimensions)
             || self.render.positions.insert(id, position) != Some(position)
+            || self.render.border_widths.insert(id, border) != Some(border)
         {
             self.plan_dirty = true;
         }
@@ -663,19 +665,7 @@ impl Conn for RiverConn {
         Ok(())
     }
 
-    /// River draws borders *over* the window's own edges rather than around them, so a window
-    /// fills the space the layout allocated and its border eats the outermost pixels of it.
-    ///
-    /// That reproduces X11's picture rather than departing from it: neighbouring windows touch,
-    /// so the line between two of them is one border from each, and a window against the screen
-    /// edge shows one border's width there. Insetting as X11 does would leave the window short of
-    /// its allocation on the right and bottom and offset up and left.
-    fn border_inset(&self, _: u32) -> u32 {
-        0
-    }
-
-    fn set_initial_properties(&mut self, id: WinId, config: &Config<Self>) -> Result<()> {
-        self.ops.push(Op::BorderWidth(config.border_width));
+    fn set_initial_properties(&mut self, id: WinId, _: &Config<Self>) -> Result<()> {
         self.manage.initial_props.insert(id);
         self.plan_dirty = true;
 
