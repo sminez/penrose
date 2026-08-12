@@ -92,9 +92,13 @@ chmod +x "$RT/init.sh"
 echo "headless-river: wm=$WM"
 echo "headless-river: client=${CLIENT:-<none found>}"
 
+# Two outputs, so that multi screen handling is exercised rather than assumed:
+# a window manager that only ever looks at the first output passes every other
+# assertion here.
 timeout $((DURATION + 20)) env \
     XDG_RUNTIME_DIR="$RT" \
     WLR_BACKENDS=headless \
+    WLR_HEADLESS_OUTPUTS=2 \
     WLR_LIBINPUT_NO_DEVICES=1 \
     river -log-level debug -no-xwayland -c "$RT/init.sh" > "$LOG" 2>&1
 
@@ -146,6 +150,16 @@ if [ -s "$WMLOG" ]; then
     echo
     echo "window manager output ($(wc -l < "$WMLOG") lines, first 15):"
     head -15 "$WMLOG" | sed 's/^/  | /'
+fi
+
+# Both outputs, ordered left to right, and narrowed to the area a bar would
+# leave: river reports the outputs in no particular order and the non exclusive
+# area separately, so this is the conn's sorting as much as its counting.
+screens=$(grep -oE 'screens changed rects=\[[^]]*\]' "$WMLOG" | tail -1)
+if [ "$(grep -o 'Rect {' <<< "$screens" | wc -l)" -ge 2 ]; then
+    report "both outputs became screens ($screens)" ok
+else
+    report "both outputs became screens (got: ${screens:-none})" no
 fi
 
 if [ -n "$CLIENT" ]; then
