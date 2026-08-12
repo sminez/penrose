@@ -104,9 +104,6 @@ pub struct RiverConn {
     screen_order: ScreenOrder,
     /// Which tag to put an existing window back on, keyed by river's window identifier.
     restore_tags: HashMap<String, String>,
-    /// The border width, needed to undo the correction penrose makes for X11: see
-    /// [RiverConn::position_client].
-    border_width: u32,
     finished: bool,
 }
 
@@ -195,7 +192,6 @@ impl RiverConn {
             received: 0,
             screen_order: ScreenOrder::default(),
             restore_tags: HashMap::new(),
-            border_width: 0,
             finished: false,
         })
     }
@@ -317,23 +313,6 @@ impl RiverConn {
         }
 
         self.write();
-    }
-
-    /// Undo the room `position_clients` leaves for an X11 border, which river does not need.
-    ///
-    /// A rect that is exactly a screen was never shrunk -- `position_clients` skips those -- so
-    /// it is left alone, the same test in reverse.
-    fn unshrink(&self, r: Rect) -> Rect {
-        let border = self.border_width;
-        if border == 0 || self.shared.view().screens.contains(&r) {
-            return r;
-        }
-
-        Rect {
-            w: r.w + 2 * border,
-            h: r.h + 2 * border,
-            ..r
-        }
     }
 
     /// Write what we have queued to the socket.
@@ -554,18 +533,9 @@ impl Conn for RiverConn {
     /// A window's size is manage state and its position is render state, so this one call feeds
     /// both halves of the plan and lands on screen over two sequences.
     ///
-    /// The rect arrives already shrunk by `2 * border_width`, because `position_clients` makes
-    /// room for an X11 border -- which is drawn *outside* the window's origin, so X11 supplies the
-    /// matching offset for free and the window ends up filling its cell exactly. River has neither
-    /// half of that: it positions the window's *content* and draws borders over the content's own
-    /// edges. Left alone, the shrink would leave every window `border_width` up and left of where
-    /// it belongs with a `2 * border_width` gap at the right and bottom.
-    ///
-    /// So the shrink is undone, and the content fills the cell. Neighbouring windows then touch,
-    /// with each drawing its own border inside its edge, which is the X11 picture: `2 * bw` of
-    /// border between two windows and `bw` against the screen edge.
+    /// The rect fills the space the layout allocated, because river's borders take nothing out of
+    /// it: see [RiverConn::border_inset].
     fn position_client(&mut self, id: WinId, r: Rect) -> Result<()> {
-        let r = self.unshrink(r);
         let dimensions = (r.w, r.h);
         let position = Point { x: r.x, y: r.y };
 
@@ -693,8 +663,18 @@ impl Conn for RiverConn {
         Ok(())
     }
 
+    /// River draws borders *over* the window's own edges rather than around them, so a window
+    /// fills the space the layout allocated and its border eats the outermost pixels of it.
+    ///
+    /// That reproduces X11's picture rather than departing from it: neighbouring windows touch,
+    /// so the line between two of them is one border from each, and a window against the screen
+    /// edge shows one border's width there. Insetting as X11 does would leave the window short of
+    /// its allocation on the right and bottom and offset up and left.
+    fn border_inset(&self, _: u32) -> u32 {
+        0
+    }
+
     fn set_initial_properties(&mut self, id: WinId, config: &Config<Self>) -> Result<()> {
-        self.border_width = config.border_width;
         self.ops.push(Op::BorderWidth(config.border_width));
         self.manage.initial_props.insert(id);
         self.plan_dirty = true;

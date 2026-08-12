@@ -130,6 +130,10 @@ pub trait Conn: Send + Sized {
     fn warp_pointer(&mut self, id: WinId, x: i16, y: i16) -> Result<()>;
 
     /// Update the geometry of a given client based on the given [Rect].
+    ///
+    /// The rect is the client's own geometry, with [Conn::border_inset] already taken out of the
+    /// space the layout allocated: whether that inset is zero is what decides whether a border is
+    /// drawn around the client or over it.
     fn position_client(&mut self, id: WinId, r: Rect) -> Result<()>;
     /// Display a client on the screen at its current position.
     fn show_client(&mut self, id: WinId, state: &mut State<Self>) -> Result<()>;
@@ -168,6 +172,20 @@ pub trait Conn: Send + Sized {
     where
         WinId: 'a,
         I: Iterator<Item = &'a WinId>;
+
+    /// How far a client's geometry has to be inset to leave room for the border this backend
+    /// draws around it.
+    ///
+    /// The default is the configured border width, which is X11's answer: a border there is
+    /// drawn *outside* the window's origin, so shrinking the client by twice the width is what
+    /// makes the client and its border together fill the space the layout allocated.
+    ///
+    /// A backend which draws borders over the client's own edges rather than around them should
+    /// return 0. Shrinking in that case leaves the client short of its allocation on two sides
+    /// and offset on the other two, which is visible at any non-zero border width.
+    fn border_inset(&self, border_width: u32) -> u32 {
+        border_width
+    }
 }
 
 /// Extended functionality for [Conn] impls in order to run the window manager.
@@ -249,7 +267,7 @@ pub trait ConnExt: Conn + Sized {
     ///
     /// See `restack` for details of stacking order is determined.
     fn position_clients(&mut self, state: &State<Self>) -> Result<()> {
-        let border = state.config.border_width;
+        let border = self.border_inset(state.config.border_width);
         let positions = &state.diff.after.positions;
         let screen_positions: Vec<_> = state.client_set.screens().map(|s| s.r).collect();
 
