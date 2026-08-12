@@ -57,6 +57,11 @@ pub(super) struct Shared {
     /// Signalled when the worker publishes, so the loop's wait ends as soon as it can.
     published_changed: Condvar,
     view: Mutex<View>,
+    /// Why the connection ended badly, if it did.
+    ///
+    /// Kept here rather than on the conn because `WindowManager::run` consumes the conn: a caller
+    /// that wants to exit non-zero on a protocol error has to be able to ask afterwards.
+    fatal: Mutex<Option<String>>,
 }
 
 impl Shared {
@@ -115,5 +120,13 @@ impl Shared {
 
     pub(super) fn view(&self) -> MutexGuard<'_, View> {
         self.view.lock().expect("compositor view")
+    }
+
+    pub(super) fn set_fatal(&self, reason: String) {
+        *self.fatal.lock().expect("fatal reason") = Some(reason);
+    }
+
+    pub(super) fn fatal(&self) -> Option<String> {
+        self.fatal.lock().expect("fatal reason").clone()
     }
 }

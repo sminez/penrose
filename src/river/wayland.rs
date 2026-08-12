@@ -44,9 +44,9 @@ use crate::{
 use std::{
     collections::HashMap,
     sync::{Arc, mpsc::Sender},
-    time::Duration,
+    time::{Duration, Instant},
 };
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, info, trace, warn};
 use wayland_client::{
     Connection, EventQueue, Proxy, QueueHandle, backend::ObjectId, globals::GlobalListContents,
     protocol::wl_registry,
@@ -66,12 +66,22 @@ const PLAN_WAIT: Duration = Duration::from_millis(20);
 /// which is the price of the bound.
 const KEY_WAIT: Duration = Duration::from_millis(200);
 
+/// How long the worker may be behind before it is worth saying so.
+///
+/// Not the wait above: this is not "your handler is slower than a sequence", which a menu makes
+/// true for as long as somebody takes to choose, but "something is stuck". A person picking from
+/// a menu takes a few seconds; a wedged handler takes forever, and window management is stopped
+/// for the duration either way.
+const SLOW_HANDLER: Duration = Duration::from_secs(10);
+
 /// What the loop sends the worker.
 #[derive(Debug)]
 pub(super) enum FromLoop {
     /// An event, and how many events have been sent including this one.
     Event(u64, RiverEvent),
-    /// The connection is gone and this thread is finished.
+    /// River has handed window management to somebody else, or is shutting down. An orderly end.
+    Finished,
+    /// The connection died. Somebody should exit non-zero over this.
     Fatal(String),
 }
 
@@ -170,6 +180,11 @@ pub(super) struct Loop {
     /// Whether the batch just delivered carried a key press, which is the one thing that can arm
     /// a capture and so wants the longer wait.
     batch_had_key: bool,
+    /// The last event sent, and since when the worker has been behind: together they turn a
+    /// mysterious pause into a line in the log naming what is running.
+    last_event: Option<String>,
+    behind_since: Option<Instant>,
+    warned_slow: bool,
 
     pub(super) pending_sequence: Option<Sequence>,
     /// Windows river has closed, to be forgotten once the worker has handled the closure.
@@ -213,6 +228,9 @@ impl Loop {
             tx,
             sent: 0,
             batch_had_key: false,
+            last_event: None,
+            behind_since: None,
+            warned_slow: false,
             pending_sequence: None,
             pending_purge: Vec::new(),
             new_windows: Vec::new(),
@@ -260,15 +278,14 @@ impl Loop {
             self.purge_handled();
 
             if self.finished {
-                let _ = self.tx.send(FromLoop::Fatal(
-                    "river has finished with the window manager".to_owned(),
-                ));
+                let _ = self.tx.send(FromLoop::Finished);
                 return;
             }
 
             if let Err(e) = queue.blocking_dispatch(&mut self) {
                 let reason = describe_fatal(e);
                 error!(%reason, "river connection lost");
+                self.shared.set_fatal(reason.clone());
                 let _ = self.tx.send(FromLoop::Fatal(reason));
                 return;
             }
@@ -285,10 +302,20 @@ impl Loop {
         self.batch_had_key = false;
 
         if !self.shared.wait_for(self.sent, wait) {
-            trace!(
+            // Answering stale is the point of the bound -- it is what a blocking handler degrades
+            // to -- but it does mean whatever that handler decides lands a sequence late, which
+            // for a key press is the binding atomicity §5 wants. Debug rather than a warning:
+            // this is true for every sequence while a menu is open, which is not a fault.
+            debug!(
                 ?seq,
+                ?wait,
+                event = self.last_event.as_deref().unwrap_or("-"),
                 "answering with the plan we already have: the worker is still busy"
             );
+            self.note_behind();
+        } else {
+            self.behind_since = None;
+            self.warned_slow = false;
         }
 
         let ops = {
@@ -310,6 +337,22 @@ impl Loop {
                 }
                 self.transmit_render();
             }
+        }
+    }
+
+    /// Say so, once, when the worker has been busy long enough that the session has noticed.
+    fn note_behind(&mut self) {
+        let since = *self.behind_since.get_or_insert_with(Instant::now);
+        let elapsed = since.elapsed();
+
+        if elapsed > SLOW_HANDLER && !self.warned_slow {
+            self.warned_slow = true;
+            warn!(
+                ?elapsed,
+                event = self.last_event.as_deref().unwrap_or("-"),
+                "a handler has been running long enough to stop window management: \
+                 windows are not being placed until it returns"
+            );
         }
     }
 
@@ -354,6 +397,7 @@ impl Loop {
         }
 
         self.sent += 1;
+        self.last_event = Some(e.to_string());
         if self.tx.send(FromLoop::Event(self.sent, e)).is_err() {
             debug!("the worker is gone");
             self.finished = true;

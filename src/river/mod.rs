@@ -104,9 +104,24 @@ pub struct RiverConn {
     screen_order: ScreenOrder,
     /// Which tag to put an existing window back on, keyed by river's window identifier.
     restore_tags: HashMap<String, String>,
-    /// Why the loop stopped, if it has.
-    fatal: Option<String>,
+    /// The border width, needed to undo the correction penrose makes for X11: see
+    /// [RiverConn::position_client].
+    border_width: u32,
     finished: bool,
+}
+
+/// Why the river connection ended, readable after the window manager has returned.
+///
+/// See [RiverConn::fatal_watch].
+#[derive(Debug, Clone)]
+pub struct FatalWatch(Arc<Shared>);
+
+impl FatalWatch {
+    /// The reason the connection died, or `None` if it ended in an orderly way -- a hot swap, or
+    /// the compositor shutting down.
+    pub fn reason(&self) -> Option<String> {
+        self.0.fatal()
+    }
 }
 
 impl RiverConn {
@@ -180,7 +195,7 @@ impl RiverConn {
             received: 0,
             screen_order: ScreenOrder::default(),
             restore_tags: HashMap::new(),
-            fatal: None,
+            border_width: 0,
             finished: false,
         })
     }
@@ -242,12 +257,39 @@ impl RiverConn {
     }
 
     /// Why the connection ended, if it ended badly.
+    pub fn fatal_error(&self) -> Option<String> {
+        self.shared.fatal()
+    }
+
+    /// A handle to the same, which outlives the conn.
     ///
     /// A protocol error is the likely outcome of a bug in the plan, and it disconnects the window
-    /// manager while leaving the compositor running and looking fine. Exiting non-zero on this is
-    /// what lets a supervisor restart us; river keeps the clients alive either way.
-    pub fn fatal_error(&self) -> Option<&str> {
-        self.fatal.as_deref()
+    /// manager while leaving the compositor running and looking fine. Exiting non-zero on it is
+    /// what lets a supervisor notice and restart; river keeps the clients alive either way, so
+    /// the restart costs the session nothing.
+    ///
+    /// This exists rather than only [RiverConn::fatal_error] because `WindowManager::run` both
+    /// consumes the conn and returns `Ok` regardless: its loop hands an error to `handle_error`,
+    /// which logs it and carries on, so there is no way for the death of the connection to reach
+    /// the caller through the return value. Take one of these before `run`:
+    ///
+    /// ```no_run
+    /// # use penrose::{river::RiverConn, core::{Config, WindowManager}};
+    /// # fn main() -> penrose::Result<()> {
+    /// let conn = RiverConn::new()?;
+    /// let fatal = conn.fatal_watch();
+    /// # let wm: WindowManager<RiverConn> = todo!();
+    /// wm.run()?;
+    ///
+    /// if let Some(reason) = fatal.reason() {
+    ///     eprintln!("river connection lost: {reason}");
+    ///     std::process::exit(1);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn fatal_watch(&self) -> FatalWatch {
+        FatalWatch(Arc::clone(&self.shared))
     }
 
     /// River's identifier for a window, which is stable across a window manager restart.
@@ -275,6 +317,23 @@ impl RiverConn {
         }
 
         self.write();
+    }
+
+    /// Undo the room `position_clients` leaves for an X11 border, which river does not need.
+    ///
+    /// A rect that is exactly a screen was never shrunk -- `position_clients` skips those -- so
+    /// it is left alone, the same test in reverse.
+    fn unshrink(&self, r: Rect) -> Rect {
+        let border = self.border_width;
+        if border == 0 || self.shared.view().screens.contains(&r) {
+            return r;
+        }
+
+        Rect {
+            w: r.w + 2 * border,
+            h: r.h + 2 * border,
+            ..r
+        }
     }
 
     /// Write what we have queued to the socket.
@@ -315,12 +374,17 @@ impl Conn for RiverConn {
                 Ok(e)
             }
 
+            Ok(FromLoop::Finished) => {
+                self.finished = true;
+                Ok(RiverEvent::Finished)
+            }
+
             // The loop has stopped, so there will never be another event. Reporting this as an
-            // error would spin the run loop, which logs and calls straight back in, so it is
-            // reported as the end of the session instead and the reason kept for the caller.
+            // error would spin the run loop, which logs the error and calls straight back in, so
+            // it ends the session instead and the reason is left where a caller can find it after
+            // `run` -- which consumes the conn -- has returned. See [RiverConn::fatal_watch].
             Ok(FromLoop::Fatal(reason)) => {
                 error!(%reason, "the river connection has ended");
-                self.fatal = Some(reason);
                 self.finished = true;
                 Ok(RiverEvent::Finished)
             }
@@ -489,7 +553,19 @@ impl Conn for RiverConn {
 
     /// A window's size is manage state and its position is render state, so this one call feeds
     /// both halves of the plan and lands on screen over two sequences.
+    ///
+    /// The rect arrives already shrunk by `2 * border_width`, because `position_clients` makes
+    /// room for an X11 border -- which is drawn *outside* the window's origin, so X11 supplies the
+    /// matching offset for free and the window ends up filling its cell exactly. River has neither
+    /// half of that: it positions the window's *content* and draws borders over the content's own
+    /// edges. Left alone, the shrink would leave every window `border_width` up and left of where
+    /// it belongs with a `2 * border_width` gap at the right and bottom.
+    ///
+    /// So the shrink is undone, and the content fills the cell. Neighbouring windows then touch,
+    /// with each drawing its own border inside its edge, which is the X11 picture: `2 * bw` of
+    /// border between two windows and `bw` against the screen edge.
     fn position_client(&mut self, id: WinId, r: Rect) -> Result<()> {
+        let r = self.unshrink(r);
         let dimensions = (r.w, r.h);
         let position = Point { x: r.x, y: r.y };
 
@@ -618,6 +694,7 @@ impl Conn for RiverConn {
     }
 
     fn set_initial_properties(&mut self, id: WinId, config: &Config<Self>) -> Result<()> {
+        self.border_width = config.border_width;
         self.ops.push(Op::BorderWidth(config.border_width));
         self.manage.initial_props.insert(id);
         self.plan_dirty = true;

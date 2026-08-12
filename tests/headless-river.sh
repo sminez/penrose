@@ -80,7 +80,7 @@ cat > "$RT/init.sh" <<EOF
 #!/bin/sh
 # river runs this instead of the default init.  It starts the window manager,
 # which connects back as a client, then clients to give it something to do.
-RUST_LOG=\${RUST_LOG:-debug} "$WM" > "$WMLOG" 2>&1 &
+RUST_LOG=\${RUST_LOG:-penrose=trace} "$WM" > "$WMLOG" 2>&1 &
 sleep 3
 ${CLIENT:+$CLIENT >> "$WMLOG" 2>&1 &}
 sleep 3
@@ -160,6 +160,26 @@ if [ "$(grep -o 'Rect {' <<< "$screens" | wc -l)" -ge 2 ]; then
     report "both outputs became screens ($screens)" ok
 else
     report "both outputs became screens (got: ${screens:-none})" no
+fi
+
+# Windows have to fill their cells, which is the one thing about borders river
+# does differently: penrose shrinks each rect by 2*border_width to make room for
+# an X11 border, and an X11 border is drawn *outside* the window origin so the
+# window still fills its cell.  River positions the content and draws borders
+# over it, so the shrink has to be undone or every window sits border_width up
+# and left of where it belongs with a gap at the right and bottom.
+#
+# Layout independent: whatever split the layout chose, the widths of the windows
+# sharing a screen add up to the width of that screen.
+screen_w=$(grep -oE 'screens changed rects=\[Rect \{ x: 0, y: 0, w: [0-9]+' "$WMLOG" \
+           | grep -oE '[0-9]+$' | tail -1)
+proposed=$(grep -oE 'proposing dimensions id=[0-9]+ w=[0-9]+' "$WMLOG" \
+           | awk '{ split($3,i,"="); split($4,x,"="); last[i[2]]=x[2] } \
+                  END { s=0; for (k in last) s += last[k]; print s }')
+if [ -n "$screen_w" ] && [ "${proposed:-0}" = "$screen_w" ]; then
+    report "the windows fill the screen exactly ($proposed of $screen_w)" ok
+else
+    report "the windows fill the screen exactly (got ${proposed:-none} of ${screen_w:-none})" no
 fi
 
 if [ -n "$CLIENT" ]; then

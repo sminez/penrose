@@ -98,6 +98,7 @@ impl Loop {
 
         for (&id, &(w, h)) in self.manage.dimensions.iter() {
             if let Some(win) = self.live_window(id) {
+                trace!(%id, w, h, "proposing dimensions");
                 win.propose_dimensions(w as i32, h as i32);
             }
         }

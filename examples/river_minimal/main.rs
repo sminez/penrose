@@ -79,12 +79,26 @@ fn main() -> Result<()> {
         .init();
 
     let conn = RiverConn::new()?;
+    // Taken before run(), which consumes the conn: a protocol error disconnects the window
+    // manager while leaving the compositor running and looking fine, and the only way anything
+    // notices is the exit status.
+    let fatal = conn.fatal_watch();
+
     let key_bindings = parse_keybindings(raw_key_bindings()).into_result()?;
     // River has no pointer counterpart to X11's motion events outside its own interactive
     // operation, so there are no mouse bindings here yet.
     let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
 
-    wm.run()
+    wm.run()?;
+
+    if let Some(reason) = fatal.reason() {
+        eprintln!("river connection lost: {reason}");
+        // River keeps every client alive when we disconnect, so a supervisor can restart us and
+        // the session carries on with the windows it already had.
+        std::process::exit(1);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

@@ -165,10 +165,16 @@ fn main() -> Result<()> {
     }
 
     let conn = RiverConn::new()?.restore_tags(tags);
+    let fatal = conn.fatal_watch();
     let key_bindings = parse_keybindings(raw_key_bindings()).into_result()?;
     let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
 
     wm.run()?;
+
+    if let Some(reason) = fatal.reason() {
+        eprintln!("river connection lost: {reason}");
+        std::process::exit(1);
+    }
 
     if RESTARTING.load(Ordering::SeqCst) {
         let exe = env::current_exe().expect("our own path");
