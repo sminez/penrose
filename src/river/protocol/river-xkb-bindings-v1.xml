@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="river_xkb_bindings_v1">
+  <copyright>
+    SPDX-FileCopyrightText: © 2025 Isaac Freund
+    SPDX-License-Identifier: MIT
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to
+    deal in the Software without restriction, including without limitation the
+    rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+    sell copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+    IN THE SOFTWARE.
+  </copyright>
+
+  <description summary="xkbcommon-based key bindings">
+    This protocol allows the river-window-management-v1 window manager to
+    define key bindings in terms of xkbcommon keysyms and other configurable
+    properties.
+
+    The key words "must", "must not", "required", "shall", "shall not",
+    "should", "should not", "recommended", "may", and "optional" in this
+    document are to be interpreted as described in IETF RFC 2119.
+  </description>
+
+  <interface name="river_xkb_bindings_v1" version="3">
+    <description summary="xkbcommon bindings global interface">
+      This global interface should only be advertised to the client if the
+      river_window_manager_v1 global is also advertised.
+    </description>
+
+    <enum name="error" since="2">
+      <entry name="object_already_created" value="0" since="2"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the river_xkb_bindings_v1 object">
+        This request indicates that the client will no longer use the
+        river_xkb_bindings_v1 object.
+      </description>
+    </request>
+
+    <request name="get_xkb_binding">
+      <description summary="define a new xkbcommon key binding">
+        Define a key binding for the given seat in terms of an xkbcommon keysym
+        and other configurable properties.
+
+        The new key binding is not enabled until initial configuration is
+        completed and the enable request is made during a manage sequence.
+      </description>
+      <arg name="seat" type="object" interface="river_seat_v1"/>
+      <arg name="id" type="new_id" interface="river_xkb_binding_v1"/>
+      <arg name="keysym" type="uint" summary="an xkbcommon keysym"/>
+      <arg name="modifiers" type="uint" enum="river_seat_v1.modifiers"/>
+    </request>
+
+    <request name="get_seat" since="2">
+      <description summary="manage seat-specific state">
+        Create an object to manage seat-specific xkb bindings state.
+
+        It is a protocol error to make this request more than once for a given
+        river_seat_v1 object.
+      </description>
+      <arg name="id" type="new_id" interface="river_xkb_bindings_seat_v1"/>
+      <arg name="seat" type="object" interface="river_seat_v1"/>
+    </request>
+  </interface>
+
+  <interface name="river_xkb_binding_v1" version="3">
+    <description summary="configure a xkb key binding, receive trigger events">
+      This object allows the window manager to configure a xkbcommon key binding
+      and receive events when the key binding is triggered.
+
+      The new key binding is not enabled until the enable request is made during
+      a manage sequence.
+
+      Normally, all key events are sent to the surface with keyboard focus by
+      the compositor. Key events that trigger a key binding are not sent to the
+      surface with keyboard focus.
+
+      If multiple key bindings would be triggered by a single physical key event
+      on the compositor side, it is compositor policy which key binding(s) will
+      receive press/release events or if all of the matched key bindings receive
+      press/release events.
+
+      Key bindings might be matched by the same physical key event due to shared
+      keysym and modifiers. The layout override feature may also cause the same
+      physical key event to trigger two key bindings with different keysyms and
+      different layout overrides configured.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the xkb binding object">
+        This request indicates that the client will no longer use the xkb key
+        binding object and that it may be safely destroyed.
+      </description>
+    </request>
+
+    <request name="set_layout_override">
+      <description summary="override currently active xkb layout">
+        Specify an xkb layout that should be used to translate key events for
+        the purpose of triggering this key binding irrespective of the currently
+        active xkb layout.
+
+        The layout argument is a 0-indexed xkbcommon layout number for the
+        keyboard that generated the key event.
+
+        If this request is never made, the currently active xkb layout of the
+        keyboard that generated the key event will be used.
+
+        This request modifies window management state and may only be made as
+        part of a manage sequence, see the river_window_manager_v1 description.
+      </description>
+      <arg name="layout" type="uint" summary="0-indexed xkbcommon layout"/>
+    </request>
+
+    <request name="enable">
+      <description summary="enable the key binding">
+        This request should be made after all initial configuration has been
+        completed and the window manager wishes the key binding to be able to be
+        triggered.
+
+        This request modifies window management state and may only be made as
+        part of a manage sequence, see the river_window_manager_v1 description.
+      </description>
+    </request>
+
+    <request name="disable">
+      <description summary="disable the key binding">
+        This request may be used to temporarily disable the key binding. It may
+        be later re-enabled with the enable request.
+
+        This request modifies window management state and may only be made as
+        part of a manage sequence, see the river_window_manager_v1 description.
+      </description>
+    </request>
+
+    <event name="pressed">
+      <description summary="the key triggering the binding has been pressed">
+        This event indicates that the physical key triggering the binding has
+        been pressed.
+
+        This event will be followed by a manage_start event after all other new
+        state has been sent by the server.
+
+        The compositor should wait for the manage sequence to complete before
+        processing further input events. This allows the window manager client
+        to, for example, modify key bindings and keyboard focus without racing
+        against future input events. The window manager should of course respond
+        as soon as possible as the capacity of the compositor to buffer incoming
+        input events is finite.
+      </description>
+    </event>
+
+    <event name="released">
+      <description summary="the key triggering the binding has been released">
+        This event indicates that the physical key triggering the binding has
+        been released.
+
+        Releasing the modifiers for the binding without releasing the "main"
+        physical key that produces the bound keysym does not trigger the release
+        event. This event is sent when the "main" key is released, even if the
+        modifiers have changed since the pressed event.
+
+        This event will be followed by a manage_start event after all other new
+        state has been sent by the server.
+
+        The compositor should wait for the manage sequence to complete before
+        processing further input events. This allows the window manager client
+        to, for example, modify key bindings and keyboard focus without racing
+        against future input events. The window manager should of course respond
+        as soon as possible as the capacity of the compositor to buffer incoming
+        input events is finite.
+      </description>
+    </event>
+
+    <event name="stop_repeat" since="2">
+      <description summary="repeating should be stopped">
+        This event indicates that repeating should be stopped for the binding if
+        the window manager has been repeating some action since the pressed
+        event.
+
+        This event is generally sent when some other (possibly unbound) key is
+        pressed after the pressed event is sent and before the released event
+        is sent for this binding.
+
+        This event will be followed by a manage_start event after all other new
+        state has been sent by the server.
+      </description>
+    </event>
+  </interface>
+
+  <interface name="river_xkb_bindings_seat_v1" version="3">
+    <description summary="xkb bindings seat">
+      This object manages xkb bindings state associated with a specific seat.
+    </description>
+
+    <request name="destroy" type="destructor" since="2">
+      <description summary="destroy the object">
+        This request indicates that the client will no longer use the object and
+        that it may be safely destroyed.
+      </description>
+    </request>
+
+    <request name="ensure_next_key_eaten" since="2">
+      <description summary="ensure the next key press event is eaten">
+        Ensure that the next non-modifier key press and corresponding release
+        events for this seat are not sent to the currently focused surface.
+
+        If the next non-modifier key press triggers a binding, the
+        pressed/released events are sent to the river_xkb_binding_v1 object as
+        usual.
+
+        If the next non-modifier key press does not trigger a binding, the
+        ate_unbound_key event is sent instead.
+
+        Rationale: the window manager may wish to implement "chorded"
+        keybindings where triggering a binding activates a "submap" with a
+        different set of keybindings. Without a way to eat the next key
+        press event, there is no good way for the window manager to know that it
+        should error out and exit the submap when a key not bound in the submap
+        is pressed.
+
+        This request modifies window management state and may only be made as
+        part of a manage sequence, see the river_window_manager_v1 description.
+      </description>
+    </request>
+
+    <request name="cancel_ensure_next_key_eaten" since="2">
+      <description summary="cancel an ensure_next_key_eaten request">
+        This requests cancels the effect of the latest ensure_next_key_eaten
+        request if no key has been eaten due to the request yet. This request
+        has no effect if a key has already been eaten or no
+        ensure_next_key_eaten was made.
+
+        Rationale: the window manager may wish cancel an uncompleted "chorded"
+        keybinding after a timeout of a few seconds. Note that since this
+        timeout use-case requires the window manager to trigger a manage sequence
+        with the river_window_manager_v1.manage_dirty request it is possible that
+        the ate_unbound_key key event may be sent before the window manager has
+        a chance to make the cancel_ensure_next_key_eaten request.
+
+        This request modifies window management state and may only be made as
+        part of a manage sequence, see the river_window_manager_v1 description.
+      </description>
+    </request>
+
+    <event name="ate_unbound_key" since="2">
+      <description summary="an unbound key press event was eaten">
+        An unbound key press event was eaten due to the ensure_next_key_eaten
+        request.
+
+        This event will be followed by a manage_start event after all other new
+        state has been sent by the server.
+      </description>
+    </event>
+
+    <request name="modifiers_watch" since="3">
+      <description summary="watch for change in active modifiers">
+        Request that the server send the modifiers_update event whenever a state
+        change occurs for at least one of the modifiers specified by the
+        modifiers argument.
+
+        The window manager should make this request with the modifiers argument
+        set to 0 when it no longer wishes to take action based on a change in
+        modifiers.
+
+        This request modifies window management state and may only be made as
+        part of a manage sequence, see the river_window_manager_v1 description.
+      </description>
+      <arg name="modifiers" type="uint" enum="river_seat_v1.modifiers"/>
+    </request>
+
+    <event name="modifiers_update" since="3">
+      <description summary="active modifiers for the seat changed">
+        The set of currently active modifiers for the seat changed. This event
+        is only sent when there is a change in state for modifiers marked as
+        watched using the modifiers_watch request.
+
+        The old and new arguments convey the set of modifiers active before and
+        after the change. All modifiers are included in the old and new
+        arguments, including modifiers that are not watched.
+
+        Since this event is only sent when there is a change in state for
+        watched modifiers, it follows that at least one watched modifier is
+        active in old but inactive in new or vice-versa.
+
+        This event will be followed by a manage_start event after all other new
+        state has been sent by the server.
+
+        The compositor should wait for the manage sequence to complete before
+        processing further input events. This allows the window manager client
+        to, for example, modify key bindings and keyboard focus without racing
+        against future input events. The window manager should of course respond
+        as soon as possible as the capacity of the compositor to buffer incoming
+        input events is finite.
+      </description>
+      <arg name="old" type="uint" enum="river_seat_v1.modifiers"
+        summary="previously active modifiers"/>
+      <arg name="new" type="uint" enum="river_seat_v1.modifiers"
+        summary="currently active modifiers"/>
+    </event>
+  </interface>
+</protocol>

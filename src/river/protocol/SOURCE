@@ -1,0 +1,15 @@
+Copied verbatim from river's protocol/ directory.
+
+    repo:   https://codeberg.org/river/river.git
+    branch: main
+    commit: bfab9ea75985e048ca31b919ccd6dfc676da6dd5  (2026-08-07)
+
+Interface versions at that commit:
+
+    river_window_manager_v1   5   river-window-management-v1.xml
+    river_xkb_bindings_v1     3   river-xkb-bindings-v1.xml
+    river_layer_shell_v1      1   river-layer-shell-v1.xml
+
+These protocols are unstable and untagged, so a copy goes stale silently. To
+update: copy the three files over, move the commit above, and rebuild. See
+river-design.md §3, and the staleness check under its Future work.
