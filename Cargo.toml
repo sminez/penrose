@@ -64,3 +64,8 @@ penrose_ui = { path = "crates/penrose_ui" }
 name = "river_minimal"
 path = "examples/river_minimal/main.rs"
 required-features = ["river"]
+
+[[example]]
+name = "river_bindings"
+path = "examples/river_bindings/main.rs"
+required-features = ["river"]

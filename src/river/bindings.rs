@@ -65,13 +65,19 @@ impl Inner {
 
     /// Create binding objects for anything a seat does not have yet.
     ///
-    /// Called when the grabbed set changes and when a new seat appears.
+    /// Called when the grabbed set changes, when a capture names continuation keys, and when a
+    /// new seat appears. The continuations need objects as much as the leaders do: without one
+    /// river has no binding to match and the key produces no event at all, only `ate_unbound_key`
+    /// -- which is indistinguishable from the user typing something that is genuinely not in the
+    /// sequence.
     pub(super) fn rebind_seats(&mut self) {
-        let (keys, mouse, qh) = (
-            self.grabbed_keys.clone(),
-            self.grabbed_mouse.clone(),
-            self.qh.clone(),
-        );
+        let keys: Vec<KeySym> = self
+            .grabbed_keys
+            .iter()
+            .chain(self.capture_continuations.iter())
+            .copied()
+            .collect();
+        let (mouse, qh) = (self.grabbed_mouse.clone(), self.qh.clone());
 
         for seat in self.seats.iter_mut().filter(|s| !s.removed) {
             for &key in keys.iter() {
