@@ -415,9 +415,22 @@ impl Loop {
         }
 
         for id in std::mem::take(&mut self.new_windows) {
-            if self.windows.contains_key(&id) {
-                self.send(RiverEvent::WindowOpened(id));
-            }
+            let Some(win) = self.windows.get(&id) else {
+                continue;
+            };
+
+            // What a window calls itself, at the one moment it is all known: a
+            // manage hook matches on this, and there is otherwise no way to find
+            // out what to write in one. River reports an XWayland client's X11
+            // class here rather than an app_id, so the two can differ in case.
+            debug!(
+                %id,
+                app_id = win.facts.app_id.as_deref().unwrap_or("-"),
+                title = win.facts.title.as_deref().unwrap_or("-"),
+                "announcing a new window"
+            );
+
+            self.send(RiverEvent::WindowOpened(id));
         }
     }
 
