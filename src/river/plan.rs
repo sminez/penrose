@@ -157,13 +157,36 @@ impl Loop {
             ls.set_default();
         }
 
+        // Render state may be set in a manage sequence as well, applying at the next
+        // render_finish either way, and sending it here is worth a round trip to river:
+        //
+        //   - `exit_fullscreen` leaves a window's position and dimensions undefined "until a
+        //     manage sequence in which the window manager makes the propose_dimensions and
+        //     set_position requests is completed", so leaving position to the render sequence
+        //     means never satisfying that and never getting a perfect frame out of fullscreen.
+        //   - XWayland windows are told their position rather than discovering it, and river
+        //     configures them at manageFinish as well as renderFinish precisely because it "does
+        //     not necessarily know the new position until after a rendering sequence" -- so
+        //     giving it the position now is what lets it configure them once instead of twice.
+        //
+        // It is the same requests again in the render sequence, which costs nothing: every one
+        // of them is a total restatement.
+        self.stage_render();
+
         self.wm.manage_finish();
     }
 
     /// Transmit the render half of the plan and finish the sequence.
     pub(super) fn transmit_render(&mut self) {
         trace!("transmitting render plan");
+        self.stage_render();
+        self.wm.render_finish();
+    }
 
+    /// Everything the render half says, without ending the sequence.
+    ///
+    /// Called in both halves: see the note in [Loop::transmit_manage].
+    fn stage_render(&mut self) {
         for (&id, &p) in self.render.positions.iter() {
             if let Some(node) = self.live_node(id) {
                 // The other half of what a layout change sends. Paired with the
@@ -211,8 +234,6 @@ impl Loop {
             }
             previous = Some(node);
         }
-
-        self.wm.render_finish();
     }
 
     fn transmit_op(&mut self, op: Op) {
