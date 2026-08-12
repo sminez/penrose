@@ -10,6 +10,11 @@
 //! whatever was pressed; here a key with no binding registered produces no event at all, only
 //! `ate_unbound_key`, which carries no keysym. So the continuation keys are enabled for the
 //! duration of the capture: see river-design.md §5.
+//!
+//! **All of this lives on the loop.** Which bindings are live has to be coherent with the key
+//! press river matched against them, and `ate_unbound_key` arrives here; if the worker owned any
+//! of it, that callback would be reading a slot the worker was concurrently writing. The worker
+//! says only "these are the bindings" and "eat the next key, these would continue it", as ops.
 use crate::{
     Result,
     core::{
@@ -17,7 +22,7 @@ use crate::{
         bindings::{KeySym, MouseButton, MouseEvent, MouseEventData, MouseEventKind, MouseState},
         conn::WinId,
     },
-    river::{Inner, RiverConn, RiverEvent, plan::Op, protocol},
+    river::{RiverConn, RiverEvent, protocol, wayland::Loop},
 };
 use protocol::{
     river_window_management_v1::{
@@ -27,6 +32,7 @@ use protocol::{
         river_xkb_binding_v1::RiverXkbBindingV1, river_xkb_bindings_seat_v1::RiverXkbBindingsSeatV1,
     },
 };
+use std::collections::HashSet;
 use tracing::{debug, trace, warn};
 use wayland_client::{Connection, Proxy, QueueHandle};
 
@@ -51,16 +57,56 @@ fn button_code(button: MouseButton) -> Option<u32> {
     }
 }
 
-impl Inner {
-    /// Register bindings for the given keys and mouse states, and drop the rest.
+impl Loop {
+    /// Register bindings for the given keys and mouse states, and stop matching the rest.
     ///
     /// Binding objects may be created at any time but only enabled inside a manage sequence, so
-    /// the objects are made here and the enabling goes through the plan.
-    pub(super) fn grab(&mut self, keys: &[KeySym], mouse_states: &[MouseState]) {
-        self.grabbed_keys = keys.iter().copied().collect();
-        self.grabbed_mouse = mouse_states.iter().cloned().collect();
+    /// the objects are made here and the enabling happens when the sequence is transmitted.
+    pub(super) fn grab(&mut self, keys: Vec<KeySym>, mouse: Vec<MouseState>) {
+        self.grabbed_keys = keys;
+        self.grabbed_mouse = mouse;
         self.rebind_seats();
-        self.recompute_enabled();
+    }
+
+    /// Eat the next non-modifier key press, and listen for the keys which would continue the
+    /// sequence in progress.
+    pub(super) fn capture(&mut self, continuations: Vec<KeySym>) {
+        trace!(?continuations, "capturing the next key press");
+        // A second call replaces the continuations rather than adding to them, and does not
+        // extend the capture: river eats one key either way.
+        self.capture_continuations = continuations;
+        self.rebind_seats();
+
+        if !self.capture_armed {
+            self.capture_armed = true;
+            self.for_each_seat(|s| {
+                if let Some(xkb) = s.xkb.as_ref() {
+                    xkb.ensure_next_key_eaten();
+                }
+            });
+        }
+    }
+
+    /// Drop a capture which has not yet eaten anything.
+    pub(super) fn cancel_capture(&mut self) {
+        self.capture_continuations.clear();
+
+        if self.capture_armed {
+            self.capture_armed = false;
+            // River documents the race: ate_unbound_key may already be in flight, in which case
+            // this request does nothing and the event arrives anyway.
+            self.for_each_seat(|s| {
+                if let Some(xkb) = s.xkb.as_ref() {
+                    xkb.cancel_ensure_next_key_eaten();
+                }
+            });
+        }
+    }
+
+    /// A key press has been eaten by the capture, whether or not it triggered a binding.
+    fn capture_consumed(&mut self) {
+        self.capture_armed = false;
+        self.capture_continuations.clear();
     }
 
     /// Create binding objects for anything a seat does not have yet.
@@ -68,8 +114,7 @@ impl Inner {
     /// Called when the grabbed set changes, when a capture names continuation keys, and when a
     /// new seat appears. The continuations need objects as much as the leaders do: without one
     /// river has no binding to match and the key produces no event at all, only `ate_unbound_key`
-    /// -- which is indistinguishable from the user typing something that is genuinely not in the
-    /// sequence.
+    /// -- which is indistinguishable from the user typing something genuinely not in the sequence.
     pub(super) fn rebind_seats(&mut self) {
         let keys: Vec<KeySym> = self
             .grabbed_keys
@@ -106,68 +151,22 @@ impl Inner {
         }
     }
 
-    /// Work out which bindings should be live and put that in the plan.
+    /// Enable what should be live and disable what should not.
     ///
     /// The leaders stay enabled during a capture: pressing one mid sequence is how a sequence
     /// that goes nowhere is abandoned, and core needs the press to work that out.
-    pub(super) fn recompute_enabled(&mut self) {
-        let enabled: std::collections::HashSet<KeySym> = self
+    pub(super) fn transmit_bindings(&mut self) {
+        let enabled: HashSet<KeySym> = self
             .grabbed_keys
             .iter()
             .chain(self.capture_continuations.iter())
             .copied()
             .collect();
+        let mouse_enabled: HashSet<&MouseState> = self.grabbed_mouse.iter().collect();
 
-        if enabled != self.manage.enabled || self.grabbed_mouse != self.manage.mouse_enabled {
-            self.manage.enabled = enabled;
-            self.manage.mouse_enabled = self.grabbed_mouse.clone();
-            self.touch();
-        }
-    }
-
-    /// Eat the next non-modifier key press, and listen for the keys which would continue the
-    /// sequence in progress.
-    pub(super) fn capture(&mut self, continuations: &[KeySym]) {
-        trace!(?continuations, "capturing the next key press");
-        // A second call replaces the continuations rather than adding to them, and does not
-        // extend the capture: river eats one key either way.
-        self.capture_continuations = continuations.iter().copied().collect();
-        self.rebind_seats();
-        self.recompute_enabled();
-
-        if !self.capture_armed {
-            self.capture_armed = true;
-            self.manage.ops.push(Op::CaptureNextKey);
-            self.touch();
-        }
-    }
-
-    /// Drop a capture which has not yet eaten anything.
-    pub(super) fn cancel_capture(&mut self) {
-        self.capture_continuations.clear();
-        self.recompute_enabled();
-
-        if self.capture_armed {
-            self.capture_armed = false;
-            // River documents the race: ate_unbound_key may already be in flight, in which case
-            // this request does nothing and the event arrives anyway.
-            self.manage.ops.push(Op::CancelCaptureNextKey);
-            self.touch();
-        }
-    }
-
-    /// A key press has been eaten by the capture, whether or not it triggered a binding.
-    fn capture_consumed(&mut self) {
-        self.capture_armed = false;
-        self.capture_continuations.clear();
-        self.recompute_enabled();
-    }
-
-    /// Enable what the plan names and disable what it does not.
-    pub(super) fn transmit_bindings(&mut self) {
         for seat in self.seats.iter().filter(|s| !s.removed) {
             for (key, binding) in seat.key_bindings.iter() {
-                if self.manage.enabled.contains(key) {
+                if enabled.contains(key) {
                     binding.enable();
                 } else {
                     binding.disable();
@@ -175,7 +174,7 @@ impl Inner {
             }
 
             for (state, binding) in seat.mouse_bindings.iter() {
-                if self.manage.mouse_enabled.contains(state) {
+                if mouse_enabled.contains(state) {
                     binding.enable();
                 } else {
                     binding.disable();
@@ -189,24 +188,20 @@ impl Inner {
 ///
 /// River's `ate_unbound_key` means "a key was eaten and it was not one of yours", which is
 /// exactly the abort signal, and core has no way to say it: `dispatch_key` takes a key and there
-/// is no value which means "not a key".
-pub(super) fn abandon_key_sequence(
-    state: &mut State<RiverConn>,
-    conn: &mut RiverConn,
-) -> Result<()> {
+/// is no value which means "not a key". The capture itself is already gone -- the loop dropped it
+/// when the key was eaten -- so all that is left is the pending keys.
+pub(super) fn abandon_key_sequence(state: &mut State<RiverConn>, _: &mut RiverConn) -> Result<()> {
     if !state.pending_keys.is_empty() {
         debug!(pending = ?state.pending_keys, "abandoning key sequence: unbound key");
         state.pending_keys.clear();
     }
 
-    conn.inner.capture_consumed();
-
     Ok(())
 }
 
-impl wayland_client::Dispatch<RiverXkbBindingV1, KeySym> for Inner {
+impl wayland_client::Dispatch<RiverXkbBindingV1, KeySym> for Loop {
     fn event(
-        inner: &mut Self,
+        l: &mut Self,
         _: &RiverXkbBindingV1,
         event: protocol::river_xkb_bindings::river_xkb_binding_v1::Event,
         key: &KeySym,
@@ -218,18 +213,18 @@ impl wayland_client::Dispatch<RiverXkbBindingV1, KeySym> for Inner {
         if let Event::Pressed = event {
             // A binding firing while a capture is armed is the capture being spent: river eats
             // the key and delivers it here rather than as ate_unbound_key.
-            if inner.capture_armed {
-                inner.capture_consumed();
+            if l.capture_armed {
+                l.capture_consumed();
             }
 
-            inner.queue_event(RiverEvent::KeyPress(*key));
+            l.send_event(RiverEvent::KeyPress(*key));
         }
     }
 }
 
-impl wayland_client::Dispatch<RiverXkbBindingsSeatV1, ()> for Inner {
+impl wayland_client::Dispatch<RiverXkbBindingsSeatV1, ()> for Loop {
     fn event(
-        inner: &mut Self,
+        l: &mut Self,
         _: &RiverXkbBindingsSeatV1,
         event: protocol::river_xkb_bindings::river_xkb_bindings_seat_v1::Event,
         _: &(),
@@ -239,15 +234,15 @@ impl wayland_client::Dispatch<RiverXkbBindingsSeatV1, ()> for Inner {
         use protocol::river_xkb_bindings::river_xkb_bindings_seat_v1::Event;
 
         if let Event::AteUnboundKey = event {
-            inner.capture_consumed();
-            inner.queue_event(RiverEvent::UnboundKey);
+            l.capture_consumed();
+            l.send_event(RiverEvent::UnboundKey);
         }
     }
 }
 
-impl wayland_client::Dispatch<RiverPointerBindingV1, MouseState> for Inner {
+impl wayland_client::Dispatch<RiverPointerBindingV1, MouseState> for Loop {
     fn event(
-        inner: &mut Self,
+        l: &mut Self,
         binding: &RiverPointerBindingV1,
         event: protocol::river_window_management_v1::river_pointer_binding_v1::Event,
         state: &MouseState,
@@ -263,22 +258,21 @@ impl wayland_client::Dispatch<RiverPointerBindingV1, MouseState> for Inner {
 
         // River tells us that a binding fired, not where the pointer was: the seat's last
         // reported position is the closest thing to X11's event coordinates.
-        let rpt = inner
+        let rpt = l
             .seats
             .iter()
             .find(|s| s.mouse_bindings.values().any(|b| b.id() == binding.id()))
             .map(|s| s.pointer)
             .unwrap_or_default();
 
-        let id = inner
+        let id = l
             .render
             .positions
             .iter()
             .find(|(id, p)| {
-                inner
-                    .windows
+                l.windows
                     .get(id)
-                    .and_then(|w| w.dimensions)
+                    .and_then(|w| w.facts.dimensions)
                     .is_some_and(|(w, h)| {
                         (p.x..p.x + w as i32).contains(&rpt.x)
                             && (p.y..p.y + h as i32).contains(&rpt.y)
@@ -287,7 +281,7 @@ impl wayland_client::Dispatch<RiverPointerBindingV1, MouseState> for Inner {
             .map(|(&id, _)| id)
             .unwrap_or(WinId(0));
 
-        let wpt = inner
+        let wpt = l
             .render
             .positions
             .get(&id)
@@ -297,7 +291,7 @@ impl wayland_client::Dispatch<RiverPointerBindingV1, MouseState> for Inner {
             })
             .unwrap_or(rpt);
 
-        inner.queue_event(RiverEvent::MouseEvent(MouseEvent {
+        l.send_event(RiverEvent::MouseEvent(MouseEvent {
             data: MouseEventData { id, rpt, wpt },
             state: state.clone(),
             kind,

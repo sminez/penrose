@@ -74,3 +74,8 @@ required-features = ["river"]
 name = "river_restart"
 path = "examples/river_restart/main.rs"
 required-features = ["river"]
+
+[[example]]
+name = "river_menu"
+path = "examples/river_menu/main.rs"
+required-features = ["river"]
