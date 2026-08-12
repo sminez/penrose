@@ -86,6 +86,8 @@ pub mod extensions;
 mod macros;
 pub mod pure;
 pub mod util;
+
+#[cfg(feature = "x11rb")]
 pub mod x;
 
 #[cfg(all(
@@ -99,6 +101,18 @@ pub mod x;
     )
 ))]
 pub mod x11rb;
+
+#[cfg(all(
+    feature = "river",
+    any(
+        target_os = "linux",
+        target_os = "dragonfly",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd"
+    )
+))]
+pub mod river;
 
 #[doc(inline)]
 pub use crate::core::WinId;

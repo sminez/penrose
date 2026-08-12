@@ -1,9 +1,8 @@
 //! Configure workspaces to auto-spawn a set of windows if they are empty when they gain focus
 use crate::{
     Result,
-    core::{State, hooks::StateHook},
+    core::{State, conn::Conn, hooks::StateHook},
     util::spawn,
-    x::XConn,
 };
 
 /// Specify a workspace by `tag` and use a named layout to spawn a set of default programs
@@ -20,13 +19,13 @@ pub struct DefaultWorkspace {
 
 impl DefaultWorkspace {
     /// Create a new boxed `DefaultWorkspace` that can be added to your Config as a refresh hook.
-    pub fn boxed<X>(
+    pub fn boxed<C>(
         tag: impl Into<String>,
         layout_name: impl Into<String>,
         progs: Vec<impl Into<String>>,
-    ) -> Box<dyn StateHook<X>>
+    ) -> Box<dyn StateHook<C>>
     where
-        X: XConn,
+        C: Conn,
     {
         Box::new(Self {
             tag: tag.into(),
@@ -36,11 +35,11 @@ impl DefaultWorkspace {
     }
 }
 
-impl<X> StateHook<X> for DefaultWorkspace
+impl<C> StateHook<C> for DefaultWorkspace
 where
-    X: XConn,
+    C: Conn,
 {
-    fn call(&mut self, state: &mut State<X>, _x: &mut X) -> Result<()> {
+    fn call(&mut self, state: &mut State<C>, _c: &mut C) -> Result<()> {
         let on_screen_and_empty = std::iter::once(&state.diff.after.focused)
             .chain(state.diff.after.visible.iter())
             .find(|s| s.tag == self.tag)

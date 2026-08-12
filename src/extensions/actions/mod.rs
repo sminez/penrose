@@ -1,19 +1,33 @@
 //! Helpers and pre-defined actions for use in user defined key bindings
 use crate::{
+    builtin::actions::modify_with,
+    core::{bindings::KeyEventHandler, conn::Conn, layout::LayoutStack},
+};
+
+// The actions below this point are X11 only: they are written in terms of window
+// properties and atoms, which no other backend has. See river-design.md §1.
+#[cfg(feature = "x11rb")]
+use crate::{
     Error, Result, WinId,
-    builtin::actions::{key_handler, modify_with},
-    core::{State, bindings::KeyEventHandler, conn::ConnExt, layout::LayoutStack},
+    builtin::actions::key_handler,
+    core::{State, conn::ConnExt},
     util::spawn,
     x::{ClientConfig, XConn, atom::Atom, property::Prop},
 };
+#[cfg(feature = "x11rb")]
 use tracing::{debug, error};
 
+// dmenu is an X11 program and `DMenu::build_menu` blocks while the user chooses, which a
+// compositor backed backend cannot allow: see river-design.md §2.
+#[cfg(feature = "x11rb")]
 mod dynamic_select;
 
+#[cfg(feature = "x11rb")]
 #[doc(inline)]
 pub use dynamic_select::*;
 
 /// The possible valid actions to use when manipulating full screen state
+#[cfg(feature = "x11rb")]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FullScreenAction {
     /// Force the window out of fullscreen state
@@ -25,6 +39,7 @@ pub enum FullScreenAction {
 }
 
 /// Set the fullscreen state of a particular client
+#[cfg(feature = "x11rb")]
 pub fn set_fullscreen_state<X: XConn>(
     id: WinId,
     action: FullScreenAction,
@@ -74,6 +89,7 @@ pub fn set_fullscreen_state<X: XConn>(
 ///
 ///   [0]: crate::extensions::hooks::add_ewmh_hooks
 ///   [1]: crate::extensions::hooks::startup::ClearFsPropOnStartup
+#[cfg(feature = "x11rb")]
 pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
     key_handler(|state, x: &mut X| {
         let id = match state.client_set.current_client() {
@@ -97,12 +113,12 @@ pub fn toggle_fullscreen<X: XConn>() -> Box<dyn KeyEventHandler<X>> {
 /// > [switch_to_workspace] to select from known workspace names.
 ///
 ///   [0]: crate::pure::Workspace
-pub fn create_or_switch_to_workspace<X>(
+pub fn create_or_switch_to_workspace<C>(
     get_name: fn() -> Option<String>,
     layouts: LayoutStack,
-) -> Box<dyn KeyEventHandler<X>>
+) -> Box<dyn KeyEventHandler<C>>
 where
-    X: XConn,
+    C: Conn,
 {
     modify_with(move |cs| {
         if let Some(name) = get_name() {
@@ -120,11 +136,11 @@ where
 /// Call 'select_name' to select a Workspace name and switch focus to it if it exists.
 ///
 ///   [0]: crate::pure::Workspace
-pub fn switch_to_workspace<X>(
+pub fn switch_to_workspace<C>(
     select_name: fn(&[String]) -> Option<String>,
-) -> Box<dyn KeyEventHandler<X>>
+) -> Box<dyn KeyEventHandler<C>>
 where
-    X: XConn,
+    C: Conn,
 {
     modify_with(move |cs| {
         let tags = cs.ordered_tags();
@@ -139,6 +155,7 @@ where
 ///
 /// This is useful for key bindings that are based on the program you want to work with rather than
 /// having to remember where things are running.
+#[cfg(feature = "x11rb")]
 pub fn focus_or_spawn<X>(class: &'static str, command: &'static str) -> Box<dyn KeyEventHandler<X>>
 where
     X: XConn,

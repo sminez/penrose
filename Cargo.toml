@@ -23,7 +23,11 @@ members = [
 
 [features]
 default = ["x11rb"]
+# The x11rb backend, and everything under src/x/ that it implements.
+x11rb = ["dep:x11rb"]
 x11rb-xcb = ["x11rb", "x11rb/allow-unsafe-code"]
+# The river backend (src/river/). Additive with x11rb: both may be enabled.
+river = ["dep:wayland-client", "dep:wayland-scanner"]
 
 [dependencies]
 anymap = "0.12"
@@ -39,6 +43,8 @@ tracing = { version = "0.1", features = ["attributes"] }
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies]
 x11rb = { version = "0.13", features = ["randr"], optional = true }
+wayland-client = { version = "0.31", optional = true }
+wayland-scanner = { version = "0.31", optional = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
