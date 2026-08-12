@@ -166,6 +166,11 @@ impl Loop {
 
         for (&id, &p) in self.render.positions.iter() {
             if let Some(node) = self.live_node(id) {
+                // The other half of what a layout change sends. Paired with the
+                // proposed dimensions in the manage sequence, this is the whole
+                // of what a window was told, which is the first thing wanted
+                // when one ends up the wrong size or in the wrong place.
+                trace!(%id, x = p.x, y = p.y, "positioning");
                 node.set_position(p.x, p.y);
             }
         }

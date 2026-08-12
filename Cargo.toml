@@ -79,3 +79,8 @@ required-features = ["river"]
 name = "river_menu"
 path = "examples/river_menu/main.rs"
 required-features = ["river"]
+
+[[example]]
+name = "river_resize"
+path = "examples/river_resize/main.rs"
+required-features = ["river"]

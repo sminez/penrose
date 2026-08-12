@@ -63,10 +63,15 @@ if ! setxkbmap -print -layout us > "$RT/keymap.desc" 2>/dev/null \
     exit 77
 fi
 
+# A config of your own is run with its startup hook suppressed. That hook is the
+# one part of a real config that reaches outside its own session -- it spawns a
+# dozen programs, some of them singletons, and adopts tmux sessions by name -- so
+# running it here would disturb the session this is being tested from. Nothing
+# under test needs it.
 cat > "$RT/init.sh" <<EOF
 #!/bin/sh
 PENROSE_MENU_LOG="$ACTIONS" PENROSE_KEYMAP="$KEYMAP" \
-    RUST_LOG=\${RUST_LOG:-info} "$SPEC" > "$SPECLOG" 2>&1 &
+    PENROSE_NO_STARTUP_HOOK=1 RUST_LOG=\${RUST_LOG:-info} "$SPEC" > "$SPECLOG" 2>&1 &
 sleep 25
 EOF
 chmod +x "$RT/init.sh"

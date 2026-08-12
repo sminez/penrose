@@ -76,11 +76,16 @@ LOG=$RT/river.log
 WMLOG=$RT/wm.log
 trap 'rm -rf "$RT"' EXIT
 
+# A config of your own is run with its startup hook suppressed. That hook is the
+# one part of a real config that reaches outside its own session -- it spawns a
+# dozen programs, some of them singletons, and adopts tmux sessions by name -- so
+# running it here would disturb the session this is being tested from. Nothing
+# under test needs it.
 cat > "$RT/init.sh" <<EOF
 #!/bin/sh
 # river runs this instead of the default init.  It starts the window manager,
 # which connects back as a client, then clients to give it something to do.
-RUST_LOG=\${RUST_LOG:-penrose=trace} "$WM" > "$WMLOG" 2>&1 &
+PENROSE_NO_STARTUP_HOOK=1 RUST_LOG=\${RUST_LOG:-penrose=trace} "$WM" > "$WMLOG" 2>&1 &
 sleep 3
 ${CLIENT:+$CLIENT >> "$WMLOG" 2>&1 &}
 sleep 3

@@ -535,10 +535,16 @@ impl Conn for RiverConn {
         let dimensions = (r.w, r.h);
         let position = Point { x: r.x, y: r.y };
 
-        if self.manage.dimensions.insert(id, dimensions) != Some(dimensions)
-            || self.render.positions.insert(id, position) != Some(position)
-            || self.render.border_widths.insert(id, border) != Some(border)
-        {
+        // Each insert on its own line because each one is a side effect: `||`
+        // does not evaluate its right operand when the left is true, so writing
+        // this as one condition stored the size and silently dropped the
+        // position for every window whose size had changed -- which is every
+        // window in a layout that just changed.
+        let resized = self.manage.dimensions.insert(id, dimensions) != Some(dimensions);
+        let moved = self.render.positions.insert(id, position) != Some(position);
+        let reframed = self.render.border_widths.insert(id, border) != Some(border);
+
+        if resized || moved || reframed {
             self.plan_dirty = true;
         }
 
