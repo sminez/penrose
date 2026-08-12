@@ -443,7 +443,7 @@ where
                 }
 
                 for code in codes {
-                    self.conn.grab_key(
+                    let cookie = self.conn.grab_key(
                         false,               // don't pass grabbed events through to the client
                         self.root,           // the window to grab: in this case the root window
                         (k.mask | m).into(), // modifiers to grab
@@ -451,6 +451,24 @@ where
                         mode,                // don't lock pointer input while grabbing
                         mode,                // don't lock keyboard input while grabbing
                     )?;
+
+                    // Checked, unlike most of this backend, because the failure is both
+                    // likely and invisible: only one client may hold a passive grab on a
+                    // key, so another one that got there first -- an input method taking
+                    // Super+space, say -- makes this BadAccess. Unchecked, that is dropped
+                    // and the binding simply never fires, with nothing anywhere to say why.
+                    //
+                    // A round trip per grab, at startup and on MappingNotify only.
+                    if let Err(e) = cookie.check() {
+                        warn!(
+                            keysym = k.keysym,
+                            mask = k.mask | m,
+                            code,
+                            %e,
+                            "unable to grab a key: another client holds it, so this binding \
+                             will not fire"
+                        );
+                    }
                 }
             }
         }
