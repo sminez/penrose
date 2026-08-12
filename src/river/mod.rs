@@ -324,6 +324,25 @@ impl RiverConn {
     }
 }
 
+/// Is this client on a workspace that is actually on a screen?
+///
+/// The pointer can only be over a window river is showing, so an enter naming one penrose has
+/// hidden means the two disagree about what is on screen -- and following it would switch
+/// workspace to whatever is under a cursor that has not moved.
+///
+/// They disagree at every restart. River un-hides every window when the window manager it was
+/// talking to disconnects (`hidden = false` in `Window.zig`'s `handleDestroy`), so for as long as
+/// it takes the replacement to publish its first render plan, the whole session is stacked on
+/// screen and the pointer is over whichever of them happens to be on top. River then reports that
+/// window as hovered in its initial state, which is how a restart used to end up on the workspace
+/// of a window the user had not looked at in hours.
+fn is_on_a_visible_tag(cs: &crate::pure::StackSet<WinId>, id: WinId) -> bool {
+    match cs.tag_for_client(&id) {
+        Some(tag) => cs.screens().any(|s| s.workspace.tag == tag),
+        None => false,
+    }
+}
+
 fn bind_error(interface: &str, e: wayland_client::globals::BindError) -> Error {
     Error::Custom(format!(
         "river does not offer a usable {interface}: {e}. \
@@ -402,7 +421,7 @@ impl Conn for RiverConn {
             }
 
             PointerFocus(id) | Interaction(id) => {
-                if state.client_set.contains(&id) && state.config.focus_follow_mouse {
+                if is_on_a_visible_tag(&state.client_set, id) && state.config.focus_follow_mouse {
                     self.modify_and_refresh(state, |cs| cs.focus_client(&id))?;
                 }
             }
