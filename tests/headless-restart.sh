@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Assert that a restart keeps the session: the clients, and the workspace each
-# one was on.
+# Assert that a restart keeps the session: the clients, the workspace each one
+# was on, and which client had focus.
 #
 # Usage: tests/headless-restart.sh
 #
@@ -116,6 +116,17 @@ if grep -q 'managing existing client.*tag=Some("2")' "$SPECLOG"; then
     pass "an existing client came back on the workspace it was on"
 else
     fail "an existing client came back on the workspace it was on"
+fi
+
+# Which workspace the session comes back up on. Without this the second generation starts on
+# whichever tag the client set starts on, so a restart moves the user off the workspace they were
+# working on -- and river makes that worse than a default, since it un-hides every window when the
+# window manager it was talking to disconnects and then reports whichever one is left under the
+# pointer as hovered, which focus-follows-mouse would then follow.
+if grep -q 'focusing the client that had focus before the restart' "$SPECLOG"; then
+    pass "focus came back to the client that had it"
+else
+    fail "focus came back to the client that had it"
 fi
 
 # And it is still a real window afterwards, not merely remembered.

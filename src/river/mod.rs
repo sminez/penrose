@@ -90,6 +90,8 @@ pub struct RiverConn {
 
     /// Which tag to put an existing window back on, keyed by river's window identifier.
     restore_tags: HashMap<String, String>,
+    /// The identifier of the window that had focus before a restart.
+    restore_focus: Option<String>,
     finished: bool,
 }
 
@@ -177,6 +179,7 @@ impl RiverConn {
             handled: 0,
             received: 0,
             restore_tags: HashMap::new(),
+            restore_focus: None,
             finished: false,
         })
     }
@@ -192,6 +195,20 @@ impl RiverConn {
     /// [RiverConn::window_identifier] and [RiverConn::stop].
     pub fn restore_tags(mut self, tags: HashMap<String, String>) -> Self {
         self.restore_tags = tags;
+        self
+    }
+
+    /// Give focus back to the window that had it before a restart.
+    ///
+    /// The argument is river's window identifier, as [RiverConn::restore_tags] is keyed on, and is
+    /// applied by `manage_existing_clients` once every window is back on its tag -- so it decides
+    /// which workspace the session comes back up on. A window that no longer exists, or no
+    /// identifier at all, falls back to the first tag.
+    ///
+    /// The X11 backend does this from `_NET_ACTIVE_WINDOW`, which the X server keeps for it. River
+    /// has nowhere to keep anything, so this comes from wherever the caller wrote it.
+    pub fn restore_focus(mut self, identifier: Option<String>) -> Self {
+        self.restore_focus = identifier;
         self
     }
 
@@ -484,19 +501,41 @@ impl Conn for RiverConn {
     /// a state file it wrote before asking river to swap us out.
     fn manage_existing_clients(&mut self, state: &mut State<Self>) -> Result<()> {
         let known: Vec<String> = state.client_set.ordered_tags();
+        let mut had_focus = None;
 
         for id in self.existing_clients()? {
             if !state.client_set.contains(&id) && self.client_should_be_managed(id) {
                 let title = self.client_title(id)?;
+                let identifier = self.window_identifier(id);
                 // A tag that no longer exists in the config would be a workspace nothing can
                 // reach, so an unknown one falls back to the current workspace.
-                let tag = self
-                    .window_identifier(id)
-                    .and_then(|i| self.restore_tags.get(&i).cloned())
+                let tag = identifier
+                    .as_ref()
+                    .and_then(|i| self.restore_tags.get(i).cloned())
                     .filter(|t| known.contains(t));
+
+                if identifier.is_some() && identifier == self.restore_focus {
+                    had_focus = Some(id);
+                }
 
                 info!(%id, %title, ?tag, "managing existing client");
                 manage_without_refresh(id, tag.as_deref(), state, self)?;
+            }
+        }
+
+        // Which workspace the session comes back up on. Without this it would be whichever one the
+        // client set starts on, so a restart would move the user off the workspace they were
+        // working on -- the same reason the X11 backend restores _NET_ACTIVE_WINDOW here.
+        match had_focus {
+            Some(id) => {
+                info!(%id, "focusing the client that had focus before the restart");
+                state.client_set.focus_client(&id);
+            }
+            None => {
+                if let Some(tag) = known.first() {
+                    info!(%tag, "no focused client to restore: focusing the first tag");
+                    state.client_set.focus_tag(tag);
+                }
             }
         }
 

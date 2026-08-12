@@ -9,8 +9,11 @@
 //! our connection -- asks river to stop sending us events, and execs itself when river says it is
 //! finished. Every client stays alive across the swap.
 //!
+//! The file carries which window had focus as well as which tag each one is on, since that is
+//! what decides the workspace the session comes back up on.
+//!
 //! This is the shape a real config wants; `tests/headless-restart.sh` runs it and asserts that
-//! the windows and their tags came back.
+//! the windows, their tags and the focus came back.
 use penrose::{
     Result, WinId,
     builtin::actions::{key_handler, modify_with},
@@ -84,6 +87,7 @@ fn restart() -> Box<dyn KeyEventHandler<RiverConn>> {
         let path = env::var(STATE_ENV).expect("state file path");
         let mut f = File::create(path)?;
 
+        let focused = state.client_set.current_client().copied();
         let tagged: Vec<(WinId, String)> = state
             .client_set
             .clients()
@@ -92,7 +96,10 @@ fn restart() -> Box<dyn KeyEventHandler<RiverConn>> {
 
         for (id, tag) in tagged {
             if let Some(identifier) = conn.window_identifier(id) {
-                writeln!(f, "{identifier}\t{tag}")?;
+                // A third field on the one that had focus, which is what decides the workspace the
+                // next generation comes back up on.
+                let focus = if Some(id) == focused { "\tfocus" } else { "" };
+                writeln!(f, "{identifier}\t{tag}{focus}")?;
             }
         }
 
@@ -123,18 +130,30 @@ fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RiverConn>>> {
     raw_bindings
 }
 
-/// Read back what the previous generation wrote, if there was one.
-fn restore_tags() -> HashMap<String, String> {
+/// Read back what the previous generation wrote, if there was one: the tag of each window, and
+/// which one had focus.
+fn restore() -> (HashMap<String, String>, Option<String>) {
     let Ok(path) = env::var(STATE_ENV) else {
-        return HashMap::new();
+        return (HashMap::new(), None);
     };
 
-    fs::read_to_string(path)
-        .unwrap_or_default()
-        .lines()
-        .filter_map(|l| l.split_once('\t'))
-        .map(|(id, tag)| (id.to_string(), tag.to_string()))
-        .collect()
+    let mut tags = HashMap::new();
+    let mut focus = None;
+
+    for line in fs::read_to_string(path).unwrap_or_default().lines() {
+        let mut fields = line.split('\t');
+        let (Some(identifier), Some(tag)) = (fields.next(), fields.next()) else {
+            continue;
+        };
+
+        if fields.next() == Some("focus") {
+            focus = Some(identifier.to_string());
+        }
+
+        tags.insert(identifier.to_string(), tag.to_string());
+    }
+
+    (tags, focus)
 }
 
 fn main() -> Result<()> {
@@ -150,8 +169,8 @@ fn main() -> Result<()> {
         .and_then(|g| g.parse().ok())
         .unwrap_or(0);
 
-    let tags = restore_tags();
-    tracing::info!(generation, restoring = tags.len(), "starting");
+    let (tags, focus) = restore();
+    tracing::info!(generation, restoring = tags.len(), ?focus, "starting");
 
     // Only the first generation types: the second exists to be looked at.
     if generation == 0
@@ -164,7 +183,7 @@ fn main() -> Result<()> {
         });
     }
 
-    let conn = RiverConn::new()?.restore_tags(tags);
+    let conn = RiverConn::new()?.restore_tags(tags).restore_focus(focus);
     let fatal = conn.fatal_watch();
     let key_bindings = parse_keybindings(raw_key_bindings()).into_result()?;
     let wm = WindowManager::new(Config::default(), key_bindings, HashMap::new(), conn)?;
