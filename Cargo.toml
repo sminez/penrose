@@ -57,3 +57,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dev-dependencies]
 penrose_ui = { path = "crates/penrose_ui" }
+
+# Every other example is X11 and is picked up by cargo's autodiscovery. This one needs naming so
+# that it is only built when the river backend is.
+[[example]]
+name = "river_minimal"
+path = "examples/river_minimal/main.rs"
+required-features = ["river"]
