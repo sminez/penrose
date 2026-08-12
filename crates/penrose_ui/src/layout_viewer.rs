@@ -34,7 +34,7 @@ impl LayoutViewer {
         text: impl Into<Color>,
     ) -> Result<Self> {
         let mut conn = RustConn::new()?;
-        let screen_rects = conn.screen_details()?;
+        let screen_rects = conn.unordered_screens()?;
         let r_screen = screen_rects.last().unwrap();
 
         let mut drw = Draw::new(FONT, 14, bg)?;

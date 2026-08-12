@@ -18,7 +18,7 @@ const FONT: &str = "mono";
 
 fn main() -> anyhow::Result<()> {
     let mut conn = RustConn::new()?;
-    let screen_rects = conn.screen_details()?;
+    let screen_rects = conn.unordered_screens()?;
     let Rect { x, y, .. } = screen_rects.last().unwrap();
 
     let mut drw = Draw::new(FONT, 14, BLACK)?;

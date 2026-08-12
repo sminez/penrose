@@ -136,7 +136,7 @@ pub(crate) fn leave<X: XConn>(p: PointerChange, state: &mut State<X>, x: &mut X)
 
 pub(crate) fn detect_screens<X: XConn>(state: &mut State<X>, x: &mut X) -> Result<()> {
     info!("re-detecting screens");
-    let rects = x.screen_details()?;
+    let rects = x.screens(state.config.screen_order)?;
     info!(?rects, "found screens");
 
     state.client_set.update_screens(rects)

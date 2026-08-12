@@ -1,0 +1,1 @@
+Before this change, key bindings would stop working while caps lock is on. Num lock was already handled this way in penrose, but caps lock was not. This matches xmonad's [`cleanMask`](https://hackage-content.haskell.org/package/xmonad-0.18.1/docs/XMonad-Operations.html#g:3).

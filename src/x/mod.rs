@@ -91,7 +91,7 @@ pub trait XConn: Send {
     /// The ID of the window manager root window.
     fn root(&mut self) -> WinId;
     /// Ask the X server for the dimensions of each currently available screen.
-    fn screen_details(&mut self) -> Result<Vec<Rect>>;
+    fn unordered_screens(&mut self) -> Result<Vec<Rect>>;
     /// Ask the X server for the current (x, y) coordinate of the mouse cursor.
     fn cursor_position(&mut self) -> Result<Point>;
 
@@ -289,8 +289,8 @@ where
     }
 
     #[inline]
-    fn screen_details(&mut self) -> Result<Vec<Rect>> {
-        self.screen_details()
+    fn unordered_screens(&mut self) -> Result<Vec<Rect>> {
+        self.unordered_screens()
     }
 
     #[inline]

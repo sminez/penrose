@@ -24,8 +24,8 @@ pub trait MockXConn: Send {
         WinId(0)
     }
 
-    fn mock_screen_details(&mut self) -> Result<Vec<Rect>> {
-        unimplemented!("mock_screen_details")
+    fn mock_unordered_screens(&mut self) -> Result<Vec<Rect>> {
+        unimplemented!("mock_unordered_screens")
     }
 
     fn mock_cursor_position(&mut self) -> Result<Point> {
@@ -135,8 +135,8 @@ where
         self.mock_root()
     }
 
-    fn screen_details(&mut self) -> Result<Vec<Rect>> {
-        self.mock_screen_details()
+    fn unordered_screens(&mut self) -> Result<Vec<Rect>> {
+        self.mock_unordered_screens()
     }
 
     fn cursor_position(&mut self) -> Result<Point> {

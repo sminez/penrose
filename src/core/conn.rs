@@ -3,7 +3,7 @@ use crate::{
     Color, Result,
     builtin::layout::messages::Hide,
     core::{
-        Config, State,
+        Config, ScreenComparator, State,
         bindings::{KeyBindings, MouseBindings, MouseState},
     },
     pure::{
@@ -122,8 +122,12 @@ pub trait Conn: Send + Sized {
     fn existing_clients(&mut self) -> Result<Vec<WinId>>;
     /// Request a client windows's current workspace
     fn manage_existing_clients(&mut self, state: &mut State<Self>) -> Result<()>;
-    /// The dimensions of each currently available screen.
-    fn screen_details(&mut self) -> Result<Vec<Rect>>;
+    /// The dimensions of each currently available screen, in whatever order the backend has
+    /// them.
+    ///
+    /// Named for what it is not: which monitor is screen 0 is the config's to decide, and no
+    /// backend reports an order worth relying on, so [ConnExt::screens] is what callers want.
+    fn unordered_screens(&mut self) -> Result<Vec<Rect>>;
     /// The current (x, y) coordinate of the mouse cursor.
     fn cursor_position(&mut self) -> Result<Point>;
     /// Reposition the mouse cursor to the given (x, y) coordinates within the specified window.
@@ -250,6 +254,17 @@ pub trait ConnExt: Conn + Sized {
     /// when we last refreshed.
     fn refresh(&mut self, state: &mut State<Self>) -> Result<()> {
         self.modify_and_refresh(state, |_| ())
+    }
+
+    /// The screens, in the order the config wants them indexed.
+    ///
+    /// Which monitor is screen 0 decides what `focus_screen(0)` does, so it is settled here
+    /// rather than by each backend: see [ScreenComparator].
+    fn screens(&mut self, order: ScreenComparator) -> Result<Vec<Rect>> {
+        let mut rects = self.unordered_screens()?;
+        rects.sort_by(order);
+
+        Ok(rects)
     }
 
     /// Restack and place an ordered list of client windows in the space the layout allocated to
@@ -632,7 +647,7 @@ mod tests {
     const TEST_SCREEN_2: Rect = Rect::new(1024, 0, 4096, 2160);
 
     impl MockXConn for TransientXConn {
-        fn mock_screen_details(&mut self) -> Result<Vec<Rect>> {
+        fn mock_unordered_screens(&mut self) -> Result<Vec<Rect>> {
             Ok(vec![TEST_SCREEN, TEST_SCREEN_2])
         }
 

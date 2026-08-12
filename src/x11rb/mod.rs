@@ -326,7 +326,7 @@ where
         self.root.into()
     }
 
-    fn screen_details(&mut self) -> Result<Vec<Rect>> {
+    fn unordered_screens(&mut self) -> Result<Vec<Rect>> {
         let resources = self.conn.randr_get_screen_resources(self.root)?.reply()?;
 
         // Send queries for all CRTCs

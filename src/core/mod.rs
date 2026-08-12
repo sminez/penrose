@@ -1,12 +1,12 @@
 //! Core data structures and user facing functionality for the window manager
 use crate::{
     Color, Error, Result,
-    core::conn::Conn,
+    core::conn::{Conn, ConnExt},
     pure::{Diff, ScreenClients, Snapshot, StackSet, Workspace, geometry::Rect},
 };
 use anymap::{AnyMap, any::Any};
 use nix::sys::signal::{SigHandler, Signal, signal};
-use std::{any::TypeId, cell::RefCell, collections::HashSet, fmt, sync::Arc};
+use std::{any::TypeId, cell::RefCell, cmp::Ordering, collections::HashSet, fmt, sync::Arc};
 use tracing::{Level, debug, error, info, span, trace};
 
 pub mod bindings;
@@ -55,7 +55,7 @@ where
         let mut client_set = StackSet::try_new(
             config.default_layouts.clone(),
             config.tags.iter(),
-            conn.screen_details()?,
+            conn.screens(config.screen_order)?,
         )?;
 
         let ss = client_set.snapshot(vec![]);
@@ -203,6 +203,34 @@ where
     }
 }
 
+/// How screen indices are assigned: an ordering over the rects a backend reports.
+///
+/// Backends report screens in whatever order they please -- the X server has its own, and river
+/// makes no promise at all -- so which monitor is screen 0 is a preference rather than a fact.
+/// This is `xmonad-contrib`'s `ScreenComparator`, and it is why no backend needs a wrapper to
+/// reorder them.
+///
+/// [left_to_right] and [top_to_bottom] cover the usual cases; anything else is a function of your
+/// own. Counting from the other end is `.reverse()` on one of these:
+///
+/// ```
+/// # use penrose::{core::left_to_right, pure::geometry::Rect};
+/// fn right_to_left(a: &Rect, b: &Rect) -> std::cmp::Ordering {
+///     left_to_right(a, b).reverse()
+/// }
+/// ```
+pub type ScreenComparator = fn(&Rect, &Rect) -> Ordering;
+
+/// Screen 0 is the leftmost, ties broken top to bottom.
+pub fn left_to_right(a: &Rect, b: &Rect) -> Ordering {
+    (a.x, a.y).cmp(&(b.x, b.y))
+}
+
+/// Screen 0 is the topmost, ties broken left to right.
+pub fn top_to_bottom(a: &Rect, b: &Rect) -> Ordering {
+    (a.y, a.x).cmp(&(b.y, b.x))
+}
+
 /// The user specified config options for how the window manager should run
 pub struct Config<C>
 where
@@ -216,6 +244,8 @@ where
     pub border_width: u32,
     /// Whether or not the mouse entering a new window should set focus
     pub focus_follow_mouse: bool,
+    /// Which monitor is screen 0, and so which `focus_screen(n)` means what
+    pub screen_order: ScreenComparator,
     /// The stack of layouts to use for each workspace
     pub default_layouts: LayoutStack,
     /// The ordered set of workspace tags to use on window manager startup
@@ -263,6 +293,7 @@ where
             focused_border: "#cc241dff".try_into().expect("valid hex code"),
             border_width: 2,
             focus_follow_mouse: true,
+            screen_order: left_to_right,
             default_layouts: LayoutStack::default(),
             tags: strings(&["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
             floating_classes: strings(&["dmenu", "dunst"]),

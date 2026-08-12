@@ -806,7 +806,7 @@ mod tests {
     }
 
     impl MockXConn for TestConn {
-        fn mock_screen_details(&mut self) -> Result<Vec<Rect>> {
+        fn mock_unordered_screens(&mut self) -> Result<Vec<Rect>> {
             Ok(vec![Rect::new(0, 0, 1000, 800)])
         }
 

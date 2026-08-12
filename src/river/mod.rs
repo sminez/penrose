@@ -62,20 +62,6 @@ const WM_VERSIONS: std::ops::RangeInclusive<u32> = 4..=5;
 const XKB_VERSIONS: std::ops::RangeInclusive<u32> = 2..=3;
 const LAYER_SHELL_VERSIONS: std::ops::RangeInclusive<u32> = 1..=1;
 
-/// The order screen indices are assigned in.
-///
-/// Penrose indexes screens in whatever order `screen_details` returns them, and river makes no
-/// promise about the order it announces outputs in, so the conn sorts them by position. Which end
-/// to start from is a preference: `xmonad-contrib`'s `PhysicalScreens` counts right to left.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum ScreenOrder {
-    /// Screen 0 is the leftmost, then top to bottom.
-    #[default]
-    LeftToRight,
-    /// Screen 0 is the rightmost, then bottom to top.
-    RightToLeft,
-}
-
 /// A [Conn] implementation backed by the river Wayland compositor.
 ///
 /// Everything that mutates state is written into a plan rather than sent, because river only
@@ -102,7 +88,6 @@ pub struct RiverConn {
     /// The last event handed to penrose, which has not been handled until the next flush.
     received: u64,
 
-    screen_order: ScreenOrder,
     /// Which tag to put an existing window back on, keyed by river's window identifier.
     restore_tags: HashMap<String, String>,
     finished: bool,
@@ -154,7 +139,7 @@ impl RiverConn {
 
         // River sends a window event for every existing window, and an output and seat event for
         // each of those, before the first manage sequence. Waiting for that first sequence here,
-        // before the loop thread takes over, is what makes existing_clients and screen_details
+        // before the loop thread takes over, is what makes existing_clients and the screens
         // answerable by the time penrose asks.
         while !river.has_pending_sequence() && !river.is_finished() {
             queue
@@ -191,16 +176,9 @@ impl RiverConn {
             plan_dirty: false,
             handled: 0,
             received: 0,
-            screen_order: ScreenOrder::default(),
             restore_tags: HashMap::new(),
             finished: false,
         })
-    }
-
-    /// Index screens from the right rather than from the left.
-    pub fn with_screen_order(mut self, order: ScreenOrder) -> Self {
-        self.screen_order = order;
-        self
     }
 
     /// Put existing windows back on the workspaces they were on before a restart.
@@ -228,6 +206,18 @@ impl RiverConn {
         // Straight down the connection rather than through the plan: this needs no sequence, and
         // waiting for one would mean waiting for something nothing is going to ask for.
         self.wm.stop();
+        self.write();
+    }
+
+    /// End the Wayland session: log out.
+    ///
+    /// Everything in the session is disconnected, this window manager included, so this is the
+    /// last thing a config does. River is explicit that it is for a user asking to log out and
+    /// not for ordinary window manager termination -- use [RiverConn::stop] to hand over to a
+    /// replacement, which is what a restart wants.
+    pub fn exit_session(&mut self) {
+        info!("ending the wayland session");
+        self.wm.exit_session();
         self.write();
     }
 
@@ -405,7 +395,7 @@ impl Conn for RiverConn {
             WindowClosed(id) => self.unmanage(id, state)?,
 
             ScreenChange => {
-                let rects = self.screen_details()?;
+                let rects = self.screens(state.config.screen_order)?;
                 info!(?rects, "screens changed");
                 state.client_set.update_screens(rects)?;
                 self.refresh(state)?;
@@ -499,15 +489,12 @@ impl Conn for RiverConn {
         Ok(())
     }
 
-    fn screen_details(&mut self) -> Result<Vec<Rect>> {
-        let mut rects = self.shared.view().screens.clone();
+    /// Reported left to right, which `Config::screen_order` then has the last word on.
+    fn unordered_screens(&mut self) -> Result<Vec<Rect>> {
+        let rects = self.shared.view().screens.clone();
 
         if rects.is_empty() {
             return Err(Error::NoScreens);
-        }
-
-        if self.screen_order == ScreenOrder::RightToLeft {
-            rects.reverse();
         }
 
         Ok(rects)

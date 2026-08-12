@@ -2,7 +2,7 @@
 use crate::{Result, core::Draw};
 use penrose::{
     Color, WinId,
-    core::{State, WindowManager},
+    core::{ScreenComparator, State, WindowManager, conn::ConnExt, left_to_right},
     pure::geometry::Rect,
     x::{Atom, ClientConfig, Prop, WinType, XConn, event::XEvent},
 };
@@ -113,6 +113,10 @@ pub struct StatusBar<X: XConn> {
     active_screen: usize,
     font: String,
     redrawn: bool,
+    /// The window manager's, taken in `add_to`. A bar indexes its per screen widgets by the
+    /// position of the screen in this list, so ordering them differently from the window manager
+    /// would put each screen's bar on the wrong monitor.
+    screen_order: ScreenComparator,
 }
 
 impl<X: XConn> StatusBar<X> {
@@ -137,6 +141,7 @@ impl<X: XConn> StatusBar<X> {
             active_screen: 0,
             font: font.to_string(),
             redrawn: false,
+            screen_order: left_to_right,
         })
     }
 
@@ -165,6 +170,7 @@ impl<X: XConn> StatusBar<X> {
             active_screen: 0,
             font: font.to_string(),
             redrawn: false,
+            screen_order: left_to_right,
         })
     }
 
@@ -177,6 +183,8 @@ impl<X: XConn> StatusBar<X> {
     where
         X: 'static,
     {
+        self.screen_order = wm.state.config.screen_order;
+
         let schedules = self.widgets.update_schedules();
         if !schedules.is_empty() {
             run_update_schedules(schedules);
@@ -193,7 +201,7 @@ impl<X: XConn> StatusBar<X> {
 
     fn init_for_screens(&mut self) -> Result<()> {
         info!("initialising per screen status bar windows");
-        let screen_details = self.draw.conn.screen_details()?;
+        let screen_details = self.draw.conn.screens(self.screen_order)?;
 
         self.screens = screen_details
             .iter()
