@@ -47,6 +47,7 @@ mod bindings;
 mod event;
 mod plan;
 pub(crate) mod protocol;
+pub mod query;
 mod shared;
 mod wayland;
 
@@ -291,6 +292,13 @@ impl RiverConn {
     /// River's identifier for a window, which is stable across a window manager restart.
     pub fn window_identifier(&self, id: WinId) -> Option<String> {
         self.shared.view().windows.get(&id)?.identifier.clone()
+    }
+
+    /// The window's `app_id`, which is Wayland's answer to `WM_CLASS`.
+    ///
+    /// See [query::AppId], which is how a manage hook asks.
+    pub fn window_app_id(&self, id: WinId) -> Option<String> {
+        self.shared.view().windows.get(&id)?.app_id.clone()
     }
 
     /// Hand the plan to the loop, so that the next sequence transmits it.
