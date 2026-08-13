@@ -352,8 +352,34 @@ impl Loop {
             return;
         }
 
-        info!(locked, "session lock changed");
         self.session_locked = locked;
+
+        if locked {
+            // What somebody at the locked machine can reach, said once where it can be audited
+            // afterwards rather than inferred from the config.
+            let allowed = self.shared.allow_while_locked();
+            let live = self
+                .grabbed_keys
+                .iter()
+                .filter(|k| allowed.contains(k))
+                .count();
+            let unbound = allowed
+                .iter()
+                .filter(|k| !self.grabbed_keys.contains(k))
+                .count();
+
+            info!(live, of = allowed.len(), "session locked: bindings still live");
+
+            if unbound > 0 {
+                warn!(
+                    unbound,
+                    "keys allowed while locked have nothing bound to them"
+                );
+            }
+        } else {
+            info!("session unlocked: bindings restored");
+        }
+
         // River starts a sequence of its own accord only when something it knows about changes,
         // and this is something only we know about.
         self.wm.manage_dirty();

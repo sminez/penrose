@@ -8,12 +8,12 @@
 //! stale, which is why the loop filters against its own live objects at transmit time rather than
 //! trusting the plan.
 use crate::{
-    core::conn::WinId,
+    core::{bindings::KeySym, conn::WinId},
     pure::geometry::{Point, Rect},
     river::plan::{ManagePlan, Op, RenderPlan},
 };
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{Condvar, Mutex, MutexGuard},
     time::{Duration, Instant},
 };
@@ -62,6 +62,10 @@ pub(super) struct Shared {
     /// Kept here rather than on the conn because `WindowManager::run` consumes the conn: a caller
     /// that wants to exit non-zero on a protocol error has to be able to ask afterwards.
     fatal: Mutex<Option<String>>,
+    /// The bindings that stay live while the session is locked, which the loop needs and the
+    /// worker is told. Settled before `run` and never touched again -- it is a decision the
+    /// config made, not state either side keeps.
+    allow_while_locked: Mutex<HashSet<KeySym>>,
 }
 
 impl Shared {
@@ -120,6 +124,17 @@ impl Shared {
 
     pub(super) fn view(&self) -> MutexGuard<'_, View> {
         self.view.lock().expect("compositor view")
+    }
+
+    pub(super) fn set_allow_while_locked(&self, keys: HashSet<KeySym>) {
+        *self.allow_while_locked.lock().expect("locked allowlist") = keys;
+    }
+
+    pub(super) fn allow_while_locked(&self) -> HashSet<KeySym> {
+        self.allow_while_locked
+            .lock()
+            .expect("locked allowlist")
+            .clone()
     }
 
     pub(super) fn set_fatal(&self, reason: String) {

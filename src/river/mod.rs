@@ -35,7 +35,7 @@ use protocol::{
 };
 use shared::Shared;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     sync::{Arc, mpsc::Receiver},
     thread,
 };
@@ -196,6 +196,37 @@ impl RiverConn {
     pub fn restore_tags(mut self, tags: HashMap<String, String>) -> Self {
         self.restore_tags = tags;
         self
+    }
+
+    /// Name the bindings that go on working while the session is locked.
+    ///
+    /// Nothing does, by default. River matches a key against the window manager's bindings before
+    /// it reaches the surface with keyboard focus, and carries on doing so with a lock screen up,
+    /// so a config's whole keymap would otherwise be available to whoever sits down in front of a
+    /// locked machine -- and one of those keys is a terminal.
+    ///
+    /// This is the exception list, in the same patterns the bindings themselves use. It is the
+    /// answer to "what can somebody at my locked laptop do", so it is worth keeping short and
+    /// worth reading as a whole: volume and brightness say nothing about the session and change
+    /// nothing in it, where anything that spawns, switches workspace or reveals a window does not
+    /// belong here at any price.
+    ///
+    /// A key sequence leader is a poor choice: the keys that would continue it stay disabled, so
+    /// pressing it eats the key and abandons the sequence.
+    ///
+    /// The X11 backend has no counterpart because it needs none. An X11 locker holds an active
+    /// keyboard grab, which overrides the passive grabs bindings are made of, so none of them fire
+    /// while it is up whatever anyone asks for.
+    pub fn allow_while_locked(self, patterns: &[&str]) -> Result<Self> {
+        let keys = patterns
+            .iter()
+            .map(|p| KeySym::parse(p))
+            .collect::<Result<HashSet<_>>>()?;
+
+        info!(count = keys.len(), "bindings allowed while locked");
+        self.shared.set_allow_while_locked(keys);
+
+        Ok(self)
     }
 
     /// Give focus back to the window that had it before a restart.
