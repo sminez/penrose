@@ -198,6 +198,8 @@ pub(super) struct Loop {
     screens_changed: bool,
     /// Whether a layer surface holds keyboard focus, in which case river ignores ours.
     pub(super) focus_is_exclusive: bool,
+    /// Whether a session lock is up, in which case no binding of ours should fire.
+    pub(super) session_locked: bool,
     pub(super) finished: bool,
 }
 
@@ -239,6 +241,7 @@ impl Loop {
             new_windows: Vec::new(),
             screens_changed: false,
             focus_is_exclusive: false,
+            session_locked: false,
             finished: false,
         }
     }
@@ -341,6 +344,19 @@ impl Loop {
                 self.transmit_render();
             }
         }
+    }
+
+    /// Record that the session has been locked or unlocked, and get the bindings changed.
+    fn set_session_locked(&mut self, locked: bool) {
+        if self.session_locked == locked {
+            return;
+        }
+
+        info!(locked, "session lock changed");
+        self.session_locked = locked;
+        // River starts a sequence of its own accord only when something it knows about changes,
+        // and this is something only we know about.
+        self.wm.manage_dirty();
     }
 
     /// Say so, once, when the worker has been busy long enough that the session has noticed.
@@ -691,9 +707,16 @@ impl wayland_client::Dispatch<RiverWindowManagerV1, ()> for Loop {
                 l.rebind_seats();
             }
 
-            // Nothing is restricted while the session is locked: the lock screen is a layer
-            // surface with exclusive focus, so river is already refusing to give windows focus.
-            Event::SessionLocked | Event::SessionUnlocked => (),
+            // Bindings do not fire while the session is locked. River matches a key against the
+            // window manager's bindings before it reaches the surface with keyboard focus, and it
+            // goes on doing that with a lock screen up -- so without this, every shortcut in the
+            // config is available to whoever is sitting in front of a locked machine, and a
+            // window manager binding is a shell away from anything.
+            //
+            // The bindings themselves cannot be enabled or disabled outside a manage sequence, so
+            // this asks river for one and `transmit_bindings` acts on the flag when it arrives.
+            Event::SessionLocked => l.set_session_locked(true),
+            Event::SessionUnlocked => l.set_session_locked(false),
         }
     }
 }

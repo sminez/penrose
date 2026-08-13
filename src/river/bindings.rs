@@ -156,13 +156,23 @@ impl Loop {
     /// The leaders stay enabled during a capture: pressing one mid sequence is how a sequence
     /// that goes nowhere is abandoned, and core needs the press to work that out.
     pub(super) fn transmit_bindings(&mut self) {
-        let enabled: HashSet<KeySym> = self
-            .grabbed_keys
-            .iter()
-            .chain(self.capture_continuations.iter())
-            .copied()
-            .collect();
-        let mouse_enabled: HashSet<&MouseState> = self.grabbed_mouse.iter().collect();
+        // Nothing at all while the session is locked. River matches keys against these before the
+        // lock screen sees them, so leaving them live would hand every shortcut in the config to
+        // whoever is in front of a locked machine.
+        let (enabled, mouse_enabled): (HashSet<KeySym>, HashSet<&MouseState>) = if self
+            .session_locked
+        {
+            (HashSet::new(), HashSet::new())
+        } else {
+            (
+                self.grabbed_keys
+                    .iter()
+                    .chain(self.capture_continuations.iter())
+                    .copied()
+                    .collect(),
+                self.grabbed_mouse.iter().collect(),
+            )
+        };
 
         for seat in self.seats.iter().filter(|s| !s.removed) {
             for (key, binding) in seat.key_bindings.iter() {
