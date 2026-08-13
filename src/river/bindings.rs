@@ -294,6 +294,11 @@ impl wayland_client::Dispatch<RiverXkbBindingV1, KeySym> for Loop {
         use protocol::river_xkb_bindings::river_xkb_binding_v1::Event;
 
         if let Event::Pressed = event {
+            // Which binding river matched, which is the one thing a "that shortcut did nothing"
+            // report needs and cannot otherwise get: it says whether the key reached the window
+            // manager at all, and so whether to look at the binding or at what it does.
+            debug!(?key, locked = l.session_locked, "binding fired");
+
             // A binding firing while a capture is armed is the capture being spent: river eats
             // the key and delivers it here rather than as ate_unbound_key.
             if l.capture_armed {

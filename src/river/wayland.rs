@@ -358,6 +358,17 @@ impl Loop {
         self.session_locked = locked;
         self.locked_prefix.clear();
 
+        // Whatever key sequence was part way through is over. Both halves of one have to go: the
+        // capture here, and the keys penrose is holding on the worker -- otherwise the next key
+        // pressed after the lock is read as a continuation of a sequence begun before it, matches
+        // nothing, and is swallowed abandoning it. One binding that silently does nothing, once,
+        // long after the thing that caused it.
+        if self.capture_armed || !self.capture_continuations.is_empty() {
+            debug!("abandoning the key sequence in progress: the session lock changed");
+            self.cancel_capture();
+            self.send(RiverEvent::UnboundKey);
+        }
+
         if locked {
             // What somebody at the locked machine can reach, said once where it can be read back
             // afterwards rather than inferred from the config.
