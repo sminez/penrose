@@ -136,6 +136,29 @@ else
     fail "the windows do not tile: a size or a position is stale (screen $screen_w)"
 fi
 
+# The pointer follows the focus, and where it lands says which size was used to
+# find the middle of the window. River's account of a window is a sequence behind
+# the plan, so a warp computed from it puts the pointer half an old window away
+# from the new corner -- which is how a fullscreen toggle used to leave it in the
+# middle of the screen rather than in the window.
+warp=$(grep -oE 'warping the pointer id=[0-9]+ x=-?[0-9]+' "$RT/plain.log" | tail -1)
+
+if [ -z "$warp" ]; then
+    fail "the pointer was warped to the focused window"
+else
+    echo "  ....  $warp"
+    # "warping the pointer id=N x=X" against the "x width id" table above.
+    if echo "$geometry" | awk -v warp="$warp" '
+        BEGIN { split(warp, f, /[= ]/); want_id = f[5]; got = f[7]; ok = 0 }
+        $3 == want_id { ok = (got == $1 + int($2 / 2)) }
+        END { exit ok ? 0 : 1 }
+    '; then
+        pass "the pointer landed in the middle of the window it followed"
+    else
+        fail "the pointer landed somewhere other than the middle of the window it followed"
+    fi
+fi
+
 if [ "$status" -ne 0 ]; then
     echo >&2
     echo "--- what was sent, in order ---" >&2

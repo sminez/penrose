@@ -39,7 +39,7 @@ use std::{
     sync::{Arc, mpsc::Receiver},
     thread,
 };
-use tracing::{error, info, trace};
+use tracing::{debug, error, info, trace};
 use wayland::{FromLoop, Loop};
 use wayland_client::{Connection, globals::registry_queue_init};
 
@@ -574,10 +574,13 @@ impl Conn for RiverConn {
             }
         };
 
-        self.ops.push(Op::WarpPointer(Point {
+        let to = Point {
             x: origin.x + x as i32,
             y: origin.y + y as i32,
-        }));
+        };
+
+        debug!(%id, x = to.x, y = to.y, "warping the pointer");
+        self.ops.push(Op::WarpPointer(to));
         self.plan_dirty = true;
 
         Ok(())
@@ -649,14 +652,31 @@ impl Conn for RiverConn {
         Ok(())
     }
 
+    /// Where the window is going to be, which within a refresh is not where river says it is.
+    ///
+    /// Both halves come from the plan. River's own account of a window is a sequence behind ours
+    /// -- it is what it was told last time -- so a caller that asked during a refresh, which is
+    /// every caller, would be told the size the window is on its way out of. Mixing the two is
+    /// worse than either: the pointer warp asks for a window's centre, and a new position offset
+    /// by half of an old size lands somewhere that was never anything.
+    ///
+    /// A window penrose has not placed yet has no plan to read, and river's report is then the
+    /// only thing there is -- the size the client asked for, which is what a manage hook wants
+    /// when it centres a dialog.
     fn client_geometry(&mut self, id: WinId) -> Result<Rect> {
+        let requested = {
+            let view = self.shared.view();
+            let window = view.windows.get(&id).ok_or(Error::UnknownClient(id))?;
+
+            window.dimensions
+        };
+
         let (w, h) = self
-            .shared
-            .view()
-            .windows
-            .get(&id)
-            .ok_or(Error::UnknownClient(id))?
+            .manage
             .dimensions
+            .get(&id)
+            .copied()
+            .or(requested)
             .unwrap_or((0, 0));
         let p = self
             .render
