@@ -59,6 +59,41 @@
   fires, `S-semicolon` and `S-colon` both fire, a sequence completes and a wrong
   key aborts it, and the media keys work.
 
+- Upstream: powering an output off while the session is locked leaves a screen
+  that nothing brings back. Twice, on this machine, it cost a power cycle.
+
+  `wlopm --off '*'` while swaylock is up, then any input: the screen stays dark
+  and the session takes no input. What is already ruled out, each measured
+  rather than assumed:
+
+  * `wlopm` drives this panel. Unlocked, `--off` then `--on` three seconds later
+    reports `eDP-1 off` then `eDP-1 on`, and the screen comes back.
+  * Idle notifications survive the lock. A `swayidle -d` probe fired `IDLED`
+    three seconds into a lock and `RESUMED` on the first keystroke of the
+    password, both before the unlock -- so the `wlopm --on` a resume would run
+    does get run.
+  * Penrose sees nothing either way: no screens-changed event accompanies the
+    power off, which matches `disabled_soft` being documented as "powered off
+    and exposed to the window manager" (`Output.zig`).
+  * `wlopm` itself works from inside a lock. Run while swaylock held the
+    session, it queried `eDP-1 on` and set power on, both rc=0, and the session
+    unlocked normally afterwards. So the client is not being refused.
+
+  Which leaves exactly one untried composition, and it is the failing one:
+  powering an output *off* while locked. Every part of it works alone.
+
+  What is left is river between those two: `handlePowerManagerSetMode`
+  (`OutputManager.zig:198`) turns a dpms-off into `scheduled.state =
+  .disabled_soft`, while the lock state machine skips outputs whose
+  `wlr_output.enabled` is false (`LockManager.zig:138`). So an output that
+  powers down while locked leaves the lock accounting, and what happens to its
+  lock surface when it comes back has not been established. Worth reproducing
+  under a nested river with a second output before reporting, since the failure
+  on real hardware is a reboot each time.
+
+  Worked around by never blanking while locked: `start_idle_daemon` gates its
+  blank on `pgrep -x swaylock` and `lock-screen.sh` does not blank at all.
+
 - Upstream: river un-hides every window when the window manager disconnects,
   which is worth fixing in river rather than only working around here.
 
