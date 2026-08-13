@@ -13,7 +13,7 @@ use crate::{
     river::plan::{ManagePlan, Op, RenderPlan},
 };
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     sync::{Condvar, Mutex, MutexGuard},
     time::{Duration, Instant},
 };
@@ -62,10 +62,11 @@ pub(super) struct Shared {
     /// Kept here rather than on the conn because `WindowManager::run` consumes the conn: a caller
     /// that wants to exit non-zero on a protocol error has to be able to ask afterwards.
     fatal: Mutex<Option<String>>,
-    /// The bindings that stay live while the session is locked, which the loop needs and the
-    /// worker is told. Settled before `run` and never touched again -- it is a decision the
-    /// config made, not state either side keeps.
-    allow_while_locked: Mutex<HashSet<KeySym>>,
+    /// The bindings that stay live while the session is locked, as whole sequences: `M-m M-l` is
+    /// two keys, and allowing it must not allow the rest of what `M-m` leads to. Settled before
+    /// `run` and never touched again -- it is a decision the config made, not state either side
+    /// keeps.
+    allow_while_locked: Mutex<Vec<Vec<KeySym>>>,
 }
 
 impl Shared {
@@ -126,11 +127,11 @@ impl Shared {
         self.view.lock().expect("compositor view")
     }
 
-    pub(super) fn set_allow_while_locked(&self, keys: HashSet<KeySym>) {
-        *self.allow_while_locked.lock().expect("locked allowlist") = keys;
+    pub(super) fn set_allow_while_locked(&self, sequences: Vec<Vec<KeySym>>) {
+        *self.allow_while_locked.lock().expect("locked allowlist") = sequences;
     }
 
-    pub(super) fn allow_while_locked(&self) -> HashSet<KeySym> {
+    pub(super) fn allow_while_locked(&self) -> Vec<Vec<KeySym>> {
         self.allow_while_locked
             .lock()
             .expect("locked allowlist")

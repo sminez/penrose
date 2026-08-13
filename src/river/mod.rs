@@ -35,7 +35,7 @@ use protocol::{
 };
 use shared::Shared;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     sync::{Arc, mpsc::Receiver},
     thread,
 };
@@ -211,20 +211,22 @@ impl RiverConn {
     /// nothing in it, where anything that spawns, switches workspace or reveals a window does not
     /// belong here at any price.
     ///
-    /// A key sequence leader is a poor choice: the keys that would continue it stay disabled, so
-    /// pressing it eats the key and abandons the sequence.
+    /// Sequences work, and are allowed a key at a time rather than a leader at a time: `"M-m M-l"`
+    /// permits that sequence and nothing else `M-m` leads to. While a locked sequence is part way
+    /// through, the only continuation keys live are the ones that continue it towards something on
+    /// this list, so a wrong key ends the sequence exactly as it would unlocked.
     ///
     /// The X11 backend has no counterpart because it needs none. An X11 locker holds an active
     /// keyboard grab, which overrides the passive grabs bindings are made of, so none of them fire
     /// while it is up whatever anyone asks for.
     pub fn allow_while_locked(self, patterns: &[&str]) -> Result<Self> {
-        let keys = patterns
+        let sequences = patterns
             .iter()
-            .map(|p| KeySym::parse(p))
-            .collect::<Result<HashSet<_>>>()?;
+            .map(|p| p.split_whitespace().map(KeySym::parse).collect())
+            .collect::<Result<Vec<Vec<_>>>>()?;
 
-        info!(count = keys.len(), "bindings allowed while locked");
-        self.shared.set_allow_while_locked(keys);
+        info!(count = sequences.len(), "bindings allowed while locked");
+        self.shared.set_allow_while_locked(sequences);
 
         Ok(self)
     }

@@ -109,6 +109,29 @@ impl Loop {
         self.capture_continuations.clear();
     }
 
+    /// The keys a locked session may press next: whatever begins something the config allowed,
+    /// and whatever continues the allowed sequence already part way through.
+    ///
+    /// Only one key deep at a time, which is what makes allowing `M-m M-l` different from allowing
+    /// everything `M-m` leads to. `locked_prefix` is how far in we are, and it is what the next
+    /// key is judged against.
+    pub(super) fn keys_live_while_locked(&self) -> HashSet<KeySym> {
+        live_while_locked(&self.shared.allow_while_locked(), &self.locked_prefix)
+    }
+
+    /// Follow a key press through the allowed sequences while locked.
+    ///
+    /// The loop has to track this itself: penrose's own pending-key state lives on the worker, and
+    /// which bindings are live has to be settled by the time river matches the next key against
+    /// them.
+    pub(super) fn note_locked_key(&mut self, key: KeySym) {
+        self.locked_prefix = advance_while_locked(
+            &self.shared.allow_while_locked(),
+            &self.locked_prefix,
+            key,
+        );
+    }
+
     /// Create binding objects for anything a seat does not have yet.
     ///
     /// Called when the grabbed set changes, when a capture names continuation keys, and when a
@@ -159,18 +182,16 @@ impl Loop {
         // While the session is locked, only what the config named: river matches keys against
         // these before the lock screen sees them, so anything left live is available to whoever
         // is in front of a locked machine. See `RiverConn::allow_while_locked`.
-        //
-        // Continuations are not in the locked set even if their leader is. A sequence is several
-        // keys of arbitrary meaning, and vetting the first one says nothing about the rest.
         let (enabled, mouse_enabled): (HashSet<KeySym>, HashSet<&MouseState>) = if self
             .session_locked
         {
-            let allowed = self.shared.allow_while_locked();
+            let live = self.keys_live_while_locked();
 
             (
                 self.grabbed_keys
                     .iter()
-                    .filter(|k| allowed.contains(k))
+                    .chain(self.capture_continuations.iter())
+                    .filter(|k| live.contains(k))
                     .copied()
                     .collect(),
                 HashSet::new(),
@@ -206,6 +227,46 @@ impl Loop {
     }
 }
 
+/// The keys a locked session may press next, given how far into a sequence it is.
+///
+/// Anything that begins something allowed, so a sequence can be started, and the one key that
+/// continues what is already part way through. One key at a time is the whole point: allowing
+/// `M-m M-l` must not also allow `M-m M-d`, which is what allowing the leader would do.
+fn live_while_locked(allowed: &[Vec<KeySym>], prefix: &[KeySym]) -> HashSet<KeySym> {
+    let mut live = HashSet::new();
+
+    for seq in allowed {
+        if let Some(&first) = seq.first() {
+            live.insert(first);
+        }
+
+        if seq.len() > prefix.len() && seq.starts_with(prefix) {
+            live.insert(seq[prefix.len()]);
+        }
+    }
+
+    live
+}
+
+/// How far into an allowed sequence a key press leaves a locked session.
+///
+/// Still part way through if the key continues something allowed towards a longer one; back to
+/// the beginning otherwise, which covers both completing a sequence and pressing something that
+/// continues nothing.
+fn advance_while_locked(allowed: &[Vec<KeySym>], prefix: &[KeySym], key: KeySym) -> Vec<KeySym> {
+    let mut candidate = prefix.to_vec();
+    candidate.push(key);
+
+    if allowed
+        .iter()
+        .any(|s| s.len() > candidate.len() && s.starts_with(&candidate))
+    {
+        return candidate;
+    }
+
+    Vec::new()
+}
+
 /// Abandon a key sequence which has been ended by a key that is not part of it.
 ///
 /// River's `ate_unbound_key` means "a key was eaten and it was not one of yours", which is
@@ -239,6 +300,10 @@ impl wayland_client::Dispatch<RiverXkbBindingV1, KeySym> for Loop {
                 l.capture_consumed();
             }
 
+            if l.session_locked {
+                l.note_locked_key(*key);
+            }
+
             l.send_event(RiverEvent::KeyPress(*key));
         }
     }
@@ -256,6 +321,8 @@ impl wayland_client::Dispatch<RiverXkbBindingsSeatV1, ()> for Loop {
         use protocol::river_xkb_bindings::river_xkb_bindings_seat_v1::Event;
 
         if let Event::AteUnboundKey = event {
+            // Whatever sequence was in progress is over, locked or not.
+            l.locked_prefix.clear();
             l.capture_consumed();
             l.send_event(RiverEvent::UnboundKey);
         }
@@ -318,5 +385,75 @@ impl wayland_client::Dispatch<RiverPointerBindingV1, MouseState> for Loop {
             state: state.clone(),
             kind,
         }));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn key(pattern: &str) -> KeySym {
+        KeySym::parse(pattern).expect("a key")
+    }
+
+    fn seq(pattern: &str) -> Vec<KeySym> {
+        pattern.split_whitespace().map(key).collect()
+    }
+
+    /// `M-m M-l` allowed and `M-m M-d` not, which is the whole reason this is a sequence at a
+    /// time rather than a leader at a time.
+    #[test]
+    fn a_sibling_of_an_allowed_sequence_stays_disabled() {
+        let allowed = vec![seq("M-m M-l")];
+        let live = live_while_locked(&allowed, &[key("M-m")]);
+
+        assert!(live.contains(&key("M-l")), "the allowed continuation");
+        assert!(!live.contains(&key("M-d")), "the sibling nobody allowed");
+    }
+
+    /// A key allowed in its own right is live whatever else is part way through: being inside
+    /// `M-m` does not take away what a locked session could already press.
+    #[test]
+    fn keys_allowed_on_their_own_stay_live_mid_sequence() {
+        let allowed = vec![seq("M-m M-l"), seq("M-d")];
+        let live = live_while_locked(&allowed, &[key("M-m")]);
+
+        assert!(live.contains(&key("M-d")));
+    }
+
+    #[test]
+    fn only_leaders_are_live_with_nothing_in_progress() {
+        let allowed = vec![seq("M-m M-l"), seq("M-d")];
+        let live = live_while_locked(&allowed, &[]);
+
+        assert!(live.contains(&key("M-m")));
+        assert!(live.contains(&key("M-d")));
+        assert!(!live.contains(&key("M-l")), "not without its leader");
+    }
+
+    #[test]
+    fn a_leader_leaves_the_sequence_part_way_through() {
+        let allowed = vec![seq("M-m M-l")];
+
+        assert_eq!(
+            advance_while_locked(&allowed, &[], key("M-m")),
+            vec![key("M-m")]
+        );
+    }
+
+    #[test]
+    fn completing_a_sequence_starts_again() {
+        let allowed = vec![seq("M-m M-l")];
+        let prefix = advance_while_locked(&allowed, &[], key("M-m"));
+
+        assert!(advance_while_locked(&allowed, &prefix, key("M-l")).is_empty());
+    }
+
+    #[test]
+    fn a_key_that_continues_nothing_starts_again() {
+        let allowed = vec![seq("M-m M-l"), seq("M-d")];
+        let prefix = advance_while_locked(&allowed, &[], key("M-m"));
+
+        assert!(advance_while_locked(&allowed, &prefix, key("M-d")).is_empty());
     }
 }

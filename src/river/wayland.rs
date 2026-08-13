@@ -198,8 +198,10 @@ pub(super) struct Loop {
     screens_changed: bool,
     /// Whether a layer surface holds keyboard focus, in which case river ignores ours.
     pub(super) focus_is_exclusive: bool,
-    /// Whether a session lock is up, in which case no binding of ours should fire.
+    /// Whether a session lock is up, in which case only the bindings the config allowed fire.
     pub(super) session_locked: bool,
+    /// How far into an allowed key sequence a locked session has got.
+    pub(super) locked_prefix: Vec<KeySym>,
     pub(super) finished: bool,
 }
 
@@ -242,6 +244,7 @@ impl Loop {
             screens_changed: false,
             focus_is_exclusive: false,
             session_locked: false,
+            locked_prefix: Vec::new(),
             finished: false,
         }
     }
@@ -353,27 +356,26 @@ impl Loop {
         }
 
         self.session_locked = locked;
+        self.locked_prefix.clear();
 
         if locked {
-            // What somebody at the locked machine can reach, said once where it can be audited
+            // What somebody at the locked machine can reach, said once where it can be read back
             // afterwards rather than inferred from the config.
             let allowed = self.shared.allow_while_locked();
-            let live = self
-                .grabbed_keys
-                .iter()
-                .filter(|k| allowed.contains(k))
-                .count();
             let unbound = allowed
                 .iter()
-                .filter(|k| !self.grabbed_keys.contains(k))
+                .filter(|s| s.first().is_none_or(|k| !self.grabbed_keys.contains(k)))
                 .count();
 
-            info!(live, of = allowed.len(), "session locked: bindings still live");
+            info!(
+                sequences = allowed.len(),
+                "session locked: these bindings still fire"
+            );
 
             if unbound > 0 {
                 warn!(
                     unbound,
-                    "keys allowed while locked have nothing bound to them"
+                    "sequences allowed while locked begin with a key nothing is bound to"
                 );
             }
         } else {
