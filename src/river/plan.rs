@@ -42,7 +42,8 @@ pub(super) struct ManagePlan {
     pub(super) dimensions: HashMap<WinId, (u32, u32)>,
     /// The window to focus, or `None` for `clear_focus`.
     pub(super) focus: Option<WinId>,
-    /// Windows which should be fullscreen.
+    /// Windows which have been told they are fullscreen. They keep the bounds penrose gave
+    /// them: see the note in [Loop::transmit_manage].
     pub(super) fullscreen: HashSet<WinId>,
     /// Windows which have been told how we decorate them. Restated rather than drained: the
     /// requests are idempotent, and the loop may be transmitting a plan the worker has moved on
@@ -108,33 +109,44 @@ impl Loop {
                 // and would not know how big the client's own decorations were.
                 win.use_ssd();
                 win.set_tiled(Edges::all());
-                // Penrose honours neither maximize nor minimize, and fullscreen is driven by the
-                // window manager rather than by the window, so windows are told none of it.
-                win.set_capabilities(Capabilities::empty());
+                // The protocol's rule for this is that a window manager must not claim what it
+                // ignores. Maximize, minimize and the window menu are all ignored where their
+                // events are handled (`wayland.rs`), and penrose has no concept of any of them.
+                // Fullscreen is the one that is acted on -- `handle_event` answers a window's
+                // request with `set_fullscreen` -- so it is the one that is claimed.
+                win.set_capabilities(Capabilities::Fullscreen);
             }
         }
 
-        for (&id, win) in self.windows.iter() {
+        // Windows are told whether they are fullscreen; they are not made fullscreen. River's
+        // `fullscreen` request fills an output and takes position and size away from the window
+        // manager, which is not what a tiling window manager has to offer: the tile is all the
+        // room there is, and a window that asked to be fullscreen gets to present that way
+        // inside it. `inform_fullscreen` is that half on its own -- the state in the window's
+        // own configure, and nothing about its geometry.
+        //
+        // Informing is not optional, though. A window has entered its own fullscreen by the time
+        // it asks, and one never told it is fullscreen reconciles its way back out at the next
+        // configure it gets for any other reason -- losing focus is one, being hidden by a
+        // workspace switch is another. That is the video which quietly un-fullscreens when you
+        // look at something else.
+        for (&id, win) in self.windows.iter_mut() {
             let Some(obj) = win.obj.as_ref() else {
                 continue;
             };
-            let wants_fullscreen = self.manage.fullscreen.contains(&id);
 
-            if wants_fullscreen == win.fullscreen_set {
+            let fullscreen = self.manage.fullscreen.contains(&id);
+            if fullscreen == win.told_fullscreen {
                 continue;
             }
 
-            match self.output_for(id) {
-                // River needs to be told which output to fill, where X11 fullscreens a window
-                // where it already is. The output the window is laid out on is the same thing.
-                Some(output) if wants_fullscreen => obj.fullscreen(output),
-                None if wants_fullscreen => (),
-                _ => obj.exit_fullscreen(),
+            trace!(%id, fullscreen, "telling a window whether it is fullscreen");
+            if fullscreen {
+                obj.inform_fullscreen();
+            } else {
+                obj.inform_not_fullscreen();
             }
-        }
-        let fullscreen = self.manage.fullscreen.clone();
-        for (id, win) in self.windows.iter_mut() {
-            win.fullscreen_set = fullscreen.contains(id);
+            win.told_fullscreen = fullscreen;
         }
 
         // While a layer surface holds keyboard focus exclusively -- a lock screen, or a menu --

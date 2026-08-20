@@ -99,9 +99,9 @@ pub(super) struct WindowEntry {
     pub(super) obj: Option<RiverWindowV1>,
     pub(super) node: Option<RiverNodeV1>,
     pub(super) facts: WindowFacts,
-    /// Whether we have asked river to make this window fullscreen, so that the request is only
-    /// made when it changes rather than restated every sequence.
-    pub(super) fullscreen_set: bool,
+    /// Whether the window has been told it is fullscreen, so that it is told only when that
+    /// changes rather than every sequence.
+    pub(super) told_fullscreen: bool,
 }
 
 /// An output, and the usable area left on it after bars have claimed their exclusive zones.
@@ -195,6 +195,8 @@ pub(super) struct Loop {
     pending_purge: Vec<(u64, WinId)>,
     /// Windows river has told us about but the worker has not been told about.
     new_windows: Vec<WinId>,
+    /// Fullscreen requests waiting on the windows that made them being announced.
+    pending_fullscreen: Vec<(WinId, bool)>,
     screens_changed: bool,
     /// Whether a layer surface holds keyboard focus, in which case river ignores ours.
     pub(super) focus_is_exclusive: bool,
@@ -241,6 +243,7 @@ impl Loop {
             pending_sequence: None,
             pending_purge: Vec::new(),
             new_windows: Vec::new(),
+            pending_fullscreen: Vec::new(),
             screens_changed: false,
             focus_is_exclusive: false,
             session_locked: false,
@@ -466,7 +469,9 @@ impl Loop {
     ///
     /// New windows are announced here rather than when the window event arrives so that
     /// everything river had to say about a window -- its app id, title and parent all arrive as
-    /// separate events -- is known by the time a manage hook runs.
+    /// separate events -- is known by the time a manage hook runs. Fullscreen requests wait for
+    /// the same reason: they are answered per window, and a window is only penrose's to answer
+    /// for once it has been managed.
     fn announce_batch(&mut self) {
         if self.screens_changed {
             self.screens_changed = false;
@@ -491,6 +496,16 @@ impl Loop {
             );
 
             self.send(RiverEvent::WindowOpened(id));
+        }
+
+        // After the new windows, because river sends both halves in the one batch when a window
+        // maps already asking for fullscreen -- `mpv --fs`, a game, a kiosk browser -- and the
+        // worker has nothing to answer a request naming a window it has not managed yet.
+        for (id, fullscreen) in std::mem::take(&mut self.pending_fullscreen) {
+            // Not for a window closed in the same batch: its closure has already gone out.
+            if self.live_window(id).is_some() {
+                self.send(RiverEvent::FullscreenRequested(id, fullscreen));
+            }
         }
 
         self.announce_pointer_focus();
@@ -573,16 +588,6 @@ impl Loop {
 
     pub(super) fn for_each_seat(&self, f: impl Fn(&SeatEntry)) {
         self.seats.iter().filter(|s| !s.removed).for_each(f);
-    }
-
-    /// The output a window has been laid out on, which is the one river should fullscreen it to.
-    pub(super) fn output_for(&self, id: WinId) -> Option<&RiverOutputV1> {
-        let p = self.render.positions.get(&id)?;
-
-        self.outputs
-            .iter()
-            .find(|o| o.usable_area().is_some_and(|r| r.contains_point(*p)))
-            .map(|o| &o.obj)
     }
 
     /// The layer shell object for the first usable output, which is where layer surfaces that do
@@ -704,7 +709,7 @@ impl wayland_client::Dispatch<RiverWindowManagerV1, ()> for Loop {
                         obj: Some(id),
                         node: Some(node),
                         facts: WindowFacts::default(),
-                        fullscreen_set: false,
+                        told_fullscreen: false,
                     },
                 );
                 l.shared
@@ -824,12 +829,15 @@ impl wayland_client::Dispatch<RiverWindowV1, ()> for Loop {
                 l.with_facts(id, |f| f.pid = pid);
             }
 
-            Event::FullscreenRequested { .. } => l.send(RiverEvent::FullscreenRequested(id, true)),
-            Event::ExitFullscreenRequested => l.send(RiverEvent::FullscreenRequested(id, false)),
+            // Queued rather than sent, so that a window which maps already asking for
+            // fullscreen is one the worker has managed by the time the request reaches it.
+            Event::FullscreenRequested { .. } => l.pending_fullscreen.push((id, true)),
+            Event::ExitFullscreenRequested => l.pending_fullscreen.push((id, false)),
 
-            // Penrose decides sizes itself rather than negotiating them, drives fullscreen from
-            // the window manager rather than from the window, and has no concept of maximized,
-            // minimized or a window menu. River is free to ignore all of that on our behalf.
+            // Penrose decides sizes itself rather than negotiating them, moves and resizes
+            // windows from the layout rather than from the pointer, and has no concept of
+            // maximized, minimized or a window menu. River is free to ignore all of that on our
+            // behalf -- and `set_capabilities` tells windows as much, so none of it is claimed.
             Event::DimensionsHint { .. }
             | Event::DecorationHint { .. }
             | Event::PointerMoveRequested { .. }

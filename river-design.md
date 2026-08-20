@@ -210,6 +210,40 @@ struct RenderPlan {
 enum Op { Close(WinId), WarpPointer(WinId, i16, i16) }
 ```
 
+`ManagePlan::fullscreen` is `inform_fullscreen`, not `fullscreen`. The protocol
+splits the two: `fullscreen` is geometry — river fills a named output and takes
+position and size away from the window manager — and `inform_fullscreen` is the
+state in the window's own configure, which is what the window itself reads. Only
+the second is sent. A tiling window manager has a tile to offer and nothing
+larger, so a window that asked for fullscreen is told it has it and presents
+that way inside the bounds penrose gave it, rather than covering the output,
+the bar and whatever else is on that workspace.
+
+Sending neither is the trap. A window has already entered its own fullscreen by
+the time it asks, so ignoring the request looks like it worked — until the next
+configure the window gets for any other reason, which it reconciles against a
+state that never said fullscreen. Losing focus is such a configure, and so is
+being hidden by a workspace switch: that is "the video un-fullscreens when I
+switch away", with everything else correct.
+
+A window's own `fullscreen_requested` is therefore answered by the backend
+rather than left to the config, which is where X11 leaves it: there the state
+is an EWMH property and opt-in with the rest of EWMH, and here it arrives on
+the protocol the backend already speaks, with nothing else able to answer it.
+`set_capabilities` says the same thing to the window and has to agree with it,
+which it cannot if the two are decided in different places. A config takes the
+decision back the ordinary way, with an event hook that returns `false` for the
+event.
+
+Filling the screen is a separate decision, and not one river forces either way.
+Penrose fullscreens on X11 by floating the client at its screen's rect and
+dropping its border, which is a pure-layer move available here too and owes
+nothing to river's `fullscreen` request. It is deliberately not made: a window
+that asked for fullscreen while tiled is still one of several on its workspace,
+and the tile it has is the honest answer. So `RiverConn::set_fullscreen` and
+X11's `toggle_fullscreen` are not one action under two names — the X11 one
+covers the screen, this one changes what the window is told and nothing else.
+
 `position_client(id, rect)` splits: `rect.wh` into `ManagePlan::dimensions`,
 `rect.xy` into `RenderPlan::positions`. So a layout change is not atomic on
 screen — the size lands at `manage_finish` and the position at the following
@@ -242,7 +276,7 @@ method with no protocol counterpart.
 | `client_title` | `river_window_v1.title` event | — |
 | `client_pid` | `river_window_v1.unreliable_pid` event (v2) | — |
 | `client_should_float` / `client_should_be_managed` | `river_window_v1.app_id` event | — |
-| `client_is_fullscreen` | `fullscreen_requested` / `exit_fullscreen_requested` events; `fullscreen` / `exit_fullscreen` requests | manage |
+| `client_is_fullscreen` | `fullscreen_requested` / `exit_fullscreen_requested` events; `inform_fullscreen` / `inform_not_fullscreen` requests (not `fullscreen`, see above) | manage |
 | `client_transient_parent` | `river_window_v1.parent` event | — |
 | `set_client_border_color` | `river_window_v1.set_borders` | render |
 | `set_initial_properties` | `river_window_v1.use_ssd`, `.set_tiled`, `.set_capabilities` | manage |
@@ -419,11 +453,19 @@ orilla.
 
 `Conn::Event = RiverEvent`, a small enum of the events penrose actually acts on:
 `KeyPress(KeySym)`, `MouseEvent`, `WindowOpened(WinId)`, `WindowClosed(WinId)`,
-`Title(WinId)`, `AppId(WinId)`, `FullscreenRequested(WinId)`,
+`Title(WinId)`, `AppId(WinId)`, `FullscreenRequested(WinId, bool)`,
 `ScreenChange`, `PointerFocus(WinId)`. Everything else — sequence events,
 dimensions, node bookkeeping — is consumed inside the conn. `requires_pointer_warp`
 returns `false` for `PointerFocus` and true otherwise, mirroring the X11 `Enter`
 rule that is what makes `warpMid` free (design.md, "What comes for free").
+
+`WindowOpened` is not sent when river's `window` event arrives but at the end of
+the batch, because a window's app id, title and parent each arrive as their own
+event and a manage hook wants all of them. `FullscreenRequested` is queued behind
+it for a related reason: a window can map already asking for fullscreen, river
+sends both in the one batch, and a request that arrived first would name a window
+penrose has not managed — which the backend does not answer for, so the request
+would be dropped and the window never told.
 
 `WinId` is an internal counter, not a Wayland object id: object ids are recycled
 after `wl_display.delete_id`, so reusing them means a stale `WinId` can name a

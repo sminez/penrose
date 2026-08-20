@@ -271,11 +271,23 @@ impl RiverConn {
         self.write();
     }
 
-    /// Make a window fullscreen, or take it out of fullscreen.
+    /// Tell a window that it is fullscreen, or that it is not.
     ///
-    /// River has no `_NET_WM_STATE` for a config to set, so this is the river counterpart of the
-    /// `toggle_fullscreen` action: bind it, or call it in response to
-    /// [RiverEvent::FullscreenRequested] if you want windows to be able to fullscreen themselves.
+    /// This is the state in the window's own configure and nothing else. The window keeps the
+    /// bounds penrose gave it: river's own `fullscreen` request -- fill an output, and take
+    /// position and size away from the window manager -- is deliberately not made, and neither
+    /// is the client floated at its screen's rect. A window that asked for fullscreen while
+    /// tiled is told it has it and presents that way inside its tile.
+    ///
+    /// So this is *not* the river spelling of the `toggle_fullscreen` action, which on X11
+    /// floats the client over its whole screen and drops its border. Telling the window is the
+    /// half that matters to the window, and is what keeps one that fullscreened itself from
+    /// reconciling its way back out again on the next configure it receives for any other
+    /// reason, such as losing focus.
+    ///
+    /// Windows fullscreening *themselves* need no config: this is called for
+    /// [RiverEvent::FullscreenRequested] already, and an event hook returning `false` for that
+    /// event is how a config takes the decision back.
     pub fn set_fullscreen(&mut self, id: WinId, fullscreen: bool) {
         if fullscreen {
             self.manage.fullscreen.insert(id);
@@ -481,10 +493,29 @@ impl Conn for RiverConn {
                 state.running = false;
             }
 
+            // Honoured here rather than left to the config, unlike X11, where fullscreen is an
+            // EWMH property and so opt-in with the rest of EWMH. River has no extension to opt
+            // into: the request arrives on the protocol this backend already speaks, and nothing
+            // else can answer it. Ignoring it is not neutral either -- a window has entered its
+            // own fullscreen by the time it asks, and a window never told it is fullscreen backs
+            // out of it again at the next configure it gets for any other reason, which is the
+            // video that un-fullscreens when you focus something else. Granting it costs the
+            // layout nothing: the window is told, not resized. See [RiverConn::set_fullscreen].
+            //
+            // It is still the config's call: an event hook that returns `false` for this event
+            // replaces what happens here, which is how a config refuses fullscreen or grants it
+            // to some windows only.
+            FullscreenRequested(id, fullscreen) => {
+                // An unmanaged window is not penrose's to have an opinion about.
+                if state.client_set.contains(&id) {
+                    info!(%id, fullscreen, "honouring a fullscreen request");
+                    self.set_fullscreen(id, fullscreen);
+                }
+            }
+
             // Nothing is done with these by default: a config that wants to react to them can do
-            // so from a hook. Fullscreen in particular is deliberately not automatic, matching
-            // the X11 backend, where honouring _NET_WM_STATE is an opt-in extension.
-            Title(_) | AppId(_) | FullscreenRequested(_, _) => (),
+            // so from a hook.
+            Title(_) | AppId(_) => (),
         }
 
         Ok(())
@@ -760,6 +791,8 @@ impl Conn for RiverConn {
         self.shared.view().windows.contains_key(&id)
     }
 
+    /// Whether the window has been told it is fullscreen. It is in its layout bounds either
+    /// way: see [RiverConn::set_fullscreen].
     fn client_is_fullscreen(&mut self, id: WinId) -> bool {
         self.manage.fullscreen.contains(&id)
     }
